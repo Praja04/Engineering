@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -17,10 +18,10 @@ class AuthController extends Controller
     private function redirectByJabatan($jabatan)
     {
         return match ($jabatan) {
-            'dept_head'  => route('dept_head.dashboard'),
-            'foreman'    => route('foreman.dashboard'),
-            'supervisor' => route('supervisor.dashboard'),
-            'operator'   => route('operator.dashboard'),
+            'dept_head'  => route('dashboard'),
+            'foreman'    => route('dashboard'),
+            'supervisor' => route('dashboard'),
+            'operator'   => route('dashboard'),
             default      => route('home'),
         };
     }
@@ -42,24 +43,34 @@ class AuthController extends Controller
             ]);
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        $credentials = $request->only('username', 'password');
 
-        // Simpan data tambahan ke session
-        session([
-            'username'   => $user->username,
-            'jabatan'    => $user->jabatan,
-            'departemen' => $user->departemen,
-            'bagian'     => $user->bagian,
-            'nik'        => $user->nik,
-            'image'      => $user->image,
-        ]);
+        if (Auth::attempt($credentials)) {
+            Auth::login($user);
+            $request->session()->regenerate();
+            // $user = Auth::user();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Login berhasil.',
-            'redirect' => $this->redirectByJabatan($user->jabatan)
-        ]);
+            // $imageUrl = $user->image && url(Storage::disk('public')->exists($user->image))
+            //     ? url(Storage::url($user->image)) // -> /storage/...
+            //     : asset('material/assets/images/users/user-dummy-img.jpg');
+
+            // Simpan data tambahan ke session
+            // session([
+            //     'username'   => $user->username,
+            //     'jabatan'    => $user->jabatan,
+            //     'departemen' => $user->departemen,
+            //     'bagian'     => $user->bagian,
+            //     'nik'        => $user->nik,
+            //     'image_url'  => $imageUrl,
+            //     'status'     => $user->status,
+            // ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login berhasil.',
+                'redirect' => $this->redirectByJabatan($user->jabatan)
+            ]);
+        }
     }
 
     public function logout(Request $request)
