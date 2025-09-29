@@ -12,4 +12,9 @@ class DashboardController extends Controller
     {
         return view('scoring_mesin.dashboard');
     }
+
+    // public function master_mesin()
+    // {
+    //     return view('scoringmesin.master_mesin');
+    // }
 }

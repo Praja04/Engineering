@@ -7,8 +7,14 @@ use App\Http\Controllers\Kalibrasi\KalibrasiController;
 use App\Http\Controllers\ScoringMesin\DashboardController;
 use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
 
+use App\Http\Controllers\ScoringMesin\MachineController;
+use App\Http\Controllers\ScoringMesin\ProcessParameterController;
+use App\Http\Controllers\ScoringMesin\SectionController;
+use App\Http\Controllers\ScoringMesin\PartController;
+use App\Http\Controllers\ScoringMesin\StandardStateController;
 
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
+// Route::get('/mesin', [DashboardController::class, 'master_mesin']);
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -34,4 +40,24 @@ Route::middleware('auth')->group(function () {
         });
     });
 });
+
+
+
+//////////    Scoring Mesin Routes   ///////////
+Route::prefix('scoring-mesin')->name('scoring-mesin.')->group(function () {
+    // Machine routes
+    Route::get('machines/statistics', [MachineController::class, 'statistics'])->name('machines.statistics');
+    Route::resource('machines', MachineController::class);
+
+    // Other resources
+    Route::resource('process-parameters', ProcessParameterController::class);
+    Route::resource('sections', SectionController::class);
+    Route::resource('parts', PartController::class);
+    Route::resource('standard-states', StandardStateController::class);
+});
+
+//////////    End Scoring Mesin Routes   ///////////
+
+
+
 //////////    End View Routes   ///////////
