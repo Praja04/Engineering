@@ -13,9 +13,9 @@
 
                         <div class="page-title-right">
                             <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item"><a href="javascript: void(0);">RackMan</a></li>
-                                <li class="breadcrumb-item"><a href="javascript: void(0);">Master</a></li>
-                                <li class="breadcrumb-item active">Alat Kalibrasi</li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0);">Alat Kalibrasi</a></li>
+                                {{-- <li class="breadcrumb-item"><a href="javascript: void(0);">Master</a></li>
+                                <li class="breadcrumb-item active">Alat Kalibrasi</li> --}}
                             </ol>
                         </div>
                     </div>
@@ -25,7 +25,7 @@
                 <div class="col-xl-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h4 class="card-title mb-0">Data Alat Kalibrasi</h4>
+                            <h4 class="card-title mb-0">List Alat Kalibrasi</h4>
                             <div>
                                 {{-- btn download template --}}
                                 <a href="{{ route('master.download.template') }}" class="btn btn-info me-2">
@@ -101,11 +101,18 @@
                     @csrf
                     <div class="modal-body">
                         <div class="row gy-4">
-                            {{-- <div class="col-xxl-3 col-md-6">
-                                <label for="user_id" class="form-label">Petugas</label>
-                                <input type="text" class="form-control" id="user_id" name="user_id"
-                                    value="{{ Auth::user()->username }}" readonly>
-                            </div> --}}
+                            <div class="col-xxl-3 col-md-6">
+                                <label for="jenis_kalibrasi" class="form-label">Jenis Kalibrasi</label>
+                                <select type="text" class="form-select" id="jenis_kalibrasi" name="jenis_kalibrasi">
+                                    <option value="" disabled selected>Pilih jenis kalibrasi</option>
+                                    <option value="dimensi">Dimensi</option>
+                                    <option value="magnetic">Magnetic</option>
+                                    <option value="massa">Massa</option>
+                                    <option value="pressure">Pressure</option>
+                                    <option value="temperature">Temperature</option>
+                                    <option value="volumetrik">Volumetrik</option>
+                                </select>
+                            </div>
                             <div class="col-xxl-3 col-md-6">
                                 <label for="kode_alat" class="form-label">Kode Alat</label>
                                 <input type="text" class="form-control" id="kode_alat" name="kode_alat">
@@ -115,12 +122,8 @@
                                 <input type="text" class="form-control" id="nama_alat" name="nama_alat">
                             </div>
                             <div class="col-xxl-3 col-md-6">
-                                <label for="jenis_kalibrasi" class="form-label">Jenis Kalibrasi</label>
-                                <input type="text" class="form-control" id="jenis_kalibrasi" name="jenis_kalibrasi">
-                            </div>
-                            <div class="col-xxl-3 col-md-6">
                                 <label for="jumlah" class="form-label">Jumlah</label>
-                                <input type="text" class="form-control" id="jumlah" name="jumlah">
+                                <input type="number" class="form-control" id="jumlah" name="jumlah">
                             </div>
                             <div class="col-xxl-3 col-md-6">
                                 <label for="departemen_pemilik" class="form-label">Departemen Pemilik</label>
@@ -153,23 +156,26 @@
                                     step="any">
                             </div>
                             <div class="col-xxl-3 col-md-6">
-                                <label for="range_penggunaan" class="form-label">Range Penggunaan (Bar)</label>
-                                <input type="range" class="form-range" id="range_penggunaan" name="range_penggunaan"
-                                    min="1" max="10" step="1" value="1"
-                                    oninput="document.getElementById('rangeLabelEdit').innerText = '1 - ' + this.value + ' Bar'">
-                                <p class="mt-2"><strong id="rangeLabelEdit">1 - 1 Bar</strong></p>
-                            </div>
-
-                            <div class="col-xxl-3 col-md-6">
                                 <label for="limits_permissible_error" class="form-label">Limits of Permissible
                                     Error</label>
                                 <input type="number" class="form-control" id="limits_permissible_error"
                                     name="limits_permissible_error">
                             </div>
                             <div class="col-xxl-6 col-md-6">
-                                <label for="metode_kalibrasi" class="form-label">Metode Kalibrasi</label>
-                                <textarea class="form-control" id="metode_kalibrasi" name="metode_kalibrasi" cols="30" rows="4"></textarea>
+                                <label class="form-label">Range Penggunaan</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="min_range_use" name="min_range_use"
+                                        placeholder="Min" step="any">
+                                    <span class="input-group-text">–</span>
+                                    <input type="number" class="form-control" id="max_range_use" name="max_range_use"
+                                        placeholder="Max" step="any">
+                                    <span class="input-group-text" id="unit_range">unit</span>
+                                </div>
                             </div>
+                            {{-- <div class="col-xxl-6 col-md-6">
+                                <label for="metode_kalibrasi" class="form-label">Metode Kalibrasi</label>
+                                <textarea class="form-control" id="metode_kalibrasi" name="metode_kalibrasi" cols="30" rows="3" readonly>Diadopsi dari : "The Expression of Uncertainty and Confidence in Measurement" Oleh UKAS (United Kingdom Accreditation Service) M3003, Edition 3, November 2012</textarea>
+                            </div> --}}
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -319,7 +325,7 @@
                         </div>
                         <div class="col-md-4">
                             <strong>Range Penggunaan:</strong>
-                            <p>1 - <span id="detail_range_penggunaan"></span> bar</p>
+                            <p><span id="detail_range_penggunaan"></span></p>
                         </div>
                         <div class="col-md-4">
                             <strong>Limits of Permissible Error:</strong>
@@ -352,14 +358,18 @@
                 },
                 columns: [{
                         data: null,
-                        render: function(data, type, row, meta) {
-                            return meta.row + 1; // otomatis nomor urut
-                        }
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'kode_alat',
                         render: function(data, type, row) {
-                            return data || '-';
+                            if (!data) return '-';
+                            return `
+                                <span class="detail-btn text-primary fw-bold" style="cursor:pointer;" data-id="${row.id}" title="Detail Data">
+                                    ${data}
+                                </span>
+                            `;
                         }
                     },
                     {
@@ -393,13 +403,10 @@
                             render: function(data, type, row) {
                                 return `
                                     <button class="btn btn-sm btn-primary edit-btn" data-id="${row.id}" title="Edit Data">
-                                        <i class="mdi mdi-pencil"></i>
+                                        <i class="mdi mdi-pencil"></i> Edit
                                     </button>
                                     <button class="btn btn-sm btn-danger delete-btn" data-id="${row.id}" title="Delete Data">
-                                        <i class="mdi mdi-delete"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-info detail-btn" data-id="${row.id}" title="Detail Data">
-                                        <i class="mdi mdi-eye"></i>
+                                        <i class="mdi mdi-delete"></i> Delete
                                     </button>
                                 `;
                             }
@@ -407,11 +414,25 @@
                     @endif
                 ],
                 order: [
-                    [0, 'asc']
+                    [1, 'asc']
                 ],
                 language: {
                     lengthMenu: "Show _MENU_ entries",
                 }
+            });
+
+            // auto number tabel
+            table.on('draw.dt', function() {
+                let info = table.page.info();
+                table.column(0, {
+                        search: 'applied',
+                        order: 'applied',
+                        page: 'current'
+                    })
+                    .nodes()
+                    .each(function(cell, i) {
+                        cell.innerHTML = i + 1 + info.start;
+                    });
             });
 
             // Form submit tambah alat
@@ -434,7 +455,7 @@
                             title: 'Success',
                             text: response.message,
                             showConfirmButton: false,
-                            timer: 1000
+                            timer: 1500
                         });
                         $('#formTambahAlatKalibrasi')[0].reset();
                         $('#modalTambah').modal('hide');
@@ -547,9 +568,13 @@
                         $('#detail_tipe').text(data.tipe);
                         $('#detail_kapasitas').text(data.kapasitas);
                         $('#detail_resolusi').text(data.resolusi ?? '0');
-                        $('#detail_range_penggunaan').text(data.range_penggunaan);
                         $('#detail_limist_permissible_error').text(data
                             .limits_permissible_error);
+
+                        let range = data.range_use || '';
+                        let formatted = range.replace(/s\/d/gi, ' s/d ').trim();
+                        $('#detail_range_penggunaan').text(formatted + ' bar');
+
                         // $('#detailUser').text(
                         //     data.username ?
                         //     data.username.replace(/\b\w/g, function(l) {
@@ -587,11 +612,12 @@
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function(response) {
-                                Swal.fire(
-                                    'Deleted!',
-                                    'Your file has been deleted.',
-                                    'success'
-                                );
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: response.message ||
+                                        'Your file has been deleted.'
+                                });
 
                                 $('#dataTable').DataTable().ajax.reload();
                                 getFilters();
@@ -652,41 +678,70 @@
                         if (response.status === 'success') {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Berhasil!',
-                                text: response.message || 'File berhasil diimport.'
+                                title: 'Success!',
+                                text: response.message || 'File successfully imported.'
                             });
                         } else if (response.status === 'partial') {
                             // kalau sebagian gagal
                             let errorList = response.errors.map(e => `<li>${e}</li>`).join('');
                             Swal.fire({
                                 icon: 'warning',
-                                title: 'Sebagian berhasil!',
+                                title: 'Warning!',
                                 html: `<p>${response.message}</p>${errorList}`,
                                 width: 600
                             });
                         } else {
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Gagal!',
+                                title: 'Failed!',
                                 text: response.message ||
-                                    'Terjadi kesalahan saat import.'
+                                    'An error occurred during import.'
                             });
                         }
 
                         // reload table kalau ada data yang masuk
                         $('#dataTable').DataTable().ajax.reload();
                         $('#formImport')[0].reset(); // reset form
+                        $('#fileImport').val('');
                     },
                     error: function(xhr) {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal!',
+                            title: 'Failed!',
                             text: xhr.responseJSON?.message ||
-                                'Terjadi kesalahan saat import.'
+                                'An error occurred during import.'
                         });
                     }
                 });
             });
+
+            // form unit
+            $('#jenis_kalibrasi').on('change', function() {
+                let jenis = $(this).val();
+                let unit = 'unit';
+
+                switch (jenis) {
+                    case 'pressure':
+                        unit = 'bar';
+                        break;
+                    case 'temperature':
+                        unit = '°C';
+                        break;
+                    case 'volumetrik':
+                        unit = 'ml';
+                        break;
+                    case 'massa':
+                        unit = 'g'; // default g
+                        break;
+                    case 'dimensi':
+                    case 'magnetic':
+                    default:
+                        unit = '-';
+                }
+
+                $('#unit_range, #unit_range2').text(unit);
+            });
+
         })
     </script>
 @endsection

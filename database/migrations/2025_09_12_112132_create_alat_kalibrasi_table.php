@@ -23,10 +23,10 @@ return new class extends Migration
             $table->string('no_kalibrasi');
             $table->string('merk');
             $table->string('tipe');
-            $table->integer('kapasitas');
+            $table->float('kapasitas');
             $table->float('resolusi');
-            $table->integer('range_penggunaan'); // nilai ini nilai range akhir, karena awal selalu 1
-            $table->integer('limits_permissible_error');
+            $table->string('range_use');
+            $table->float('limits_permissible_error');
             $table->timestamps();
 
             $table->unique('kode_alat');

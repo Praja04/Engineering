@@ -25,7 +25,7 @@ class AlatKalibrasiModel extends Model
         'tipe',
         'kapasitas',
         'resolusi',
-        'range_penggunaan',
+        'range_use',
         'limits_permissible_error'
     ];
 

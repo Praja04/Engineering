@@ -36,7 +36,8 @@ class KalibrasiController extends Controller
             'tipe' => 'nullable|string|max:50',
             'kapasitas' => 'nullable|integer',
             'resolusi' => 'nullable|numeric',
-            'range_penggunaan' => 'nullable|integer',
+            'min_range_use' => 'nullable|numeric',
+            'max_range_use' => 'nullable|numeric',
             'limits_permissible_error' => 'nullable|integer',
         ]);
 
@@ -54,27 +55,27 @@ class KalibrasiController extends Controller
                 'tipe' => $request->tipe ?? '-',
                 'kapasitas' => $request->kapasitas ?? 0,
                 'resolusi' => $request->resolusi ?? 0,
-                'range_penggunaan' => $request->range_penggunaan ?? 0,
+                'range_use' => $request->min_range_use . 's/d' . $request->max_range_use ?? 0,
                 'limits_permissible_error' => $request->limits_permissible_error ?? 0,
             ]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Alat kalibrasi berhasil ditambahkan',
+                'message' => 'Calibration tool successfully added',
                 'data' => $alat
             ], 201);
         } catch (Exception $e) {
             if ($e->getCode() == "23000") { // error kode duplikat (SQLSTATE 23000)
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Kode alat sudah digunakan, silakan gunakan kode lain'
+                    'message' => 'The tool code has already been used. Please use another code.'
                 ], 409); // 409 Conflict
             }
 
             // fallback kalau error lain
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan saat menyimpan data'
+                'message' => 'An error occurred while saving the data.'
             ], 500);
         }
     }
@@ -134,7 +135,8 @@ class KalibrasiController extends Controller
             'edit_tipe' => 'nullable|string|max:50',
             'edit_kapasitas' => 'nullable|integer',
             'edit_resolusi' => 'nullable|numeric',
-            'edit_range_penggunaan' => 'nullable|integer',
+            'edit_min_range_use' => 'nullable|numeric',
+            'edit_max_range_use' => 'nullable|numeric',
             'edit_limits_permissible_error' => 'nullable|integer',
         ]);
 
@@ -154,26 +156,27 @@ class KalibrasiController extends Controller
                 'tipe' => $request->edit_tipe ?? '-',
                 'kapasitas' => $request->edit_kapasitas ?? 0,
                 'resolusi' => $request->edit_resolusi ?? 0,
-                'range_penggunaan' => $request->edit_range_penggunaan ?? 0,
+                'min_range_use' => $request->edit_min_range_use ?? 0,
+                'max_range_use' => $request->edit_max_range_use ?? 0,
                 'limits_permissible_error' => $request->edit_limits_permissible_error ?? 0,
             ]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Alat kalibrasi berhasil diperbarui',
+                'message' => 'The calibration tool has been successfully updated.',
                 'data' => $alat
             ], 200);
         } catch (Exception $e) {
             if ($e->getCode() == "23000") {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Kode alat sudah digunakan, silakan gunakan kode lain'
+                    'message' => 'The tool code has already been used. Please use another code.'
                 ], 409);
             }
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan saat memperbarui data'
+                'message' => 'An error occurred while updating the data.'
             ], 500);
         }
     }
@@ -187,17 +190,17 @@ class KalibrasiController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Alat kalibrasi berhasil dihapus'
+                'message' => 'The calibration tool has been successfully deleted.'
             ], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Data alat kalibrasi dengan ID ' . $id . ' tidak ditemukan'
+                'message' => 'Calibration tool data with ID ' . $id . ' not found'
             ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan saat menghapus data'
+                'message' => 'An error occurred while deleting data'
             ], 500);
         }
     }
@@ -225,9 +228,9 @@ class KalibrasiController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         // Set headers
-        $sheet->setCellValue('A1', 'Kode Alat');
-        $sheet->setCellValue('B1', 'Nama Alat');
-        $sheet->setCellValue('C1', 'Jenis Kalibrasi');
+        $sheet->setCellValue('A1', 'Jenis Kalibrasi');
+        $sheet->setCellValue('B1', 'Kode Alat');
+        $sheet->setCellValue('C1', 'Nama Alat');
         $sheet->setCellValue('D1', 'Jumlah');
         $sheet->setCellValue('E1', 'Departemen Pemilik');
         $sheet->setCellValue('F1', 'Lokasi Alat');
@@ -236,13 +239,14 @@ class KalibrasiController extends Controller
         $sheet->setCellValue('I1', 'Tipe');
         $sheet->setCellValue('J1', 'Kapasitas');
         $sheet->setCellValue('K1', 'Resolusi');
-        $sheet->setCellValue('L1', 'Range Penggunaan Alat');
-        $sheet->setCellValue('M1', 'Limits of Permissible Error');
+        $sheet->setCellValue('L1', 'Min Range Penggunaan');
+        $sheet->setCellValue('M1', 'Max Range Penggunaan');
+        $sheet->setCellValue('N1', 'Limits of Permissible Error');
 
         // Add example data
-        $sheet->setCellValue('A2', 'EUT/COM/PRE/006');
-        $sheet->setCellValue('B2', 'Pressure Gauge');
-        $sheet->setCellValue('C2', 'Pressure');
+        $sheet->setCellValue('A2', 'Pressure');
+        $sheet->setCellValue('B2', 'EUT/COM/PRE/006');
+        $sheet->setCellValue('C2', 'Pressure Gauge');
         $sheet->setCellValue('D2', 1);
         $sheet->setCellValue('E2', 'EUT');
         $sheet->setCellValue('F2', 'Compressed Air Process');
@@ -251,22 +255,23 @@ class KalibrasiController extends Controller
         $sheet->setCellValue('I2', 'Analog');
         $sheet->setCellValue('J2', '16');
         $sheet->setCellValue('K2', '0.1');
-        $sheet->setCellValue('L2', '5');
-        $sheet->setCellValue('M2', '1');
+        $sheet->setCellValue('L2', '1');
+        $sheet->setCellValue('M2', '5');
+        $sheet->setCellValue('N2', '1');
 
         // Auto width columns
-        foreach (range('A', 'M') as $column) {
+        foreach (range('A', 'N') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
         // Style header
-        $sheet->getStyle('A1:M1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:M1')->getFill()
+        $sheet->getStyle('A1:N1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:N1')->getFill()
             ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
             ->getStartColor()->setARGB('FFCCCCCC');
 
         $writer = new Xlsx($spreadsheet);
-        $filename = 'template_import_barang_' . date('Y-m-d') . '.xlsx';
+        $filename = 'template_import_alat_kalibrasi_' . date('Y-m-d') . '.xlsx';
 
         return response()->streamDownload(function () use ($writer) {
             $writer->save('php://output');
@@ -292,22 +297,49 @@ class KalibrasiController extends Controller
                 if ($index == 1) continue; // skip header
 
                 // ambil kolom sesuai template
-                $kode       = trim($row['A'] ?? '');
-                $nama       = trim($row['B'] ?? '');
-                $jenis      = trim($row['C'] ?? '');
-                $departemen = trim($row['D'] ?? '');
-                $lokasi     = trim($row['E'] ?? '');
-                $noKal      = trim($row['F'] ?? '');
+                $jenis        = trim($row['A'] ?? '');
+                $kode         = trim($row['B'] ?? '');
+                $nama         = trim($row['C'] ?? '');
+                $jumlah       = trim($row['D'] ?? '');
+                $departemen   = trim($row['E'] ?? '');
+                $lokasi       = trim($row['F'] ?? '');
+                $noKal        = trim($row['G'] ?? '');
+                $merk         = trim($row['H'] ?? '');
+                $tipe         = trim($row['I'] ?? '');
+                $kapasitas    = trim($row['J'] ?? '');
+                $resolusi     = trim($row['K'] ?? '');
+                $min_range_use = trim($row['L'] ?? '');
+                $max_range_use = trim($row['M'] ?? '');
+                $limits_error = trim($row['N'] ?? '');
 
-                // validasi wajib
-                if (!$kode || !$nama || !$jenis || !$departemen || !$lokasi || !$noKal) {
-                    $errors[] = "Baris {$index}: Data tidak lengkap";
-                    continue;
+                // field yang wajib diisi
+                $requiredFields = [
+                    'Jenis Kalibrasi' => $jenis,
+                    'Kode Alat'       => $kode,
+                    'Nama Alat'       => $nama,
+                    'Jumlah'          => $jumlah,
+                    'Departemen'      => $departemen,
+                    'Lokasi'          => $lokasi,
+                    'Nomor Kalibrasi' => $noKal,
+                    'Merk'            => $merk,
+                    'Tipe'            => $tipe,
+                    'Kapasitas'       => $kapasitas,
+                    'Resolusi'        => $resolusi,
+                    'Min Range'       => $min_range_use,
+                    'Max Range'       => $max_range_use,
+                    'Limits Error'    => $limits_error,
+                ];
+
+                foreach ($requiredFields as $field => $value) {
+                    if ($value === '' || $value === null) {
+                        $errors[] = "Row {$index}: Column {$field} Must be filled in";
+                        continue; // skip baris ini, lanjut baris berikutnya
+                    }
                 }
 
                 // validasi kode unik
                 if (AlatKalibrasiModel::where('kode_alat', $kode)->exists()) {
-                    $errors[] = "Baris {$index}: Kode alat '{$kode}' sudah terdaftar";
+                    $errors[] = "Row {$index}: Kode alat '{$kode}' already exists";
                     continue;
                 }
 
@@ -317,16 +349,17 @@ class KalibrasiController extends Controller
                     'kode_alat' => $kode,
                     'nama_alat' => $nama,
                     'jenis_kalibrasi' => $jenis,
+                    'jumlah' => $jumlah,
                     'departemen_pemilik' => $departemen,
                     'lokasi_alat' => $lokasi,
                     'no_kalibrasi' => $noKal,
-                    'merk' => $row['G'] ?? '-',
-                    'tipe' => $row['H'] ?? '-',
-                    'kapasitas' => is_numeric($row['I']) ? (int)$row['I'] : 0,
-                    'resolusi' => is_numeric($row['J']) ? (float)$row['J'] : 0,
-                    'range_penggunaan' => is_numeric($row['K']) ? (int)$row['K'] : 0,
-                    'limits_permissible_error' => is_numeric($row['L']) ? (int)$row['L'] : 0,
-                    'jumlah' => 1,
+                    'merk' => $merk ?? '-',
+                    'tipe' => $tipe ?? '-',
+                    'kapasitas' => is_numeric($kapasitas) ? (int)$kapasitas : 0,
+                    'resolusi' => is_numeric($resolusi) ? (float)$resolusi : 0,
+                    'min_range_use' => is_numeric($min_range_use) ? (int)$min_range_use : 0,
+                    'max_range_use' => is_numeric($max_range_use) ? (int)$max_range_use : 0,
+                    'limits_permissible_error' => is_numeric($limits_error) ? (int)$limits_error : 0,
                 ]);
 
                 $successCount++;
@@ -334,13 +367,13 @@ class KalibrasiController extends Controller
 
             return response()->json([
                 'status' => $errors ? 'partial' : 'success',
-                'message' => "Berhasil import {$successCount} data",
+                'message' => "Import successful {$successCount} data",
                 'errors' => $errors
             ]);
         } catch (Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal mengimport data: ' . $e->getMessage()
+                'message' => 'Failed to import data: ' . $e->getMessage()
             ], 500);
         }
     }

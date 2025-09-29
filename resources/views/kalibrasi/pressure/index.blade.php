@@ -39,7 +39,7 @@
                             <ol class="breadcrumb m-0">
                                 <li class="breadcrumb-item"><a href="javascript: void(0);">Kalibrasi</a></li>
                                 <li class="breadcrumb-item">Pressure</li>
-                                <li class="breadcrumb-item active">Form Pressure</li>
+                                <li class="breadcrumb-item active">Alat Kalibrasi</li>
                             </ol>
                         </div>
                     </div>
@@ -51,118 +51,143 @@
                 <div class="col-lg-12">
                     {{-- Input data header --}}
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-                            data-bs-target="#collapseFormPressure" style="cursor:pointer;">
-                            <h4 class="card-title mb-0">Form Pressure Information</h4>
-                            <i class="mdi mdi-chevron-up toggle-icon"></i>
+                        <div class="card-header">
+                            <h5 class="mb-0">Form Pressure Information</h5>
                         </div>
-                        <div id="collapseFormPressure" class="collapse show">
-                            <div class="card-body">
-                                <form id="formKalibrasi">
-                                    <div class="row gy-3">
-                                        <!-- Pilih Alat -->
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="alat_id" class="form-label">Pilih Kode Alat</label>
-                                            <select class="form-select" id="alat_id" name="alat_id">
-                                                <option value="">-- Pilih Kode Alat --</option>
-                                                @foreach ($alat as $a)
-                                                    <option value="{{ $a->id }}">{{ $a->kode_alat }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+                        <div class="card-body">
+                            <form id="formKalibrasi">
 
-                                        <!-- Info Alat (readonly, auto fill) -->
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="departemen_pemilik" class="form-label">Departemen
-                                                Pemilik</label>
-                                            <input type="text" class="form-control text-muted" id="departemen_pemilik"
-                                                name="departemen_pemilik" readonly>
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="lokasi_alat" class="form-label">Lokasi Alat</label>
-                                            <input type="text" class="form-control text-muted" id="lokasi_alat"
-                                                name="lokasi_alat" readonly>
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="no_kalibrasi" class="form-label">Nomor Kalibrasi</label>
-                                            <input type="text" class="form-control text-muted" id="no_kalibrasi"
-                                                name="no_kalibrasi" readonly>
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="nama_alat" class="form-label">Nama Alat</label>
-                                            <input type="text" class="form-control text-muted" id="nama_alat"
-                                                name="nama_alat" readonly>
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="merk" class="form-label">Merk</label>
-                                            <input type="text" class="form-control text-muted" id="merk"
-                                                name="merk" readonly>
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="tipe" class="form-label">Tipe</label>
-                                            <input type="text" class="form-control text-muted" id="tipe"
-                                                name="tipe" readonly>
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="kapasitas" class="form-label">Kapasitas</label>
-                                            <input type="text" class="form-control text-muted" id="kapasitas"
-                                                name="kapasitas" readonly>
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="resolusi" class="form-label">Resolusi</label>
-                                            <input type="text" class="form-control text-muted" id="resolusi"
-                                                name="resolusi" readonly>
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="range_penggunaan" class="form-label">Range Penggunaan
-                                                Alat</label>
-                                            <input type="text" class="form-control text-muted" id="range_penggunaan"
-                                                name="range_penggunaan" readonly>
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="limits_error" class="form-label">Limits of Permissible
-                                                Error</label>
-                                            <input type="text" class="form-control text-muted" id="limits_error"
-                                                name="limits_error" readonly>
-                                        </div>
-
-                                        <!-- Data Kalibrasi (user input) -->
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="lokasi_kalibrasi" class="form-label">Lokasi Kalibrasi</label>
-                                            <input type="text" class="form-control" id="lokasi_kalibrasi"
-                                                name="lokasi_kalibrasi">
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="suhu_ruangan" class="form-label">Suhu Ruangan</label>
-                                            <input type="text" class="form-control" id="suhu_ruangan"
-                                                name="suhu_ruangan">
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="kelembaban" class="form-label">Kelembaban</label>
-                                            <input type="text" class="form-control" id="kelembaban"
-                                                name="kelembaban">
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="tgl_kalibrasi" class="form-label">Tanggal Kalibrasi</label>
-                                            <input type="date" class="form-control" id="tgl_kalibrasi"
-                                                name="tgl_kalibrasi">
-                                        </div>
-                                        <div class="col-xxl-3 col-md-3">
-                                            <label for="tgl_kalibrasi_ulang" class="form-label">Tanggal Kalibrasi
-                                                Ulang</label>
-                                            <input type="date" class="form-control" id="tgl_kalibrasi_ulang"
-                                                name="tgl_kalibrasi_ulang">
-                                        </div>
-                                        <div class="col-xxl-6 col-md-6">
-                                            <label for="metode_kalibrasi" class="form-label">Metode Kalibrasi</label>
-                                            <textarea class="form-control text-muted" name="metode_kalibrasi" id="metode_kalibrasi" cols="30"
-                                                rows="3" readonly></textarea>
+                                <!-- Section Pilih Alat -->
+                                <div class="card mb-3 border-primary">
+                                    <div class="card-header bg-primary text-white py-2">
+                                        Informasi Alat (Auto Fill)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row gy-3">
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="alat_id" class="form-label">Pilih Kode Alat</label>
+                                                <select class="form-select" id="alat_id" name="alat_id">
+                                                    <option value="">-- Pilih Kode Alat --</option>
+                                                    @foreach ($alat as $a)
+                                                        <option value="{{ $a->id }}">{{ $a->kode_alat }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="departemen_pemilik" class="form-label">Departemen
+                                                    Pemilik</label>
+                                                <input type="text" class="form-control text-muted"
+                                                    id="departemen_pemilik" name="departemen_pemilik" readonly>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="lokasi_alat" class="form-label">Lokasi Alat</label>
+                                                <input type="text" class="form-control text-muted" id="lokasi_alat"
+                                                    name="lokasi_alat" readonly>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="no_kalibrasi" class="form-label">Nomor Kalibrasi</label>
+                                                <input type="text" class="form-control text-muted" id="no_kalibrasi"
+                                                    name="no_kalibrasi" readonly>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="nama_alat" class="form-label">Nama Alat</label>
+                                                <input type="text" class="form-control text-muted" id="nama_alat"
+                                                    name="nama_alat" readonly>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="merk" class="form-label">Merk</label>
+                                                <input type="text" class="form-control text-muted" id="merk"
+                                                    name="merk" readonly>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="tipe" class="form-label">Tipe</label>
+                                                <input type="text" class="form-control text-muted" id="tipe"
+                                                    name="tipe" readonly>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="kapasitas" class="form-label">Kapasitas</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control text-muted" id="kapasitas"
+                                                        name="kapasitas" readonly>
+                                                    <span class="input-group-text">Bar</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="resolusi" class="form-label">Resolusi</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control text-muted" id="resolusi"
+                                                        name="resolusi" readonly>
+                                                    <span class="input-group-text">Bar</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label class="form-label">Range Penggunaan</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="min_range_use"
+                                                        name="min_range_use" placeholder="Min" step="any" readonly>
+                                                    <span class="input-group-text">–</span>
+                                                    <input type="number" class="form-control" id="max_range_use"
+                                                        name="max_range_use" placeholder="Max" step="any" readonly>
+                                                    <span class="input-group-text" id="unit_range">Bar</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-3 col-md-3">
+                                                <label for="limits_error" class="form-label">Limits of Permissible
+                                                    Error</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">&plusmn;</span>
+                                                    <input type="text" class="form-control text-muted"
+                                                        id="limits_error" name="limits_error" readonly>
+                                                    <span class="input-group-text" id="unit_range">Bar</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </form>
-                            </div>
+
+                                    <!-- Section Data Kalibrasi -->
+                                    <div class="card mb-3 border-success">
+                                        <div class="card-header bg-success text-white py-2">
+                                            Data Kalibrasi (Input User)
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row gy-3">
+                                                <div class="col-xxl-3 col-md-3">
+                                                    <label for="lokasi_kalibrasi" class="form-label">Lokasi
+                                                        Kalibrasi</label>
+                                                    <input type="text" class="form-control" id="lokasi_kalibrasi"
+                                                        name="lokasi_kalibrasi">
+                                                </div>
+                                                <div class="col-xxl-3 col-md-3">
+                                                    <label for="suhu_ruangan" class="form-label">Suhu Ruangan</label>
+                                                    <input type="text" class="form-control" id="suhu_ruangan"
+                                                        name="suhu_ruangan">
+                                                </div>
+                                                <div class="col-xxl-3 col-md-3">
+                                                    <label for="kelembaban" class="form-label">Kelembaban</label>
+                                                    <input type="text" class="form-control" id="kelembaban"
+                                                        name="kelembaban">
+                                                </div>
+                                                <div class="col-xxl-3 col-md-3">
+                                                    <label for="tgl_kalibrasi" class="form-label">Tanggal
+                                                        Kalibrasi</label>
+                                                    <input type="date" class="form-control" id="tgl_kalibrasi"
+                                                        name="tgl_kalibrasi">
+                                                </div>
+                                                <div class="col-xxl-6 col-md-6">
+                                                    <label for="metode_kalibrasi" class="form-label">Metode
+                                                        Kalibrasi</label>
+                                                    <textarea class="form-control text-muted" name="metode_kalibrasi" id="metode_kalibrasi" cols="30"
+                                                        rows="3" readonly></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
+
+
 
                     {{-- Input data pressure --}}
                     <div class="card">
@@ -265,7 +290,8 @@
                     $('#tipe').val(data.tipe);
                     $('#kapasitas').val(data.kapasitas);
                     $('#resolusi').val(data.resolusi);
-                    $('#range_penggunaan').val(data.range_penggunaan);
+                    $('#min_range_use').val(data.min_range_use);
+                    $('#max_range_use').val(data.max_range_use);
                     $('#limits_error').val(data.limits_permissible_error);
                     $('#metode_kalibrasi').val(
                         `Diadopsi dari : "The Expression of Uncertainty and Confidence in Measurement" Oleh UKAS (United Kingdom Accreditation Service) M3003, Edition 3, November 2012`
