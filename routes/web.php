@@ -20,7 +20,7 @@ Route::middleware('auth')->group(function () {
     // Kalibrasi Routes
     Route::prefix('kalibrasi')->group(function () {
 
-        // Maste Alat Kalibrasi
+        // Master Alat Kalibrasi
         Route::get('/master/alat', [KalibrasiController::class, 'viewMasterAlat'])->name('master.alat');
         Route::post('/store/master/alat', [KalibrasiController::class, 'storeAlatKalibrasi'])->name('store.master.alat');
         Route::put('/update/master/alat/{id}', [KalibrasiController::class, 'updateAlatKalibrasi'])->name('update.master.alat');
@@ -28,9 +28,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/master/download/template', [KalibrasiController::class, 'downloadTemplateAlatKalibrasi'])->name('master.download.template');
         Route::post('/master/import', [KalibrasiController::class, 'importAlatKalibrasi'])->name('master.import');
 
-        // pressure routes
+        Route::get('/schedule', [KalibrasiController::class, 'viewSchedule'])->name('kalibrasi.schedule');
+        Route::get('/certificate', [KalibrasiController::class, 'viewCertificate'])->name('kalibrasi.certificate');
+        Route::post('/certificate/req-approval/{id}', [KalibrasiController::class, 'reqApprovalStore'])->name('kalibrasi.certificate.req-approval');
+
+        // Pressure Routes
         Route::prefix('pressure')->group(function () {
             Route::get('/index', [KalibrasiPressureController::class, 'index'])->name('kalibrasi.pressure.index');
+            Route::post('/store', [KalibrasiPressureController::class, 'store'])->name('kalibrasi.pressure.store');
+            Route::get('/data', [KalibrasiPressureController::class, 'viewData'])->name('kalibrasi.pressure.data');
+            Route::delete('/delete/{id}', [KalibrasiPressureController::class, 'destroy'])->name('kalibrasi.pressure.delete');
         });
     });
 });

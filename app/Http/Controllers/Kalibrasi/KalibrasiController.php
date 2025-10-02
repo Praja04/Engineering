@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Kalibrasi;
 
 use Exception;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Models\Kalibrasi\KalibrasiModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Exports\AlatKalibrasiTemplateExport;
@@ -22,6 +24,16 @@ class KalibrasiController extends Controller
         return view('kalibrasi.master_alat_kalibrasi');
     }
 
+    public function viewSchedule()
+    {
+        return view('kalibrasi.schedule');
+    }
+
+    public function viewCertificate()
+    {
+        return view('kalibrasi.certificate');
+    }
+
     public function storeAlatKalibrasi(Request $request)
     {
         $request->validate([
@@ -32,13 +44,13 @@ class KalibrasiController extends Controller
             'departemen_pemilik' => 'required|string|max:50',
             'lokasi_alat' => 'required|string|max:50',
             'no_kalibrasi' => 'required|string|max:50',
-            'merk' => 'nullable|string|max:50',
-            'tipe' => 'nullable|string|max:50',
-            'kapasitas' => 'nullable|integer',
-            'resolusi' => 'nullable|numeric',
-            'min_range_use' => 'nullable|numeric',
-            'max_range_use' => 'nullable|numeric',
-            'limits_permissible_error' => 'nullable|integer',
+            'merk' => 'required|string|max:50',
+            'tipe' => 'required|string|max:50',
+            'kapasitas' => 'required|integer',
+            'resolusi' => 'required|numeric',
+            'min_range_use' => 'required|numeric',
+            'max_range_use' => 'required|numeric',
+            'limits_permissible_error' => 'required|integer',
         ]);
 
         try {
@@ -131,13 +143,13 @@ class KalibrasiController extends Controller
             'edit_departemen_pemilik' => 'required|string|max:50',
             'edit_lokasi_alat' => 'required|string|max:50',
             'edit_no_kalibrasi' => 'required|string|max:50',
-            'edit_merk' => 'nullable|string|max:50',
-            'edit_tipe' => 'nullable|string|max:50',
-            'edit_kapasitas' => 'nullable|integer',
-            'edit_resolusi' => 'nullable|numeric',
-            'edit_min_range_use' => 'nullable|numeric',
-            'edit_max_range_use' => 'nullable|numeric',
-            'edit_limits_permissible_error' => 'nullable|integer',
+            'edit_merk' => 'required|string|max:50',
+            'edit_tipe' => 'required|string|max:50',
+            'edit_kapasitas' => 'required|integer',
+            'edit_resolusi' => 'required|numeric',
+            'edit_min_range_use' => 'required|numeric',
+            'edit_max_range_use' => 'required|numeric',
+            'edit_limits_permissible_error' => 'required|integer',
         ]);
 
         try {
@@ -156,8 +168,7 @@ class KalibrasiController extends Controller
                 'tipe' => $request->edit_tipe ?? '-',
                 'kapasitas' => $request->edit_kapasitas ?? 0,
                 'resolusi' => $request->edit_resolusi ?? 0,
-                'min_range_use' => $request->edit_min_range_use ?? 0,
-                'max_range_use' => $request->edit_max_range_use ?? 0,
+                'range_use' => $request->edit_min_range_use . 's/d' . $request->edit_max_range_use ?? 0,
                 'limits_permissible_error' => $request->edit_limits_permissible_error ?? 0,
             ]);
 
@@ -377,4 +388,67 @@ class KalibrasiController extends Controller
             ], 500);
         }
     }
+
+    // getData Schedule
+    public function getSchedule()
+    {
+        try {
+            $data = KalibrasiModel::selectRaw('id,alat_id,user_id,lokasi_kalibrasi,tgl_kalibrasi,tgl_kalibrasi_ulang,jenis_kalibrasi')
+                ->with('alat:id,kode_alat')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getDataCertificate()
+    {
+        try {
+            $data = KalibrasiModel::selectRaw('id,alat_id,lokasi_kalibrasi,tgl_kalibrasi,tgl_kalibrasi_ulang,jenis_kalibrasi')
+                ->with(
+                    'alat:id,kode_alat,nama_alat',
+                    'certificate:id,kalibrasi_id,status'
+                )
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getUserApprovals()
+    {
+        try {
+            $data = User::selectRaw('id,username,email,jabatan,nik,bagian')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function reqApprovalStore() {}
 }

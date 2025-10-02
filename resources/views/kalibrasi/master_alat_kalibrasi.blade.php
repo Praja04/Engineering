@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
 @section('styles')
+    <style>
+        .btn-header:hover,
+        .btn-header:hover i,
+        .btn-header:hover span {
+            color: black !important;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -24,46 +31,103 @@
             <div class="row">
                 <div class="col-xl-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <h4 class="card-title mb-0">List Alat Kalibrasi</h4>
-                            <div>
-                                {{-- btn download template --}}
-                                <a href="{{ route('master.download.template') }}" class="btn btn-info me-2">
-                                    <i class="mdi mdi-download"></i> Download Template
+                            <div class="d-flex flex-wrap gap-2">
+
+                                {{-- Download Template --}}
+                                <!-- Mobile: Icon only -->
+                                <a href="{{ route('master.download.template') }}"
+                                    class="btn btn-info waves-effect waves-light d-md-none" title="Download Template">
+                                    <i class="mdi mdi-download"></i>
+                                </a>
+                                <!-- Desktop: Icon + Text -->
+                                <a href="{{ route('master.download.template') }}"
+                                    class="btn btn-info waves-effect waves-light d-none d-md-inline-flex align-items-center gap-1"
+                                    title="Download Template">
+                                    <i class="mdi mdi-download"></i>
+                                    <span>Download Template</span>
                                 </a>
 
-                                <!-- Tombol Import -->
+                                {{-- Import File --}}
                                 <form id="formImport" action="{{ route('master.import') }}" method="POST"
-                                    enctype="multipart/form-data" class="d-inline me-2">
+                                    enctype="multipart/form-data" class="d-inline">
                                     @csrf
                                     <input type="file" name="file" id="fileImport" accept=".csv, .xlsx"
                                         style="display: none;">
-                                    <button type="button" class="btn btn-success" id="btnImport">
-                                        <i class="mdi mdi-upload"></i> Import File
+                                    <!-- Mobile: Icon only -->
+                                    <button type="button" class="btn btn-success waves-effect waves-light d-md-none"
+                                        id="btnImport" title="Import File">
+                                        <i class="mdi mdi-upload"></i>
+                                    </button>
+                                    <!-- Desktop: Icon + Text -->
+                                    <button type="button"
+                                        class="btn btn-success waves-effect waves-light d-none d-md-inline-flex align-items-center gap-1"
+                                        id="btnImportDesktop" title="Import File">
+                                        <i class="mdi mdi-upload"></i>
+                                        <span>Import File</span>
                                     </button>
                                 </form>
 
-                                <!-- Tombol Tambah -->
-                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambah">
-                                    <i class="mdi mdi-plus me-2"></i>Tambah Alat
+                                {{-- Tambah Alat --}}
+                                <!-- Mobile: Icon only -->
+                                <button class="btn btn-primary waves-effect waves-light d-md-none" data-bs-toggle="modal"
+                                    data-bs-target="#modalTambah" title="Add Alat">
+                                    <i class="mdi mdi-plus"></i>
+                                </button>
+                                <!-- Desktop: Icon + Text -->
+                                <button
+                                    class="btn btn-primary waves-effect waves-light d-none d-md-inline-flex align-items-center gap-1"
+                                    data-bs-toggle="modal" data-bs-target="#modalTambah" title="Add Alat">
+                                    <i class="mdi mdi-plus"></i>
+                                    <span>Add Alat</span>
                                 </button>
                             </div>
                         </div>
-
-
                         <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <select id="filterJenis" class="form-select">
-                                        <option value="">-- All Jenis Kalibrasi --</option>
-                                    </select>
+                            <div class="mb-3">
+                                <!-- Versi Desktop/Tablet -->
+                                <div class="d-none d-md-flex flex-wrap align-items-center gap-2">
+                                    <!-- Icon Filter -->
+                                    <div class="d-flex align-items-center">
+                                        <i class="mdi mdi-filter-outline text-primary fs-2"></i>
+                                    </div>
+
+                                    <!-- Filter Jenis Kalibrasi -->
+                                    <div class="btn-group flex-fill flex-md-grow-0" style="min-width: 200px;">
+                                        <button type="button" class="btn btn-outline-primary dropdown-toggle w-100"
+                                            data-bs-toggle="dropdown" aria-expanded="false" id="btnJenisKalibrasi">
+                                            All Jenis Kalibrasi
+                                        </button>
+                                        <div class="dropdown-menu w-100" id="filterJenis">
+                                            <!-- isi dropdown Jenis Kalibrasi diinject JS -->
+                                        </div>
+                                        <input type="hidden" name="jenis_kalibrasi" id="selectedJenisKalibrasi">
+                                    </div>
+
+                                    <!-- Filter Departemen -->
+                                    <div class="btn-group flex-fill flex-md-grow-0" style="min-width: 200px;">
+                                        <button type="button" class="btn btn-outline-primary dropdown-toggle w-100"
+                                            data-bs-toggle="dropdown" aria-expanded="false" id="btnDepartemen">
+                                            All Departemen
+                                        </button>
+                                        <div class="dropdown-menu w-100" id="filterDepartemen">
+                                            <!-- isi dropdown Departemen diinject JS -->
+                                        </div>
+                                        <input type="hidden" name="departemen" id="selectedDepartemen">
+                                    </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <select id="filterDepartemen" class="form-select">
-                                        <option value="">-- All Departemen --</option>
-                                    </select>
+
+                                <!-- Versi  -->
+                                <div class="d-md-none">
+                                    <button class="btn btn-outline-primary w-100" data-bs-toggle="modal"
+                                        data-bs-target="#filterModal">
+                                        <i class="mdi mdi-filter-outline me-1"></i> Filter
+                                    </button>
                                 </div>
                             </div>
+
+
                             <table class="nowrap table table-striped dt-responsive" id="dataTable" style="width:100%">
                                 <thead>
                                     <tr>
@@ -89,12 +153,54 @@
         </div>
     </div>
 
+    {{-- Modal filter --}}
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Filter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <!-- Dropdown Jenis Kalibrasi -->
+                    <div class="mb-3">
+                        <label class="form-label">Jenis Kalibrasi</label>
+                        <div class="btn-group w-100">
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle w-100"
+                                data-bs-toggle="dropdown" aria-expanded="false" id="btnJenisKalibrasiMobile">
+                                All Jenis Kalibrasi
+                            </button>
+                            <div class="dropdown-menu w-100" id="filterJenisMobile"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Departemen -->
+                    <div class="mb-3">
+                        <label class="form-label">Departemen</label>
+                        <div class="btn-group w-100">
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle w-100"
+                                data-bs-toggle="dropdown" aria-expanded="false" id="btnDepartemenMobile">
+                                All Departemen
+                            </button>
+                            <div class="dropdown-menu w-100" id="filterDepartemenMobile"></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Modal Tambah Alat --}}
     <div class="modal fade" id="modalTambah" tabindex="-1" aria-labelledby="modalTambahLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalTambahLabel">Tambah Alat</h5>
+                    <h5 class="modal-title" id="modalTambahLabel">Add Alat</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="formTambahAlatKalibrasi" enctype="multipart/form-data">
@@ -105,7 +211,7 @@
                                 <label for="jenis_kalibrasi" class="form-label">Jenis Kalibrasi</label>
                                 <select type="text" class="form-select" id="jenis_kalibrasi" name="jenis_kalibrasi">
                                     <option value="" disabled selected>Pilih jenis kalibrasi</option>
-                                    <option value="dimensi">Dimensi</option>
+                                    <option value="dimention">Dimention</option>
                                     <option value="magnetic">Magnetic</option>
                                     <option value="massa">Massa</option>
                                     <option value="pressure">Pressure</option>
@@ -180,7 +286,7 @@
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-primary" type="submit">Simpan</button>
-                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-outline-primary" type="button" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -191,8 +297,8 @@
     <div class="modal fade" id="modalEditAlat" tabindex="-1" aria-labelledby="editAlatLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-info py-3">
-                    <h5 class="modal-title text-white" id="editAlatLabel">Edit Alat Kalibrasi</h5>
+                <div class="modal-header py-3">
+                    <h5 class="modal-title" id="editAlatLabel">Edit Alat Kalibrasi</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="formEditAlat" enctype="multipart/form-data">
@@ -208,8 +314,16 @@
                         </div>
                         <div class="col-md-6">
                             <label for="edit_jenis_kalibrasi" class="form-label">Jenis Kalibrasi</label>
-                            <input type="text" class="form-control" id="edit_jenis_kalibrasi"
+                            <select type="text" class="form-select" id="edit_jenis_kalibrasi"
                                 name="edit_jenis_kalibrasi">
+                                <option value="" disabled selected>Pilih jenis kalibrasi</option>
+                                <option value="dimention">Dimention</option>
+                                <option value="magnetic">Magnetic</option>
+                                <option value="massa">Massa</option>
+                                <option value="pressure">Pressure</option>
+                                <option value="temperature">Temperature</option>
+                                <option value="volumetrik">Volumetrik</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label for="edit_jumlah" class="form-label">Jumlah</label>
@@ -245,14 +359,17 @@
                             <input type="number" step="0.01" class="form-control" id="edit_resolusi"
                                 name="edit_resolusi">
                         </div>
-                        <div class="col-md-6">
-                            <label for="edit_range_penggunaan" class="form-label">Range Penggunaan (Bar)</label>
-                            <input type="range" class="form-range" id="edit_range_penggunaan" min="1"
-                                max="10" step="1"
-                                oninput="document.getElementById('rangeLabel').innerText = '1 - ' + this.value + ' Bar'">
-                            <p class="mt-2"><strong id="rangeLabel">1 - 1 Bar</strong></p>
+                        <div class="col-xxl-6 col-md-6">
+                            <label class="form-label">Range Penggunaan</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="edit_min_range_use"
+                                    name="edit_min_range_use" placeholder="Min" step="any">
+                                <span class="input-group-text">–</span>
+                                <input type="number" class="form-control" id="edit_max_range_use"
+                                    name="edit_max_range_use" placeholder="Max" step="any">
+                                <span class="input-group-text" id="unit_range">unit</span>
+                            </div>
                         </div>
-
                         <div class="col-md-6">
                             <label for="edit_limits_permissible_error" class="form-label">Limits of Permissible
                                 Error</label>
@@ -261,8 +378,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        <button type="button" class="btn btn-outline-info" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-info">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
@@ -402,10 +519,10 @@
                             orderable: false,
                             render: function(data, type, row) {
                                 return `
-                                    <button class="btn btn-sm btn-primary edit-btn" data-id="${row.id}" title="Edit Data">
+                                    <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${row.id}" title="Edit Data">
                                         <i class="mdi mdi-pencil"></i> Edit
                                     </button>
-                                    <button class="btn btn-sm btn-danger delete-btn" data-id="${row.id}" title="Delete Data">
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${row.id}" title="Delete Data">
                                         <i class="mdi mdi-delete"></i> Delete
                                     </button>
                                 `;
@@ -486,7 +603,7 @@
                         $('#editId').val(data.id);
                         $('#edit_kode_alat').val(data.kode_alat);
                         $('#edit_nama_alat').val(data.nama_alat);
-                        $('#edit_jenis_kalibrasi').val(data.jenis_kalibrasi);
+                        $('#edit_jenis_kalibrasi').val(data.jenis_kalibrasi).trigger('change');
                         $('#edit_jumlah').val(data.jumlah);
                         $('#edit_departemen_pemilik').val(data.departemen_pemilik || 0);
                         $('#edit_lokasi_alat').val(data.lokasi_alat || 0);
@@ -495,11 +612,13 @@
                         $('#edit_tipe').val(data.tipe || 0);
                         $('#edit_kapasitas').val(data.kapasitas || 0);
                         $('#edit_resolusi').val(data.resolusi || 0);
-                        $('#edit_range_penggunaan')
-                            .val(data.range_penggunaan ||
-                                1)
-                            .trigger('input');
-                        $('#rangeLabel').text('1 - ' + (data.range_penggunaan || 1) + ' Bar');
+                        if (data.range_use) {
+                            let parts = data.range_use.split('s/d');
+                            let minVal = parts[0] ? parts[0].trim() : '';
+                            let maxVal = parts[1] ? parts[1].trim() : '';
+                            $('#edit_min_range_use').val(minVal);
+                            $('#edit_max_range_use').val(maxVal);
+                        }
 
                         $('#edit_limits_permissible_error').val(data.limits_permissible_error ||
                             0);
@@ -575,19 +694,11 @@
                         let formatted = range.replace(/s\/d/gi, ' s/d ').trim();
                         $('#detail_range_penggunaan').text(formatted + ' bar');
 
-                        // $('#detailUser').text(
-                        //     data.username ?
-                        //     data.username.replace(/\b\w/g, function(l) {
-                        //         return l.toUpperCase();
-                        //     }) :
-                        //     '-'
-                        // );
-
                         $('#detailModalAlat').modal('show');
                     },
                     error: function(err) {
                         console.error("Error fetching detail:", err);
-                        Swal.fire('Error!', 'Gagal mengambil detail data.', 'error');
+                        Swal.fire('Error!', 'Failed to retrieve data details.', 'error');
                     }
                 });
             });
@@ -637,31 +748,124 @@
 
             // filtering
             function getFilters() {
-                $('#filterJenis').empty().append('<option value="">All Jenis Kalibrasi</option>');
-                $('#filterDepartemen').empty().append('<option value="">All Departemen</option>');
+                // === Jenis Kalibrasi ===
+                const $dropdownJenis = $('#filterJenis');
+                const $btnJenis = $('#btnJenisKalibrasi');
+                const $hiddenJenis = $('#selectedJenisKalibrasi');
 
-                $.get("{{ url('api/kalibrasi/master/filters') }}", function(res) {
-                    res.jenis.forEach(function(item) {
-                        $('#filterJenis').append(`<option value="${item}">${item}</option>`);
-                    });
+                // === Departemen ===
+                const $dropdownDep = $('#filterDepartemen');
+                const $btnDep = $('#btnDepartemen');
+                const $hiddenDep = $('#selectedDepartemen');
 
-                    res.departemen.forEach(function(item) {
-                        $('#filterDepartemen').append(`<option value="${item}">${item}</option>`);
+                // === Mobile Jenis Kalibrasi ===
+                const $dropdownJenisMobile = $('#filterJenisMobile');
+                const $btnJenisMobile = $('#btnJenisKalibrasiMobile');
+
+                // === Mobile Departemen ===
+                const $dropdownDepMobile = $('#filterDepartemenMobile');
+                const $btnDepMobile = $('#btnDepartemenMobile');
+
+                // Reset isi dropdown
+                $dropdownJenis.empty();
+                $dropdownDep.empty();
+                $dropdownJenisMobile.empty();
+                $dropdownDepMobile.empty();
+
+                // Tambah default option Jenis Kalibrasi
+                const defaultJenis = `
+                    <button class="dropdown-item" type="button" data-value="">
+                        All Jenis Kalibrasi
+                    </button>
+                `;
+
+                $dropdownJenis.append(defaultJenis);
+                $dropdownJenisMobile.append(defaultJenis);
+
+                // Tambah default option Departemen
+                const defaultDep = `
+                    <button class="dropdown-item" type="button" data-value="">
+                        All Departemen
+                    </button>
+                `;
+                $dropdownDep.append(defaultDep);
+                $dropdownDepMobile.append(defaultDep);
+
+                $.get("{{ url('api/kalibrasi/master/filters') }}")
+                    .done(function(res) {
+                        // === isi Jenis Kalibrasi ===
+                        if (res?.jenis && Array.isArray(res.jenis)) {
+                            res.jenis.forEach(item => {
+                                const option = `
+                                    <button class="dropdown-item" type="button" data-value="${item}">
+                                        ${item}
+                                    </button>
+                                `;
+                                $dropdownJenis.append(option);
+                                $dropdownJenisMobile.append(option);
+                            });
+                        }
+
+                        // === isi Departemen ===
+                        if (res?.departemen && Array.isArray(res.departemen)) {
+                            res.departemen.forEach(item => {
+                                const option = `
+                                    <button class="dropdown-item" type="button" data-value="${item}">
+                                        ${item}
+                                    </button>`;
+                                $dropdownDep.append(option);
+                                $dropdownDepMobile.append(option);
+                            });
+                        }
+
+                        // Event handler dropdown Jenis Kalibrasi (desktop + mobile)
+                        $dropdownJenis.add($dropdownJenisMobile)
+                            .off('click').on('click', '.dropdown-item', function() {
+                                const value = $(this).data('value');
+                                const text = $(this).text();
+
+                                $btnJenis.text(text);
+                                $btnJenisMobile.text(text);
+
+                                $hiddenJenis.val(value);
+
+                                // 🚀 Apply filter ke DataTable (kolom index 3 → sesuaikan!)
+                                table.column(3).search(value).draw();
+                            });
+
+                        // Event handler dropdown Departemen (desktop + mobile)
+                        $dropdownDep.add($dropdownDepMobile)
+                            .off('click').on('click', '.dropdown-item', function() {
+                                const value = $(this).data('value');
+                                const text = $(this).text();
+
+                                $btnDep.text(text);
+                                $btnDepMobile.text(text);
+
+                                $hiddenDep.val(value);
+
+                                // 🚀 Apply filter ke DataTable (kolom index 4 → sesuaikan!)
+                                table.column(4).search(value).draw();
+                            });
+                    })
+                    .fail(function(xhr, status, error) {
+                        console.error("Failed to load filters:", error);
                     });
-                });
             }
 
+
+
             // Apply filter
-            $('#filterJenis').on('change', function() {
+            $('#filterJenis, #filterJenisMobile').on('change', function() {
                 table.column(3).search(this.value).draw();
             });
 
-            $('#filterDepartemen').on('change', function() {
+            $('#filterDepartemen, #filterDepartemenMobile').on('change', function() {
                 table.column(4).search(this.value).draw();
             });
 
             // Import handler
-            $('#btnImport').click(function() {
+            $('#btnImport, #btnImportDesktop').on('click', function() {
                 $('#fileImport').click();
             });
 
@@ -716,13 +920,13 @@
             });
 
             // form unit
-            $('#jenis_kalibrasi').on('change', function() {
+            $('#jenis_kalibrasi', '#edit_jenis_kalibrasi').on('change', function() {
                 let jenis = $(this).val();
                 let unit = 'unit';
 
                 switch (jenis) {
                     case 'pressure':
-                        unit = 'bar';
+                        unit = 'Bar';
                         break;
                     case 'temperature':
                         unit = '°C';
@@ -741,7 +945,6 @@
 
                 $('#unit_range, #unit_range2').text(unit);
             });
-
         })
     </script>
 @endsection

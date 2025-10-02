@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Kalibrasi;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Kalibrasi\KalibrasiModel;
 use App\Models\Kalibrasi\AlatKalibrasiModel;
+use App\Models\Kalibrasi\KalibrasiSertifikatModel;
 use App\Models\Kalibrasi\Pressure\KalibrasiPressureModel;
 use App\Models\Kalibrasi\Pressure\KalibrasiPressureGabunganModel;
 
@@ -22,6 +24,11 @@ class KalibrasiPressureController extends Controller
             ->get();
 
         return view('kalibrasi.pressure.index', compact('alat'));
+    }
+
+    public function viewData()
+    {
+        return view('kalibrasi.pressure.data');
     }
 
     /**
@@ -41,10 +48,11 @@ class KalibrasiPressureController extends Controller
         $validated = $request->validate([
             'alat_id' => 'required|exists:alat_kalibrasi,id',
             'lokasi_kalibrasi' => 'required|string|max:255',
-            'suhu_ruangan' => 'required|string|max:50',
-            'kelembaban' => 'required|string|max:50',
+            'suhu_ruangan' => 'required|numeric|max:50',
+            'suhu_ruangan_tol' => 'required|numeric|max:50',
+            'kelembaban' => 'required|numeric|max:50',
+            'kelembaban_tol' => 'required|numeric|max:50',
             'tgl_kalibrasi' => 'required|date',
-            'tgl_kalibrasi_ulang' => 'required|date',
             'metode_kalibrasi' => 'required|string|max:255',
 
             'pressure' => 'required|array',
@@ -55,17 +63,25 @@ class KalibrasiPressureController extends Controller
             'pressure.*.koreksi_standar' => 'nullable|numeric',
         ]);
 
+        // dd($validated['pressure']);
+
         // Simpan data utama kalibrasi
         $kalibrasi = KalibrasiModel::create([
             'alat_id' => $validated['alat_id'],
             'user_id' => Auth::id() ?? 1,
             'lokasi_kalibrasi' => $validated['lokasi_kalibrasi'],
-            'suhu_ruangan' => $validated['suhu_ruangan'],
-            'kelembaban' => $validated['kelembaban'],
+            'suhu_ruangan' => $validated['suhu_ruangan'] . '±' . $validated['suhu_ruangan_tol'],
+            'kelembaban' => $validated['kelembaban'] . '±' . $validated['kelembaban_tol'],
             'tgl_kalibrasi' => $validated['tgl_kalibrasi'],
-            'tgl_kalibrasi_ulang' => $validated['tgl_kalibrasi_ulang'],
+            'tgl_kalibrasi_ulang' => Carbon::parse($validated['tgl_kalibrasi'])->addYearNoOverflow(),
             'metode_kalibrasi' => $validated['metode_kalibrasi'],
-            'jenis_kalibrasi' => 'Pressure',
+            'jenis_kalibrasi' => 'pressure',
+        ]);
+
+        KalibrasiSertifikatModel::create([
+            'kalibrasi_id' => $kalibrasi->id,
+            'user_id' => Auth::id(),
+            'status' => 'draft'
         ]);
 
         // Pisahkan data titik
@@ -97,23 +113,48 @@ class KalibrasiPressureController extends Controller
 
         $avg = fn($arr, $field) => count($arr) ? array_sum(array_column($arr, $field)) / count($arr) : null;
         $std = fn($arr, $field) => count($arr) > 1
-            ? sqrt(array_sum(array_map(fn($x) => pow($x[$field] - ($avg($arr, $field)), 2), $arr)) / (count($arr) - 1))
-            : null;
+            ? sqrt(array_sum(array_map(fn($x) => pow($x[$field] - $avg($arr, $field), 2), $arr)) / (count($arr) - 1))
+            : 0;
 
         // Loop tiap titik kalibrasi untk simpak ke pressure u gabungan
+        $staticU = [
+            'naik' => [
+                0 => 0.059872897,
+                1 => 0.059872897,
+                2 => 0.059872897,
+                3 => 0.059872897,
+                4 => 0.059872897,
+                5 => 0.059872897,
+                6 => 0.059872897,
+                7 => 0.059872897,
+                8 => 0.079157482,
+            ],
+            'turun' => [
+                0 => 0.059872897,
+                1 => 0.059872897,
+                2 => 0.059872897,
+                3 => 0.059872897,
+                4 => 0.059872897,
+                5 => 0.059872897,
+                6 => 0.059872897,
+                7 => 0.059872897,
+                8 => 0.093090854,
+            ],
+        ];
+
         foreach ($perTitik as $titik => $arah) {
             $naik = $arah['naik'] ?? [];
             $turun = $arah['turun'] ?? [];
 
-            $u_naik = $avg($naik, 'penunjuk_alat');
-            $u_turun = $avg($turun, 'penunjuk_alat');
+            $u_naik  = $staticU['naik'][$titik]  ?? 0.00;
+            $u_turun = $staticU['turun'][$titik] ?? 0.00;
 
-            $u_naik_kuadrat = count($naik) ? array_sum(array_map(fn($x) => pow($x['penunjuk_alat'] - $u_naik, 2), $naik)) : null;
-            $u_turun_kuadrat = count($turun) ? array_sum(array_map(fn($x) => pow($x['penunjuk_alat'] - $u_turun, 2), $turun)) : null;
+            $ketidakpastianNaik = $staticU['naik'][$titik]  ?? 0.00;
+            $ketidakpastianTurun = $staticU['turun'][$titik] ?? 0.00;
 
-            $u_gabungan = ($u_naik_kuadrat !== null && $u_turun_kuadrat !== null)
-                ? sqrt($u_naik_kuadrat + $u_turun_kuadrat)
-                : null;
+            $u_naik_kuadrat  = pow($u_naik, 2);
+            $u_turun_kuadrat = pow($u_turun, 2);
+            $u_gabungan = sqrt($u_naik_kuadrat + $u_turun_kuadrat);
 
             KalibrasiPressureGabunganModel::create([
                 'kalibrasi_id' => $kalibrasi->id,
@@ -131,8 +172,8 @@ class KalibrasiPressureController extends Controller
                 'std_deviasi_naik' => $std($naik, 'tekanan_standar'),
                 'std_deviasi_turun' => $std($turun, 'tekanan_standar'),
 
-                'ketidak_pastian_naik' => null,
-                'ketidak_pastian_turun' => null,
+                'ketidak_pastian_naik' => $ketidakpastianNaik,
+                'ketidak_pastian_turun' => $ketidakpastianTurun,
 
                 'u_naik' => $u_naik,
                 'u_turun' => $u_turun,
@@ -144,8 +185,8 @@ class KalibrasiPressureController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Data kalibrasi berhasil disimpan',
-            'data' => $kalibrasi->load('pressureDetails')
+            'message' => 'Pressure calibration data successfully saved.',
+            'data' => $kalibrasi->load('pressure')
         ], 200);
     }
 
@@ -170,6 +211,33 @@ class KalibrasiPressureController extends Controller
         ]);
     }
 
+    public function getData()
+    {
+        try {
+            // ambil data kalibrasi + relasi pressure & gabungan
+            $data = KalibrasiModel::with([
+                'pressure' => function ($q) {
+                    $q->orderBy('titik_kalibrasi');
+                },
+                'pressureGabungan',
+                'alat:id,kode_alat,nama_alat'
+            ])
+                ->where('jenis_kalibrasi', 'pressure')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -191,6 +259,18 @@ class KalibrasiPressureController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $kalibrasi = KalibrasiModel::findOrFail($id);
+
+        // Hapus relasi dulu
+        $kalibrasi->pressure()->delete();
+        $kalibrasi->pressureGabungan()->delete();
+
+        // Hapus kalibrasi utama
+        $kalibrasi->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Calibration data successfully deleted'
+        ]);
     }
 }
