@@ -17,10 +17,10 @@ class Authenticate
     public function handle($request, Closure $next)
     {
         if (!Auth::check()) {
+            session(['url.intended' => $request->fullUrl()]);
             return redirect('/'); // Redirect ke halaman login jika belum login
         }
 
         return $next($request);
     }
-
 }

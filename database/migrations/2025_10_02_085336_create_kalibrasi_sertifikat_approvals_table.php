@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('approver_email');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('comment')->nullable();     // alasan approve/reject
-            $table->timestamp('actioned_at')->nullable(); // kapan action dilakukan
+            $table->timestamp('approved_at')->nullable(); // kapan action dilakukan
             $table->timestamps();
         });
     }

@@ -202,10 +202,10 @@
                         orderable: false,
                         render: function(data, type, row) {
                             return `
-                                <button class="btn btn-sm btn-outline-primary req-approval-btn" data-id="${row.id}" title="Edit Data">
+                                <button class="btn btn-sm btn-outline-primary req-approval-btn" data-id="${row.certificate.id}" title="Edit Data">
                                     <i class="mdi mdi-send-check"></i> Request Approval
                                 </button>
-                                <button class="btn btn-sm btn-outline-info detail-btn" data-id="${row.id}" title="Delete Data">
+                                <button class="btn btn-sm btn-outline-info detail-btn" data-id="${row.certificate.id}" title="Delete Data">
                                     <i class="mdi mdi-eye"></i> Detail
                                 </button>
                             `;
@@ -293,7 +293,7 @@
                 e.preventDefault();
 
                 $.ajax({
-                    url: "{{ route('kalibrasi.certificate.req-approval') }}" + sertifikatId,
+                    url: `{{ route('kalibrasi.certificate.req-approval', '') }}/` + sertifikatId,
                     type: 'POST',
                     data: $(this).serialize(),
                     success: function(res) {

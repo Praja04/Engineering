@@ -35,6 +35,14 @@ return [
     */
 
     'mailers' => [
+        'mailersend' => [
+            'transport' => 'mailersend',
+            'api_key' => env('MAIL_MAILERSEND_API_KEY'),
+            'from' => [
+                'address' => env('MAIL_FROM_ADDRESS'),
+                'name' => env('MAIL_FROM_NAME'),
+            ],
+        ],
 
         'smtp' => [
             'transport' => 'smtp',
