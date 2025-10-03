@@ -18,7 +18,7 @@ class KalibrasiSertifikatApprovalModel extends Model
         'approver_email',
         'status',
         'comment',
-        'actioned_at',
+        'approved_at',
     ];
 
     // relasi ke sertifikat

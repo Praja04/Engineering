@@ -31,7 +31,7 @@ class KalibrasiController extends Controller
 
     public function viewCertificate()
     {
-        return view('kalibrasi.certificate');
+        return view('kalibrasi.certificate.certificate');
     }
 
     public function storeAlatKalibrasi(Request $request)
@@ -409,46 +409,4 @@ class KalibrasiController extends Controller
             ], 500);
         }
     }
-
-    public function getDataCertificate()
-    {
-        try {
-            $data = KalibrasiModel::selectRaw('id,alat_id,lokasi_kalibrasi,tgl_kalibrasi,tgl_kalibrasi_ulang,jenis_kalibrasi')
-                ->with(
-                    'alat:id,kode_alat,nama_alat',
-                    'certificate:id,kalibrasi_id,status'
-                )
-                ->get();
-
-            return response()->json([
-                'status' => 'success',
-                'data'   => $data
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function getUserApprovals()
-    {
-        try {
-            $data = User::selectRaw('id,username,email,jabatan,nik,bagian')
-                ->get();
-
-            return response()->json([
-                'status' => 'success',
-                'data'   => $data
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function reqApprovalStore() {}
 }

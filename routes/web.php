@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KalibrasController;
+use App\Http\Controllers\Kalibrasi\KalibrasiCertificateController;
 use App\Http\Controllers\Kalibrasi\KalibrasiController;
 use App\Http\Controllers\ScoringMesin\DashboardController;
 use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
@@ -30,7 +31,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/schedule', [KalibrasiController::class, 'viewSchedule'])->name('kalibrasi.schedule');
         Route::get('/certificate', [KalibrasiController::class, 'viewCertificate'])->name('kalibrasi.certificate');
-        Route::post('/certificate/req-approval/{id}', [KalibrasiController::class, 'reqApprovalStore'])->name('kalibrasi.certificate.req-approval');
+        Route::post('/certificate/req-approval/{id}', [KalibrasiCertificateController::class, 'getCertificateData'])->name('kalibrasi.certificate.req-approval');
+        Route::get('/certificate/approval/{id}', [KalibrasiCertificateController::class, 'showApprovalPage'])->name('kalibrasi.certificate.approval.detail');
+        Route::get('/certificate/approvals/all', [KalibrasiCertificateController::class, 'showApprovalPage'])->name('kalibrasi.certificate.approvals');
 
         // Pressure Routes
         Route::prefix('pressure')->group(function () {

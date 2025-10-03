@@ -38,54 +38,8 @@
             @if (in_array($jabatan, ['dept_head', 'foreman', 'operator', 'supervisor']))
                 <ul class="navbar-nav" id="navbar-nav">
                     @if ($jabatan !== 'operator')
-                        {{-- <li class="menu-title"><span data-key="t-menu">Dashboard</span></li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link menu-link">
-                                <i class="mdi mdi-chart-box"></i> <span data-key="p2h-dashboard">P2H
-                                    Dashboard</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link menu-link">
-                                <i class="mdi mdi-account-hard-hat"></i> <span data-key="tkbm-dashboard">TKBM
-                                    Dashboard</span>
-                            </a>
-                        </li> --}}
                     @endif
                     <li class="menu-title"><span data-key="t-menu">Engineering Menu</span></li>
-                    {{-- <li class="nav-item">
-                        <a class="nav-link menu-link  {{ request()->routeIs('tkbm.*') ? '' : 'collapsed' }}"
-                            href="#sideBarTkbm" data-bs-toggle="collapse" role="button"
-                            aria-expanded="{{ request()->routeIs('tkbm.*') ? 'true' : 'false' }}"
-                            aria-controls="sideBarTkbm">
-                            <i class="mdi mdi-human-dolly"></i> <span data-key="t-tkbm">TKBM</span>
-                        </a>
-                        <div class="collapse menu-dropdown {{ request()->routeIs('tkbm.*') ? 'show' : '' }}"
-                            id="sideBarTkbm">
-                            <ul class="nav nav-sm flex-column">
-                                <li class="nav-item">
-                                    <a href="{{ route('tkbm.stock') }}"
-                                        class="nav-link {{ request()->routeIs('tkbm.stock') ? 'active' : '' }}"
-                                        data-key="t-input-tkbm">
-                                        Form BPS </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('tkbm.data') }}"
-                                        class="nav-link {{ request()->routeIs('tkbm.data') ? 'active' : '' }}"
-                                        data-key="t-tkbm">
-                                        Data TKBM </a>
-                                </li>
-                                @if (Session::get('jabatan') !== 'operator')
-                                    <li class="nav-item">
-                                        <a href="{{ route('tkbm.master.fee') }}"
-                                            class="nav-link {{ request()->routeIs('tkbm.master.fee') ? 'active' : '' }}"
-                                            data-key="t-input-tkbm">
-                                            Manage Fees & Harga </a>
-                                    </li>
-                                @endif
-                            </ul>
-                        </div>
-                    </li> --}}
                     <li class="nav-item">
                         <a class="nav-link menu-link {{ request()->routeIs('kalibrasi.*') ? '' : 'collapsed' }}"
                             href="#sideBarPressure" data-bs-toggle="collapse" role="button"
@@ -132,6 +86,12 @@
                                         class="nav-link {{ request()->routeIs('kalibrasi.certificate') ? 'active' : '' }}"
                                         data-key="t-tkbm">
                                         <i class="mdi mdi-certificate"></i>Cetificate</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('kalibrasi.certificate.approvals') }}"
+                                        class="nav-link {{ request()->routeIs(['kalibrasi.certificate.approvals', 'kalibrasi.certificate.approval.detail']) ? 'active' : '' }}"
+                                        data-key="t-tkbm">
+                                        <i class="mdi mdi-check-decagram"></i>Approval</a>
                                 </li>
                             </ul>
                         </div>

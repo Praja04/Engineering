@@ -29,7 +29,7 @@ class KalibrasiSertifikatModel extends Model
     }
 
     // relasi ke user yang request sertifikat
-    public function requester()
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
