@@ -45,11 +45,23 @@ class Machine extends Model
         return $query->where('status', 'broken');
     }
 
-    // Relationship with ProcessParameter
+    // Relationship with MachineProcess
+    public function machineProcesses()
+    {
+        return $this->hasMany(MachineProcess::class);
+    }
+
+    // Relationship with ProcessParameter through MachineProcess
     public function processParameters()
     {
-        return $this->hasMany(ProcessParameter::class);
+        return $this->belongsToMany(
+            ProcessParameter::class,
+            'machine_processes',
+            'machine_id',
+            'process_parameter_id'
+        )->withPivot('catatan')->withTimestamps();
     }
+  
 
     // Accessor for status badge class
     public function getStatusBadgeClassAttribute()

@@ -11,7 +11,7 @@ class SectionController extends Controller
     public function index(Request $request)
     {
         if ($request->wantsJson() || $request->ajax()) {
-            return response()->json(Section::with('processParameter.machine')->get());
+            return response()->json(Section::with('processParameter')->get());
         }
 
         // For web view, return the view

@@ -33,11 +33,11 @@ return new class extends Migration
             $table->float('ketidak_pastian_turun', 8, 3)->nullable();
 
             // U per arah
-            $table->float('u_naik', 8, 3)->nullable();
-            $table->float('u_turun', 8, 3)->nullable();
-            $table->float('u_naik_kuadrat', 8, 3)->nullable();
-            $table->float('u_turun_kuadrat', 8, 3)->nullable();
-            $table->float('u_gabungan', 8, 3)->nullable();
+            $table->decimal('u_naik', 10, 9)->nullable();
+            $table->decimal('u_turun', 10, 9)->nullable();
+            $table->decimal('u_naik_kuadrat', 10, 9)->nullable();
+            $table->decimal('u_turun_kuadrat', 10, 9)->nullable();
+            $table->decimal('u_gabungan', 10, 9)->nullable();
 
             $table->timestamps();
         });

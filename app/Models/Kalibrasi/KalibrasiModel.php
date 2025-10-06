@@ -36,13 +36,18 @@ class KalibrasiModel extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function pressureDetails()
+    public function pressure()
     {
         return $this->hasMany(KalibrasiPressureModel::class, 'kalibrasi_id');
     }
 
-    public function pressureSummary()
+    public function pressureGabungan()
     {
-        return $this->hasOne(KalibrasiPressureGabunganModel::class, 'kalibrasi_id');
+        return $this->hasMany(KalibrasiPressureGabunganModel::class, 'kalibrasi_id');
+    }
+
+    public function certificate()
+    {
+        return $this->hasOne(KalibrasiSertifikatModel::class, 'kalibrasi_id');
     }
 }

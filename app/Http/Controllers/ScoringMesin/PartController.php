@@ -12,7 +12,7 @@ class PartController extends Controller
     {
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json(
-                Part::with('section.processParameter.machine')->get()
+                Part::with('section.processParameter')->get()
             );
         }
 
@@ -24,6 +24,8 @@ class PartController extends Controller
         $validated = $request->validate([
             'section_id' => 'required|exists:sections,id',
             'name' => 'required',
+            'critical' => 'required|in:Y,N',
+            'standar' => 'nullable|string',
         ]);
 
         $part = Part::create($validated);
@@ -33,7 +35,7 @@ class PartController extends Controller
     public function show(Part $part)
     {
         return response()->json(
-            $part->load('section.processParameter.machine')
+            $part->load('section.processParameter')
         );
     }
 
@@ -42,6 +44,8 @@ class PartController extends Controller
         $validated = $request->validate([
             'section_id' => 'required|exists:sections,id',
             'name' => 'required',
+            'critical' => 'required|in:Y,N',
+            'standar' => 'nullable|string',
         ]);
 
         $part->update($validated);

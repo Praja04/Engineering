@@ -45,7 +45,7 @@
 
         <!-- Statistics Cards -->
         <div class="row mb-4">
-            <div class="col-xl-4 col-md-6">
+            <div class="col-xl-6 col-md-6">
                 <div class="card card-animate card-hover" data-aos="fade-up" data-aos-delay="100">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
@@ -65,27 +65,9 @@
                 </div>
             </div>
 
-            <div class="col-xl-4 col-md-6">
-                <div class="card card-animate card-hover" data-aos="fade-up" data-aos-delay="200">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <p class="text-uppercase fw-semibold text-muted fs-12 mb-1">Total Mesin</p>
-                                <h4 class="mb-0 text-info" id="totalMachines">0</h4>
-                            </div>
-                            <div class="flex-shrink-0">
-                                <div class="avatar-sm">
-                                    <span class="avatar-title bg-soft-info rounded fs-3">
-                                        <i class="bx bx-cog text-info"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
 
-            <div class="col-xl-4 col-md-6">
+            <div class="col-xl-6 col-md-6">
                 <div class="card card-animate card-hover" data-aos="fade-up" data-aos-delay="300">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
@@ -132,12 +114,7 @@
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <select class="form-select" id="machineFilter">
-                                    <option value="">Semua Mesin</option>
-                                    <!-- Options will be loaded dynamically -->
-                                </select>
-                            </div>
+                           
                         </div>
 
                         <!-- Table -->
@@ -147,8 +124,6 @@
                                     <tr>
                                         <th scope="col">No</th>
                                         <th scope="col">Nama Parameter</th>
-                                        <th scope="col">Mesin</th>
-                                        <th scope="col">Kode Mesin</th>
                                         <th scope="col">Tanggal Dibuat</th>
                                         <th scope="col">Aksi</th>
                                     </tr>
@@ -198,13 +173,6 @@
             <form id="addParameterForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="parameterMachine" class="form-label">Mesin <span class="text-danger">*</span></label>
-                        <select class="form-select" id="parameterMachine" name="machine_id" required>
-                            <option value="">Pilih Mesin</option>
-                        </select>
-                        <div class="invalid-feedback"></div>
-                    </div>
-                    <div class="mb-3">
                         <label for="parameterName" class="form-label">Nama Parameter <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="parameterName" name="name" placeholder="Contoh: Suhu" required>
                         <div class="invalid-feedback"></div>
@@ -234,13 +202,7 @@
             <form id="editParameterForm">
                 <input type="hidden" id="editParameterId">
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="editParameterMachine" class="form-label">Mesin <span class="text-danger">*</span></label>
-                        <select class="form-select" id="editParameterMachine" name="machine_id" required>
-                            <option value="">Pilih Mesin</option>
-                        </select>
-                        <div class="invalid-feedback"></div>
-                    </div>
+                   
                     <div class="mb-3">
                         <label for="editParameterName" class="form-label">Nama Parameter <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="editParameterName" name="name" required>
@@ -280,13 +242,13 @@
 
 <script>
     let parametersData = [];
-    let machinesData = [];
+    
     let filteredData = [];
     let currentPage = 1;
     let itemsPerPage = 10;
 
     $(document).ready(function() {
-        loadMachines();
+       
         loadParameters();
 
         $('#searchParameter').on('keyup', filterAndRenderTable);
@@ -295,32 +257,6 @@
         setupFormHandlers();
     });
 
-    function loadMachines() {
-        $.ajax({
-            url: "/scoring-mesin/machines",
-            type: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            },
-            success: function(response) {
-                machinesData = response;
-                populateMachineSelects();
-            }
-        });
-    }
-
-    function populateMachineSelects() {
-        let options = '<option value="">Pilih Mesin</option>';
-        let filterOptions = '<option value="">Semua Mesin</option>';
-
-        machinesData.forEach(machine => {
-            options += `<option value="${machine.id}">${machine.name} (${machine.code})</option>`;
-            filterOptions += `<option value="${machine.id}">${machine.name} (${machine.code})</option>`;
-        });
-
-        $('#parameterMachine, #editParameterMachine').html(options);
-        $('#machineFilter').html(filterOptions);
-    }
 
     function loadParameters() {
         $.ajax({
@@ -343,14 +279,14 @@
 
     function filterAndRenderTable() {
         const searchTerm = $('#searchParameter').val().toLowerCase();
-        const machineFilter = $('#machineFilter').val();
+        
 
         filteredData = parametersData.filter(param => {
             const matchesSearch = param.name.toLowerCase().includes(searchTerm) ||
                 (param.machine && param.machine.name.toLowerCase().includes(searchTerm));
-            const matchesMachine = !machineFilter || param.machine_id == machineFilter;
+            
 
-            return matchesSearch && matchesMachine;
+            return matchesSearch ;
         });
 
         currentPage = 1;
@@ -396,10 +332,6 @@
                                 <h6 class="mb-0">${param.name}</h6>
                             </div>
                         </div>
-                    </td>
-                    <td>${param.machine ? param.machine.name : '-'}</td>
-                    <td>
-                        <span class="badge bg-soft-info text-info">${param.machine ? param.machine.code : '-'}</span>
                     </td>
                     <td>${formatDate(param.created_at)}</td>
                     <td>

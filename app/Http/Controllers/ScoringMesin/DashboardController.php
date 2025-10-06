@@ -10,7 +10,7 @@ class DashboardController extends Controller
     //return view dashboard
     public function index()
     {
-        return view('scoring_mesin.dashboard');
+        return view('dashboard.mesin_retail');
     }
 
     // public function master_mesin()

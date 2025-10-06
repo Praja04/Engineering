@@ -25,6 +25,7 @@ class AuthController extends Controller
             default      => route('home'),
         };
     }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -65,10 +66,12 @@ class AuthController extends Controller
             //     'status'     => $user->status,
             // ]);
 
+            $intendedUrl = session()->get('url.intended', $this->redirectByJabatan($user->jabatan));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Login berhasil.',
-                'redirect' => $this->redirectByJabatan($user->jabatan)
+                'redirect' => $intendedUrl
             ]);
         }
     }

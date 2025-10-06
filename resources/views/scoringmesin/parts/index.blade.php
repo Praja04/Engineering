@@ -126,23 +126,18 @@
                     <div class="card-body">
                         <!-- Filter dan Search -->
                         <div class="row mb-3">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="search-box">
                                     <input type="text" id="searchPart" class="form-control search" placeholder="Cari part...">
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <select class="form-select" id="machineFilter">
-                                    <option value="">Semua Mesin</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <select class="form-select" id="processFilter">
                                     <option value="">Semua Proses</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <select class="form-select" id="sectionFilter">
                                     <option value="">Semua Section</option>
                                 </select>
@@ -157,9 +152,10 @@
                                     <tr>
                                         <th scope="col">No</th>
                                         <th scope="col">Nama Part</th>
+                                        <th scope="col">Standar</th>
+                                        <th scope="col">Critical</th>
                                         <th scope="col">Section</th>
                                         <th scope="col">Parameter</th>
-                                        <th scope="col">Mesin</th>
                                         <th scope="col">Tanggal Dibuat</th>
                                         <th scope="col">Aksi</th>
                                     </tr>
@@ -197,6 +193,7 @@
 </div>
 
 <!-- Modal Tambah Part -->
+<!-- Modal Tambah Part -->
 <div class="modal fade" id="addPartModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -215,12 +212,30 @@
                         </select>
                         <div class="invalid-feedback"></div>
                     </div>
+
                     <div class="mb-3">
                         <label for="partName" class="form-label">Nama Part <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="partName" name="name" placeholder="Contoh: Part A1" required>
                         <div class="invalid-feedback"></div>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="standar" class="form-label">Standar <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="standar" name="standar" placeholder="Masukkan standar part" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="critical" class="form-label">Critical <span class="text-danger">*</span></label>
+                        <select class="form-select" id="critical" name="critical" required>
+                            <option value="">Pilih</option>
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                        </select>
+                        <div class="invalid-feedback"></div>
+                    </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary">
@@ -244,6 +259,7 @@
             </div>
             <form id="editPartForm">
                 <input type="hidden" id="editPartId">
+
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="editPartSection" class="form-label">Section <span class="text-danger">*</span></label>
@@ -252,12 +268,30 @@
                         </select>
                         <div class="invalid-feedback"></div>
                     </div>
+
                     <div class="mb-3">
                         <label for="editPartName" class="form-label">Nama Part <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="editPartName" name="name" required>
                         <div class="invalid-feedback"></div>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="editStandar" class="form-label">Standar <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editStandar" name="standar" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editCritical" class="form-label">Critical <span class="text-danger">*</span></label>
+                        <select class="form-select" id="editCritical" name="critical" required>
+                            <option value="">Pilih</option>
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                        </select>
+                        <div class="invalid-feedback"></div>
+                    </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-success">
@@ -268,6 +302,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- Modal View Part -->
 <div class="modal fade" id="viewPartModal" tabindex="-1" aria-hidden="true">
@@ -294,49 +329,69 @@
     let sectionsData = [];
     let filteredData = [];
     let currentPage = 1;
-    let itemsPerPage = 10;
+    const itemsPerPage = 10;
 
     $(document).ready(function() {
         loadSections();
         loadParts();
 
         $('#searchPart').on('keyup', filterAndRenderTable);
-        $('#sectionFilter').on('change', filterAndRenderTable);
+        $('#sectionFilter, #processFilter').on('change', filterAndRenderTable);
 
         setupFormHandlers();
     });
 
+    // ==========================
+    // LOAD DATA
+    // ==========================
     function loadSections() {
         $.ajax({
             url: "/scoring-mesin/sections",
-            type: 'GET',
+            type: "GET",
             headers: {
-                'Accept': 'application/json'
+                "Accept": "application/json"
             },
             success: function(response) {
                 sectionsData = response;
                 populateSectionSelects();
-                populateMachineAndProcessFilters();
+                populateProcessFilters();
+            },
+            error: function() {
+                console.error("Gagal memuat sections");
             }
         });
     }
 
+    function loadParts() {
+        $.ajax({
+            url: "/scoring-mesin/parts",
+            type: "GET",
+            headers: {
+                "Accept": "application/json"
+            },
+            success: function(response) {
+                partsData = response;
+                filteredData = [...partsData];
+                renderTable();
+                updateStatistics();
+            },
+            error: function() {
+                showError();
+            }
+        });
+    }
+
+    // ==========================
+    // DROPDOWN & FILTER
+    // ==========================
     function populateSectionSelects() {
         let options = '<option value="">Pilih Section</option>';
         let filterOptions = '<option value="">Semua Section</option>';
 
-        console.log(sectionsData);
-
         sectionsData.forEach(section => {
-            // pastikan relasi tersedia agar tidak error
-            const paramName = section.process_parameter ? section.process_parameter.name : '';
-            const machineName = section.process_parameter && section.process_parameter.machine ? section.process_parameter.machine.name : '';
-
-            // gabungkan jadi satu teks (skip yang kosong)
+            const paramName = section.process_parameter ? section.process_parameter.name : "";
             let displayText = section.name;
             if (paramName) displayText += ` - ${paramName}`;
-            if (machineName) displayText += ` - ${machineName}`;
-
             options += `<option value="${section.id}">${displayText}</option>`;
             filterOptions += `<option value="${section.id}">${displayText}</option>`;
         });
@@ -345,89 +400,64 @@
         $('#sectionFilter').html(filterOptions);
     }
 
-    function populateMachineAndProcessFilters() {
-        const machines = [];
-        const processes = [];
+    function populateProcessFilters() {
+        const uniqueProcesses = [];
 
         sectionsData.forEach(section => {
-            if (section.process_parameter) {
-                processes.push({
+            if (section.process_parameter && !uniqueProcesses.find(p => p.id === section.process_parameter.id)) {
+                uniqueProcesses.push({
                     id: section.process_parameter.id,
                     name: section.process_parameter.name
                 });
-                if (section.process_parameter.machine) {
-                    machines.push({
-                        id: section.process_parameter.machine.id,
-                        name: section.process_parameter.machine.name
-                    });
-                }
             }
         });
-
-        // unikkan
-        const uniqueMachines = machines.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
-        const uniqueProcesses = processes.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
-
-        let machineOptions = '<option value="">Semua Mesin</option>';
-        uniqueMachines.forEach(m => machineOptions += `<option value="${m.id}">${m.name}</option>`);
 
         let processOptions = '<option value="">Semua Proses</option>';
         uniqueProcesses.forEach(p => processOptions += `<option value="${p.id}">${p.name}</option>`);
-
-        $('#machineFilter').html(machineOptions);
         $('#processFilter').html(processOptions);
     }
 
-
-    function loadParts() {
-        $.ajax({
-            url: "/scoring-mesin/parts",
-            type: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            },
-            success: function(response) {
-                partsData = response;
-                filteredData = [...partsData];
-                renderTable();
-                updateStatistics();
-            },
-            error: function(xhr) {
-                showError();
-            }
-        });
-    }
-
+    // ==========================
+    // FILTER + RENDER TABLE
+    // ==========================
     function filterAndRenderTable() {
         const searchTerm = $('#searchPart').val().toLowerCase();
         const sectionFilter = $('#sectionFilter').val();
+        const processFilter = $('#processFilter').val();
 
         filteredData = partsData.filter(part => {
-            const matchesSearch = part.name.toLowerCase().includes(searchTerm) ||
+            const matchesSearch =
+                part.name.toLowerCase().includes(searchTerm) ||
                 (part.section && part.section.name.toLowerCase().includes(searchTerm));
-            const matchesSection = !sectionFilter || part.section_id == sectionFilter;
 
-            return matchesSearch && matchesSection;
+            const matchesSection = !sectionFilter || part.section_id == sectionFilter;
+            const matchesProcess = !processFilter ||
+                (part.section && part.section.process_parameter && part.section.process_parameter.id == processFilter);
+
+            return matchesSearch && matchesSection && matchesProcess;
         });
 
         currentPage = 1;
         renderTable();
     }
 
+    // ==========================
+    // TABLE RENDER
+    // ==========================
     function renderTable() {
         const tbody = $('#partTableBody');
 
         if (filteredData.length === 0) {
             tbody.html(`
-            <tr>
-                <td colspan="7" class="text-center py-4"> <!-- Ubah dari 6 ke 7 -->
-                    <div class="text-muted">
-                        <i class="ri-database-2-line fs-24 mb-2 d-block"></i>
-                        Belum ada data part
-                    </div>
-                </td>
-            </tr>
-        `);
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="ri-database-2-line fs-24 mb-2 d-block"></i>
+                            Belum ada data part
+                        </div>
+                    </td>
+                </tr>
+            `);
             $('#paginationContainer').hide();
             return;
         }
@@ -436,70 +466,55 @@
         const endIndex = startIndex + itemsPerPage;
         const paginatedData = filteredData.slice(startIndex, endIndex);
 
-        let html = '';
+        let html = "";
         paginatedData.forEach((part, index) => {
             const globalIndex = startIndex + index + 1;
-            const sectionName = part.section ? part.section.name : '-';
-            const parameterName = part.section && part.section.process_parameter ?
-                part.section.process_parameter.name : '-';
-            const machineName = part.section && part.section.process_parameter &&
-                part.section.process_parameter.machine ?
-                part.section.process_parameter.machine.name : '-'; // Tambahkan ini
+            const sectionName = part.section ? part.section.name : "-";
+            const parameterName = part.section && part.section.process_parameter ? part.section.process_parameter.name : "-";
+            // Critical: Enum Y/N
+            const critical = part.critical === 'Y' ?
+                `<span class="badge bg-danger">Critical</span>` :
+                `<span class="badge bg-warning text-dark">Tidak Critical</span>`;
+
+            // Standar: text atau strip
+            const standar = part.standar ? part.standar : '-';
 
             html += `
-            <tr>
-                <td>${globalIndex}</td>
-                <td>
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-xs me-3">
-                            <span class="avatar-title rounded-circle bg-soft-primary text-primary fs-16">
-                                <i class="bx bx-cube"></i>
-                            </span>
+                <tr>
+                    <td>${globalIndex}</td>
+                    <td>${part.name}</td>
+                    <td>${standar}</td>
+                    <td>${critical}</td>
+                    <td>${sectionName}</td>
+                    <td>${parameterName}</td>
+                    <td>${formatDate(part.created_at)}</td>
+                    <td>
+                        <div class="hstack gap-2">
+                            <button class="btn btn-soft-primary btn-sm btn-action" onclick="viewPart(${part.id})" data-bs-toggle="modal" data-bs-target="#viewPartModal" title="Lihat Detail">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button class="btn btn-soft-success btn-sm btn-action" onclick="editPart(${part.id})" data-bs-toggle="modal" data-bs-target="#editPartModal" title="Edit">
+                                <i class="ri-pencil-line"></i>
+                            </button>
+                            <button class="btn btn-soft-danger btn-sm btn-action" onclick="deletePart(${part.id})" title="Hapus">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
                         </div>
-                        <div>
-                            <h6 class="mb-0">${part.name}</h6>
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <span class="badge bg-soft-info text-info">${sectionName}</span>
-                </td>
-                <td>${parameterName}</td>
-                <td>${machineName}</td> <!-- Tambahkan ini -->
-                <td>${formatDate(part.created_at)}</td>
-                <td>
-                    <div class="hstack gap-2">
-                        <button type="button" class="btn btn-soft-primary btn-sm btn-action" 
-                                onclick="viewPart(${part.id})" 
-                                data-bs-toggle="modal" data-bs-target="#viewPartModal"
-                                title="Lihat Detail">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <button type="button" class="btn btn-soft-success btn-sm btn-action" 
-                                onclick="editPart(${part.id})" 
-                                data-bs-toggle="modal" data-bs-target="#editPartModal"
-                                title="Edit">
-                            <i class="ri-pencil-line"></i>
-                        </button>
-                        <button type="button" class="btn btn-soft-danger btn-sm btn-action" 
-                                onclick="deletePart(${part.id})" 
-                                title="Hapus">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
+                    </td>
+                </tr>
+            `;
         });
 
         tbody.html(html);
         renderPagination();
     }
 
+    // ==========================
+    // PAGINATION
+    // ==========================
     function renderPagination() {
         const totalItems = filteredData.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
-
         if (totalPages <= 1) {
             $('#paginationContainer').hide();
             return;
@@ -507,15 +522,13 @@
 
         const startItem = (currentPage - 1) * itemsPerPage + 1;
         const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-
         $('#paginationInfo').html(`Menampilkan ${startItem} sampai ${endItem} dari ${totalItems} data`);
 
-        let paginationHtml = '<ul class="pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">';
-
-        paginationHtml += `
-            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                <a href="#" class="page-link" onclick="changePage(${currentPage - 1}); return false;">Previous</a>
-            </li>
+        let paginationHtml = `
+            <ul class="pagination pagination-separated justify-content-center justify-content-sm-end mb-sm-0">
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="changePage(${currentPage - 1}); return false;">Previous</a>
+                </li>
         `;
 
         for (let i = 1; i <= totalPages; i++) {
@@ -526,17 +539,17 @@
                     </li>
                 `;
             } else if (i === currentPage - 3 || i === currentPage + 3) {
-                paginationHtml += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
             }
         }
 
         paginationHtml += `
-            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                <a href="#" class="page-link" onclick="changePage(${currentPage + 1}); return false;">Next</a>
-            </li>
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a href="#" class="page-link" onclick="changePage(${currentPage + 1}); return false;">Next</a>
+                </li>
+            </ul>
         `;
 
-        paginationHtml += '</ul>';
         $('#paginationLinks').html(paginationHtml);
         $('#paginationContainer').show();
     }
@@ -549,84 +562,47 @@
         }
     }
 
-    function updateStatistics() {
-        const total = partsData.length;
-        const uniqueSections = [...new Set(partsData.map(p => p.section_id))].length;
-        const latest = partsData.length > 0 ? partsData[partsData.length - 1].name : '-';
-
-        $('#totalParts').text(total);
-        $('#totalSections').text(uniqueSections);
-        $('#latestPart').text(latest);
-    }
-
-    function formatDate(dateString) {
-        if (!dateString) return '-';
-        if (typeof moment !== 'undefined') {
-            return moment(dateString).format('DD/MM/YYYY HH:mm');
-        }
-        const date = new Date(dateString);
-        return date.toLocaleString('id-ID');
-    }
-
-    function showError() {
-        $('#partTableBody').html(`
-            <tr>
-                <td colspan="6" class="text-center py-4 text-danger">
-                    <i class="ri-error-warning-line fs-24 mb-2 d-block"></i>
-                    Gagal memuat data part
-                    <br>
-                    <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadParts()">
-                        <i class="ri-refresh-line me-1"></i>Coba Lagi
-                    </button>
-                </td>
-            </tr>
-        `);
-    }
-
+    // ==========================
+    // FORM HANDLER
+    // ==========================
     function setupFormHandlers() {
         $('#addPartForm').on('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
 
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Menyimpan...',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-            }
+            Swal.fire({
+                title: "Menyimpan...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
 
             $.ajax({
                 url: "/scoring-mesin/parts",
-                type: 'POST',
+                type: "POST",
                 data: data,
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
                 },
-                success: function(response) {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: 'Part berhasil ditambahkan',
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                    }
+                success: function() {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Berhasil!",
+                        text: "Part berhasil ditambahkan",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
                     $('#addPartModal').modal('hide');
                     $('#addPartForm')[0].reset();
                     loadParts();
                 },
                 error: function(xhr) {
-                    const errorMsg = xhr.status === 422 && xhr.responseJSON?.errors ? Object.values(xhr.responseJSON.errors)[0][0] : 'Terjadi kesalahan';
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: errorMsg
-                        });
-                    }
+                    const msg = xhr.status === 422 && xhr.responseJSON?.errors ? Object.values(xhr.responseJSON.errors)[0][0] : "Terjadi kesalahan";
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error!",
+                        text: msg
+                    });
                 }
             });
         });
@@ -637,87 +613,58 @@
             const data = Object.fromEntries(formData);
             const id = $('#editPartId').val();
 
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Menyimpan...',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-            }
+            Swal.fire({
+                title: "Menyimpan...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
 
             $.ajax({
                 url: `/scoring-mesin/parts/${id}`,
-                type: 'PUT',
+                type: "PUT",
                 data: data,
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
                 },
-                success: function(response) {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: 'Part berhasil diupdate',
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                    }
+                success: function() {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Berhasil!",
+                        text: "Part berhasil diupdate",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
                     $('#editPartModal').modal('hide');
                     loadParts();
                 },
                 error: function(xhr) {
-                    const errorMsg = xhr.status === 422 && xhr.responseJSON?.errors ? Object.values(xhr.responseJSON.errors)[0][0] : 'Terjadi kesalahan';
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: errorMsg
-                        });
-                    }
+                    const msg = xhr.status === 422 && xhr.responseJSON?.errors ? Object.values(xhr.responseJSON.errors)[0][0] : "Terjadi kesalahan";
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error!",
+                        text: msg
+                    });
                 }
             });
         });
     }
 
+    // ==========================
+    // DETAIL / EDIT / DELETE
+    // ==========================
     function viewPart(id) {
-        $('#partDetailContent').html(`
-            <div class="text-center py-4">
-                <div class="spinner-border" role="status"></div>
-                <p class="mt-2">Memuat detail part...</p>
-            </div>
-        `);
-
-        $.ajax({
-            url: `/scoring-mesin/parts/${id}`,
-            type: 'GET',
-            success: function(response) {
-                const sectionName = response.section ? response.section.name : '-';
-                const parameterName = response.section && response.section.process_parameter ?
-                    response.section.process_parameter.name : '-';
-
-                $('#partDetailContent').html(`
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Nama Part:</label>
-                        <p class="mb-0">${response.name}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Section:</label>
-                        <p class="mb-0">${sectionName}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Parameter Proses:</label>
-                        <p class="mb-0">${parameterName}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Tanggal Dibuat:</label>
-                        <p class="mb-0">${formatDate(response.created_at)}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Terakhir Update:</label>
-                        <p class="mb-0">${formatDate(response.updated_at)}</p>
-                    </div>
-                `);
-            }
+        $('#partDetailContent').html(`<div class="text-center py-4"><div class="spinner-border" role="status"></div><p class="mt-2">Memuat detail part...</p></div>`);
+        $.get(`/scoring-mesin/parts/${id}`, function(response) {
+            const sectionName = response.section ? response.section.name : "-";
+            const parameterName = response.section && response.section.process_parameter ? response.section.process_parameter.name : "-";
+            $('#partDetailContent').html(`
+                <div class="mb-3"><label class="fw-semibold">Nama Part:</label><p>${response.name}</p></div>
+                <div class="mb-3"><label class="fw-semibold">Section:</label><p>${sectionName}</p></div>
+                <div class="mb-3"><label class="fw-semibold">Parameter Proses:</label><p>${parameterName}</p></div>
+                <div class="mb-3"><label class="fw-semibold">Standar:</label><p>${response.standar ? 'Ya' : 'Tidak'}</p></div>
+                <div class="mb-3"><label class="fw-semibold">Critical:</label><p>${response.critical ? 'Ya' : 'Tidak'}</p></div>
+                <div class="mb-3"><label class="fw-semibold">Dibuat:</label><p>${formatDate(response.created_at)}</p></div>
+            `);
         });
     }
 
@@ -727,56 +674,63 @@
             $('#editPartId').val(part.id);
             $('#editPartName').val(part.name);
             $('#editPartSection').val(part.section_id);
+            $('#editStandar').val(part.standar);
+            $('#editCritical').val(part.critical);
         }
     }
 
     function deletePart(id) {
-        const confirmDelete = () => {
-            if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: "Apakah Anda yakin?",
+            text: "Data part akan dihapus permanen!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Ya, hapus!",
+            cancelButtonText: "Batal"
+        }).then((result) => {
+            if (result.isConfirmed) {
                 Swal.fire({
-                    title: 'Menghapus...',
+                    title: "Menghapus...",
                     allowOutsideClick: false,
                     didOpen: () => Swal.showLoading()
                 });
-            }
-
-            $.ajax({
-                url: `/scoring-mesin/parts/${id}`,
-                type: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function() {
-                    if (typeof Swal !== 'undefined') {
+                $.ajax({
+                    url: `/scoring-mesin/parts/${id}`,
+                    type: "DELETE",
+                    headers: {
+                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
+                    },
+                    success: function() {
                         Swal.fire({
-                            icon: 'success',
-                            title: 'Terhapus!',
-                            text: 'Part berhasil dihapus',
+                            icon: "success",
+                            title: "Terhapus!",
+                            text: "Part berhasil dihapus",
                             showConfirmButton: false,
                             timer: 1500
                         });
+                        loadParts();
                     }
-                    loadParts();
-                }
-            });
-        };
+                });
+            }
+        });
+    }
 
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: 'Apakah Anda yakin?',
-                text: "Data part akan dihapus permanen!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) confirmDelete();
-            });
-        } else {
-            if (confirm('Apakah Anda yakin ingin menghapus part ini?')) confirmDelete();
-        }
+    function showError() {
+        $('#partTableBody').html(`<tr><td colspan="8" class="text-center text-danger py-4"><i class="ri-error-warning-line fs-24"></i><br>Gagal memuat data part</td></tr>`);
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return "-";
+        return moment ? moment(dateString).format("DD/MM/YYYY HH:mm") : new Date(dateString).toLocaleString("id-ID");
+    }
+
+    function updateStatistics() {
+        $('#totalParts').text(partsData.length);
+        $('#totalSections').text([...new Set(partsData.map(p => p.section_id))].length);
+        $('#latestPart').text(partsData.length > 0 ? partsData[partsData.length - 1].name : "-");
     }
 </script>
+
 @endsection

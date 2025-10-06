@@ -9,7 +9,7 @@ class Part extends Model
 {
     /** @use HasFactory<\Database\Factories\ScoringMesin\PartFactory> */
     use HasFactory;
-    protected $fillable = ['section_id', 'name'];
+    protected $fillable = ['section_id', 'name','critical','standar'];
 
     public function section()
     {

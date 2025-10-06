@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('section_id')->constrained()->onDelete('cascade');
             $table->string('name');
+            $table->enum('critical', ['Y','N'])->default('N');
+            $table->text('standar')->nullable();
             $table->timestamps();
         });
     }

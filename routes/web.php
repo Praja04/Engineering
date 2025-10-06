@@ -3,18 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KalibrasController;
+use App\Http\Controllers\Kalibrasi\KalibrasiCertificateController;
 use App\Http\Controllers\Kalibrasi\KalibrasiController;
-use App\Http\Controllers\ScoringMesin\DashboardController;
+
 use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
 
-use App\Http\Controllers\ScoringMesin\MachineController;
-use App\Http\Controllers\ScoringMesin\ProcessParameterController;
-use App\Http\Controllers\ScoringMesin\SectionController;
-use App\Http\Controllers\ScoringMesin\PartController;
-use App\Http\Controllers\ScoringMesin\StandardStateController;
+
 
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
-// Route::get('/mesin', [DashboardController::class, 'master_mesin']);
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -26,7 +22,7 @@ Route::middleware('auth')->group(function () {
     // Kalibrasi Routes
     Route::prefix('kalibrasi')->group(function () {
 
-        // Maste Alat Kalibrasi
+        // Master Alat Kalibrasi
         Route::get('/master/alat', [KalibrasiController::class, 'viewMasterAlat'])->name('master.alat');
         Route::post('/store/master/alat', [KalibrasiController::class, 'storeAlatKalibrasi'])->name('store.master.alat');
         Route::put('/update/master/alat/{id}', [KalibrasiController::class, 'updateAlatKalibrasi'])->name('update.master.alat');
@@ -34,30 +30,23 @@ Route::middleware('auth')->group(function () {
         Route::get('/master/download/template', [KalibrasiController::class, 'downloadTemplateAlatKalibrasi'])->name('master.download.template');
         Route::post('/master/import', [KalibrasiController::class, 'importAlatKalibrasi'])->name('master.import');
 
-        // pressure routes
+        Route::get('/schedule', [KalibrasiController::class, 'viewSchedule'])->name('kalibrasi.schedule');
+        Route::get('/certificate', [KalibrasiController::class, 'viewCertificate'])->name('kalibrasi.certificate');
+        Route::post('/certificate/req-approval/{id}', [KalibrasiCertificateController::class, 'getCertificateData'])->name('kalibrasi.certificate.req-approval');
+        Route::get('/certificate/approval/{id}', [KalibrasiCertificateController::class, 'showApprovalPage'])->name('kalibrasi.certificate.approval.detail');
+        Route::get('/certificate/approvals/all', [KalibrasiCertificateController::class, 'showApprovalPage'])->name('kalibrasi.certificate.approvals');
+
+        // Pressure Routes
         Route::prefix('pressure')->group(function () {
             Route::get('/index', [KalibrasiPressureController::class, 'index'])->name('kalibrasi.pressure.index');
+            Route::post('/store', [KalibrasiPressureController::class, 'store'])->name('kalibrasi.pressure.store');
+            Route::get('/data', [KalibrasiPressureController::class, 'viewData'])->name('kalibrasi.pressure.data');
+            Route::delete('/delete/{id}', [KalibrasiPressureController::class, 'destroy'])->name('kalibrasi.pressure.delete');
         });
     });
 });
 
-
-
-//////////    Scoring Mesin Routes   ///////////
-Route::prefix('scoring-mesin')->name('scoring-mesin.')->group(function () {
-    // Machine routes
-    Route::get('machines/statistics', [MachineController::class, 'statistics'])->name('machines.statistics');
-    Route::resource('machines', MachineController::class);
-
-    // Other resources
-    Route::resource('process-parameters', ProcessParameterController::class);
-    Route::resource('sections', SectionController::class);
-    Route::resource('parts', PartController::class);
-    Route::resource('standard-states', StandardStateController::class);
-});
-
-//////////    End Scoring Mesin Routes   ///////////
-
-
+////////// Scoring Mesin Routes ///////////
+@include 'scoring/scoring-routes.php';
 
 //////////    End View Routes   ///////////

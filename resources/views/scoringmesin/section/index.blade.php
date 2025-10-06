@@ -126,23 +126,19 @@
                     <div class="card-body">
                         <!-- Filter dan Search -->
                         <div class="row mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="search-box">
                                     <input type="text" id="searchSection" class="form-control search" placeholder="Cari section...">
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <select class="form-select" id="parameterFilter">
                                     <option value="">Semua Parameter</option>
                                     <!-- Options will be loaded dynamically -->
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <select class="form-select" id="machineFilter">
-                                    <option value="">Semua Mesin</option>
-                                </select>
-                            </div>
+
                         </div>
 
                         <!-- Table -->
@@ -153,7 +149,6 @@
                                         <th scope="col">No</th>
                                         <th scope="col">Nama Section</th>
                                         <th scope="col">Parameter Proses</th>
-                                        <th scope="col">Mesin</th>
                                         <th scope="col">Tanggal Dibuat</th>
                                         <th scope="col">Aksi</th>
                                     </tr>
@@ -301,6 +296,96 @@
         setupFormHandlers();
     });
 
+    function setupFormHandlers() {
+        // ✅ Tambah Section
+        $('#addSectionForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                process_parameter_id: $('#sectionParameter').val(),
+                name: $('#sectionName').val(),
+            };
+
+            Swal.fire({
+                title: 'Menyimpan...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+            });
+
+            $.ajax({
+                url: '/scoring-mesin/sections',
+                type: 'POST',
+                data: formData,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: response.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    $('#addSectionModal').modal('hide');
+                    $('#addSectionForm')[0].reset();
+                    loadSections();
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menyimpan data.'
+                    });
+                }
+            });
+        });
+
+        // ✅ Edit Section
+        $('#editSectionForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const id = $('#editSectionId').val();
+            const formData = {
+                process_parameter_id: $('#editSectionParameter').val(),
+                name: $('#editSectionName').val(),
+            };
+
+            Swal.fire({
+                title: 'Mengupdate...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+            });
+
+            $.ajax({
+                url: `/scoring-mesin/sections/${id}`,
+                type: 'PUT',
+                data: formData,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: response.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    $('#editSectionModal').modal('hide');
+                    loadSections();
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memperbarui data.'
+                    });
+                }
+            });
+        });
+    }
+
     /* =========================
        🔹 LOAD DATA
     ==========================*/
@@ -323,9 +408,9 @@
         let filterOptions = '<option value="">Semua Parameter</option>';
 
         parametersData.forEach(param => {
-            const machineInfo = param.machine ? ` - ${param.machine.name}` : '';
-            options += `<option value="${param.id}">${param.name}${machineInfo}</option>`;
-            filterOptions += `<option value="${param.id}">${param.name}${machineInfo}</option>`;
+            // const machineInfo = param.machine ? ` - ${param.machine.name}` : '';
+            options += `<option value="${param.id}">${param.name}</option>`;
+            filterOptions += `<option value="${param.id}">${param.name}</option>`;
         });
 
         $('#sectionParameter, #editSectionParameter').html(options);
@@ -344,7 +429,7 @@
                 filteredData = [...sectionsData];
                 renderTable();
                 updateStatistics();
-                populateMachineFilter(); // ✅ isi filter mesin setelah data masuk
+
             },
             error: function() {
                 showError();
@@ -352,26 +437,7 @@
         });
     }
 
-    /* =========================
-       🔹 FILTER MESIN
-    ==========================*/
-    function populateMachineFilter() {
-        const uniqueMachines = [];
 
-        sectionsData.forEach(section => {
-            const machine = section.process_parameter?.machine;
-            if (machine && !uniqueMachines.find(m => m.id === machine.id)) {
-                uniqueMachines.push(machine);
-            }
-        });
-
-        let options = '<option value="">Semua Mesin</option>';
-        uniqueMachines.forEach(machine => {
-            options += `<option value="${machine.id}">${machine.name}</option>`;
-        });
-
-        $('#machineFilter').html(options);
-    }
 
     /* =========================
        🔹 FILTER + RENDER TABLE
@@ -379,11 +445,11 @@
     function filterAndRenderTable() {
         const searchTerm = $('#searchSection').val().toLowerCase();
         const parameterFilter = $('#parameterFilter').val();
-        const machineFilter = $('#machineFilter').val();
+
 
         filteredData = sectionsData.filter(section => {
             const processParam = section.process_parameter;
-            const machine = processParam?.machine;
+
 
             const matchesSearch =
                 section.name.toLowerCase().includes(searchTerm) ||
@@ -391,9 +457,9 @@
                 (machine && machine.name.toLowerCase().includes(searchTerm));
 
             const matchesParameter = !parameterFilter || section.process_parameter_id == parameterFilter;
-            const matchesMachine = !machineFilter || (machine && machine.id == machineFilter);
 
-            return matchesSearch && matchesParameter && matchesMachine;
+
+            return matchesSearch && matchesParameter;
         });
 
         currentPage = 1;
@@ -447,7 +513,6 @@
                         </div>
                     </td>
                     <td><span class="badge bg-soft-info text-info">${parameterName}</span></td>
-                    <td>${machineName}</td>
                     <td>${formatDate(section.created_at)}</td>
                     <td>
                         <div class="hstack gap-2">
@@ -566,12 +631,11 @@
 
         $.get(`/scoring-mesin/sections/${id}`, function(response) {
             const paramName = response.process_parameter?.name || '-';
-            const machineName = response.process_parameter?.machine?.name || '-';
+
 
             $('#sectionDetailContent').html(`
                 <div class="mb-3"><label class="fw-semibold">Nama Section:</label><p>${response.name}</p></div>
                 <div class="mb-3"><label class="fw-semibold">Parameter Proses:</label><p>${paramName}</p></div>
-                <div class="mb-3"><label class="fw-semibold">Mesin:</label><p>${machineName}</p></div>
                 <div class="mb-3"><label class="fw-semibold">Tanggal Dibuat:</label><p>${formatDate(response.created_at)}</p></div>
                 <div class="mb-3"><label class="fw-semibold">Terakhir Update:</label><p>${formatDate(response.updated_at)}</p></div>
             `);

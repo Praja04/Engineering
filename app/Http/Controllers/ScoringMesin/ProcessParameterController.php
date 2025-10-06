@@ -12,7 +12,7 @@ class ProcessParameterController extends Controller
     {
         // Check if request expects JSON
         if ($request->wantsJson() || $request->ajax()) {
-            return response()->json(ProcessParameter::with('machine')->get());
+            return response()->json(ProcessParameter::all());
         }
 
         // For web view, return the view
@@ -23,7 +23,7 @@ class ProcessParameterController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'machine_id' => 'required|exists:machines,id',
+         
             'name' => 'required',
         ]);
 
@@ -31,15 +31,15 @@ class ProcessParameterController extends Controller
         return response()->json(['message' => 'Parameter proses ditambahkan', 'data' => $param], 201);
     }
 
-    public function show(ProcessParameter $processParameter)
+    public function show()
     {
-        return response()->json($processParameter->load('machine'));
+        return response()->json(ProcessParameter::all());
     }
 
     public function update(Request $request, ProcessParameter $processParameter)
     {
         $validated = $request->validate([
-            'machine_id' => 'required|exists:machines,id',
+          
             'name' => 'required',
         ]);
 
