@@ -13,7 +13,14 @@ use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
+Route::get('/manage_user', [AuthController::class, 'manage_user'])->name('manage_user');
+Route::prefix('users')->as('users.')->group(function () {
+    Route::get('/data', [AuthController::class, 'getUsers'])->name('get'); // API untuk DataTables
+    Route::post('/', [AuthController::class, 'store'])->name('store'); // Simpan user baru
+    Route::get('/{id}/edit', [AuthController::class, 'edit'])->name('edit'); // Ambil data user untuk edit
+    Route::post('/{id}', [AuthController::class, 'update'])->name('update'); // Update user
+    Route::delete('/{id}', [AuthController::class, 'destroy'])->name('destroy'); // Hapus user
+});
 
 ///////////   View Routes   ///////////
 Route::middleware('auth')->group(function () {
@@ -48,5 +55,8 @@ Route::middleware('auth')->group(function () {
 
 ////////// Scoring Mesin Routes ///////////
 @include 'scoring/scoring-routes.php';
+@include 'utility/listrik-routes.php';
+@include 'utility/air-routes.php';
+@include 'utility/chemical-routes.php';
 
 //////////    End View Routes   ///////////

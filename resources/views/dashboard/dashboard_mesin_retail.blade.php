@@ -381,16 +381,17 @@
 
             try {
                 const scoringResponse = await $.ajax({
-                    url: 'http://127.0.0.1:8000/scoring/api/mesin',
+                    url: "{{url('/scoring/api/mesin')}}",
                     method: 'GET',
                     data: {
                         week: selectedWeek
                     }
+
                 });
 
                 const downtimePromises = machineList.map(machine =>
                     $.ajax({
-                        url:"{{url('')}}"+ `/api/retail/${machine}/durasi/stop`,
+                        url: `http://10.11.11.200:8080/api/retail/${machine}/durasi/stop`,
                         method: 'GET',
                         data: {
                             date: selectedDate

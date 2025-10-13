@@ -1,3 +1,13 @@
+@php
+$jabatan = Auth::user()->jabatan;
+$bagian = Auth::user()->bagian;
+@endphp
+
+@if (
+($jabatan === 'dept_head') ||
+($jabatan === 'supervisor') ||
+($jabatan === 'foreman' && $bagian === 'Engineering Maintenance & Improvement')
+)
 <li class="nav-item">
     <a class="nav-link menu-link" href="#sidebarScoringMesinInput" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarScoringMesinInput">
         <i class="mdi mdi-robot-industrial"></i>
@@ -18,3 +28,4 @@
         </ul>
     </div>
 </li>
+@endif

@@ -23,3 +23,7 @@ Route::prefix('kalibrasi')->group(function () {
         Route::get('/data', [KalibrasiPressureController::class, 'getData']);
     });
 });
+
+
+////// api utility listrik routes ///////
+@include 'utility/api-listrik-routes.php';

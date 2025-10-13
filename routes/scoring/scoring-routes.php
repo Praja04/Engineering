@@ -10,7 +10,12 @@ use App\Http\Controllers\ScoringMesin\MachineScoringController;
 use App\Http\Controllers\ScoringMesin\MachineProcessController;
 use App\Http\Controllers\ScoringMesin\DashboardController;
 ////////// Scoring Mesin Routes ///////////
-Route::get('/dashboard/mesin/retail', [DashboardController::class, 'index'])->name('dashboard.mesin');
+
+Route::prefix('dashboard')->name('dashboard.')->middleware(['auth'])->group(function () {
+    Route::get('/mesin/scoring', [DashboardController::class, 'dashboard_scoring_retail'])->name('scoringmesin');
+    Route::get('/mesin/downtime', [DashboardController::class, 'dashboard_downtime'])->name('downtimemesin');
+});
+
 Route::prefix('scoring-mesin')->name('scoring-mesin.')->group(function () {
     // Machine routes
     Route::get('machines/statistics', [MachineController::class, 'statistics'])->name('machines.statistics');
@@ -48,8 +53,10 @@ Route::prefix('scoring')->name('scoring.')->middleware(['auth'])->group(function
 
     // Statistics
     Route::get('/statistics', [MachineScoringController::class, 'statistics'])->name('statistics');
-    Route::get('/api/mesin', [MachineScoringController::class, 'api_scoring_mesin'])->name('api.mesin');
+  
 });
+Route::get('scoring/api/mesin', [MachineScoringController::class, 'api_scoring_mesin'])->name('api.mesin');
+
 Route::prefix('machine-processes')->group(function () {
 
     // GET: Display main index page / Get all machine processes (AJAX)
