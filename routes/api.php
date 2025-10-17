@@ -4,6 +4,7 @@ use App\Http\Controllers\Kalibrasi\KalibrasiCertificateController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Kalibrasi\KalibrasiController;
 use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
+use App\Http\Controllers\ScoringMesin\MachineScoringController;
 
 Route::prefix('kalibrasi')->group(function () {
     Route::get('/data/master/alat', [KalibrasiController::class, 'getDataAlatKalibrasi']);
@@ -24,6 +25,6 @@ Route::prefix('kalibrasi')->group(function () {
     });
 });
 
-
+Route::get('scoring/mesin', [MachineScoringController::class, 'api_scoring_mesin'])->name('api_scoring.mesin');
 ////// api utility listrik routes ///////
 @include 'utility/api-listrik-routes.php';
