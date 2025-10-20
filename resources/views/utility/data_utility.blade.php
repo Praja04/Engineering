@@ -207,7 +207,7 @@
             const bulan = $('#bulanPicker').val();
             if (!bulan) return alert('Silakan pilih bulan terlebih dahulu.');
 
-            let baseUrl = "{{url('eng/export-pemakaian-')}}";
+            let baseUrl = "{{url('utility/export-pemakaian-')}}";
             let url = '';
 
             switch (currentUnit) {
