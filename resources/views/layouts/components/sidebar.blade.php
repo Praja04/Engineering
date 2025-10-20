@@ -37,6 +37,7 @@
                 <li class="menu-title"><span data-key="t-dashboard">Dashboard</span></li>
                 @endif
                 @include('layouts.components.sidebar-scoring.dashboard-scoring')
+                @include('layouts.components.sidebar-utility.dashboard')
 
 
                 <!-- /////////////////////menu/////////////// -->
@@ -56,7 +57,7 @@
 
 
                 <!-- /////////////////////Manage User/////////////// -->
-                @if (in_array($jabatan, ['dept_head', 'foreman', 'supervisor']))
+                @if (in_array($jabatan, ['dept_head', 'supervisor']))
                 <li class="nav-item">
                     <a href="{{ url('manage_user') }}" class="nav-link menu-link">
                         <i class="mdi mdi-folder-account"></i> <span data-key="t-tkbm">Manage User</span>
