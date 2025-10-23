@@ -503,7 +503,7 @@
             chartInstances[key].render();
         }
     }
-    
+
     // Fetch data untuk bar chart
     function fetchAir(start, end) {
         showLoading('loading-air');
@@ -522,6 +522,8 @@
         'PDAM': 14 // m³ per day
     };
 
+
+    //per bulan
     function fetchAirRaw(start, end) {
         showLoading('loading-air-raw');
 
@@ -557,6 +559,37 @@
 
         }).always(() => hideLoading('loading-air-raw'));
     }
+
+    //per hari
+    // function fetchAirRaw(start, end) {
+    //     showLoading('loading-air-raw');
+
+    //     $.getJSON(`{{ url('utility/top5/air/raw') }}?start_date=${start}&end_date=${end}`, data => {
+    //         // Langsung pakai quota tanpa dikali hari
+    //         const processedData = data.map(item => {
+    //             const quota = waterQuotas[item.jenis_pemakaian] || 0;
+    //             const variance = item.total_pemakaian - quota;
+    //             const percentageUsage = quota > 0 ? (item.total_pemakaian / quota * 100).toFixed(1) : 0;
+
+    //             return {
+    //                 ...item,
+    //                 quota: quota,
+    //                 expectedUsage: quota, // Ganti nama biar jelas
+    //                 variance: variance,
+    //                 percentageUsage: percentageUsage,
+    //                 status: item.total_pemakaian > quota ? 'exceeded' : 'normal'
+    //             };
+    //         });
+
+    //         // Prepare chart data - showing actual vs quota
+    //         const labels = processedData.map(d => d.jenis_pemakaian);
+    //         const actualUsage = processedData.map(d => d.total_pemakaian);
+    //         const quotaUsage = processedData.map(d => d.expectedUsage);
+
+    //         renderComparisonBar(labels, actualUsage, quotaUsage, "#pemakaian-air-chart-raw", 'airRaw', 'm³', processedData);
+
+    //     }).always(() => hideLoading('loading-air-raw'));
+    // }
 
     // Render comparison bar chart (actual vs quota)
     function renderComparisonBar(labels, actualValues, expectedValues, selector, key, unit, dataDetails) {
