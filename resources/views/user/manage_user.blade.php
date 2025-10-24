@@ -4,356 +4,380 @@
 
 @section('content')
 
-<div class="page-content">
-    <div class="container-fluid">
-        <!-- start page title -->
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">Team</h4>
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- start page title -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                        <h4 class="mb-sm-0">Team</h4>
 
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item">
-                                <a href="javascript: void(0);">Pages</a>
-                            </li>
-                            <li class="breadcrumb-item active">
-                                Team
-                            </li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- end page title -->
-
-        <div class="card">
-            <div class="card-body">
-                <div class="row g-2">
-                    <div class="col-sm-4">
-                        <div class="search-box">
-                            <input type="text" class="form-control" id="searchMemberList" placeholder="Search for name or designation..." />
-                            <i class="ri-search-line search-icon"></i>
-                        </div>
-                    </div>
-                    <div class="col-sm-auto ms-auto">
-                        <div class="list-grid-nav hstack gap-1">
-                            <button type="button" id="grid-view-button" class="btn btn-soft-info nav-link btn-icon fs-14 active filter-button shadow-none">
-                                <i class="ri-grid-fill"></i>
-                            </button>
-                            <button type="button" id="list-view-button" class="btn btn-soft-info nav-link btn-icon fs-14 filter-button shadow-none">
-                                <i class="ri-list-unordered"></i>
-                            </button>
-                            <button type="button" class="btn btn-success addMembers-modal" data-bs-toggle="modal" data-bs-target="#addmemberModal">
-                                <i class="ri-add-fill me-1 align-bottom"></i> Add Members
-                            </button>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item">
+                                    <a href="javascript: void(0);">Pages</a>
+                                </li>
+                                <li class="breadcrumb-item active">
+                                    Team
+                                </li>
+                            </ol>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+            <!-- end page title -->
 
-        <div class="row">
-            <div class="col-lg-12">
-                <div id="teamlist">
-                    <div class="team-list grid-view-filter row" id="team-member-list"></div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-sm-4">
+                            <div class="search-box">
+                                <input type="text" class="form-control" id="searchMemberList"
+                                    placeholder="Search for name or designation..." />
+                                <i class="ri-search-line search-icon"></i>
+                            </div>
+                        </div>
+                        <div class="col-sm-auto ms-auto">
+                            <div class="list-grid-nav hstack gap-1">
+                                <button type="button" id="grid-view-button"
+                                    class="btn btn-soft-info nav-link btn-icon fs-14 active filter-button shadow-none">
+                                    <i class="ri-grid-fill"></i>
+                                </button>
+                                <button type="button" id="list-view-button"
+                                    class="btn btn-soft-info nav-link btn-icon fs-14 filter-button shadow-none">
+                                    <i class="ri-list-unordered"></i>
+                                </button>
+                                <button type="button" class="btn btn-success addMembers-modal" data-bs-toggle="modal"
+                                    data-bs-target="#addmemberModal">
+                                    <i class="ri-add-fill me-1 align-bottom"></i> Add Members
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Modal -->
-        <div class="modal fade" id="addmemberModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0">
-                    <div class="modal-body">
-                        <form id="memberlist-form" class="needs-validation" enctype="multipart/form-data" novalidate>
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="text-center mb-4">
-                                        <div class="position-relative d-inline-block">
-                                            <div class="avatar-lg">
-                                                <img src="{{ asset('material/assets/images/users/user-dummy-img.jpg') }}" id="member-img" class="avatar-md rounded-circle h-auto" />
-                                            </div>
-                                            <div class="position-absolute bottom-0 end-0">
-                                                <label for="member-image-input" class="mb-0" title="Select Member Image">
-                                                    <div class="avatar-xs">
-                                                        <div class="avatar-title bg-light border rounded-circle text-muted cursor-pointer">
-                                                            <i class="ri-image-fill"></i>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div id="teamlist">
+                        <div class="team-list grid-view-filter row" id="team-member-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="addmemberModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0">
+                        <div class="modal-body">
+                            <form id="memberlist-form" class="needs-validation" enctype="multipart/form-data" novalidate>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="text-center mb-4">
+                                            <div class="position-relative d-inline-block">
+                                                <div class="avatar-lg">
+                                                    <img src="{{ asset('material/assets/images/users/user-dummy-img.jpg') }}"
+                                                        id="member-img" class="avatar-md rounded-circle h-auto" />
+                                                </div>
+                                                <div class="position-absolute bottom-0 end-0">
+                                                    <label for="member-image-input" class="mb-0"
+                                                        title="Select Member Image">
+                                                        <div class="avatar-xs">
+                                                            <div
+                                                                class="avatar-title bg-light border rounded-circle text-muted cursor-pointer">
+                                                                <i class="ri-image-fill"></i>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </label>
-                                                <input class="form-control" id="member-image-input" type="file" name="image" accept="image/png, image/gif, image/jpeg" required />
+                                                    </label>
+                                                    <input class="form-control" id="member-image-input" type="file"
+                                                        name="image" accept="image/png, image/gif, image/jpeg" required />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="teammembersName" class="form-label">Nama</label>
-                                        <input type="text" class="form-control" id="teammembersName" name="username" placeholder="Enter name" required />
-                                        <div class="invalid-feedback">Please enter a member name.</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required />
-                                        <div class="invalid-feedback">Please enter a valid email.</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="nik" class="form-label">NIK</label>
-                                        <input type="number" class="form-control" id="nik" name="nik" placeholder="Enter nik" required />
-                                        <div class="invalid-feedback">Please enter nik.</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="password" class="form-label">Password</label>
-                                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required />
-                                        <div class="invalid-feedback">Please enter a password</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="designation" class="form-label">Jabatan</label>
-                                        <select class="form-control" id="designation" name="jabatan" required>
-                                            <option value="" disabled selected>Pilih Jabatan</option>
-                                            <option value="dept_head">Head of Departemen</option>
-                                            <option value="foreman">Foreman</option>
-                                            <option value="supervisor">Supervisor</option>
-                                            <option value="operator">Operator</option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select a Jabatan.</div>
-                                    </div>
+                                        <div class="mb-3">
+                                            <label for="teammembersName" class="form-label">Nama</label>
+                                            <input type="text" class="form-control" id="teammembersName" name="username"
+                                                placeholder="Enter name" required />
+                                            <div class="invalid-feedback">Please enter a member name.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="email" name="email"
+                                                placeholder="Enter email" required />
+                                            <div class="invalid-feedback">Please enter a valid email.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="nik" class="form-label">NIK</label>
+                                            <input type="number" class="form-control" id="nik" name="nik"
+                                                placeholder="Enter nik" required />
+                                            <div class="invalid-feedback">Please enter nik.</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="password" class="form-label">Password</label>
+                                            <input type="password" class="form-control" id="password" name="password"
+                                                placeholder="Enter password" required />
+                                            <div class="invalid-feedback">Please enter a password</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="designation" class="form-label">Jabatan</label>
+                                            <select class="form-control" id="designation" name="jabatan" required>
+                                                <option value="" disabled selected>Pilih Jabatan</option>
+                                                <option value="dept_head">Head of Departemen</option>
+                                                <option value="foreman">Foreman</option>
+                                                <option value="supervisor">Supervisor</option>
+                                                <option value="operator">Operator</option>
+                                            </select>
+                                            <div class="invalid-feedback">Please select a Jabatan.</div>
+                                        </div>
 
-                                    <div class="mb-3">
-                                        <label for="departemen" class="form-label">Departemen</label>
-                                        <select class="form-control" id="departemen" name="departemen" required>
-                                            <option value="" disabled selected>Pilih Departemen</option>
-                                            <option value="engineering">Engineering</option>
-                                        </select>
-                                        <div class="invalid-feedback">Please select a Departemen.</div>
-                                    </div>
+                                        <div class="mb-3">
+                                            <label for="departemen" class="form-label">Departemen</label>
+                                            <select class="form-control" id="departemen" name="departemen" required>
+                                                <option value="" disabled selected>Pilih Departemen</option>
+                                                <option value="engineering">Engineering</option>
+                                                <option value="quality_control">Quality Control</option>
+                                                <option value="produksi">Produksi</option>
+                                                <option value="warehouse">Warehouse</option>
+                                            </select>
+                                            <div class="invalid-feedback">Please select a Departemen.</div>
+                                        </div>
 
-                                    <div class="mb-3">
-                                        <label for="bagian" class="form-label">Bagian</label>
-                                        <select class="form-control" id="bagian" name="bagian" required>
-                                            <option value="" disabled selected>Pilih Bagian</option>
-                                            <option value="Engineering">Engineering</option>
-                                            <option value="Engineering Kalibrasi">Engineering Kalibrasi</option>
-                                            <option value="Engineering Maintenance & Improvement">Engineering Maintenance & Improvement</option>
-                                            <option value="Engineering Produksi">Engineering Produksi</option>
-                                            <option value="Engineering WWTP">Engineering WWTP</option>
-                                            <option value="Engineering Workshop & Project">Engineering Workshop & Project</option>
-                                          </select>
-                                    </div>
+                                        <div class="mb-3">
+                                            <label for="bagian" class="form-label">Bagian</label>
+                                            <select class="form-control" id="bagian" name="bagian" required>
+                                                <option value="" disabled selected>Pilih Bagian</option>
+                                                <option value="engineering">Engineering</option>
+                                                <option value="engineering_kalibrasi">Engineering Kalibrasi</option>
+                                                <option value="engineering_maintenance_&_improvement">Engineering
+                                                    Maintenance & Improvement</option>
+                                                <option value="engineering_produksi">Engineering Produksi</option>
+                                                <option value="engineering_wwtp">Engineering WWTP</option>
+                                                <option value="engineering_workshop_&_project">Engineering Workshop &
+                                                    Project</option>
+                                            </select>
+                                        </div>
 
 
-                                    <div class="hstack gap-2 justify-content-end">
-                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                                        <button type="submit" class="btn btn-success">Add Member</button>
+                                        <div class="hstack gap-2 justify-content-end">
+                                            <button type="button" class="btn btn-light"
+                                                data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-success">Add Member</button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Edit -->
+            <div class="modal fade" id="editMemberModal" tabindex="-1" aria-labelledby="editMemberLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editMemberLabel">Edit Member</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editMemberForm">
+                                <input type="hidden" id="editUserId" name="user_id">
+
+                                <div class="mb-3">
+                                    <label for="editUsername" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="editUsername" name="username"
+                                        required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="editJabatan" class="form-label">Jabatan</label>
+                                    <select class="form-control" id="editJabatan" name="jabatan" required>
+                                        <option value="" disabled selected>Pilih Jabatan</option>
+                                        <option value="dept_head">Head Departemen</option>
+                                        <option value="supervisor">Supervisor</option>
+                                        <option value="foreman">Foreman</option>
+                                        <option value="operator">Operator</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="editEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="editEmail" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editNik" class="form-label">NIK</label>
+                                    <input type="number" class="form-control" id="editNik" name="nik" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="editDepartemen" class="form-label">Departemen</label>
+                                    <select class="form-control" id="editDepartemen" name="departemen" required>
+                                        <option value="" disabled selected>Pilih Departemen</option>
+                                        <option value="engineering">Engineering</option>
+                                        <option value="qc">QC</option>
+                                        <option value="produksi">Produksi</option>
+                                        <option value="warehouse">Warehouse</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="editBagian" class="form-label">Bagian</label>
+                                    <select class="form-control" id="editBagian" name="bagian" required>
+                                        <option value="" disabled selected>Pilih Bagian</option>
+                                        <option value="dokumen_control">Dokumen Control</option>
+                                        <option value="engineering">Engineering</option>
+                                        <option value="engineering_kalibrasi">Engineering Kalibrasi</option>
+                                        <option value="engineering_maintenance_&_improvement">Engineering Maintenance &
+                                            Improvement</option>
+                                        <option value="engineering_produksi">Engineering Produksi</option>
+                                        <option value="engineering_wwtp">Engineering WWTP</option>
+                                        <option value="engineering_workshop_&_project">Engineering Workshop & Project
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="editPassword" class="form-label">Password (Opsional)</label>
+                                    <input type="password" class="form-control" id="editPassword" name="password">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="editImage" class="form-label">Upload Foto</label>
+                                    <input type="file" class="form-control" id="editImage" name="image">
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Modal Edit -->
-        <div class="modal fade" id="editMemberModal" tabindex="-1" aria-labelledby="editMemberLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editMemberLabel">Edit Member</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editMemberForm">
-                            <input type="hidden" id="editUserId" name="user_id">
-
-                            <div class="mb-3">
-                                <label for="editUsername" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="editUsername" name="username" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editJabatan" class="form-label">Jabatan</label>
-                                <select class="form-control" id="editJabatan" name="jabatan" required>
-                                    <option value="" disabled selected>Pilih Jabatan</option>
-                                    <option value="dept_head">Head Departemen</option>
-                                    <option value="supervisor">Supervisor</option>
-                                    <option value="foreman">Foreman</option>
-                                    <option value="operator">Operator</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editEmail" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="editEmail" name="email" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="editNik" class="form-label">NIK</label>
-                                <input type="number" class="form-control" id="editNik" name="nik" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editDepartemen" class="form-label">Departemen</label>
-                                <select class="form-control" id="editDepartemen" name="departemen" required>
-                                    <option value="" disabled selected>Pilih Departemen</option>
-                                    <option value="engineering">Engineering</option>
-                                    <option value="qc">QC</option>
-                                    <option value="produksi">Produksi</option>
-                                    <option value="warehouse">Warehouse</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editBagian" class="form-label">Bagian</label>
-                                <select class="form-control" id="editBagian" name="bagian" required>
-                                    <option value="" disabled selected>Pilih Bagian</option>
-                                    <option value="Dokumen Control">Dokumen Control</option>
-                                    <option value="Engineering">Engineering</option>
-                                    <option value="Engineering Kalibrasi">Engineering Kalibrasi</option>
-                                    <option value="Engineering Maintenance & Improvement">Engineering Maintenance & Improvement</option>
-                                    <option value="Engineering Produksi">Engineering Produksi</option>
-                                    <option value="Engineering WWTP">Engineering WWTP</option>
-                                    <option value="Engineering Workshop & Project">Engineering Workshop & Project</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editPassword" class="form-label">Password (Opsional)</label>
-                                <input type="password" class="form-control" id="editPassword" name="password">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="editImage" class="form-label">Upload Foto</label>
-                                <input type="file" class="form-control" id="editImage" name="image">
-                            </div>
-
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
+        <!-- container-fluid -->
     </div>
-    <!-- container-fluid -->
-</div>
 
-<script>
-    $(document).ready(function() {
+    <script>
+        $(document).ready(function() {
 
-        $("#searchMemberList").on("keyup", function() {
-            let searchText = $(this).val().toLowerCase();
-            console.log("Search Text:", searchText); // Debugging
+            $("#searchMemberList").on("keyup", function() {
+                let searchText = $(this).val().toLowerCase();
+                console.log("Search Text:", searchText); // Debugging
 
-            $(".team-box").each(function() {
-                let username = $(this).find(".team-content h5").text().toLowerCase();
-                let designation = $(this).find(".member-designation").text().toLowerCase();
-                let departemen = $(this).find(".member-departemen").text().toLowerCase();
+                $(".team-box").each(function() {
+                    let username = $(this).find(".team-content h5").text().toLowerCase();
+                    let designation = $(this).find(".member-designation").text().toLowerCase();
+                    let departemen = $(this).find(".member-departemen").text().toLowerCase();
 
-                //console.log("Checking:", username, designation); // Debugging
+                    //console.log("Checking:", username, designation); // Debugging
 
-                if (username.includes(searchText) || designation.includes(searchText) || departemen.includes(searchText)) {
-                    $(this).closest(".col").show(); // Pastikan elemen yang berisi card ditampilkan
-                } else {
-                    $(this).closest(".col").hide();
-                }
-            });
-        });
-
-        $('#memberlist-form').submit(function(e) {
-            e.preventDefault();
-
-            // Cek validasi form
-            var form = this;
-            if (!form.checkValidity()) {
-                form.classList.add('was-validated');
-                $('member-image-input').add('was-validated');
-                Swal.fire({
-                    title: "Data Belum Lengkap",
-                    text: "Silakan lengkapi semua field yang wajib diisi.",
-                    icon: "warning"
-                });
-
-                return; // Hentikan submit kalau form tidak valid
-            }
-
-            var formData = new FormData(form);
-            formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
-
-            $.ajax({
-                url: "{{ url('/users') }}",
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                beforeSend: function() {
-                    Swal.fire({
-                        title: "Processing...",
-                        text: "Please wait while we save the data.",
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                },
-                success: function(response) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: response.success,
-                        icon: "success",
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        $('#addmemberModal').modal('hide');
-                        location.reload();
-                    });
-                },
-                error: function(xhr) {
-                    console.error("Error Response:", xhr);
-
-                    let errorMsg = "Failed to add user.";
-                    if (xhr.responseJSON) {
-                        if (xhr.responseJSON.errors) {
-                            errorMsg = Object.values(xhr.responseJSON.errors).flat().join("\n");
-                        } else if (xhr.responseJSON.message) {
-                            errorMsg = xhr.responseJSON.message;
-                        }
+                    if (username.includes(searchText) || designation.includes(searchText) ||
+                        departemen.includes(searchText)) {
+                        $(this).closest(".col")
+                            .show(); // Pastikan elemen yang berisi card ditampilkan
+                    } else {
+                        $(this).closest(".col").hide();
                     }
-
-                    Swal.fire({
-                        title: "Error!",
-                        text: errorMsg,
-                        icon: "error"
-                    });
-                }
+                });
             });
-        });
+
+            $('#memberlist-form').submit(function(e) {
+                e.preventDefault();
+
+                // Cek validasi form
+                var form = this;
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    $('member-image-input').add('was-validated');
+                    Swal.fire({
+                        title: "Data Belum Lengkap",
+                        text: "Silakan lengkapi semua field yang wajib diisi.",
+                        icon: "warning"
+                    });
+
+                    return; // Hentikan submit kalau form tidak valid
+                }
+
+                var formData = new FormData(form);
+                formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                $.ajax({
+                    url: "{{ url('/users') }}",
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    beforeSend: function() {
+                        Swal.fire({
+                            title: "Processing...",
+                            text: "Please wait while we save the data.",
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            title: "Success!",
+                            text: response.success,
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            $('#addmemberModal').modal('hide');
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error("Error Response:", xhr);
+
+                        let errorMsg = "Failed to add user.";
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.errors) {
+                                errorMsg = Object.values(xhr.responseJSON.errors).flat().join(
+                                    "\n");
+                            } else if (xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                        }
+
+                        Swal.fire({
+                            title: "Error!",
+                            text: errorMsg,
+                            icon: "error"
+                        });
+                    }
+                });
+            });
 
 
 
 
-        $("#grid-view-button").on("click", function() {
-            $(this).addClass("active");
-            $("#list-view-button").removeClass("active");
-            loadUsers(); // Kembali ke tampilan grid
-        });
+            $("#grid-view-button").on("click", function() {
+                $(this).addClass("active");
+                $("#list-view-button").removeClass("active");
+                loadUsers(); // Kembali ke tampilan grid
+            });
 
-        // List View - Card Simplified
-        $("#list-view-button").on("click", function() {
-            $(this).addClass("active");
-            $("#grid-view-button").removeClass("active");
+            // List View - Card Simplified
+            $("#list-view-button").on("click", function() {
+                $(this).addClass("active");
+                $("#grid-view-button").removeClass("active");
 
-            $.ajax({
-                url: "{{ route('users.get') }}",
-                type: "GET",
-                success: function(users) {
-                    let userList = '';
+                $.ajax({
+                    url: "{{ route('users.get') }}",
+                    type: "GET",
+                    success: function(users) {
+                        let userList = '';
 
-                    users.forEach(user => {
-                        let imageUrl = user.image ?
-                            "{{ url('/uploads/users') }}/" + user.image :
-                            "{{ asset('material/assets/images/users/user-dummy-img.jpg') }}";
+                        users.forEach(user => {
+                            let imageUrl = user.image ?
+                                "{{ url('/uploads/users') }}/" + user.image :
+                                "{{ asset('material/assets/images/users/user-dummy-img.jpg') }}";
 
-                        userList += `
+                            userList += `
                         <div class="col-lg-12">
                             <div class="card team-box">
                                 <div class="card-body p-3">
@@ -405,29 +429,34 @@
                             </div>
                         </div>
                     `;
-                    });
+                        });
 
-                    $('#team-member-list').html(userList);
-                },
-                error: function(xhr) {
-                    console.log("Error fetching data:", xhr.responseText);
-                }
+                        $('#team-member-list').html(userList);
+                    },
+                    error: function(xhr) {
+                        console.log("Error fetching data:", xhr.responseText);
+                    }
+                });
             });
-        });
 
-        function loadUsers() {
-            $.ajax({
-                url: "{{ route('users.get') }}",
-                type: "GET",
-                success: function(users) {
-                    let userList = '';
-                    users.forEach(user => {
-                        let imageUrl = user.image ? "{{ url('/uploads/users') }}/" + user.image : "{{ asset('material/assets/images/users/user-dummy-img.jpg') }}";
+            function loadUsers() {
+                $.ajax({
+                    url: "{{ route('users.get') }}",
+                    type: "GET",
+                    success: function(users) {
+                        let userList = '';
+                        users.forEach(user => {
+                            let imageUrl = user.image ? "{{ url('/uploads/users') }}/" + user
+                                .image :
+                                "{{ asset('material/assets/images/users/user-dummy-img.jpg') }}";
 
-                        let randomImageNumber = Math.floor(Math.random() * 10) + 1; // Pilih angka 1-10 secara acak
-                        let randomImage = "{{ asset('material/assets/images/small/img-') }}" + randomImageNumber + ".jpg";
+                            let randomImageNumber = Math.floor(Math.random() * 10) +
+                                1; // Pilih angka 1-10 secara acak
+                            let randomImage =
+                                "{{ asset('material/assets/images/small/img-') }}" +
+                                randomImageNumber + ".jpg";
 
-                        userList += `
+                            userList += `
                             <div class="col">
                                 <div class="card team-box">
                                     <div class="team-cover">
@@ -490,126 +519,128 @@
                                 </div>
                             </div>
                         `;
-                    });
-                    $('#team-member-list').html(userList);
-                },
-                error: function(xhr) {
-                    console.log("Error fetching data:", xhr.responseText);
-                }
+                        });
+                        $('#team-member-list').html(userList);
+                    },
+                    error: function(xhr) {
+                        console.log("Error fetching data:", xhr.responseText);
+                    }
+                });
+            }
+
+            loadUsers(); // Panggil fungsi saat halaman dimuat
+
+            // Set data ke modal edit saat tombol edit diklik
+            $(document).on('click', '.edit-list', function() {
+                let id = $(this).data('edit-id');
+                let username = $(this).data('username');
+                let jabatan = $(this).data('jabatan');
+                let email = $(this).data('email');
+                let password = $(this).data('password');
+                let bagian = $(this).data('bagian');
+
+                $('#editUserId').val(id);
+                $('#editUsername').val(username);
+                $('#editJabatan').val(jabatan);
+                $('#editEmail').val(email);
+                $('#editPassword').val(password);
+                $('#editBagian').val(bagian);
             });
-        }
 
-        loadUsers(); // Panggil fungsi saat halaman dimuat
+            $('#editMemberForm').submit(function(e) {
+                e.preventDefault();
+                let base_url = "{{ url('/users') }}";
+                let userId = $('#editUserId').val();
+                let formData = new FormData(this);
 
-        // Set data ke modal edit saat tombol edit diklik
-        $(document).on('click', '.edit-list', function() {
-            let id = $(this).data('edit-id');
-            let username = $(this).data('username');
-            let jabatan = $(this).data('jabatan');
-            let email = $(this).data('email');
-            let password = $(this).data('password');
-            let bagian = $(this).data('bagian');
+                formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+                formData.append('_method', 'POST'); // Laravel mendukung PUT/PATCH dengan ini
 
-            $('#editUserId').val(id);
-            $('#editUsername').val(username);
-            $('#editJabatan').val(jabatan);
-            $('#editEmail').val(email);
-            $('#editPassword').val(password);
-            $('#editBagian').val(bagian);
-        });
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "You are about to update this user!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, Update",
+                    cancelButtonText: "Cancel"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: base_url + '/' + userId,
 
-        $('#editMemberForm').submit(function(e) {
-            e.preventDefault();
-            let base_url = "{{ url('/users') }}";
-            let userId = $('#editUserId').val();
-            let formData = new FormData(this);
-
-            formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
-            formData.append('_method', 'POST'); // Laravel mendukung PUT/PATCH dengan ini
-
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You are about to update this user!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, Update",
-                cancelButtonText: "Cancel"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: base_url + '/' + userId,
-
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            Swal.fire({
-                                title: "Success!",
-                                text: response.success,
-                                icon: "success",
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                            $('#editMemberModal').modal('hide');
-                            setTimeout(() => location.reload(), 2000);
-                        },
-                        error: function(xhr) {
-                            Swal.fire({
-                                title: "Error!",
-                                text: xhr.responseJSON.message || "Something went wrong!",
-                                icon: "error"
-                            });
-                        }
-                    });
-                }
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(response) {
+                                Swal.fire({
+                                    title: "Success!",
+                                    text: response.success,
+                                    icon: "success",
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                $('#editMemberModal').modal('hide');
+                                setTimeout(() => location.reload(), 2000);
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    title: "Error!",
+                                    text: xhr.responseJSON.message ||
+                                        "Something went wrong!",
+                                    icon: "error"
+                                });
+                            }
+                        });
+                    }
+                });
             });
-        });
 
 
-        $(document).on("click", ".remove-list", function() {
-            let userId = $(this).data("remove-id");
+            $(document).on("click", ".remove-list", function() {
+                let userId = $(this).data("remove-id");
 
-            Swal.fire({
-                title: "Are you sure?",
-                text: "This action cannot be undone!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Yes, delete it!"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: "{{ url('/users') }}/" + userId,
-                        type: "DELETE",
-                        data: {
-                            _token: $('meta[name="csrf-token"]').attr("content") // CSRF token
-                        },
-                        success: function(response) {
-                            Swal.fire({
-                                title: "Deleted!",
-                                text: response.success,
-                                icon: "success",
-                                timer: 2000,
-                                showConfirmButton: false
-                            }).then(() => {
-                                location.reload();
-                            });
-                        },
-                        error: function(xhr) {
-                            Swal.fire({
-                                title: "Error!",
-                                text: "Failed to delete user.",
-                                icon: "error"
-                            });
-                        }
-                    });
-                }
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "This action cannot be undone!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Yes, delete it!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ url('/users') }}/" + userId,
+                            type: "DELETE",
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr(
+                                    "content") // CSRF token
+                            },
+                            success: function(response) {
+                                Swal.fire({
+                                    title: "Deleted!",
+                                    text: response.success,
+                                    icon: "success",
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    title: "Error!",
+                                    text: "Failed to delete user.",
+                                    icon: "error"
+                                });
+                            }
+                        });
+                    }
+                });
             });
-        });
 
-    });
-</script>
+        });
+    </script>
 
 @endsection
