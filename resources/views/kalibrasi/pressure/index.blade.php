@@ -26,6 +26,56 @@
             font-size: 0.875rem;
             color: #495057;
         }
+
+        .info-fab {
+            position: fixed;
+            top: 80px;
+            /* jarak dari bawah layar */
+            right: 30px;
+            /* jarak dari kanan layar */
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(135deg, #4c9efc, #6db9fb);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 18px rgba(46, 142, 255, 0.4);
+            color: white;
+            cursor: pointer;
+            z-index: 2000;
+            transition: all .25s ease;
+        }
+
+        /* efek hover glow */
+        .info-fab:hover {
+            transform: translateY(-4px) scale(1.08);
+            box-shadow: 0 10px 25px rgba(46, 142, 255, 0.6), 0 0 12px rgba(46, 142, 255, 0.5) inset;
+        }
+
+        /* animasi pulse */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(46, 142, 255, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(46, 142, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 142, 255, 0);
+            }
+        }
+
+        .info-fab::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+            animation: pulse 2s infinite;
+        }
     </style>
 @endsection
 
@@ -35,16 +85,20 @@
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="page-title d-sm-flex align-items-center justify-content-between">
-                        <div>
-                            <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item"><a href="javascript:void(0);">Kalibrasi</a></li>
-                                <li class="breadcrumb-item">Pressure</li>
-                                <li class="breadcrumb-item active">Form Pressure</li>
-                            </ol>
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Tombol Back -->
+                            <a href="{{ url()->previous() }}"
+                                class="btn btn-outline-primary rounded-pill px-4 d-flex align-items-center">
+                                <i class="mdi mdi-arrow-left me-1"></i>
+                                Kembali
+                            </a>
                         </div>
-                        <div>
-                            <i class="mdi mdi-information text-info ms-3" id="infoBtn"
-                                style="cursor:pointer; font-size: 1.5rem;"></i>
+                        <div id="infoBtn" class="info-fab">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true">
+                                <circle cx="12" cy="12" r="12" fill="#2e8eff" />
+                                <text x="12" y="17" text-anchor="middle" font-size="14" font-family="Arial, sans-serif"
+                                    font-weight="700" fill="#fff">i</text>
+                            </svg>
                         </div>
                     </div>
                 </div>
@@ -84,77 +138,62 @@
                                                 <div class="col-xxl-3 col-md-3">
                                                     <label for="departemen_pemilik" class="form-label">Departemen
                                                         Pemilik</label>
-                                                    <input type="text" class="form-control text-muted"
+                                                    <input type="text" class="form-control text-muted bg-soft-info "
                                                         id="departemen_pemilik" name="departemen_pemilik" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
                                                     <label for="lokasi_alat" class="form-label">Lokasi Alat</label>
-                                                    <input type="text" class="form-control text-muted" id="lokasi_alat"
-                                                        name="lokasi_alat" readonly>
+                                                    <input type="text" class="form-control text-muted bg-soft-info "
+                                                        id="lokasi_alat" name="lokasi_alat" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
                                                     <label for="no_kalibrasi" class="form-label">Nomor Kalibrasi</label>
-                                                    <input type="text" class="form-control text-muted" id="no_kalibrasi"
-                                                        name="no_kalibrasi" readonly>
+                                                    <input type="text" class="form-control text-muted bg-soft-info "
+                                                        id="no_kalibrasi" name="no_kalibrasi" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
                                                     <label for="nama_alat" class="form-label">Nama Alat</label>
-                                                    <input type="text" class="form-control text-muted" id="nama_alat"
-                                                        name="nama_alat" readonly>
+                                                    <input type="text" class="form-control text-muted bg-soft-info"
+                                                        id="nama_alat" name="nama_alat" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
                                                     <label for="merk" class="form-label">Merk</label>
-                                                    <input type="text" class="form-control text-muted" id="merk"
-                                                        name="merk" readonly>
+                                                    <input type="text" class="form-control text-muted bg-soft-info"
+                                                        id="merk" name="merk" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
                                                     <label for="tipe" class="form-label">Tipe</label>
-                                                    <input type="text" class="form-control text-muted" id="tipe"
-                                                        name="tipe" readonly>
+                                                    <input type="text" class="form-control text-muted bg-soft-info"
+                                                        id="tipe" name="tipe" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
                                                     <label for="kapasitas" class="form-label">Kapasitas</label>
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control text-muted" id="kapasitas"
-                                                            name="kapasitas" readonly>
-                                                        <span class="input-group-text">Bar</span>
-                                                    </div>
+                                                    <input type="text" class="form-control text-muted bg-soft-info"
+                                                        id="kapasitas" name="kapasitas" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
                                                     <label for="resolusi" class="form-label">Resolusi</label>
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control text-muted" id="resolusi"
-                                                            name="resolusi" readonly>
-                                                        <span class="input-group-text">Bar</span>
-                                                    </div>
+                                                    <input type="text" class="form-control text-muted bg-soft-info"
+                                                        id="resolusi" name="resolusi" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
-                                                    <label class="form-label">Range Penggunaan</label>
-                                                    <div class="input-group">
-                                                        <input type="number" class="form-control text-muted"
-                                                            id="min_range_use" name="min_range_use" placeholder="Min"
-                                                            step="any" readonly>
-                                                        <span class="input-group-text">–</span>
-                                                        <input type="number" class="form-control text-muted"
-                                                            id="max_range_use" name="max_range_use" placeholder="Max"
-                                                            step="any" readonly>
-                                                        <span class="input-group-text" id="unit_range">Bar</span>
-                                                    </div>
+                                                    <label for="range_penggunaan_alat" class="form-label">Range
+                                                        Penggunaan</label>
+                                                    <input type="text" class="form-control text-muted bg-soft-info"
+                                                        id="range_penggunaan_alat" name="range_penggunaan_alat" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
-                                                    <label for="limits_error" class="form-label">Limits of Permissible
+                                                    <label for="limits_of_permissible_error" class="form-label">Limits of
+                                                        Permissible
                                                         Error</label>
-                                                    <div class="input-group">
-                                                        <span class="input-group-text">&plusmn;</span>
-                                                        <input type="text" class="form-control text-muted"
-                                                            id="limits_error" name="limits_error" readonly>
-                                                        <span class="input-group-text" id="unit_range">Bar</span>
-                                                    </div>
+                                                    <input type="text" class="form-control text-muted bg-soft-info"
+                                                        id="limits_of_permissible_error"
+                                                        name="limits_of_permissible_error" readonly>
                                                 </div>
                                                 <div class="col-xxl-3 col-md-3">
                                                     <label for="metode_kalibrasi" class="form-label">Metode
                                                         Kalibrasi</label>
-                                                    <textarea class="form-control text-muted" name="metode_kalibrasi" id="metode_kalibrasi" cols="30"
+                                                    <textarea class="form-control text-muted bg-soft-info" name="metode_kalibrasi" id="metode_kalibrasi" cols="30"
                                                         rows="2" readonly></textarea>
                                                 </div>
                                             </div>
@@ -163,7 +202,6 @@
 
                                     <!-- Section Data Kalibrasi -->
                                     <div class="card mb-3 border-success">
-
                                         <div class="card-header bg-success text-white py-2">
                                             Data Kalibrasi (Input User)
                                         </div>
@@ -173,29 +211,38 @@
                                                     <label for="lokasi_kalibrasi" class="form-label">Lokasi
                                                         Kalibrasi</label>
                                                     <input type="text" class="form-control" id="lokasi_kalibrasi"
-                                                        name="lokasi_kalibrasi">
+                                                        name="lokasi_kalibrasi" placeholder="Laboratorium Kalibrasi">
                                                 </div>
+                                                <!-- SUHU RUANGAN -->
                                                 <div class="col-xxl-3 col-md-3">
+                                                    <input type="hidden" name="suhu_ruangan_final"
+                                                        id="suhu_ruangan_final">
                                                     <label for="suhu_ruangan" class="form-label">Suhu Ruangan</label>
                                                     <div class="input-group">
                                                         <input type="number" class="form-control" id="suhu_ruangan"
                                                             name="suhu_ruangan" placeholder="25">
-                                                        <span class="input-group-text">&plusmn;</span>
-                                                        <input type="number" class="form-control" id="suhu_ruangan_tol"
-                                                            name="suhu_ruangan_tol" placeholder="1">
+                                                        <span class="input-group-text">±</span>
+                                                        <input type="number" class="form-control" id="toleransi_suhu"
+                                                            name="toleransi_suhu" placeholder="1">
                                                         <span class="input-group-text">°C</span>
                                                     </div>
+                                                    <small class="text-muted">Contoh: 25°C ± 1°C</small>
                                                 </div>
+
+                                                <!-- KELEMBABAN -->
                                                 <div class="col-xxl-3 col-md-3">
+                                                    <input type="hidden" name="kelembaban_final" id="kelembaban_final">
                                                     <label for="kelembaban" class="form-label">Kelembaban</label>
                                                     <div class="input-group">
                                                         <input type="number" class="form-control" id="kelembaban"
-                                                            name="kelembaban" placeholder="45">
-                                                        <span class="input-group-text">&plusmn;</span>
-                                                        <input type="number" class="form-control" id="kelembaban_tol"
-                                                            name="kelembaban_tol" placeholder="3">
+                                                            name="kelembaban" placeholder="47">
+                                                        <span class="input-group-text">±</span>
+                                                        <input type="number" class="form-control"
+                                                            id="toleransi_kelembaban" name="toleransi_kelembaban"
+                                                            placeholder="3">
                                                         <span class="input-group-text">%</span>
                                                     </div>
+                                                    <small class="text-muted">Contoh: 47% ± 3%</small>
                                                 </div>
 
                                                 <div class="col-xxl-3 col-md-3">
@@ -212,8 +259,6 @@
                             </div>
                         </div>
                     </div>
-
-
 
                     {{-- Input data pressure --}}
                     <div class="card">
@@ -247,10 +292,11 @@
                                             <label for="titik_naik" class="form-label">Jumlah Titik Kalibrasi</label>
                                             <div class="input-group">
                                                 <input type="number" class="form-control" id="titik_naik"
-                                                    min="1" max="10" value="1">
+                                                    name="titik_naik" min="1" max="10" value=""
+                                                    placeholder="0">
                                                 <button type="button" class="btn btn-info btn-generate"
                                                     id="generateNaik">
-                                                    <i class="mdi mdi-plus me-1"></i>Buat Titik
+                                                    <i class="mdi mdi-plus me-1"></i>Buat / Tambah Titik
                                                 </button>
                                             </div>
                                         </div>
@@ -264,11 +310,11 @@
                                             <label for="titik_turun" class="form-label">Jumlah Titik Kalibrasi</label>
                                             <div class="input-group">
                                                 <input type="number" class="form-control" id="titik_turun"
-                                                    min="1" max="10" value="1">
-
+                                                    name="titik_turun" min="1" max="10" value=""
+                                                    placeholder="0">
                                                 <button type="button" class="btn btn-info btn-generate"
                                                     id="generateTurun">
-                                                    <i class="mdi mdi-plus me-1"></i>Buat Titik
+                                                    <i class="mdi mdi-plus me-1"></i>Buat / Tambah Titik
                                                 </button>
                                             </div>
                                         </div>
@@ -279,18 +325,20 @@
                             </div>
                         </div>
                     </div>
+
                     <!-- Submit Button -->
                     <div class="card">
                         <div class="card-body">
-                            <div class="col-12">
-                                <div class="gap-2">
-                                    <button type="button" class="btn btn-outline-secondary"
-                                        id="btnCancelKalibrasi">Cancel
-                                    </button>
-                                    <button type="submit" id="btnSimpanKalibrasi" class="btn btn-success">
-                                        Save
-                                    </button>
-                                </div>
+                            <div class="col-12 d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-outline-danger " id="btnResetKalibrasi">
+                                    <i class="mdi mdi-close-circle-outline me-1"></i> Reset
+                                </button>
+                                <button type="submit" id="btnPreview" class="btn btn-outline-info">
+                                    <i class="mdi mdi-eye-outline me-1"></i> Preview
+                                </button>
+                                <button type="submit" id="btnSimpanKalibrasi" class="btn btn-success btnSaveKalibrasi">
+                                    <i class="mdi mdi-send-check-outline me-1"></i> Submit & Kirim ke Foreman
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -327,134 +375,242 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Preview --}}
+    <div class="modal fade" id="modalPreviewKalibrasi" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="mdi mdi-eye-outline me-2"></i>Preview Data Kalibrasi</h5>
+                    <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="previewBody">
+                    <div class="text-center text-muted py-5">
+                        <i class="mdi mdi-loading mdi-spin fs-1 mb-2"></i><br>
+                        Memuat preview...
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="mdi mdi-pencil-outline me-1"></i> Edit Lagi
+                    </button>
+                    <button class="btn btn-success" id="btnSubmitFinalFromPreview">
+                        <i class="mdi mdi-check-circle-outline me-1"></i> Submit Final
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
-            $('#alat_id').change(function() {
-                var id = $(this).val();
-                if (!id) return;
 
-                $.get('/api/kalibrasi/pressure/data/alat/' + id, function(res) {
-                    let data = res.data;
-                    $('#departemen_pemilik').val(data.departemen_pemilik);
-                    $('#lokasi_alat').val(data.lokasi_alat);
-                    $('#no_kalibrasi').val(data.no_kalibrasi);
-                    $('#nama_alat').val(data.nama_alat);
-                    $('#merk').val(data.merk);
-                    $('#tipe').val(data.tipe);
-                    $('#kapasitas').val(data.kapasitas);
-                    $('#resolusi').val(data.resolusi);
-                    if (data.range_use) {
-                        let parts = data.range_use.split('s/d');
-                        let minVal = parts[0] ? parts[0].trim() : '';
-                        let maxVal = parts[1] ? parts[1].trim() : '';
-                        $('#min_range_use').val(minVal);
-                        $('#max_range_use').val(maxVal);
-                    }
-                    $('#limits_error').val(data.limits_permissible_error);
-                    $('#metode_kalibrasi').val(
-                        `Diadopsi dari : "The Expression of Uncertainty and Confidence in Measurement" Oleh UKAS (United Kingdom Accreditation Service) M3003, Edition 3, November 2012`
-                    );
+            const STORAGE_KEY = 'formKalibrasiPressure';
+
+            $(document).on('input change',
+                '#formKalibrasi input, #formKalibrasi select, #formKalibrasi textarea, #collapseDataPressure input',
+                function() {
+                    saveForm();
                 });
-            });
 
-            // generate data tekanan pressure
-            generateTitikKalibrasi('containerNaik', 0);
-            generateTitikKalibrasi('containerTurun', 0);
 
+            function saveForm() {
+                let headerData = $('#formKalibrasi').serialize();
+
+                // Ambil nilai titik naik dan turun secara eksplisit
+                let titikNaikVal = 'titik_naik=' + ($('#titik_naik').val() || 0);
+                let titikTurunVal = 'titik_turun=' + ($('#titik_turun').val() || 0);
+
+                // Ambil data pressure dinamis
+                let pressureData = $('#collapseDataPressure').find('input').serialize();
+
+                // Gabungkan semua data, pastikan titik_naik dan titik_turun ada di awal
+                let combinedData = titikNaikVal + '&' + titikTurunVal + '&' + headerData + '&' + pressureData;
+
+                localStorage.setItem(STORAGE_KEY, combinedData);
+
+                // DEBUGGING CHECK
+                console.log('✅ Data berhasil disimpan ke localStorage.');
+                console.log('Data tersimpan:', combinedData); // Sekarang cek log ini, harusnya ada titik_naik=X
+            }
+
+            // Load data dari localStorage
+            function loadForm() {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return;
+
+                if (!saved) {
+                    console.log('❌ Tidak ada data tersimpan di localStorage.');
+                    return;
+                }
+
+                console.log('✅ Memuat data dari localStorage. Data raw:', saved);
+
+                const params = new URLSearchParams(saved);
+
+                const titikNaik = parseInt(params.get('titik_naik')) || 0;
+                const titikTurun = parseInt(params.get('titik_turun')) || 0;
+
+                if (titikNaik > 0) {
+                    $('#titik_naik').val(titikNaik);
+                    generateTitikKalibrasi('containerNaik', titikNaik);
+                }
+                if (titikTurun > 0) {
+                    $('#titik_turun').val(titikTurun);
+                    generateTitikKalibrasi('containerTurun', titikTurun);
+                }
+
+                setTimeout(() => {
+                    params.forEach((value, key) => {
+
+                        const $el = $(`[name="${key}"]`);
+
+                        if ($el.length) {
+                            // Khusus untuk select (seperti alat_id)
+                            if ($el.is('select')) {
+                                $el.val(value).trigger('change');
+                            }
+                            // Untuk input/textarea
+                            else {
+                                $el.val(value);
+                            }
+                        }
+                    });
+
+                    // 5. Update badge setelah semua nilai terisi
+                    updateAllBadges();
+                }, 50); // Delay singkat 50ms (lebih aman dari 150ms)
+            }
+
+            function updateAllBadges() {
+                $('#containerNaik .titik-kalibrasi-block, #containerTurun .titik-kalibrasi-block').each(function(i,
+                    block) {
+                    const containerId = $(block).parent().attr('id');
+                    const titikNo = i + 1;
+                    const $inputAlat1 = $(`#${containerId}_alat_${titikNo}_1`);
+                    const $badge = $(`#badge_${containerId}_${titikNo}`);
+
+                    // Panggil fungsi input trigger dari generateTitikKalibrasi agar badge terupdate
+                    if ($inputAlat1.length) {
+                        // Pastikan badge terupdate dengan nilai dari input
+                        $badge.text($inputAlat1.val() || "0.0");
+                    }
+                });
+            }
+
+            // Fungsi generate titik kalibrasi (tetap sama)
             function generateTitikKalibrasi(containerId, jumlah) {
                 const $container = $('#' + containerId);
-                $container.empty();
 
-                if (jumlah === 0) return;
+                // 1. Hitung berapa banyak titik yang sudah ada (existingTitik)
+                const existingTitik = $container.children('.titik-kalibrasi-block').length;
 
-                for (let i = 1; i <= jumlah; i++) {
-                    const titikBlock = `
-                        <div class="titik-kalibrasi-block p-3 mb-3 border rounded">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0 text-primary">
-                                    Titik Kalibrasi ${i}
-                                    <span class="badge bg-primary ms-2" id="badge_${containerId}_${i}">0.0</span>
-                                </h6>
-                            </div>
-                            ${generateMeasurementRows(containerId, i)}
-                        </div>
-                    `;
-                    $container.append(titikBlock);
-
-                    // binding event: ambil nilai awal penunjuk alat pertama
-                    const $inputAlat1 = $(`#${containerId}_alat_${i}_1`);
-                    const $badge = $(`#badge_${containerId}_${i}`);
-
-                    // set nilai awal badge
-                    $badge.text($inputAlat1.val() || "0.0");
-
-                    // update badge setiap kali input berubah
-                    $inputAlat1.on("input", function() {
-                        $badge.text($(this).val() || "0.0");
-                    });
+                // 💡 Kasus 1: Mengurangi Jumlah Titik (Hapus yang berlebih)
+                if (jumlah < existingTitik) {
+                    // Hapus elemen berlebih dari belakang
+                    $container.children('.titik-kalibrasi-block').slice(jumlah).remove();
+                    console.log(`Titik yang dihapus dari ${containerId}: ${existingTitik - jumlah}`);
+                    return;
                 }
+
+                // 💡 Kasus 2: Menambah Jumlah Titik (Mulai dari existingTitik + 1)
+                if (jumlah > existingTitik) {
+                    console.log(`Menambahkan ${jumlah - existingTitik} titik baru ke ${containerId}`);
+                    for (let i = existingTitik + 1; i <= jumlah; i++) { // Mulai loop dari titik berikutnya
+                        const titikBlock = `
+                            <div class="titik-kalibrasi-block p-3 mb-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0 text-primary">
+                                        Titik Kalibrasi ${i}
+                                        <span class="badge bg-primary ms-2" id="badge_${containerId}_${i}">0.0</span>
+                                    </h6>
+                                </div>
+                                ${generateMeasurementRows(containerId, i)}
+                            </div>
+                        `;
+                        $container.append(titikBlock);
+
+                        // Pasang event listener dan update badge untuk titik yang baru dibuat
+                        const $inputAlat1 = $(`#${containerId}_alat_${i}_1`);
+                        const $badge = $(`#badge_${containerId}_${i}`);
+
+                        $badge.text($inputAlat1.val() || "0.0");
+
+                        $inputAlat1.off("input").on("input", function() {
+                            $badge.text($(this).val() || "0.0");
+                            saveForm
+                                (); // Tambahkan saveForm() di sini agar auto-save saat pengukuran diubah
+                        });
+                    }
+                }
+
+                // Jika jumlah == existingTitik, tidak terjadi apa-apa (data aman)
             }
 
+            // Baris input pengukuran
             function generateMeasurementRows(containerId, titikNo) {
-                let rows = `
-                        <div class="row g-3 mb-3">
-                            <!-- Penunjuk Standar -->
-                            <div class="col-12 col-md-6">
-                                <label class="form-label fw-bold d-block">Penunjuk Standar</label>
-                                <input type="number" class="form-control mb-2"
-                                    id="${containerId}_standar_${titikNo}_1"
-                                    name="${containerId}_standar_${titikNo}_1"
-                                    step="0.001" placeholder="0.0">
-                                <input type="number" class="form-control mb-2"
-                                    id="${containerId}_standar_${titikNo}_2"
-                                    name="${containerId}_standar_${titikNo}_2"
-                                    step="0.001" placeholder="0.0">
-                                <input type="number" class="form-control"
-                                    id="${containerId}_standar_${titikNo}_3"
-                                    name="${containerId}_standar_${titikNo}_3"
-                                    step="0.001" placeholder="0.0">
-                            </div>
-
-                            <!-- Penunjuk Alat -->
-                            <div class="col-12 col-md-6">
-                                <label class="form-label fw-bold d-block">Penunjuk Alat</label>
-                                <input type="number" class="form-control mb-2"
-                                    id="${containerId}_alat_${titikNo}_1"
-                                    name="${containerId}_alat_${titikNo}_1"
-                                    step="0.001" placeholder="0.0">
-                                <input type="number" class="form-control mb-2"
-                                    id="${containerId}_alat_${titikNo}_2"
-                                    name="${containerId}_alat_${titikNo}_2"
-                                    step="0.001" placeholder="0.0">
-                                <input type="number" class="form-control"
-                                    id="${containerId}_alat_${titikNo}_3"
-                                    name="${containerId}_alat_${titikNo}_3"
-                                    step="0.001" placeholder="0.0">
-                            </div>
+                return `
+                    <div class="row g-3 mb-3">
+                        <!-- Penunjuk Standar -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold d-block">Penunjuk Standar</label>
+                            <input type="number" class="form-control mb-2" id="${containerId}_standar_${titikNo}_1" name="${containerId}_standar_${titikNo}_1" step="0.1" placeholder="0.0">
+                            <input type="number" class="form-control mb-2" id="${containerId}_standar_${titikNo}_2" name="${containerId}_standar_${titikNo}_2" step="0.1" placeholder="0.0">
+                            <input type="number" class="form-control" id="${containerId}_standar_${titikNo}_3" name="${containerId}_standar_${titikNo}_3" step="0.1" placeholder="0.0">
                         </div>
-                    `;
-                return rows;
+                        <!-- Penunjuk Alat -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-bold d-block">Penunjuk Alat</label>
+                            <input type="number" class="form-control mb-2" id="${containerId}_alat_${titikNo}_1" name="${containerId}_alat_${titikNo}_1" step="0.1" placeholder="0.0">
+                            <input type="number" class="form-control mb-2" id="${containerId}_alat_${titikNo}_2" name="${containerId}_alat_${titikNo}_2" step="0.1" placeholder="0.0">
+                            <input type="number" class="form-control" id="${containerId}_alat_${titikNo}_3" name="${containerId}_alat_${titikNo}_3" step="0.1" placeholder="0.0">
+                        </div>
+                    </div>
+                `;
             }
 
-            // Event handlers tabs
+            // Tombol generate
             $('#generateNaik').click(function() {
                 const jumlah = parseInt($('#titik_naik').val()) || 0;
                 generateTitikKalibrasi('containerNaik', jumlah);
+                saveForm();
             });
 
             $('#generateTurun').click(function() {
                 const jumlah = parseInt($('#titik_turun').val()) || 0;
                 generateTitikKalibrasi('containerTurun', jumlah);
+                saveForm();
             });
 
+            // Jalankan load saat halaman dibuka
+            loadForm();
+
             // simpan button
-            $(document).on('click', '#btnSimpanKalibrasi', function(e) {
+            $(document).on('click', '.btnSaveKalibrasi', function(e) {
                 e.preventDefault();
 
+                const suhu = $('#suhu_ruangan').val();
+                const toleransiSuhu = $('#toleransi_suhu').val();
+                const kelembaban = $('#kelembaban').val();
+                const toleransiKelembaban = $('#toleransi_kelembaban').val();
+
+                // Format data gabungan
+                const suhuFormatted = suhu && toleransiSuhu ?
+                    `${suhu}°C ± ${toleransiSuhu}°C` :
+                    suhu ? `${suhu}°C` : '';
+
+                const kelembabanFormatted = kelembaban && toleransiKelembaban ?
+                    `${kelembaban}% ± ${toleransiKelembaban}%` :
+                    kelembaban ? `${kelembaban}%` : '';
+
+                // Masukkan hasil ke hidden input
+                $('#suhu_ruangan_final').val(suhuFormatted);
+                $('#kelembaban_final').val(kelembabanFormatted);
+
                 let formData = $('#formKalibrasi').serializeArray();
+                console.log(formData);
                 let data = {};
 
                 formData.forEach(function(item) {
@@ -483,7 +639,6 @@
                 let turunCount = 0;
 
                 // Ambil data TEKANAN NAIK
-                // Ambil data TEKANAN NAIK
                 $('#containerNaik .titik-kalibrasi-block').each(function(i, block) {
                     for (let k = 1; k <= 3; k++) {
                         let standar = $(block).find(
@@ -503,7 +658,7 @@
                                 tekanan: 'naik',
                                 penunjuk_standar: standar,
                                 penunjuk_alat: alat,
-                                koreksi_standar: standar - alat
+                                koreksi_standar: 0
                             });
                         }
                     }
@@ -528,19 +683,18 @@
                                 tekanan: 'turun',
                                 penunjuk_standar: standar,
                                 penunjuk_alat: alat,
-                                koreksi_standar: standar - alat
+                                koreksi_standar: 0
                             });
                         }
                     }
                 });
 
-
                 // Validasi isi
                 if (!adaNaik || !adaTurun) {
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Incomplete data!',
-                        text: 'Please fill in the calibration points for UP and DOWN pressure..'
+                        icon: 'warning',
+                        title: 'Data Tidak Lengkap!',
+                        text: 'Silakan isi data untuk tekanan atas dan bawah.'
                     });
                     return; // stop proses
                 }
@@ -549,8 +703,8 @@
                 if (naikCount !== turunCount) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Mismatch data!',
-                        text: 'The number of calibration points for UP and DOWN must be the same.'
+                        title: 'Data tidak cocok!',
+                        text: 'Jumlah titik kalibrasi untuk Tekanan Naik dan Turun harus sama.'
                     });
                     return;
                 }
@@ -569,8 +723,10 @@
                             $('#formKalibrasi')[0].reset();
                             $('#containerNaik').empty();
                             $('#containerTurun').empty();
-                            $('#titikNaik').val('');
-                            $('#titikTurun').val('');
+                            $('#titik_naik').val('');
+                            $('#titik_turun').val('');
+
+                            localStorage.removeItem(STORAGE_KEY);
                         } else {
                             Swal.fire('Failed', res.message || 'Something went wrong!',
                                 'error');
@@ -598,17 +754,36 @@
                 });
             });
 
-            // Cancel button
-            $(document).on('click', '#btnCancelKalibrasi', function() {
-                // reset semua field
-                $('#formKalibrasi')[0].reset();
+            $('#alat_id').change(function() {
+                var id = $(this).val();
+                if (!id) return;
 
-                // kosongkan container titik
+                $.get('/api/kalibrasi/pressure/data/alat/' + id, function(res) {
+                    let data = res.data;
+                    $('#departemen_pemilik').val(data.departemen_pemilik);
+                    $('#lokasi_alat').val(data.lokasi_alat);
+                    $('#no_kalibrasi').val(data.no_kalibrasi);
+                    $('#nama_alat').val(data.nama_alat);
+                    $('#merk').val(data.merk);
+                    $('#tipe').val(data.tipe);
+                    $('#kapasitas').val(data.kapasitas);
+                    $('#resolusi').val(data.resolusi);
+                    $('#range_penggunaan_alat').val(data.range_penggunaan_alat);
+                    $('#limits_of_permissible_error').val(data.limits_of_permissible_error);
+                    $('#metode_kalibrasi').val(data.metode_kalibrasi);
+                });
+            });
+
+            // reset button
+            $(document).on('click', '#btnResetKalibrasi', function() {
+                $('#formKalibrasi')[0].reset();
                 $('#containerNaik').empty();
                 $('#containerTurun').empty();
-
-                // kalau ada select2 atau plugin lain, reset juga
+                $('#titik_naik').val('');
+                $('#titik_turun').val('');
                 $('#alat_id').val('').trigger('change');
+
+                localStorage.removeItem(STORAGE_KEY);
             });
 
             // saat dibuka
@@ -659,6 +834,99 @@
                     }
                 });
             });
+
+            $(document).on('click', '#btnPreview', function(e) {
+                e.preventDefault();
+
+                // Ambil data utama form
+                const formData = $('#formKalibrasi').serializeArray();
+                const data = {};
+                formData.forEach(item => data[item.name] = item.value);
+
+                // Ambil titik pengukuran (naik & turun)
+                let pressureData = {
+                    naik: [],
+                    turun: []
+                };
+
+                ['Naik', 'Turun'].forEach(type => {
+                    $(`#container${type} .titik-kalibrasi-block`).each(function(index) {
+                        let titik = {
+                            no: index + 1,
+                            standar: [],
+                            alat: []
+                        };
+                        for (let j = 1; j <= 3; j++) {
+                            titik.standar.push($(
+                                    `#container${type}_standar_${index + 1}_${j}`)
+                                .val() || '-');
+                            titik.alat.push($(`#container${type}_alat_${index + 1}_${j}`)
+                                .val() || '-');
+                        }
+                        pressureData[type.toLowerCase()].push(titik);
+                    });
+                });
+
+                // ============================
+                // BAGIAN PREVIEW HTML
+                // ============================
+                let html = `
+                    <h5 class="fw-bold text-primary mb-3">Informasi Kalibrasi</h5>
+                    <div class="row">
+                         <div class="col-md-6 mb-2"><strong>Kode Alat:</strong> ${$('#alat_id option:selected').text() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Nama Alat:</strong> ${$('#nama_alat').val() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Merk:</strong> ${$('#merk').val() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Tipe:</strong> ${$('#tipe').val() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Kapasitas:</strong> ${$('#kapasitas').val() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Resolusi:</strong> ${$('#resolusi').val() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Range Penggunaan:</strong> ${$('#range_penggunaan_alat').val() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Departemen Pemilik:</strong> ${$('#departemen_pemilik').val() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Lokasi Alat:</strong> ${$('#lokasi_alat').val() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Metode Kalibrasi:</strong> ${$('#metode_kalibrasi').val() || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Lokasi Kalibrasi:</strong> ${data.lokasi_kalibrasi || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Suhu Ruangan:</strong> ${data.suhu_ruangan || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Kelembaban:</strong> ${data.kelembaban || '-'}</div>
+                        <div class="col-md-6 mb-2"><strong>Tanggal Kalibrasi:</strong> ${data.tgl_kalibrasi || '-'}</div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <h5 class="fw-bold text-success mt-4 mb-2">Tekanan Naik</h5>
+                    ${generatePreviewTable(pressureData.naik)}
+
+                    <h5 class="fw-bold text-danger mt-4 mb-2">Tekanan Turun</h5>
+                    ${generatePreviewTable(pressureData.turun)}
+                `;
+
+                $('#previewBody').html(html);
+                $('#modalPreviewKalibrasi').modal('show');
+            });
+
+            function generatePreviewTable(data) {
+                if (!data.length) return '<p class="text-muted fst-italic">Belum ada titik kalibrasi.</p>';
+
+                let rows = data.map(titik => `
+                    <tr>
+                        <td>${titik.no}</td>
+                        <td>${titik.standar.join('<br>')}</td>
+                        <td>${titik.alat.join('<br>')}</td>
+                    </tr>
+                `).join('');
+
+                return `
+                    <table class="table table-sm table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="10%">Titik</th>
+                                <th width="45%">Penunjuk Standar</th>
+                                <th width="45%">Penunjuk Alat</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+
         })
     </script>
 @endsection

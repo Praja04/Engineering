@@ -14,23 +14,23 @@ return new class extends Migration
         Schema::create('kalibrasi_pressure_gabungan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kalibrasi_id')->constrained('kalibrasi')->cascadeOnDelete();
-            $table->float('titik_kalibrasi', 8, 3);
+            $table->decimal('titik_kalibrasi', 10, 3);
 
             // avg per arah
-            $table->float('avg_penunjuk_alat_naik', 8, 3)->nullable();
-            $table->float('avg_penunjuk_alat_turun', 8, 3)->nullable();
-            $table->float('avg_tekanan_standar_naik', 8, 3)->nullable();
-            $table->float('avg_tekanan_standar_turun', 8, 3)->nullable();
-            $table->float('avg_kor_alat_naik', 8, 3)->nullable();
-            $table->float('avg_kor_alat_turun', 8, 3)->nullable();
+            $table->decimal('avg_penunjuk_alat_naik', 10, 3)->nullable();
+            $table->decimal('avg_penunjuk_alat_turun', 10, 3)->nullable();
+            $table->decimal('avg_tekanan_standar_naik', 10, 3)->nullable();
+            $table->decimal('avg_tekanan_standar_turun', 10, 3)->nullable();
+            $table->decimal('avg_kor_alat_naik', 10, 3)->nullable();
+            $table->decimal('avg_kor_alat_turun', 10, 3)->nullable();
 
             // std deviasi per arah
-            $table->float('std_deviasi_naik', 8, 3)->nullable();
-            $table->float('std_deviasi_turun', 8, 3)->nullable();
+            $table->decimal('std_deviasi_naik', 10, 3)->nullable();
+            $table->decimal('std_deviasi_turun', 10, 3)->nullable();
 
             // ketidakpastian per arah
-            $table->float('ketidak_pastian_naik', 8, 3)->nullable();
-            $table->float('ketidak_pastian_turun', 8, 3)->nullable();
+            $table->decimal('ketidak_pastian_naik', 10, 3)->nullable();
+            $table->decimal('ketidak_pastian_turun', 10, 3)->nullable();
 
             // U per arah
             $table->decimal('u_naik', 10, 9)->nullable();

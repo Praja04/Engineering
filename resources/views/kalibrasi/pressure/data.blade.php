@@ -26,13 +26,11 @@
                     <div class="page-title d-sm-flex align-items-center justify-content-between">
                         {{-- <h4 class="mb-sm-0">Form Input TKBM</h4> --}}
 
-                        <div class="page-title-right">
-                            <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item"><a href="javascript: void(0);">Kalibrasi</a></li>
-                                <li class="breadcrumb-item active">List History</a></li>
-                                {{-- <li class="breadcrumb-item active">Alat Kalibrasi</li> --}}
-                            </ol>
-                        </div>
+                        <a href="{{ url()->previous() }}"
+                            class="btn btn-outline-primary rounded-pill px-4 d-flex align-items-center">
+                            <i class="mdi mdi-arrow-left me-1"></i>
+                            Kembali
+                        </a>
                     </div>
                 </div>
             </div>
@@ -48,11 +46,11 @@
                                     <tr>
                                         <th>No</th>
                                         <th>Kode Alat</th>
-                                        <th>Tanggal Kalibrasi</th>
+                                        <th>Tgl Kalibrasi</th>
+                                        <th>Tgl Kalibrasi Ulang</th>
                                         <th>Lokasi</th>
                                         <th>Kondisi Ruangan</th>
                                         <th>Titik Kalibrasi</th>
-                                        <th>Status</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -60,24 +58,6 @@
                                     <!-- Data akan diisi via jQuery -->
                                 </tbody>
                             </table>
-                            <div class="mt-3">
-                                <h6>Keterangan Status:</h6>
-                                <div class="d-flex gap-4 flex-wrap">
-                                    <div>
-                                        <span class="badge rounded-pill badge-outline-success px-3 py-1">Valid</span>
-                                        <small class="text-muted">Masih dalam masa berlaku</small>
-                                    </div>
-                                    <div>
-                                        <span class="badge rounded-pill badge-outline-warning px-3 py-1">Almost
-                                            Expired</span>
-                                        <small class="text-muted">Waktu kalibrasi ulang &lt; 30 hari</small>
-                                    </div>
-                                    <div>
-                                        <span class="badge rounded-pill badge-outline-danger px-3 py-1">Expired</span>
-                                        <small class="text-muted">Sudah melewati tanggal ulang</small>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -216,7 +196,7 @@
                                 <div class="card-body p-0">
                                     <div class="table-responsive">
                                         <table class="table table-hover table-sm text-center mb-0">
-                                            <thead class="table-light">
+                                            <thead class="table-light align-middle">
                                                 <tr>
                                                     <th>Titik</th>
                                                     <th>Penunjuk Standar</th>
@@ -224,6 +204,11 @@
                                                     <th>Koreksi Standar</th>
                                                     <th>Tekanan Standar</th>
                                                     <th>Koreksi Alat</th>
+                                                    <th>Avg. Penunjuk Alat</th>
+                                                    <th>Avg. Tekanan Standar</th>
+                                                    <th>Avg. Kor Alat</th>
+                                                    <th>Standar Deviasi</th>
+                                                    <th>Ketidakpastian</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="pressure_naik"></tbody>
@@ -241,7 +226,7 @@
                                 <div class="card-body p-0">
                                     <div class="table-responsive">
                                         <table class="table table-hover table-sm text-center mb-0">
-                                            <thead class="table-light">
+                                            <thead class="table-light align-middle">
                                                 <tr>
                                                     <th>Titik</th>
                                                     <th>Penunjuk Standar</th>
@@ -249,6 +234,11 @@
                                                     <th>Koreksi Standar</th>
                                                     <th>Tekanan Standar</th>
                                                     <th>Koreksi Alat</th>
+                                                    <th>Avg. Penunjuk Alat</th>
+                                                    <th>Avg. Tekanan Standar</th>
+                                                    <th>Avg. Kor Alat</th>
+                                                    <th>Standar Deviasi</th>
+                                                    <th>Ketidakpastian</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="pressure_turun"></tbody>
@@ -352,6 +342,12 @@
                             },
                         },
                         {
+                            data: "tgl_kalibrasi_ulang",
+                            render: function(data) {
+                                return formatDate(data);
+                            },
+                        },
+                        {
                             data: "lokasi_kalibrasi",
                         },
                         {
@@ -369,12 +365,6 @@
                             data: "pressure_gabungan",
                             render: function(data) {
                                 return data.length;
-                            },
-                        },
-                        {
-                            data: "tgl_kalibrasi_ulang",
-                            render: function(data) {
-                                return getStatusBadge(data);
                             },
                         },
                         {
@@ -405,20 +395,6 @@
                 return date.toLocaleDateString('id-ID', options);
             }
 
-            function getStatusBadge(tglUlang) {
-                let today = new Date();
-                let ulangDate = new Date(tglUlang);
-                let diffDays = Math.ceil((ulangDate - today) / (1000 * 60 * 60 * 24));
-
-                if (diffDays < 0) {
-                    return '<span class="badge badge-soft-danger px-3 py-2">Expired</span>';
-                } else if (diffDays <= 30) {
-                    return '<span class="badge badge-soft-warning px-3 py-2">Almost Expired</span>';
-                } else {
-                    return '<span class="badge badge-soft-success px-3 py-2">Valid</span>';
-                }
-            }
-
             // Show detail modal
             $(document).on('click', '.btn-detail', function() {
                 let id = $(this).data('id');
@@ -438,7 +414,7 @@
                 $('#detail_suhu').text(item.suhu_ruangan + '°C');
                 $('#detail_kelembaban').text(item.kelembaban + '%');
                 $('#detail_jenis').text(item.jenis_kalibrasi.toUpperCase());
-                $('#detail_metode').text(item.metode_kalibrasi);
+                $('#detail_metode').text(item.alat.metode_kalibrasi);
 
                 // Render pressure data
                 let naikBody = $('#pressure_naik');
@@ -463,35 +439,56 @@
                 const turunArr = pressures.filter(p => p.tekanan === 'turun')
                     .sort((a, b) => a.titik_kalibrasi - b.titik_kalibrasi);
 
-                function renderList(arr, $body) {
-                    if (arr.length === 0) {
-                        $body.append('<tr><td colspan="6" class="text-center text-muted">No data</td></tr>');
+                function formatNumber(val) {
+                    const num = parseFloat(val);
+                    if (isNaN(num)) return '—';
+                    return num.toFixed(1); // hanya 1 angka desimal
+                }
+
+                function renderList(item, arr, $body, tipe) {
+                    if (!arr.length) {
+                        $body.append('<tr><td colspan="9" class="text-center text-muted">Tidak ada data</td></tr>');
                         return;
                     }
 
-                    let lastTitik = null; // <- reset per tabel
+                    const grouped = arr.reduce((acc, p) => {
+                        if (!acc[p.titik_kalibrasi]) acc[p.titik_kalibrasi] = [];
+                        acc[p.titik_kalibrasi].push(p);
+                        return acc;
+                    }, {});
 
-                    arr.forEach(p => {
-                        const showTitik = lastTitik !== p.titik_kalibrasi;
-                        const titikCell = showTitik ?
-                            `<span class="badge badge-soft-primary">${p.titik_kalibrasi}</span>` : '';
-                        lastTitik = p.titik_kalibrasi;
+                    const suffix = tipe === 'naik' ? '_naik' : '_turun';
 
-                        $body.append(`
-                            <tr>
-                                <td>${titikCell}</td>
-                                <td>${p.penunjuk_standar}</td>
-                                <td>${p.penunjuk_alat}</td>
-                                <td>${p.koreksi_standar}</td>
-                                <td>${p.tekanan_standar}</td>
-                                <td>${p.koreksi_alat}</td>
-                            </tr>
-                        `);
+                    Object.keys(grouped).forEach(titik => {
+                        const dataTitik = grouped[titik];
+                        const pg = item.pressure_gabungan?.find(pg => pg.titik_kalibrasi == titik);
+
+                        dataTitik.forEach((p, i) => {
+                            const showTitik = i === 0; // tampilkan hanya di baris pertama per titik
+                            const showGabungan = i ===
+                                0; // tampilkan nilai avg/sd/u hanya di baris pertama
+
+                            $body.append(`
+                                <tr>
+                                    <td>${showTitik ? `<span class="badge bg-primary">${formatNumber(p.titik_kalibrasi)}</span>` : ''}</td>
+                                    <td>${formatNumber(p.penunjuk_standar)}</td>
+                                    <td>${formatNumber(p.penunjuk_alat)}</td>
+                                    <td>${formatNumber(p.koreksi_standar)}</td>
+                                    <td>${formatNumber(p.tekanan_standar)}</td>
+                                    <td>${formatNumber(p.koreksi_alat)}</td>
+                                    <td>${showGabungan && pg ? formatNumber(pg['avg_penunjuk_alat' + suffix]) : ''}</td>
+                                    <td>${showGabungan && pg ? formatNumber(pg['avg_tekanan_standar' + suffix]) : ''}</td>
+                                    <td>${showGabungan && pg ? formatNumber(pg['avg_kor_alat' + suffix]) : ''}</td>
+                                    <td>${showGabungan && pg ? formatNumber(pg['std_deviasi' + suffix]) : ''}</td>
+                                    <td>${showGabungan && pg ? formatNumber(pg['ketidak_pastian' + suffix]) : ''}</td>
+                                </tr>
+                            `);
+                        });
                     });
                 }
 
-                renderList(naikArr, naikBody);
-                renderList(turunArr, turunBody);
+                renderList(item, naikArr, naikBody, 'naik');
+                renderList(item, turunArr, turunBody, 'turun');
 
                 // Render data gabungan
                 if (item.pressure_gabungan && item.pressure_gabungan.length > 0) {
@@ -501,7 +498,7 @@
                     $.each(item.pressure_gabungan, function(i, pg) {
                         let row = `
                         <tr>
-                            <td><span class="badge badge-soft-primary">${pg.titik_kalibrasi}</span></td>
+                            <td><span class="badge badge-soft-primary">${formatNumber(pg.titik_kalibrasi)}</span></td>
                             <td>${parseFloat(pg.u_naik).toFixed(9)}</td>
                             <td>${parseFloat(pg.u_turun).toFixed(9)}</td>
                             <td>${parseFloat(pg.u_naik_kuadrat).toFixed(9)}</td>

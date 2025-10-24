@@ -48,12 +48,9 @@ class KalibrasiPressureController extends Controller
         $validated = $request->validate([
             'alat_id' => 'required|exists:alat_kalibrasi,id',
             'lokasi_kalibrasi' => 'required|string|max:255',
-            'suhu_ruangan' => 'required|numeric|max:50',
-            'suhu_ruangan_tol' => 'required|numeric|max:50',
-            'kelembaban' => 'required|numeric|max:50',
-            'kelembaban_tol' => 'required|numeric|max:50',
+            'suhu_ruangan_final' => 'required|string|max:50',
+            'kelembaban_final' => 'required|string|max:50',
             'tgl_kalibrasi' => 'required|date',
-            'metode_kalibrasi' => 'required|string|max:255',
 
             'pressure' => 'required|array',
             'pressure.*.titik_kalibrasi' => 'required|numeric',
@@ -63,18 +60,15 @@ class KalibrasiPressureController extends Controller
             'pressure.*.koreksi_standar' => 'nullable|numeric',
         ]);
 
-        // dd($validated['pressure']);
-
         // Simpan data utama kalibrasi
         $kalibrasi = KalibrasiModel::create([
             'alat_id' => $validated['alat_id'],
             'user_id' => Auth::id() ?? 1,
-            'lokasi_kalibrasi' => $validated['lokasi_kalibrasi'],
-            'suhu_ruangan' => $validated['suhu_ruangan'] . '±' . $validated['suhu_ruangan_tol'],
-            'kelembaban' => $validated['kelembaban'] . '±' . $validated['kelembaban_tol'],
+            'lokasi_kalibrasi' => $validated['lokasi_kalibrasi'] ?? '-',
+            'suhu_ruangan' => $validated['suhu_ruangan_final'] ?? '-',
+            'kelembaban' => $validated['kelembaban_final'] ?? '-',
             'tgl_kalibrasi' => $validated['tgl_kalibrasi'],
             'tgl_kalibrasi_ulang' => Carbon::parse($validated['tgl_kalibrasi'])->addYearNoOverflow(),
-            'metode_kalibrasi' => $validated['metode_kalibrasi'],
             'jenis_kalibrasi' => 'pressure',
         ]);
 
@@ -220,7 +214,7 @@ class KalibrasiPressureController extends Controller
                     $q->orderBy('titik_kalibrasi');
                 },
                 'pressureGabungan',
-                'alat:id,kode_alat,nama_alat'
+                'alat'
             ])
                 ->where('jenis_kalibrasi', 'pressure')
                 ->orderBy('created_at', 'desc')
@@ -261,7 +255,6 @@ class KalibrasiPressureController extends Controller
     {
         $kalibrasi = KalibrasiModel::findOrFail($id);
 
-        // Hapus relasi dulu
         $kalibrasi->pressure()->delete();
         $kalibrasi->pressureGabungan()->delete();
 
