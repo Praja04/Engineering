@@ -77,7 +77,8 @@
 
                 <!-- CTA Button -->
                 <div style="text-align: center; margin: 35px 0;">
-                    <a href="{{ route('kalibrasi.certificate.approval.detail', $sertifikat->id) }}"
+                    {{-- <a href="{{ route('kalibrasi.certificate.approval.detail', $sertifikat->id) }}" --}}
+                    <a href="{{ route('kalibrasi.certificate.approvals') }}"
                         style="display: inline-block; 
                           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                           color: #ffffff; 

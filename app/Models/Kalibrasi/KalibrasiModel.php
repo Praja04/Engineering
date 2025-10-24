@@ -22,8 +22,8 @@ class KalibrasiModel extends Model
         'kelembaban',
         'tgl_kalibrasi',
         'tgl_kalibrasi_ulang',
-        'metode_kalibrasi',
         'jenis_kalibrasi',
+        'status_save'
     ];
 
     public function alat()
@@ -34,6 +34,19 @@ class KalibrasiModel extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function getRelasiByJenis(): array
+    {
+        return match (strtolower($this->jenis_kalibrasi)) {
+            'pressure' => ['pressure', 'pressureGabungan'],
+            'temperature' => ['temperature', 'temperatureGabungan'],
+            'volumetric' => ['volumetric', 'volumetricGabungan'],
+            // tambahkan jenis lain di sini
+            'mass' => ['mass', 'massGabungan'],
+            'electrical' => ['electrical', 'electricalGabungan'],
+            default => [], // fallback kalau belum diatur
+        };
     }
 
     public function pressure()

@@ -45,9 +45,9 @@
                         style="background: linear-gradient(135deg, #e8fdf5, #d0f5e6); color: #22543d;">
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div>
-                                <h6 class="fw-semibold mb-1">Valid</h6>
+                                <h6 class="fw-semibold mb-1">Active</h6>
                                 <h2 class="fw-bold mb-0" id="countValid">0</h2>
-                                <p class="mb-0">More than 14 days</p>
+                                <p class="mb-0">Waktu Kalibrasi Ulang Masih Panjang</p>
                             </div>
                             <i class="mdi mdi-check-circle-outline fs-1 opacity-50"></i>
                         </div>
@@ -60,9 +60,9 @@
                         style="background: linear-gradient(135deg, #fffbea, #fff3cd); color: #7c5700;">
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div>
-                                <h6 class="fw-semibold mb-1">Almost Expired</h6>
+                                <h6 class="fw-semibold mb-1">Warning</h6>
                                 <h2 class="fw-bold mb-0" id="countAlmost">0</h2>
-                                <p class="mb-0">Less than 14 days</p>
+                                <p class="mb-0">Mendekati Waktu Kalibrasi Ulang</p>
                             </div>
                             <i class="mdi mdi-alert-outline fs-1 opacity-50"></i>
                         </div>
@@ -75,9 +75,9 @@
                         style="background: linear-gradient(135deg, #fde2e4, #fad2e1); color: #6d0202;">
                         <div class="card-body d-flex align-items-center justify-content-between">
                             <div>
-                                <h6 class="fw-semibold mb-1">Expired</h6>
+                                <h6 class="fw-semibold mb-1">Missed</h6>
                                 <h2 class="fw-bold mb-0" id="countExpired">0</h2>
-                                <p class="mb-0">Past the recalibration date</p>
+                                <p class="mb-0">Waktu Kalibrasi Ulang Sudah Terlewat</p>
                             </div>
                             <i class="mdi mdi-close-circle-outline fs-1 opacity-50"></i>
                         </div>
@@ -97,30 +97,12 @@
                         </div>
                         <div class="card-body">
                             <div class="mb-4">
-                                <div class="d-flex flex-wrap gap-2 align-items-center">
-                                    <button class="btn btn-sm btn-outline-primary filter-btn active" data-filter="all">
-                                        <i class="mdi mdi-filter-variant me-1"></i>All
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-info filter-btn" data-filter="Pressure">
-                                        <i class="mdi mdi-gauge me-1"></i>Pressure
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success filter-btn" data-filter="Massa">
-                                        <i class="mdi mdi-scale-balance me-1"></i>Massa
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="Temperature">
-                                        <i class="mdi mdi-thermometer me-1"></i>Temperature
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-primary filter-btn" data-filter="Volumetrik">
-                                        <i class="mdi mdi-beaker me-1"></i>Volumetrik
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger filter-btn" data-filter="Dimention">
-                                        <i class="mdi mdi-ruler me-1"></i>Dimention
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="Magnetic">
-                                        <i class="mdi mdi-magnet me-1"></i>Magnetic
-                                    </button>
+                                <div class="d-flex flex-wrap gap-2 align-items-center" id="filterContainer">
+                                    <!-- Filter buttons will be generated here -->
                                 </div>
                             </div>
+
+
                             <div class="table-responsive">
                                 <table id="scheduleTable" class="table table-hover align-middle text-nowrap"
                                     style="width:100%">
@@ -130,8 +112,8 @@
                                             <th>Kode Alat</th>
                                             <th>Lokasi</th>
                                             <th>Jenis Kalibrasi</th>
-                                            <th>Tanggal Kalibrasi</th>
-                                            <th>Tanggal Kalibrasi Ulang</th>
+                                            <th>Tgl Kalibrasi</th>
+                                            <th>Tgl Kalibrasi Ulang</th>
                                             <th>Status</th>
                                             <th class="text-center">Action</th>
                                         </tr>
@@ -156,6 +138,73 @@
                 const schedules = res.data || [];
 
                 schedules.sort((a, b) => new Date(a.tgl_kalibrasi_ulang) - new Date(b.tgl_kalibrasi_ulang));
+
+                // Ambil daftar jenis kalibrasi unik
+                const jenisSet = new Set();
+
+                schedules.forEach(item => {
+                    if (item.jenis_kalibrasi) {
+                        jenisSet.add(item.jenis_kalibrasi);
+                    }
+                });
+
+                console.log(jenisSet);
+
+                // Konversi ke array & urutkan alfabet
+                const jenisList = Array.from(jenisSet).sort();
+
+                // Icon mapping (biar tetap cantik dan relevan)
+                const styleMap = {
+                    'Pressure': {
+                        icon: 'mdi-gauge',
+                        color: 'btn-outline-info'
+                    },
+                    'Massa': {
+                        icon: 'mdi-scale-balance',
+                        color: 'btn-outline-success'
+                    },
+                    'Temperature': {
+                        icon: 'mdi-thermometer',
+                        color: 'btn-outline-warning'
+                    },
+                    'Volumetrik': {
+                        icon: 'mdi-beaker',
+                        color: 'btn-outline-primary'
+                    },
+                    'Dimention': {
+                        icon: 'mdi-ruler',
+                        color: 'btn-outline-danger'
+                    },
+                    'Magnetic': {
+                        icon: 'mdi-magnet',
+                        color: 'btn-outline-secondary'
+                    },
+                };
+
+                // 🎨 Generate tombol filter dinamis
+                const filterContainer = $('#filterContainer');
+                let filterButtons = `
+                    <button class="btn btn-sm btn-outline-primary filter-btn active" data-filter="all">
+                        <i class="mdi mdi-filter-variant me-1"></i>All
+                    </button>
+                `;
+
+                jenisList.forEach(jenis => {
+                    const {
+                        icon,
+                        color
+                    } = styleMap[jenis] || {
+                        icon: 'mdi-shape',
+                        color: 'btn-outline-secondary'
+                    };
+                    filterButtons += `
+                        <button class="btn btn-sm ${color} filter-btn" data-filter="${jenis}">
+                            <i class="mdi ${icon} me-1"></i>${jenis}
+                        </button>
+                    `;
+                });
+
+                filterContainer.html(filterButtons);
 
                 let rows = "";
 
@@ -203,7 +252,7 @@
                             <td>${statusBadge}</td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-outline-primary calibrate-btn" 
-                                        onclick="window.location.href='/kalibrasi/${jenis}/index'"
+                                        onclick="window.location.href='/kalibrasi/form/${jenis}'"
                                         data-id="${item.id}" 
                                         title="Calibrate Data">
                                     <i class="mdi mdi-hand-pointing-up"></i> Calibrate Now
