@@ -26,7 +26,7 @@
                     <div class="page-title d-sm-flex align-items-center justify-content-between">
                         {{-- <h4 class="mb-sm-0">Form Input TKBM</h4> --}}
 
-                        <a href="{{ url()->previous() }}"
+                        <a href="{{ route('kalibrasi.data.dashboard') }}"
                             class="btn btn-outline-primary rounded-pill px-4 d-flex align-items-center">
                             <i class="mdi mdi-arrow-left me-1"></i>
                             Kembali

@@ -284,9 +284,9 @@
                                 if (userRole === 'foreman' && !allApproved &&
                                     statusSertifikat === 'draft') {
                                     actionButtons += `
-                                        <button class="btn btn-outline-primary btn-sm req-approval-btn" 
-                                            data-id="${item.id}">
-                                            <i class="mdi mdi-send-check-outline me-1"></i> Send Approval
+                                       <button class="btn btn-outline-primary btn-sm req-approval-btn" 
+                                            data-id="${item.certificate?.id}">
+                                            <i class="mdi mdi-send-check-outline me-1"></i>Request Approval
                                         </button>
                                     `;
 

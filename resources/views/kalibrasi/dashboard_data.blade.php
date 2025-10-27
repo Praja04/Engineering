@@ -95,7 +95,7 @@
                 <!-- Kalibrasi Listrik -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-primary text-dark cursor-pointer"
-                        onclick="window.location.href='{{ route('kalibrasi.data.dev-page') }}'">
+                        onclick="window.location.href='{{ route('kalibrasi.data.volumetrik') }}'">
                         <div class="card-body text-center p-4">
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-flash-outline fs-1 text-primary"></i>

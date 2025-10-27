@@ -18,12 +18,14 @@
                                 Terima kasih atas kesabaran dan dukungan Anda.
                             </p>
 
-                            <a href="{{ url()->previous() }}" class="btn btn-outline-primary rounded-pill px-4">
-                                <i class="mdi mdi-arrow-left me-1"></i> Kembali
-                            </a>
-                            <a href="{{ route('dashboard') }}" class="btn btn-primary rounded-pill px-4">
-                                <i class="mdi mdi-view-dashboard-outline me-1"></i> Ke Dashboard
-                            </a>
+                            <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                <a href="{{ url()->previous() }}" class="btn btn-outline-primary rounded-pill px-4">
+                                    <i class="mdi mdi-arrow-left me-1"></i> Kembali
+                                </a>
+                                <a href="{{ route('dashboard') }}" class="btn btn-primary rounded-pill px-4">
+                                    <i class="mdi mdi-view-dashboard-outline me-1"></i> Ke Dashboard
+                                </a>
+                            </div>
 
                             <div class="mt-4 small text-muted">
                                 <i class="mdi mdi-clock-outline"></i> Terakhir diperbarui: {{ now()->format('d M Y') }}

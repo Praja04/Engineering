@@ -20,7 +20,7 @@ class KalibrasiPressureController extends Controller
     public function index()
     {
         $alat = AlatKalibrasiModel::select('id', 'kode_alat', 'nama_alat')
-            ->where('jenis_kalibrasi', 'Pressure')
+            ->where('jenis_kalibrasi', 'pressure')
             ->get();
 
         return view('kalibrasi.pressure.index', compact('alat'));

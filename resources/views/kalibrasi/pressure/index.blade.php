@@ -87,7 +87,7 @@
                     <div class="page-title d-sm-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-2">
                             <!-- Tombol Back -->
-                            <a href="{{ url()->previous() }}"
+                            <a href="{{ route('kalibrasi.form.dashboard') }}"
                                 class="btn btn-outline-primary rounded-pill px-4 d-flex align-items-center">
                                 <i class="mdi mdi-arrow-left me-1"></i>
                                 Kembali
@@ -118,7 +118,6 @@
                         <div id="collapseDataInformation" class="collapse show">
                             <div class="card-body">
                                 <form id="formKalibrasi">
-
                                     <!-- Section Pilih Alat -->
                                     <div class="card mb-3 border-primary">
                                         <div class="card-header bg-primary text-white py-2">
@@ -414,7 +413,6 @@
                 function() {
                     saveForm();
                 });
-
 
             function saveForm() {
                 let headerData = $('#formKalibrasi').serialize();

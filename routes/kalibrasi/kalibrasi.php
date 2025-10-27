@@ -3,22 +3,24 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Kalibrasi\KalibrasiCertificateController;
 use App\Http\Controllers\Kalibrasi\KalibrasiController;
-
 use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
+use App\Http\Controllers\Kalibrasi\KalibrasiVolumtrikController;
 
 // All Access
-Route::middleware(['auth', 'access:engineering_kalibrasi'])->group(function () {
+Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
 
     Route::prefix('kalibrasi')->group(function () {
         Route::prefix('form')->group(function () {
             Route::get('/dashboard', [KalibrasiController::class, 'dashboardForm'])->name('kalibrasi.form.dashboard');
             Route::get('/pressure', [KalibrasiPressureController::class, 'index'])->name('kalibrasi.form.pressure');
+            Route::get('/volumetrik', [KalibrasiVolumtrikController::class, 'showForm'])->name('kalibrasi.form.volumetrik');
             Route::get('/dev-page', [KalibrasiController::class, 'viewDevPage'])->name('kalibrasi.form.dev-page');
         });
 
         Route::prefix('data')->group(function () {
             Route::get('/dashboard', [KalibrasiController::class, 'dashboardData'])->name('kalibrasi.data.dashboard');
             Route::get('/pressure', [KalibrasiPressureController::class, 'viewData'])->name('kalibrasi.data.pressure');
+            Route::get('/volumetrik', [KalibrasiVolumtrikController::class, 'viewData'])->name('kalibrasi.data.volumetrik');
             Route::get('/dev-page', [KalibrasiController::class, 'viewDevPage'])->name('kalibrasi.data.dev-page');
         });
 
@@ -38,6 +40,10 @@ Route::middleware(['auth', 'access:engineering_kalibrasi'])->group(function () {
         Route::prefix('pressure')->group(function () {
             Route::post('/store', [KalibrasiPressureController::class, 'store'])->name('kalibrasi.pressure.store');
             Route::delete('/delete/{id}', [KalibrasiPressureController::class, 'destroy'])->name('kalibrasi.pressure.delete');
+        });
+
+        Route::prefix('volumetrik')->group(function () {
+            Route::post('/store', [KalibrasiVolumtrikController::class, 'store'])->name('kalibrasi.volumetrik.store');
         });
     });
 });

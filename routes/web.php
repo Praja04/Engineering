@@ -29,6 +29,7 @@ Route::middleware('auth')->group(function () {
 
 // Kalibrasi Routes
 @include 'kalibrasi/kalibrasi.php';
+// End Kalibrasi Routes
 
 ////////// Scoring Mesin Routes ///////////
 @include 'scoring/scoring-routes.php';
@@ -38,3 +39,7 @@ Route::middleware('auth')->group(function () {
 @include 'utility/dashboard.php';
 
 //////////    End View Routes   ///////////
+
+// Boiler Routes
+@include('boiler/boiler.php');
+// End Boiler Routes

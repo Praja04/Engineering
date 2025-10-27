@@ -38,9 +38,9 @@
                     <li class="menu-title"><span data-key="t-dashboard">Dashboard</span></li>
 
                     @include('layouts.components.sidebar-scoring.dashboard-scoring')
+                    @include('layouts.components.sidebar-boiler.dashboard')
+                    @include('layouts.components.sidebar-utility.dashboard')
                 @endif
-                @include('layouts.components.sidebar-scoring.dashboard-scoring')
-                @include('layouts.components.sidebar-utility.dashboard')
 
 
                 <!-- /////////////////////menu/////////////// -->
@@ -57,8 +57,6 @@
                     @include('layouts.components.sidebar-kalibrasi.data-master')
                     @include('layouts.components.sidebar-scoring.menu-scoring-master')
                 @endif
-
-
 
                 <!-- /////////////////////Manage User/////////////// -->
                 @if (in_array($jabatan, ['dept_head', 'supervisor']))
