@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Kalibrasi\Pressure\KalibrasiPressureModel;
 use App\Models\Kalibrasi\Pressure\KalibrasiPressureGabunganModel;
+use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikGabunganModel;
+use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikModel;
 
 class KalibrasiModel extends Model
 {
@@ -62,5 +64,15 @@ class KalibrasiModel extends Model
     public function certificate()
     {
         return $this->hasOne(KalibrasiSertifikatModel::class, 'kalibrasi_id');
+    }
+
+    public function volumetrik()
+    {
+        return $this->hasMany(KalibrasiVolumetrikModel::class, 'kalibrasi_id');
+    }
+
+    public function volumetrikGabungan()
+    {
+        return $this->hasOne(KalibrasiVolumetrikGabunganModel::class, 'kalibrasi_id');
     }
 }

@@ -4,7 +4,7 @@
 @endphp
 
 @if (in_array($jabatan, ['operator', 'foreman', 'supervisor', 'dept_head']) &&
-        in_array($bagian, ['engineering', 'engineering_kalibrasi']))
+        in_array($bagian, ['Engineering', 'Engineering Kalibrasi']))
     <li class="nav-item">
         <a class="nav-link menu-link {{ request()->routeIs('kalibrasi.*') ? '' : 'collapsed' }}" href="#sideBarPressure"
             data-bs-toggle="collapse" role="button"
@@ -13,30 +13,6 @@
         </a>
         <div class="collapse menu-dropdown {{ request()->routeIs('kalibrasi.*') ? 'show' : '' }}" id="sideBarPressure">
             <ul class="nav nav-sm flex-column">
-                {{-- <li class="nav-item">
-                    <a href="#" data-bs-target="#sidebarPressure" data-bs-toggle="collapse" role="button"
-                        aria-expanded="{{ request()->routeIs('kalibrasi.pressure.*') ? 'true' : 'false' }}"
-                        aria-controls="sidebarPressure" class="nav-link" data-key="t-m-tkbm">
-                        <i class="mdi mdi-gauge"></i>Form
-                    </a>
-                    <div class="collapse menu-dropdown {{ request()->routeIs('kalibrasi.pressure.*') ? 'show' : '' }}"
-                        id="sidebarPressure">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{{ route('kalibrasi.pressure.index') }}"
-                                    class="nav-link {{ request()->routeIs('kalibrasi.pressure.index') ? 'active' : '' }}"
-                                    data-key="t-input-p2h">
-                                    Form Pressure</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('kalibrasi.pressure.data') }}"
-                                    class="nav-link {{ request()->routeIs('kalibrasi.pressure.data') ? 'active' : '' }}"
-                                    data-key="t-chat">
-                                    Data Pressure </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li> --}}
                 <li class="nav-item">
                     <a href="{{ route('kalibrasi.form.dashboard') }}"
                         class="nav-link {{ request()->routeIs('kalibrasi.form*') ? 'active' : '' }}">
