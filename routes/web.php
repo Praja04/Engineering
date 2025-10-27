@@ -35,5 +35,6 @@ Route::middleware('auth')->group(function () {
 @include 'utility/listrik-routes.php';
 @include 'utility/air-routes.php';
 @include 'utility/chemical-routes.php';
+@include 'utility/dashboard.php';
 
 //////////    End View Routes   ///////////

@@ -6,7 +6,7 @@ $bagian = Auth::user()->bagian;
 @if (
 ($jabatan === 'dept_head') ||
 ($jabatan === 'supervisor') ||
-($jabatan === 'foreman' && $bagian === 'Engineering Maintenance & Improvement')
+($jabatan === 'foreman' && $bagian === 'Engineering Maintenance & Improvement') || ($jabatan === 'foreman' && $bagian === 'Engineering Produksi')
 )
 <li class="nav-item">
     <a class="nav-link menu-link" href="#sidebarDashboardScoring" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarDashboardScoring">

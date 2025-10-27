@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Kalibrasi\KalibrasiController;
 use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
+use App\Http\Controllers\ScoringMesin\MachineScoringController;
 use App\Http\Controllers\Kalibrasi\KalibrasiCertificateController;
 
 Route::prefix('kalibrasi')->group(function () {
@@ -25,10 +26,6 @@ Route::prefix('kalibrasi')->group(function () {
     });
 });
 
-Route::prefix('notifications')->group(function () {
-    Route::post('/read/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.read');
-});
-
-
+Route::get('scoring/mesin', [MachineScoringController::class, 'api_scoring_mesin'])->name('api_scoring.mesin');
 ////// api utility listrik routes ///////
 @include 'utility/api-listrik-routes.php';
