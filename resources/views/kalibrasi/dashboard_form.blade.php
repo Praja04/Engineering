@@ -49,7 +49,7 @@
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-gauge fs-1 text-success"></i>
                             </div>
-                            <h5 class="fw-semibold mb-1">Kalibrasi Pressure</h5>
+                            <h5 class="fw-semibold mb-1">Kalibrasi Pressure Gauge</h5>
                             <p class="small text-muted mb-0">Pressure gauge, manometer, dan alat tekanan.</p>
                         </div>
                     </div>
@@ -63,7 +63,7 @@
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-thermometer-lines fs-1 text-info"></i>
                             </div>
-                            <h5 class="fw-semibold mb-1">Kalibrasi Suhu</h5>
+                            <h5 class="fw-semibold mb-1">Kalibrasi Thermohygrometer</h5>
                             <p class="small text-muted mb-0">Thermometer, oven, sensor suhu, dll.</p>
                         </div>
                     </div>
@@ -77,7 +77,7 @@
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-scale-balance fs-1 text-warning"></i>
                             </div>
-                            <h5 class="fw-semibold mb-1">Kalibrasi Massa</h5>
+                            <h5 class="fw-semibold mb-1">Kalibrasi Timbangan</h5>
                             <p class="small text-muted mb-0">Timbangan, neraca, dan beban standar.</p>
                         </div>
                     </div>
@@ -119,7 +119,7 @@
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-thermometer fs-1 text-secondary"></i>
                             </div>
-                            <h5 class="fw-semibold mb-1">Kalibrasi Temperature</h5>
+                            <h5 class="fw-semibold mb-1">Kalibrasi Temperature Gauge</h5>
                             <p class="small text-muted mb-0">Termometer digital, sensor suhu, dll.</p>
                         </div>
                     </div>

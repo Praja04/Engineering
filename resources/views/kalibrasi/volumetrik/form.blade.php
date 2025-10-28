@@ -49,161 +49,177 @@
                         @csrf
 
                         {{-- === Data Utama Kalibrasi === --}}
-
-                        <div class="row mb-3 gy-3">
-                            <div class="col-lg-6 col-md-8 col-sm-12">
-                                <label for="alat_id" class="form-label">Pilih Alat</label>
-                                <div class="input-group">
-                                    <select class="form-select" id="alat_id" name="alat_id" required>
-                                        <option value="">-- Pilih Alat --</option>
-                                        @foreach ($alat as $alat)
-                                            <option value="{{ $alat->id }}">{{ $alat->nama_alat }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="button" id="btnDetail" class="btn btn-soft-primary"
-                                        data-bs-toggle="collapse" data-bs-target="#collapseAlatDetail" disabled>
-                                        <i class="mdi mdi-information-outline me-2"></i>Detail
-                                    </button>
-                                </div>
+                        <div class="card border border-primary border-opacity-50 mb-4">
+                            <div class="card-header bg-light">
+                                <strong><i class="mdi mdi-clipboard-list-outline me-2"></i>Data Utama Kalibrasi</strong>
                             </div>
-                            <div class="col-lg-6 col-md-4 col-sm-12">
-                                <label class="form-label fw-semibold">Lokasi Kalibrasi</label>
-                                <input type="text" name="lokasi_kalibrasi" id="lokasi_kalibrasi" class="form-control"
-                                    placeholder="Lab Kalibrasi 1" required>
-                            </div>
-
-                            <!-- DETAIL ALAT (COLLAPSE) -->
-                            <div class="collapse mb-3 mt-4" id="collapseAlatDetail">
-                                <div class="card border-info shadow-sm">
-                                    <div class="card-header bg-soft-info">
-                                        <strong>Detail Alat</strong>
+                            <div class="card-body">
+                                <div class="row mb-3 gy-3">
+                                    <div class="col-lg-6 col-md-8 col-sm-12">
+                                        <label for="alat_id" class="form-label">Pilih Alat</label>
+                                        <div class="input-group">
+                                            <select class="form-select" id="alat_id" name="alat_id" required>
+                                                <option value="">-- Pilih Alat --</option>
+                                                @foreach ($alat as $alat)
+                                                    <option value="{{ $alat->id }}">{{ $alat->nama_alat }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button type="button" id="btnDetail" class="btn btn-outline-primary"
+                                                data-bs-toggle="collapse" data-bs-target="#collapseAlatDetail" disabled>
+                                                <i class="mdi mdi-information-outline me-2"></i>Detail
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="card-body small">
-                                        <div class="row g-2 gy-3">
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Departemen Pemilik:</strong> <span id="departemen_pemilik">-</span>
-                                            </div>
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Lokasi Alat:</strong> <span id="lokasi_alat">-</span>
-                                            </div>
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>No. Kalibrasi:</strong> <span id="no_kalibrasi">-</span>
-                                            </div>
+                                    <div class="col-lg-6 col-md-4 col-sm-12">
+                                        <label class="form-label fw-semibold">Lokasi Kalibrasi</label>
+                                        <input type="text" name="lokasi_kalibrasi" id="lokasi_kalibrasi"
+                                            class="form-control" placeholder="Lab Kalibrasi 1" required>
+                                    </div>
 
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Nama Alat:</strong> <span id="nama_alat">-</span>
+                                    <!-- DETAIL ALAT (COLLAPSE) -->
+                                    <div class="collapse mb-3 mt-4" id="collapseAlatDetail">
+                                        <div class="card border-info shadow-sm">
+                                            <div class="card-header bg-soft-info">
+                                                <strong>Detail Alat</strong>
                                             </div>
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Merk:</strong> <span id="merk">-</span>
-                                            </div>
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Tipe:</strong> <span id="tipe">-</span>
-                                            </div>
+                                            <div class="card-body small">
+                                                <div class="row g-2 gy-3">
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Departemen Pemilik:</strong> <span
+                                                            id="departemen_pemilik">-</span>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Lokasi Alat:</strong> <span id="lokasi_alat">-</span>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>No. Kalibrasi:</strong> <span id="no_kalibrasi">-</span>
+                                                    </div>
 
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Kapasitas:</strong> <span id="kapasitas">-</span>
-                                            </div>
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Resolusi:</strong> <span id="resolusi">-</span>
-                                            </div>
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Range Penggunaan:</strong> <span id="range_penggunaan_alat">-</span>
-                                            </div>
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Nama Alat:</strong> <span id="nama_alat">-</span>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Merk:</strong> <span id="merk">-</span>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Tipe:</strong> <span id="tipe">-</span>
+                                                    </div>
 
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Limits of Permissible Error:</strong> <span
-                                                    id="limits_of_permissible_error">-</span>
-                                            </div>
-                                            <div class="col-sm-6 col-md-4">
-                                                <strong>Metode Kalibrasi:</strong> <span id="metode_kalibrasi">-</span>
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Kapasitas:</strong> <span id="kapasitas">-</span>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Resolusi:</strong> <span id="resolusi">-</span>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Range Penggunaan:</strong> <span
+                                                            id="range_penggunaan_alat">-</span>
+                                                    </div>
+
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Limits of Permissible Error:</strong> <span
+                                                            id="limits_of_permissible_error">-</span>
+                                                    </div>
+                                                    <div class="col-sm-6 col-md-4">
+                                                        <strong>Metode Kalibrasi:</strong> <span
+                                                            id="metode_kalibrasi">-</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4 col-12">
-                                <input type="hidden" name="suhu_ruangan_final" id="suhu_ruangan_final">
-                                <label for="suhu_ruangan" class="form-label">Suhu Ruangan</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" id="suhu_ruangan" name="suhu_ruangan"
-                                        placeholder="25">
-                                    <span class="input-group-text">±</span>
-                                    <input type="number" class="form-control" id="toleransi_suhu" name="toleransi_suhu"
-                                        placeholder="1">
-                                    <span class="input-group-text">°C</span>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-4 col-12">
+                                        <input type="hidden" name="suhu_ruangan_final" id="suhu_ruangan_final">
+                                        <label for="suhu_ruangan" class="form-label">Suhu Ruangan</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="suhu_ruangan" name="suhu_ruangan"
+                                                placeholder="25">
+                                            <span class="input-group-text">±</span>
+                                            <input type="number" class="form-control" id="toleransi_suhu"
+                                                name="toleransi_suhu" placeholder="1">
+                                            <span class="input-group-text">°C</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-12">
+                                        <input type="hidden" name="kelembaban_final" id="kelembaban_final">
+                                        <label for="kelembaban" class="form-label">Kelembaban</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="kelembaban" name="kelembaban"
+                                                placeholder="47">
+                                            <span class="input-group-text">±</span>
+                                            <input type="number" class="form-control" id="toleransi_kelembaban"
+                                                name="toleransi_kelembaban" placeholder="3">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12">
+                                        <label class="form-label fw-semibold">Tanggal Kalibrasi</label>
+                                        <input type="date" name="tgl_kalibrasi" id="tgl_kalibrasi"
+                                            class="form-control" required>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-4 col-12">
-                                <input type="hidden" name="kelembaban_final" id="kelembaban_final">
-                                <label for="kelembaban" class="form-label">Kelembaban</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" id="kelembaban" name="kelembaban"
-                                        placeholder="47">
-                                    <span class="input-group-text">±</span>
-                                    <input type="number" class="form-control" id="toleransi_kelembaban"
-                                        name="toleransi_kelembaban" placeholder="3">
-                                    <span class="input-group-text">%</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-sm-12">
-                                <label class="form-label fw-semibold">Tanggal Kalibrasi</label>
-                                <input type="date" name="tgl_kalibrasi" id="tgl_kalibrasi" class="form-control"
-                                    required>
-                            </div>
                         </div>
-
-                        <hr>
 
                         {{-- === Input Jumlah Baris === --}}
-                        <div class="row mb-3 gy-2 align-items-center">
-                            <div class="col-auto">
-                                <label class="fw-semibold">Jumlah Titik Kalibrasi:</label>
+                        <div class="card border border-primary border-opacity-50">
+                            <div class="card-header bg-light">
+                                <strong><i class="mdi mdi-beaker-outline me-2"></i>Data Pengukuran Volumetrik</strong>
                             </div>
-                            <div class="col-auto">
-                                <input type="number" id="jumlahBaris" class="form-control" min="1"
-                                    max="50" placeholder="Contoh: 10" style="width: 120px;">
-                            </div>
-                            <div class="col-auto">
-                                <button type="button" id="generateRows" class="btn btn-outline-primary">
-                                    <i class="mdi mdi-table-plus me-1"></i> Generate
-                                </button>
-                            </div>
-                        </div>
+                            <div class="card-body">
+                                <div class="row mb-3 gy-2 align-items-center">
+                                    <div class="col-auto">
+                                        <label class="fw-semibold">Jumlah Titik Kalibrasi:</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <input type="number" id="jumlahBaris" class="form-control" min="1"
+                                            max="50" placeholder="Contoh: 10" style="width: 120px;">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button type="button" id="generateRows" class="btn btn-outline-primary">
+                                            <i class="mdi mdi-table-plus me-1"></i> Generate
+                                        </button>
+                                    </div>
+                                </div>
 
-                        {{-- === Data Pengukuran Volumetrik === --}}
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle" id="tableVolumetrik">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Titik Kalibrasi</th>
-                                        <th>Penunjuk Standar</th>
-                                        <th>Penunjuk Alat</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="text-center text-muted">
-                                        <td colspan="4">Silakan tentukan jumlah titik kalibrasi di atas</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                                {{-- === Data Pengukuran Volumetrik === --}}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle" id="tableVolumetrik">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Titik Kalibrasi</th>
+                                                <th>Penunjuk Standar</th>
+                                                <th>Penunjuk Alat</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="text-center text-muted">
+                                                <td colspan="4">Silakan tentukan jumlah titik kalibrasi di atas</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                        <div class="text-start mt-4">
-                            <div class="d-flex flex-wrap gap-2 justify-content-start">
-                                <button type="button" class="btn btn-outline-danger rounded-pill px-4" id="btnReset">
-                                    <i class="mdi mdi-close-circle-outline me-1"></i> Reset
-                                </button>
+                                <div class="text-start mt-4">
+                                    <div class="d-flex flex-wrap gap-2 justify-content-start">
+                                        <button type="button" class="btn btn-outline-danger rounded-pill px-4"
+                                            id="btnReset">
+                                            <i class="mdi mdi-close-circle-outline me-1"></i> Reset
+                                        </button>
 
-                                <button type="button" id="btnPreview" class="btn btn-outline-info rounded-pill px-4">
-                                    <i class="mdi mdi-eye-outline me-1"></i> Preview
-                                </button>
+                                        <button type="button" id="btnPreview"
+                                            class="btn btn-outline-info rounded-pill px-4">
+                                            <i class="mdi mdi-eye-outline me-1"></i> Preview
+                                        </button>
 
-                                <button type="submit" class="btn btn-success rounded-pill px-4">
-                                    <i class="mdi mdi-content-save me-1"></i> Submit Kalibrasi
-                                </button>
+                                        <button type="submit" class="btn btn-success rounded-pill px-4">
+                                            <i class="mdi mdi-content-save me-1"></i> Submit Kalibrasi
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </form>
