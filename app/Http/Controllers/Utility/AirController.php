@@ -8,6 +8,7 @@ use App\Models\Utility\PemakaianAirModel;
 use App\Models\Utility\AirArea;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -55,7 +56,9 @@ class AirController extends Controller
         }
 
         $tanggal = $request->input('tanggal');
-        $createdBy = Session::get('username') ?? 'system';
+        // $createdBy = Session::get('username') ?? 'system';
+        $createdBy = Auth::check() ? Auth::user()->username : 'system';
+
         $notes = $request->input('notes');
         $data = $request->input('data');
 
