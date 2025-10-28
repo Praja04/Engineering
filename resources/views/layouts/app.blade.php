@@ -37,9 +37,10 @@
         <!-- App Css-->
         <link href="{{ asset('material/assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
         <!-- custom Css-->
-        <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet" type="text/css" />
         <link href="{{ asset('material/assets/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
+        <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet" type="text/css" />
         <link href="{{ asset('material/assets/libs/aos/aos.css') }}" rel="stylesheet" type="text/css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
         <!-- jQuery should be included before DataTables -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -64,6 +65,11 @@
             <div class="main-content">
                 @yield('content')
 
+                {{-- Btn click to up --}}
+                <button onclick="topFunction()" class="btn btn-danger btn-icon" id="back-to-top">
+                    <i class="ri-arrow-up-line "></i>
+                </button>
+
                 @include('layouts.components.footer')
             </div>
         </div>
@@ -85,6 +91,7 @@
 
         <!-- Sweet alert init js-->
         <script src="{{ asset('material/assets/js/pages/sweetalerts.init.js') }}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
         {{-- Chart --}}
         <script src="{{ asset('material/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
@@ -195,6 +202,134 @@
                         // console.log('Icon updated, isDark:', isDark); // Debug
                     }
                 }
+
+                let btn = $("#back-to-top");
+
+                // cek scroll untuk munculin tombol
+                $(window).scroll(function() {
+                    if ($(window).scrollTop() > 200) {
+                        btn.fadeIn(); // muncul
+                    } else {
+                        btn.fadeOut(); // sembunyi
+                    }
+                });
+
+                // klik tombol -> scroll ke atas
+                btn.on("click", function() {
+                    $("html, body").animate({
+                        scrollTop: 0
+                    }, "smooth");
+                });
+
+                let seenNotifications = new Set();
+
+                function fetchNotifications() {
+                    $.ajax({
+                        url: "{{ route('notifications') }}",
+                        method: "GET",
+                        dataType: "json",
+                        success: function(response) {
+                            const notifList = $('#notifList');
+                            const notifBadge = $('#notifBadge');
+
+                            notifList.empty();
+
+                            if (response.length === 0) {
+                                notifList.html(
+                                    '<p class="text-center text-muted py-3 mb-0">Tidak ada notifikasi</p>'
+                                );
+                                notifBadge.hide();
+                                return;
+                            }
+
+                            const unread = response.filter(n => !n.is_read);
+                            notifBadge.text(unread.length > 0 ? unread.length : '').toggle(unread.length >
+                                0);
+
+                            response.forEach(n => {
+                                const item = $(`
+                                    <a href="${n.url}" 
+                                        class="list-group-item list-group-item-action notif-item d-flex align-items-start ${n.is_read ? 'bg-light text-muted' : 'bg-white'}"
+                                        data-id="${n.id}">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 ${n.is_read ? '' : 'fw-semibold'}">${n.title}</h6>
+                                            <p class="mb-1 small">${n.message}</p>
+                                            <small class="text-muted">${n.created_at}</small>
+                                        </div>
+                                        <div class="ms-2">
+                                            ${n.is_read 
+                                                ? '<i class="bx bx-check-circle text-success fs-5"></i>' 
+                                                : '<i class="bx bx-bell text-warning fs-5"></i>'}
+                                        </div>
+                                    </a>
+                                `);
+
+                                notifList.append(item);
+
+                                // Hanya munculkan toastr kalau baru muncul
+                                if (!n.is_read && !seenNotifications.has(n.id)) {
+                                    toastr.info(n.message, n.title);
+                                    seenNotifications.add(n.id);
+                                }
+                            });
+                        },
+                        error: function() {
+                            console.error("Gagal memuat notifikasi");
+                        }
+                    });
+                }
+
+                $('#notifList').on('click', '.notif-item', function(e) {
+                    e.preventDefault();
+                    const id = $(this).data('id');
+                    const url = $(this).attr('href');
+                    const item = $(this);
+
+                    // Kalau sudah read, langsung buka halaman
+                    if (item.hasClass('bg-light')) {
+                        window.location.href = url;
+                        return;
+                    }
+
+                    $.ajax({
+                        url: `{{ url('api/notifications/read') }}/${id}`,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function() {
+                            // Animasi lembut biar halus
+                            item.fadeTo(200, 0.5, function() {
+                                item
+                                    .removeClass('bg-white fw-semibold text-dark')
+                                    .addClass('bg-light text-muted')
+                                    .css('opacity', 1); // balikin opacity
+
+                                item.find('.bx-bell')
+                                    .removeClass('bx-bell text-warning')
+                                    .addClass('bx-check-circle text-success');
+                            });
+
+                            // Update badge counter
+                            const currentCount = parseInt($('#notifBadge').text()) || 0;
+                            const newCount = Math.max(currentCount - 1, 0);
+                            if (newCount === 0) $('#notifBadge').hide();
+                            else $('#notifBadge').text(newCount);
+
+                            // Delay sedikit supaya user sempat lihat perubahan status
+                            setTimeout(() => {
+                                window.location.href = url;
+                            }, 300);
+                        },
+                        error: function() {
+                            toastr.error('Gagal menandai notifikasi sebagai dibaca.');
+                        }
+                    });
+                });
+
+                // Jalankan pertama kali & interval
+                fetchNotifications();
+                setInterval(fetchNotifications, 60000);
             });
         </script>
 

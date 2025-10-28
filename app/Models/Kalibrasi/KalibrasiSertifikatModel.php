@@ -16,7 +16,6 @@ class KalibrasiSertifikatModel extends Model
     protected $fillable = [
         'kalibrasi_id',
         'user_id',
-        'certificate_number',
         'status',
         'notes',
         'issued_at',
@@ -38,12 +37,5 @@ class KalibrasiSertifikatModel extends Model
     public function approvals()
     {
         return $this->hasMany(KalibrasiSertifikatApprovalModel::class, 'sertifikat_id');
-    }
-
-    // helper: cek apakah semua sudah approve
-    public function isFullyApproved()
-    {
-        return $this->approvals()->where('status', 'pending')->count() === 0
-            && $this->approvals()->where('status', 'rejected')->count() === 0;
     }
 }

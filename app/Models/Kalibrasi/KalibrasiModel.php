@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Kalibrasi\Pressure\KalibrasiPressureModel;
 use App\Models\Kalibrasi\Pressure\KalibrasiPressureGabunganModel;
+use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikGabunganModel;
+use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikModel;
 
 class KalibrasiModel extends Model
 {
@@ -22,8 +24,8 @@ class KalibrasiModel extends Model
         'kelembaban',
         'tgl_kalibrasi',
         'tgl_kalibrasi_ulang',
-        'metode_kalibrasi',
         'jenis_kalibrasi',
+        'status_save'
     ];
 
     public function alat()
@@ -34,6 +36,19 @@ class KalibrasiModel extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function getRelasiByJenis(): array
+    {
+        return match (strtolower($this->jenis_kalibrasi)) {
+            'pressure' => ['pressure', 'pressureGabungan'],
+            'temperature' => ['temperature', 'temperatureGabungan'],
+            'volumetric' => ['volumetric', 'volumetricGabungan'],
+            // tambahkan jenis lain di sini
+            'mass' => ['mass', 'massGabungan'],
+            'electrical' => ['electrical', 'electricalGabungan'],
+            default => [], // fallback kalau belum diatur
+        };
     }
 
     public function pressure()
@@ -49,5 +64,15 @@ class KalibrasiModel extends Model
     public function certificate()
     {
         return $this->hasOne(KalibrasiSertifikatModel::class, 'kalibrasi_id');
+    }
+
+    public function volumetrik()
+    {
+        return $this->hasMany(KalibrasiVolumetrikModel::class, 'kalibrasi_id');
+    }
+
+    public function volumetrikGabungan()
+    {
+        return $this->hasOne(KalibrasiVolumetrikGabunganModel::class, 'kalibrasi_id');
     }
 }

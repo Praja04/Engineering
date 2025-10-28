@@ -8,11 +8,260 @@
 
 @section('content')
     <div class="page-content">
-        <div class="conatiner-fluid">
-            <div class="row" id="sertifikat-list-container">
-                {{-- Kartu akan dimuat di sini oleh JavaScript --}}
-                <div class="col-12 text-center" id="loading-spinner">
-                    <p>Memuat data...</p>
+        <div class="container-fluid">
+            <div class="card shadow-sm rounded-3 mb-4" data-aos="fade-up">
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <!-- Filter Tanggal -->
+                        <div class="col-md-4">
+                            <label for="filterTanggal" class="form-label fw-semibold">Tanggal Kalibrasi</label>
+                            <input type="date" id="filterTanggal" name="tanggal" class="form-control">
+                        </div>
+
+                        <!-- Filter Jenis -->
+                        <div class="col-md-4">
+                            <label for="filterJenis" class="form-label fw-semibold">Jenis Kalibrasi</label>
+                            <select id="filterJenis" name="jenis" class="form-select">
+                                <option value="">Semua Jenis</option>
+                            </select>
+                        </div>
+
+                        <!-- Tombol Reset -->
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button id="resetFilter" class="btn btn-outline-primary w-100">
+                                <i class="mdi mdi-refresh me-1"></i> Reset Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow-sm rounded-3 mb-4" data-aos="fade-up">
+                <div class="card-body">
+                    <div class="row" id="sertifikat-list-container">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Detail --}}
+    <div class="modal fade" id="modalDetail" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-3 border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold" id="modalDetailLabel">Detail Sertifikat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalDetailBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detail -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-clipboard-data me-2"></i>
+                        Detail Kalibrasi Pressure
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Tabs -->
+                    <ul class="nav nav-pills arrow-navtabs nav-success bg-light mb-3 px-3 pt-3" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab"
+                                data-bs-target="#info-pane">Informasi</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab"
+                                data-bs-target="#measurement-pane">Pengukuran</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#result-pane">Hitung U
+                                Gabungan</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content p-3">
+                        <!-- Tab 1: Informasi -->
+                        <div class="tab-pane fade show active" id="info-pane">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-primary border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar-event"></i> Kode Alat
+                                            </small>
+                                            <strong id="detail_kode_alat"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-primary border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar-event"></i> Nama Alat
+                                            </small>
+                                            <strong id="detail_nama_alat"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-primary border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar-event"></i> Tanggal Kalibrasi
+                                            </small>
+                                            <strong id="detail_tgl_kalibrasi"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-success border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar-check"></i> Tgl Kalibrasi Ulang
+                                            </small>
+                                            <strong id="detail_tgl_ulang"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-info border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-geo-alt"></i> Lokasi
+                                            </small>
+                                            <strong id="detail_lokasi"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-warning border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-thermometer-half"></i> Suhu Ruangan
+                                            </small>
+                                            <strong id="detail_suhu"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-info border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-droplet"></i> Kelembaban
+                                            </small>
+                                            <strong id="detail_kelembaban"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-primary border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-gear"></i> Jenis Kalibrasi
+                                            </small>
+                                            <strong id="detail_jenis"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-primary">
+                                <strong><i class="bi bi-book me-2"></i>Metode Kalibrasi</strong>
+                                <p class="mb-0 mt-2 small" id="detail_metode"></p>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Pengukuran -->
+                        <div class="tab-pane fade" id="measurement-pane">
+                            <!-- Tekanan Naik -->
+                            <div class="card mb-3 border-success">
+                                <div class="card-header bg-success text-white">
+                                    <i class="bi bi-arrow-up-circle-fill me-2"></i>
+                                    <strong>Tekanan Naik</strong>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-sm text-center mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Titik</th>
+                                                    <th>Penunjuk Standar</th>
+                                                    <th>Penunjuk Alat</th>
+                                                    <th>Koreksi Standar</th>
+                                                    <th>Tekanan Standar</th>
+                                                    <th>Koreksi Alat</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="pressure_naik"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tekanan Turun -->
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <i class="bi bi-arrow-down-circle-fill me-2"></i>
+                                    <strong>Tekanan Turun</strong>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-sm text-center mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Titik</th>
+                                                    <th>Penunjuk Standar</th>
+                                                    <th>Penunjuk Alat</th>
+                                                    <th>Koreksi Standar</th>
+                                                    <th>Tekanan Standar</th>
+                                                    <th>Koreksi Alat</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="pressure_turun"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Hasil -->
+                        <div class="tab-pane fade" id="result-pane">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <i class="bi bi-calculator-fill me-2"></i>
+                                    <strong>Hasil Perhitungan Ketidakpastian</strong>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-sm text-center mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Titik</th>
+                                                    <th>U Naik</th>
+                                                    <th>U Turun</th>
+                                                    <th>U Naik²</th>
+                                                    <th>U Turun²</th>
+                                                    <th class="bg-success-subtle">U Gabungan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="detail_gabungan"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Tutup
+                    </button>
                 </div>
             </div>
         </div>
@@ -22,39 +271,52 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            const sertifikatId = '{{ $id ?? 'null' }}';
+            const baseUrlApi = `{{ url('kalibrasi/certificate/approval/data') }}`;
 
-            const baseUrlApi = `{{ url('api/kalibrasi/certificate/approval/data') }}`;
+            fetchSertifikat(baseUrlApi);
 
-            let finalApiUrl = baseUrlApi;
+            $('#filterTanggal, #filterJenis').on('change', function() {
+                const tanggal = $('#filterTanggal').val();
+                const jenis = $('#filterJenis').val();
 
-            if (sertifikatId !== 'null') {
-                finalApiUrl = `${baseUrlApi}/${sertifikatId}`;
-            }
+                // Buat query string dinamis
+                const params = new URLSearchParams();
+                if (tanggal) params.append('tanggal', tanggal);
+                if (jenis) params.append('jenis', jenis);
 
-            fetchSertifikat(finalApiUrl);
+                // Gabungkan URL + query
+                const url = params.toString() ? `${baseUrlApi}?${params.toString()}` : baseUrlApi;
+
+                fetchSertifikat(url);
+            });
+
+            // Tombol reset
+            $('#resetFilter').on('click', function() {
+                $('#filterTanggal').val('');
+                $('#filterJenis').val('');
+                fetchSertifikat(baseUrlApi);
+            });
 
             function fetchSertifikat(url) {
                 $.ajax({
                     url: url,
                     method: 'GET',
                     success: function(res) {
-                        var container = $('#sertifikat-list-container');
+                        const container = $('#sertifikat-list-container');
                         const data = res.data;
                         container.empty();
 
-                        if ($.isArray(data)) {
-                            // Tampilkan daftar kartu col-md-4
-                            if (data.length > 0) {
-                                displayCollectionCards(data, container);
-                            } else {
-                                displayEmptyState(container);
-                            }
+                        if ($('#filterJenis option').length <= 1 && Array.isArray(data)) {
+                            filterJenis(data);
+                        }
 
-                            // Kasus 2: Data adalah Single Object (Asumsi: objek sertifikat tunggal)
-                        } else if (typeof data === 'object' && data !== null) {
-                            // Tampilkan kartu detail col-md-12
-                            displaySingleCard(data, container);
+                        if ($.isArray(data)) {
+                            if (data.length > 0) {
+                                displayListView(data, container);
+                            } else {
+                                displayEmptyState(container, res.message ||
+                                    'Tidak ada data sertifikat.');
+                            }
                         } else {
                             displayEmptyState(container, 'Data tidak valid.');
                         }
@@ -67,226 +329,308 @@
                 });
             }
 
-            // 1. Tampilan untuk Collection (col-md-4)
-            function displayCollectionCards(sertifikatArray, container) {
-                const getStatusClass = (status) => {
-                    if (status === 'pending') return 'badge-soft-warning ';
-                    if (status === 'approved') return 'badge-soft-success';
-                    return 'badge-soft-danger';
-                };
+            function filterJenis(data) {
+                const jenisSet = new Set();
 
-                $.each(sertifikatArray, function(index, item) {
-                    // Mendapatkan data dengan aman (jika properti bersarang mungkin null)
-                    const kodeAlat = item.kalibrasi && item.kalibrasi.alat ? item.kalibrasi.alat.kode_alat :
-                        'N/A';
-                    const jenisKalibrasi = item.kalibrasi ? item.kalibrasi.jenis_kalibrasi : 'N/A';
-                    const namaAlat = item.kalibrasi.alat ? item.kalibrasi.alat.nama_alat : 'N/A';
-                    const lokasiKalibrasi = item.kalibrasi ? item.kalibrasi.lokasi_kalibrasi : 'N/A';
-                    const username = item.user ? item.user.username : 'N/A';
-
-                    // Format tanggal (Catatan: ini hanya untuk contoh, tanggal dari JSON mungkin perlu format lebih lanjut)
-                    const tanggalPengajuan = new Date(item.created_at).toLocaleDateString('id-ID', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: '2-digit'
-                    }).replace(/\//g, '/');
-
-                    const delay = (index * 200) % 1000;
-                    const cardHtml = `
-                         <div class="col-md-4 mb-4">
-                            <div data-aos="fade-up" data-aos-delay="${delay}" data-aos-anchor-placement="top-bottom">
-                                <div class="card shadow-lg border-0 rounded-4 h-100 d-flex flex-column justify-content-between">
-                                    
-                                    <div class="card-body p-3 d-flex flex-column justify-content-between">
-                                        
-                                        <div class="d-flex justify-content-between align-items-start mb-2 border-bottom pb-2">
-                                            <span class="badge badge-soft-primary fw-bold rounded-pill px-3 py-2 small">
-                                                SERTIFIKAT #${item.id}
-                                            </span>
-                                            <span class="badge ${getStatusClass(item.status)} fw-bolder p-2 rounded-pill text-uppercase shadow-sm small">
-                                                ${item.status}
-                                            </span>
-                                        </div>
-
-                                        <h6 class="fw-bolder text-dark mb-2 text-truncate" title="Kode Alat">
-                                            ${kodeAlat}
-                                        </h6>
-
-                                        <div class="row g-2 small mb-2 flex-grow-1 ">
-                                            <div class="col-6 d-flex flex-column gap-2 ">
-                                                <div class="d-flex align-items-center">
-                                                    
-                                                    <div>
-                                                        <span class="d-block text-uppercase fw-semibold text-muted extra-small">Jenis Kalibrasi</span>
-                                                        <span class="fw-bold text-dark">${jenisKalibrasi.charAt(0).toUpperCase() + jenisKalibrasi.slice(1) || 'N/A'}</span>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    
-                                                    <div>
-                                                        <span class="d-block text-uppercase fw-semibold text-muted extra-small">Nama Alat</span>
-                                                        <span class="fw-bold text-dark">${namaAlat.charAt(0).toUpperCase() + namaAlat.slice(1) || 'N/A'}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-6 d-flex flex-column gap-2 ">
-                                                <div class="d-flex align-items-center">
-                                                    
-                                                    <div>
-                                                        <span class="d-block text-uppercase fw-semibold text-muted extra-small">Lokasi Kalibrasi</span>
-                                                        <span class="fw-bold text-dark">${lokasiKalibrasi.charAt(0).toUpperCase() + lokasiKalibrasi.slice(1) || 'N/A'}</span>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex align-items-center">
-                                                    
-                                                    <div>
-                                                        <span class="d-block text-uppercase fw-semibold text-muted extra-small">User Pemohon</span>
-                                                        <span class="fw-bold text-dark">${username.charAt(0).toUpperCase() + username.slice(1) || 'N/A'}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-12 pt-2">
-                                                <div class="d-flex align-items-center">
-                                                    
-                                                    <div>
-                                                        <span class="d-block text-uppercase fw-semibold text-muted extra-small">Tanggal Pengajuan</span>
-                                                        <span class="fw-bold text-dark">${tanggalPengajuan}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="pt-0"> 
-                                            <a href="#"
-                                                class="btn-detail-sertifikat btn btn-sm btn-soft-info w-100 d-flex align-items-center justify-content-center py-2 fw-bolder rounded-3 mb-2"
-                                                data-sertifikat-id="${item.id}" title="Lihat Detail Sertifikat">
-                                                <i class="mdi mdi-magnify me-2"></i> Detail Sertifikat
-                                            </a>
-
-                                            <div class="mb-2 flex-grow-1">
-                                                <textarea id="komentar_list_${item.id}" data-komentar-id="${item.id}" class="form-control form-control-sm komentar-textarea" rows="2" style="resize: none;"
-                                                    placeholder="Tulis komentar untuk Approve/Reject (Opsional)..."></textarea>
-                                            </div>
-                                            <div class="d-flex gap-2">
-                                                <button type="button" 
-                                                    class="btn-action btn btn-soft-success d-flex align-items-center justify-content-center fw-bolder flex-fill py-2 rounded-3 shadow-sm btn-sm"
-                                                    data-id="${item.id}" data-status="approved" title="Approve Sertifikat">
-                                                    <i class="mdi mdi-check-circle me-1"></i> Approve
-                                                </button>
-                                                <button type="button" 
-                                                    class="btn-action btn btn-soft-danger d-flex align-items-center justify-content-center fw-bolder flex-fill py-2 rounded-3 shadow-sm btn-sm"
-                                                    data-id="${item.id}" data-status="rejected" title="Reject Sertifikat">
-                                                    <i class="mdi mdi-close-circle me-1"></i> Reject
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    container.append(cardHtml);
+                data.forEach(item => {
+                    const jenis = item.kalibrasi?.jenis_kalibrasi;
+                    if (jenis) jenisSet.add(jenis);
                 });
-                // setupActionButtons(); // Pasang kembali event listener setelah kartu dibuat
+
+                $('#filterJenis').find('option:not(:first)').remove();
+
+                // Tambahkan option dengan format Capitalized
+                jenisSet.forEach(jenis => {
+                    const formatted = jenis
+                        .toLowerCase()
+                        .split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+
+                    $('#filterJenis').append(`<option value="${jenis}">${formatted}</option>`);
+                });
             }
 
-            // 2. Tampilan untuk Single Object (col-md-12)
-            function displaySingleCard(item, container) {
-                // Penanganan data nested dan null (seperti yang dilakukan di fungsi sebelumnya)
-                const kodeAlat = item.kalibrasi && item.kalibrasi.alat ? item.kalibrasi.alat.kode_alat : '—';
-                const namaAlat = item.kalibrasi && item.kalibrasi.alat ? item.kalibrasi.alat.nama_alat : '—';
-                const jenisKalibrasi = item.kalibrasi ? item.kalibrasi.jenis_kalibrasi : '—';
-                const lokasiKalibrasi = item.kalibrasi ? item.kalibrasi.lokasi_kalibrasi : '—';
+            function displayListView(data, container) {
+                const rowsHtml = data.map((item, i) => {
+                    const tgl_kalibrasi = item.kalibrasi.tgl_kalibrasi ?? '—';
+                    const kodeAlat = item.kalibrasi?.alat?.kode_alat ?? '—';
+                    const namaAlat = item.kalibrasi?.alat?.nama_alat ?? '—';
+                    const jenisKalibrasi = item.kalibrasi?.jenis_kalibrasi ?? '—';
+                    const status = item.status ?? 'pending';
+                    const komentar = item.comment ?? '';
 
-                // Format tanggal
-                const dateObj = new Date(item.created_at);
-                const tanggalKalibrasi =
-                    `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+                    const badgeClass =
+                        status === 'approved' ? 'success' :
+                        status === 'pending' || status === 'read' ? 'warning' :
+                        'danger';
 
-                // Logic untuk Status Badge
-                let statusClass, iconClass;
-                if (item.status.toLowerCase() === 'pending') {
-                    statusClass = 'badge-soft-warning';
-                    iconClass = 'mdi-progress-clock';
-                } else if (item.status.toLowerCase() === 'approved') {
-                    statusClass = 'badge-soft-success';
-                    iconClass = 'mdi-check-all';
-                } else {
-                    statusClass = 'badge-soft-danger';
-                    iconClass = 'mdi-close-circle';
-                }
+                    // Tombol detail selalu ada
+                    let actionColumn = `
+                        <button class="btn btn-outline-primary btn-sm btn-detail" data-id="${item.id}">
+                            <i class="mdi mdi-eye me-2"></i>Detail
+                        </button>
+                    `;
 
-                // Gunakan template literal (backticks) untuk membuat HTML
-                var singleCardHtml = `
-                    <div class="col-md-12 mb-3">
-                        <div data-aos="fade-up" data-aos-anchor-placement="top-bottom">
-                            <div class="card shadow-sm border-0 rounded-3">
-                                <div class="card-body p-3 p-md-4">
-                                    <div class="row g-3 align-items-stretch">
-                                        <div class="col-md-6 border-end pe-md-3 d-flex flex-column justify-content-between">
-                                            <h5 class="fw-bolder text-dark pb-1 border-bottom border-primary border-2">
-                                                <span class="text-muted fw-normal small d-block">Kode Alat:</span>
-                                                <span class="text-primary">${kodeAlat}</span>
-                                            </h5>
-                                            <div class="row g-2 small">
-                                                <div class="col-6">
-                                                    <span class="text-uppercase fw-semibold text-muted d-block"> Jenis Kalibrasi</span>
-                                                    <span class="fw-bold text-dark fs-6">${jenisKalibrasi.charAt(0).toUpperCase() + jenisKalibrasi.slice(1) || '—'}</span>
-                                                </div>
-                                                <div class="col-6">
-                                                    <span class="text-uppercase fw-semibold text-muted d-block"> Nama Alat</span>
-                                                    <span class="fw-bold text-dark fs-6">${namaAlat.charAt(0).toUpperCase() + namaAlat.slice(1) || '—'}</span>
-                                                </div>
+                    // Tambahkan tombol approve/reject hanya jika masih pending atau read
+                    if (status === 'pending' || status === 'read') {
+                        actionColumn += `
+                            <button class="btn btn-success btn-sm btn-approve" data-id="${item.id}">
+                                <i class="mdi mdi-check me-2"></i>Approve
+                            </button>
+                            <button class="btn btn-danger btn-sm btn-reject" data-id="${item.id}">
+                                <i class="mdi mdi-close me-2"></i>Reject
+                            </button>
+                        `;
+                    } else {
+                        // Kalau sudah final, tampilkan badge
+                        actionColumn += `
+                            <span class="badge badge-soft-${badgeClass} px-3 py-2 ms-2 text-uppercase">
+                                <i class="mdi mdi-${status === 'approved' ? 'check' : 'close'} me-1"></i>
+                                ${status === 'approved' ? 'Disetujui' : 'Ditolak'}
+                            </span>
+                        `;
+                    }
 
-                                                <div class="col-6 pt-2 border-top">
-                                                    <span class="text-uppercase fw-semibold text-muted d-block">Lokasi Kalibrasi</span>
-                                                    <span class="fw-bold text-dark fs-6">${lokasiKalibrasi.charAt(0).toUpperCase() + lokasiKalibrasi.slice(1) || '—'}</span>
-                                                </div>
-                                                <div class="col-6 pt-2 border-top">
-                                                    <span class="text-uppercase fw-semibold text-muted d-block">Tanggal Kalibrasi</span>
-                                                    <span class="fw-bold text-dark fs-6">${tanggalKalibrasi}</span>
-                                                </div>
-                                            </div>
-                                            <button type="button" data-alat-id="${item.kalibrasi && item.kalibrasi.alat ? item.kalibrasi.alat.id : '—'}"
-                                                class="btn-detail-alat btn btn-outline-info btn-sm d-flex align-items-center justify-content-center fw-medium py-2 rounded-3 shadow-sm mt-3">
-                                                <i class="mdi mdi-magnify me-1"></i> Detail Alat & Riwayat
-                                            </button>
-                                        </div>
-                                        <div class="col-md-6 ps-md-3 d-flex flex-column justify-content-between">
-                                            <div class="mb-3">
-                                                <span class="text-uppercase fw-bold text-muted small d-block mb-1">Status Sertifikat</span>
-                                                <span class="badge ${statusClass} fs-6 fw-bolder p-2 px-3 rounded-pill shadow-sm text-uppercase">
-                                                    <i class="mdi ${iconClass} me-2"></i>
-                                                    ${item.status}
-                                                </span>
-                                            </div>
-                                            <div class="mb-3 flex-grow-1">
-                                                <label for="komentar_${item.id}" class="form-label text-uppercase fw-bold text-muted small mb-1">Komentar / Catatan (Opsional)</label>
-                                                <textarea id="komentar_${item.id}" data-komentar-id="${item.id}" class="form-control form-control-sm komentar-textarea" rows="3" style="resize: none;"
-                                                    placeholder="Tulis komentar untuk proses Approve atau Reject..."></textarea>
-                                            </div>
-                                            <div class="d-flex gap-2 mt-auto">
-                                                <button type="button" data-id="${item.id}" data-status="Approved" 
-                                                    class="btn-action btn btn-success btn-sm d-flex align-items-center justify-content-center fw-bolder text-uppercase flex-fill py-2 rounded-3 shadow-sm">
-                                                    <i class="mdi mdi-check-circle me-1"></i> Approve
-                                                </button>
-                                                <button type="button" data-id="${item.id}" data-status="Rejected" 
-                                                    class="btn-action btn btn-danger btn-sm d-flex align-items-center justify-content-center fw-bolder text-uppercase flex-fill py-2 rounded-3 shadow-sm">
-                                                    <i class="mdi mdi-close-circle me-1"></i> Reject
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    return `
+                    <tr data-id="${item.id}">
+                        <td>${i + 1}</td>
+                        <td>${kodeAlat}</td>
+                        <td>${namaAlat}</td>
+                        <td>${tgl_kalibrasi}</td>
+                        <td>${jenisKalibrasi}</td>
+                        <td>
+                            <span class="badge badge-soft-${badgeClass} text-uppercase">${status}</span>
+                        </td>
+                        <td>
+                            <textarea class="form-control form-control komentar"
+                                placeholder="Tulis komentar..."
+                                rows="1"
+                                data-id="${item.id}"
+                                style="min-width:150px;resize:none;"
+                                ${status !== 'pending' && status !== 'read' ? 'disabled' : ''}>${komentar}</textarea>
+                        </td>
+                        <td class="text-nowrap gap-2">${actionColumn}</td>
+                    </tr>
+                `;
+                }).join('');
+
+                const tableHtml = `
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-info">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Kode Alat</th>
+                                    <th>Nama Alat</th>
+                                    <th>Tgl Kalibrasi</th>
+                                    <th>Jenis Kalibrasi</th>
+                                    <th>Status</th>
+                                    <th>Komentar</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
                     </div>
                 `;
-                container.append(singleCardHtml);
-                AOS.refresh();
 
-                // Pasang event listener untuk tombol setelah kartu dibuat
-                // setupActionButtons();
+                container.html(tableHtml);
+
+                // Event handler
+                $('.btn-detail').on('click', function() {
+                    const id = $(this).data('id');
+                    const item = data.find(d => d.id === id);
+                    showDetailModal(item);
+                });
+
+                $('.btn-approve').on('click', function() {
+                    const id = $(this).data('id');
+                    const komentar = $(`.komentar[data-id="${id}"]`).val();
+                    handleApproval(id, 'approved', komentar);
+                });
+
+                $('.btn-reject').on('click', function() {
+                    const id = $(this).data('id');
+                    const komentar = $(`.komentar[data-id="${id}"]`).val();
+                    handleApproval(id, 'rejected', komentar);
+                });
+            }
+
+            function handleApproval(id, status, komentar) {
+                if (!komentar && status === 'rejected') {
+                    toastr.warning('Komentar wajib diisi jika menolak sertifikat.');
+                    return;
+                }
+
+                Swal.fire({
+                    title: `Yakin ingin ${status === 'approved' ? 'menyetujui' : 'menolak'} sertifikat ini?`,
+                    text: komentar ? `Komentar: "${komentar}"` : 'Tanpa komentar.',
+                    icon: status === 'approved' ? 'question' : 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Lanjutkan',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: status === 'approved' ? '#28a745' : '#dc3545'
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+
+                    $.ajax({
+                        url: "{{ route('kalibrasi.certificate.approval.action') }}",
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            id,
+                            status,
+                            komentar
+                        },
+                        beforeSend: function() {
+                            Swal.fire({
+                                title: 'Memproses...',
+                                allowOutsideClick: false,
+                                didOpen: () => Swal.showLoading()
+                            });
+                        },
+                        success: function(res) {
+                            Swal.close();
+
+                            if (res.status === 'success') {
+                                Swal.fire({
+                                    title: 'Berhasil!',
+                                    text: res.message,
+                                    icon: 'success',
+                                    showConfirmButton: false,
+                                    timer: 1500,
+                                    didClose: () => {
+                                        fetchSertifikat(
+                                            `{{ url('kalibrasi/certificate/approval/data') }}`
+                                        );
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Gagal!',
+                                    text: res.message || 'Terjadi kesalahan.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            Swal.close();
+                            toastr.error(xhr.responseJSON?.message ||
+                                'Gagal memproses approval.');
+                        }
+                    });
+                });
+            }
+
+            function showDetailModal(item) {
+                if (!item) return;
+
+                const kalibrasi = item.kalibrasi ?? item.sertifikat?.kalibrasi ?? {};
+                const alat = kalibrasi.alat ?? {};
+
+                // Data umum
+                $('#detail_kode_alat').text(alat.kode_alat ?? '—');
+                $('#detail_nama_alat').text(alat.nama_alat ?? '—');
+                $('#detail_tgl_kalibrasi').text(formatDate(kalibrasi.tgl_kalibrasi));
+                $('#detail_tgl_ulang').text(formatDate(kalibrasi.tgl_kalibrasi_ulang));
+                $('#detail_lokasi').text(kalibrasi.lokasi_kalibrasi ?? '—');
+                $('#detail_suhu').text(kalibrasi.suhu_ruangan ? `${kalibrasi.suhu_ruangan}°C` : '—');
+                $('#detail_kelembaban').text(kalibrasi.kelembaban ? `${kalibrasi.kelembaban}%` : '—');
+                $('#detail_jenis').text((kalibrasi.jenis_kalibrasi ?? '').toUpperCase());
+                $('#detail_metode').text(alat.metode_kalibrasi ?? '—');
+
+                // --- Pressure data ---
+                const naikBody = $('#pressure_naik');
+                const turunBody = $('#pressure_turun');
+                naikBody.empty();
+                turunBody.empty();
+
+                const pressures = (kalibrasi.pressure || []).map(p => ({
+                    ...p,
+                    tekanan: (p.tekanan || '').toString().toLowerCase().trim(),
+                    titik_kalibrasi: p.titik_kalibrasi ?? '',
+                    penunjuk_standar: p.penunjuk_standar ?? '',
+                    penunjuk_alat: p.penunjuk_alat ?? '',
+                    koreksi_standar: p.koreksi_standar ?? '',
+                    tekanan_standar: p.tekanan_standar ?? '',
+                    koreksi_alat: p.koreksi_alat ?? ''
+                }));
+
+                const naikArr = pressures.filter(p => p.tekanan === 'naik')
+                    .sort((a, b) => a.titik_kalibrasi - b.titik_kalibrasi);
+                const turunArr = pressures.filter(p => p.tekanan === 'turun')
+                    .sort((a, b) => a.titik_kalibrasi - b.titik_kalibrasi);
+
+                function formatNumber(val) {
+                    const num = parseFloat(val);
+                    if (isNaN(num)) return '—';
+                    return num.toFixed(1); // hanya 1 angka desimal
+                }
+
+                function renderList(arr, $body) {
+                    if (arr.length === 0) {
+                        $body.append('<tr><td colspan="6" class="text-center text-muted">No data</td></tr>');
+                        return;
+                    }
+
+                    let lastTitik = null;
+                    arr.forEach((p) => {
+                        const showTitik = lastTitik !== p.titik_kalibrasi;
+                        const titikCell = showTitik ?
+                            `<span class="badge badge-soft-primary">${formatNumber(p.titik_kalibrasi)}</span>` :
+                            '';
+                        lastTitik = p.titik_kalibrasi;
+
+                        $body.append(`
+                            <tr>
+                                <td>${titikCell}</td>
+                                <td>${formatNumber(p.penunjuk_standar)}</td>
+                                <td>${formatNumber(p.penunjuk_alat)}</td>
+                                <td>${formatNumber(p.koreksi_standar)}</td>
+                                <td>${formatNumber(p.tekanan_standar)}</td>
+                                <td>${formatNumber(p.koreksi_alat)}</td>
+                            </tr>
+                        `);
+                    });
+                }
+
+                renderList(naikArr, naikBody);
+                renderList(turunArr, turunBody);
+
+                // --- U gabungan ---
+                const tbody = $('#detail_gabungan');
+                tbody.empty();
+
+                if (kalibrasi.pressure_gabungan?.length > 0) {
+                    kalibrasi.pressure_gabungan.forEach((pg) => {
+                        tbody.append(`
+                            <tr>
+                                <td><span class="badge badge-soft-primary">${formatNumber(pg.titik_kalibrasi)}</span></td>
+                                <td>${pg.u_naik}</td>
+                                <td>${pg.u_turun}</td>
+                                <td>${pg.u_naik_kuadrat}</td>
+                                <td>${pg.u_turun_kuadrat}</td>
+                                <td class="highlight-value">${pg.u_gabungan}</td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    tbody.append('<tr><td colspan="6" class="text-center text-muted">No data</td></tr>');
+                }
+
+                $('#detailModal').modal('show');
+            }
+
+            function formatDate(dateString) {
+                let date = new Date(dateString);
+                let options = {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                };
+                return date.toLocaleDateString('id-ID', options);
             }
 
             function displayEmptyState(container, message = 'Tidak ada data sertifikat yang tersedia.') {
@@ -298,8 +642,6 @@
                     </div>
                 `);
             }
-
-            // ... (Fungsi setupActionButtons() Anda di sini) ...
         });
     </script>
 @endsection

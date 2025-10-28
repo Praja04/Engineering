@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('sertifikat_id')->constrained('kalibrasi_sertifikat')->onDelete('cascade');
             $table->foreignId('approver_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->string('approver_email');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'read', 'approved', 'rejected'])->default('pending');
             $table->text('comment')->nullable();     // alasan approve/reject
             $table->timestamp('approved_at')->nullable(); // kapan action dilakukan
             $table->timestamps();
