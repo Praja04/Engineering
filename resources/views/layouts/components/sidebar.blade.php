@@ -59,9 +59,10 @@
                 @endif
 
                 <!-- /////////////////////Manage User/////////////// -->
-                @if (in_array($jabatan, ['dept_head', 'supervisor']))
+                @if (in_array($jabatan, ['dept_head', 'foreman', 'supervisor']))
                     <li class="nav-item">
-                        <a href="{{ url('manage_user') }}" class="nav-link menu-link">
+                        <a href="{{ url('users/index') }}"
+                            class="nav-link menu-link  {{ request()->routeIs('users.*') ? 'active' : '' }}">
                             <i class="mdi mdi-folder-account"></i> <span data-key="t-tkbm">Manage User</span>
                         </a>
                     </li>
