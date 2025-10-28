@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('kalibrasi_pressure', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kalibrasi_id')->constrained('kalibrasi')->cascadeOnDelete();
-            $table->float('titik_kalibrasi', 8, 3);
+            $table->decimal('titik_kalibrasi', 10, 3);
             $table->enum('tekanan', ['naik', 'turun']);
-            $table->float('penunjuk_standar', 8, 3)->nullable();
-            $table->float('penunjuk_alat', 8, 3)->nullable();
-            $table->float('koreksi_standar', 8, 3)->nullable();
-            $table->float('tekanan_standar', 8, 3)->nullable();
-            $table->float('koreksi_alat', 8, 3)->nullable();
+            $table->decimal('penunjuk_standar', 10, 3)->nullable();
+            $table->decimal('penunjuk_alat', 10, 3)->nullable();
+            $table->decimal('koreksi_standar', 10, 3)->nullable();
+            $table->decimal('tekanan_standar', 10, 3)->nullable();
+            $table->decimal('koreksi_alat', 10, 3)->nullable();
             $table->timestamps();
         });
     }

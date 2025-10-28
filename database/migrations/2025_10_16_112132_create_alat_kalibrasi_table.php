@@ -23,10 +23,11 @@ return new class extends Migration
             $table->string('no_kalibrasi');
             $table->string('merk');
             $table->string('tipe');
-            $table->float('kapasitas');
-            $table->float('resolusi');
-            $table->string('range_use');
-            $table->float('limits_permissible_error');
+            $table->string('kapasitas');
+            $table->string('resolusi');
+            $table->string('range_penggunaan_alat');
+            $table->string('limits_of_permissible_error');
+            $table->string('metode_kalibrasi');
             $table->timestamps();
 
             $table->unique('kode_alat');

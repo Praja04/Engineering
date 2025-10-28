@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('kelembaban');
             $table->date('tgl_kalibrasi');
             $table->date('tgl_kalibrasi_ulang');
-            $table->string('metode_kalibrasi');
             $table->string('jenis_kalibrasi');
             $table->timestamps();
         });
