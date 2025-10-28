@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Utility;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Utility\PemakaianChemicalModel;
 use App\Models\Utility\ChemicalType;
@@ -65,7 +66,8 @@ class ChemicalController extends Controller
         $jumlahPemakaian = $request->input('jumlah_pemakaian');
         $running_hour = $request->input('running_hour');
 
-        $operator = Session::get('username');
+        // $operator = Session::get('username');
+        $operator = Auth::user()->username;
         if (count($jenisPemakaian) !== count($jumlahPemakaian)) {
             return response()->json(['message' => 'Data chemical tidak valid.'], 422);
         }
