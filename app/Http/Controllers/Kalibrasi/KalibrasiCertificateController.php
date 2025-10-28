@@ -512,7 +512,7 @@ class KalibrasiCertificateController extends Controller
 
                 case 'volumetrik':
                     $kalibrasi->load(['volumetrik']);
-                    $this->_fillVolumetrik($spreadsheet, $sertifikat, $kalibrasi, $alat);
+                    $this->_fillVolumetrik($spreadsheet, $kalibrasi, $alat, $approvals);
                     break;
 
                 case 'timbangan':
@@ -736,20 +736,37 @@ class KalibrasiCertificateController extends Controller
         return $spreadsheet;
     }
 
-    private function _fillVolumetrik(Spreadsheet $spreadsheet, $sertifikat, $kalibrasi)
+    private function _fillVolumetrik(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals)
     {
         $sheet = $spreadsheet->getActiveSheet();
 
-        $sheet->setCellValue('B2', $kalibrasi->alat->kode_alat ?? '-');
-        $sheet->setCellValue('B3', $kalibrasi->alat->nama_alat ?? '-');
-        $sheet->setCellValue('B4', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('I7', $alat->departemen_pemilik ?? '-');
+        $sheet->setCellValue('I8', $alat->lokasi_alat ?? '-');
+        $sheet->setCellValue('I9', $alat->no_kalibrasi ?? '-');
+        $sheet->setCellValue('I10', $alat->nama_alat ?? '-');
+        $sheet->setCellValue('I11', $alat->merk ?? '-');
+        $sheet->setCellValue('I12', $alat->tipe ?? '-');
+        $sheet->setCellValue('I13', $alat->kapasitas ?? '-');
+        $sheet->setCellValue('I14', $alat->resolusi ?? '-');
+        $sheet->setCellValue('AA7', $alat->range_penggunaan_alat ?? '-');
+        $sheet->setCellValue('AA8', $alat->limits_of_permissible_error ?? '-');
+        $sheet->setCellValue('AA9', $alat->kode_alat ?? '-');
+        $sheet->setCellValue('I15', $kalibrasi->lokasi_kalibrasi ?? '-');
+        $sheet->setCellValue('I16', $kalibrasi->suhu_ruangan ?? '-');
+        $sheet->setCellValue('I17', $kalibrasi->kelembaban ?? '-');
+        $sheet->setCellValue('AA10', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
 
-        $row = 8;
+        $row = 26;
         foreach ($kalibrasi->volumetrik as $v) {
-            $sheet->setCellValue("A{$row}", $v->volume_terukur ?? '-');
-            $sheet->setCellValue("B{$row}", $v->error ?? '-');
+            $sheet->setCellValue("D{$row}", $v->titik_kalibrasi ?? '-');
+            $sheet->setCellValue("L{$row}", $v->penunjuk_alat ?? '-');
+            $sheet->setCellValue("R{$row}", $v->penunjuk_standar ?? '-');
+            $sheet->setCellValue("X{$row}", $v->koreksi ?? '-');
             $row++;
         }
+
+        $sheet->setCellValue("AD{$row}", $v->error ?? '-');
     }
 
     private function _fillTimbangan(Spreadsheet $spreadsheet, $sertifikat, $kalibrasi)
