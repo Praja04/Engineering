@@ -168,6 +168,8 @@
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
+    const userJabatan = "{{ Auth::user()->jabatan }}";
+
     $(document).ready(function() {
         const endpoints = {
             Listrik: "{{url('api/utility/data/listrik')}}",
@@ -335,17 +337,17 @@
             const parameters = Object.keys(entry.rows || {});
 
             const operatorRow = `<tr>
-                <th>Operator</th>
-                ${headers.map(p => `
-                    <td>
-                    ${entry.operator?.[p] ?? '-'}
-                    <button class="btn btn-sm btn-warning btn-edit-panel mt-1" 
-                            data-panel="${p}" 
-                            data-entry='${JSON.stringify(entry)}'>
-                        Edit
-                    </button>
-                    </td>
-                `).join('')}
+             <th>Operator</th>
+                ${headers.map(p => {
+                    const operatorName = entry.operator?.[p] ?? '-';
+                    const editButton = (userJabatan !== 'operator') ? `
+                        <button class="btn btn-sm btn-warning btn-edit-panel mt-1" 
+                                data-panel="${p}" 
+                                data-entry='${JSON.stringify(entry)}'>
+                            Edit
+                        </button>` : '';
+                    return `<td>${operatorName}${editButton}</td>`;
+                }).join('')}
                 </tr>`;
 
             const usageRow = `<tr><th>Usage (Volt)</th>${headers.map(p => `<td>${entry.usage?.[p] ?? '-'}</td>`).join('')}</tr>`;
@@ -374,13 +376,19 @@
                 },
                 {
                     label: 'Action',
-                    cells: entry.data.map(d => `
+                    cells: entry.data.map(d => {
+                        if (userJabatan !== 'operator') {
+                            return `
                 <button class="btn btn-sm btn-warning btn-edit-air"
                         data-entry='${JSON.stringify(d)}'
                         data-tanggal="${entry.tanggal}">
                     Edit
-                </button>
-            `)
+                </button>`;
+                        } else {
+                            return '-';
+                        }
+                    })
+
                 }
             ];
 
@@ -390,35 +398,43 @@
 
         function buildChemicalTable(entry) {
             const shifts = Array.from(new Set(entry.data.flatMap(d => d.shifts.map(s => s.shift))));
-            const rows = entry.data.map(d => {
-                const actionRow = `<tr><th>Action</th>${
-            shifts.map(s => {
-                const shiftData = d.shifts.find(x => x.shift === s);
-                return `<td>
-                    ${shiftData ? `
-                        <button class="btn btn-sm btn-warning btn-edit-chemical"
-                                data-shift="${s}" 
-                                data-jenis="${d.jenis_pemakaian}" 
-                                data-tanggal="${entry.tanggal}"
-                                data-entry='${JSON.stringify(shiftData)}'>
-                            Edit
-                        </button>` : '-' }
-                </td>`;
-            }).join('')
-        }</tr>`;
+            const canEdit = userJabatan !== 'operator'; // kondisi di luar loop
 
-                const group = ['nilai_pemakaian', 'area', 'operator', 'notes'].map(attr => {
-                    const cells = shifts.map(s => {
-                        const sd = d.shifts.find(x => x.shift === s);
-                        return `<td>${sd?.[attr] ?? '-'}</td>`;
+            const rows = entry.data.map(d => {
+                // Baris data utama
+                const dataRows = ['nilai_pemakaian', 'area', 'operator', 'notes'].map(attr => {
+                    const cells = shifts.map(shift => {
+                        const shiftData = d.shifts.find(s => s.shift === shift);
+                        return `<td>${shiftData?.[attr] ?? '-'}</td>`;
                     });
                     const label = attr.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
                     return `<tr><th>${label}</th>${cells.join('')}</tr>`;
                 });
 
+                // Baris tombol aksi
+                const actionCells = shifts.map(shift => {
+                    const shiftData = d.shifts.find(s => s.shift === shift);
+                    if (shiftData && canEdit) {
+                        return `<td>
+                    <button class="btn btn-sm btn-warning btn-edit-chemical"
+                            data-shift="${shift}" 
+                            data-jenis="${d.jenis_pemakaian}" 
+                            data-tanggal="${entry.tanggal}"
+                            data-entry='${JSON.stringify(shiftData)}'>
+                        Edit
+                    </button>
+                </td>`;
+                    } else {
+                        return `<td>-</td>`;
+                    }
+                });
+
+                const actionRow = `<tr><th>Action</th>${actionCells.join('')}</tr>`;
+
+                // Gabungkan semua baris
                 return `
             <tr class="table-primary"><th colspan="${shifts.length + 1}">${d.jenis_pemakaian}</th></tr>
-            ${group.join('')}
+            ${dataRows.join('')}
             ${actionRow}
         `;
             });

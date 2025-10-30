@@ -73,7 +73,7 @@
                                 @csrf
                                 <div class="mb-3">
                                     <label for="waktu" class="form-label">Waktu</label>
-                                    <input type="date" name="waktu" class="form-control" id="waktu_listrik" readonly>
+                                    <input type="date" name="waktu" class="form-control" id="waktu_listrik" @if(Auth::user()->jabatan === 'operator') readonly @endif>
                                 </div>
                                 <div class="mb-3">
                                     <label for="panel_type" class="form-label">Panel Type</label>
@@ -119,7 +119,7 @@
                                 @csrf
                                 <div class="mb-3">
                                     <label for="tanggal" class="form-label">Tanggal (Pemakaian Tanggal Sebelumnya)</label>
-                                    <input type="date" name="tanggal" id="tanggal_air" class="form-control" readonly>
+                                    <input type="date" name="tanggal" class="form-control" id="tanggal_air" @if(Auth::user()->jabatan === 'operator') readonly @endif>
                                 </div>
 
                                 <div id="area-input-container"></div> <!-- Tempat input dinamis -->
@@ -137,7 +137,7 @@
                                 @csrf
                                 <div class="mb-3">
                                     <label for="tanggal" class="form-label">Tanggal</label>
-                                    <input type="date" name="tanggal" id="tanggal_chemical" class="form-control" readonly>
+                                    <input type="date" name="tanggal" class="form-control" id="tanggal_chemical" @if(Auth::user()->jabatan === 'operator') readonly @endif>
                                 </div>
                                 <div class="mb-3">
                                     <label for="area" class="form-label">Pilih Shift</label>
