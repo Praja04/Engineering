@@ -137,7 +137,7 @@
                                 @csrf
                                 <div class="mb-3">
                                     <label for="tanggal" class="form-label">Tanggal</label>
-                                    <input type="date" name="tanggal" class="form-control" id="tanggal_chemical" @if(Auth::user()->jabatan === 'operator') readonly @endif>
+                                    <input type="date" name="tanggal" class="form-control" id="tanggal_chemical">
                                 </div>
                                 <div class="mb-3">
                                     <label for="area" class="form-label">Pilih Shift</label>
@@ -184,8 +184,6 @@
         }
     });
 
-
-
     function setTanggalChemical() {
         const now = new Date();
         let tanggal = new Date(now); // default: hari ini
@@ -193,26 +191,39 @@
         const jam = now.getHours();
         const menit = now.getMinutes();
         const detik = now.getSeconds();
-        const selectedShift = $('#shift').val();
-
-        // Hitung total detik dari jam 00:00:00
         const totalDetik = jam * 3600 + menit * 60 + detik;
 
-        // 06:00:00 = 21600 detik
-        const batasAwalShift1 = 8 * 3600;
+        const selectedShift = $('#shift').val();
+        const batasAwalShift3 = 8 * 3600;
 
-        // Kalau shift 3 dan waktu sekarang masih di bawah jam 06:00:00, anggap masih hari sebelumnya
-        if (selectedShift === 'shift 3' && totalDetik < batasAwalShift1) {
-            tanggal.setDate(tanggal.getDate() - 1);
+        const inputTanggal = document.getElementById('tanggal_chemical');
+
+        if (selectedShift === 'shift 3') {
+            // Jika sebelum jam 08:00, anggap masih hari sebelumnya
+            if (totalDetik < batasAwalShift3) {
+                tanggal.setDate(tanggal.getDate() - 1);
+            }
+            inputTanggal.removeAttribute('readonly'); // shift 3 bisa edit
+        } else {
+            // Selain shift 3: tanggal hari ini dan readonly
+            inputTanggal.setAttribute('readonly', true);
         }
 
         const tanggalFormatted = tanggal.toISOString().split('T')[0];
         $('#tanggal_chemical').val(tanggalFormatted);
     }
+
     // Trigger saat shift dipilih
     $('#shift').on('change', function() {
-        setTanggalChemical();
+        const selected = $(this).val();
+        if (selected) {
+            setTanggalChemical();
+        } else {
+            $('#tanggal_chemical').val('');
+            document.getElementById('tanggal_chemical').setAttribute('readonly', true);
+        }
     });
+
     $(document).ready(function() {
 
         function toggleCosInput() {
