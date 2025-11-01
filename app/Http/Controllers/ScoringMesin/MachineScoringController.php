@@ -138,7 +138,7 @@ class MachineScoringController extends Controller
                     'notes' => $partData['notes'] ?? null,
                 ]);
             }
-
+            
             DB::commit();
 
             // Pesan sukses dan redirect sesuai status
