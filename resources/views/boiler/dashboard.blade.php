@@ -602,34 +602,35 @@
             };
 
             const updatePVSteam = () => {
-                $.getJSON("{{ url('http://10.11.11.200/api/sensor/boiler-realtime') }}", (response) => {
-                    if (response) {
-                        console.log(response);
-                        $('#PV-bar').val(`${response.PVSteam} Bar`);
-                        const $pvInput = $('#PV-bar');
-                        const pvValue = parseFloat(response.PVSteam);
-                        $pvInput.removeClass('bg-danger bg-warning bg-success text-white text-dark');
-                        if (pvValue > 7) {
-                            $pvInput.addClass('bg-danger text-white'); // merah
-                        } else if (pvValue > 6) {
-                            $pvInput.addClass('bg-warning text-dark'); // kuning
-                        } else {
-                            $pvInput.addClass('bg-success text-white'); // hijau
-                        }
-                        updateGaugeChart(response);
+                $.getJSON("{{ url('http://10.11.11.200/mybas/public/api/sensor/boiler-realtime') }}", (
+                    response) => {
+                        if (response) {
+                            console.log(response);
+                            $('#PV-bar').val(`${response.PVSteam} Bar`);
+                            const $pvInput = $('#PV-bar');
+                            const pvValue = parseFloat(response.PVSteam);
+                            $pvInput.removeClass('bg-danger bg-warning bg-success text-white text-dark');
+                            if (pvValue > 7) {
+                                $pvInput.addClass('bg-danger text-white'); // merah
+                            } else if (pvValue > 6) {
+                                $pvInput.addClass('bg-warning text-dark'); // kuning
+                            } else {
+                                $pvInput.addClass('bg-success text-white'); // hijau
+                            }
+                            updateGaugeChart(response);
 
-                        if (response.PVSteam > 6) {
-                            $.ajax({
-                                url: "{{ url('http://10.11.11.200/api/send/tele') }}",
-                                type: "GET",
-                                dataType: "json"
-                            }).done((response) => {
-                                console.log(response);
-                            }).fail((xhr, status, error) => console.error(
-                                `AJAX Error: ${status} ${error}`));
+                            if (response.PVSteam > 6) {
+                                $.ajax({
+                                    url: "{{ url('http://10.11.11.200/mybas/public/api/send/tele') }}",
+                                    type: "GET",
+                                    dataType: "json"
+                                }).done((response) => {
+                                    console.log(response);
+                                }).fail((xhr, status, error) => console.error(
+                                    `AJAX Error: ${status} ${error}`));
+                            }
                         }
-                    }
-                }).fail((xhr, status, error) => console.error(`AJAX Error: ${status} ${error}`));
+                    }).fail((xhr, status, error) => console.error(`AJAX Error: ${status} ${error}`));
             };
 
             const updateInputFields = () => {
@@ -647,7 +648,7 @@
                     params = {};
 
                 if (filter === "latest") {
-                    url = "{{ url('http://10.11.11.200/api/sensor/boiler-data') }}";
+                    url = "{{ url('http://10.11.11.200/mybas/public/api/sensor/boiler-data') }}";
                 } else if (filter === "daily") {
                     const tanggal = $("#datePicker").val();
                     if (!tanggal) return Swal.fire({
@@ -667,7 +668,7 @@
                         title: "Pilih Rentang Tanggal!",
                         text: "Harap pilih tanggal mulai dan selesai."
                     });
-                    url = "{{ url('http://10.11.11.200/api/sensor/boiler/data-mingguan') }}";
+                    url = "{{ url('http://10.11.11.200/mybas/public/api/sensor/boiler/data-mingguan') }}";
                     params = {
                         tanggal_mulai: start,
                         tanggal_selesai: end
@@ -696,7 +697,7 @@
 
 
                 $.ajax({
-                    url: "{{ url('http://10.11.11.200/api/sensor/rhtemp') }}",
+                    url: "{{ url('http://10.11.11.200/mybas/public/api/sensor/rhtemp') }}",
                     method: 'GET',
                     data: {
                         filter: filter,
@@ -717,7 +718,7 @@
                 });
 
                 $.ajax({
-                    url: "{{ url('http://10.11.11.200/api/sensor/lhtemp') }}",
+                    url: "{{ url('http://10.11.11.200/mybas/public/api/sensor/lhtemp') }}",
                     method: 'GET',
                     data: {
                         filter,
@@ -734,7 +735,7 @@
                 });
 
                 $.ajax({
-                    url: "{{ url('http://10.11.11.200/api/sensor/pvsteam') }}",
+                    url: "{{ url('http://10.11.11.200/mybas/public/api/sensor/pvsteam') }}",
                     method: 'GET',
                     data: {
                         filter,
@@ -751,7 +752,7 @@
                 });
 
                 $.ajax({
-                    url: "{{ url('http://10.11.11.200/api/sensor/levelfeedwater') }}",
+                    url: "{{ url('http://10.11.11.200/mybas/public/api/sensor/levelfeedwater') }}",
                     method: 'GET',
                     data: {
                         filter,
@@ -794,8 +795,8 @@
             $('.abnormal-card').on('click', function() {
                 const type = $(this).data('type');
                 $.ajax({
-                    url: "{{ url('http://10.11.11.200/api/sensor') }}/" +
-                    type, // asumsi endpoint sama
+                    url: "{{ url('http://10.11.11.200/mybas/public/api/sensor') }}/" +
+                        type, // asumsi endpoint sama
                     method: 'GET',
                     data: {
                         filter: $('#filter_abnormal').val(),
@@ -921,7 +922,7 @@
                 }
 
                 $.ajax({
-                    url: "{{ url('http://10.11.11.200/api/kondensat/data') }}",
+                    url: "{{ url('http://10.11.11.200/mybas/public/api/kondensat/data') }}",
                     method: "GET",
                     data: {
                         start_date: start,
