@@ -130,4 +130,30 @@ class KalibrasiVolumtrikController extends Controller
 
         return sqrt($sumSq / ($n - 1)); // sample stdev
     }
+
+    public function getData()
+    {
+        try {
+            $data = KalibrasiModel::with([
+                'volumetrik' => function ($q) {
+                    $q->orderBy('titik_kalibrasi');
+                },
+                'volumetrikGabungan',
+                'alat'
+            ])
+                ->where('jenis_kalibrasi', 'volumetrik')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
