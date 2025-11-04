@@ -168,7 +168,11 @@ class ListrikController extends Controller
         $panels = array_merge(['MDP'], array_map(fn ($i) => "SDP$i", range(1, 14)));
 
         $templatePath = storage_path('app/templates/template_listrik.xlsx');
-        $spreadsheet = IOFactory::load($templatePath);
+
+        // --- Load template dengan proteksi XXE dimatikan (hanya untuk template internal) ---
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+        // $reader->setSecurityScan(false);
+        $spreadsheet = $reader->load($templatePath);
 
         $rowBase = 4;
         $rowStep = 4;
@@ -180,16 +184,14 @@ class ListrikController extends Controller
             'mwh'  => 3,
         ];
 
-        $sheetNames = [
-            'minggu 1', 'minggu 2', 'minggu 3', 'minggu 4', 'minggu 5'
-        ];
+        $sheetNames = ['minggu 1', 'minggu 2', 'minggu 3', 'minggu 4', 'minggu 5'];
 
         foreach ($sheetNames as $weekIndex => $sheetName) {
             $sheet = $spreadsheet->getSheetByName($sheetName);
             if (!$sheet) continue;
 
-            // Tambahkan info Bulan dan Tahun di S1 dan S2
-            $sheet->setCellValue('S1', 'Bulan : ' . $startDate->translatedFormat('F')); // contoh: September
+            // Tambahkan info Bulan dan Tahun
+            $sheet->setCellValue('S1', 'Bulan : ' . $startDate->translatedFormat('F'));
             $sheet->setCellValue('S2', 'Tahun : ' . $startDate->year);
 
             $weekStart = $startDate->copy()->addDays($weekIndex * 7);
@@ -203,9 +205,7 @@ class ListrikController extends Controller
                 ->whereBetween('waktu', [$weekStart, $weekEnd])
                     ->orderBy('waktu')
                     ->get()
-                    ->groupBy(function ($item) {
-                        return Carbon::parse($item->waktu)->day;
-                    });
+                    ->groupBy(fn ($item) => Carbon::parse($item->waktu)->day);
 
                 $col = 7 + $panelIndex;
 
@@ -239,9 +239,7 @@ class ListrikController extends Controller
                             $sheet->setCellValue("{$colLetter}{$row}", $entry->$field);
                         }
 
-                        if (
-                            $panel === 'MDP' && $entry->cos !== null
-                        ) {
+                        if ($panel === 'MDP' && $entry->cos !== null) {
                             $sheet->setCellValue("F{$rowStart}", $entry->cos);
                         }
                     }
@@ -249,13 +247,24 @@ class ListrikController extends Controller
             }
         }
 
+        // --- Pastikan folder exports ada dan writable ---
+        $exportDir = storage_path('app/exports');
+        if (!file_exists($exportDir)) {
+            mkdir($exportDir, 0775, true);
+        }
+        if (!is_writable($exportDir)) {
+            chmod($exportDir, 0775);
+        }
+
         $filename = "Laporan_Listrik_{$month}.xlsx";
-        $outputPath = storage_path("app/exports/{$filename}");
+        $outputPath = $exportDir . '/' . $filename;
+
         $writer = new Xlsx($spreadsheet);
         $writer->save($outputPath);
 
         return response()->download($outputPath)->deleteFileAfterSend(true);
     }
+
 
     public function getTrendPemakaianListrik(Request $request)
     {
