@@ -758,15 +758,81 @@ class KalibrasiCertificateController extends Controller
         $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
 
         $row = 26;
+        $u_total = $kalibrasi->volumetrikGabungan->u_total ?? null;
+        $formatted_u_total = $u_total !== null ? number_format((float)$u_total, 3, '.', '') : '-';
         foreach ($kalibrasi->volumetrik as $v) {
             $sheet->setCellValue("D{$row}", $v->titik_kalibrasi ?? '-');
             $sheet->setCellValue("L{$row}", $v->penunjuk_alat ?? '-');
             $sheet->setCellValue("R{$row}", $v->penunjuk_standar ?? '-');
             $sheet->setCellValue("X{$row}", $v->koreksi ?? '-');
+
+            $sheet->setCellValue("AD{$row}", $formatted_u_total);
             $row++;
         }
 
-        $sheet->setCellValue("AD{$row}", $v->error ?? '-');
+        $baseRow = 62;
+        $nameRow = 66;
+        $columns = ['C', 'H', 'M', 'S'];
+
+        foreach ($approvals as $i => $approval) {
+            if (!isset($columns[$i])) break; // Maks 4 kolom
+
+            $col = $columns[$i];
+            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
+            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
+
+            // Cek gambar ttd individu
+            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
+            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
+            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
+
+            // Merge area untuk area tanda tangan
+            $sheet->mergeCells($mergeRange);
+            $sheet->getStyle($mergeRange)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            if (file_exists($finalPath)) {
+                try {
+                    // Hitung posisi tengah dari range merge
+                    $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
+                    $startCol = $rangeBounds[0][0];
+                    $endCol   = $rangeBounds[1][0];
+
+                    // Konversi ke huruf kolom
+                    $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
+                    $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
+
+                    // Hitung total lebar kolom yang di-merge
+                    $totalWidth = 0;
+                    for ($j = $startCol; $j <= $endCol; $j++) {
+                        $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
+                    }
+
+                    // Hitung offset X agar gambar di tengah
+                    $offsetX = ($totalWidth * 6.2 / 2) - 25;
+                    if ($offsetX < 0) $offsetX = 0;
+
+                    // Tambahkan gambar
+                    $drawing = new Drawing();
+                    $drawing->setPath($finalPath);
+                    $drawing->setHeight(70);
+                    $drawing->setCoordinates($startColLetter . $baseRow);
+                    $drawing->setOffsetX($offsetX);
+                    $drawing->setOffsetY(5);
+                    $drawing->setWorksheet($sheet);
+                } catch (\Throwable $th) {
+                    Log::warning('Gagal memuat TTD: ' . $th->getMessage());
+                }
+            }
+
+            // Nama approver di bawah TTD
+            $sheet->mergeCells($nameRange);
+            $sheet->setCellValue($col . $nameRow, '( ' . ($approval['approver_name'] ?? '-') . ' )');
+            $sheet->getStyle($nameRange)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+        }
     }
 
     private function _fillTimbangan(Spreadsheet $spreadsheet, $sertifikat, $kalibrasi)
