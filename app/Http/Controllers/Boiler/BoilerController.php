@@ -21,14 +21,37 @@ class BoilerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jenis_input' => 'required|in:weekly,monthly',
+            'periode_tipe' => 'required|in:weekly,monthly',
             'tanggal' => 'required|date',
             'batu_bara' => 'required|numeric|min:0',
             'steam' => 'required|numeric|min:0',
         ]);
 
+        $jenis = $request->periode_tipe;
+        $tanggal = $request->tanggal;
+
+        $exists = BoilerModel::where('periode_tipe', $jenis)
+            ->when($jenis === 'weekly', function ($query) use ($tanggal) {
+                $query->whereRaw('YEAR(tanggal) = YEAR(?)', [$tanggal])
+                    ->whereRaw('WEEK(tanggal, 1) = WEEK(?, 1)', [$tanggal]);
+            })
+            ->when($jenis === 'monthly', function ($query) use ($tanggal) {
+                $query->whereRaw('YEAR(tanggal) = YEAR(?)', [$tanggal])
+                    ->whereRaw('MONTH(tanggal) = MONTH(?)', [$tanggal]);
+            })
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => $jenis === 'weekly'
+                    ? 'Data KPI untuk minggu tersebut sudah ada.'
+                    : 'Data KPI untuk bulan tersebut sudah ada.'
+            ], 422);
+        }
+
         BoilerModel::create([
-            'jenis_input' => $request->jenis_input,
+            'periode_tipe' => $request->periode_tipe,
             'tanggal' => $request->tanggal,
             'batu_bara' => $request->batu_bara,
             'steam' => $request->steam,
@@ -45,8 +68,8 @@ class BoilerController extends Controller
         $query = BoilerModel::query();
 
         // filter dinamis
-        if ($request->jenis_input) {
-            $query->where('jenis_input', $request->jenis_input);
+        if ($request->periode_tipe) {
+            $query->where('periode_tipe', $request->periode_tipe);
         }
         if ($request->tanggal) {
             $query->whereDate('tanggal', $request->tanggal);
@@ -70,7 +93,7 @@ class BoilerController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'jenis_input' => 'required|in:weekly,monthly',
+            'periode_tipe' => 'required|in:weekly,monthly',
             'tanggal' => 'required|date',
             'batu_bara' => 'required|numeric|min:0',
             'steam' => 'required|numeric|min:0',
@@ -86,7 +109,7 @@ class BoilerController extends Controller
         }
 
         $boiler->update([
-            'jenis_input' => $request->jenis_input,
+            'periode_tipe' => $request->periode_tipe,
             'tanggal' => $request->tanggal,
             'batu_bara' => $request->batu_bara,
             'steam' => $request->steam,
