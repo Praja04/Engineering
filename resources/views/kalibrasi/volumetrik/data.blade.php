@@ -27,7 +27,7 @@
                         </div>
                         <div class="card-body">
                             <table class="table table-hover nowrap dt-responsive" id="historyTable" style="width:100%">
-                                <thead>
+                                <thead class="table-light">
                                     <tr>
                                         <th>No</th>
                                         <th>Kode Alat</th>
@@ -49,6 +49,189 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Detail -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-clipboard-data me-2"></i>
+                        Detail Kalibrasi Volumetrik
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Tabs -->
+                    <ul class="nav nav-pills arrow-navtabs nav-success bg-light mb-3 px-3 pt-3" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab"
+                                data-bs-target="#info-pane">Informasi</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab"
+                                data-bs-target="#measurement-pane">Pengukuran</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#result-pane">Hitung
+                                Gabungan</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content p-3">
+                        <!-- Tab 1: Informasi -->
+                        <div class="tab-pane fade show active" id="info-pane">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-primary border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar-event"></i> Kode Alat
+                                            </small>
+                                            <strong id="detail_kode_alat"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-primary border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar-event"></i> Nama Alat
+                                            </small>
+                                            <strong id="detail_nama_alat"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-primary border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar-event"></i> Tanggal Kalibrasi
+                                            </small>
+                                            <strong id="detail_tgl_kalibrasi"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-success border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar-check"></i> Tgl Kalibrasi Ulang
+                                            </small>
+                                            <strong id="detail_tgl_ulang"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-info border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-geo-alt"></i> Lokasi
+                                            </small>
+                                            <strong id="detail_lokasi"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-warning border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-thermometer-half"></i> Suhu Ruangan
+                                            </small>
+                                            <strong id="detail_suhu"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-info border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-droplet"></i> Kelembaban
+                                            </small>
+                                            <strong id="detail_kelembaban"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card card-animate border-start border-primary border-3">
+                                        <div class="card-body">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-gear"></i> Jenis Kalibrasi
+                                            </small>
+                                            <strong id="detail_jenis"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-primary">
+                                <strong><i class="bi bi-book me-2"></i>Metode Kalibrasi</strong>
+                                <p class="mb-0 mt-2 small" id="detail_metode"></p>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Pengukuran -->
+                        <div class="tab-pane fade" id="measurement-pane">
+                            <!-- Tekanan Naik -->
+                            <div class="card mb-3 border-success">
+                                <div class="card-header bg-soft-primary text-primary">
+                                    <i class="bi bi-arrow-up-circle-fill me-2"></i>
+                                    <strong>Pengukuran</strong>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-sm text-center mb-0">
+                                            <thead class="table-light align-middle">
+                                                <tr>
+                                                    <th>Titik Kalibrasi</th>
+                                                    <th>Penunjuk Standar</th>
+                                                    <th>Penunjuk Alat</th>
+                                                    <th>Koreksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="hitung_data"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Hasil -->
+                        <div class="tab-pane fade" id="result-pane">
+                            <div class="card border-success">
+                                <div class="card-header bg-soft-primary text-primary">
+                                    <i class="bi bi-calculator-fill me-2"></i>
+                                    <strong>Hasil Perhitungan Summary</strong>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-sm text-center mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Avg Penunjuk Standar</th>
+                                                    <th>Avg Koreksi</th>
+                                                    <th>Std Dev Penunjuk Standar</th>
+                                                    <th>Akar 10</th>
+                                                    <th>U Timbangan</th>
+                                                    <th class="bg-success-subtle">U Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="detail_gabungan"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -62,7 +245,7 @@
             // Fetch data dari API
             function fetchHistoryData() {
                 $.ajax({
-                    url: `{{ url('api/kalibrasi/pressure/data') }}`,
+                    url: `{{ url('api/kalibrasi/volumetrik/data') }}`,
                     method: 'GET',
                     dataType: 'json',
                     success: function(response) {
@@ -84,70 +267,71 @@
 
                 $('#historyTable').DataTable({
                     data: historyData,
+                    responsive: true,
                     processing: true,
                     serverSide: false,
-                    responsive: true,
-                    scrollX: true,
+                    destroy: true,
+                    scrollX: true, // hilangkan horizontal scroll biar lebih clean
+                    ordering: false,
                     language: {
                         lengthMenu: "Show _MENU_ entries",
+                        search: "Cari:",
+                        info: "Showing _START_ - _END_ from _TOTAL_ data",
+                        infoEmpty: "Tidak ada data",
+                        infoFiltered: "(difilter dari total _MAX_ data)"
                     },
                     columns: [{
-                            data: null, // auto numbering
-                            render: function(data, type, row, meta) {
-                                return meta.row + 1;
-                            },
+                            data: null,
+                            className: "text-center",
+                            render: (data, type, row, meta) => meta.row + 1
                         },
                         {
-                            data: "alat.kode_alat",
+                            data: "alat.kode_alat"
                         },
                         {
                             data: "tgl_kalibrasi",
-                            render: function(data) {
-                                return formatDate(data);
-                            },
+                            render: data => formatDate(data)
                         },
                         {
                             data: "tgl_kalibrasi_ulang",
-                            render: function(data) {
-                                return formatDate(data);
-                            },
+                            render: data => formatDate(data)
                         },
                         {
-                            data: "lokasi_kalibrasi",
+                            data: "lokasi_kalibrasi"
                         },
                         {
                             data: null,
-                            render: function(data) {
-                                return `
-                                    <p class="condition-text mb-0">
-                                        Suhu: ${data.suhu_ruangan}°C<br>
-                                        Kelembaban: ${data.kelembaban}%
-                                    </p>
-                                `;
-                            },
+                            render: data => `
+                                <div>
+                                    <small class="text-muted d-block">Suhu: ${data.suhu_ruangan}</small>
+                                    <small class="text-muted">Kelembaban: ${data.kelembaban}</small>
+                                </div>
+                            `
                         },
                         {
-                            data: "pressure_gabungan",
-                            render: function(data) {
-                                return data.length;
-                            },
+                            data: "volumetrik",
+                            className: "text-center",
+                            render: data => data.length
                         },
                         {
                             data: null,
                             orderable: false,
-                            render: function(data, type, row) {
-                                return `
-                                    <button class="btn btn-sm btn-outline-primary btn-detail" data-id="${row.id}" title="Detail Data">
-                                        <i class="mdi mdi-eye"></i> Detail
+                            className: "text-center",
+                            render: (data, type, row) => `
+                                <div>
+                                    <button class="btn btn-sm btn-soft-info btn-detail" data-id="${row.id}" title="Detail">
+                                        <i class="mdi mdi-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${row.id}" title="Delete Data">
-                                        <i class="mdi mdi-delete"></i> Delete
+                                    <button class="btn btn-sm btn-soft-danger delete-btn" data-id="${row.id}" title="Hapus">
+                                        <i class="mdi mdi-delete"></i>
                                     </button>
-                                `;
-                            }
+                                </div>
+                            `
                         }
-                    ]
+                    ],
+                    dom: '<"row mb-3"<"col-md-6"l><"col-md-6 text-end"f>>rt<"row mt-3"<"col-md-6"i><"col-md-6 text-end"p>>',
                 });
+
             }
 
             function formatDate(dateString) {
@@ -166,9 +350,18 @@
                 showDetailModal(id, historyData);
             });
 
+            function formatNumberDynamic(value, maxDecimals = 2) {
+                if (value === null || value === undefined || value === '' || isNaN(value)) return '-';
+                const num = parseFloat(value);
+                if (Number.isInteger(num)) return num.toString(); // tanpa koma kalau bulat
+                return num.toFixed(maxDecimals).replace(/\.?0+$/, ''); // hapus nol di belakang koma
+            }
+
             function showDetailModal(id, historyData) {
                 let item = historyData.find(x => x.id === id);
                 if (!item) return;
+
+                console.log(item);
 
                 // Isi data umum
                 $('#detail_kode_alat').text(item.alat.kode_alat);
@@ -176,103 +369,57 @@
                 $('#detail_tgl_kalibrasi').text(formatDate(item.tgl_kalibrasi));
                 $('#detail_tgl_ulang').text(formatDate(item.tgl_kalibrasi_ulang));
                 $('#detail_lokasi').text(item.lokasi_kalibrasi);
-                $('#detail_suhu').text(item.suhu_ruangan + '°C');
-                $('#detail_kelembaban').text(item.kelembaban + '%');
+                $('#detail_suhu').text(item.suhu_ruangan);
+                $('#detail_kelembaban').text(item.kelembaban);
                 $('#detail_jenis').text(item.jenis_kalibrasi.toUpperCase());
                 $('#detail_metode').text(item.alat.metode_kalibrasi);
 
-                // Render pressure data
-                let naikBody = $('#pressure_naik');
-                let turunBody = $('#pressure_turun');
-                naikBody.empty();
-                turunBody.empty();
-                let lastTitik = null;
+                // Render volumetrik data
+                const volumetriks = Array.isArray(item.volumetrik) ? item.volumetrik : [];
+                const hitungBody = $('#hitung_data');
+                hitungBody.empty();
 
-                const pressures = (item.pressure || []).map(p => ({
-                    ...p,
-                    tekanan: (p.tekanan || '').toString().toLowerCase().trim(),
-                    titik_kalibrasi: p.titik_kalibrasi ?? '',
-                    penunjuk_standar: p.penunjuk_standar ?? '',
-                    penunjuk_alat: p.penunjuk_alat ?? '',
-                    koreksi_standar: p.koreksi_standar ?? '',
-                    tekanan_standar: p.tekanan_standar ?? '',
-                    koreksi_alat: p.koreksi_alat ?? ''
-                }));
-
-                const naikArr = pressures.filter(p => p.tekanan === 'naik')
-                    .sort((a, b) => a.titik_kalibrasi - b.titik_kalibrasi);
-                const turunArr = pressures.filter(p => p.tekanan === 'turun')
-                    .sort((a, b) => a.titik_kalibrasi - b.titik_kalibrasi);
-
-                function formatNumber(val) {
-                    const num = parseFloat(val);
-                    if (isNaN(num)) return '—';
-                    return num.toFixed(1); // hanya 1 angka desimal
-                }
-
-                function renderList(item, arr, $body, tipe) {
-                    if (!arr.length) {
-                        $body.append('<tr><td colspan="9" class="text-center text-muted">Tidak ada data</td></tr>');
-                        return;
-                    }
-
-                    const grouped = arr.reduce((acc, p) => {
-                        if (!acc[p.titik_kalibrasi]) acc[p.titik_kalibrasi] = [];
-                        acc[p.titik_kalibrasi].push(p);
-                        return acc;
-                    }, {});
-
-                    const suffix = tipe === 'naik' ? '_naik' : '_turun';
-
-                    Object.keys(grouped).forEach(titik => {
-                        const dataTitik = grouped[titik];
-                        const pg = item.pressure_gabungan?.find(pg => pg.titik_kalibrasi == titik);
-
-                        dataTitik.forEach((p, i) => {
-                            const showTitik = i === 0; // tampilkan hanya di baris pertama per titik
-                            const showGabungan = i ===
-                                0; // tampilkan nilai avg/sd/u hanya di baris pertama
-
-                            $body.append(`
-                                <tr>
-                                    <td>${showTitik ? `<span class="badge bg-primary">${formatNumber(p.titik_kalibrasi)}</span>` : ''}</td>
-                                    <td>${formatNumber(p.penunjuk_standar)}</td>
-                                    <td>${formatNumber(p.penunjuk_alat)}</td>
-                                    <td>${formatNumber(p.koreksi_standar)}</td>
-                                    <td>${formatNumber(p.tekanan_standar)}</td>
-                                    <td>${formatNumber(p.koreksi_alat)}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['avg_penunjuk_alat' + suffix]) : ''}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['avg_tekanan_standar' + suffix]) : ''}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['avg_kor_alat' + suffix]) : ''}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['std_deviasi' + suffix]) : ''}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['ketidak_pastian' + suffix]) : ''}</td>
-                                </tr>
-                            `);
-                        });
+                if (volumetriks.length > 0) {
+                    volumetriks.forEach(v => {
+                        hitungBody.append(`
+                            <tr>
+                                <td>${formatNumberDynamic(v.titik_kalibrasi, 2)}</td>
+                                <td>${formatNumberDynamic(v.penunjuk_standar, 2)}</td>
+                                <td>${formatNumberDynamic(v.penunjuk_alat, 2)}</td>
+                                <td>${formatNumberDynamic(v.koreksi, 2)}</td>
+                            </tr>
+                        `);
                     });
-                }
-
-                renderList(item, naikArr, naikBody, 'naik');
-                renderList(item, turunArr, turunBody, 'turun');
-
-                // Render data gabungan
-                if (item.pressure_gabungan && item.pressure_gabungan.length > 0) {
-                    let tbody = $('#detail_gabungan');
-                    tbody.empty();
-
-                    $.each(item.pressure_gabungan, function(i, pg) {
-                        let row = `
+                } else {
+                    hitungBody.append(`
                         <tr>
-                            <td><span class="badge badge-soft-primary">${formatNumber(pg.titik_kalibrasi)}</span></td>
-                            <td>${parseFloat(pg.u_naik).toFixed(9)}</td>
-                            <td>${parseFloat(pg.u_turun).toFixed(9)}</td>
-                            <td>${parseFloat(pg.u_naik_kuadrat).toFixed(9)}</td>
-                            <td>${parseFloat(pg.u_turun_kuadrat).toFixed(9)}</td>
-                            <td class="highlight-value">${parseFloat(pg.u_gabungan).toFixed(9)}</td>
+                            <td colspan="6" class="text-muted fst-italic">Tidak ada data pengukuran</td>
                         </tr>
-                    `;
-                        tbody.append(row);
-                    });
+                    `);
+                }
+
+                // === Render data gabungan ===
+                const gabungan = item.volumetrik_gabungan ?? null;
+                const gabunganBody = $('#detail_gabungan');
+                gabunganBody.empty();
+
+                if (gabungan) {
+                    gabunganBody.append(`
+                        <tr>
+                            <td>${formatNumberDynamic(gabungan.avg_penunjuk_standar, 8)}</td>
+                            <td>${formatNumberDynamic(gabungan.avg_koreksi, 8)}</td>
+                            <td>${formatNumberDynamic(gabungan.stdev_penunjuk_standar, 8)}</td>
+                            <td>${formatNumberDynamic(gabungan.akar_10, 8)}</td>
+                            <td>${formatNumberDynamic(gabungan.u_timbangan, 8)}</td>
+                            <td class="fw-bold bg-success-subtle">${formatNumberDynamic(gabungan.u_total, 8)}</td>
+                        </tr>
+                    `);
+                } else {
+                    gabunganBody.append(`
+                        <tr>
+                            <td colspan="6" class="text-muted fst-italic">Data gabungan belum tersedia</td>
+                        </tr>
+                    `);
                 }
 
                 // Show modal
