@@ -13,9 +13,9 @@
                 <div class="card-body">
                     {{-- Pilihan Jenis Input --}}
                     <div class="mb-4">
-                        <label for="jenisInput" class="form-label fw-bold">Pilih Jenis Input</label>
-                        <select id="jenisInput" class="form-select" required>
-                            <option value="">-- Pilih Jenis --</option>
+                        <label for="tipePeriode" class="form-label fw-bold">Pilih Jenis Input</label>
+                        <select id="tipePeriode" class="form-select" required>
+                            <option value="">Pilih tipe periode</option>
                             <option value="weekly">Mingguan</option>
                             <option value="monthly">Bulanan</option>
                         </select>
@@ -57,11 +57,11 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            const $jenisInput = $('#jenisInput');
+            const $tipePeriode = $('#tipePeriode');
             const $formBoiler = $('#formBoiler');
 
             // Saat memilih jenis input
-            $jenisInput.on('change', function() {
+            $tipePeriode.on('change', function() {
                 if ($(this).val() === 'weekly' || $(this).val() === 'monthly') {
                     $formBoiler.removeClass('d-none');
                 } else {
@@ -75,7 +75,7 @@
 
                 const formData = {
                     _token: $('meta[name="csrf-token"]').attr('content'),
-                    jenis_input: $jenisInput.val(), // sesuaikan field di backend
+                    periode_tipe: $tipePeriode.val(), // sesuaikan field di backend
                     tanggal: $('#tanggal').val(),
                     batu_bara: $('#batuBara').val(),
                     steam: $('#steam').val(),
@@ -96,7 +96,7 @@
                             });
 
                             $formBoiler.trigger('reset');
-                            $jenisInput.val('');
+                            $tipePeriode.val('');
                             $formBoiler.addClass('d-none');
                         } else {
                             Swal.fire({

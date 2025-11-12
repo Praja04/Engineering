@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('boilers', function (Blueprint $table) {
+        Schema::create('kpi', function (Blueprint $table) {
             $table->id();
             $table->enum('periode_tipe', ['weekly', 'monthly']);
             $table->date('tanggal');
-            $table->decimal('batu_bara', 10, 3); // ton
-            $table->decimal('steam', 10, 3);     // m³
+            $table->decimal('fg', 10, 2); // ton
+            $table->decimal('kecap_matang', 10, 2);  // ton
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('boilers');
+        Schema::dropIfExists('kpi');
     }
 };
