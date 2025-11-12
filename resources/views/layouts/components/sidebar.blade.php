@@ -46,6 +46,7 @@
                 <!-- /////////////////////menu/////////////// -->
                 <li class="menu-title"><span data-key="t-menu">Engineering Menu</span></li>
                 @include('layouts.components.sidebar-utility.utility')
+                @include('layouts.components.sidebar-boiler.menu-boiler')
                 @include('layouts.components.sidebar-kalibrasi.menu-kalibrasi')
                 @include('layouts.components.sidebar-scoring.menu-scoring-input')
 

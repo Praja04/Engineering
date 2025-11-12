@@ -323,6 +323,7 @@
                     serverSide: false,
                     responsive: true,
                     scrollX: true,
+                    ordering: false,
                     language: {
                         lengthMenu: "Show _MENU_ entries",
                     },
@@ -352,14 +353,12 @@
                         },
                         {
                             data: null,
-                            render: function(data) {
-                                return `
-                                    <p class="condition-text mb-0">
-                                        Suhu: ${data.suhu_ruangan}°C<br>
-                                        Kelembaban: ${data.kelembaban}%
-                                    </p>
-                                `;
-                            },
+                            render: data => `
+                                <div>
+                                    <small class="text-muted d-block">Suhu: ${data.suhu_ruangan}</small>
+                                    <small class="text-muted">Kelembaban: ${data.kelembaban}</small>
+                                </div>
+                            `
                         },
                         {
                             data: "pressure_gabungan",
@@ -372,11 +371,11 @@
                             orderable: false,
                             render: function(data, type, row) {
                                 return `
-                                    <button class="btn btn-sm btn-outline-primary btn-detail" data-id="${row.id}" title="Detail Data">
-                                        <i class="mdi mdi-eye"></i> Detail
+                                    <button class="btn btn-sm btn-soft-info btn-detail" data-id="${row.id}" title="Detail">
+                                        <i class="mdi mdi-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${row.id}" title="Delete Data">
-                                        <i class="mdi mdi-delete"></i> Delete
+                                    <button class="btn btn-sm btn-soft-danger delete-btn" data-id="${row.id}" title="Delete">
+                                        <i class="mdi mdi-delete"></i>
                                     </button>
                                 `;
                             }

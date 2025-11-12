@@ -27,6 +27,7 @@ Route::prefix('kalibrasi')->group(function () {
 
     Route::prefix('volumetrik')->group(function () {
         Route::post('/store', [KalibrasiVolumtrikController::class, 'store']);
+        Route::get('/data', [KalibrasiVolumtrikController::class, 'getData']);
     });
 });
 

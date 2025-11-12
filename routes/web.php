@@ -29,6 +29,8 @@ Route::middleware('auth')->group(function () {
 
 // Kalibrasi Routes
 @include 'kalibrasi/kalibrasi.php';
+@include('boiler/boiler.php');
+@include('kpi/kpi.php');
 // End Kalibrasi Routes
 
 ////////// Scoring Mesin Routes ///////////
@@ -39,7 +41,3 @@ Route::middleware('auth')->group(function () {
 @include 'utility/dashboard.php';
 
 //////////    End View Routes   ///////////
-
-// Boiler Routes
-@include('boiler/boiler.php');
-// End Boiler Routes

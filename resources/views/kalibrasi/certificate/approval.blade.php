@@ -417,7 +417,7 @@
 
                 const tableHtml = `
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <table class="table table-hover align-middle text-nowrap">
                             <thead class="table-info">
                                 <tr>
                                     <th>#</th>
@@ -536,8 +536,8 @@
                 $('#detail_tgl_kalibrasi').text(formatDate(kalibrasi.tgl_kalibrasi));
                 $('#detail_tgl_ulang').text(formatDate(kalibrasi.tgl_kalibrasi_ulang));
                 $('#detail_lokasi').text(kalibrasi.lokasi_kalibrasi ?? '—');
-                $('#detail_suhu').text(kalibrasi.suhu_ruangan ? `${kalibrasi.suhu_ruangan}°C` : '—');
-                $('#detail_kelembaban').text(kalibrasi.kelembaban ? `${kalibrasi.kelembaban}%` : '—');
+                $('#detail_suhu').text(kalibrasi.suhu_ruangan ? `${kalibrasi.suhu_ruangan}` : '—');
+                $('#detail_kelembaban').text(kalibrasi.kelembaban ? `${kalibrasi.kelembaban}` : '—');
                 $('#detail_jenis').text((kalibrasi.jenis_kalibrasi ?? '').toUpperCase());
                 $('#detail_metode').text(alat.metode_kalibrasi ?? '—');
 

@@ -28,6 +28,12 @@
                             Utility</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{{ url('utility/data') }}">
+                        <i class="mdi mdi-poll"></i> <span data-key="t-widgets">Form
+                            KPI</span>
+                    </a>
+                </li>
             </ul>
         </div>
     </li>
