@@ -3,15 +3,18 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Auth\TokenAuthController;
 
+Route::get('/token-login', [TokenAuthController::class, 'loginWithToken'])
+    ->name('auth.token-login');
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 ///////////   View Routes   ///////////
+Route::view('/dashboard', 'dashboard')->name('dashboard');
 Route::middleware('auth')->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
 
     Route::middleware(['auth', 'access'])->group(function () {
         Route::prefix('users')->as('users.')->group(function () {
@@ -43,3 +46,4 @@ Route::middleware('auth')->group(function () {
 // Boiler Routes
 @include('boiler/boiler.php');
 // End Boiler Routes
+
