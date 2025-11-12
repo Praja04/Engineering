@@ -227,14 +227,14 @@
                                     <select class="form-control" id="editBagian" name="bagian" required>
                                         <option value="" disabled selected>Pilih Bagian</option>
                                         <option value="dokumen_control">Dokumen Control</option>
-                                        <option value="engineering">Engineering</option>
-                                        <option value="engineering_kalibrasi">Engineering Kalibrasi</option>
-                                        <option value="engineering_maintenance_&_improvement">Engineering Maintenance &
-                                            Improvement</option>
-                                        <option value="engineering_produksi">Engineering Produksi</option>
-                                        <option value="engineering_wwtp">Engineering WWTP</option>
-                                        <option value="engineering_workshop_&_project">Engineering Workshop & Project
-                                        </option>
+                                        <option value="Engineering">Engineering</option>
+                                        <option value="Engineering Kalibrasi">Engineering Kalibrasi</option>
+                                        <option value="Engineering Maintenance & Improvement">Engineering
+                                            Maintenance & Improvement</option>
+                                        <option value="Engineering Produksi">Engineering Produksi</option>
+                                        <option value="Engineering WWTP">Engineering WWTP</option>
+                                        <option value="Engineering Workshop & Project">Engineering Workshop &
+                                            Project</option>
                                     </select>
                                 </div>
 

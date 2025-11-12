@@ -155,27 +155,27 @@
 
                 // Icon mapping (biar tetap cantik dan relevan)
                 const styleMap = {
-                    'Pressure': {
+                    'pressure': {
                         icon: 'mdi-gauge',
                         color: 'btn-outline-info'
                     },
-                    'Massa': {
+                    'timbangan': {
                         icon: 'mdi-scale-balance',
                         color: 'btn-outline-success'
                     },
-                    'Temperature': {
+                    'temperature': {
                         icon: 'mdi-thermometer',
                         color: 'btn-outline-warning'
                     },
-                    'Volumetrik': {
+                    'volumetrik': {
                         icon: 'mdi-beaker',
                         color: 'btn-outline-primary'
                     },
-                    'Dimention': {
+                    'thermohygrometer': {
                         icon: 'mdi-ruler',
                         color: 'btn-outline-danger'
                     },
-                    'Magnetic': {
+                    'jangka_sorong': {
                         icon: 'mdi-magnet',
                         color: 'btn-outline-secondary'
                     },
@@ -277,7 +277,11 @@
                             next: "Next",
                             previous: "Prev"
                         }
-                    }
+                    },
+                    columnDefs: [{
+                        orderable: false,
+                        targets: [0, 1, 2, 3, 4, 5, 6, 7]
+                    }]
                 });
 
                 // Filter button functionality
