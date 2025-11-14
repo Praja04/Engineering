@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\AirController;
 
-Route::prefix('utility')->middleware('auth')->group(function () {
+Route::prefix('utility')->group(function () {
 
     Route::get('data/air', [AirController::class, 'getPemakaianAirData']);
     Route::get('/trend-pemakaian-air', [AirController::class, 'getTrendPemakaianAir']);
