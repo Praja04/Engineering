@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('kpi', function (Blueprint $table) {
             $table->id();
             $table->enum('periode_tipe', ['weekly', 'monthly']);
+            $table->integer('week')->nullable();
             $table->date('tanggal');
             $table->decimal('fg', 10, 2); // ton
             $table->decimal('kecap_matang', 10, 2);  // ton

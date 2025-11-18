@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Master Alat Kalibrasi')
+
 @section('styles')
     <style>
         .card {

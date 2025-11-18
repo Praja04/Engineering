@@ -28,6 +28,7 @@ class BoilerController extends Controller
         ]);
 
         $jenis = $request->periode_tipe;
+        // dd($jenis);
         $tanggal = $request->tanggal;
 
         $exists = BoilerModel::where('periode_tipe', $jenis)
@@ -50,8 +51,13 @@ class BoilerController extends Controller
             ], 422);
         }
 
+        $weekOfMonth = $jenis === 'weekly'
+            ? ceil(date('d', strtotime($tanggal)) / 7)
+            : null;
+
         BoilerModel::create([
             'periode_tipe' => $request->periode_tipe,
+            'week' => $weekOfMonth,
             'tanggal' => $request->tanggal,
             'batu_bara' => $request->batu_bara,
             'steam' => $request->steam,

@@ -13,7 +13,7 @@ use App\Models\Kalibrasi\KalibrasiSertifikatModel;
 use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikModel;
 use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikGabunganModel;
 
-class KalibrasiVolumtrikController extends Controller
+class KalibrasiVolumetrikController extends Controller
 {
     public function showForm()
     {
@@ -155,5 +155,21 @@ class KalibrasiVolumtrikController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function destroy(string $id)
+    {
+        $kalibrasi = KalibrasiModel::findOrFail($id);
+
+        $kalibrasi->volumetrik()->delete();
+        $kalibrasi->volumetrikGabungan()->delete();
+
+        // Hapus kalibrasi utama
+        $kalibrasi->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data kalibrasi berhasil dihapus!'
+        ]);
     }
 }

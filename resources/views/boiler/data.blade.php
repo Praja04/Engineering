@@ -45,8 +45,9 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>No</th>
-                                    <th>Jenis Input</th>
+                                    <th>Periode Tipe</th>
                                     <th>Tanggal</th>
+                                    <th>Week</th>
                                     <th>Batu Bara (Ton)</th>
                                     <th>Steam (m³)</th>
                                     <th>Aksi</th>
@@ -75,8 +76,8 @@
                         <input type="hidden" id="boilerId">
 
                         <div class="mb-3">
-                            <label for="jenisInput" class="form-label">Jenis Input</label>
-                            <select id="jenisInput" class="form-select" required>
+                            <label for="periodeTipe" class="form-label">Periode Tipe</label>
+                            <select id="periodeTipe" class="form-select" required>
                                 <option value="">-- Pilih Jenis --</option>
                                 <option value="weekly">Mingguan</option>
                                 <option value="monthly">Bulanan</option>
@@ -129,7 +130,7 @@
 
             function loadData(jenis = '', tanggal = '') {
                 $.get("{{ route('boiler.get-data') }}", {
-                    jenis_input: jenis,
+                    periode_tipe: jenis,
                     tanggal: tanggal
                 }, function(data) {
                     tableBody.empty();
@@ -151,12 +152,14 @@
                     $.each(data, function(i, item) {
                         const batuBara = formatNumber(item.batu_bara);
                         const steam = formatNumber(item.steam);
+                        const weekDisplay = item.week ? `Week ${item.week}` : '-';
 
                         tableBody.append(`
                             <tr>
                                 <td>${i + 1}</td>
-                                <td class="text-capitalize">${item.jenis_input}</td>
+                                <td class="text-capitalize">${item.periode_tipe}</td>
                                 <td>${item.tanggal}</td>
+                                <td>${weekDisplay}</td>
                                 <td>${batuBara}</td>
                                 <td>${steam}</td>
                                 <td>
@@ -203,7 +206,7 @@
 
                 const data = {
                     _token: $('meta[name="csrf-token"]').attr('content'),
-                    jenis_input: $('#jenisInput').val(),
+                    jenis_input: $('#periodeTipe').val(),
                     tanggal: $('#tanggal').val(),
                     batu_bara: $('#batuBara').val(),
                     steam: $('#steam').val(),
@@ -251,7 +254,7 @@
                     if (res.success) {
                         $('#modalBoilerLabel').text('Edit Data Boiler');
                         $('#boilerId').val(res.data.id);
-                        $('#jenisInput').val(res.data.jenis_input);
+                        $('#periodeTipe').val(res.data.periode_tipe);
                         $('#tanggal').val(res.data.tanggal);
                         $('#batuBara').val(formatNumber(res.data.batu_bara));
                         $('#steam').val(formatNumber(res.data.steam));

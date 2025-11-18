@@ -135,7 +135,7 @@
                                             <select class="form-control" id="departemen" name="departemen" required>
                                                 <option value="" disabled selected>Pilih Departemen</option>
                                                 <option value="engineering">Engineering</option>
-                                                <option value="quality_control">Quality Control</option>
+                                                <option value="quality control">Quality Control</option>
                                                 <option value="produksi">Produksi</option>
                                                 <option value="warehouse">Warehouse</option>
                                             </select>
@@ -216,7 +216,7 @@
                                     <select class="form-control" id="editDepartemen" name="departemen" required>
                                         <option value="" disabled selected>Pilih Departemen</option>
                                         <option value="engineering">Engineering</option>
-                                        <option value="qc">QC</option>
+                                        <option value="quality control">QC</option>
                                         <option value="produksi">Produksi</option>
                                         <option value="warehouse">Warehouse</option>
                                     </select>

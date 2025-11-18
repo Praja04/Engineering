@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Schedule Kalibrasi')
+
 @section('styles')
     <style>
         #scheduleTable tbody tr.status-urgent {

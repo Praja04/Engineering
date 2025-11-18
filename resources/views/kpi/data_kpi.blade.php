@@ -47,8 +47,9 @@
                                     <th>No</th>
                                     <th>Tipe Periode</th>
                                     <th>Tanggal</th>
+                                    <th>Week</th>
                                     <th>FG (Ton)</th>
-                                    <th>Kecap Matang (m³)</th>
+                                    <th>Kecap Matang (Ton)</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -151,12 +152,14 @@
                     $.each(data, function(i, item) {
                         const fg = formatNumber(item.fg);
                         const kecapMatang = formatNumber(item.kecap_matang);
+                        const weekDisplay = item.week ? `Week ${item.week}` : '-';
 
                         tableBody.append(`
                             <tr>
                                 <td>${i + 1}</td>
                                 <td class="text-capitalize">${item.periode_tipe}</td>
                                 <td>${item.tanggal}</td>
+                                <td>${weekDisplay}</td>
                                 <td>${fg}</td>
                                 <td>${kecapMatang}</td>
                                 <td>
@@ -235,10 +238,16 @@
                     },
                     error: function(xhr) {
                         console.error(xhr.responseText);
+                        let message = 'Terjadi kesalahan saat menyimpan data!';
+
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+
                         Swal.fire({
                             icon: 'error',
                             title: 'Terjadi Kesalahan!',
-                            text: 'Terjadi kesalahan saat menyimpan data!'
+                            text: message
                         });
                     }
                 });
@@ -266,7 +275,7 @@
                 });
             });
 
-            // Hapus data pakai SweetAlert2
+            // Hapus
             $(document).on('click', '.btnDelete', function() {
                 const id = $(this).data('id');
 
@@ -307,10 +316,16 @@
                             },
                             error: function(xhr) {
                                 console.error(xhr.responseText);
+                                let message = 'Terjadi kesalahan saat menghapus data!';
+
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    message = xhr.responseJSON.message;
+                                }
+
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Terjadi Kesalahan!',
-                                    text: 'Terjadi kesalahan saat menghapus data!'
+                                    text: message
                                 });
                             }
                         });

@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Approval Kalibrasi')
+
 @section('styles')
     <style>
 

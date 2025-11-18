@@ -13,7 +13,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Kalibrasi\KalibrasiModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Chart\DataSeries;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use App\Models\Kalibrasi\KalibrasiSertifikatModel;
 use PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues;
@@ -484,7 +487,10 @@ class KalibrasiCertificateController extends Controller
                     return [
                         'id' => $a->id,
                         'approver_id' => $a->approver_id,
+                        'status' => $a->status,
                         'approver_name' => optional($a->approver)->username ?? '-',
+                        'jabatan' => $a->approver->jabatan ?? '-',
+                        'departemen' => $a->approver->departemen ?? '-',
                         'comment' => $a->comment,
                     ];
                 });
@@ -515,9 +521,24 @@ class KalibrasiCertificateController extends Controller
                     $this->_fillVolumetrik($spreadsheet, $kalibrasi, $alat, $approvals);
                     break;
 
+                case 'temperature':
+                    $kalibrasi->load(['temperature', 'temperatureGabungan']);
+                    $this->_fillTemperature($spreadsheet, $approvals, $kalibrasi, $alat);
+                    break;
+
+                case 'thermohygrometer':
+                    $kalibrasi->load(['thermohygrometer', 'thermohygrometerGabungan']);
+                    $this->_fillThermo($spreadsheet, $approvals, $kalibrasi, $alat);
+                    break;
+
+                case 'jangka_sorong':
+                    $kalibrasi->load(['jangkaSorong', 'jangkaSorongSummary', 'jangkaSorongFinalSummary']);
+                    $this->_fillJangkaSorong($spreadsheet, $approvals, $kalibrasi, $alat);
+                    break;
+
                 case 'timbangan':
-                    $kalibrasi->load(['timbangan']);
-                    $this->_fillTimbangan($spreadsheet, $sertifikat, $kalibrasi, $alat);
+                    $kalibrasi->load(['pembacaanSummary', 'jangkaSorongSummary', 'jangkaSorongFinalSummary']);
+                    $this->_fillTimbangan($spreadsheet, $approvals, $kalibrasi, $alat);
                     break;
 
                 default:
@@ -600,16 +621,46 @@ class KalibrasiCertificateController extends Controller
 
         $baseRow = 63;
         $nameRow = 67;
-        $columns = ['C', 'H', 'M', 'S'];
+        // Mapping tetap untuk posisi tanda tangan berdasarkan jabatan
+        $roleColumnMap = [
+            'foreman'    => 'C',
+            'supervisor' => 'H',
+            'dept_head'  => 'M',
+        ];
 
-        foreach ($approvals as $i => $approval) {
-            if (!isset($columns[$i])) break; // Maks 4 kolom
+        // Loop semua approver
+        foreach ($approvals as $approval) {
+            $jabatan = strtolower($approval['jabatan'] ?? '');
+            $departemen = strtolower($approval['departemen'] ?? '');
+            $status = strtolower($approval['status'] ?? ''); // cek status approval
 
-            $col = $columns[$i];
+            // Default kolom berdasarkan jabatan
+            $col = $roleColumnMap[$jabatan] ?? null;
+
+            // Jika foreman dari departemen non-engineering → pindah ke kolom S
+            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
+                $col = 'S';
+            }
+
+            if (!$col) {
+                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
+                continue;
+            }
+
+            // Tentukan range merge
             $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
             $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
 
-            // Cek gambar ttd individu
+            // === Jika belum approve → kosongkan area ===
+            if ($status !== 'approved') {
+                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
+                $sheet->mergeCells($mergeRange);
+                $sheet->mergeCells($nameRange);
+                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama juga
+                continue;
+            }
+
+            // === Path tanda tangan ===
             $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
             $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
             $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
@@ -620,116 +671,118 @@ class KalibrasiCertificateController extends Controller
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                 ->setVertical(Alignment::VERTICAL_CENTER);
 
-            if (file_exists($finalPath)) {
-                try {
-                    // Hitung posisi tengah dari range merge
-                    $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                    $startCol = $rangeBounds[0][0];
-                    $endCol   = $rangeBounds[1][0];
+            // === Gambar tanda tangan ===
+            try {
+                $rangeBounds = Coordinate::rangeBoundaries($mergeRange);
+                $startCol = $rangeBounds[0][0];
+                $endCol   = $rangeBounds[1][0];
 
-                    // Konversi ke huruf kolom
-                    $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                    $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
+                $startColLetter = Coordinate::stringFromColumnIndex($startCol);
+                $endColLetter   = Coordinate::stringFromColumnIndex($endCol);
 
-                    // Hitung total lebar kolom yang di-merge
-                    $totalWidth = 0;
-                    for ($j = $startCol; $j <= $endCol; $j++) {
-                        $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                    }
-
-                    // Hitung offset X agar gambar di tengah
-                    $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                    if ($offsetX < 0) $offsetX = 0;
-
-                    // Tambahkan gambar
-                    $drawing = new Drawing();
-                    $drawing->setPath($finalPath);
-                    $drawing->setHeight(70);
-                    $drawing->setCoordinates($startColLetter . $baseRow);
-                    $drawing->setOffsetX($offsetX);
-                    $drawing->setOffsetY(5);
-                    $drawing->setWorksheet($sheet);
-                } catch (\Throwable $th) {
-                    Log::warning('Gagal memuat TTD: ' . $th->getMessage());
+                // Hitung total lebar kolom
+                $totalWidth = 0;
+                for ($j = $startCol; $j <= $endCol; $j++) {
+                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
                 }
+
+                // Posisi gambar agak tengah
+                $offsetX = ($totalWidth * 6.2 / 2) - 25;
+                if ($offsetX < 0) $offsetX = 0;
+
+                $drawing = new Drawing();
+                $drawing->setPath($finalPath);
+                $drawing->setHeight(70);
+                $drawing->setCoordinates($startColLetter . $baseRow);
+                $drawing->setOffsetX(30);
+                $drawing->setOffsetY(5);
+                $drawing->setWorksheet($sheet);
+            } catch (\Throwable $th) {
+                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
             }
 
-            // Nama approver di bawah TTD
+            // === Nama approver di bawah tanda tangan ===
+            $approverName = strtoupper($approval['approver_name'] ?? '-'); // kapital semua
             $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . ($approval['approver_name'] ?? '-') . ' )');
+            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
             $sheet->getStyle($nameRange)->getAlignment()
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                 ->setVertical(Alignment::VERTICAL_CENTER);
         }
 
+
         $rowEnd = $row - 1;
 
         if ($totalTitik > 0) {
             $chartCollection = $sheet->getChartCollection();
-            if ($chartCollection->count() > 0) {
-                foreach ($chartCollection as $chart) {
 
-                    $plotArea = $chart->getPlotArea();
-                    $series = is_object($plotArea) && method_exists($plotArea, 'getPlotSeries')
-                        ? $plotArea->getPlotSeries()
-                        : [];
+            foreach ($chartCollection as $chart) {
+                if (!$chart || !$chart->getPlotArea()) continue;
 
-                    if (empty($series)) {
-                        continue;
-                    }
+                $plotArea = $chart->getPlotArea();
+                $oldSeries = $plotArea->getPlotGroup();
 
-                    // -----------------------------------------------------
-                    // Tentukan Range Data Dinamis
-                    // -----------------------------------------------------
+                if (empty($oldSeries)) continue;
 
-                    // Kategori (Sumbu X): Titik Kalibrasi (Kolom H)
-                    $categoryRange = 'Sertifikat!$H$' . $rowStart . ':$H$' . $rowEnd;
+                $categoryRange = "Sertifikat!\$H\${$rowStart}:\$H\${$rowEnd}"; // Titik kalibrasi (X)
+                $titikKalibrasiRange = "Sertifikat!\$H\${$rowStart}:\$H\${$rowEnd}"; // Titik kalibrasi (X)
+                $alatNaikRange = "Sertifikat!\$L\${$rowStart}:\$L\${$rowEnd}";
+                $alatTurunRange = "Sertifikat!\$O\${$rowStart}:\$O\${$rowEnd}";
+                $standarNaikRange = "Sertifikat!\$R\${$rowStart}:\$R\${$rowEnd}";
+                $standarTurunRange = "Sertifikat!\$U\${$rowStart}:\$U\${$rowEnd}";
 
-                    // Nilai (Sumbu Y)
-                    // Asumsi urutan series di template Anda: L, O, R, U
-                    $valueRanges = [
-                        'Sertifikat!$L$' . $rowStart . ':$L$' . $rowEnd, // Pembacaan Alat Naik
-                        'Sertifikat!$O$' . $rowStart . ':$O$' . $rowEnd, // Pembacaan Alat Turun
-                        'Sertifikat!$R$' . $rowStart . ':$R$' . $rowEnd, // Pembacaan Standar Naik
-                        'Sertifikat!$U$' . $rowStart . ':$U$' . $rowEnd, // Pembacaan Standar Turun
-                        // ... tambahkan range lain jika ada series lain
-                    ];
+                $categoryAxis = [
+                    new DataSeriesValues(
+                        'String',
+                        null,
+                        null,
+                        $totalTitik,
+                        range(1, $totalTitik) // isi kategori dengan 1,2,3,...
+                    )
+                ];
 
-                    // -----------------------------------------------------
-                    // Proses Pembaruan Series
-                    // -----------------------------------------------------
+                $seriesList = [
+                    [
+                        'label' => '"Titik Kalibrasi"',
+                        'range' => $titikKalibrasiRange,
+                        'order' => [0],
+                    ],
+                    [
+                        'label' => '"Alat Naik"',
+                        'range' => $alatNaikRange,
+                        'order' => [1],
+                    ],
+                    [
+                        'label' => '"Alat Turun"',
+                        'range' => $alatTurunRange,
+                        'order' => [2],
+                    ],
+                    [
+                        'label' => '"Standar Naik"',
+                        'range' => $standarNaikRange,
+                        'order' => [3],
+                    ],
+                    [
+                        'label' => '"Standar Turun"',
+                        'range' => $standarTurunRange,
+                        'order' => [4],
+                    ],
+                ];
 
-                    // Hanya ambil series sebanyak data range yang kita siapkan
-                    $seriesToUpdate = array_slice($series, 0, count($valueRanges));
-
-                    foreach ($seriesToUpdate as $seriesIndex => $seriesItem) {
-
-                        // --- 1. Perbarui Kategori (X-Axis) ---
-                        $categories = $seriesItem->getCategories();
-                        if (!empty($categories) && $categories[0]) {
-                            $categories[0] = new DataSeriesValues(
-                                'String',
-                                $categoryRange,
-                                NULL,
-                                $totalTitik
-                            );
-                            $seriesItem->setCategories($categories);
-                        }
-
-                        // --- 2. Perbarui Nilai (Y-Axis) ---
-                        $values = $seriesItem->getValues();
-                        if (!empty($values) && isset($valueRanges[$seriesIndex])) {
-                            // Perbarui value[0] untuk series saat ini
-                            $values[0] = new DataSeriesValues(
-                                'Number',
-                                $valueRanges[$seriesIndex], // Ambil range dari array yang disiapkan
-                                NULL,
-                                $totalTitik
-                            );
-                            $seriesItem->setValues($values);
-                        }
-                    }
+                $newSeries = [];
+                foreach ($seriesList as $s) {
+                    $newSeries[] = new DataSeries(
+                        DataSeries::TYPE_LINECHART,           // tipe chart
+                        null,                                 // grouping
+                        $s['order'],                          // urutan
+                        [new DataSeriesValues('String', $s['label'], null, 1)], // legend
+                        $categoryAxis,                        // kategori
+                        [new DataSeriesValues('Number', $s['range'], null, $totalTitik)] // nilai
+                    );
                 }
+
+                $newPlotArea = new PlotArea(null, $newSeries);
+                $chart->setPlotArea($newPlotArea);
             }
         }
 
@@ -772,16 +825,41 @@ class KalibrasiCertificateController extends Controller
 
         $baseRow = 62;
         $nameRow = 66;
-        $columns = ['C', 'H', 'M', 'S'];
 
-        foreach ($approvals as $i => $approval) {
-            if (!isset($columns[$i])) break; // Maks 4 kolom
+        // Mapping tetap untuk posisi tanda tangan
+        $roleColumnMap = [
+            'foreman'    => 'C',
+            'supervisor' => 'H',
+            'dept_head'   => 'M',
+        ];
 
-            $col = $columns[$i];
+        foreach ($approvals as $approval) {
+            $jabatan = strtolower($approval['jabatan'] ?? '');
+            $departemen = strtolower($approval['departemen'] ?? '');
+            $status = strtolower($approval['status'] ?? ''); // tambahkan ini
+
+            // Default kolom berdasarkan jabatan
+            $col = $roleColumnMap[$jabatan] ?? null;
+
+            // Jika foreman dari departemen non-engineering → pindah ke kolom S
+            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
+                $col = 'S';
+            }
+
+            if (!$col) continue; // skip jika tidak ada mapping kolom
+
             $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
             $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
 
-            // Cek gambar ttd individu
+            // Kosongkan area jika belum approve
+            if ($status !== 'approved') {
+                Log::info("Skip karena belum approve: {$approval['approver_name']}");
+                $sheet->mergeCells($mergeRange);
+                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama juga
+                continue;
+            }
+
+            // Path tanda tangan
             $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
             $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
             $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
@@ -792,63 +870,927 @@ class KalibrasiCertificateController extends Controller
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                 ->setVertical(Alignment::VERTICAL_CENTER);
 
-            if (file_exists($finalPath)) {
-                try {
-                    // Hitung posisi tengah dari range merge
-                    $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                    $startCol = $rangeBounds[0][0];
-                    $endCol   = $rangeBounds[1][0];
+            try {
+                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
+                $startCol = $rangeBounds[0][0];
+                $endCol   = $rangeBounds[1][0];
 
-                    // Konversi ke huruf kolom
-                    $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                    $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
+                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
+                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
 
-                    // Hitung total lebar kolom yang di-merge
-                    $totalWidth = 0;
-                    for ($j = $startCol; $j <= $endCol; $j++) {
-                        $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                    }
-
-                    // Hitung offset X agar gambar di tengah
-                    $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                    if ($offsetX < 0) $offsetX = 0;
-
-                    // Tambahkan gambar
-                    $drawing = new Drawing();
-                    $drawing->setPath($finalPath);
-                    $drawing->setHeight(70);
-                    $drawing->setCoordinates($startColLetter . $baseRow);
-                    $drawing->setOffsetX($offsetX);
-                    $drawing->setOffsetY(5);
-                    $drawing->setWorksheet($sheet);
-                } catch (\Throwable $th) {
-                    Log::warning('Gagal memuat TTD: ' . $th->getMessage());
+                $totalWidth = 0;
+                for ($j = $startCol; $j <= $endCol; $j++) {
+                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
                 }
+
+                $offsetX = ($totalWidth * 6.2 / 2) - 25;
+                if ($offsetX < 0) $offsetX = 0;
+
+                $drawing = new Drawing();
+                $drawing->setPath($finalPath);
+                $drawing->setHeight(70);
+                $drawing->setCoordinates($startColLetter . $baseRow);
+                $drawing->setOffsetX(25);
+                $drawing->setOffsetY(5);
+                $drawing->setWorksheet($sheet);
+            } catch (\Throwable $th) {
+                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
             }
 
-            // Nama approver di bawah TTD
+            // Nama approver di bawah TTD (huruf kapital)
+            $approverName = ucfirst($approval['approver_name'] ?? '-');
             $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . ($approval['approver_name'] ?? '-') . ' )');
+            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
             $sheet->getStyle($nameRange)->getAlignment()
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                 ->setVertical(Alignment::VERTICAL_CENTER);
         }
     }
 
-    private function _fillTimbangan(Spreadsheet $spreadsheet, $sertifikat, $kalibrasi)
+    private function _fillTemperature(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat)
     {
         $sheet = $spreadsheet->getActiveSheet();
 
-        $sheet->setCellValue('B2', $kalibrasi->alat->kode_alat ?? '-');
-        $sheet->setCellValue('B3', $kalibrasi->alat->nama_alat ?? '-');
-        $sheet->setCellValue('B4', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('I7', $alat->departemen_pemilik ?? '-');
+        $sheet->setCellValue('I8', $alat->lokasi_alat ?? '-');
+        $sheet->setCellValue('I9', $alat->no_kalibrasi ?? '-');
+        $sheet->setCellValue('I10', $alat->nama_alat ?? '-');
+        $sheet->setCellValue('I11', $alat->merk ?? '-');
+        $sheet->setCellValue('I12', $alat->tipe ?? '-');
+        $sheet->setCellValue('I13', $alat->kapasitas ?? '-');
+        $sheet->setCellValue('I14', $alat->resolusi ?? '-');
+        $sheet->setCellValue('AA7', $alat->range_penggunaan_alat ?? '-');
+        $sheet->setCellValue('AA8', $alat->limits_of_permissible_error ?? '-');
+        $sheet->setCellValue('AA9', $alat->kode_alat ?? '-');
+        $sheet->setCellValue('I15', $kalibrasi->lokasi_kalibrasi ?? '-');
+        $sheet->setCellValue('I16', $kalibrasi->suhu_ruangan ?? '-');
+        $sheet->setCellValue('I17', $kalibrasi->kelembaban ?? '-');
+        $sheet->setCellValue('AA10', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
 
-        $row = 8;
-        foreach ($kalibrasi->timbangan as $t) {
-            $sheet->setCellValue("A{$row}", $t->beban ?? '-');
-            $sheet->setCellValue("B{$row}", $t->penunjukan ?? '-');
-            $sheet->setCellValue("C{$row}", $t->kesalahan ?? '-');
+        // ===== Data Tekanan Naik & Turun =====
+        $rowStart = 25;
+        $row = $rowStart;
+        $index = 0;
+
+        $totalTitik = count($kalibrasi->temperatureGabungan);
+
+        foreach ($kalibrasi->temperatureGabungan as $tg) {
+            // Hitung persentase posisi titik kalibrasi
+            // $persentase = $totalTitik > 1 ? $index * $step : 100; // kalau cuma 1 titik = 100%
+            // $sheet->setCellValue("D{$row}", round($persentase, 2));
+            $sheet->setCellValue("D{$row}", $tg->titik_kalibrasi ?? '');
+            $sheet->setCellValue("L{$row}", $tg->avg_penunjuk_alat ?? '');
+            // $sheet->setCellValue("O{$row}", $tg->avg_penunjuk_alat_turun ?? '');
+            $sheet->setCellValue("R{$row}", $tg->avg_suhu_standar ?? '');
+            // $sheet->setCellValue("U{$row}", $tg->avg_tekanan_standar_turun ?? '');
+            $sheet->setCellValue("X{$row}", $tg->avg_kor_alat ?? '');
+            // $sheet->setCellValue("AA{$row}", $tg->avg_kor_alat_turun ?? '');
+            $sheet->setCellValue("AD{$row}", $tg->ketidakpastian ?? '');
+            // $sheet->setCellValue("AG{$row}", $tg->u_gabungan ?? '');
+
+            $row++;
+            $index++;
+        }
+
+        $baseRow = 61;
+        $nameRow = 65;
+
+        // Mapping posisi tanda tangan berdasarkan jabatan
+        $roleColumnMap = [
+            'foreman'    => 'C',
+            'supervisor' => 'H',
+            'dept_head'  => 'M',
+        ];
+
+        // Loop semua approver
+        foreach ($approvals as $approval) {
+            $jabatan = strtolower($approval['jabatan'] ?? '');
+            $departemen = strtolower($approval['departemen'] ?? '');
+            $status = strtolower($approval['status'] ?? ''); // status approval
+
+            // Default kolom berdasarkan jabatan
+            $col = $roleColumnMap[$jabatan] ?? null;
+
+            // Jika foreman dari departemen non-engineering → pindah ke kolom S
+            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
+                $col = 'S';
+            }
+
+            if (!$col) {
+                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
+                continue;
+            }
+
+            // Tentukan range merge
+            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
+            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
+
+            // === Jika belum approve → kosongkan area ===
+            if ($status !== 'approved') {
+                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
+                $sheet->mergeCells($mergeRange);
+                $sheet->mergeCells($nameRange);
+                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama
+                continue;
+            }
+
+            // === Path tanda tangan ===
+            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
+            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
+            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
+
+            // Merge area untuk area tanda tangan
+            $sheet->mergeCells($mergeRange);
+            $sheet->getStyle($mergeRange)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            // === Gambar tanda tangan ===
+            try {
+                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
+                $startCol = $rangeBounds[0][0];
+                $endCol   = $rangeBounds[1][0];
+
+                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
+                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
+
+                // Hitung total lebar kolom
+                $totalWidth = 0;
+                for ($j = $startCol; $j <= $endCol; $j++) {
+                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
+                }
+
+                // Posisi gambar agak tengah
+                $offsetX = ($totalWidth * 6.2 / 2) - 25;
+                if ($offsetX < 0) $offsetX = 0;
+
+                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawing->setPath($finalPath);
+                $drawing->setHeight(70);
+                $drawing->setCoordinates($startColLetter . $baseRow);
+                $drawing->setOffsetX(30);
+                $drawing->setOffsetY(5);
+                $drawing->setWorksheet($sheet);
+            } catch (\Throwable $th) {
+                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
+            }
+
+            // === Nama approver di bawah tanda tangan ===
+            $approverName = strtoupper($approval['approver_name'] ?? '-');
+            $sheet->mergeCells($nameRange);
+            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
+            $sheet->getStyle($nameRange)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+        }
+
+        $rowEnd = $row - 1;
+
+        if ($totalTitik > 0) {
+            $chartCollection = $sheet->getChartCollection();
+
+            foreach ($chartCollection as $chart) {
+                if (!$chart || !$chart->getPlotArea()) continue;
+
+                $plotArea = $chart->getPlotArea();
+                $oldSeries = $plotArea->getPlotGroup();
+
+                if (empty($oldSeries)) continue;
+
+                $categoryRange = 'Sertifikat!$D$' . $rowStart . ':$D$' . $rowEnd; // Titik kalibrasi (kategori)
+                $titikKalibrasiRange = 'Sertifikat!$D$' . $rowStart . ':$D$' . $rowEnd; // nilai titik kalibrasi juga bisa numerik
+                $alatUkurRange = 'Sertifikat!$L$' . $rowStart . ':$L$' . $rowEnd;
+                $alatStandarRange = 'Sertifikat!$R$' . $rowStart . ':$R$' . $rowEnd;
+
+                $categoryAxis = [
+                    new DataSeriesValues(
+                        'String',
+                        null,
+                        null,
+                        $totalTitik,
+                        range(1, $totalTitik) // isi kategori dengan 1,2,3,...
+                    )
+                ];
+
+                $seriesList = [
+                    [
+                        'label' => '"Titik Kalibrasi"',
+                        'range' => $titikKalibrasiRange,
+                        'order' => [0],
+                    ],
+                    [
+                        'label' => '"Alat Ukur"',
+                        'range' => $alatUkurRange,
+                        'order' => [1],
+                    ],
+                    [
+                        'label' => '"Alat Standar"',
+                        'range' => $alatStandarRange,
+                        'order' => [2],
+                    ]
+                ];
+
+                $newSeries = [];
+                foreach ($seriesList as $s) {
+                    $newSeries[] = new DataSeries(
+                        DataSeries::TYPE_LINECHART,           // tipe chart
+                        null,                                 // grouping
+                        $s['order'],                          // urutan
+                        [new DataSeriesValues('String', $s['label'], null, 1)], // legend
+                        $categoryAxis,                        // kategori
+                        [new DataSeriesValues('Number', $s['range'], null, $totalTitik)] // nilai
+                    );
+                }
+
+                $newPlotArea = new PlotArea(null, $newSeries);
+                $chart->setPlotArea($newPlotArea);
+            }
+        }
+
+        return $spreadsheet;
+    }
+
+    private function _fillThermo(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat)
+    {
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Information Alat & kalibrasi
+        $sheet->setCellValue('I7', $alat->departemen_pemilik ?? '-');
+        $sheet->setCellValue('I8', $alat->lokasi_alat ?? '-');
+        $sheet->setCellValue('I9', $alat->no_kalibrasi ?? '-');
+        $sheet->setCellValue('I10', $alat->nama_alat ?? '-');
+        $sheet->setCellValue('I11', $alat->merk ?? '-');
+        $sheet->setCellValue('I12', $alat->tipe ?? '-');
+        $sheet->setCellValue('I13', $alat->kapasitas ?? '-');
+        $sheet->setCellValue('I14', $alat->resolusi ?? '-');
+        $sheet->setCellValue('AA7', $alat->range_penggunaan_alat ?? '-');
+        $sheet->setCellValue('AA8', $alat->limits_of_permissible_error ?? '-');
+        $sheet->setCellValue('AA9', $alat->kode_alat ?? '-');
+        $sheet->setCellValue('I15', $kalibrasi->lokasi_kalibrasi ?? '-');
+        $sheet->setCellValue('I16', $kalibrasi->suhu_ruangan ?? '-');
+        $sheet->setCellValue('I17', $kalibrasi->kelembaban ?? '-');
+        $sheet->setCellValue('AA10', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
+
+        // ===== Data Thermohygrometer =====
+        $rowStart = 25;
+        $row = $rowStart;
+        $startRow = $row;
+
+        $totalTitik = count($kalibrasi->thermohygrometerGabungan);
+
+        $totalData = $kalibrasi->thermohygrometerGabungan->count();
+        $first = $kalibrasi->thermohygrometerGabungan->first();
+
+        $ketidakpastian_suhu = $first->ketidak_pastian_suhu ?? '';
+        $ketidakpastian_rh = $first->ketidak_pastian_rh ?? '';
+        foreach ($kalibrasi->thermohygrometerGabungan as $tg) {
+            // Pastikan nilai yang akan dihitung tidak null
+            $avg_tekanan_standar_suhu = $tg->avg_tekanan_standar_suhu ?? 0;
+            $avg_penunjuk_alat_suhu = $tg->avg_penunjuk_alat_suhu ?? 0;
+
+            // Hitung selisih (R - L)
+            $selisih = $avg_tekanan_standar_suhu - $avg_penunjuk_alat_suhu;
+
+            $posisi = $tg->posisi ?? '';
+            $posisi = str_ireplace(['kanan', 'kiri'], ['Ka.', 'Ki.'], $posisi);
+            $posisi = ucwords(strtolower($posisi));
+
+            // Isi data ke Excel
+            $sheet->setCellValue("H{$row}", $posisi);
+            $sheet->setCellValue("L{$row}", $avg_penunjuk_alat_suhu);
+            $sheet->setCellValue("O{$row}", $tg->avg_penunjuk_alat_rh ?? '');
+            $sheet->setCellValue("R{$row}", $avg_tekanan_standar_suhu);
+            $sheet->setCellValue("U{$row}", $tg->avg_tekanan_standar_rh ?? '');
+            $sheet->setCellValue("X{$row}", round($selisih, 2)); // hasil R - L
+            $sheet->setCellValue("AA{$row}", $tg->avg_kor_alat_rh ?? '');
+
             $row++;
         }
+
+        // Tentukan baris terakhir setelah loop
+        $endRow = $row - 1;
+
+        // Range merge
+        $rangeSuhu = "AD{$startRow}:AF{$endRow}";
+        $rangeRh   = "AG{$startRow}:AI{$endRow}";
+
+        // Cek dan unmerge hanya jika memang terdaftar
+        $mergedCells = $sheet->getMergeCells();
+
+        if (isset($mergedCells[$rangeSuhu])) {
+            $sheet->unmergeCells($rangeSuhu);
+        }
+        if (isset($mergedCells[$rangeRh])) {
+            $sheet->unmergeCells($rangeRh);
+        }
+
+        // Merge ulang
+        $sheet->mergeCells($rangeSuhu);
+        $sheet->mergeCells($rangeRh);
+
+        $sheet->setCellValue("AD{$startRow}", $ketidakpastian_suhu);
+        $sheet->setCellValue("AG{$startRow}", $ketidakpastian_rh);
+
+        $sheet->getStyle("AD{$startRow}:AF{$endRow}")
+            ->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+        $sheet->getStyle("AG{$startRow}:AI{$endRow}")
+            ->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+        $baseRow = 62;
+        $nameRow = 66;
+
+        // Mapping posisi tanda tangan berdasarkan jabatan
+        $roleColumnMap = [
+            'foreman'    => 'C',
+            'supervisor' => 'H',
+            'dept_head'  => 'M',
+        ];
+
+        // Loop semua approver
+        foreach ($approvals as $approval) {
+            $jabatan = strtolower($approval['jabatan'] ?? '');
+            $departemen = strtolower($approval['departemen'] ?? '');
+            $status = strtolower($approval['status'] ?? ''); // status approval
+
+            // Default kolom berdasarkan jabatan
+            $col = $roleColumnMap[$jabatan] ?? null;
+
+            // Jika foreman dari departemen non-engineering → pindah ke kolom S
+            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
+                $col = 'S';
+            }
+
+            if (!$col) {
+                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
+                continue;
+            }
+
+            // Tentukan range merge
+            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
+            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
+
+            // === Jika belum approve → kosongkan area ===
+            if ($status !== 'approved') {
+                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
+                $sheet->mergeCells($mergeRange);
+                $sheet->mergeCells($nameRange);
+                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama
+                continue;
+            }
+
+            // === Path tanda tangan ===
+            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
+            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
+            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
+
+            // Merge area untuk area tanda tangan
+            $sheet->mergeCells($mergeRange);
+            $sheet->getStyle($mergeRange)->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+            // === Gambar tanda tangan ===
+            try {
+                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
+                $startCol = $rangeBounds[0][0];
+                $endCol   = $rangeBounds[1][0];
+
+                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
+                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
+
+                // Hitung total lebar kolom
+                $totalWidth = 0;
+                for ($j = $startCol; $j <= $endCol; $j++) {
+                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
+                }
+
+                // Posisi gambar agak tengah
+                $offsetX = ($totalWidth * 6.2 / 2) - 25;
+                if ($offsetX < 0) $offsetX = 0;
+
+                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawing->setPath($finalPath);
+                $drawing->setHeight(70);
+                $drawing->setCoordinates($startColLetter . $baseRow);
+                $drawing->setOffsetX(30);
+                $drawing->setOffsetY(5);
+                $drawing->setWorksheet($sheet);
+            } catch (\Throwable $th) {
+                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
+            }
+
+            // === Nama approver di bawah tanda tangan ===
+            $approverName = strtoupper($approval['approver_name'] ?? '-');
+            $sheet->mergeCells($nameRange);
+            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
+            $sheet->getStyle($nameRange)->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+        }
+
+        $rowEnd = $row - 1;
+
+        if ($totalTitik > 0) {
+            $chartCollection = $sheet->getChartCollection();
+
+            foreach ($chartCollection as $chart) {
+                if (!$chart || !$chart->getPlotArea()) continue;
+
+                $plotArea = $chart->getPlotArea();
+                $oldSeries = $plotArea->getPlotGroup();
+
+                if (empty($oldSeries)) continue;
+
+                $categoryRange = "Sertifikat!\$H\${$rowStart}:\$H\${$rowEnd}"; // Titik kalibrasi (X)
+                $titikKalibrasiRange = "Sertifikat!\$H\${$rowStart}:\$H\${$rowEnd}"; // Titik kalibrasi (X)
+                $alatNaikRange = "Sertifikat!\$L\${$rowStart}:\$L\${$rowEnd}";
+                $alatTurunRange = "Sertifikat!\$O\${$rowStart}:\$O\${$rowEnd}";
+                $standarNaikRange = "Sertifikat!\$R\${$rowStart}:\$R\${$rowEnd}";
+                $standarTurunRange = "Sertifikat!\$U\${$rowStart}:\$U\${$rowEnd}";
+
+                $categoryAxis = [
+                    new DataSeriesValues(
+                        'String',
+                        null,
+                        null,
+                        $totalTitik,
+                        range(1, $totalTitik) // isi kategori dengan 1,2,3,...
+                    )
+                ];
+
+                $seriesList = [
+                    [
+                        'label' => '"Titik Kalibrasi"',
+                        'range' => $titikKalibrasiRange,
+                        'order' => [0],
+                    ],
+                    [
+                        'label' => '"Alat Naik"',
+                        'range' => $alatNaikRange,
+                        'order' => [1],
+                    ],
+                    [
+                        'label' => '"Alat Turun"',
+                        'range' => $alatTurunRange,
+                        'order' => [2],
+                    ],
+                    [
+                        'label' => '"Standar Naik"',
+                        'range' => $standarNaikRange,
+                        'order' => [3],
+                    ],
+                    [
+                        'label' => '"Standar Turun"',
+                        'range' => $standarTurunRange,
+                        'order' => [4],
+                    ],
+                ];
+
+                $newSeries = [];
+                foreach ($seriesList as $s) {
+                    $newSeries[] = new DataSeries(
+                        DataSeries::TYPE_LINECHART,           // tipe chart
+                        null,                                 // grouping
+                        $s['order'],                          // urutan
+                        [new DataSeriesValues('String', $s['label'], null, 1)], // legend
+                        $categoryAxis,                        // kategori
+                        [new DataSeriesValues('Number', $s['range'], null, $totalTitik)] // nilai
+                    );
+                }
+
+                $newPlotArea = new PlotArea(null, $newSeries);
+                $chart->setPlotArea($newPlotArea);
+            }
+        }
+
+        return $spreadsheet;
+    }
+
+    private function _fillJangkaSorong(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat)
+    {
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Information Alat & kalibrasi
+        $sheet->setCellValue('I7', $alat->departemen_pemilik ?? '-');
+        $sheet->setCellValue('I8', $alat->lokasi_alat ?? '-');
+        $sheet->setCellValue('I9', $alat->no_kalibrasi ?? '-');
+        $sheet->setCellValue('I10', $alat->nama_alat ?? '-');
+        $sheet->setCellValue('I11', $alat->merk ?? '-');
+        $sheet->setCellValue('I12', $alat->tipe ?? '-');
+        $sheet->setCellValue('I13', $alat->kapasitas ?? '-');
+        $sheet->setCellValue('I14', $alat->resolusi ?? '-');
+        $sheet->setCellValue('AA7', $alat->range_penggunaan_alat ?? '-');
+        $sheet->setCellValue('AA8', $alat->limits_of_permissible_error ?? '-');
+        $sheet->setCellValue('AA9', $alat->kode_alat ?? '-');
+        $sheet->setCellValue('I15', $kalibrasi->lokasi_kalibrasi ?? '-');
+        $sheet->setCellValue('I16', $kalibrasi->suhu_ruangan ?? '-');
+        $sheet->setCellValue('I17', $kalibrasi->kelembaban ?? '-');
+        $sheet->setCellValue('AA10', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
+
+        // ===== Data Jangka Sorong =====
+        $rowStart = 26;
+        $row = $rowStart;
+        $startRow = $row;
+
+        $totalTitik = count($kalibrasi->jangkaSorongSummary);
+
+        foreach ($kalibrasi->jangkaSorongSummary as $tg) {
+
+            // Isi data ke Excel
+            $sheet->setCellValue("D{$row}", $tg->master->nilai_master ?? '');
+            $sheet->setCellValue("L{$row}", $tg->avg_pembacaan ?? '');
+            $sheet->setCellValue("R{$row}", $tg->master->nilai_master ?? '');
+            $sheet->setCellValue("X{$row}", $tg->koreksi ?? '');
+
+            $row++;
+        }
+
+        // Tentukan baris terakhir setelah loop
+        $endRow = $row - 1;
+
+        // Range merge
+        $ketidakPastianNilai = optional($kalibrasi->jangkaSorongFinalSummary->first())->ketidakpastian ?? '';
+        $ketidakPastian = "AD{$startRow}:AI{$endRow}";
+
+        // Cek dan unmerge hanya jika memang terdaftar
+        $mergedCells = $sheet->getMergeCells();
+
+        if (isset($mergedCells[$ketidakPastian])) {
+            $sheet->unmergeCells($ketidakPastian);
+        }
+
+        // Merge ulang
+        $sheet->mergeCells($ketidakPastian);
+
+        $sheet->setCellValue("AD{$startRow}", $ketidakPastianNilai);
+
+        $sheet->getStyle("AD{$startRow}:AF{$endRow}")
+            ->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+        $baseRow = 63;
+        $nameRow = 67;
+
+        // Mapping posisi tanda tangan berdasarkan jabatan
+        $roleColumnMap = [
+            'foreman'    => 'C',
+            'supervisor' => 'H',
+            'dept_head'  => 'M',
+        ];
+
+        // Loop semua approver
+        foreach ($approvals as $approval) {
+            $jabatan = strtolower($approval['jabatan'] ?? '');
+            $departemen = strtolower($approval['departemen'] ?? '');
+            $status = strtolower($approval['status'] ?? ''); // status approval
+
+            // Default kolom berdasarkan jabatan
+            $col = $roleColumnMap[$jabatan] ?? null;
+
+            // Jika foreman dari departemen non-engineering → pindah ke kolom S
+            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
+                $col = 'S';
+            }
+
+            if (!$col) {
+                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
+                continue;
+            }
+
+            // Tentukan range merge
+            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
+            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
+
+            // === Jika belum approve → kosongkan area ===
+            if ($status !== 'approved') {
+                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
+                $sheet->mergeCells($mergeRange);
+                $sheet->mergeCells($nameRange);
+                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama
+                continue;
+            }
+
+            // === Path tanda tangan ===
+            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
+            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
+            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
+
+            // Merge area untuk area tanda tangan
+            $sheet->mergeCells($mergeRange);
+            $sheet->getStyle($mergeRange)->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+            // === Gambar tanda tangan ===
+            try {
+                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
+                $startCol = $rangeBounds[0][0];
+                $endCol   = $rangeBounds[1][0];
+
+                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
+                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
+
+                // Hitung total lebar kolom
+                $totalWidth = 0;
+                for ($j = $startCol; $j <= $endCol; $j++) {
+                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
+                }
+
+                // Posisi gambar agak tengah
+                $offsetX = ($totalWidth * 6.2 / 2) - 25;
+                if ($offsetX < 0) $offsetX = 0;
+
+                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawing->setPath($finalPath);
+                $drawing->setHeight(70);
+                $drawing->setCoordinates($startColLetter . $baseRow);
+                $drawing->setOffsetX(30);
+                $drawing->setOffsetY(5);
+                $drawing->setWorksheet($sheet);
+            } catch (\Throwable $th) {
+                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
+            }
+
+            // === Nama approver di bawah tanda tangan ===
+            $approverName = strtoupper($approval['approver_name'] ?? '-');
+            $sheet->mergeCells($nameRange);
+            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
+            $sheet->getStyle($nameRange)->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+        }
+
+        $rowEnd = $row - 1;
+
+        if ($totalTitik > 0) {
+            $chartCollection = $sheet->getChartCollection();
+
+            foreach ($chartCollection as $chart) {
+                if (!$chart || !$chart->getPlotArea()) continue;
+
+                $plotArea = $chart->getPlotArea();
+                $oldSeries = $plotArea->getPlotGroup();
+
+                if (empty($oldSeries)) continue;
+
+                $categoryRange = "Sertifikat!\$D\${$rowStart}:\$D\${$rowEnd}"; // Titik kalibrasi (X)
+                $titikKalibrasiRange = "Sertifikat!\$D\${$rowStart}:\$D\${$rowEnd}"; // Titik kalibrasi (X)
+                $pembacaanAlat = "Sertifikat!\$L\${$rowStart}:\$L\${$rowEnd}";
+                $pembacaanStandar = "Sertifikat!\$R\${$rowStart}:\$R\${$rowEnd}";
+
+                $categoryAxis = [
+                    new DataSeriesValues(
+                        'String',
+                        null,
+                        null,
+                        $totalTitik,
+                        range(1, $totalTitik) // isi kategori dengan 1,2,3,...
+                    )
+                ];
+
+                $seriesList = [
+                    [
+                        'label' => '"Titik Kalibrasi"',
+                        'range' => $titikKalibrasiRange,
+                        'order' => [0],
+                    ],
+                    [
+                        'label' => '"Pembacaan Alat"',
+                        'range' => $pembacaanAlat,
+                        'order' => [1],
+                    ],
+                    [
+                        'label' => '"Pembacaan Standar"',
+                        'range' => $pembacaanStandar,
+                        'order' => [2],
+                    ],
+                ];
+
+                $newSeries = [];
+                foreach ($seriesList as $s) {
+                    $newSeries[] = new DataSeries(
+                        DataSeries::TYPE_LINECHART,           // tipe chart
+                        null,                                 // grouping
+                        $s['order'],                          // urutan
+                        [new DataSeriesValues('String', $s['label'], null, 1)], // legend
+                        $categoryAxis,                        // kategori
+                        [new DataSeriesValues('Number', $s['range'], null, $totalTitik)] // nilai
+                    );
+                }
+
+                $newPlotArea = new PlotArea(null, $newSeries);
+                $chart->setPlotArea($newPlotArea);
+            }
+        }
+
+        return $spreadsheet;
+    }
+
+    private function _fillTimbangan(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat)
+    {
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Information Alat & kalibrasi
+        $sheet->setCellValue('I7', $alat->departemen_pemilik ?? '-');
+        $sheet->setCellValue('I8', $alat->lokasi_alat ?? '-');
+        $sheet->setCellValue('I9', $alat->no_kalibrasi ?? '-');
+        $sheet->setCellValue('I10', $alat->nama_alat ?? '-');
+        $sheet->setCellValue('I11', $alat->merk ?? '-');
+        $sheet->setCellValue('I12', $alat->tipe ?? '-');
+        $sheet->setCellValue('I13', $alat->kapasitas ?? '-');
+        $sheet->setCellValue('I14', $alat->resolusi ?? '-');
+        $sheet->setCellValue('AA7', $alat->range_penggunaan_alat ?? '-');
+        $sheet->setCellValue('AA8', $alat->limits_of_permissible_error ?? '-');
+        $sheet->setCellValue('AA9', $alat->kode_alat ?? '-');
+        $sheet->setCellValue('I15', $kalibrasi->lokasi_kalibrasi ?? '-');
+        $sheet->setCellValue('I16', $kalibrasi->suhu_ruangan ?? '-');
+        $sheet->setCellValue('I17', $kalibrasi->kelembaban ?? '-');
+        $sheet->setCellValue('AA10', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
+
+        // Data Kemampuan Ulang Pembacaan
+        if (!empty($kalibrasi->pembacaanSummary) && count($kalibrasi->pembacaanSummary) >= 3) {
+            $summaryList = $kalibrasi->pembacaanSummary;
+
+            $cellMap = [
+                0 => 27, // Mendekati nol
+                1 => 28, // Setengah kapasitas
+                2 => 29, // Kapasitas maksimum
+            ];
+
+            foreach ($summaryList as $index => $summary) {
+                if (isset($cellMap[$index])) {
+                    $row = $cellMap[$index];
+
+                    $beban       = $summary->beban       ?? 0;
+                    $stdDev      = $summary->std_dev     ?? 0;
+                    $perbedaan   = $summary->maks_perbedaan_akhir   ?? 0;
+
+                    $sheet->setCellValue("N{$row}", $beban);
+                    $sheet->setCellValue("S{$row}", $stdDev);
+                    $sheet->setCellValue("X{$row}", $perbedaan);
+                }
+            }
+        } else {
+            foreach ([27, 28, 29] as $row) {
+                $sheet->setCellValue("N{$row}", '-');
+                $sheet->setCellValue("S{$row}", '-');
+                $sheet->setCellValue("X{$row}", '-');
+            }
+        }
+
+        // Data Keseragaman Skala
+        if (!empty($kalibrasi->keseragamanSummary)) {
+            $keseragamanList = $kalibrasi->keseragamanSummary;
+
+            $startRow = 37; // baris awal untuk keseragaman
+            foreach ($keseragamanList as $i => $data) {
+                $row = $startRow + $i;
+                $beban    = $data->beban ?? '-';
+                $koreksi  = $data->koreksi_skala ?? '-';
+
+                $sheet->setCellValue("C{$row}", $beban);
+                $sheet->setCellValue("I{$row}", $koreksi);
+            }
+        } else {
+            Log::info('Tidak ada data keseragaman skala untuk kalibrasi ID: ' . ($kalibrasi->id ?? '-'));
+        }
+
+        // Data Pengaruh Pada Pinggan
+        if (!empty($kalibrasi->pingganSummary)) {
+            $percobaan1 = collect($kalibrasi->pingganSummary)->firstWhere('percobaan', 1);
+
+            if ($percobaan1) {
+                $row = 40; // baris awal pengisian pinggan
+
+                $sheet->setCellValue("R{$row}", $percobaan1->smry_tengah ?? '-');
+                $sheet->setCellValue("U{$row}", $percobaan1->smry_depan ?? '-');
+                $sheet->setCellValue("X{$row}", $percobaan1->smry_belakang ?? '-');
+                $sheet->setCellValue("AA{$row}", $percobaan1->smry_kiri ?? '-');
+                $sheet->setCellValue("AD{$row}", $percobaan1->smry_kanan ?? '-');
+                $sheet->setCellValue("AG{$row}", $percobaan1->selisih_maks ?? '-');
+            } else {
+                Log::info('Percobaan ke-1 tidak ditemukan untuk kalibrasi ID: ' . ($kalibrasi->id ?? '-'));
+            }
+        }
+
+        // Data Pengnolan Beban (Tare)
+        if (!empty($kalibrasi->tareSummary)) {
+            $tare = $kalibrasi->tareSummary;
+
+            $sheet->setCellValue('V48', $tare->selisih_mz_tanpa_nol ?? '-');
+            $sheet->setCellValue('V49', $tare->selisih_mz_dengan_nol ?? '-');
+        }
+
+        // Histerisis
+        if (!empty($kalibrasi->histerisisSummary)) {
+            $tare = $kalibrasi->histerisisSummary;
+
+            $sheet->setCellValue('AD48', $tare->setengah_kapasitas ?? '-');
+            $sheet->setCellValue('AG48', $tare->histerisis ?? '-');
+        }
+
+        // Ketidak Pastian
+
+        $baseRow = 66;
+        $nameRow = 70;
+
+        $roleColumnMap = [
+            'foreman'    => 'C',
+            'supervisor' => 'H',
+            'dept_head'  => 'M',
+        ];
+
+        foreach ($approvals as $approval) {
+            $jabatan = strtolower($approval['jabatan'] ?? '');
+            $departemen = strtolower($approval['departemen'] ?? '');
+            $status = strtolower($approval['status'] ?? ''); // status approval
+
+            // Default kolom berdasarkan jabatan
+            $col = $roleColumnMap[$jabatan] ?? null;
+
+            // Jika foreman dari departemen non-engineering → pindah ke kolom S
+            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
+                $col = 'S';
+            }
+
+            if (!$col) {
+                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
+                continue;
+            }
+
+            // Tentukan range merge
+            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
+            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
+
+            // === Jika belum approve → kosongkan area ===
+            if ($status !== 'approved') {
+                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
+                $sheet->mergeCells($mergeRange);
+                $sheet->mergeCells($nameRange);
+                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama
+                continue;
+            }
+
+            // === Path tanda tangan ===
+            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
+            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
+            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
+
+            // Merge area untuk area tanda tangan
+            $sheet->mergeCells($mergeRange);
+            $sheet->getStyle($mergeRange)->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+            // === Gambar tanda tangan ===
+            try {
+                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
+                $startCol = $rangeBounds[0][0];
+                $endCol   = $rangeBounds[1][0];
+
+                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
+                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
+
+                // Hitung total lebar kolom
+                $totalWidth = 0;
+                for ($j = $startCol; $j <= $endCol; $j++) {
+                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
+                }
+
+                // Posisi gambar agak tengah
+                $offsetX = ($totalWidth * 6.2 / 2) - 25;
+                if ($offsetX < 0) $offsetX = 0;
+
+                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawing->setPath($finalPath);
+                $drawing->setHeight(70);
+                $drawing->setCoordinates($startColLetter . $baseRow);
+                $drawing->setOffsetX(30);
+                $drawing->setOffsetY(5);
+                $drawing->setWorksheet($sheet);
+            } catch (\Throwable $th) {
+                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
+            }
+
+            // === Nama approver di bawah tanda tangan ===
+            $approverName = strtoupper($approval['approver_name'] ?? '-');
+            $sheet->mergeCells($nameRange);
+            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
+            $sheet->getStyle($nameRange)->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+        }
+
+        return $spreadsheet;
     }
 }

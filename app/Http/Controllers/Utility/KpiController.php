@@ -30,6 +30,10 @@ class KpiController extends Controller
         $jenis = $request->periode_tipe;
         $tanggal = $request->tanggal;
 
+        $weekOfMonth = $jenis === 'weekly'
+            ? ceil(date('d', strtotime($tanggal)) / 7)
+            : null;
+
         $exists = KpiModel::where('periode_tipe', $jenis)
             ->when($jenis === 'weekly', function ($query) use ($tanggal) {
                 $query->whereRaw('YEAR(tanggal) = YEAR(?)', [$tanggal])
@@ -52,6 +56,7 @@ class KpiController extends Controller
 
         KpiModel::create([
             'periode_tipe' => $request->periode_tipe,
+            'week' => $weekOfMonth,
             'tanggal' => $request->tanggal,
             'fg' => $request->fg,
             'kecap_matang' => $request->kecap_matang,

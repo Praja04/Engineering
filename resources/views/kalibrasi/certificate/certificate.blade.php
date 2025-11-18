@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Certificate Kalibrasi')
+
 @section('styles')
     <style>
         .icon-wrapper {
