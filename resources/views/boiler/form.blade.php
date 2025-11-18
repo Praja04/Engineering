@@ -108,10 +108,16 @@
                     },
                     error: function(xhr) {
                         console.error(xhr.responseText);
+                        let message = 'Terjadi kesalahan saat menyimpan data!';
+
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+
                         Swal.fire({
                             icon: 'error',
-                            title: 'Terjadi Kesalahan!',
-                            text: 'Terjadi kesalahan saat menyimpan data!'
+                            title: 'Gagal!',
+                            text: message
                         });
                     }
                 });
