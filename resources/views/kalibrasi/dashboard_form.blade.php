@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Form Kalibrasi')
+
 @section('styles')
     <style>
         .text-gradient {
@@ -49,7 +51,7 @@
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-gauge fs-1 text-success"></i>
                             </div>
-                            <h5 class="fw-semibold mb-1">Kalibrasi Pressure Gauge</h5>
+                            <h5 class="fw-semibold mb-1">Kalibrasi Pressure</h5>
                             <p class="small text-muted mb-0">Pressure gauge, manometer, dan alat tekanan.</p>
                         </div>
                     </div>
@@ -58,7 +60,7 @@
                 <!-- Kalibrasi Suhu -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-info text-dark cursor-pointer"
-                        onclick="window.location.href='{{ route('kalibrasi.form.dev-page') }}'">
+                        onclick="window.location.href='{{ route('kalibrasi.form.thermohygrometer') }}'">
                         <div class="card-body text-center p-4">
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-thermometer-lines fs-1 text-info"></i>
@@ -72,7 +74,7 @@
                 <!-- Kalibrasi Massa -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-warning text-dark cursor-pointer"
-                        onclick="window.location.href='{{ route('kalibrasi.form.dev-page') }}'">
+                        onclick="window.location.href='{{ route('kalibrasi.form.timbangan') }}'">
                         <div class="card-body text-center p-4">
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-scale-balance fs-1 text-warning"></i>
@@ -100,7 +102,7 @@
                 <!-- Kalibrasi Panjang -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-danger text-dark cursor-pointer"
-                        onclick="window.location.href='{{ route('kalibrasi.form.dev-page') }}'">
+                        onclick="window.location.href='{{ route('kalibrasi.form.jangka-sorong') }}'">
                         <div class="card-body text-center p-4">
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-ruler-square fs-1 text-danger"></i>
@@ -114,12 +116,12 @@
                 <!-- Kalibrasi Temperature -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-secondary text-dark cursor-pointer"
-                        onclick="window.location.href='{{ route('kalibrasi.form.dev-page') }}'">
+                        onclick="window.location.href='{{ route('kalibrasi.form.temperature') }}'">
                         <div class="card-body text-center p-4">
                             <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
                                 <i class="mdi mdi-thermometer fs-1 text-secondary"></i>
                             </div>
-                            <h5 class="fw-semibold mb-1">Kalibrasi Temperature Gauge</h5>
+                            <h5 class="fw-semibold mb-1">Kalibrasi Temperature</h5>
                             <p class="small text-muted mb-0">Termometer digital, sensor suhu, dll.</p>
                         </div>
                     </div>
