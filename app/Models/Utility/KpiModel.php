@@ -12,7 +12,8 @@ class KpiModel extends Model
     protected $table = 'kpi';
 
     protected $fillable = [
-        'jenis_input',
+        'periode_tipe',
+        'week',
         'tanggal',
         'fg',
         'kecap_matang',
