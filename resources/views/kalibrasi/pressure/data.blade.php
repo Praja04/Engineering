@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Data Pressure')
+
 @section('styles')
     <style>
         .badge-point {
