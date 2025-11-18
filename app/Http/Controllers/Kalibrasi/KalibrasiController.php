@@ -37,7 +37,7 @@ class KalibrasiController extends Controller
 
     public function viewMasterAlat()
     {
-        return view('kalibrasi.master_alat_kalibrasi');
+        return view('kalibrasi.master.master_alat_kalibrasi');
     }
 
     public function viewSchedule()
@@ -345,7 +345,6 @@ class KalibrasiController extends Controller
                 $metodeKal    = trim($row['N'] ?? '');
 
                 $jenisFormatted = strtolower(str_replace(' ', '_', $jenis));
-                $departemenFormatted = str_replace(' ', '_', $departemen);
 
                 // field yang wajib diisi
                 $data = [
@@ -353,7 +352,7 @@ class KalibrasiController extends Controller
                     'kode_alat' => $kode,
                     'nama_alat' => $nama,
                     'jumlah' => $jumlah,
-                    'departemen_pemilik' => strtolower($departemenFormatted),
+                    'departemen_pemilik' => $departemen,
                     'lokasi_alat' => $lokasi,
                     'no_kalibrasi' => $noKal,
                     'merk' => $merk,
