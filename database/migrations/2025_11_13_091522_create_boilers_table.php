@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('boilers', function (Blueprint $table) {
             $table->id();
             $table->enum('periode_tipe', ['weekly', 'monthly']);
-            $table->integer('week')->nullable();
-            $table->date('tanggal');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->string('month', 7)->nullable();
             $table->decimal('batu_bara', 10, 3); // ton
             $table->decimal('steam', 10, 3);     // m³
             $table->timestamps();
