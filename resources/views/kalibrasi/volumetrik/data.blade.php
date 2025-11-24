@@ -361,7 +361,7 @@
                 let item = historyData.find(x => x.id === id);
                 if (!item) return;
 
-                console.log(item);
+                // console.log(item);
 
                 // Isi data umum
                 $('#detail_kode_alat').text(item.alat.kode_alat);
