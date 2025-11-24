@@ -14,7 +14,9 @@ class BoilerModel extends Model
     protected $fillable = [
         'periode_tipe',
         'week',
-        'tanggal',
+        'start_date',
+        'end_date',
+        'month',
         'batu_bara',
         'steam',
     ];

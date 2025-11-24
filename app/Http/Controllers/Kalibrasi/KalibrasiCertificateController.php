@@ -48,32 +48,36 @@ class KalibrasiCertificateController extends Controller
         $request->validate([
             'manager_id' => 'required|exists:users,id',
             'supervisor_id' => 'required|exists:users,id',
-            'foreman_id' => 'required|exists:users,id',
             'user_id' => 'required|exists:users,id',
         ]);
 
         $sertifikat = KalibrasiSertifikatModel::findOrFail($id);
 
         DB::beginTransaction();
+
         try {
+            $foremanId = Auth::id();
+
             $approvers = [
                 $request->manager_id,
                 $request->supervisor_id,
-                $request->foreman_id,
-                $request->user_id
+                $request->user_id,
+                $foremanId,
             ];
 
             foreach ($approvers as $approverId) {
                 if ($approverId) {
                     $user = User::find($approverId);
 
-                    $status = ($user->id === Auth::id()) ? 'approved' : 'pending';
+                    $status = ($user->id === $foremanId) ? 'approved' : 'pending';
+                    $approvedAt = ($status === 'approved') ? now() : null;
 
                     KalibrasiSertifikatApprovalModel::create([
                         'sertifikat_id' => $sertifikat->id,
                         'approver_id' => $user->id,
                         'approver_email' => $user->email,
-                        'status' => $status
+                        'status' => $status,
+                        'approved_at' => $approvedAt,
                     ]);
 
                     // Kirim email hanya ke yang belum approve otomatis
@@ -91,7 +95,7 @@ class KalibrasiCertificateController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Request approval berhasil dikirim ke semua approver.'
+                'message' => 'Request approval berhasil dikirim.'
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -513,32 +517,32 @@ class KalibrasiCertificateController extends Controller
             switch ($jenis) {
                 case 'pressure':
                     $kalibrasi->load(['pressure', 'pressureGabungan']);
-                    $this->_fillPressure($spreadsheet, $kalibrasi, $alat, $approvals);
+                    $this->_fillPressure($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
                     break;
 
                 case 'volumetrik':
                     $kalibrasi->load(['volumetrik']);
-                    $this->_fillVolumetrik($spreadsheet, $kalibrasi, $alat, $approvals);
+                    $this->_fillVolumetrik($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
                     break;
 
                 case 'temperature':
                     $kalibrasi->load(['temperature', 'temperatureGabungan']);
-                    $this->_fillTemperature($spreadsheet, $approvals, $kalibrasi, $alat);
+                    $this->_fillTemperature($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
                     break;
 
                 case 'thermohygrometer':
                     $kalibrasi->load(['thermohygrometer', 'thermohygrometerGabungan']);
-                    $this->_fillThermo($spreadsheet, $approvals, $kalibrasi, $alat);
+                    $this->_fillThermo($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
                     break;
 
                 case 'jangka_sorong':
                     $kalibrasi->load(['jangkaSorong', 'jangkaSorongSummary', 'jangkaSorongFinalSummary']);
-                    $this->_fillJangkaSorong($spreadsheet, $approvals, $kalibrasi, $alat);
+                    $this->_fillJangkaSorong($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
                     break;
 
                 case 'timbangan':
                     $kalibrasi->load(['pembacaanSummary', 'jangkaSorongSummary', 'jangkaSorongFinalSummary']);
-                    $this->_fillTimbangan($spreadsheet, $approvals, $kalibrasi, $alat);
+                    $this->_fillTimbangan($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
                     break;
 
                 default:
@@ -569,7 +573,7 @@ class KalibrasiCertificateController extends Controller
         }
     }
 
-    private function _fillPressure(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals)
+    private function _fillPressure(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat)
     {
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -786,10 +790,17 @@ class KalibrasiCertificateController extends Controller
             }
         }
 
+        // Tanggal diterbitkan
+        $issuedDate = $sertifikat->issued_at
+            ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
+            : '-';
+
+        $sheet->setCellValue('X62', "Diterbitkan tanggal : $issuedDate");
+
         return $spreadsheet;
     }
 
-    private function _fillVolumetrik(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals)
+    private function _fillVolumetrik(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat)
     {
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -905,9 +916,18 @@ class KalibrasiCertificateController extends Controller
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                 ->setVertical(Alignment::VERTICAL_CENTER);
         }
+
+        // Tanggal diterbitkan
+        $issuedDate = $sertifikat->issued_at
+            ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
+            : '-';
+
+        $sheet->setCellValue('X61', "Diterbitkan tanggal : $issuedDate");
+
+        return $spreadsheet;
     }
 
-    private function _fillTemperature(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat)
+    private function _fillTemperature(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat)
     {
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -1108,10 +1128,17 @@ class KalibrasiCertificateController extends Controller
             }
         }
 
+        // Tanggal diterbitkan
+        $issuedDate = $sertifikat->issued_at
+            ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
+            : '-';
+
+        $sheet->setCellValue('X60', "Diterbitkan tanggal : $issuedDate");
+
         return $spreadsheet;
     }
 
-    private function _fillThermo(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat)
+    private function _fillThermo(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat)
     {
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -1370,10 +1397,17 @@ class KalibrasiCertificateController extends Controller
             }
         }
 
+        // Tanggal diterbitkan
+        $issuedDate = $sertifikat->issued_at
+            ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
+            : '-';
+
+        $sheet->setCellValue('X61', "Diterbitkan tanggal : $issuedDate");
+
         return $spreadsheet;
     }
 
-    private function _fillJangkaSorong(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat)
+    private function _fillJangkaSorong(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat)
     {
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -1437,8 +1471,8 @@ class KalibrasiCertificateController extends Controller
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
             ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
-        $baseRow = 63;
-        $nameRow = 67;
+        $baseRow = 55;
+        $nameRow = 59;
 
         // Mapping posisi tanda tangan berdasarkan jabatan
         $roleColumnMap = [
@@ -1592,10 +1626,17 @@ class KalibrasiCertificateController extends Controller
             }
         }
 
+        // Tanggal diterbitkan
+        $issuedDate = $sertifikat->issued_at
+            ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
+            : '-';
+
+        $sheet->setCellValue('X54', "Diterbitkan tanggal : $issuedDate");
+
         return $spreadsheet;
     }
 
-    private function _fillTimbangan(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat)
+    private function _fillTimbangan(Spreadsheet $spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat)
     {
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -1790,6 +1831,13 @@ class KalibrasiCertificateController extends Controller
                 ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
                 ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
         }
+
+        // Tanggal diterbitkan
+        $issuedDate = $sertifikat->issued_at
+            ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
+            : '-';
+
+        $sheet->setCellValue('X65', "Diterbitkan tanggal : $issuedDate");
 
         return $spreadsheet;
     }

@@ -13,6 +13,7 @@ use App\Models\Kalibrasi\Timbangan\SmryPingganModel;
 use App\Models\Kalibrasi\Timbangan\SmryPembacaanModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Kalibrasi\Timbangan\SmryHisterisisModel;
+use App\Models\Kalibrasi\Master\MasterJangkaSorongModel;
 use App\Models\Kalibrasi\Pressure\KalibrasiPressureModel;
 use App\Models\Kalibrasi\Timbangan\KeseragamanSkalaModel;
 use App\Models\Kalibrasi\Timbangan\SmryKetidakpastianModel;
@@ -61,7 +62,21 @@ class KalibrasiModel extends Model
         return match (strtolower($this->jenis_kalibrasi)) {
             'pressure' => ['pressure', 'pressureGabungan'],
             'temperature' => ['temperature', 'temperatureGabungan'],
-            'volumetric' => ['volumetric', 'volumetricGabungan'],
+            'volumetrik' => ['volumetrik', 'volumetrikGabungan'],
+            'thermohygrometer' => ['thermohygrometer', 'thermohygrometerGabungan'],
+            'jangka_sorong' => ['jangkaSorong.master', 'jangkaSorongSummary.master', 'jangkaSorongFinalSummary'],
+            'timbangan' => [
+                'pembacaan',
+                'keseragamanSkala',
+                'pinggan',
+                'tare',
+                'histerisis',
+                'pembacaanSummary',
+                'keseragamanSummary',
+                'pingganSummary',
+                'tareSummary',
+                'histerisisSummary'
+            ],
             // tambahkan jenis lain di sini
             'mass' => ['mass', 'massGabungan'],
             'electrical' => ['electrical', 'electricalGabungan'],

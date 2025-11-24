@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Utility;
 
-use App\Http\Controllers\Controller;
-use App\Models\Utility\KpiModel;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Utility\KpiModel;
+use App\Http\Controllers\Controller;
 
 class KpiController extends Controller
 {
@@ -20,45 +21,63 @@ class KpiController extends Controller
 
     public function store(Request $request)
     {
+        // dd($request);
         $request->validate([
             'periode_tipe' => 'required|in:weekly,monthly',
-            'tanggal' => 'required|date',
-            'fg' => 'required|numeric|min:0',
+            'finish_goods' => 'required|numeric|min:0',
             'kecap_matang' => 'required|numeric|min:0',
+            'start_date'   => 'nullable|required_if:periode_tipe,weekly|date',
+            'end_date'     => 'nullable|required_if:periode_tipe,weekly|date|after_or_equal:start_date',
+            'month'        => 'nullable|required_if:periode_tipe,monthly|date_format:Y-m'
         ]);
 
         $jenis = $request->periode_tipe;
-        $tanggal = $request->tanggal;
 
-        $weekOfMonth = $jenis === 'weekly'
-            ? ceil(date('d', strtotime($tanggal)) / 7)
-            : null;
+        if ($jenis === 'weekly') {
 
-        $exists = KpiModel::where('periode_tipe', $jenis)
-            ->when($jenis === 'weekly', function ($query) use ($tanggal) {
-                $query->whereRaw('YEAR(tanggal) = YEAR(?)', [$tanggal])
-                    ->whereRaw('WEEK(tanggal, 1) = WEEK(?, 1)', [$tanggal]);
-            })
-            ->when($jenis === 'monthly', function ($query) use ($tanggal) {
-                $query->whereRaw('YEAR(tanggal) = YEAR(?)', [$tanggal])
-                    ->whereRaw('MONTH(tanggal) = MONTH(?)', [$tanggal]);
-            })
-            ->exists();
+            $start = Carbon::parse($request->start_date);
+            $end   = Carbon::parse($request->end_date);
 
-        if ($exists) {
-            return response()->json([
-                'success' => false,
-                'message' => $jenis === 'weekly'
-                    ? 'Data KPI untuk minggu tersebut sudah ada.'
-                    : 'Data KPI untuk bulan tersebut sudah ada.'
-            ], 422);
+            if ($start->diffInDays($end) < 6) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Periode weekly harus minimal 7 hari.'
+                ], 422);
+            }
+
+            $exists = KpiModel::where('periode_tipe', 'weekly')
+                ->where('start_date', $request->start_date)
+                ->where('end_date', $request->end_date)
+                ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data KPI untuk periode weekly tersebut sudah ada.'
+                ], 422);
+            }
+        }
+
+        if ($jenis === 'monthly') {
+
+            $exists = KpiModel::where('periode_tipe', 'monthly')
+                ->where('month', $request->month)
+                ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data KPI untuk bulan tersebut sudah ada.'
+                ], 422);
+            }
         }
 
         KpiModel::create([
-            'periode_tipe' => $request->periode_tipe,
-            'week' => $weekOfMonth,
-            'tanggal' => $request->tanggal,
-            'fg' => $request->fg,
+            'periode_tipe' => $jenis,
+            'start_date'   => $jenis === 'weekly' ? $request->start_date : null,
+            'end_date'     => $jenis === 'weekly' ? $request->end_date : null,
+            'month'        => $jenis === 'monthly' ? $request->month : null,
+            'finish_goods' => $request->finish_goods,
             'kecap_matang' => $request->kecap_matang,
         ]);
 
@@ -76,9 +95,9 @@ class KpiController extends Controller
         if ($request->periode_tipe) {
             $query->where('periode_tipe', $request->periode_tipe);
         }
-        if ($request->tanggal) {
-            $query->whereDate('tanggal', $request->tanggal);
-        }
+        // if ($request->tanggal) {
+        //     $query->whereDate('tanggal', $request->tanggal);
+        // }
 
         $data = $query->orderBy('created_at', 'desc')->get();
         return response()->json($data);
@@ -99,9 +118,11 @@ class KpiController extends Controller
     {
         $request->validate([
             'periode_tipe' => 'required|in:weekly,monthly',
-            'tanggal' => 'required|date',
-            'fg' => 'required|numeric|min:0',
+            'finish_goods' => 'required|numeric|min:0',
             'kecap_matang' => 'required|numeric|min:0',
+            'start_date'   => 'nullable|required_if:periode_tipe,weekly|date',
+            'end_date'     => 'nullable|required_if:periode_tipe,weekly|date|after_or_equal:start_date',
+            'month'        => 'nullable|required_if:periode_tipe,monthly|date_format:Y-m'
         ]);
 
         $kpi = KpiModel::find($id);
@@ -113,10 +134,14 @@ class KpiController extends Controller
             ], 404);
         }
 
+        $jenis = $request->periode_tipe;
+
         $kpi->update([
-            'periode_tipe' => $request->periode_tipe,
-            'tanggal' => $request->tanggal,
-            'fg' => $request->fg,
+            'periode_tipe' => $jenis,
+            'start_date'   => $jenis === 'weekly' ? $request->start_date : null,
+            'end_date'     => $jenis === 'weekly' ? $request->end_date : null,
+            'month'        => $jenis === 'monthly' ? $request->month : null,
+            'finish_goods' => $request->finish_goods,
             'kecap_matang' => $request->kecap_matang,
         ]);
 
