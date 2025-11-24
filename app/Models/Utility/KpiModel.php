@@ -14,8 +14,10 @@ class KpiModel extends Model
     protected $fillable = [
         'periode_tipe',
         'week',
-        'tanggal',
-        'fg',
+        'start_date',
+        'end_date',
+        'month',
+        'finish_goods',
         'kecap_matang',
     ];
 }
