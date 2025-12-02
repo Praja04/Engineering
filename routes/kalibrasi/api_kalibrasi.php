@@ -4,8 +4,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Kalibrasi\KalibrasiController;
 use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
+use App\Http\Controllers\Kalibrasi\KalibrasiVolumetrikController;
 use App\Http\Controllers\Kalibrasi\KalibrasiCertificateController;
-use App\Http\Controllers\Kalibrasi\KalibrasiVolumtrikController;
+use App\Http\Controllers\Kalibrasi\KalibrasiTemperatureController;
+use App\Http\Controllers\Kalibrasi\KalibrasiJangkaSorongController;
+use App\Http\Controllers\Kalibrasi\KalibrasiThermohygrometerController;
+use App\Http\Controllers\Kalibrasi\KalibrasiTimbanganController;
 
 Route::prefix('kalibrasi')->group(function () {
     Route::get('/data/master/alat', [KalibrasiController::class, 'getDataAlatKalibrasi']);
@@ -25,12 +29,14 @@ Route::prefix('kalibrasi')->group(function () {
         Route::get('/data', [KalibrasiPressureController::class, 'getData']);
     });
 
-    Route::prefix('volumetrik')->group(function () {
-        Route::post('/store', [KalibrasiVolumtrikController::class, 'store']);
-        Route::get('/data', [KalibrasiVolumtrikController::class, 'getData']);
-    });
+    Route::get('volumetrik/data', [KalibrasiVolumetrikController::class, 'getData']);
+    Route::get('temperature/data', [KalibrasiTemperatureController::class, 'getData']);
+    Route::get('thermohygrometer/data', [KalibrasiThermohygrometerController::class, 'getData']);
+    Route::get('jangka-sorong/data', [KalibrasiJangkaSorongController::class, 'getData']);
+    Route::get('timbangan/data', [KalibrasiTimbanganController::class, 'getData']);
 });
 
 Route::prefix('notifications')->group(function () {
     Route::post('/read/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::get('/kalibrasi/approval', [NotificationController::class, 'kalibrasiCertificate'])->name('notifications');
 });

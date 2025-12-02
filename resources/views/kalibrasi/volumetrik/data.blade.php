@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title', 'Data Volumetrik')
 @section('styles')
 @endsection
 
@@ -361,7 +361,7 @@
                 let item = historyData.find(x => x.id === id);
                 if (!item) return;
 
-                console.log(item);
+                // console.log(item);
 
                 // Isi data umum
                 $('#detail_kode_alat').text(item.alat.kode_alat);
@@ -440,7 +440,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `{{ route('kalibrasi.pressure.delete', '') }}/` + id,
+                            url: `{{ route('kalibrasi.volumetrik.delete', '') }}/` + id,
                             method: 'DELETE',
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'

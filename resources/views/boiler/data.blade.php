@@ -6,7 +6,7 @@
     <div class="page-content">
         <div class="container-fluid">
             {{-- Card Filter --}}
-            <div class="card shadow-sm border-0 rounded-3 mb-3">
+            {{-- <div class="card shadow-sm border-0 rounded-3 mb-3">
                 <div class="card-body">
                     <form id="filterForm" class="row g-3 align-items-end">
                         <div class="col-md-4">
@@ -30,30 +30,70 @@
                         </div>
                     </form>
                 </div>
-            </div>
+            </div> --}}
 
-            {{-- Card Table --}}
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Data Boiler</h5>
                 </div>
 
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-borderless table-striped table-hover align-middle text-nowrap"
-                            id="tableBoiler">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>No</th>
-                                    <th>Jenis Input</th>
-                                    <th>Tanggal</th>
-                                    <th>Batu Bara (Ton)</th>
-                                    <th>Steam (m³)</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+
+                    <!-- TABS -->
+                    <ul class="nav nav-pills nav-justified mb-3" id="boilerTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="weekly-tab" data-bs-toggle="tab"
+                                data-bs-target="#weeklyPane" type="button" role="tab">
+                                Mingguan
+                            </button>
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthlyPane"
+                                type="button" role="tab">
+                                Bulanan
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- TAB CONTENT -->
+                    <div class="tab-content">
+
+                        <!-- WEEKLY TAB -->
+                        <div class="tab-pane fade show active" id="weeklyPane" role="tabpanel">
+                            <table class="table table-borderless table-striped table-hover align-middle text-nowrap"
+                                id="tableWeekly">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Tgl Awal</th>
+                                        <th>Tgl Akhir</th>
+                                        <th>Batu Bara (Ton)</th>
+                                        <th>Steam (m³)</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <!-- MONTHLY TAB -->
+                        <div class="tab-pane fade" id="monthlyPane" role="tabpanel">
+                            <table class="table table-borderless table-striped table-hover align-middle text-nowrap"
+                                id="tableMonthly">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Bulan</th>
+                                        <th>Batu Bara (Ton)</th>
+                                        <th>Steam (m³)</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -75,17 +115,29 @@
                         <input type="hidden" id="boilerId">
 
                         <div class="mb-3">
-                            <label for="jenisInput" class="form-label">Jenis Input</label>
-                            <select id="jenisInput" class="form-select" required>
+                            <label for="periodeTipe" class="form-label">Periode Tipe</label>
+                            <select id="periodeTipe" class="form-select" required>
                                 <option value="">-- Pilih Jenis --</option>
                                 <option value="weekly">Mingguan</option>
                                 <option value="monthly">Bulanan</option>
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="tanggal" class="form-label">Tanggal</label>
-                            <input type="date" id="tanggal" class="form-control" required>
+                        <div class="mb-3 d-none" id="groupWeeklyEdit">
+                            <label class="form-label fw-bold">Periode Mingguan</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="date" id="editStartDate" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="date" id="editEndDate" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 d-none" id="groupMonthlyEdit">
+                            <label class="form-label fw-bold">Periode Bulanan</label>
+                            <input type="month" id="editMonth" class="form-control">
                         </div>
 
                         <div class="mb-3">
@@ -114,8 +166,7 @@
     <script>
         $(document).ready(function() {
             const tableBody = $('#tableBoiler tbody');
-            const $modal = new bootstrap.Modal('#modalBoiler');
-            const $form = $('#formBoiler');
+            const form = $('#formBoiler');
             const today = new Date().toISOString().split('T')[0];
             $('#filterTanggal').val(today);
 
@@ -125,22 +176,29 @@
                 return val % 1 === 0 ? val.toFixed(0) : parseFloat(val.toString()).toString();
             };
 
-            loadData();
+            loadData('weekly');
 
-            function loadData(jenis = '', tanggal = '') {
+            function loadData(periode = '', tanggal = '') {
                 $.get("{{ route('boiler.get-data') }}", {
-                    jenis_input: jenis,
+                    periode_tipe: periode,
                     tanggal: tanggal
                 }, function(data) {
+
+                    const tableBody = periode === 'weekly' ?
+                        $('#tableWeekly tbody') :
+                        $('#tableMonthly tbody');
+
                     tableBody.empty();
+
                     if (data.length === 0) {
+                        const colspan = periode === 'weekly' ? 6 : 5;
+
                         tableBody.append(`
                             <tr>
-                                <td colspan="6" class="text-center py-4">
+                                <td colspan="${colspan}" class="text-center py-4">
                                     <div class="d-flex flex-column align-items-center text-muted">
                                         <i class="mdi mdi-database-off mdi-36px mb-2"></i>
                                         <span class="fw-semibold">Tidak ada data ditemukan</span>
-                                        <small class="text-secondary">Coba ubah filter atau tambah data baru.</small>
                                     </div>
                                 </td>
                             </tr>
@@ -152,46 +210,75 @@
                         const batuBara = formatNumber(item.batu_bara);
                         const steam = formatNumber(item.steam);
 
-                        tableBody.append(`
-                            <tr>
-                                <td>${i + 1}</td>
-                                <td class="text-capitalize">${item.jenis_input}</td>
-                                <td>${item.tanggal}</td>
-                                <td>${batuBara}</td>
-                                <td>${steam}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
-                                        <i class="mdi mdi-pencil"></i> Edit
-                                    </button>
-                                    <button class="btn btn-sm btn-danger btnDelete" data-id="${item.id}">
-                                        <i class="mdi mdi-delete"></i> Hapus
-                                    </button>
-                                </td>
-                            </tr>
-                        `);
+                        if (periode === 'weekly') {
+                            const startDate = item.start_date ? `${item.start_date}` : '-';
+                            const endDate = item.end_date ? `${item.end_date}` : '-';
+
+                            tableBody.append(`
+                                <tr>
+                                    <td>${i + 1}</td>
+                                    <td>${startDate}</td>
+                                    <td>${endDate}</td>
+                                    <td>${batuBara}</td>
+                                    <td>${steam}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
+                                            <i class="mdi mdi-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-danger btnDelete" data-id="${item.id}">
+                                            <i class="mdi mdi-delete"></i> Hapus
+                                        </button>
+                                    </td>
+                                </tr>
+                            `);
+
+                        } else if (periode === 'monthly') {
+                            const month = item.month ?? '-';
+
+                            tableBody.append(`
+                                <tr>
+                                    <td>${i + 1}</td>
+                                    <td>${month}</td>
+                                    <td>${batuBara}</td>
+                                    <td>${steam}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
+                                            <i class="mdi mdi-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-danger btnDelete" data-id="${item.id}">
+                                            <i class="mdi mdi-delete"></i> Hapus
+                                        </button>
+                                    </td>
+                                </tr>
+                            `);
+                        }
                     });
+
                 });
             }
 
+            $('#weekly-tab').on('click', () => loadData('weekly'));
+            $('#monthly-tab').on('click', () => loadData('monthly'));
+
             // Filter otomatis ketika jenis atau tanggal berubah
-            $('#filterJenis, #filterTanggal').on('change', function() {
-                const jenis = $('#filterJenis').val();
-                const tanggal = $('#filterTanggal').val();
+            // $('#filterJenis, #filterTanggal').on('change', function() {
+            //     const jenis = $('#filterJenis').val();
+            //     const tanggal = $('#filterTanggal').val();
 
-                // panggil fungsi loadData dengan parameter filter
-                loadData(jenis, tanggal);
-            });
+            //     // panggil fungsi loadData dengan parameter filter
+            //     loadData(jenis, tanggal);
+            // });
 
-            $('#btnReset').on('click', function() {
-                $('#filterForm')[0].reset();
-                $('#filterTanggal').val(today);
+            // $('#btnReset').on('click', function() {
+            //     $('#filterForm')[0].reset();
+            //     $('#filterTanggal').val(today);
 
-                // Reload data dengan kondisi default
-                loadData($('#filterJenis').val(), $('#filterTanggal').val());
-            });
+            //     // Reload data dengan kondisi default
+            //     loadData($('#filterJenis').val(), $('#filterTanggal').val());
+            // });
 
             // Simpan / Update data
-            $form.on('submit', function(e) {
+            form.on('submit', function(e) {
                 e.preventDefault();
 
                 const id = $('#boilerId').val();
@@ -200,19 +287,30 @@
                     "{{ url('boiler/update') }}/" + id :
                     "{{ route('boiler.store') }}";
                 const method = isUpdate ? 'PUT' : 'POST';
+                const periode = $('#periodeTipe').val();
 
-                const data = {
+                let payload = {
                     _token: $('meta[name="csrf-token"]').attr('content'),
-                    jenis_input: $('#jenisInput').val(),
-                    tanggal: $('#tanggal').val(),
+                    periode_tipe: periode,
                     batu_bara: $('#batuBara').val(),
                     steam: $('#steam').val(),
                 };
 
+                // WEEKLY
+                if (periode === 'weekly') {
+                    payload.start_date = $('#editStartDate').val();
+                    payload.end_date = $('#editEndDate').val();
+                }
+
+                // MONTHLY
+                if (periode === 'monthly') {
+                    payload.month = $('#editMonth').val();
+                }
+
                 $.ajax({
                     url: url,
                     type: method,
-                    data: data,
+                    data: payload,
                     success: function(res) {
                         if (res.success) {
                             Swal.fire({
@@ -222,8 +320,8 @@
                                 timer: 1000,
                                 showConfirmButton: false
                             }).then(() => {
-                                $modal.hide();
-                                loadData();
+                                $('#modalBoiler').modal('hide');
+                                loadData(periode);
                             });
                         } else {
                             Swal.fire({
@@ -245,24 +343,54 @@
             });
 
             // Edit data
+            $('#periodeTipe').on('change', function() {
+                const tipe = $(this).val();
+
+                // Reset visibility
+                $('#groupWeeklyEdit, #groupMonthlyEdit').addClass('d-none');
+
+                if (tipe === 'weekly') {
+                    $('#groupWeeklyEdit').removeClass('d-none');
+                } else if (tipe === 'monthly') {
+                    $('#groupMonthlyEdit').removeClass('d-none');
+                }
+            });
+
             $(document).on('click', '.btnEdit', function() {
                 const id = $(this).data('id');
+
                 $.get("{{ url('boiler/show') }}/" + id, function(res) {
-                    if (res.success) {
-                        $('#modalBoilerLabel').text('Edit Data Boiler');
-                        $('#boilerId').val(res.data.id);
-                        $('#jenisInput').val(res.data.jenis_input);
-                        $('#tanggal').val(res.data.tanggal);
-                        $('#batuBara').val(formatNumber(res.data.batu_bara));
-                        $('#steam').val(formatNumber(res.data.steam));
-                        $modal.show();
-                    } else {
-                        Swal.fire({
+
+                    if (!res.success) {
+                        return Swal.fire({
                             icon: 'error',
-                            title: 'Gagal!',
+                            title: 'Error!',
                             text: res.message
                         });
                     }
+
+                    const data = res.data;
+
+                    $('#modalBoilerLabel').text('Edit Data Boiler');
+                    $('#boilerId').val(data.id);
+
+                    // SET PERIODE TIPE
+                    $('#periodeTipe').val(data.periode_tipe).trigger('change');
+
+                    if (data.periode_tipe === 'weekly') {
+                        $('#editStartDate').val(data.start_date);
+                        $('#editEndDate').val(data.end_date);
+                    }
+
+                    if (data.periode_tipe === 'monthly') {
+                        $('#editMonth').val(data.month);
+                    }
+
+                    // SET VALUE NORMAL
+                    $('#batuBara').val(formatNumber(data.batu_bara));
+                    $('#steam').val(formatNumber(data.steam));
+
+                    $('#modalBoiler').modal('show');
                 });
             });
 
@@ -296,7 +424,7 @@
                                         timer: 1000,
                                         showConfirmButton: false
                                     });
-                                    loadData();
+                                    loadData('weekly');
                                 } else {
                                     Swal.fire({
                                         icon: 'error',

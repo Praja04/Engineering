@@ -12,8 +12,11 @@ class BoilerModel extends Model
     protected $table = 'boilers';
 
     protected $fillable = [
-        'jenis_input',
-        'tanggal',
+        'periode_tipe',
+        'week',
+        'start_date',
+        'end_date',
+        'month',
         'batu_bara',
         'steam',
     ];

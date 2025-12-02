@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Certificate Kalibrasi')
+
 @section('styles')
     <style>
         .icon-wrapper {
@@ -138,9 +140,12 @@
                                     <th>Kode Alat</th>
                                     <th>Jenis Kalibrasi</th>
                                     <th>Lokasi</th>
-                                    <th>Tanggal</th>
+                                    <th>Tgl Kalibrasi</th>
                                     <th>Status</th>
-                                    <th class="text-center">Aksi</th>
+                                    @if (Auth::user()->jabatan === 'foreman')
+                                        <th class="text-center">Aksi</th>
+                                    @endif
+                                    <th class="text-center">Sertifikat</th>
                                     <th>Keterangan</th>
                                 </tr>
                             </thead>
@@ -176,12 +181,12 @@
                                 <option value="" selected disabled> Pilih Supervisor </option>
                             </select>
                         </div>
-                        <div class="mb-3">
+                        {{-- <div class="mb-3">
                             <label class="form-label">Foreman</label>
                             <select name="foreman_id" id="foremanSelect" class="form-select">
                                 <option value="" selected disabled> Pilih Foreman </option>
                             </select>
-                        </div>
+                        </div> --}}
 
                         <div class="mb-3">
                             <label class="form-label">User</label>
@@ -264,6 +269,7 @@
                                 let rowId = `collapseRow-${item.id}`;
                                 let keteranganText = '-';
                                 let actionButtons = '';
+                                let sertifButtons = '';
 
                                 // Cek kalau semua approval sudah approved
                                 const allApproved = item.certificate?.approvals?.length > 0 &&
@@ -271,15 +277,15 @@
                                         'approved');
 
                                 // Kalau sudah approved, tampilkan tombol Download Sertifikat
-                                if (allApproved) {
-                                    actionButtons += `
+                                // if (allApproved) {
+                                sertifButtons += `
                                         <a href="/kalibrasi/certificate/download/${item.certificate?.id}" 
                                         target="_blank" 
-                                        class="btn btn-outline-success btn-sm">
+                                        class="btn btn-outline-info btn-sm">
                                             <i class="mdi mdi-file-download-outline me-1"></i> Download
                                         </a>
                                     `;
-                                }
+                                // }
 
                                 if (userRole === 'foreman' && !allApproved &&
                                     statusSertifikat === 'draft') {
@@ -291,7 +297,7 @@
                                     `;
 
                                     keteranganText = `
-                                        <button class="btn btn-secondary btn-sm d-flex align-items-center gap-1" disabled>
+                                        <button class="btn btn-info btn-sm d-flex align-items-center gap-1" disabled>
                                                 <i class="mdi mdi-timer-sand"></i> Siap Diajukan
                                             </button>
                                     `;
@@ -340,28 +346,28 @@
                                     let statusLabel;
                                     if (statusSertifikat === 'pending') {
                                         statusLabel = `
-                                            <button class="btn btn-outline-warning btn-sm d-flex align-items-center gap-1" type="button"
+                                            <button class="btn btn-soft-warning btn-sm d-flex align-items-center gap-1" type="button"
                                                 data-bs-toggle="collapse" data-bs-target="#approvalDetail-${item.id}">
                                                 <i class="mdi mdi-timer-sand"></i> Menunggu Approval...
                                             </button>
                                         `;
                                     } else if (statusSertifikat === 'approved') {
                                         statusLabel = `
-                                            <button class="btn btn-outline-success btn-sm d-flex align-items-center gap-1" type="button"
+                                            <button class="btn btn-soft-success btn-sm d-flex align-items-center gap-1" type="button"
                                                 data-bs-toggle="collapse" data-bs-target="#approvalDetail-${item.id}">
                                                 <i class="mdi mdi-check-circle-outline"></i> Sudah Disetujui
                                             </button>
                                         `;
                                     } else if (statusSertifikat === 'rejected') {
                                         statusLabel = `
-                                            <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" type="button"
+                                            <button class="btn btn-soft-danger btn-sm d-flex align-items-center gap-1" type="button"
                                                 data-bs-toggle="collapse" data-bs-target="#approvalDetail-${item.id}">
                                                 <i class="mdi mdi-close-circle-outline"></i> Approval Ditolak
                                             </button>
                                         `;
                                     } else {
                                         statusLabel = `
-                                            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" type="button"
+                                            <button class="btn btn-soft-secondary btn-sm d-flex align-items-center gap-1" type="button"
                                                 data-bs-toggle="collapse" data-bs-target="#approvalDetail-${item.id}">
                                                 <i class="mdi mdi-help-circle-outline"></i> Status Tidak Diketahui
                                             </button>
@@ -395,10 +401,16 @@
                                         <td>${item.lokasi_kalibrasi || '-'}</td>
                                         <td>${item.tgl_kalibrasi || '-'}</td>
                                         <td>${statusBadge}</td>
+                                        @if (Auth::user()->jabatan === 'foreman')
+                                            <td class="text-center">
+                                                <div class="d-flex flex-nowrap justify-content-center gap-2"> 
+                                                    ${actionButtons}
+                                                </div>
+                                            </td>
+                                        @endif
                                         <td class="text-center">
                                             <div class="d-flex flex-nowrap justify-content-center gap-2"> 
-                                                ${actionButtons}
-                                                ${detailButton}
+                                                ${sertifButtons}
                                             </div>
                                         </td>
                                         <td>${keteranganText}</td> 
@@ -420,13 +432,6 @@
                                                     <div class="col-md-4"><strong>Tanggal Kalibrasi:</strong> ${item.tgl_kalibrasi || '-'}</div>
 
                                                     <div class="col-md-4"><strong>Tanggal Kalibrasi Ulang:</strong> ${item.tgl_kalibrasi_ulang || '-'}</div>
-                                                    @if (Auth::user()->jabatan == 'operator')
-                                                        <div class="col-md-8 text-end">
-                                                            <a href="/kalibrasi/certificate/download/${item.certificate?.id}" target="_blank" class="btn btn-sm btn-info me-2">
-                                                            <i class="mdi mdi-file-document-outline"></i> Download Sertifikat
-                                                            </a>
-                                                        </div>
-                                                    @endif
                                                 </div>
                                             </div>
                                         </td>

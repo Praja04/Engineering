@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('title', 'Form Volumetrik')
 @section('styles')
     <style>
         #collapseDetailAlat strong {
@@ -170,6 +170,7 @@
                                 <strong><i class="mdi mdi-beaker-outline me-2"></i>Data Pengukuran Volumetrik</strong>
                             </div>
                             <div class="card-body">
+
                                 <div class="row mb-3 gy-2 align-items-center">
                                     <div class="col-auto">
                                         <label class="fw-semibold">Jumlah Titik Kalibrasi:</label>

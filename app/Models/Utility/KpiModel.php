@@ -12,9 +12,12 @@ class KpiModel extends Model
     protected $table = 'kpi';
 
     protected $fillable = [
-        'jenis_input',
-        'tanggal',
-        'fg',
+        'periode_tipe',
+        'week',
+        'start_date',
+        'end_date',
+        'month',
+        'finish_goods',
         'kecap_matang',
     ];
 }

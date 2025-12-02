@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Form Pressure')
+
 @section('styles')
     <style>
         .titik-kalibrasi-block {
@@ -751,8 +753,6 @@
                     }
                 });
             });
-
-
 
             // reset button
             $(document).on('click', '#btnResetKalibrasi', function() {
