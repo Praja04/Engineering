@@ -12,6 +12,18 @@ class DashboardUtilityController extends Controller
     {
         return view('dashboard.utility.dashboard');
     }
+    public function listrik()
+    {
+        return view('dashboard.utility.listrik');
+    }
+    public function air()
+    {
+        return view('dashboard.utility.air');
+    }
+    public function chemical()
+    {
+        return view('dashboard.utility.chemical');
+    }
     public function wwtp()
     {
         return view('dashboard.wwtp.dashboard');

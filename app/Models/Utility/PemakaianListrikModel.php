@@ -16,5 +16,8 @@ class PemakaianListrikModel extends Model
     public $timestamps = true;
 
     protected $fillable = ['waktu', 'operator', 'panel_type', 'volt', 'a', 'kw', 'mwh', 'cos'];
+    protected $casts = [
+        'waktu' => 'date',
+    ];
 
 }
