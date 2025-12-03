@@ -15,9 +15,24 @@ $bagian = Auth::user()->bagian;
     </a>
     <div class="collapse menu-dropdown" id="sidebarUtilityDashboard">
         <ul class="nav nav-sm flex-column">
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a href="{{ url('utility/dashboard') }}" class="nav-link" data-key="t-analytics">
                     <i class="mdi mdi-chart-bar me-2"></i> Dashboard Utility
+                </a>
+            </li> -->
+            <li class="nav-item">
+                <a href="{{ url('utility/dashboard/listrik') }}" class="nav-link" data-key="t-analytics">
+                    <i class="mdi mdi-chart-bar me-2"></i> Pemakaian Listrik
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url('utility/dashboard/air') }}" class="nav-link" data-key="t-analytics">
+                    <i class="mdi mdi-chart-bar me-2"></i> Pemakaian Air
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url('utility/dashboard/chemical') }}" class="nav-link" data-key="t-analytics">
+                    <i class="mdi mdi-chart-bar me-2"></i> Pemakaian chemical
                 </a>
             </li>
             <li class="nav-item">

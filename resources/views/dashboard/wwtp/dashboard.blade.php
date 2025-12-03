@@ -231,7 +231,7 @@
 
 <script>
     // Set tanggal target (sesuaikan dengan tanggal launch Anda)
-    const targetDate = new Date('2025-11-11T23:59:59').getTime();
+    const targetDate = new Date('2025-12-30T23:59:59').getTime();
 
     function updateCountdown() {
         const now = new Date().getTime();
