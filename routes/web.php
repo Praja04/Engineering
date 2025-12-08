@@ -21,7 +21,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/index', [AuthController::class, 'manage_user'])->name('users.index');
             Route::get('/data', [AuthController::class, 'getUsers'])->name('get'); // API untuk DataTables
             Route::post('/', [AuthController::class, 'store'])->name('store'); // Simpan user baru
-            Route::get('/{id}/edit', [AuthController::class, 'edit'])->name('edit'); // Ambil data user untuk edit
+            Route::get('/edit/{id}', [AuthController::class, 'edit'])->name('edit'); // Ambil data user untuk edit
             Route::post('/{id}', [AuthController::class, 'update'])->name('update'); // Update user
             Route::delete('/{id}', [AuthController::class, 'destroy'])->name('destroy'); // Hapus user
         });
@@ -48,4 +48,3 @@ Route::middleware('auth')->group(function () {
 // Boiler Routes
 @include('boiler/boiler.php');
 // End Boiler Routes
-
