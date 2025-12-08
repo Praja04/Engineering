@@ -38,11 +38,11 @@ class AuthController extends Controller
             ->orWhere('nik', $request->username)
             ->first();
 
-
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return back()->withErrors([
-                'login' => 'Username atau password salah',
-            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Username atau password salah'
+            ], 401);
         }
 
         $credentials = $request->only('username', 'password');
@@ -66,7 +66,7 @@ class AuthController extends Controller
             //     'image_url'  => $imageUrl,
             //     'status'     => $user->status,
             // ]);
-        
+
             $intendedUrl = session()->get('url.intended', $this->redirectByJabatan($user->jabatan));
 
             return response()->json([
