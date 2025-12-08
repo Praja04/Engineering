@@ -10,16 +10,21 @@
             <i class="mdi mdi-cog"></i>
             <span data-key="t-dashboards">Dashboard Boiler</span>
         </a>
-        <div class="collapse menu-dropdown" id="sidebarDashboardBoiler">
+        <div class="collapse menu-dropdown {{ request()->routeIs('dashboard.boiler.*') ? 'show' : '' }}"
+            id="sidebarDashboardBoiler">
             <ul class="nav nav-sm flex-column">
                 <li class="nav-item">
-                    <a href="{{ route('boiler.dashboard') }}" class="nav-link" data-key="t-analytics">
+                    <a href="{{ route('dashboard.boiler.realtime') }}"
+                        class="nav-link {{ request()->routeIs('dashboard.boiler.realtime') ? 'active' : '' }}"
+                        data-key="t-analytics">
                         <i class="mdi mdi-chart-line me-2"></i> Dashboard Realtime
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ url('dashboard/mesin/downtime') }}" class="nav-link" data-key="t-analytics">
-                        <i class="mdi mdi-bullseye-arrow me-2"></i> Dashboard KPI
+                    <a href="{{ route('dashboard.boiler.kpi') }}"
+                        class="nav-link {{ request()->routeIs('dashboard.boiler.kpi') ? 'active' : '' }}"
+                        data-key="t-analytics">
+                        <i class="mdi mdi-bullseye-arrow me-2"></i> Dashboard KPI Boiler
                     </a>
                 </li>
             </ul>
