@@ -13,4 +13,6 @@ Route::get('scoring/mesin', [MachineScoringController::class, 'api_scoring_mesin
 @include 'utility/api-listrik-routes.php';
 @include 'utility/api-air-routes.php';
 @include 'utility/api-chemical-routes.php';
+//api wwtp //
+@include 'utility/api-wwtp-routes.php';
 @include 'boiler/api_boiler.php';
