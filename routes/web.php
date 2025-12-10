@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Utility\WWTPController;
 use App\Http\Controllers\Auth\TokenAuthController;
 
 Route::get('/token-login', [TokenAuthController::class, 'loginWithToken'])
@@ -28,24 +29,26 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/notifications', [NotificationController::class, 'kalibrasiCertificate'])->name('notifications');
+
+
+    // Kalibrasi Routes
+    @include 'kalibrasi/kalibrasi.php';
+    @include('boiler/boiler.php');
+    @include('kpi/kpi.php');
+    // End Kalibrasi Routes
+
+    ////////// Scoring Mesin Routes ///////////
+    @include 'scoring/scoring-routes.php';
+    @include 'utility/listrik-routes.php';
+    @include 'utility/air-routes.php';
+    @include 'utility/chemical-routes.php';
+    @include 'utility/dashboard.php';
+    Route::get('/wwtp', [WWTPController::class, 'page'])->name('wwtp.page');
+
+    //////////    End View Routes   ///////////
+
+    // Boiler Routes
+    @include('boiler/boiler.php');
+    // End Boiler Routes
+
 });
-
-// Kalibrasi Routes
-@include 'kalibrasi/kalibrasi.php';
-@include('boiler/boiler.php');
-@include('kpi/kpi.php');
-// End Kalibrasi Routes
-
-////////// Scoring Mesin Routes ///////////
-@include 'scoring/scoring-routes.php';
-@include 'utility/listrik-routes.php';
-@include 'utility/air-routes.php';
-@include 'utility/chemical-routes.php';
-@include 'utility/dashboard.php';
-
-//////////    End View Routes   ///////////
-
-// Boiler Routes
-@include('boiler/boiler.php');
-// End Boiler Routes
-
