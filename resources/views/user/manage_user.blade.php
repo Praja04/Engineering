@@ -352,9 +352,6 @@
                 });
             });
 
-
-
-
             $("#grid-view-button").on("click", function() {
                 $(this).addClass("active");
                 $("#list-view-button").removeClass("active");
@@ -378,57 +375,55 @@
                                 "{{ asset('material/assets/images/users/user-dummy-img.jpg') }}";
 
                             userList += `
-                        <div class="col-lg-12">
-                            <div class="card team-box">
-                                <div class="card-body p-3">
-                                    <div class="row align-items-center">
-                                        <!-- Profile Image -->
-                                        <div class="col-auto">
-                                            <div class="avatar-lg img-thumbnail rounded-circle flex-shrink-0">
-                                                <img src="${imageUrl}" alt="" class="member-img img-fluid d-block rounded-circle" style="height:85px;">
+                                <div class="col-lg-12">
+                                    <div class="card team-box">
+                                        <div class="card-body p-3">
+                                            <div class="row align-items-center">
+                                                <!-- Profile Image -->
+                                                <div class="col-auto">
+                                                    <div class="avatar-lg img-thumbnail rounded-circle flex-shrink-0">
+                                                        <img src="${imageUrl}" alt="" class="member-img img-fluid d-block rounded-circle" style="height:85px;">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Name & Position -->
+                                                <div class="col">
+                                                    <a class="member-name" data-bs-toggle="offcanvas" href="#member-overview" aria-controls="member-overview">
+                                                        <h5 class="fs-16 mb-1 nama_user">${user.username}</h5>
+                                                    </a>
+                                                    <p class="text-muted mb-0">${user.jabatan}</p>
+                                                </div>
+
+                                                <!-- Email & Jabatan -->
+                                                <div class="col text-center">
+                                                    <h5 class="mb-1 projects-num">${user.email}</h5>
+                                                    <p class="text-muted mb-0">Email</p>
+                                                </div>
+                                                <div class="col text-center">
+                                                    <h5 class="mb-1 tasks-num">${user.departemen}</h5>
+                                                    <p class="text-muted mb-0">Departemen</p>
+                                                </div>
+                                                <div class="col text-center">
+                                                    <h5 class="mb-1 tasks-num">${user.nik}</h5>
+                                                    <p class="text-muted mb-0">Departemen</p>
+                                                </div>
+
+                                                <!-- Actions -->
+                                                <div class="col-auto">
+                                                    <button class="btn btn-sm btn-primary edit-list" data-bs-toggle="modal" 
+                                                        data-bs-target="#editMemberModal" data-edit-id="${user.id}">
+                                                        <i class="ri-pencil-line"></i> Edit
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger remove-list" data-bs-toggle="modal" 
+                                                        data-bs-target="#removeMemberModal" data-remove-id="${user.id}">
+                                                        <i class="ri-delete-bin-5-line"></i> Remove
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-
-                                        <!-- Name & Position -->
-                                        <div class="col">
-                                            <a class="member-name" data-bs-toggle="offcanvas" href="#member-overview" aria-controls="member-overview">
-                                                <h5 class="fs-16 mb-1 nama_user">${user.username}</h5>
-                                            </a>
-                                            <p class="text-muted mb-0">${user.jabatan}</p>
-                                        </div>
-
-                                        <!-- Email & Jabatan -->
-                                        <div class="col text-center">
-                                            <h5 class="mb-1 projects-num">${user.email}</h5>
-                                            <p class="text-muted mb-0">Email</p>
-                                        </div>
-                                        <div class="col text-center">
-                                            <h5 class="mb-1 tasks-num">${user.departemen}</h5>
-                                            <p class="text-muted mb-0">Departemen</p>
-                                        </div>
-                                        <div class="col text-center">
-                                            <h5 class="mb-1 tasks-num">${user.nik}</h5>
-                                            <p class="text-muted mb-0">Departemen</p>
-                                        </div>
-
-                                        <!-- Actions -->
-                                        <div class="col-auto">
-                                            <button class="btn btn-sm btn-primary edit-list" data-bs-toggle="modal" 
-                                                data-bs-target="#editMemberModal" data-edit-id="${user.id}" 
-                                                data-username="${user.username}" data-jabatan="${user.jabatan}" 
-                                                data-email="${user.email}">
-                                                <i class="ri-pencil-line"></i> Edit
-                                            </button>
-                                            <button class="btn btn-sm btn-danger remove-list" data-bs-toggle="modal" 
-                                                data-bs-target="#removeMemberModal" data-remove-id="${user.id}">
-                                                <i class="ri-delete-bin-5-line"></i> Remove
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    `;
+                            `;
                         });
 
                         $('#team-member-list').html(userList);
@@ -480,8 +475,7 @@
                                                         <ul class="dropdown-menu dropdown-menu-end">
                                                             <li>
                                                                 <a class="dropdown-item edit-list" href="#editMemberModal" data-bs-toggle="modal" 
-                                                                   data-edit-id="${user.id}" data-username="${user.username}" 
-                                                                   data-jabatan="${user.jabatan}" data-email="${user.email}" data-bagian="${user.bagian}">
+                                                                   data-edit-id="${user.id}">
                                                                     <i class="ri-pencil-line me-2 align-bottom text-muted"></i>Edit
                                                                 </a>
                                                             </li>
@@ -533,19 +527,40 @@
             // Set data ke modal edit saat tombol edit diklik
             $(document).on('click', '.edit-list', function() {
                 let id = $(this).data('edit-id');
-                let username = $(this).data('username');
-                let jabatan = $(this).data('jabatan');
-                let email = $(this).data('email');
-                let password = $(this).data('password');
-                let bagian = $(this).data('bagian');
 
-                $('#editUserId').val(id);
-                $('#editUsername').val(username);
-                $('#editJabatan').val(jabatan);
-                $('#editEmail').val(email);
-                $('#editPassword').val(password);
-                $('#editBagian').val(bagian);
+                // Kosongkan input sementara
+                $('#editMemberForm')[0].reset();
+                $('#editUserId').val('');
+
+                // Request ke API
+                $.ajax({
+                    url: "{{ route('users.edit', '') }}/" + id,
+                    type: 'GET',
+                    success: function(res) {
+
+                        // Isi seluruh field modal
+                        $('#editUserId').val(res.id);
+                        $('#editUsername').val(res.username);
+                        $('#editJabatan').val(res.jabatan);
+                        $('#editEmail').val(res.email);
+                        $('#editNik').val(res.nik);
+                        $('#editDepartemen').val(res.departemen);
+                        $('#editBagian').val(res.bagian);
+
+                        // Password tidak boleh diisi dari server → biarkan kosong
+                        $('#editPassword').val('');
+                    },
+                    error: function(xhr) {
+                        console.error(xhr);
+                        Swal.fire({
+                            title: "Error!",
+                            text: "Failed to get user.",
+                            icon: "error"
+                        });
+                    }
+                });
             });
+
 
             $('#editMemberForm').submit(function(e) {
                 e.preventDefault();
