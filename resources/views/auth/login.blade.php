@@ -154,11 +154,11 @@
         <script src="{{ asset('material/assets/js/pages/password-addon.init.js') }}"></script>
 
         <script>
-            // $.ajaxSetup({
-            //     headers: {
-            //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            //     }
-            // });
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
             $(document).ready(function() {
                 $('#loginForm').submit(function(e) {
                     e.preventDefault();
@@ -178,7 +178,7 @@
                         data: {
                             username: $('#username').val(),
                             password: $('#password').val(),
-                            _token: '{{ csrf_token() }}'
+                            _token: $('input[name="_token"]').val()
                         },
                         success: function(response) {
                             Swal.close(); // Tutup loading
