@@ -1,16 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Kalibrasi\KalibrasiController;
-use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
+use App\Http\Controllers\ScoringMesin\MachineScoringController;
+use App\Http\Controllers\Auth\TokenAuthController;
 
-Route::prefix('kalibrasi')->group(function () {
-    Route::get('/data/master/alat', [KalibrasiController::class, 'getDataAlatKalibrasi']);
-    Route::get('/show/master/alat/{id}', [KalibrasiController::class, 'showAlatKalibrasi']);
-    Route::get('/master/filters', [KalibrasiController::class, 'getFilters']);
+Route::post('/auth/validate-token', [TokenAuthController::class, 'receiveToken']);
+// Api Kalibrasi Routes
+@include 'kalibrasi/api_kalibrasi.php';
 
-    Route::prefix('pressure')->group(function () {
-        Route::post('/store', [KalibrasiPressureController::class, 'store']);
-        Route::get('/data/alat/{id}', [KalibrasiPressureController::class, 'show']);
-    });
-});
+Route::get('scoring/mesin', [MachineScoringController::class, 'api_scoring_mesin'])->name('api_scoring.mesin');
+////// api utility listrik routes ///////
+@include 'utility/api-listrik-routes.php';
+@include 'utility/api-air-routes.php';
+@include 'utility/api-chemical-routes.php';
+//api wwtp //
+@include 'utility/api-wwtp-routes.php';
+@include 'boiler/api_boiler.php';

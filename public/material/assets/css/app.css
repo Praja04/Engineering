@@ -3324,7 +3324,7 @@ code {
 
 #back-to-top {
   position: fixed;
-  bottom: 100px;
+  bottom: 80px;
   left: 28px;
   -webkit-transition: all 0.5s ease;
   transition: all 0.5s ease;

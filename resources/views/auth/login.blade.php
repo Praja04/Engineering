@@ -202,33 +202,38 @@
                         error: function(xhr) {
                             Swal.close(); // Tutup loading saat error
 
-                            if (xhr.status === 401) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Unauthorized!',
-                                    text: 'Username atau password salah.'
-                                });
-                            } else if (xhr.status === 403) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Akses Ditolak!',
-                                    text: 'Jabatan tidak dikenali.'
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Terjadi Kesalahan!',
-                                    text: 'Terjadi kesalahan pada server.'
-                                });
-                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Login Gagal!',
+                                text: xhr.responseJSON?.message ??
+                                    "Terjadi kesalahan pada server."
+                            });
+                            // if (xhr.status === 401) {
+                            //     Swal.fire({
+                            //         icon: 'error',
+                            //         title: 'Login Gagal!',
+                            //         text: xhr.responseJSON?.message ??
+                            //             "Terjadi kesalahan pada server."
+                            //     });
+                            // } else if (xhr.status === 403) {
+                            //     Swal.fire({
+                            //         icon: 'error',
+                            //         title: 'Akses Ditolak!',
+                            //         text: 'Jabatan tidak dikenali.'
+                            //     });
+                            // } else {
+                            //     Swal.fire({
+                            //         icon: 'error',
+                            //         title: 'Terjadi Kesalahan!',
+                            //         text: 'Terjadi kesalahan pada server.'
+                            //     });
+                            // }
                         }
                     });
                 });
 
             });
         </script>
-
-
     </body>
 
 </html>
