@@ -18,11 +18,11 @@
                         class="nav-link {{ request()->routeIs('boiler.form') ? 'active' : '' }}">
                         <i class="mdi mdi-file-document"></i>Form Boiler</a>
                 </li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a href="{{ route('boiler.data') }}"
                         class="nav-link {{ request()->routeIs('boiler.data') ? 'active' : '' }}" data-key="t-tkbm">
                         <i class="mdi mdi-book-open"></i>Data Boiler</a>
-                </li>
+                </li> --}}
             </ul>
         </div>
     </li>

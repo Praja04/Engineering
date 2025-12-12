@@ -62,12 +62,11 @@
                         <!-- WEEKLY TAB -->
                         <div class="tab-pane fade show active" id="weeklyPane" role="tabpanel">
                             <table class="table table-borderless table-striped table-hover align-middle text-nowrap"
-                                id="tableWeekly">
+                                id="tableBoiler">
                                 <thead class="table-light">
                                     <tr>
                                         <th>No</th>
-                                        <th>Tgl Awal</th>
-                                        <th>Tgl Akhir</th>
+                                        <th>Tanggal</th>
                                         <th>Batu Bara (Ton)</th>
                                         <th>Steam (m³)</th>
                                         <th>Aksi</th>
@@ -387,6 +386,7 @@
                     }
 
                     // SET VALUE NORMAL
+                    $('#editMonth').val(data.month);
                     $('#batuBara').val(formatNumber(data.batu_bara));
                     $('#steam').val(formatNumber(data.steam));
 

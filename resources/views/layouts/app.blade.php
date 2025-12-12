@@ -97,6 +97,8 @@
         <script src="{{ asset('material/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
         <script src="{{ asset('material/assets/js/highcharts.js') }}"></script>
         <script src="https://code.highcharts.com/highcharts.js"></script>
+        <script src="https://code.highcharts.com/stock/highstock.js"></script>
+
         <!-- App js -->
         <script src="{{ asset('material/assets/libs/aos/aos.js') }}"></script>
         <script src="{{ asset('material/assets/js/pages/animation-aos.init.js') }}"></script>
