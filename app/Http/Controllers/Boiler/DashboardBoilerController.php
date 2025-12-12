@@ -19,124 +19,54 @@ class DashboardBoilerController extends Controller
         return view('dashboard.boiler.kpi_dashboard');
     }
 
-    public function getBatuBaraSteam()
+    public function getBatuBaraSteam(Request $request)
     {
-        $weeklyGrouped = BoilerModel::where('periode_tipe', 'weekly')
-            ->get()
-            ->map(function ($item) {
+        $query = BoilerModel::orderBy('date', 'asc');
 
-                $month = substr($item->start_date, 0, 7);
-
-                return [
-                    'month' => $month,
-                    'batu_bara' => (float) $item->batu_bara,
-                    'steam' => (float) $item->steam,
-                ];
-            })
-            ->groupBy('month')
-            ->map(function ($group) {
-                return [
-                    'month' => $group->first()['month'],
-                    'total_batubara' => $group->sum('batu_bara'),
-                    'total_steam' => $group->sum('steam'),
-                ];
-            });
-
-        // Ambil monthly
-        $monthly = BoilerModel::where('periode_tipe', 'monthly')
-            ->selectRaw('month, SUM(batu_bara) as total_batubara, SUM(steam) as total_steam')
-            ->groupBy('month')
-            ->get()
-            ->keyBy('month');
-
-        // Gabungkan
-        $finalData = collect([]);
-
-        // Semua bulan yang ada di weekly maupun monthly
-        $allMonths = $weeklyGrouped->keys()
-            ->merge($monthly->keys())
-            ->unique()
-            ->sort();
-
-        foreach ($allMonths as $month) {
-
-            if ($monthly->has($month)) {
-                // Monthly punya prioritas
-                $row = $monthly[$month];
-                $total_bb = (float) $row->total_batubara;
-                $total_steam = (float) $row->total_steam;
-            } else {
-                // Jika monthly tidak ada → ambil weekly
-                $row = $weeklyGrouped[$month];
-                $total_bb = (float) $row['total_batubara'];
-                $total_steam = (float) $row['total_steam'];
-            }
-
-            // Hitung rasio
-            $rasio = $total_steam > 0 ? ($total_bb / $total_steam) * 1000 : 0;
-
-            $finalData->push([
-                'month' => $month,
-                'total_batubara' => $total_bb,
-                'total_steam' => $total_steam,
-                'rasio' => $rasio,
-            ]);
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
         }
 
+        $data = $query->get()->map(function ($item) {
+            $steam = (float) $item->steam;
+            $bb = (float) $item->batu_bara;
+
+            return [
+                'date' => $item->date,
+                'steam' => $steam,
+                'batu_bara' => $bb,
+                'rasio' => $steam > 0 ? ($bb / $steam) * 1000 : 0
+            ];
+        });
+
         return response()->json([
-            'status' => 'success',
-            'message' => 'Data Batubara & Steam berhasil diambil',
-            'data' => $finalData
+            'success' => true,
+            'data' => $data
         ]);
     }
 
-    public function getSteamFg()
+    public function getSteamFg(Request $request)
     {
-        $steamWeekly = BoilerModel::where('periode_tipe', 'weekly')
+        $start = $request->start_date;
+        $end = $request->end_date;
+
+        $steamQuery = BoilerModel::query();
+
+        if ($start) {
+            $steamQuery->whereDate('date', '>=', $start);
+        }
+
+        if ($end) {
+            $steamQuery->whereDate('date', '<=', $end);
+        }
+
+        $steamDaily = $steamQuery->orderBy('date', 'asc')
             ->get()
             ->map(function ($item) {
-
-                $month = substr($item->start_date, 0, 7);
-
                 return [
-                    'month' => $month,
-                    'steam' => (float) $item->steam
-                ];
-            })
-            ->groupBy('month')
-            ->map(function ($group) {
-                return [
-                    'month' => $group->first()['month'],
-                    'steam' => $group->sum('steam')
-                ];
-            });
-
-        $steamMonthly = BoilerModel::where('periode_tipe', 'monthly')
-            ->get()
-            ->keyBy('month')
-            ->map(function ($item) {
-                return [
-                    'month' => $item->month,
-                    'steam' => (float) $item->steam
-                ];
-            });
-
-        $fgWeekly = KpiModel::where('periode_tipe', 'weekly')
-            ->get()
-            ->map(function ($item) {
-
-                $month = substr($item->start_date, 0, 7);
-
-                return [
-                    'month' => $month,
-                    'finish_goods' => (float) $item->finish_goods
-                ];
-            })
-            ->groupBy('month')
-            ->map(function ($group) {
-                return [
-                    'month' => $group->first()['month'],
-                    'finish_goods' => $group->sum('finish_goods')
+                    'date' => $item->date,
+                    'steam' => (float) $item->steam,
+                    'month' => substr($item->date, 0, 7)
                 ];
             });
 
@@ -146,40 +76,46 @@ class DashboardBoilerController extends Controller
             ->map(function ($item) {
                 return [
                     'month' => $item->month,
-                    'finish_goods' => (float) $item->finish_goods
+                    'fg' => (float) $item->finish_goods
                 ];
             });
 
-        $allMonths = $steamWeekly->keys()
-            ->merge($steamMonthly->keys())
-            ->merge($fgWeekly->keys())
-            ->merge($fgMonthly->keys())
-            ->unique()
-            ->sort();
+        $fgWeekly = KpiModel::where('periode_tipe', 'weekly')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'start_date' => $item->start_date,
+                    'end_date' => $item->end_date,
+                    'fg' => (float) $item->finish_goods
+                ];
+            });
 
         $final = collect([]);
 
-        foreach ($allMonths as $month) {
+        foreach ($steamDaily as $row) {
 
-            if ($steamMonthly->has($month)) {
-                $steam = $steamMonthly[$month]['steam'];
-            } else {
-                $steam = $steamWeekly->has($month) ? $steamWeekly[$month]['steam'] : 0;
-            }
+            $date = $row['date'];
+            $month = $row['month'];
 
             if ($fgMonthly->has($month)) {
-                $fg = $fgMonthly[$month]['finish_goods'];
+                $fgValue = $fgMonthly[$month]['fg'];
             } else {
-                $fg = $fgWeekly->has($month) ? $fgWeekly[$month]['finish_goods'] : 0;
+                $fgValue = 0;
+                foreach ($fgWeekly as $week) {
+                    if ($date >= $week['start_date'] && $date <= $week['end_date']) {
+                        $fgValue = $week['fg'];
+                        break;
+                    }
+                }
             }
 
-            // Rasio
-            $rasio = $fg > 0 ? ($steam / $fg) : 0;
+            $steam = $row['steam'];
+            $rasio = $fgValue > 0 ? ($steam / $fgValue) * 1000 : 0;
 
             $final->push([
-                'month' => $month,
+                'date' => $date,
                 'steam' => $steam,
-                'finish_goods' => $fg,
+                'finish_goods' => $fgValue,
                 'rasio' => $rasio,
             ]);
         }
@@ -191,54 +127,28 @@ class DashboardBoilerController extends Controller
         ]);
     }
 
-    public function getBatuBaraFg()
+    public function getBatuBaraFg(Request $request)
     {
-        $bbWeekly = BoilerModel::where('periode_tipe', 'weekly')
+        $start = $request->start_date;
+        $end = $request->end_date;
+
+        $bbQuery = BoilerModel::query();
+
+        if ($start) {
+            $bbQuery->whereDate('date', '>=', $start);
+        }
+
+        if ($end) {
+            $bbQuery->whereDate('date', '<=', $end);
+        }
+
+        $bbDaily = $bbQuery->orderBy('date', 'asc')
             ->get()
             ->map(function ($item) {
-
-                // Ambil bulan dari start_date: "2025-11-17" → "2025-11"
-                $month = substr($item->start_date, 0, 7);
-
                 return [
-                    'month' => $month,
-                    'batu_bara' => (float) $item->batu_bara
-                ];
-            })
-            ->groupBy('month')
-            ->map(function ($group) {
-                return [
-                    'month' => $group->first()['month'],
-                    'batu_bara' => $group->sum('batu_bara')
-                ];
-            });
-
-        $bbMonthly = BoilerModel::where('periode_tipe', 'monthly')
-            ->get()
-            ->keyBy('month')
-            ->map(function ($item) {
-                return [
-                    'month' => $item->month,
-                    'batu_bara' => (float) $item->batu_bara
-                ];
-            });
-
-        $fgWeekly = KpiModel::where('periode_tipe', 'weekly')
-            ->get()
-            ->map(function ($item) {
-
-                $month = substr($item->start_date, 0, 7);
-
-                return [
-                    'month' => $month,
-                    'finish_goods' => (float) $item->finish_goods
-                ];
-            })
-            ->groupBy('month')
-            ->map(function ($group) {
-                return [
-                    'month' => $group->first()['month'],
-                    'finish_goods' => $group->sum('finish_goods')
+                    'date' => $item->date,
+                    'batu_bara' => (float) $item->batu_bara,
+                    'month' => substr($item->date, 0, 7)
                 ];
             });
 
@@ -248,43 +158,47 @@ class DashboardBoilerController extends Controller
             ->map(function ($item) {
                 return [
                     'month' => $item->month,
-                    'finish_goods' => (float) $item->finish_goods
+                    'fg' => (float) $item->finish_goods
                 ];
             });
 
-        $allMonths = $bbWeekly->keys()
-            ->merge($bbMonthly->keys())
-            ->merge($fgWeekly->keys())
-            ->merge($fgMonthly->keys())
-            ->unique()
-            ->sort();
+        $fgWeekly = KpiModel::where('periode_tipe', 'weekly')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'start_date'   => $item->start_date,
+                    'end_date'     => $item->end_date,
+                    'fg'           => (float) $item->finish_goods
+                ];
+            });
 
         $final = collect([]);
 
-        foreach ($allMonths as $month) {
+        foreach ($bbDaily as $row) {
 
-            // Batu bara → monthly > weekly > 0
-            if ($bbMonthly->has($month)) {
-                $batuBara = $bbMonthly[$month]['batu_bara'];
-            } else {
-                $batuBara = $bbWeekly->has($month) ? $bbWeekly[$month]['batu_bara'] : 0;
-            }
+            $date = $row['date'];
+            $month = $row['month'];
 
-            // Finish goods → monthly > weekly > 0
             if ($fgMonthly->has($month)) {
-                $finishGoods = $fgMonthly[$month]['finish_goods'];
+                $fgValue = $fgMonthly[$month]['fg'];
             } else {
-                $finishGoods = $fgWeekly->has($month) ? $fgWeekly[$month]['finish_goods'] : 0;
+                $fgValue = 0;
+                foreach ($fgWeekly as $week) {
+                    if ($date >= $week['start_date'] && $date <= $week['end_date']) {
+                        $fgValue = $week['fg'];
+                        break;
+                    }
+                }
             }
 
-            // Rasio
-            $rasio = $finishGoods > 0 ? ($batuBara / $finishGoods) : 0;
+            $bbValue = $row['batu_bara'];
+            $rasio = $fgValue > 0 ? ($bbValue / $fgValue) * 1000 : 0;
 
             $final->push([
-                'month'        => $month,
-                'batu_bara'    => $batuBara,
-                'finish_goods' => $finishGoods,
-                'rasio'        => $rasio
+                'date'          => $date,
+                'batu_bara'     => $bbValue,
+                'finish_goods'  => $fgValue,
+                'rasio'         => $rasio
             ]);
         }
 
