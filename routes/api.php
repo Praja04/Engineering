@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ScoringMesin\MachineScoringController;
 use App\Http\Controllers\Auth\TokenAuthController;
 
-Route::post('/auth/validate-token', [TokenAuthController::class, 'receiveToken']);
+// Route::post('/auth/validate-token', [TokenAuthController::class, 'receiveToken']);
 // Api Kalibrasi Routes
 @include 'kalibrasi/api_kalibrasi.php';
 
