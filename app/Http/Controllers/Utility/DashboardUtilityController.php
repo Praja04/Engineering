@@ -24,8 +24,12 @@ class DashboardUtilityController extends Controller
     {
         return view('dashboard.utility.chemical');
     }
-    public function wwtp()
+    public function wwtp_proses()
     {
-        return view('dashboard.wwtp.dashboard');
+        return view('dashboard.wwtp.dashboard_proses');
+    }
+    public function wwtp_performance()
+    {
+        return view('dashboard.wwtp.dashboard_performance');
     }
 }
