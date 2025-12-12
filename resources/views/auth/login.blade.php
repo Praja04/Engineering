@@ -178,7 +178,7 @@
                         data: {
                             username: $('#username').val(),
                             password: $('#password').val(),
-                            _token: $('meta[name="csrf-token"]').attr('content')
+                            _token: '{{ csrf_token() }}'
                         },
                         success: function(response) {
                             Swal.close(); // Tutup loading
