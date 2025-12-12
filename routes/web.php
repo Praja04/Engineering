@@ -53,3 +53,9 @@ Route::middleware('auth')->group(function () {
 
 });
 //////////   API Routes   ///////////
+Route::get('/debug-session', function () {
+    return response()->json([
+        'session_id' => session()->getId(),
+        'token' => csrf_token(),
+    ]);
+});
