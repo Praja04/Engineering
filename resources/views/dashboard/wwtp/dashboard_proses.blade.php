@@ -10,7 +10,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">Dashboard WWTP (Wastewater Treatment Plant)</h4>
+                    <h4 class="mb-sm-0">Dashboard WWTP Proses</h4>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="#">Utility</a></li>
@@ -189,7 +189,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <canvas id="influentChart" height="320"></canvas>
+                        <div id="influentChart"></div>
                     </div>
                 </div>
             </div>
@@ -201,7 +201,7 @@
                         <h4 class="card-title mb-0">Influent Source Distribution</h4>
                     </div>
                     <div class="card-body">
-                        <canvas id="influentPieChart" height="320"></canvas>
+                        <div id="influentPieChart"></div>
                     </div>
                 </div>
             </div>
@@ -224,7 +224,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <canvas id="effluentChart" height="320"></canvas>
+                        <div id="effluentChart"></div>
                     </div>
                 </div>
             </div>
@@ -236,7 +236,7 @@
                         <h4 class="card-title mb-0">Effluent Process Distribution</h4>
                     </div>
                     <div class="card-body">
-                        <canvas id="effluentPieChart" height="320"></canvas>
+                        <div id="effluentPieChart"></div>
                     </div>
                 </div>
             </div>
@@ -250,7 +250,7 @@
                         <h4 class="card-title mb-0">6-Month Comparison</h4>
                     </div>
                     <div class="card-body">
-                        <canvas id="monthlyComparisonChart" height="100"></canvas>
+                        <div id="monthlyComparisonChart"></div>
                     </div>
                 </div>
             </div>
@@ -319,8 +319,15 @@
             transform: scale(1);
         }
     }
-</style>\
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    .apexcharts-tooltip {
+        background: #fff !important;
+        border: 1px solid #e3e6ef !important;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     let influentChart, effluentChart, influentPieChart, effluentPieChart, monthlyComparisonChart;
     let allInfluentData = [];
@@ -401,163 +408,279 @@
     // Initialize Charts
     function initCharts() {
         // Influent Line Chart
-        const influentCtx = document.getElementById('influentChart').getContext('2d');
-        influentChart = new Chart(influentCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                        label: 'Pit Sparta',
-                        data: [],
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'Pit Garam',
-                        data: [],
-                        borderColor: 'rgb(255, 99, 132)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'Pit Domestik',
-                        data: [],
-                        borderColor: 'rgb(54, 162, 235)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
+        const influentOptions = {
+            series: [{
+                name: 'Pit Sparta',
+                data: []
+            }, {
+                name: 'Pit Garam',
+                data: []
+            }, {
+                name: 'Pit Domestik',
+                data: []
+            }],
+            chart: {
+                type: 'area',
+                height: 320,
+                toolbar: {
+                    show: true,
+                    tools: {
+                        download: true,
+                        selection: true,
+                        zoom: true,
+                        zoomin: true,
+                        zoomout: true,
+                        pan: true,
+                        reset: true
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value + ' m³';
-                            }
-                        }
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
+            },
+            colors: ['#4bc0c0', '#ff6384', '#36a2eb'],
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.4,
+                    opacityTo: 0.1,
+                }
+            },
+            xaxis: {
+                categories: [],
+                labels: {
+                    rotate: -45,
+                    rotateAlways: false
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Volume (m³)'
+                },
+                labels: {
+                    formatter: function(value) {
+                        return value.toFixed(0) + ' m³';
                     }
                 }
+            },
+            tooltip: {
+                shared: true,
+                intersect: false,
+                y: {
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' m³';
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center'
+            },
+            grid: {
+                borderColor: '#f1f1f1'
             }
-        });
+        };
+        influentChart = new ApexCharts(document.querySelector("#influentChart"), influentOptions);
+        influentChart.render();
 
         // Effluent Line Chart
-        const effluentCtx = document.getElementById('effluentChart').getContext('2d');
-        effluentChart = new Chart(effluentCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                        label: 'Full Proses',
-                        data: [],
-                        borderColor: 'rgb(153, 102, 255)',
-                        backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'DAF Pre',
-                        data: [],
-                        borderColor: 'rgb(255, 159, 64)',
-                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
+        const effluentOptions = {
+            series: [{
+                name: 'Full Proses',
+                data: []
+            }, {
+                name: 'DAF Pre',
+                data: []
+            }],
+            chart: {
+                type: 'area',
+                height: 320,
+                toolbar: {
+                    show: true,
+                    tools: {
+                        download: true,
+                        selection: true,
+                        zoom: true,
+                        zoomin: true,
+                        zoomout: true,
+                        pan: true,
+                        reset: true
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value + ' m³';
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
+            },
+            colors: ['#9966ff', '#ff9f40'],
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.4,
+                    opacityTo: 0.1,
+                }
+            },
+            xaxis: {
+                categories: [],
+                labels: {
+                    rotate: -45,
+                    rotateAlways: false
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Volume (m³)'
+                },
+                labels: {
+                    formatter: function(value) {
+                        return value.toFixed(0) + ' m³';
+                    }
+                }
+            },
+            tooltip: {
+                shared: true,
+                intersect: false,
+                y: {
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' m³';
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center'
+            },
+            grid: {
+                borderColor: '#f1f1f1'
+            }
+        };
+        effluentChart = new ApexCharts(document.querySelector("#effluentChart"), effluentOptions);
+        effluentChart.render();
+
+        // Influent Pie Chart
+        const influentPieOptions = {
+            series: [0, 0, 0],
+            chart: {
+                type: 'donut',
+                height: 320,
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
+            },
+            labels: ['Pit Sparta', 'Pit Garam', 'Pit Domestik'],
+            colors: ['#4bc0c0', '#ff6384', '#36a2eb'],
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center'
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) {
+                    return val.toFixed(1) + '%';
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' m³';
+                    }
+                }
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                formatter: function(w) {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toFixed(2) + ' m³';
+                                }
                             }
                         }
                     }
                 }
             }
-        });
-
-        // Influent Pie Chart
-        const influentPieCtx = document.getElementById('influentPieChart').getContext('2d');
-        influentPieChart = new Chart(influentPieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Pit Sparta', 'Pit Garam', 'Pit Domestik'],
-                datasets: [{
-                    data: [0, 0, 0],
-                    backgroundColor: [
-                        'rgba(75, 192, 192, 0.8)',
-                        'rgba(255, 99, 132, 0.8)',
-                        'rgba(54, 162, 235, 0.8)'
-                    ],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
+        };
+        influentPieChart = new ApexCharts(document.querySelector("#influentPieChart"), influentPieOptions);
+        influentPieChart.render();
 
         // Effluent Pie Chart
-        const effluentPieCtx = document.getElementById('effluentPieChart').getContext('2d');
-        effluentPieChart = new Chart(effluentPieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Full Proses', 'DAF Pre'],
-                datasets: [{
-                    data: [0, 0],
-                    backgroundColor: [
-                        'rgba(153, 102, 255, 0.8)',
-                        'rgba(255, 159, 64, 0.8)'
-                    ],
-                    borderWidth: 2
-                }]
+        const effluentPieOptions = {
+            series: [0, 0],
+            chart: {
+                type: 'donut',
+                height: 320,
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
+            labels: ['Full Proses', 'DAF Pre'],
+            colors: ['#9966ff', '#ff9f40'],
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center'
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) {
+                    return val.toFixed(1) + '%';
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(value) {
+                        return value.toFixed(2) + ' m³';
+                    }
+                }
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                formatter: function(w) {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toFixed(2) + ' m³';
+                                }
+                            }
+                        }
                     }
                 }
             }
-        });
+        };
+        effluentPieChart = new ApexCharts(document.querySelector("#effluentPieChart"), effluentPieOptions);
+        effluentPieChart.render();
 
         // Load initial data
         updateInfluentChart();
@@ -573,25 +696,41 @@
 
             allInfluentData = data;
 
-            influentChart.data.labels = data.map(d => {
+            const categories = data.map(d => {
                 const date = new Date(d.tanggal);
                 return date.toLocaleDateString('id-ID', {
                     day: '2-digit',
                     month: 'short'
                 });
             });
-            influentChart.data.datasets[0].data = data.map(d => d.pit_sparta);
-            influentChart.data.datasets[1].data = data.map(d => d.pit_garam);
-            influentChart.data.datasets[2].data = data.map(d => d.pit_domestik);
-            influentChart.update();
+
+            const spartaData = data.map(d => parseFloat(d.pit_sparta) || 0);
+            const garamData = data.map(d => parseFloat(d.pit_garam) || 0);
+            const domestikData = data.map(d => parseFloat(d.pit_domestik) || 0);
+
+            influentChart.updateOptions({
+                xaxis: {
+                    categories: categories
+                }
+            });
+
+            influentChart.updateSeries([{
+                name: 'Pit Sparta',
+                data: spartaData
+            }, {
+                name: 'Pit Garam',
+                data: garamData
+            }, {
+                name: 'Pit Domestik',
+                data: domestikData
+            }]);
 
             // Update pie chart
-            const totalSparta = data.reduce((sum, d) => sum + d.pit_sparta, 0);
-            const totalGaram = data.reduce((sum, d) => sum + d.pit_garam, 0);
-            const totalDomestik = data.reduce((sum, d) => sum + d.pit_domestik, 0);
+            const totalSparta = spartaData.reduce((sum, val) => sum + val, 0);
+            const totalGaram = garamData.reduce((sum, val) => sum + val, 0);
+            const totalDomestik = domestikData.reduce((sum, val) => sum + val, 0);
 
-            influentPieChart.data.datasets[0].data = [totalSparta, totalGaram, totalDomestik];
-            influentPieChart.update();
+            influentPieChart.updateSeries([totalSparta, totalGaram, totalDomestik]);
 
         } catch (error) {
             console.error('Error updating influent chart:', error);
@@ -607,23 +746,36 @@
 
             allEffluentData = data;
 
-            effluentChart.data.labels = data.map(d => {
+            const categories = data.map(d => {
                 const date = new Date(d.tanggal);
                 return date.toLocaleDateString('id-ID', {
                     day: '2-digit',
                     month: 'short'
                 });
             });
-            effluentChart.data.datasets[0].data = data.map(d => d.full_proses);
-            effluentChart.data.datasets[1].data = data.map(d => d.daf_pre);
-            effluentChart.update();
+
+            const fullProsesData = data.map(d => parseFloat(d.full_proses) || 0);
+            const dafPreData = data.map(d => parseFloat(d.daf_pre) || 0);
+
+            effluentChart.updateOptions({
+                xaxis: {
+                    categories: categories
+                }
+            });
+
+            effluentChart.updateSeries([{
+                name: 'Full Proses',
+                data: fullProsesData
+            }, {
+                name: 'DAF Pre',
+                data: dafPreData
+            }]);
 
             // Update pie chart
-            const totalFullProses = data.reduce((sum, d) => sum + d.full_proses, 0);
-            const totalDafPre = data.reduce((sum, d) => sum + d.daf_pre, 0);
+            const totalFullProses = fullProsesData.reduce((sum, val) => sum + val, 0);
+            const totalDafPre = dafPreData.reduce((sum, val) => sum + val, 0);
 
-            effluentPieChart.data.datasets[0].data = [totalFullProses, totalDafPre];
-            effluentPieChart.update();
+            effluentPieChart.updateSeries([totalFullProses, totalDafPre]);
 
         } catch (error) {
             console.error('Error updating effluent chart:', error);
@@ -636,47 +788,79 @@
             const response = await fetch('/api/wwtp/dashboard/monthly-comparison');
             const data = await response.json();
 
-            const ctx = document.getElementById('monthlyComparisonChart').getContext('2d');
-            monthlyComparisonChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.map(d => d.month),
-                    datasets: [{
-                            label: 'Influent',
-                            data: data.map(d => d.influent),
-                            backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                            borderColor: 'rgb(54, 162, 235)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Effluent',
-                            data: data.map(d => d.effluent),
-                            backgroundColor: 'rgba(153, 102, 255, 0.8)',
-                            borderColor: 'rgb(153, 102, 255)',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
+            const options = {
+                series: [{
+                    name: 'Influent',
+                    data: data.map(d => parseFloat(d.influent) || 0)
+                }, {
+                    name: 'Effluent',
+                    data: data.map(d => parseFloat(d.effluent) || 0)
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    toolbar: {
+                        show: true
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + ' m³';
-                                }
-                            }
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 800
+                    }
+                },
+                colors: ['#36a2eb', '#9966ff'],
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        endingShape: 'rounded',
+                        dataLabels: {
+                            position: 'top'
                         }
                     }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    show: true,
+                    width: 2,
+                    colors: ['transparent']
+                },
+                xaxis: {
+                    categories: data.map(d => d.month)
+                },
+                yaxis: {
+                    title: {
+                        text: 'Volume (m³)'
+                    },
+                    labels: {
+                        formatter: function(value) {
+                            return value.toFixed(0) + ' m³';
+                        }
+                    }
+                },
+                fill: {
+                    opacity: 1
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(value) {
+                            return value.toFixed(2) + ' m³';
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    horizontalAlign: 'center'
+                },
+                grid: {
+                    borderColor: '#f1f1f1'
                 }
-            });
+            };
+
+            monthlyComparisonChart = new ApexCharts(document.querySelector("#monthlyComparisonChart"), options);
+            monthlyComparisonChart.render();
 
         } catch (error) {
             console.error('Error loading monthly comparison:', error);

@@ -18,12 +18,7 @@ $jabatan === 'supervisor' ||
     <div class="collapse menu-dropdown {{ request()->routeIs('kpi.*') ? 'show' : '' }}" id="sidebarUtility">
         <ul class="nav nav-sm flex-column">
 
-            <li class="nav-item">
-                <a class="nav-link menu-link" href="{{ url('wwtp') }}">
-                    <i class="mdi mdi-water-pump"></i>
-                    <span data-key="t-widgets">Form WWTP</span>
-                </a>
-            </li>
+          
 
             <li class="nav-item">
                 <a class="nav-link menu-link" href="{{ url('utility/form') }}">
@@ -31,27 +26,13 @@ $jabatan === 'supervisor' ||
                     <span data-key="t-widgets">Form Utility</span>
                 </a>
             </li>
-
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('kpi.form') ? 'active' : '' }}" href="{{ url('kpi/form') }}">
-                    <i class="mdi mdi-chart-line"></i>
-                    <span data-key="t-widgets">Form KPI</span>
-                </a>
-            </li>
-
+ 
             <li class="nav-item">
                 <a class="nav-link menu-link" href="{{ url('utility/data') }}">
                     <i class="mdi mdi-database-eye-outline"></i>
                     <span data-key="t-widgets">Data Utility</span>
                 </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('kpi.data') ? 'active' : '' }}" href="{{ url('kpi/data') }}">
-                    <i class="mdi mdi-chart-box"></i>
-                    <span data-key="t-widgets">Data KPI</span>
-                </a>
-            </li>
+            </li> 
 
         </ul>
     </div>

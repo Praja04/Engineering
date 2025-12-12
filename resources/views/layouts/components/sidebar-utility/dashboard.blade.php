@@ -36,8 +36,14 @@ $bagian = Auth::user()->bagian;
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link menu-link" href="{{ url('wwtp/dashboard') }}">
-                    <i class="mdi mdi-card-account-details"></i> <span data-key="t-widgets">Dashboard WWTP</span>
+                <a class="nav-link menu-link" href="{{ url('wwtp/dashboard/proses') }}">
+                    <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets">Proses WWTP</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link menu-link" href="{{ url('wwtp/dashboard/performance') }}">
+                    <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets">Performance WWTP</span>
                 </a>
             </li>
         </ul>

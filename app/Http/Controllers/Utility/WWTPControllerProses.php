@@ -9,13 +9,15 @@ use App\Models\Utility\WwtpInfluent;
 use App\Models\Utility\WwtpEffluent;
 use Carbon\Carbon;
 
-class WWTPController extends Controller
+class WWTPControllerProses extends Controller
 {
     //
-    public function page()
+    public function proses()
     {
-        return view('utility.wwtp.index');
+        return view('utility.wwtp.proses');
     }
+
+   
     /**
      * Menampilkan semua record WWTP
      */
