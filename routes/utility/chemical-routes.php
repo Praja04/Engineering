@@ -2,8 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\ChemicalController;
-use App\Http\Controllers\Utility\WWTPControllerProses;
-use App\Http\Controllers\Utility\WWTPControllerPerformance;
 
 
 
@@ -22,10 +20,4 @@ Route::prefix('utility')->middleware('auth')->group(function () {
     Route::post('/update-pemakaian-chemical', [ChemicalController::class, 'updateChemical']);
 
     Route::get('/export-pemakaian-chemical', [ChemicalController::class, 'exportPemakaianChemicalSpreadsheet']);
-});
-
-
-Route::middleware('auth')->group(function () {
-    Route::get('/wwtp/proses', [WWTPControllerProses::class, 'proses'])->name('wwtp.proses');
-    Route::get('/wwtp/performance', [WWTPControllerPerformance::class, 'performance'])->name('wwtp.performance');
 });
