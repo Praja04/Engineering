@@ -40,7 +40,7 @@ Route::middleware('auth')->group(function () {
     @include 'scoring/scoring-routes.php';
     @include 'utility/listrik-routes.php';
     @include 'utility/air-routes.php';
-    @include 'utility/wwtp-routes.php';
+    // @include 'utility/wwtp-routes.php';
     @include 'utility/chemical-routes.php';
     @include 'utility/dashboard.php';
 
@@ -51,9 +51,4 @@ Route::middleware('auth')->group(function () {
     @include('boiler/boiler.php');
     // End Boiler Routes
 
-});
-//////////   API Routes   ///////////
-Route::get('/test-session', function () {
-    session(['test' => 'value123']);
-    return session('test');
 });
