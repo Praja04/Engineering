@@ -6,71 +6,97 @@
     <div class="page-content">
         <div class="container-fluid">
             <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Form Boiler</h5>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalBoiler">
+                        <i class="mdi mdi-plus-circle-outline me-2"></i> Tambah Data Boiler
+                    </button>
                 </div>
 
                 <div class="card-body">
-                    {{-- Pilihan Jenis Input --}}
-                    <div class="mb-4">
-                        <label for="tipePeriode" class="form-label fw-bold">Pilih Tipe Periode</label>
-                        <select id="tipePeriode" class="form-select" required>
-                            <option value="">Pilih tipe periode</option>
-                            <option value="weekly">Mingguan</option>
-                            <option value="monthly">Bulanan</option>
-                        </select>
-                    </div>
-
-                    {{-- Form Input Data --}}
-                    <form id="formBoiler" class="d-none">
-                        <div class="row mb-3 g-3">
-                            <!-- Weekly -->
-                            <div id="groupWeekly" class="d-none">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">Tanggal Mulai</label>
-                                        <input type="date" id="startDate" class="form-control">
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold">Tanggal Akhir</label>
-                                        <input type="date" id="endDate" class="form-control">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Monthly -->
-                            <div id="groupMonthly" class="d-none">
-                                <div class="row g-3">
-                                    <div class="col-md-12">
-                                        <label class="form-label fw-bold">Pilih Bulan</label>
-                                        <input type="month" id="monthPicker" class="form-control">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Batu Bara -->
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Batu Bara (Ton)</label>
-                                <input type="number" id="batuBara" name="batu_bara" step="0.01" min="0"
-                                    class="form-control" placeholder="Contoh: 25.5" required>
-                            </div>
-
-                            <!-- Steam -->
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Steam (m³)</label>
-                                <input type="number" id="steam" name="steam" step="0.01" min="0"
-                                    class="form-control" placeholder="Contoh: 180.0" required>
-                            </div>
+                    <form id="filterForm" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="periodeTipe" class="form-label">Start Date</label>
+                            <input type="date" id="startDate" class="form-control">
                         </div>
-
-                        <div class="text-end">
-                            <button type="submit" class="btn btn-success px-4">
-                                <i class="mdi mdi-content-save me-1"></i> Simpan
+                        <div class="col-md-4">
+                            <label for="periodeTipe" class="form-label">End Date</label>
+                            <input type="date" id="endDate" class="form-control">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="button" id="filterButton" class="btn btn-primary w-100 me-2">
+                                <i class="mdi mdi-filter-variant me-2"></i> Filter
+                            </button>
+                            <button type="button" id="resetButton" class="btn btn-secondary w-100">
+                                <i class="mdi mdi-refresh me-2"></i> Reset
                             </button>
                         </div>
                     </form>
                 </div>
+            </div>
+
+            {{-- Table Data --}}
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Data Boiler</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-borderedless table-striped text-nowrap" id="boilerTable"
+                            style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Tanggal</th>
+                                    <th>Batu Bara (Ton)</th>
+                                    <th>Steam (m³)</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{-- Data akan diisi melalui AJAX --}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Tambah/Edit --}}
+    <div class="modal fade" id="modalBoiler" tabindex="-1" aria-labelledby="modalBoilerLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-3">
+                <div class="modal-header">
+                    <i class="mdi mdi-pencil me-2"></i>
+                    <h5 class="modal-title" id="modalBoilerLabel">Tambah Data Boiler</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="formBoiler">
+                    <div class="modal-body">
+                        <input type="hidden" id="boilerId">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tanggal</label>
+                            <input type="date" id="date" class="form-control">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="batuBara" class="form-label">Batu Bara (Ton)</label>
+                            <input type="number" id="batuBara" class="form-control" step="0.01" min="0">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="steam" class="form-label">Steam (m³)</label>
+                            <input type="number" id="steam" class="form-control" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success">Simpan</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -79,79 +105,38 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            const $tipePeriode = $('#tipePeriode');
-            const $formBoiler = $('#formBoiler');
-            const $groupWeekly = $('#groupWeekly');
-            const $groupMonthly = $('#groupMonthly');
-
-            // Saat memilih jenis input
-            $tipePeriode.on('change', function() {
-                const val = $(this).val();
-
-                // Reset tampilan
-                $groupWeekly.addClass('d-none');
-                $groupMonthly.addClass('d-none');
-                $formBoiler.addClass('d-none');
-
-                if (val === 'weekly') {
-                    $groupWeekly.removeClass('d-none');
-                    $formBoiler.removeClass('d-none');
-                }
-
-                if (val === 'monthly') {
-                    $groupMonthly.removeClass('d-none');
-                    $formBoiler.removeClass('d-none');
-                }
-            });
+            const formBoiler = $('#formBoiler');
 
             // Submit form
-            $formBoiler.on('submit', function(e) {
+            formBoiler.on('submit', function(e) {
                 e.preventDefault();
+
+                const date = $('#date').val();
+                const batuBara = $('#batuBara').val();
+                const steam = $('#steam').val();
+
+                if (!date || !steam || !batuBara) {
+                    Swal.fire('Error', 'Field wajib diisi!', 'error');
+                    return;
+                }
+
+                const id = $('#boilerId').val();
+                const isUpdate = id !== '';
+                const url = isUpdate ?
+                    "{{ url('boiler/update') }}/" + id :
+                    "{{ route('boiler.store') }}";
+                const method = isUpdate ? 'PUT' : 'POST';
 
                 const formData = {
                     _token: $('meta[name="csrf-token"]').attr('content'),
-                    periode_tipe: $tipePeriode.val(),
+                    date: date,
                     batu_bara: $('#batuBara').val(),
                     steam: $('#steam').val(),
                 };
 
-                const val = $tipePeriode.val();
-
-                if (val === 'weekly') {
-                    const start = $('#startDate').val();
-                    const end = $('#endDate').val();
-
-                    if (!start || !end) {
-                        Swal.fire('Error', 'Tanggal mulai dan akhir wajib diisi!', 'error');
-                        return;
-                    }
-
-                    const diffMs = new Date(end) - new Date(start);
-                    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-                    if (diffDays < 6) {
-                        Swal.fire('Error', 'Rentang tanggal minimal harus 7 hari!', 'error');
-                        return;
-                    }
-
-                    formData.start_date = start;
-                    formData.end_date = end;
-                }
-
-                if (val === 'monthly') {
-                    const month = $('#monthPicker').val();
-
-                    if (!month) {
-                        Swal.fire('Error', 'Silakan pilih bulan!', 'error');
-                        return;
-                    }
-
-                    formData.month = month;
-                }
-
                 $.ajax({
-                    url: "{{ route('boiler.store') }}", // route dinamis Laravel
-                    type: "POST",
+                    url: url,
+                    type: method,
                     data: formData,
                     success: function(response) {
                         if (response.success) {
@@ -163,9 +148,9 @@
                                 showConfirmButton: false
                             });
 
-                            $formBoiler.trigger('reset');
-                            $tipePeriode.val('');
-                            $formBoiler.addClass('d-none');
+                            formBoiler.trigger('reset');
+                            $('#modalBoiler').modal('hide');
+                            loadData();
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -189,6 +174,165 @@
                         });
                     }
                 });
+            });
+
+            loadData();
+
+            function loadData(startDate = '', endDate = '') {
+                $.get("{{ route('boiler.get-data') }}", {
+                    start_date: startDate,
+                    end_date: endDate
+                }, function(data) {
+
+                    const tableBody = $('#boilerTable tbody');
+
+                    tableBody.empty();
+
+                    if (data.length === 0) {
+
+                        tableBody.append(`
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="d-flex flex-column align-items-center text-muted">
+                                        <i class="mdi mdi-database-off mdi-36px mb-2"></i>
+                                        <span class="fw-semibold">Tidak ada data ditemukan</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+                        return;
+                    }
+
+                    $.each(data, function(i, item) {
+                        const batuBara = formatNumber(item.batu_bara);
+                        const steam = formatNumber(item.steam);
+
+                        const date = item.date ? `${item.date}` : '-';
+
+                        tableBody.append(`
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td>${date}</td>
+                                <td>${batuBara}</td>
+                                <td>${steam}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
+                                        <i class="mdi mdi-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger btnDelete" data-id="${item.id}">
+                                        <i class="mdi mdi-delete"></i> Hapus
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+
+                    });
+
+                });
+            }
+
+            const formatNumber = (num) => {
+                const val = parseFloat(num);
+                if (isNaN(val)) return '-';
+                return val % 1 === 0 ? val.toFixed(0) : parseFloat(val.toString()).toString();
+            };
+
+            $(document).on('click', '.btnEdit', function() {
+                const id = $(this).data('id');
+
+                $.get("{{ url('boiler/show') }}/" + id, function(res) {
+
+                    if (!res.success) {
+                        return Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: res.message
+                        });
+                    }
+
+                    const data = res.data;
+
+                    $('#modalBoilerLabel').text('Edit Data Boiler');
+                    $('#boilerId').val(data.id);
+
+                    // SET VALUE NORMAL
+                    $('#date').val(data.date);
+                    $('#batuBara').val(formatNumber(data.batu_bara));
+                    $('#steam').val(formatNumber(data.steam));
+
+                    $('#modalBoiler').modal('show');
+                });
+            });
+
+            $('#modalBoiler').on('hidden.bs.modal', function() {
+                $('#modalBoilerLabel').text('Tambah Data Boiler');
+                $('#boilerId').val('');
+                $('#formBoiler')[0].reset();
+            });
+
+            // Hapus data pakai SweetAlert2
+            $(document).on('click', '.btnDelete', function() {
+                const id = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Yakin ingin menghapus data ini?',
+                    text: "Data yang dihapus tidak bisa dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ url('boiler/delete') }}/" + id,
+                            type: 'DELETE',
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(res) {
+                                if (res.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        text: res.message,
+                                        timer: 1000,
+                                        showConfirmButton: false
+                                    });
+                                    loadData('weekly');
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Gagal!',
+                                        text: 'Gagal menghapus data.'
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                console.error(xhr.responseText);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Terjadi Kesalahan!',
+                                    text: 'Terjadi kesalahan saat menghapus data!'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
+            $('#filterButton').on('click', function() {
+                const startDate = $('#startDate').val();
+                const endDate = $('#endDate').val();
+
+                loadData(startDate, endDate);
+            });
+
+            $('#resetButton').on('click', function() {
+                $('#startDate').val('');
+                $('#endDate').val('');
+                loadData();
             });
         });
     </script>

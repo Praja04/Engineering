@@ -16,40 +16,44 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    private function redirectByJabatan($jabatan)
-    {
-        return match ($jabatan) {
-            'dept_head'  => route('dashboard'),
-            'foreman'    => route('dashboard'),
-            'supervisor' => route('dashboard'),
-            'operator'   => route('dashboard'),
-            default      => route('home'),
-        };
-    }
+    private $redirects = [
+        'dept_head' => '/dashboard',
+        'supervisor' => '/dashboard',
+        'foreman' => '/dashboard',
+        'operator' => '/dashboard',
+    ];
 
     public function login(Request $request)
     {
+        if (Auth::check()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Anda sudah login.',
+                'redirect' => $this->redirectUser(Auth::user()),
+            ]);
+        }
+
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('username', $request->username)
-            ->orWhere('nik', $request->username)
-            ->first();
+        // $user = User::where('username', $request->username)
+        //     ->orWhere('nik', $request->username)
+        //     ->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Username atau password salah'
-            ], 401);
-        }
+        // if (!$user || !Hash::check($request->password, $user->password)) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Username atau password salah'
+        //     ], 401);
+        // }
 
         $credentials = $request->only('username', 'password');
 
         if (Auth::attempt($credentials)) {
-            Auth::login($user);
             $request->session()->regenerate();
+            $user = Auth::user();
             // $user = Auth::user();
 
             // $imageUrl = $user->image && url(Storage::disk('public')->exists($user->image))
@@ -67,14 +71,28 @@ class AuthController extends Controller
             //     'status'     => $user->status,
             // ]);
 
-            $intendedUrl = session()->get('url.intended', $this->redirectByJabatan($user->jabatan));
+            // $intendedUrl = session()->get('url.intended', $this->redirectByJabatan($user->jabatan));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Login berhasil.',
-                'redirect' => $intendedUrl
+                'redirect' => $this->redirectUser($user),
             ]);
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Login gagal. Periksa username atau password Anda.',
+        ], 401);
+    }
+
+    private function redirectUser($user)
+    {
+        $jabatan = strtolower($user->jabatan);
+
+        $path = $this->redirects[$jabatan] ?? '/';
+
+        return url($path);
     }
 
     public function logout(Request $request)

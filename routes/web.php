@@ -2,14 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\NotificationController; 
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Auth\TokenAuthController;
 
 // Route::get('/token-login', [TokenAuthController::class, 'loginWithToken'])
 //     ->name('auth.token-login');
-Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
-Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::middleware('web')->group(function () {
+    Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
 
 
 ///////////   View Routes   ///////////
@@ -51,4 +53,9 @@ Route::middleware('auth')->group(function () {
     @include('boiler/boiler.php');
     // End Boiler Routes
 
+});
+//////////   API Routes   ///////////
+Route::get('/test-session', function () {
+    session(['test' => 'value123']);
+    return session('test');
 });

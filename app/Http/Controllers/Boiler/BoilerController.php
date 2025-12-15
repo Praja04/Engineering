@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Boiler;
 
-use App\Http\Controllers\Controller;
-use App\Models\Boiler\BoilerModel;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Boiler\BoilerModel;
+use App\Http\Controllers\Controller;
 
 class BoilerController extends Controller
 {
@@ -22,40 +23,27 @@ class BoilerController extends Controller
     {
 
         $request->validate([
-            'periode_tipe' => 'required|in:weekly,monthly',
+            // 'periode_tipe' => 'required|in:weekly,monthly',
             'batu_bara' => 'required|numeric|min:0',
             'steam' => 'required|numeric|min:0',
-            'start_date'   => 'required_if:periode_tipe,weekly|date',
-            'end_date'     => 'required_if:periode_tipe,weekly|date|after_or_equal:start_date',
-            'month'        => 'required_if:periode_tipe,monthly|date_format:Y-m'
+            'date'   => 'required|date',
+            // 'end_date'     => 'required_if:periode_tipe,weekly|date|after_or_equal:start_date',
+            // 'month'        => 'required_if:periode_tipe,monthly|date_format:Y-m'
         ]);
 
-        $jenis = $request->periode_tipe;
+        $date = $request->date;
 
-        // ===== CEK DUPLIKAT =====
-        $exists = BoilerModel::where('periode_tipe', $jenis)
-            ->when($jenis === 'weekly', function ($q) use ($request) {
-                $q->where('start_date', $request->start_date);
-            })
-            ->when($jenis === 'monthly', function ($q) use ($request) {
-                $q->where('month', $request->month);
-            })
-            ->exists();
+        $exists = BoilerModel::where('date', $date)->exists();
 
         if ($exists) {
             return response()->json([
                 'success' => false,
-                'message' => $jenis === 'weekly'
-                    ? 'Data KPI untuk minggu tersebut sudah ada.'
-                    : 'Data KPI untuk bulan tersebut sudah ada.'
+                'message' => 'Data Boiler untuk hari ini sudah ada.'
             ], 422);
         }
 
         BoilerModel::create([
-            'periode_tipe' => $jenis,
-            'start_date'   => $jenis === 'weekly' ? $request->start_date : null,
-            'end_date'     => $jenis === 'weekly' ? $request->end_date : null,
-            'month'        => $jenis === 'monthly' ? $request->month : null,
+            'date'        => $request->date,
             'batu_bara'    => $request->batu_bara,
             'steam'        => $request->steam,
         ]);
@@ -71,15 +59,22 @@ class BoilerController extends Controller
         $query = BoilerModel::query();
 
         // filter dinamis
-        if ($request->periode_tipe) {
-            $query->where('periode_tipe', $request->periode_tipe);
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+        } elseif ($request->start_date) {
+            $query->whereDate('date', '>=', $request->start_date);
+        } elseif ($request->end_date) {
+            $query->whereDate('date', '<=', $request->end_date);
+        } else {
+            // ➤ Default: 30 hari terakhir
+            $start = Carbon::now()->subDays(30)->format('Y-m-d');
+            $end   = Carbon::now()->format('Y-m-d');
+
+            $query->whereBetween('date', [$start, $end]);
         }
 
-        // if ($request->tanggal) {
-        //     $query->whereDate('tanggal', $request->tanggal);
-        // }
+        $data = $query->orderBy('date', 'desc')->get();
 
-        $data = $query->orderBy('created_at', 'desc')->get();
         return response()->json($data);
     }
 
@@ -97,12 +92,12 @@ class BoilerController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'periode_tipe' => 'required|in:weekly,monthly',
+            // 'periode_tipe' => 'required|in:weekly,monthly',
             'batu_bara' => 'required|numeric|min:0',
             'steam' => 'required|numeric|min:0',
-            'start_date'   => 'required_if:periode_tipe,weekly|date',
-            'end_date'     => 'required_if:periode_tipe,weekly|date|after_or_equal:start_date',
-            'month'        => 'required_if:periode_tipe,monthly|date_format:Y-m'
+            'date'   => 'required|date',
+            // 'end_date'     => 'required_if:periode_tipe,weekly|date|after_or_equal:start_date',
+            // 'month'        => 'required_if:periode_tipe,monthly|date_format:Y-m'
         ]);
 
         $boiler = BoilerModel::find($id);
@@ -113,13 +108,13 @@ class BoilerController extends Controller
                 'message' => 'Data tidak ditemukan!'
             ], 404);
         }
-        $jenis = $request->periode_tipe;
+        // $jenis = $request->periode_tipe;
 
         $boiler->update([
-            'periode_tipe' => $jenis,
-            'start_date'   => $jenis === 'weekly' ? $request->start_date : null,
-            'end_date'     => $jenis === 'weekly' ? $request->end_date : null,
-            'month'        => $jenis === 'monthly' ? $request->month : null,
+            // 'periode_tipe' => $jenis,
+            // 'start_date'   => $jenis === 'weekly' ? $request->start_date : null,
+            // 'end_date'     => $jenis === 'weekly' ? $request->end_date : null,
+            'date'         => $request->date,
             'batu_bara'    => $request->batu_bara,
             'steam'        => $request->steam,
         ]);
