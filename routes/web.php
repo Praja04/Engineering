@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
     @include 'scoring/scoring-routes.php';
     @include 'utility/listrik-routes.php';
     @include 'utility/air-routes.php';
-    // @include 'utility/wwtp-routes.php';
+    @include 'utility/wwtp-routes.php';
     @include 'utility/chemical-routes.php';
     @include 'utility/dashboard.php';
 
