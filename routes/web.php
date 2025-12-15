@@ -54,8 +54,3 @@ Route::middleware('auth')->group(function () {
     // End Boiler Routes
 
 });
-//////////   API Routes   ///////////
-Route::get('/test-session', function () {
-    session(['test' => 'value123']);
-    return session('test');
-});
