@@ -4,7 +4,7 @@
 @endphp
 
 @if (in_array($jabatan, ['operator', 'foreman', 'supervisor', 'dept_head']) &&
-        in_array($bagian, ['Engineering', 'Engineering Utility']))
+        in_array($bagian, ['Engineering', 'Engineering Utility', 'Engineering WWTP']))
     <li class="nav-item">
         <a class="nav-link menu-link {{ request()->routeIs('boiler.*') ? '' : 'collapsed' }}" href="#sideBarBoiler"
             data-bs-toggle="collapse" role="button"
