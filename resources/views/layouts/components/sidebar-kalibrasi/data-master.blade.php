@@ -3,7 +3,7 @@
     $bagian = Auth::user()->bagian;
 @endphp
 
-@if ($jabatan != 'operator')
+@if ($jabatan != 'operator' && in_array($bagian, ['Engineering', 'Engineering Kalibrasi']))
     <li class="nav-item">
         <a class="nav-link menu-link {{ request()->routeIs('master.kalibrasi.*') ? '' : 'collapsed' }}"
             href="#sidebarMasterKalibrasi" data-bs-toggle="collapse" role="button"
