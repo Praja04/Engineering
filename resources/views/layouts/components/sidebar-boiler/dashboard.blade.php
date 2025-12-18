@@ -3,7 +3,7 @@
     $bagian = Auth::user()->bagian;
 @endphp
 
-@if ($jabatan != 'operator' && $bagian == 'Engineering')
+@if ($jabatan != 'operator' && in_array($bagian, ['Engineering', 'Engineering Utility', 'Engineering WWTP']))
     <li class="nav-item">
         <a class="nav-link menu-link" href="#sidebarDashboardBoiler" data-bs-toggle="collapse" role="button"
             aria-expanded="false" aria-controls="sidebarDashboardBoiler">
