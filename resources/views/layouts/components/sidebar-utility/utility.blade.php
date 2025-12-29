@@ -9,14 +9,14 @@
         ($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering WWTP'])) ||
         ($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering WWTP'])))
     <li class="nav-item">
-        <a class="nav-link menu-link {{ request()->is('utility/*') ? '' : 'collapsed' }}" href="#sidebarUtility"
+        <a class="nav-link menu-link {{ request()->is('utility/*') ? '' : 'collapsed' }}" href="#sidebarUtilityMenu"
             data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->is('utility/*') ? 'true' : 'false' }}"
-            aria-controls="sidebarUtility">
+            aria-controls="sidebarUtilityMenu">
             <i class="mdi mdi-flash"></i>
             <span data-key="t-dashboards">Utility</span>
         </a>
 
-        <div class="collapse menu-dropdown {{ request()->is('utility/*') ? 'show' : '' }}" id="sidebarUtility">
+        <div class="collapse menu-dropdown {{ request()->is('utility/*') ? 'show' : '' }}" id="sidebarUtilityMenu">
             <ul class="nav nav-sm flex-column">
                 <li class="nav-item">
                     <a class="nav-link {{ request()->is('utility/form') ? 'active' : '' }}"

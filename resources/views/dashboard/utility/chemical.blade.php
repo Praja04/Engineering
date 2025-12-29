@@ -6,8 +6,9 @@
         <!-- Page Header with Gradient Background -->
         <div class="row">
             <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-gradient-success p-4 rounded-3 mb-4 text-white shadow-lg">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between p-4 rounded-3 mb-4 text-white shadow-lg" style="background: linear-gradient(135deg, #28a745, #0d6efd);">
                     <div>
+
                         <h4 class="mb-1 text-white fw-bold">Engineering Dashboard - Chemical</h4>
                         <p class="mb-0 opacity-75">Monitor konsumsi bahan kimia secara real-time</p>
                     </div>
@@ -16,42 +17,40 @@
                             <li class="breadcrumb-item">
                                 <a href="javascript: void(0);" class="text-white-50">Dashboards</a>
                             </li>
-                            <li class="breadcrumb-item active text-white">
-                                Chemical
-                            </li>
+                            <li class="breadcrumb-item active text-white">Chemical</li>
                         </ol>
                     </div>
                 </div>
             </div>
         </div>
 
-      
-        <!-- Charts Grid -->
+        <!-- Charts Grid - Chemical Utility -->
         <div class="row g-4">
-            <!-- Chemical Usage -->
             <div class="col-xxl-12 col-lg-12">
                 <div class="card chart-card border-0 shadow-sm h-100">
                     <div class="card-header bg-transparent border-bottom-0 pb-0">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <h5 class="card-title mb-1 fw-semibold">Pemakaian Chemical</h5>
-                                <p class="text-muted mb-0 small">Konsumsi bahan kimia</p>
+                                <h5 class="card-title mb-1 fw-semibold">
+                                    <i class="ri-drop-line text-primary me-2"></i>Pemakaian Chemical Utility
+                                </h5>
+                                <p class="text-muted mb-0 small">SCF, SRTF, PT-100, SMBS, B4, SRF, Chlorin</p>
                             </div>
                             <div class="dropdown">
                                 <button class="btn btn-outline btn-sm dropdown-toggle border-0" type="button" data-bs-toggle="dropdown">
                                     <i class="ri-calendar-line me-1"></i>
-                                    <span id="selectedBulanChemical">Pilih Periode</span>
+                                    <span id="selectedBulanUtility">Pilih Periode</span>
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-end p-3 border-0 shadow-lg" style="min-width: 300px;">
                                     <div class="mb-3">
                                         <label class="form-label small fw-semibold text-muted">Dari Tanggal</label>
-                                        <input type="date" id="startDateChemical" class="form-control form-control-sm">
+                                        <input type="date" id="startDateUtility" class="form-control form-control-sm">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-semibold text-muted">Sampai Tanggal</label>
-                                        <input type="date" id="endDateChemical" class="form-control form-control-sm">
+                                        <input type="date" id="endDateUtility" class="form-control form-control-sm">
                                     </div>
-                                    <button class="btn btn-primary btn-sm w-100" id="applyChemicalRange">
+                                    <button class="btn btn-primary btn-sm w-100" id="applyUtilityRange">
                                         <i class="ri-refresh-line me-1"></i>Terapkan Filter
                                     </button>
                                 </div>
@@ -59,44 +58,119 @@
                         </div>
                     </div>
                     <div class="card-body pt-2">
-                        <div class="chart-loading" id="loading-chemical">
+                        <div class="chart-loading" id="loading-utility">
                             <div class="text-center p-5">
-                                <div class="spinner-grow text-success" role="status">
+                                <div class="spinner-grow text-primary" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
-                                <p class="mt-3 text-muted mb-0">Memuat data chemical...</p>
+                                <p class="mt-3 text-muted mb-0">Memuat data chemical utility...</p>
                             </div>
                         </div>
-                        <div id="pemakaian-chemical-chart" class="apex-charts"></div>
+                        <div id="pemakaian-utility-chart" class="apex-charts"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Trend Analysis Section -->
+        <!-- Charts Grid - Chemical WWTP -->
         <div class="row g-4 mt-2">
-            <!-- Chemical Trend -->
+            <div class="col-xxl-12 col-lg-12">
+                <div class="card chart-card border-0 shadow-sm h-100">
+                    <div class="card-header bg-transparent border-bottom-0 pb-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="card-title mb-1 fw-semibold">
+                                    <i class="ri-water-flash-line text-success me-2"></i>Pemakaian Chemical WWTP
+                                </h5>
+                                <p class="text-muted mb-0 small">PAC, BE-100, C-204, C-9040, Denfloc, NaOH, dll</p>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-outline btn-sm dropdown-toggle border-0" type="button" data-bs-toggle="dropdown">
+                                    <i class="ri-calendar-line me-1"></i>
+                                    <span id="selectedBulanWWTP">Pilih Periode</span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end p-3 border-0 shadow-lg" style="min-width: 300px;">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold text-muted">Dari Tanggal</label>
+                                        <input type="date" id="startDateWWTP" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold text-muted">Sampai Tanggal</label>
+                                        <input type="date" id="endDateWWTP" class="form-control form-control-sm">
+                                    </div>
+                                    <button class="btn btn-success btn-sm w-100" id="applyWWTPRange">
+                                        <i class="ri-refresh-line me-1"></i>Terapkan Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="chart-loading" id="loading-wwtp">
+                            <div class="text-center p-5">
+                                <div class="spinner-grow text-success" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted mb-0">Memuat data chemical WWTP...</p>
+                            </div>
+                        </div>
+                        <div id="pemakaian-wwtp-chart" class="apex-charts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend Analysis Section - Chemical Utility -->
+        <div class="row g-4 mt-2">
+            <div class="col-xl-12">
+                <div class="card trend-card border-0 shadow-sm">
+                    <div class="card-header bg-gradient-primary text-white border-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="card-title mb-1 text-white fw-semibold">Trend Pemakaian Chemical Utility</h5>
+                                <p class="mb-0 opacity-75 small">Analisis pola konsumsi chemical utility harian</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="month" id="filter_bulan_utility" class="form-control form-control-sm bg-white" style="width: 140px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="chart-loading" id="loading-trend-utility">
+                            <div class="text-center p-5">
+                                <div class="spinner-grow text-primary" role="status"></div>
+                                <p class="mt-3 text-muted mb-0">Memuat trend data chemical utility...</p>
+                            </div>
+                        </div>
+                        <div id="pemakaian_utility_chart" class="apex-charts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend Analysis Section - Chemical WWTP -->
+        <div class="row g-4 mt-2">
             <div class="col-xl-12">
                 <div class="card trend-card border-0 shadow-sm">
                     <div class="card-header bg-gradient-success text-white border-0">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <h5 class="card-title mb-1 text-white fw-semibold">Trend Pemakaian Chemical</h5>
-                                <p class="mb-0 opacity-75 small">Analisis pola konsumsi chemical harian</p>
+                                <h5 class="card-title mb-1 text-white fw-semibold">Trend Pemakaian Chemical WWTP</h5>
+                                <p class="mb-0 opacity-75 small">Analisis pola konsumsi chemical WWTP harian</p>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <input type="month" id="filter_bulan_chemical" class="form-control form-control-sm bg-white" style="width: 140px;">
+                                <input type="month" id="filter_bulan_wwtp" class="form-control form-control-sm bg-white" style="width: 140px;">
                             </div>
                         </div>
                     </div>
                     <div class="card-body p-0">
-                        <div class="chart-loading" id="loading-trend-chemical">
+                        <div class="chart-loading" id="loading-trend-wwtp">
                             <div class="text-center p-5">
                                 <div class="spinner-grow text-success" role="status"></div>
-                                <p class="mt-3 text-muted mb-0">Memuat trend data chemical...</p>
+                                <p class="mt-3 text-muted mb-0">Memuat trend data chemical WWTP...</p>
                             </div>
                         </div>
-                        <div id="pemakaian_chemical_chart" class="apex-charts"></div>
+                        <div id="pemakaian_wwtp_chart" class="apex-charts"></div>
                     </div>
                 </div>
             </div>
@@ -107,7 +181,6 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-    // Simpan instance chart
     const chartInstances = {};
 
     function showLoading(id) {
@@ -118,7 +191,6 @@
         $(`#${id}`).fadeOut(300);
     }
 
-    // Base options
     function baseOptions(type = 'bar') {
         return {
             chart: {
@@ -143,7 +215,6 @@
                 labels: {
                     style: {
                         fontSize: '12px',
-                        // colors: '#8c9097'
                     }
                 }
             },
@@ -151,7 +222,6 @@
                 labels: {
                     style: {
                         fontSize: '12px',
-                        // colors: '#8c9097'
                     }
                 }
             },
@@ -172,7 +242,6 @@
         };
     }
 
-    // Render bar chart
     function renderBar(labels, values, selector, key, unit, color) {
         const options = baseOptions('bar');
         options.series = [{
@@ -247,17 +316,56 @@
         }
     }
 
-    // Fetch data untuk bar chart
-    function fetchChemical(start, end) {
-        showLoading('loading-chemical');
-        $.getJSON(`{{ url('utility/top5/chemical') }}?start_date=${start}&end_date=${end}`, data => {
-            renderBar(data.map(d => d.jenis_pemakaian), data.map(d => +d.total_pemakaian),
-                "#pemakaian-chemical-chart", 'chemical', 'kg', '#10B981');
-        }).always(() => hideLoading('loading-chemical'));
+    function fetchChemicalByArea(start, end, area, selector, loadingId, key, color) {
+        showLoading(loadingId);
+        $.getJSON(`{{ url('utility/top5/chemical') }}?start_date=${start}&end_date=${end}&area=${area}`, data => {
+            if (!data || data.length === 0) {
+                showEmptyState(selector, key, `Tidak ada data ${area.toUpperCase()} di rentang tanggal ini`);
+            } else {
+                renderBar(
+                    data.map(d => d.jenis_pemakaian),
+                    data.map(d => +d.total_pemakaian),
+                    selector,
+                    key,
+                    'kg',
+                    color
+                );
+            }
+        }).fail(() => {
+            showEmptyState(selector, key, 'Gagal memuat data. Silakan coba lagi.');
+        }).always(() => hideLoading(loadingId));
     }
 
-    // Trend chart setup
-    function setupTrend(selector, url, ySuffix, key, loadingId) {
+    function showEmptyState(selector, key, message) {
+        const options = baseOptions('bar');
+        options.series = [{
+            name: 'Data',
+            data: []
+        }];
+        options.xaxis.categories = [];
+        options.chart.height = 350;
+        options.noData = {
+            text: message,
+            align: 'center',
+            verticalAlign: 'middle',
+            offsetX: 0,
+            offsetY: 0,
+            style: {
+                color: '#9CA3AF',
+                fontSize: '16px',
+                fontFamily: 'Inter, sans-serif'
+            }
+        };
+
+        if (chartInstances[key]) {
+            chartInstances[key].updateOptions(options, true, true);
+        } else {
+            chartInstances[key] = new ApexCharts(document.querySelector(selector), options);
+            chartInstances[key].render();
+        }
+    }
+
+    function setupTrend(selector, url, ySuffix, key, loadingId, area) {
         const options = baseOptions('line');
         options.chart.height = 350;
         options.series = [];
@@ -273,51 +381,91 @@
                 formatter: v => `${v} ${ySuffix}`
             }
         };
+        options.noData = {
+            text: 'Tidak ada data untuk periode ini',
+            align: 'center',
+            verticalAlign: 'middle',
+            style: {
+                color: '#9CA3AF',
+                fontSize: '16px',
+                fontFamily: 'Inter, sans-serif'
+            }
+        };
 
         const chart = new ApexCharts(document.querySelector(selector), options);
         chart.render();
         chartInstances[key] = chart;
 
         function fetchTrend(params = {}) {
+            // Selalu tambahkan area ke params
+            const finalParams = {
+                ...params,
+                area
+            };
+
             showLoading(loadingId);
-            $.getJSON(url, params, data => {
-                chart.updateSeries(data);
+            $.getJSON(url, finalParams, data => {
+                if (!data || data.length === 0) {
+                    chart.updateSeries([]);
+                } else {
+                    chart.updateSeries(data);
+                }
+            }).fail(() => {
+                chart.updateSeries([]);
             }).always(() => hideLoading(loadingId));
         }
 
-        fetchTrend(); // initial load
+        fetchTrend(); // initial load dengan area
         return fetchTrend;
     }
 
-    // Init
     $(function() {
         const today = new Date();
         const start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
         const end = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10);
 
-        // Load bar chart
-        fetchChemical(start, end);
+        // Load bar charts
+        fetchChemicalByArea(start, end, 'utility', "#pemakaian-utility-chart", "loading-utility", 'utility', '#0EA5E9');
+        fetchChemicalByArea(start, end, 'wwtp', "#pemakaian-wwtp-chart", "loading-wwtp", 'wwtp', '#10B981');
 
-        // Trend chart
-        const fetchTrendChemical = setupTrend("#pemakaian_chemical_chart", "{{ url('utility/trend-pemakaian-chemical') }}", "kg", "trendChemical", "loading-trend-chemical");
+        // Trend charts - dengan area parameter
+        const fetchTrendUtility = setupTrend("#pemakaian_utility_chart", "{{ url('utility/trend-pemakaian-chemical') }}", "kg", "trendUtility", "loading-trend-utility", "utility");
+        const fetchTrendWWTP = setupTrend("#pemakaian_wwtp_chart", "{{ url('utility/trend-pemakaian-chemical') }}", "kg", "trendWWTP", "loading-trend-wwtp", "wwtp");
 
-        // Event listener filter bulan
-        $('#filter_bulan_chemical').on('change', function() {
-            fetchTrendChemical({
+        // Event listeners - Utility
+        $('#filter_bulan_utility').on('change', function() {
+            fetchTrendUtility({
                 bulan: this.value
             });
         });
 
-        // Event listener filter date-range
-        $("#applyChemicalRange").on("click", function() {
-            const start = $("#startDateChemical").val();
-            const end = $("#endDateChemical").val();
+        $("#applyUtilityRange").on("click", function() {
+            const start = $("#startDateUtility").val();
+            const end = $("#endDateUtility").val();
             if (!start || !end) {
                 alert("Pilih tanggal awal & akhir!");
                 return;
             }
-            $("#selectedBulanChemical").text(`${start} s/d ${end}`);
-            fetchChemical(start, end);
+            $("#selectedBulanUtility").text(`${start} s/d ${end}`);
+            fetchChemicalByArea(start, end, 'utility', "#pemakaian-utility-chart", "loading-utility", 'utility', '#0EA5E9');
+        });
+
+        // Event listeners - WWTP
+        $('#filter_bulan_wwtp').on('change', function() {
+            fetchTrendWWTP({
+                bulan: this.value
+            });
+        });
+
+        $("#applyWWTPRange").on("click", function() {
+            const start = $("#startDateWWTP").val();
+            const end = $("#endDateWWTP").val();
+            if (!start || !end) {
+                alert("Pilih tanggal awal & akhir!");
+                return;
+            }
+            $("#selectedBulanWWTP").text(`${start} s/d ${end}`);
+            fetchChemicalByArea(start, end, 'wwtp', "#pemakaian-wwtp-chart", "loading-wwtp", 'wwtp', '#10B981');
         });
     });
 </script>
@@ -326,11 +474,11 @@
 <style>
     :root {
         --success-gradient: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        --primary-gradient: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%);
     }
 
     body {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        /* background-color: #F8FAFC; */
     }
 
     .page-content {
@@ -341,14 +489,16 @@
         background: var(--success-gradient);
     }
 
-    /* Enhanced Card Styles */
+    .bg-gradient-primary {
+        background: var(--primary-gradient);
+    }
+
     .card {
         border: none;
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         overflow: hidden;
-        /* background: #FFFFFF; */
     }
 
     .card:hover {
@@ -356,21 +506,11 @@
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
 
-    .stat-card {
-        background: linear-gradient(135deg, #FFFFFF 0%, #D1FAE5 100%);
-        border-left: 4px solid #10B981;
-    }
-
-    /* .chart-card {
-        background: #FFFFFF;
-    } */
-
     .trend-card .card-header {
         border-radius: 16px 16px 0 0;
         padding: 1.5rem;
     }
 
-    /* Enhanced Loading States */
     .chart-loading {
         position: absolute;
         top: 0;
@@ -390,7 +530,6 @@
         animation-duration: 1.5s;
     }
 
-    /* Enhanced Buttons */
     .btn {
         border-radius: 8px;
         font-weight: 500;
@@ -403,7 +542,6 @@
         transform: translateY(-2px);
     }
 
-    /* Enhanced Dropdowns */
     .dropdown-menu {
         border: none;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -413,15 +551,6 @@
         background: rgba(255, 255, 255, 0.95);
     }
 
-    .dropdown-toggle::after {
-        transition: transform 0.2s ease;
-    }
-
-    .dropdown[aria-expanded="true"] .dropdown-toggle::after {
-        transform: rotate(180deg);
-    }
-
-    /* Enhanced Form Controls */
     .form-control {
         border-radius: 8px;
         border: 2px solid #E2E8F0;
@@ -435,7 +564,6 @@
         transform: scale(1.02);
     }
 
-    /* Enhanced Breadcrumbs */
     .breadcrumb {
         background: transparent;
         margin: 0;
@@ -450,14 +578,6 @@
         opacity: 0.8;
     }
 
-    /* Enhanced Avatar */
-    .avatar-sm {
-        width: 40px;
-        height: 40px;
-        font-size: 14px;
-    }
-
-    /* Enhanced Scrollbar */
     ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -478,7 +598,6 @@
         background: #94A3B8;
     }
 
-    /* Enhanced Animations */
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -491,7 +610,6 @@
         }
     }
 
-    /* Responsive Enhancements */
     @media (max-width: 768px) {
         .card {
             border-radius: 12px;
@@ -511,23 +629,6 @@
         .apex-charts {
             height: 300px !important;
         }
-    }
-
-    /* Utility Classes */
-    .tracking-wide {
-        letter-spacing: 0.05em;
-    }
-
-    /* Badge Styles */
-    .badge {
-        padding: 0.35rem 0.65rem;
-        font-weight: 500;
-        border-radius: 6px;
-    }
-
-    .badge.bg-success-subtle {
-        background-color: #D1FAE5;
-        color: #059669;
     }
 </style>
 

@@ -82,15 +82,102 @@ class ListrikController extends Controller
     }
 
 
+    // public function getPemakaianListrikData(Request $request)
+    // {
+    //     $defaultPanelOrder = ['MDP', 'SDP1', 'SDP2', 'SDP3', 'SDP4', 'SDP5', 'SDP6', 'SDP7', 'SDP8', 'SDP9', 'SDP10', 'SDP11', 'SDP12', 'SDP13', 'SDP14'];
+
+    //     $data = PemakaianListrikModel::orderBy('waktu')->get();
+
+    //     // Group by tanggal (YYYY-MM-DD)
+    //     $grouped = $data->groupBy(function ($item) {
+    //         return date('Y-m-d', strtotime($item->waktu));
+    //     });
+
+    //     $sortedDates = $grouped->keys()->sort()->values();
+    //     $result = [];
+
+    //     foreach ($sortedDates as $index => $tanggal) {
+    //         $items = $grouped[$tanggal];
+    //         $pivot = [];
+    //         $usage = [];
+    //         $operators = [];
+
+    //         // Panel tersedia dan terurut
+    //         $availablePanels = $items->pluck('panel_type')->unique()->values()->all();
+    //         $panels = array_values(array_intersect($defaultPanelOrder, $availablePanels));
+
+    //         // Ambil operator
+    //         foreach ($panels as $panel) {
+    //             $panelItem = $items->firstWhere('panel_type', $panel);
+    //             $operators[$panel] = $panelItem?->operator ?? null;
+    //         }
+
+    //         // Ambil parameter-parameter
+    //         $parameters = ['volt', 'a', 'kw', 'mwh', 'cos'];
+    //         foreach ($parameters as $param) {
+    //             $pivot[$param] = [];
+    //             foreach ($panels as $panel) {
+    //                 $panelItem = $items->firstWhere('panel_type', $panel);
+    //                 $pivot[$param][$panel] = $panelItem?->$param ?? null;
+    //             }
+    //         }
+
+    //         // Hitung usage berdasarkan mwh selisih antar hari
+    //         if ($index < count($sortedDates) - 1) {
+    //             $nextTanggal = $sortedDates[$index + 1];
+    //             $nextItems = $grouped[$nextTanggal];
+
+    //             foreach ($panels as $panel) {
+    //                 $currentMwh = $items->firstWhere('panel_type', $panel)?->mwh;
+    //                 $nextMwh = $nextItems->firstWhere('panel_type', $panel)?->mwh;
+
+    //                 if (!is_null($currentMwh) && !is_null($nextMwh)) {
+    //                     $usage[$panel] = $nextMwh - $currentMwh;
+    //                 } else {
+    //                     $usage[$panel] = null;
+    //                 }
+    //             }
+    //         } else {
+    //             // Tanggal terakhir: usage belum bisa dihitung
+    //             foreach ($panels as $panel) {
+    //                 $usage[$panel] = null;
+    //             }
+    //         }
+
+    //         $result[] = [
+    //             'tanggal' => $tanggal,
+    //             'operator' => $operators,
+    //             'panels' => $panels,
+    //             'rows' => $pivot,
+    //             'usage' => $usage,
+    //         ];
+    //     }
+
+    //     return response()->json(array_reverse($result));
+    // }
+
     public function getPemakaianListrikData(Request $request)
     {
         $defaultPanelOrder = ['MDP', 'SDP1', 'SDP2', 'SDP3', 'SDP4', 'SDP5', 'SDP6', 'SDP7', 'SDP8', 'SDP9', 'SDP10', 'SDP11', 'SDP12', 'SDP13', 'SDP14'];
 
-        $data = PemakaianListrikModel::orderBy('waktu')->get();
+        // Ambil parameter bulan dari request, default ke bulan sekarang
+        $bulan = $request->input('bulan', date('Y-m'));
+
+        // Parse tahun dan bulan
+        $year = date('Y', strtotime($bulan . '-01'));
+        $month = date('m', strtotime($bulan . '-01'));
+
+        // Query dengan filter bulan
+        $data = PemakaianListrikModel::whereYear('waktu', $year)
+            ->whereMonth('waktu', $month)
+            ->orderBy('waktu')
+            ->get();
 
         // Group by tanggal (YYYY-MM-DD)
         $grouped = $data->groupBy(function ($item) {
-            return date('Y-m-d', strtotime($item->waktu));
+            return date('Y-m-d',
+                strtotime($item->waktu)
+            );
         });
 
         $sortedDates = $grouped->keys()->sort()->values();
@@ -104,7 +191,9 @@ class ListrikController extends Controller
 
             // Panel tersedia dan terurut
             $availablePanels = $items->pluck('panel_type')->unique()->values()->all();
-            $panels = array_values(array_intersect($defaultPanelOrder, $availablePanels));
+            $panels = array_values(array_intersect($defaultPanelOrder,
+                $availablePanels
+            ));
 
             // Ambil operator
             foreach ($panels as $panel) {
@@ -131,7 +220,8 @@ class ListrikController extends Controller
                     $currentMwh = $items->firstWhere('panel_type', $panel)?->mwh;
                     $nextMwh = $nextItems->firstWhere('panel_type', $panel)?->mwh;
 
-                    if (!is_null($currentMwh) && !is_null($nextMwh)) {
+                    if (!is_null($currentMwh) && !is_null($nextMwh)
+                    ) {
                         $usage[$panel] = $nextMwh - $currentMwh;
                     } else {
                         $usage[$panel] = null;
@@ -155,6 +245,7 @@ class ListrikController extends Controller
 
         return response()->json(array_reverse($result));
     }
+    
     public function exportPemakaianListrikSpreadsheet(Request $request)
     {
         $month = $request->input('bulan');

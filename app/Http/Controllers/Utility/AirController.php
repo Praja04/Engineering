@@ -121,9 +121,42 @@ class AirController extends Controller
     }
 
 
- 
 
-    
+
+
+
+    // public function getPemakaianAirData(Request $request)
+    // {
+
+    //     $data = PemakaianAirModel::orderBy('tanggal', 'desc')->get();
+
+    //     // Kelompokkan berdasarkan tanggal
+    //     $grouped = $data->groupBy(function ($item) {
+    //         return date('Y-m-d', strtotime($item->tanggal));
+    //     });
+
+    //     $result = [];
+
+    //     foreach ($grouped as $tanggal => $items) {
+    //         $result[] = [
+    //             'tanggal' => $tanggal,
+    //             'data' => $items->map(function ($item) {
+    //                 return [
+    //                     'id' => $item->id,
+    //                     'pemakaian_awal' => $item->pemakaian_awal,
+    //                     'pemakaian_akhir' => $item->pemakaian_akhir,
+    //                     'jenis_pemakaian' => $item->jenis_pemakaian,
+    //                     'created_by' => $item->created_by,
+    //                     'notes' => $item->notes,
+    //                     'created_at' => $item->created_at,
+    //                     'updated_at' => $item->updated_at,
+    //                 ];
+    //             })->values(),
+    //         ];
+    //     }
+
+    //     return response()->json($result);
+    // }
 
     public function getPemakaianAirData(Request $request)
     {
