@@ -388,24 +388,24 @@
         $.getJSON(url, function(data) {
             // Update values
             $('#kpi_finish_goods').text(parseFloat(data.finish_goods).toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
             }));
             $('#kpi_kecap_matang').text(parseFloat(data.kecap_matang).toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
             }));
             $('#kpi_total_listrik_produksi').text(parseFloat(data.total_listrik_produksi).toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
             }));
             $('#kpi_total_listrik_bas').text(parseFloat(data.total_listrik_bas).toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
             }));
 
             // KPI Hasil Produksi: 510 Kwh / 10 ton FG
-            const kpiProduksi = parseFloat(data.kpi_listrik_produksi).toFixed(2);
+            const kpiProduksi = parseFloat(data.kpi_listrik_produksi).toFixed(4);
             $('#kpi_hasil_produksi').text(kpiProduksi + ' Kwh/10 ton FG');
 
             // Calculate percentage for progress bar (target = 51)
@@ -423,7 +423,7 @@
             }
 
             // KPI Hasil BAS: 75 Kwh/ton kecap matang
-            const kpiBas = parseFloat(data.kpi_listrik_bas).toFixed(2);
+            const kpiBas = parseFloat(data.kpi_listrik_bas).toFixed(4);
             $('#kpi_hasil_bas').text(kpiBas + ' Kwh/ton');
 
             // Calculate percentage for progress bar (target = 75)

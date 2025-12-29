@@ -107,15 +107,132 @@ class ChemicalController extends Controller
 
 
 
+    // public function getPemakaianChemicalData(Request $request)
+    // {
+    //     $data = PemakaianChemicalModel::orderBy('tanggal', 'desc')->get();
+
+    //     // Mapping satuan berdasarkan nama chemical yang dinormalisasi
+    //     $satuanMap = ChemicalType::pluck('satuan', 'nama_chemical')->mapWithKeys(function ($satuan, $nama) {
+    //         $key = strtolower(preg_replace('/[^a-z0-9]/', '', $nama));
+    //         return [$key => $satuan];
+    //     });
+
+    //     $grouped = $data->groupBy(fn ($item) => date('Y-m-d', strtotime($item->tanggal)));
+    //     $result = [];
+
+    //     foreach ($grouped as $tanggal => $items) {
+    //         $jenisGrouped = $items->groupBy('jenis_pemakaian');
+    //         $jenisData = [];
+
+    //         foreach ($jenisGrouped as $jenis => $entries) {
+    //             $lookupKey = strtolower(preg_replace('/[^a-z0-9]/', '', $jenis));
+    //             $satuanAsli = $satuanMap[$lookupKey] ?? null;
+
+    //             // Detail per shift
+    //             $shifts = $entries->map(function ($entry) use ($satuanAsli) {
+    //                 $nilai = $entry->nilai_pemakaian;
+    //                 $formatted = is_null($nilai) ? '-' : "{$nilai}" . ($satuanAsli ? " {$satuanAsli}" : '');
+    //                 return [
+    //                     'shift' => $entry->shift,
+    //                     'nilai_pemakaian' => $formatted,
+    //                     'area' => $entry->chemical_area,
+    //                     'operator' => $entry->operator,
+    //                     'notes' => $entry->notes,
+    //                     'running_hour' => $entry->running_hour,
+    //                     'created_at' => $entry->created_at,
+    //                     'updated_at' => $entry->updated_at,
+    //                 ];
+    //             })->sortBy(fn ($s) => preg_replace('/\D/', '', strtolower($s['shift'])))->values();
+
+    //             // Hitung total pemakaian dan tentukan satuannya
+    //             $totalPemakaian = 0;
+    //             $hasCustomRumus = false;
+
+    //             foreach ($entries as $entry) {
+    //                 $nilai = is_numeric($entry->nilai_pemakaian)
+    //                     ? floatval($entry->nilai_pemakaian)
+    //                     : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
+    //                 $rh = $entry->running_hour ?? 1;
+    //                 $jenisAsli = trim($entry->jenis_pemakaian);
+
+    //                 switch ($jenisAsli) {
+    //                     case 'PAC powder 1':
+    //                         $totalPemakaian += $rh * ($nilai * 60 * 7.6 / 100) / 1000;
+    //                         $hasCustomRumus = true;
+    //                         break;
+    //                     case 'PAC powder 2':
+    //                         $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+    //                         $hasCustomRumus = true;
+    //                         break;
+    //                     case 'BE-100':
+    //                         $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+    //                         $hasCustomRumus = true;
+    //                         break;
+    //                     case 'C-204':
+    //                         $totalPemakaian += $rh * ($nilai * 60 * 1 / 100) / 1000;
+    //                         $hasCustomRumus = true;
+    //                         break;
+    //                     case 'C-9040 step 1':
+    //                         $totalPemakaian += $rh * ($nilai * 60 * 0.11 / 100) / 1000;
+    //                         $hasCustomRumus = true;
+    //                         break;
+    //                     case 'C-9040 step 2':
+    //                         $totalPemakaian += $rh * ($nilai * 60 * 0.35 / 100) / 1000;
+    //                         $hasCustomRumus = true;
+    //                         break;
+    //                     case 'Denfloc 260 PA':
+    //                         $totalPemakaian += ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
+    //                         $hasCustomRumus = true;
+    //                         break;
+    //                     case 'NaOH':
+    //                         $totalPemakaian += $rh * ($nilai / 1000 * 60) * 1.5;
+    //                         $hasCustomRumus = true;
+    //                         break;
+    //                     default:
+    //                         $totalPemakaian += $nilai;
+    //                         break;
+    //                 }
+    //             }
+
+    //             $finalSatuan = $hasCustomRumus ? 'kg/hari' : ($satuanAsli ?? null);
+
+    //             $jenisData[] = [
+    //                 'jenis_pemakaian' => $jenis,
+    //                 'total_pemakaian' => round($totalPemakaian, 3),
+    //                 'satuan' => $finalSatuan,
+    //                 'shifts' => $shifts
+    //             ];
+    //         }
+
+    //         $result[] = [
+    //             'tanggal' => $tanggal,
+    //             'data' => $jenisData
+    //         ];
+    //     }
+
+    //     return response()->json($result);
+    // }
+
     public function getPemakaianChemicalData(Request $request)
     {
-        $data = PemakaianChemicalModel::orderBy('tanggal', 'desc')->get();
+        // Ambil parameter bulan dari request, default ke bulan sekarang
+        $bulan = $request->input('bulan', date('Y-m'));
+
+        // Parse tahun dan bulan
+        $year = date('Y', strtotime($bulan . '-01'));
+        $month = date('m', strtotime($bulan . '-01'));
+
+        // Query dengan filter bulan
+        $data = PemakaianChemicalModel::whereYear('tanggal', $year)
+            ->whereMonth('tanggal', $month)
+            ->orderBy('tanggal', 'desc')
+            ->get();
 
         // Mapping satuan berdasarkan nama chemical yang dinormalisasi
         $satuanMap = ChemicalType::pluck('satuan', 'nama_chemical')->mapWithKeys(function ($satuan, $nama) {
-            $key = strtolower(preg_replace('/[^a-z0-9]/', '', $nama));
-            return [$key => $satuan];
-        });
+                $key = strtolower(preg_replace('/[^a-z0-9]/', '', $nama));
+                return [$key => $satuan];
+            });
 
         $grouped = $data->groupBy(fn ($item) => date('Y-m-d', strtotime($item->tanggal)));
         $result = [];
@@ -150,8 +267,8 @@ class ChemicalController extends Controller
 
                 foreach ($entries as $entry) {
                     $nilai = is_numeric($entry->nilai_pemakaian)
-                        ? floatval($entry->nilai_pemakaian)
-                        : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
+                    ? floatval($entry->nilai_pemakaian)
+                    : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
                     $rh = $entry->running_hour ?? 1;
                     $jenisAsli = trim($entry->jenis_pemakaian);
 
@@ -327,19 +444,169 @@ class ChemicalController extends Controller
         return response()->download($outputPath)->deleteFileAfterSend(true);
     }
 
+    // public function getTrendPemakaianChemical(Request $request)
+    // {
+    //     $tanggal = $request->query('tanggal'); // format: YYYY-MM-DD
+    //     $bulan   = $request->query('bulan');   // format: YYYY-MM
+
+    //     $query = PemakaianChemicalModel::query()
+    //         ->join('chemical_types', 'pemakaian_chemical.jenis_pemakaian', '=', 'chemical_types.nama_chemical');
+
+    //     if ($tanggal) {
+    //         $query->whereDate('pemakaian_chemical.tanggal', $tanggal);
+    //     } elseif ($bulan) {
+    //         $query->whereYear('pemakaian_chemical.tanggal', substr($bulan, 0, 4))
+    //             ->whereMonth('pemakaian_chemical.tanggal', substr($bulan, 5, 2));
+    //     } else {
+    //         $query->whereYear('pemakaian_chemical.tanggal', now()->format('Y'))
+    //             ->whereMonth('pemakaian_chemical.tanggal', now()->format('m'));
+    //     }
+
+    //     $data = $query->select(
+    //         'pemakaian_chemical.tanggal',
+    //         'pemakaian_chemical.jenis_pemakaian',
+    //         'chemical_types.satuan',
+    //         DB::raw('SUM(nilai_pemakaian) as total_pemakaian')
+    //     )
+    //         ->groupBy('pemakaian_chemical.tanggal', 'pemakaian_chemical.jenis_pemakaian', 'chemical_types.satuan')
+    //         ->orderBy('pemakaian_chemical.tanggal')
+    //         ->get()
+    //         ->groupBy('jenis_pemakaian');
+
+    //     $result = [];
+
+    //     foreach ($data as $jenis => $records) {
+    //         $satuan = $records->first()->satuan ?? '-';
+    //         $result[] = [
+    //             'name' => "$jenis ($satuan)",
+    //             'data' => $records->map(fn ($r) => [
+    //                 'x' => $r->tanggal,
+    //                 'y' => round($r->total_pemakaian, 2)
+    //             ])->values()
+    //         ];
+    //     }
+
+    //     return response()->json($result);
+    // }
+
+
+      // public function getTopJenisPemakaianChemical(Request $request)
+    // {
+    //     $start = $request->query('start_date');
+    //     $end = $request->query('end_date');
+
+    //     if (!$start || !$end) {
+    //         $start = now()->startOfMonth()->format('Y-m-d');
+    //         $end = now()->endOfMonth()->format('Y-m-d');
+    //     }
+
+    //     $data = PemakaianChemicalModel::whereBetween('tanggal', [$start, $end])->get();
+
+    //     // Normalisasi satuan dari chemical type
+    //     $satuanMap = ChemicalType::pluck('satuan', 'nama_chemical')->mapWithKeys(function ($satuan, $nama) {
+    //         $key = strtolower(preg_replace('/[^a-z0-9]/', '', $nama));
+    //         return [$key => $satuan];
+    //     });
+
+    //     $grouped = $data->groupBy('jenis_pemakaian');
+    //     $result = [];
+
+    //     foreach ($grouped as $jenis => $entries) {
+    //         $totalPemakaian = 0;
+    //         $hasCustomRumus = false;
+    //         $lookupKey = strtolower(preg_replace('/[^a-z0-9]/', '', $jenis));
+    //         $satuanAsli = $satuanMap[$lookupKey] ?? null;
+
+    //         foreach ($entries as $entry) {
+    //             $nilai = is_numeric($entry->nilai_pemakaian)
+    //                 ? floatval($entry->nilai_pemakaian)
+    //                 : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
+    //             $rh = $entry->running_hour ?? 1;
+    //             $jenisAsli = trim($entry->jenis_pemakaian);
+
+    //             switch ($jenisAsli) {
+    //                 case 'PAC powder 1':
+    //                     $totalPemakaian += $rh * ($nilai * 60 * 7.6 / 100) / 1000;
+    //                     $hasCustomRumus = true;
+    //                     break;
+    //                 case 'PAC powder 2':
+    //                     $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+    //                     $hasCustomRumus = true;
+    //                     break;
+    //                 case 'BE-100':
+    //                     $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+    //                     $hasCustomRumus = true;
+    //                     break;
+    //                 case 'C-204':
+    //                     $totalPemakaian += $rh * ($nilai * 60 * 1 / 100) / 1000;
+    //                     $hasCustomRumus = true;
+    //                     break;
+    //                 case 'C-9040 step 1':
+    //                     $totalPemakaian += $rh * ($nilai * 60 * 0.11 / 100) / 1000;
+    //                     $hasCustomRumus = true;
+    //                     break;
+    //                 case 'C-9040 step 2':
+    //                     $totalPemakaian += $rh * ($nilai * 60 * 0.35 / 100) / 1000;
+    //                     $hasCustomRumus = true;
+    //                     break;
+    //                 case 'Denfloc 260 PA':
+    //                     $totalPemakaian += ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
+    //                     $hasCustomRumus = true;
+    //                     break;
+    //                 case 'NaOH':
+    //                     $totalPemakaian += $rh * ($nilai / 1000 * 60) * 1.5;
+    //                     $hasCustomRumus = true;
+    //                     break;
+    //                 default:
+    //                     $totalPemakaian += $nilai;
+    //                     break;
+    //             }
+    //         }
+
+
+    //         $result[] = [
+    //             'jenis_pemakaian' => $jenis,
+    //             'total_pemakaian' => round($totalPemakaian, 3),
+    //             'satuan'          => $hasCustomRumus ? 'kg/hari' : ($satuanAsli ?? '-'),
+    //             'start_date'      => $start,
+    //             'end_date'        => $end
+    //         ];
+    //     }
+
+    //     return response()->json(collect($result)->sortByDesc('total_pemakaian')->values());
+    // }
+
+
     public function getTrendPemakaianChemical(Request $request)
     {
         $tanggal = $request->query('tanggal'); // format: YYYY-MM-DD
         $bulan   = $request->query('bulan');   // format: YYYY-MM
+        $area    = $request->query('area');    // 'utility' atau 'wwtp'
+
+        // Definisi chemical berdasarkan area
+        $chemicalUtility = ['SCF', 'SRTF', 'PT-100', 'PT100', 'SMBS', 'B4', 'SRF', 'Chlorin'];
+        $chemicalWWTP = [
+            'PAC powder 1', 'PAC powder 2', 'BE-100', 'C-204', 'C-9040 step 1',
+            'C-9040 step 2', 'Denfloc 260 PA', 'Denfloc 945', 'NaOH',
+            'Defoamer', 'NPK'
+        ];
 
         $query = PemakaianChemicalModel::query()
-            ->join('chemical_types', 'pemakaian_chemical.jenis_pemakaian', '=', 'chemical_types.nama_chemical');
+        ->join('chemical_types', 'pemakaian_chemical.jenis_pemakaian', '=', 'chemical_types.nama_chemical');
 
+        // Filter berdasarkan area
+        if ($area === 'utility') {
+            $query->whereIn('pemakaian_chemical.jenis_pemakaian', $chemicalUtility);
+        } elseif ($area === 'wwtp') {
+            $query->whereIn('pemakaian_chemical.jenis_pemakaian', $chemicalWWTP);
+        }
+
+        // Filter tanggal
         if ($tanggal) {
             $query->whereDate('pemakaian_chemical.tanggal', $tanggal);
         } elseif ($bulan) {
             $query->whereYear('pemakaian_chemical.tanggal', substr($bulan, 0, 4))
-                ->whereMonth('pemakaian_chemical.tanggal', substr($bulan, 5, 2));
+            ->whereMonth('pemakaian_chemical.tanggal', substr($bulan, 5, 2));
         } else {
             $query->whereYear('pemakaian_chemical.tanggal', now()->format('Y'))
                 ->whereMonth('pemakaian_chemical.tanggal', now()->format('m'));
@@ -348,41 +615,122 @@ class ChemicalController extends Controller
         $data = $query->select(
             'pemakaian_chemical.tanggal',
             'pemakaian_chemical.jenis_pemakaian',
-            'chemical_types.satuan',
-            DB::raw('SUM(nilai_pemakaian) as total_pemakaian')
+            'pemakaian_chemical.nilai_pemakaian',
+            'pemakaian_chemical.running_hour',
+            'chemical_types.satuan'
         )
-            ->groupBy('pemakaian_chemical.tanggal', 'pemakaian_chemical.jenis_pemakaian', 'chemical_types.satuan')
-            ->orderBy('pemakaian_chemical.tanggal')
-            ->get()
-            ->groupBy('jenis_pemakaian');
+        ->orderBy('pemakaian_chemical.tanggal')
+        ->orderBy('pemakaian_chemical.jenis_pemakaian')
+        ->get()
+        ->groupBy('jenis_pemakaian');
 
         $result = [];
 
         foreach ($data as $jenis => $records) {
-            $satuan = $records->first()->satuan ?? '-';
+            $dataPoints = [];
+
+            foreach ($records as $record) {
+                $nilai = is_numeric($record->nilai_pemakaian)
+                ? floatval($record->nilai_pemakaian)
+                    : floatval(preg_replace('/[^\d.]+/', '', $record->nilai_pemakaian));
+                $rh = $record->running_hour ?? 1;
+                $totalPemakaian = 0;
+                $satuan = $record->satuan ?? '-';
+                $jenisAsli = trim($record->jenis_pemakaian);
+
+                // Hitung berdasarkan rumus khusus
+                switch ($jenisAsli) {
+                    case 'PAC powder 1':
+                        $totalPemakaian = $rh * ($nilai * 60 * 7.6 / 100) / 1000;
+                        $satuan = 'kg/hari';
+                        break;
+                    case 'PAC powder 2':
+                        $totalPemakaian = $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+                        $satuan = 'kg/hari';
+                        break;
+                    case 'BE-100':
+                        $totalPemakaian = $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+                        $satuan = 'kg/hari';
+                        break;
+                    case 'C-204':
+                        $totalPemakaian = $rh * ($nilai * 60 * 1 / 100) / 1000;
+                        $satuan = 'kg/hari';
+                        break;
+                    case 'C-9040 step 1':
+                        $totalPemakaian = $rh * ($nilai * 60 * 0.11 / 100) / 1000;
+                        $satuan = 'kg/hari';
+                        break;
+                    case 'C-9040 step 2':
+                        $totalPemakaian = $rh * ($nilai * 60 * 0.35 / 100) / 1000;
+                        $satuan = 'kg/hari';
+                        break;
+                    case 'Denfloc 260 PA':
+                        $totalPemakaian = ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
+                        $satuan = 'kg/hari';
+                        break;
+                    case 'NaOH':
+                        $totalPemakaian = $rh * ($nilai / 1000 * 60) * 1.5;
+                        $satuan = 'kg/hari';
+                        break;
+                    default:
+                        $totalPemakaian = $nilai;
+                        break;
+                }
+
+                $dataPoints[] = [
+                    'x' => $record->tanggal,
+                    'y' => round($totalPemakaian, 3)
+                ];
+            }
+
+            // Agregasi per tanggal (jika ada multiple entries per hari)
+            $groupedByDate = collect($dataPoints)->groupBy('x')->map(function ($items) {
+                return [
+                    'x' => $items->first()['x'],
+                    'y' => round($items->sum('y'), 3)
+                ];
+            })->values();
+
             $result[] = [
-                'name' => "$jenis ($satuan)",
-                'data' => $records->map(fn ($r) => [
-                    'x' => $r->tanggal,
-                    'y' => round($r->total_pemakaian, 2)
-                ])->values()
+                'name' => "$jenis",
+                'data' => $groupedByDate
             ];
         }
 
         return response()->json($result);
     }
-
+  
     public function getTopJenisPemakaianChemical(Request $request)
     {
         $start = $request->query('start_date');
         $end = $request->query('end_date');
+        $area = $request->query('area'); // 'utility' atau 'wwtp'
 
         if (!$start || !$end) {
             $start = now()->startOfMonth()->format('Y-m-d');
             $end = now()->endOfMonth()->format('Y-m-d');
         }
 
+        // Definisi chemical berdasarkan area
+        $chemicalUtility = ['SCF', 'SRTF', 'PT-100', 'PT100', 'SMBS', 'B4', 'SRF', 'Chlorin'];
+        $chemicalWWTP = [
+            'PAC powder 1', 'PAC powder 2', 'BE-100', 'C-204', 'C-9040 step 1',
+            'C-9040 step 2', 'Denfloc 260 PA', 'Denfloc 945', 'NaOH',
+            'Defoamer', 'NPK'
+        ];
+
         $data = PemakaianChemicalModel::whereBetween('tanggal', [$start, $end])->get();
+
+        // Filter berdasarkan area jika diminta
+        if ($area === 'utility') {
+            $data = $data->filter(function ($item) use ($chemicalUtility) {
+                return in_array($item->jenis_pemakaian, $chemicalUtility);
+            });
+        } elseif ($area === 'wwtp') {
+            $data = $data->filter(function ($item) use ($chemicalWWTP) {
+                return in_array($item->jenis_pemakaian, $chemicalWWTP);
+            });
+        }
 
         // Normalisasi satuan dari chemical type
         $satuanMap = ChemicalType::pluck('satuan', 'nama_chemical')->mapWithKeys(function ($satuan, $nama) {
@@ -401,8 +749,8 @@ class ChemicalController extends Controller
 
             foreach ($entries as $entry) {
                 $nilai = is_numeric($entry->nilai_pemakaian)
-                    ? floatval($entry->nilai_pemakaian)
-                    : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
+                ? floatval($entry->nilai_pemakaian)
+                : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
                 $rh = $entry->running_hour ?? 1;
                 $jenisAsli = trim($entry->jenis_pemakaian);
 
@@ -445,11 +793,14 @@ class ChemicalController extends Controller
                 }
             }
 
+            // Tentukan kategori area
+            $areaCategory = in_array($jenis, $chemicalUtility) ? 'Utility' : 'WWTP';
 
             $result[] = [
                 'jenis_pemakaian' => $jenis,
                 'total_pemakaian' => round($totalPemakaian, 3),
                 'satuan'          => $hasCustomRumus ? 'kg/hari' : ($satuanAsli ?? '-'),
+                'area'            => $areaCategory,
                 'start_date'      => $start,
                 'end_date'        => $end
             ];
