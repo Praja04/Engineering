@@ -25,7 +25,7 @@
             </div>
         </div>
 
-      
+
         <!-- KPI Listrik Section -->
         <div class="row g-4 mb-4">
             <div class="col-12">
@@ -109,7 +109,7 @@
                                             </div>
                                             <div>
                                                 <h6 class="mb-0 fw-semibold text-primary">KPI Listrik BAS</h6>
-                                                <p class="mb-0 small text-muted">Total SDP Seluruh / Kecap Matang</p>
+                                                <p class="mb-0 small text-muted">Total SDP Seluruh(tanpa data total MDP) / Kecap Matang</p>
                                             </div>
                                         </div>
 
@@ -157,41 +157,47 @@
         <div class="row g-4">
             <!-- Electricity Usage -->
             <div class="col-xxl-12 col-lg-12">
-                <div class="card chart-card border-0 shadow-sm h-100">
-                    <div class="card-header bg-transparent border-bottom-0 pb-0">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h5 class="card-title mb-1 fw-semibold">Pemakaian Listrik</h5>
-                                <p class="text-muted mb-0 small">Konsumsi energi listrik</p>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-info-subtle text-info fw-semibold">
-                                        <i class="ri-information-line me-1"></i>MDP
-                                    </span>
-                                    <span id="mdp_listrik" class="text-muted small">-</span>
-                                </div>
+                <!-- Filter Section - Di luar card -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="mb-1 fw-semibold">Pemakaian Listrik</h5>
+                        <p class="text-muted mb-0 small">Konsumsi energi listrik</p>
+                    </div>
+
+                    <!-- Dropdown Filter -->
+                    <div class="dropdown">
+                        <button class="btn btn-warning btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                            <i class="ri-calendar-line me-1"></i>
+                            <span id="selectedBulanListrik">Pilih Periode</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3 border-0 shadow-lg" style="min-width: 300px;">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-muted">Dari Tanggal</label>
+                                <input type="date" id="startDateListrik" class="form-control form-control-sm" onclick="event.stopPropagation();">
                             </div>
-                            <div class="dropdown">
-                                <button class="btn btn-outline btn-sm dropdown-toggle border-0" type="button" data-bs-toggle="dropdown">
-                                    <i class="ri-calendar-line me-1"></i>
-                                    <span id="selectedBulanListrik">Pilih Periode</span>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end p-3 border-0 shadow-lg" style="min-width: 300px;">
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-semibold text-muted">Dari Tanggal</label>
-                                        <input type="date" id="startDateListrik" class="form-control form-control-sm">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-semibold text-muted">Sampai Tanggal</label>
-                                        <input type="date" id="endDateListrik" class="form-control form-control-sm">
-                                    </div>
-                                    <button class="btn btn-primary btn-sm w-100" id="applyListrikRange">
-                                        <i class="ri-refresh-line me-1"></i>Terapkan Filter
-                                    </button>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-muted">Sampai Tanggal</label>
+                                <input type="date" id="endDateListrik" class="form-control form-control-sm" onclick="event.stopPropagation();">
                             </div>
+                            <button class="btn btn-primary btn-sm w-100" id="applyListrikRange">
+                                <i class="ri-refresh-line me-1"></i>Terapkan Filter
+                            </button>
                         </div>
                     </div>
-                    <div class="card-body pt-2">
+                </div>
+
+                <!-- Card Chart -->
+                <div class="card chart-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <!-- MDP Info Badge -->
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="badge bg-info-subtle text-info fw-semibold">
+                                <i class="ri-information-line me-1"></i>MDP
+                            </span>
+                            <span id="mdp_listrik" class="text-muted small">-</span>
+                        </div>
+
+                        <!-- Loading State -->
                         <div class="chart-loading" id="loading-listrik">
                             <div class="text-center p-5">
                                 <div class="spinner-grow text-warning" role="status">
@@ -200,6 +206,8 @@
                                 <p class="mt-3 text-muted mb-0">Memuat data listrik...</p>
                             </div>
                         </div>
+
+                        <!-- Chart Container -->
                         <div id="pemakaian-listrik-chart" class="apex-charts"></div>
                     </div>
                 </div>
@@ -533,6 +541,20 @@
             }
             $("#selectedBulanListrik").text(`${start} s/d ${end}`);
             fetchListrik(start, end);
+        });
+    });
+
+
+    $(function() {
+        // Prevent dropdown from closing when clicking inside
+        $('.dropdown-menu').on('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Close dropdown after apply button is clicked
+        $('#applyListrikRange').on('click', function() {
+            const dropdown = $(this).closest('.dropdown');
+            dropdown.find('[data-bs-toggle="dropdown"]').dropdown('hide');
         });
     });
 </script>

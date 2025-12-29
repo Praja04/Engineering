@@ -273,131 +273,139 @@ class KpiController extends Controller
     // }
 
     public function getKpiListrik(Request $request)
-{
-    $today = Carbon::now();
-    $currentMonth = $today->format('Y-m');
+    {
+        $today = Carbon::now();
+        $currentMonth = $today->format('Y-m');
 
-    /**
-     * 1. Ambil KPI:
-     *    - Prioritas monthly
-     *    - Jika tidak ada, ambil weekly terbaru
-     */
-    $kpiMonthly = KpiModel::where('periode_tipe', 'monthly')
+        /**
+         * 1. Ambil KPI:
+         *    - Prioritas monthly
+         *    - Jika tidak ada, ambil weekly terbaru
+         */
+        $kpiMonthly = KpiModel::where('periode_tipe', 'monthly')
         ->where('month', $currentMonth)
-        ->first();
+            ->first();
 
-    if ($kpiMonthly) {
-        $finishGoods   = $kpiMonthly->finish_goods;
-        $kecapMatang   = $kpiMonthly->kecap_matang;
-        $sumberKpi = 'monthly';
-    } else {
-        $kpiWeekly = KpiModel::where('periode_tipe', 'weekly')
+        if ($kpiMonthly) {
+            $finishGoods   = $kpiMonthly->finish_goods;
+            $kecapMatang   = $kpiMonthly->kecap_matang;
+            $sumberKpi = 'monthly';
+        } else {
+            $kpiWeekly = KpiModel::where('periode_tipe', 'weekly')
             ->whereDate('start_date', '<=', $today)
             ->orderBy('end_date', 'desc')
             ->first();
 
-        if (!$kpiWeekly) {
+            if (!$kpiWeekly) {
+                return response()->json([
+                    'message' => 'Tidak ada data KPI monthly maupun weekly.'
+                ], 404);
+            }
+
+            $finishGoods   = $kpiWeekly->finish_goods;
+            $kecapMatang   = $kpiWeekly->kecap_matang;
+            $sumberKpi = 'weekly-terbaru';
+        }
+
+        /**
+         * Validasi agar tidak membagi dengan nol
+         */
+        if ($finishGoods <= 0) {
             return response()->json([
-                'message' => 'Tidak ada data KPI monthly maupun weekly.'
+                'message' => 'Finish Goods tidak valid (<=0).'
+            ], 422);
+        }
+
+        if ($kecapMatang <= 0
+        ) {
+            return response()->json([
+                'message' => 'Kecap Matang tidak valid (<=0).'
+            ], 422);
+        }
+
+        /**
+         * 2. Ambil data listrik bulan berjalan
+         */
+        $listrik = PemakaianListrikModel::whereMonth('waktu', $today->month)
+            ->whereYear('waktu', $today->year)
+            ->orderBy('waktu')
+            ->get();
+
+        if ($listrik->isEmpty()) {
+            return response()->json([
+                'message' => 'Tidak ada data listrik bulan ini.'
             ], 404);
         }
 
-        $finishGoods   = $kpiWeekly->finish_goods;
-        $kecapMatang   = $kpiWeekly->kecap_matang;
-        $sumberKpi = 'weekly-terbaru';
-    }
+        /**
+         * 3. Panel Produksi & Semua Panel
+         */
+        $panelProduksi = ['SDP1', 'SDP2', 'SDP3', 'SDP5', 'SDP9', 'SDP10', 'SDP11'];
 
-    /**
-     * Validasi agar tidak membagi dengan nol
-     */
-    if ($finishGoods <= 0) {
-        return response()->json([
-            'message' => 'Finish Goods tidak valid (<=0).'
-        ], 422);
-    }
+        // Group data by panel_type
+        $groupedByPanel = $listrik->groupBy('panel_type');
 
-    if ($kecapMatang <= 0) {
-        return response()->json([
-            'message' => 'Kecap Matang tidak valid (<=0).'
-        ], 422);
-    }
+        /**
+         * 4. Hitung Total Produksi (SDP Produksi) dengan Delta
+         */
+        $totalProduksi = 0;
 
-    /**
-     * 2. Ambil data listrik bulan berjalan
-     */
-    $listrik = PemakaianListrikModel::whereMonth('waktu', $today->month)
-        ->whereYear('waktu', $today->year)
-        ->orderBy('waktu')
-        ->get();
+        foreach ($panelProduksi as $panel) {
+            if (!$groupedByPanel->has($panel)) continue;
 
-    if ($listrik->isEmpty()) {
-        return response()->json([
-            'message' => 'Tidak ada data listrik bulan ini.'
-        ], 404);
-    }
+            $panelData = $groupedByPanel[$panel]->sortBy('waktu')->pluck('mwh')->values();
 
-    /**
-     * 3. Panel Produksi & Semua Panel
-     */
-    $panelProduksi = ['SDP1', 'SDP2', 'SDP3', 'SDP5', 'SDP9', 'SDP10', 'SDP11'];
-    
-    // Group data by panel_type
-    $groupedByPanel = $listrik->groupBy('panel_type');
-
-    /**
-     * 4. Hitung Total Produksi (SDP Produksi) dengan Delta
-     */
-    $totalProduksi = 0;
-    
-    foreach ($panelProduksi as $panel) {
-        if (!$groupedByPanel->has($panel)) continue;
-        
-        $panelData = $groupedByPanel[$panel]->sortBy('waktu')->pluck('mwh')->values();
-        
-        // Hitung delta untuk panel ini
-        for ($i = 0; $i < $panelData->count() - 1; $i++) {
-            $delta = $panelData[$i + 1] - $panelData[$i];
-            if ($delta >= 0) {
-                $totalProduksi += $delta;
+            // Hitung delta untuk panel ini
+            for ($i = 0; $i < $panelData->count() - 1; $i++) {
+                $delta = $panelData[$i + 1] - $panelData[$i];
+                if ($delta >= 0) {
+                    $totalProduksi += $delta;
+                }
             }
         }
-    }
 
-    /**
-     * 5. Hitung Total BAS (Semua Panel) dengan Delta
-     */
-    $totalBas = 0;
-    
-    foreach ($groupedByPanel as $panel => $panelData) {
-        $panelValues = $panelData->sortBy('waktu')->pluck('mwh')->values();
-        
-        // Hitung delta untuk panel ini
-        for ($i = 0; $i < $panelValues->count() - 1; $i++) {
-            $delta = $panelValues[$i + 1] - $panelValues[$i];
-            if ($delta >= 0) {
-                $totalBas += $delta;
+        /**
+         * 5. Hitung Total BAS (Semua Panel kecuali MDP) dengan Delta
+         */
+        $totalBas = 0;
+
+        foreach ($groupedByPanel as $panel => $panelData) {
+            // Skip MDP panel
+            if ($panel === 'MDP') continue;
+
+            $panelValues = $panelData->sortBy('waktu')->pluck('mwh')->values();
+
+            // Hitung delta untuk panel ini
+            for ($i = 0; $i < $panelValues->count() - 1; $i++) {
+                $delta = $panelValues[$i + 1] - $panelValues[$i];
+                if ($delta >= 0) {
+                    $totalBas += $delta;
+                }
             }
         }
+
+        /**
+         * 6. KPI Perhitungan
+         */
+        $kpiProduksi = $totalProduksi / $finishGoods;
+        $kpiBas = $totalBas / $kecapMatang;
+
+        return response()->json([
+            'periode' => $currentMonth,
+            'kpi_sumber' => $sumberKpi,
+
+            'finish_goods' => $finishGoods,
+            'kecap_matang' => $kecapMatang,
+
+            'total_listrik_produksi' => round($totalProduksi, 2),
+            'total_listrik_bas' => round($totalBas,
+                2
+            ),
+
+            'kpi_listrik_produksi' => round($kpiProduksi,
+                4
+            ),
+            'kpi_listrik_bas' => round($kpiBas, 4)
+        ]);
     }
-
-    /**
-     * 6. KPI Perhitungan
-     */
-    $kpiProduksi = $totalProduksi / $finishGoods;
-    $kpiBas = $totalBas / $kecapMatang;
-
-    return response()->json([
-        'periode' => $currentMonth,
-        'kpi_sumber' => $sumberKpi,
-
-        'finish_goods' => $finishGoods,
-        'kecap_matang' => $kecapMatang,
-
-        'total_listrik_produksi' => round($totalProduksi, 2),
-        'total_listrik_bas' => round($totalBas, 2),
-
-        'kpi_listrik_produksi' => round($kpiProduksi, 4),
-        'kpi_listrik_bas' => round($kpiBas, 4)
-    ]);
-}
 }
