@@ -230,9 +230,9 @@ class ChemicalController extends Controller
 
         // Mapping satuan berdasarkan nama chemical yang dinormalisasi
         $satuanMap = ChemicalType::pluck('satuan', 'nama_chemical')->mapWithKeys(function ($satuan, $nama) {
-                $key = strtolower(preg_replace('/[^a-z0-9]/', '', $nama));
-                return [$key => $satuan];
-            });
+            $key = strtolower(preg_replace('/[^a-z0-9]/', '', $nama));
+            return [$key => $satuan];
+        });
 
         $grouped = $data->groupBy(fn ($item) => date('Y-m-d', strtotime($item->tanggal)));
         $result = [];
@@ -267,8 +267,8 @@ class ChemicalController extends Controller
 
                 foreach ($entries as $entry) {
                     $nilai = is_numeric($entry->nilai_pemakaian)
-                    ? floatval($entry->nilai_pemakaian)
-                    : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
+                        ? floatval($entry->nilai_pemakaian)
+                        : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
                     $rh = $entry->running_hour ?? 1;
                     $jenisAsli = trim($entry->jenis_pemakaian);
 
@@ -282,7 +282,7 @@ class ChemicalController extends Controller
                             $hasCustomRumus = true;
                             break;
                         case 'BE-100':
-                            $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+                            $totalPemakaian += $rh * ($nilai * 60 * 2.5 / 100) / 1000;
                             $hasCustomRumus = true;
                             break;
                         case 'C-204':
@@ -330,7 +330,7 @@ class ChemicalController extends Controller
         return response()->json($result);
     }
 
-   
+
 
     public function getChemicalAreas()
     {
@@ -339,7 +339,7 @@ class ChemicalController extends Controller
         return response()->json($areas);
     }
 
-   
+
     public function exportPemakaianChemicalSpreadsheet(Request $request)
     {
         $bulan = $request->input('bulan'); // contoh: '2025-06'
@@ -407,7 +407,7 @@ class ChemicalController extends Controller
                             $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
                             break;
                         case 'BE-100':
-                            $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+                            $totalPemakaian += $rh * ($nilai * 60 * 2.5 / 100) / 1000;
                             break;
                         case 'C-204':
                             $totalPemakaian += $rh * ($nilai * 60 * 1 / 100) / 1000;
@@ -490,7 +490,7 @@ class ChemicalController extends Controller
     // }
 
 
-      // public function getTopJenisPemakaianChemical(Request $request)
+    // public function getTopJenisPemakaianChemical(Request $request)
     // {
     //     $start = $request->query('start_date');
     //     $end = $request->query('end_date');
@@ -592,7 +592,7 @@ class ChemicalController extends Controller
         ];
 
         $query = PemakaianChemicalModel::query()
-        ->join('chemical_types', 'pemakaian_chemical.jenis_pemakaian', '=', 'chemical_types.nama_chemical');
+            ->join('chemical_types', 'pemakaian_chemical.jenis_pemakaian', '=', 'chemical_types.nama_chemical');
 
         // Filter berdasarkan area
         if ($area === 'utility') {
@@ -606,7 +606,7 @@ class ChemicalController extends Controller
             $query->whereDate('pemakaian_chemical.tanggal', $tanggal);
         } elseif ($bulan) {
             $query->whereYear('pemakaian_chemical.tanggal', substr($bulan, 0, 4))
-            ->whereMonth('pemakaian_chemical.tanggal', substr($bulan, 5, 2));
+                ->whereMonth('pemakaian_chemical.tanggal', substr($bulan, 5, 2));
         } else {
             $query->whereYear('pemakaian_chemical.tanggal', now()->format('Y'))
                 ->whereMonth('pemakaian_chemical.tanggal', now()->format('m'));
@@ -619,10 +619,10 @@ class ChemicalController extends Controller
             'pemakaian_chemical.running_hour',
             'chemical_types.satuan'
         )
-        ->orderBy('pemakaian_chemical.tanggal')
-        ->orderBy('pemakaian_chemical.jenis_pemakaian')
-        ->get()
-        ->groupBy('jenis_pemakaian');
+            ->orderBy('pemakaian_chemical.tanggal')
+            ->orderBy('pemakaian_chemical.jenis_pemakaian')
+            ->get()
+            ->groupBy('jenis_pemakaian');
 
         $result = [];
 
@@ -631,7 +631,7 @@ class ChemicalController extends Controller
 
             foreach ($records as $record) {
                 $nilai = is_numeric($record->nilai_pemakaian)
-                ? floatval($record->nilai_pemakaian)
+                    ? floatval($record->nilai_pemakaian)
                     : floatval(preg_replace('/[^\d.]+/', '', $record->nilai_pemakaian));
                 $rh = $record->running_hour ?? 1;
                 $totalPemakaian = 0;
@@ -649,7 +649,7 @@ class ChemicalController extends Controller
                         $satuan = 'kg/hari';
                         break;
                     case 'BE-100':
-                        $totalPemakaian = $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+                        $totalPemakaian = $rh * ($nilai * 60 * 2.5 / 100) / 1000;
                         $satuan = 'kg/hari';
                         break;
                     case 'C-204':
@@ -699,7 +699,7 @@ class ChemicalController extends Controller
 
         return response()->json($result);
     }
-  
+
     public function getTopJenisPemakaianChemical(Request $request)
     {
         $start = $request->query('start_date');
@@ -749,8 +749,8 @@ class ChemicalController extends Controller
 
             foreach ($entries as $entry) {
                 $nilai = is_numeric($entry->nilai_pemakaian)
-                ? floatval($entry->nilai_pemakaian)
-                : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
+                    ? floatval($entry->nilai_pemakaian)
+                    : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
                 $rh = $entry->running_hour ?? 1;
                 $jenisAsli = trim($entry->jenis_pemakaian);
 
@@ -831,7 +831,7 @@ class ChemicalController extends Controller
         return response()->json($data);
     }
 
- 
+
     public function updateChemical(Request $request)
     {
         $request->validate([
