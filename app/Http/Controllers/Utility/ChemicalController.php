@@ -592,7 +592,13 @@ class ChemicalController extends Controller
         ];
 
         $query = PemakaianChemicalModel::query()
-            ->join('chemical_types', 'pemakaian_chemical.jenis_pemakaian', '=', 'chemical_types.nama_chemical');
+            ->join('chemical_types', function ($join) {
+                $join->on(
+                    DB::raw('TRIM(pemakaian_chemical.jenis_pemakaian)'),
+                    '=',
+                    DB::raw('TRIM(chemical_types.nama_chemical)')
+                );
+            });
 
         // Filter berdasarkan area
         if ($area === 'utility') {
