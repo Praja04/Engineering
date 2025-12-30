@@ -734,21 +734,29 @@
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            // Ini validasi gagal
-                            let errors = xhr.responseJSON.errors;
+                            let response = xhr.responseJSON;
                             let msg = "";
-                            Object.keys(errors).forEach(function(key) {
-                                msg += errors[key][0] + "<br>";
-                            });
+
+                            if (response.errors) {
+                                if (Array.isArray(response.errors)) {
+                                    msg = response.errors.join("<br>");
+                                } else {
+                                    Object.keys(response.errors).forEach(function(key) {
+                                        msg += response.errors[key].join("<br>") +
+                                            "<br>";
+                                    });
+                                }
+                            } else {
+                                msg = response.message || "Validasi gagal.";
+                            }
 
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Validation failed!',
-                                html: msg, // pake html biar <br> bisa kebaca
+                                title: 'Validasi Gagal',
+                                html: msg
                             });
                         } else {
-                            // Error selain validasi (500, 404, dll)
-                            Swal.fire('Error', 'Server error occurred!', 'error');
+                            Swal.fire('Error', 'Terjadi kesalahan pada server!', 'error');
                         }
                     }
                 });
