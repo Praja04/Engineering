@@ -764,7 +764,7 @@ class ChemicalController extends Controller
                         $hasCustomRumus = true;
                         break;
                     case 'BE-100':
-                        $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+                        $totalPemakaian += $rh * ($nilai * 60 * 2.5 / 100) / 1000;
                         $hasCustomRumus = true;
                         break;
                     case 'C-204':
