@@ -211,7 +211,7 @@
                     }
                 },
                 legend: {
-                    position: "top",
+                    position: "bottom",
                     horizontalAlign: "right"
                 },
                 grid: {
@@ -364,7 +364,7 @@
                     }
                 },
                 legend: {
-                    position: "top",
+                    position: "bottom",
                     horizontalAlign: "right"
                 },
                 grid: {
@@ -496,7 +496,7 @@
                     }
                 },
                 legend: {
-                    position: "top",
+                    position: "bottom",
                     horizontalAlign: "right"
                 },
                 grid: {
