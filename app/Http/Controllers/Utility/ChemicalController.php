@@ -586,7 +586,7 @@ class ChemicalController extends Controller
         // Definisi chemical berdasarkan area
         $chemicalUtility = ['SCF', 'SRTF', 'PT-100', 'PT100', 'SMBS', 'B4', 'SRF', 'Chlorin'];
         $chemicalWWTP = [
-            'PAC powder 1', 'PAC powder 2', 'BE-100', 'C-204', 'C-9040 step 1',
+            'PAC powder 1', 'PAC powder 2','BE-100', 'C-204', 'C-9040 step 1',
             'C-9040 step 2', 'Denfloc 260 PA', 'Denfloc 945', 'NaOH',
             'Defoamer', 'NPK'
         ];
@@ -641,42 +641,42 @@ class ChemicalController extends Controller
                     : floatval(preg_replace('/[^\d.]+/', '', $record->nilai_pemakaian));
                 $rh = $record->running_hour ?? 1;
                 $totalPemakaian = 0;
-                $satuan = $record->satuan ?? '-';
+                // $satuan = $record->satuan ?? '-';
                 $jenisAsli = trim($record->jenis_pemakaian);
 
                 // Hitung berdasarkan rumus khusus
                 switch ($jenisAsli) {
                     case 'PAC powder 1':
                         $totalPemakaian = $rh * ($nilai * 60 * 7.6 / 100) / 1000;
-                        $satuan = 'kg/hari';
+                        // $satuan = 'kg/hari';
                         break;
                     case 'PAC powder 2':
                         $totalPemakaian = $rh * ($nilai * 60 * 12.5 / 100) / 1000;
-                        $satuan = 'kg/hari';
+                        // $satuan = 'kg/hari';
                         break;
                     case 'BE-100':
                         $totalPemakaian = $rh * ($nilai * 60 * 2.5 / 100) / 1000;
-                        $satuan = 'kg/hari';
+                        // $satuan = 'kg/hari';
                         break;
                     case 'C-204':
                         $totalPemakaian = $rh * ($nilai * 60 * 1 / 100) / 1000;
-                        $satuan = 'kg/hari';
+                        // $satuan = 'kg/hari';
                         break;
                     case 'C-9040 step 1':
                         $totalPemakaian = $rh * ($nilai * 60 * 0.11 / 100) / 1000;
-                        $satuan = 'kg/hari';
+                        // $satuan = 'kg/hari';
                         break;
                     case 'C-9040 step 2':
                         $totalPemakaian = $rh * ($nilai * 60 * 0.35 / 100) / 1000;
-                        $satuan = 'kg/hari';
+                        // $satuan = 'kg/hari';
                         break;
                     case 'Denfloc 260 PA':
                         $totalPemakaian = ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
-                        $satuan = 'kg/hari';
+                        // $satuan = 'kg/hari';
                         break;
                     case 'NaOH':
                         $totalPemakaian = $rh * ($nilai / 1000 * 60) * 1.5;
-                        $satuan = 'kg/hari';
+                        // $satuan = 'kg/hari';
                         break;
                     default:
                         $totalPemakaian = $nilai;

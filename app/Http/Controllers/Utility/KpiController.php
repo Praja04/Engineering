@@ -277,35 +277,80 @@ class KpiController extends Controller
         $today = Carbon::now();
         $currentMonth = $today->format('Y-m');
 
+        // Filter dari request: 'monthly', 'weekly', atau null (default)
+        $filterType = $request->input('filter_type'); // 'monthly' atau 'weekly'
+        $filterValue = $request->input('filter_value'); // 'YYYY-MM' untuk monthly, atau week ID untuk weekly
+
         /**
-         * 1. Ambil KPI:
-         *    - Prioritas monthly
-         *    - Jika tidak ada, ambil weekly terbaru
+         * 1. Tentukan KPI yang akan digunakan
          */
-        $kpiMonthly = KpiModel::where('periode_tipe', 'monthly')
-        ->where('month', $currentMonth)
-            ->first();
+        $kpiData = null;
+        $sumberKpi = '';
+        $startDate = null;
+        $endDate = null;
 
-        if ($kpiMonthly) {
-            $finishGoods   = $kpiMonthly->finish_goods;
-            $kecapMatang   = $kpiMonthly->kecap_matang;
-            $sumberKpi = 'monthly';
-        } else {
-            $kpiWeekly = KpiModel::where('periode_tipe', 'weekly')
-            ->whereDate('start_date', '<=', $today)
-            ->orderBy('end_date', 'desc')
-            ->first();
+        // Jika ada filter monthly
+        if ($filterType === 'monthly' && $filterValue) {
+            $kpiData = KpiModel::where('periode_tipe', 'monthly')
+                ->where('month', $filterValue)
+                ->first();
 
-            if (!$kpiWeekly) {
-                return response()->json([
-                    'message' => 'Tidak ada data KPI monthly maupun weekly.'
-                ], 404);
+            if ($kpiData) {
+                $sumberKpi = 'monthly';
+                // Untuk monthly, ambil seluruh bulan
+                $startDate = Carbon::parse($filterValue . '-01')->startOfMonth();
+                $endDate = Carbon::parse($filterValue . '-01')->endOfMonth();
             }
-
-            $finishGoods   = $kpiWeekly->finish_goods;
-            $kecapMatang   = $kpiWeekly->kecap_matang;
-            $sumberKpi = 'weekly-terbaru';
         }
+        // Jika ada filter weekly
+        elseif ($filterType === 'weekly' && $filterValue
+        ) {
+            $kpiData = KpiModel::where('periode_tipe', 'weekly')
+            ->where('id', $filterValue)
+            ->first();
+
+            if ($kpiData) {
+                $sumberKpi = 'weekly';
+                $startDate = Carbon::parse($kpiData->start_date);
+                $endDate = Carbon::parse($kpiData->end_date);
+            }
+        }
+        // Default: cari data bulanan current month
+        else {
+            $kpiData = KpiModel::where('periode_tipe', 'monthly')
+            ->where('month', $currentMonth)
+            ->first();
+
+            if ($kpiData) {
+                $sumberKpi = 'monthly';
+                $startDate = Carbon::parse($currentMonth . '-01')->startOfMonth();
+                $endDate = Carbon::parse($currentMonth . '-01')->endOfMonth();
+            } else {
+                // Jika tidak ada monthly, ambil weekly terbaru
+                $kpiData = KpiModel::where('periode_tipe',
+                    'weekly'
+                )
+                ->whereDate('end_date', '<=', $today)
+                    ->orderBy('end_date', 'desc')
+                    ->first();
+
+                if ($kpiData) {
+                    $sumberKpi = 'weekly-terbaru';
+                    $startDate = Carbon::parse($kpiData->start_date);
+                    $endDate = Carbon::parse($kpiData->end_date);
+                }
+            }
+        }
+
+        // Jika tidak ada data KPI sama sekali
+        if (!$kpiData) {
+            return response()->json([
+                'message' => 'Tidak ada data KPI monthly maupun weekly.'
+            ], 404);
+        }
+
+        $finishGoods = $kpiData->finish_goods;
+        $kecapMatang = $kpiData->kecap_matang;
 
         /**
          * Validasi agar tidak membagi dengan nol
@@ -316,96 +361,176 @@ class KpiController extends Controller
             ], 422);
         }
 
-        if ($kecapMatang <= 0
-        ) {
+        if ($kecapMatang <= 0) {
             return response()->json([
                 'message' => 'Kecap Matang tidak valid (<=0).'
             ], 422);
         }
 
         /**
-         * 2. Ambil data listrik bulan berjalan
+         * 2. Ambil data listrik berdasarkan range tanggal
          */
-        $listrik = PemakaianListrikModel::whereMonth('waktu', $today->month)
-            ->whereYear('waktu', $today->year)
-            ->orderBy('waktu')
-            ->get();
+        $listrik = PemakaianListrikModel::whereBetween('waktu', [$startDate, $endDate])
+        ->orderBy('panel_type')
+        ->orderBy('waktu')
+        ->get();
 
         if ($listrik->isEmpty()) {
             return response()->json([
-                'message' => 'Tidak ada data listrik bulan ini.'
+                'message' => 'Tidak ada data listrik pada periode ini.'
             ], 404);
         }
 
         /**
-         * 3. Panel Produksi & Semua Panel
+         * 3. Group data by panel_type
          */
-        $panelProduksi = ['SDP1', 'SDP2', 'SDP3', 'SDP5', 'SDP9', 'SDP10', 'SDP11'];
-
-        // Group data by panel_type
         $groupedByPanel = $listrik->groupBy('panel_type');
 
         /**
-         * 4. Hitung Total Produksi (SDP Produksi) dengan Delta
+         * 4. Hitung usage per panel dengan detail per hari
          */
-        $totalProduksi = 0;
-
-        foreach ($panelProduksi as $panel) {
-            if (!$groupedByPanel->has($panel)) continue;
-
-            $panelData = $groupedByPanel[$panel]->sortBy('waktu')->pluck('mwh')->values();
-
-            // Hitung delta untuk panel ini
-            for ($i = 0; $i < $panelData->count() - 1; $i++) {
-                $delta = $panelData[$i + 1] - $panelData[$i];
-                if ($delta >= 0) {
-                    $totalProduksi += $delta;
-                }
-            }
-        }
-
-        /**
-         * 5. Hitung Total BAS (Semua Panel kecuali MDP) dengan Delta
-         */
-        $totalBas = 0;
+        $panelUsages = [];
+        $panelUsageDetails = []; // Detail usage per hari
 
         foreach ($groupedByPanel as $panel => $panelData) {
-            // Skip MDP panel
-            if ($panel === 'MDP') continue;
+            $sortedData = $panelData->sortBy('waktu')->values();
+            $totalUsage = 0;
+            $dailyUsage = []; // Array untuk menyimpan usage per hari
 
-            $panelValues = $panelData->sortBy('waktu')->pluck('mwh')->values();
+            // Hitung delta antara hari ini dan esok hari
+            for ($i = 0; $i < $sortedData->count() - 1; $i++) {
+                $currentDate = $sortedData[$i]->waktu;
+                $nextDate = $sortedData[$i + 1]->waktu;
+                $currentMwh = $sortedData[$i]->mwh;
+                $nextMwh = $sortedData[$i + 1]->mwh;
 
-            // Hitung delta untuk panel ini
-            for ($i = 0; $i < $panelValues->count() - 1; $i++) {
-                $delta = $panelValues[$i + 1] - $panelValues[$i];
+                $delta = $nextMwh - $currentMwh;
+
+                // Simpan detail per hari
+                $dailyUsage[] = [
+                    'tanggal' => $currentDate,
+                    'mwh_sekarang' => round($currentMwh, 2),
+                    'mwh_esok' => round($nextMwh, 2),
+                    'tanggal_esok' => $nextDate,
+                    'usage' => round($delta, 2),
+                    'status' => $delta >= 0 ? 'valid' : 'negative'
+                ];
+
                 if ($delta >= 0) {
-                    $totalBas += $delta;
+                    $totalUsage += $delta;
+                }
+            }
+
+            $panelUsages[$panel] = $totalUsage;
+            $panelUsageDetails[$panel] = $dailyUsage;
+        }
+
+        /**
+         * 5. Hitung Total Produksi (SDP1 + SDP2 + 71.3% SDP3 + SDP5 + SDP9 + SDP10 + SDP11)
+         */
+        $totalProduksi = 0;
+        $panelProduksi = ['SDP1', 'SDP2', 'SDP3', 'SDP5', 'SDP9', 'SDP10', 'SDP11'];
+        $detailProduksi = [];
+
+        foreach ($panelProduksi as $panel) {
+            if (isset($panelUsages[$panel])) {
+                if ($panel === 'SDP3') {
+                    // Hanya ambil 71.3% dari SDP3
+                    $contribution = $panelUsages[$panel] * 0.713;
+                    $totalProduksi += $contribution;
+                    $detailProduksi[$panel] = [
+                        'total_usage' => round($panelUsages[$panel], 2),
+                        'percentage' => 71.3,
+                        'contribution' => round($contribution, 2)
+                    ];
+                } else {
+                    $totalProduksi += $panelUsages[$panel];
+                    $detailProduksi[$panel] = [
+                        'total_usage' => round($panelUsages[$panel],
+                            2
+                        ),
+                        'percentage' => 100,
+                        'contribution' => round($panelUsages[$panel], 2)
+                    ];
                 }
             }
         }
 
         /**
-         * 6. KPI Perhitungan
+         * 6. Hitung Total BAS (Semua SDP1 sampai SDP14)
+         */
+        $totalBas = 0;
+        $detailBas = [];
+
+        for ($i = 1; $i <= 14; $i++) {
+            $panel = 'SDP' . $i;
+            if (isset($panelUsages[$panel])) {
+                $totalBas += $panelUsages[$panel];
+                $detailBas[$panel] = round($panelUsages[$panel], 2);
+            }
+        }
+
+        /**
+         * 7. KPI Perhitungan
          */
         $kpiProduksi = $totalProduksi / $finishGoods;
         $kpiBas = $totalBas / $kecapMatang;
 
         return response()->json([
-            'periode' => $currentMonth,
-            'kpi_sumber' => $sumberKpi,
+            'periode' => [
+                'type' => $sumberKpi,
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'display' => $sumberKpi === 'monthly'
+                ? Carbon::parse($startDate)->format('F Y')
+                : $startDate->format('d M') . ' - ' .
+                    $endDate->format('d M Y')
+            ],
 
-            'finish_goods' => $finishGoods,
-            'kecap_matang' => $kecapMatang,
+            'kpi_data' => [
+                'finish_goods' => $finishGoods,
+                'kecap_matang' => $kecapMatang,
+            ],
 
-            'total_listrik_produksi' => round($totalProduksi, 2),
-            'total_listrik_bas' => round($totalBas,
-                2
-            ),
+            'listrik' => [
+                'total_produksi' => round($totalProduksi, 2),
+                'total_bas' => round($totalBas, 2),
+                'detail_per_panel' => array_map(function ($usage) {
+                    return round($usage, 2);
+                }, $panelUsages),
 
-            'kpi_listrik_produksi' => round($kpiProduksi,
-                4
-            ),
-            'kpi_listrik_bas' => round($kpiBas, 4)
+                // Detail usage per hari untuk setiap panel
+                'usage_harian_per_panel' => $panelUsageDetails,
+
+                // Detail kontribusi untuk produksi
+                'detail_produksi' => $detailProduksi,
+
+                // Detail untuk BAS
+                'detail_bas' => $detailBas
+            ],
+
+            'kpi' => [
+                'listrik_produksi' => round($kpiProduksi,
+                    4
+                ),
+                'listrik_bas' => round($kpiBas, 4)
+            ]
         ]);
+    }
+
+    public function getAvailableWeeks()
+    {
+        $weeks = KpiModel::where('periode_tipe', 'weekly')
+        ->orderBy('start_date', 'desc')
+        ->get(['id', 'start_date', 'end_date'])
+        ->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'start_date' => $item->start_date,
+                'end_date' => $item->end_date
+            ];
+        });
+
+        return response()->json($weeks);
     }
 }
