@@ -31,13 +31,30 @@
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-gradient-warning text-white border-0">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h5 class="card-title mb-1 text-white fw-semibold">KPI Listrik</h5>
-                                <p class="mb-0 opacity-75 small">Key Performance Indicator Pemakaian Listrik</p>
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Toggle Filter Type -->
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="filter_type_kpi" id="filter_type_monthly" value="monthly" checked>
+                                <label class="btn btn-outline-warning btn-sm" for="filter_type_monthly">
+                                    <i class="ri-calendar-line me-1"></i>Bulanan
+                                </label>
+
+                                <input type="radio" class="btn-check" name="filter_type_kpi" id="filter_type_weekly" value="weekly">
+                                <label class="btn btn-outline-warning btn-sm" for="filter_type_weekly">
+                                    <i class="ri-calendar-2-line me-1"></i>Mingguan
+                                </label>
                             </div>
-                            <div>
-                                <input type="month" id="filter_kpi_listrik" class="form-control form-control-sm bg-white" style="width: 140px;">
+
+                            <!-- Monthly Filter -->
+                            <div id="monthly_filter_container">
+                                <input type="month" id="filter_kpi_monthly" class="form-control form-control-sm bg-white" style="width: 140px;">
+                            </div>
+
+                            <!-- Weekly Filter -->
+                            <div id="weekly_filter_container" style="display: none;">
+                                <select id="filter_kpi_weekly" class="form-select form-select-sm bg-white" style="width: 200px;">
+                                    <option value="">Pilih Minggu...</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -388,32 +405,73 @@
         }
     }
 
-    // Fetch KPI Data
-    function fetchKPIListrik(periode = null) {
+    // Helper function to format date
+    function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    // Function to load available weeks
+    function loadAvailableWeeks() {
+        $.getJSON('{{ url("api/utility/kpi/listrik/weeks") }}', function(data) {
+            const select = $('#filter_kpi_weekly');
+            select.empty();
+            select.append('<option value="">Pilih Minggu...</option>');
+
+            data.forEach(week => {
+                const label = `${formatDate(week.start_date)} - ${formatDate(week.end_date)}`;
+                select.append(`<option value="${week.id}">${label}</option>`);
+            });
+        }).fail(function() {
+            console.error('Gagal memuat data mingguan');
+            alert('Gagal memuat daftar minggu dari database');
+        });
+    }
+
+    // Fetch KPI Data - Updated version
+    function fetchKPIListrik(filterType = null, filterValue = null) {
         showLoading('loading-kpi');
-        const url = periode ? `{{ url('api/utility/kpi/listrik') }}?periode=${periode}` : `{{ url('api/utility/kpi/listrik') }}`;
+
+        let url = '{{ url("api/utility/kpi/listrik") }}';
+        const params = [];
+
+        if (filterType && filterValue) {
+            params.push(`filter_type=${filterType}`);
+            params.push(`filter_value=${filterValue}`);
+        }
+
+        if (params.length > 0) {
+            url += '?' + params.join('&');
+        }
 
         $.getJSON(url, function(data) {
+            // Update periode display (bisa ditampilkan di UI jika diperlukan)
+            console.log('Periode:', data.periode.display);
+
             // Update values
-            $('#kpi_finish_goods').text(parseFloat(data.finish_goods).toLocaleString('id-ID', {
-                minimumFractionDigits: 4,
-                maximumFractionDigits: 4
+            $('#kpi_finish_goods').text(parseFloat(data.kpi_data.finish_goods).toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             }));
-            $('#kpi_kecap_matang').text(parseFloat(data.kecap_matang).toLocaleString('id-ID', {
-                minimumFractionDigits: 4,
-                maximumFractionDigits: 4
+
+            $('#kpi_kecap_matang').text(parseFloat(data.kpi_data.kecap_matang).toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             }));
-            $('#kpi_total_listrik_produksi').text(parseFloat(data.total_listrik_produksi).toLocaleString('id-ID', {
-                minimumFractionDigits: 4,
-                maximumFractionDigits: 4
+
+            $('#kpi_total_listrik_produksi').text(parseFloat(data.listrik.total_produksi).toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             }));
-            $('#kpi_total_listrik_bas').text(parseFloat(data.total_listrik_bas).toLocaleString('id-ID', {
-                minimumFractionDigits: 4,
-                maximumFractionDigits: 4
+
+            $('#kpi_total_listrik_bas').text(parseFloat(data.listrik.total_bas).toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             }));
 
             // KPI Hasil Produksi: 510 Kwh / 10 ton FG
-            const kpiProduksi = parseFloat(data.kpi_listrik_produksi).toFixed(4);
+            const kpiProduksi = parseFloat(data.kpi.listrik_produksi).toFixed(4);
             $('#kpi_hasil_produksi').text(kpiProduksi + ' Kwh/10 ton FG');
 
             // Calculate percentage for progress bar (target = 51)
@@ -431,7 +489,7 @@
             }
 
             // KPI Hasil BAS: 75 Kwh/ton kecap matang
-            const kpiBas = parseFloat(data.kpi_listrik_bas).toFixed(4);
+            const kpiBas = parseFloat(data.kpi.listrik_bas).toFixed(4);
             $('#kpi_hasil_bas').text(kpiBas + ' Kwh/ton');
 
             // Calculate percentage for progress bar (target = 75)
@@ -449,8 +507,9 @@
             }
 
             $('#kpi-content').fadeIn(300);
-        }).fail(function() {
-            alert('Gagal memuat data KPI');
+        }).fail(function(xhr) {
+            const errorMsg = xhr.responseJSON?.message || 'Gagal memuat data KPI';
+            alert(errorMsg);
         }).always(function() {
             hideLoading('loading-kpi');
         });
@@ -507,10 +566,13 @@
         const currentMonth = today.toISOString().slice(0, 7); // Format: YYYY-MM
 
         // Set default value for month filter
-        $('#filter_kpi_listrik').val(currentMonth);
+        $('#filter_kpi_monthly').val(currentMonth);
 
-        // Load KPI data
+        // Load KPI data (default - will use monthly current or weekly latest)
         fetchKPIListrik();
+
+        // Load available weeks for dropdown
+        loadAvailableWeeks();
 
         // Load bar chart
         fetchListrik(start, end);
@@ -518,10 +580,48 @@
         // Trend chart
         const fetchTrendListrik = setupTrend("#pemakaian_listrik_chart", "{{ url('api/utility/trend-pemakaian-listrik') }}", "mWh", "trendListrik", "loading-trend-listrik");
 
-        // Event listener filter bulan KPI
-        $('#filter_kpi_listrik').on('change', function() {
-            const selectedPeriode = this.value;
-            fetchKPIListrik(selectedPeriode);
+        // ========== EVENT LISTENERS ==========
+
+        // Toggle between monthly and weekly filter
+        $('input[name="filter_type_kpi"]').on('change', function() {
+            const filterType = $(this).val();
+
+            if (filterType === 'monthly') {
+                $('#monthly_filter_container').slideDown(200);
+                $('#weekly_filter_container').slideUp(200);
+
+                // Load monthly data
+                const selectedMonth = $('#filter_kpi_monthly').val();
+                if (selectedMonth) {
+                    fetchKPIListrik('monthly', selectedMonth);
+                }
+            } else {
+                $('#monthly_filter_container').slideUp(200);
+                $('#weekly_filter_container').slideDown(200);
+
+                // Auto-select first week if available
+                const firstWeekValue = $('#filter_kpi_weekly option:eq(1)').val();
+                if (firstWeekValue) {
+                    $('#filter_kpi_weekly').val(firstWeekValue);
+                    fetchKPIListrik('weekly', firstWeekValue);
+                }
+            }
+        });
+
+        // Event listener for monthly filter
+        $('#filter_kpi_monthly').on('change', function() {
+            const selectedMonth = $(this).val();
+            if (selectedMonth) {
+                fetchKPIListrik('monthly', selectedMonth);
+            }
+        });
+
+        // Event listener for weekly filter
+        $('#filter_kpi_weekly').on('change', function() {
+            const selectedWeek = $(this).val();
+            if (selectedWeek) {
+                fetchKPIListrik('weekly', selectedWeek);
+            }
         });
 
         // Event listener filter bulan trend
@@ -542,10 +642,7 @@
             $("#selectedBulanListrik").text(`${start} s/d ${end}`);
             fetchListrik(start, end);
         });
-    });
 
-
-    $(function() {
         // Prevent dropdown from closing when clicking inside
         $('.dropdown-menu').on('click', function(e) {
             e.stopPropagation();
