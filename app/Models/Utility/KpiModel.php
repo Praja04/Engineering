@@ -19,5 +19,8 @@ class KpiModel extends Model
         'month',
         'finish_goods',
         'kecap_matang',
+        'invoice_listrik',
+        'steam',
+        'batubara',
     ];
 }
