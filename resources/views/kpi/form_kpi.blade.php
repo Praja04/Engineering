@@ -58,6 +58,24 @@
                             <input type="number" step="0.01" id="kecap_matang" name="kecap_matang" class="form-control"
                                 placeholder="Contoh: 85.75" required>
                         </div>
+                        <!-- Nilai Invoice Listrik -->
+                        <div class="mb-3">
+                            <label for="invoice_listrik" class="form-label fw-semibold">Invoice Listrik (Rp)</label>
+                            <input type="number" step="0.01" id="invoice_listrik" name="invoice_listrik" class="form-control"
+                                placeholder="Contoh: 1500000">
+                        </div>
+                        <!-- Nilai Steam -->
+                        <div class="mb-3">
+                            <label for="steam" class="form-label fw-semibold">Steam (Kg)</label>
+                            <input type="number" step="0.01" id="steam" name="steam" class="form-control"
+                                placeholder="Contoh: 5000">
+                        </div>
+                        <!-- Nilai Batubara -->
+                        <div class="mb-3">
+                            <label for="batubara" class="form-label fw-semibold">Batubara (Kg)</label>
+                            <input type="number" step="0.01" id="batubara" name="batubara" class="form-control"
+                                placeholder="Contoh: 3000">
+                        </div>
 
                         <!-- Tombol Aksi -->
                         <div class="d-flex justify-content-end gap-2 mt-4">

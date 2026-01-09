@@ -71,6 +71,9 @@
                                         <th>Tgl Akhir</th>
                                         <th>Finish Goods (Ton)</th>
                                         <th>Kecap Matang (Ton)</th>
+                                        <th>Invoice Listrik</th>
+                                        <th>Steam</th>
+                                        <th>Batubara</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -88,6 +91,9 @@
                                         <th>Bulan</th>
                                         <th>Finish Goods (Ton)</th>
                                         <th>Kecap Matang (Ton)</th>
+                                        <th>Invoice Listrik</th>
+                                        <th>Steam</th>
+                                        <th>Batubara</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -151,6 +157,19 @@
                             <input type="number" id="kecap_matang" class="form-control" step="0.01" min="0"
                                 required>
                         </div>
+                        <div class="mb-3">
+                            <label for="invoice_listrik" class="form-label">Invoice Listrik</label>
+                            <input type="number" id="invoice_listrik" class="form-control" step="0.01" min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="steam" class="form-label">Steam</label>
+                            <input type="number" id="steam" class="form-control" step="0.01" min="0">
+                        </div>  
+                        <div class="mb-3">
+                            <label for="batubara" class="form-label">Batubara</label>
+                            <input type="number" id="batubara" class="form-control" step="0.01" min="0">
+                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -209,6 +228,9 @@
                     $.each(data, function(i, item) {
                         const finishGoods = formatNumber(item.finish_goods);
                         const kecapMatang = formatNumber(item.kecap_matang);
+                        const invoiceListrik = formatNumber(item.invoice_listrik);
+                        const steam = formatNumber(item.steam);
+                        const batubara = formatNumber(item.batubara);
 
                         if (periode === 'weekly') {
                             const startDate = item.start_date ? `${item.start_date}` : '-';
@@ -221,6 +243,10 @@
                                     <td>${endDate}</td>
                                     <td>${finishGoods}</td>
                                     <td>${kecapMatang}</td>
+                                    <td>${invoiceListrik}</td>
+                                    <td>${steam}</td>
+                                    <td>${batubara}</td>
+
                                     <td>
                                         <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
                                             <i class="mdi mdi-pencil"></i> Edit
@@ -241,6 +267,10 @@
                                     <td>${month}</td>
                                     <td>${finishGoods}</td>
                                     <td>${kecapMatang}</td>
+                                    <td>${invoiceListrik}</td>
+                                    <td>${steam}</td>
+                                    <td>${batubara}</td>
+
                                     <td>
                                         <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
                                             <i class="mdi mdi-pencil"></i> Edit
@@ -293,6 +323,9 @@
                     periode_tipe: periode,
                     finish_goods: $('#finish_goods').val(),
                     kecap_matang: $('#kecap_matang').val(),
+                    invoice_listrik: $('#invoice_listrik').val(),
+                    steam: $('#steam').val(),
+                    batubara: $('#batubara').val()
                 };
 
                 // WEEKLY
@@ -389,6 +422,9 @@
 
                         $('#finish_goods').val(formatNumber(res.data.finish_goods));
                         $('#kecap_matang').val(formatNumber(res.data.kecap_matang));
+                        $('#invoice_listrik').val(formatNumber(res.data.invoice_listrik));
+                        $('#steam').val(formatNumber(res.data.steam));
+                        $('#batubara').val(formatNumber(res.data.batubara));
 
                         $('#modalKpi').modal('show');
                     } else {

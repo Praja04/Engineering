@@ -412,17 +412,32 @@
         return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
     }
 
-    // Function to load available weeks
-    function loadAvailableWeeks() {
+    // Function to load available weeks filtered by month
+    function loadAvailableWeeks(selectedMonth = null) {
+        // Jika tidak ada selectedMonth, gunakan bulan yang sedang dipilih
+        if (!selectedMonth) {
+            selectedMonth = $('#filter_kpi_monthly').val();
+        }
+
         $.getJSON('{{ url("api/utility/kpi/listrik/weeks") }}', function(data) {
             const select = $('#filter_kpi_weekly');
             select.empty();
             select.append('<option value="">Pilih Minggu...</option>');
 
-            data.forEach(week => {
-                const label = `${formatDate(week.start_date)} - ${formatDate(week.end_date)}`;
-                select.append(`<option value="${week.id}">${label}</option>`);
+            // Filter weeks berdasarkan bulan yang dipilih
+            const filteredWeeks = data.filter(week => {
+                const weekMonth = week.start_date.substring(0, 7); // Format: YYYY-MM
+                return weekMonth === selectedMonth;
             });
+
+            if (filteredWeeks.length === 0) {
+                select.append('<option value="" disabled>Tidak ada data mingguan di bulan ini</option>');
+            } else {
+                filteredWeeks.forEach(week => {
+                    const label = `${formatDate(week.start_date)} - ${formatDate(week.end_date)}`;
+                    select.append(`<option value="${week.id}">${label}</option>`);
+                });
+            }
         }).fail(function() {
             console.error('Gagal memuat data mingguan');
             alert('Gagal memuat daftar minggu dari database');
@@ -448,62 +463,79 @@
         $.getJSON(url, function(data) {
             // Update periode display (bisa ditampilkan di UI jika diperlukan)
             console.log('Periode:', data.periode.display);
+            console.log('Has KPI Data:', data.periode.has_kpi_data);
 
-            // Update values
-            $('#kpi_finish_goods').text(parseFloat(data.kpi_data.finish_goods).toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }));
+            // Check if KPI data is available
+            const hasKpiData = data.periode.has_kpi_data;
 
-            $('#kpi_kecap_matang').text(parseFloat(data.kpi_data.kecap_matang).toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }));
+            if (hasKpiData) {
+                // Sembunyikan alert dan tampilkan KPI cards
+                $('#no-kpi-alert').hide();
+                $('.kpi-cards-container').show();
 
-            $('#kpi_total_listrik_produksi').text(parseFloat(data.listrik.total_produksi).toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }));
+                // Update values - KPI data tersedia
+                $('#kpi_finish_goods').text(parseFloat(data.kpi_data.finish_goods).toLocaleString('id-ID', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }));
 
-            $('#kpi_total_listrik_bas').text(parseFloat(data.listrik.total_bas).toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }));
+                $('#kpi_kecap_matang').text(parseFloat(data.kpi_data.kecap_matang).toLocaleString('id-ID', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }));
 
-            // KPI Hasil Produksi: 510 Kwh / 10 ton FG
-            const kpiProduksi = parseFloat(data.kpi.listrik_produksi).toFixed(4);
-            $('#kpi_hasil_produksi').text(kpiProduksi + ' Kwh/10 ton FG');
+                $('#kpi_total_listrik_produksi').text(parseFloat(data.listrik.total_produksi).toLocaleString('id-ID', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }));
 
-            // Calculate percentage for progress bar (target = 51)
-            const targetProduksi = 51;
-            const percentageProduksi = Math.min((kpiProduksi / targetProduksi) * 100, 100);
-            $('#kpi_progress_produksi').css('width', percentageProduksi + '%');
+                $('#kpi_total_listrik_bas').text(parseFloat(data.listrik.total_bas).toLocaleString('id-ID', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }));
 
-            // Change color based on achievement
-            if (kpiProduksi <= targetProduksi) {
-                $('#kpi_progress_produksi').removeClass('bg-danger').addClass('bg-success');
-                $('#kpi_hasil_produksi').removeClass('text-danger').addClass('text-success');
+                // KPI Hasil Produksi: 510 Kwh / 10 ton FG
+                const kpiProduksi = parseFloat(data.kpi.listrik_produksi).toFixed(4);
+                $('#kpi_hasil_produksi').text(kpiProduksi + ' Kwh/10 ton FG');
+
+                // Calculate percentage for progress bar (target = 51)
+                const targetProduksi = 51;
+                const percentageProduksi = Math.min((kpiProduksi / targetProduksi) * 100, 100);
+                $('#kpi_progress_produksi').css('width', percentageProduksi + '%');
+
+                // Change color based on achievement
+                if (kpiProduksi <= targetProduksi) {
+                    $('#kpi_progress_produksi').removeClass('bg-danger').addClass('bg-success');
+                    $('#kpi_hasil_produksi').removeClass('text-danger').addClass('text-success');
+                } else {
+                    $('#kpi_progress_produksi').removeClass('bg-success').addClass('bg-danger');
+                    $('#kpi_hasil_produksi').removeClass('text-success').addClass('text-danger');
+                }
+
+                // KPI Hasil BAS: 75 Kwh/ton kecap matang
+                const kpiBas = parseFloat(data.kpi.listrik_bas).toFixed(4);
+                $('#kpi_hasil_bas').text(kpiBas + ' Kwh/ton');
+
+                // Calculate percentage for progress bar (target = 75)
+                const targetBas = 75;
+                const percentageBas = Math.min((kpiBas / targetBas) * 100, 100);
+                $('#kpi_progress_bas').css('width', percentageBas + '%');
+
+                // Change color based on achievement
+                if (kpiBas <= targetBas) {
+                    $('#kpi_progress_bas').removeClass('bg-danger').addClass('bg-success');
+                    $('#kpi_hasil_bas').removeClass('text-danger').addClass('text-success');
+                } else {
+                    $('#kpi_progress_bas').removeClass('bg-success').addClass('bg-danger');
+                    $('#kpi_hasil_bas').removeClass('text-success').addClass('text-danger');
+                }
             } else {
-                $('#kpi_progress_produksi').removeClass('bg-success').addClass('bg-danger');
-                $('#kpi_hasil_produksi').removeClass('text-success').addClass('text-danger');
-            }
+                // Tampilkan alert dan sembunyikan KPI cards
+                $('.kpi-cards-container').hide();
+                $('#no-kpi-alert').show();
 
-            // KPI Hasil BAS: 75 Kwh/ton kecap matang
-            const kpiBas = parseFloat(data.kpi.listrik_bas).toFixed(4);
-            $('#kpi_hasil_bas').text(kpiBas + ' Kwh/ton');
-
-            // Calculate percentage for progress bar (target = 75)
-            const targetBas = 75;
-            const percentageBas = Math.min((kpiBas / targetBas) * 100, 100);
-            $('#kpi_progress_bas').css('width', percentageBas + '%');
-
-            // Change color based on achievement
-            if (kpiBas <= targetBas) {
-                $('#kpi_progress_bas').removeClass('bg-danger').addClass('bg-success');
-                $('#kpi_hasil_bas').removeClass('text-danger').addClass('text-success');
-            } else {
-                $('#kpi_progress_bas').removeClass('bg-success').addClass('bg-danger');
-                $('#kpi_hasil_bas').removeClass('text-success').addClass('text-danger');
+                // Update periode di alert
+                $('#alert-periode').text(data.periode.display);
             }
 
             $('#kpi-content').fadeIn(300);
@@ -571,8 +603,8 @@
         // Load KPI data (default - will use monthly current or weekly latest)
         fetchKPIListrik();
 
-        // Load available weeks for dropdown
-        loadAvailableWeeks();
+        // Load available weeks for dropdown (filtered by current month)
+        loadAvailableWeeks(currentMonth);
 
         // Load bar chart
         fetchListrik(start, end);
@@ -612,7 +644,14 @@
         $('#filter_kpi_monthly').on('change', function() {
             const selectedMonth = $(this).val();
             if (selectedMonth) {
-                fetchKPIListrik('monthly', selectedMonth);
+                // Update weekly dropdown berdasarkan bulan yang dipilih
+                loadAvailableWeeks(selectedMonth);
+
+                // Jika sedang di mode monthly, langsung fetch data
+                const filterType = $('input[name="filter_type_kpi"]:checked').val();
+                if (filterType === 'monthly') {
+                    fetchKPIListrik('monthly', selectedMonth);
+                }
             }
         });
 
@@ -655,7 +694,6 @@
         });
     });
 </script>
-
 <!-- Enhanced CSS Styles -->
 <style>
     :root {
