@@ -14,10 +14,10 @@ class BoilerController extends Controller
         return view('boiler.form');
     }
 
-    public function viewData()
-    {
-        return view('boiler.data');
-    }
+    // public function viewData()
+    // {
+    //     return view('boiler.data');
+    // }
 
     public function store(Request $request)
     {
@@ -58,7 +58,7 @@ class BoilerController extends Controller
     {
         $query = BoilerModel::query();
 
-        // filter dinamis
+        // Filter dinamis tanggal (tetap sama seperti sebelumnya)
         if ($request->start_date && $request->end_date) {
             $query->whereBetween('date', [$request->start_date, $request->end_date]);
         } elseif ($request->start_date) {
@@ -66,14 +66,21 @@ class BoilerController extends Controller
         } elseif ($request->end_date) {
             $query->whereDate('date', '<=', $request->end_date);
         } else {
-            // ➤ Default: 30 hari terakhir
-            $start = Carbon::now()->subDays(30)->format('Y-m-d');
-            $end   = Carbon::now()->format('Y-m-d');
+            $start = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $end   = Carbon::now()->endOfMonth()->format('Y-m-d');
 
             $query->whereBetween('date', [$start, $end]);
         }
 
-        $data = $query->orderBy('date', 'desc')->get();
+        $query->orderBy('date', 'desc');
+
+        // Pagination
+        $perPage = $request->input('per_page', 10);
+        $perPage = min(max($perPage, 5), 100);
+
+        $data = $query->paginate($perPage);
+
+        $data->appends($request->query());
 
         return response()->json($data);
     }
