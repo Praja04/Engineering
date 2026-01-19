@@ -33,13 +33,30 @@
             </div> --}}
 
             {{-- Card Table --}}
+            <div class="card shadow-sm border-0 rounded-3 mb-3" id="filterCard">
+                <div class="card-body">
+                    <form id="filterForm" class="row g-3 align-items-end">
+                        <div class="col-md-6" id="filterRangeContainer">
+                            <!-- Akan diisi dinamis berdasarkan tab -->
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-end gap-2">
+                            <button type="button" id="btnFilter" class="btn btn-primary w-50">
+                                <i class="mdi mdi-filter me-1"></i> Filter
+                            </button>
+                            <button type="button" id="btnReset" class="btn btn-secondary w-50">
+                                <i class="mdi mdi-refresh me-1"></i> Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Data KPI</h5>
                 </div>
-
                 <div class="card-body">
-
                     <!-- TABS -->
                     <ul class="nav nav-pills nav-justified mb-3" id="boilerTabs" role="tablist">
                         <li class="nav-item" role="presentation">
@@ -71,7 +88,7 @@
                                         <th>Tgl Akhir</th>
                                         <th>Finish Goods (Ton)</th>
                                         <th>Kecap Matang (Ton)</th>
-                                        <th>Invoice Listrik</th>
+                                        {{-- <th>Invoice Listrik</th> --}}
                                         <th>Steam</th>
                                         <th>Batubara</th>
                                         <th>Aksi</th>
@@ -79,6 +96,7 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                            <div id="pagination-weekly" class="mt-3"></div>
                         </div>
 
                         <!-- MONTHLY TAB -->
@@ -99,6 +117,7 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
+                            <div id="pagination-monthly" class="mt-3"></div>
                         </div>
                     </div>
                 </div>
@@ -157,14 +176,15 @@
                             <input type="number" id="kecap_matang" class="form-control" step="0.01" min="0"
                                 required>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3 monthly-only">
                             <label for="invoice_listrik" class="form-label">Invoice Listrik</label>
-                            <input type="number" id="invoice_listrik" class="form-control" step="0.01" min="0">
+                            <input type="number" id="invoice_listrik" class="form-control" step="0.01"
+                                min="0">
                         </div>
                         <div class="mb-3">
                             <label for="steam" class="form-label">Steam</label>
                             <input type="number" id="steam" class="form-control" step="0.01" min="0">
-                        </div>  
+                        </div>
                         <div class="mb-3">
                             <label for="batubara" class="form-label">Batubara</label>
                             <input type="number" id="batubara" class="form-control" step="0.01" min="0">
@@ -189,32 +209,100 @@
             const $form = $('#formKpi');
             const today = new Date().toISOString().split('T')[0];
             $('#filterTanggal').val(today);
+            let currentTab = 'weekly';
+            const $weeklyTab = $('#weekly-tab');
+            const $monthlyTab = $('#monthly-tab');
+            const $filterRangeContainer = $('#filterRangeContainer');
 
-            const formatNumber = (num) => {
-                const val = parseFloat(num);
-                if (isNaN(val)) return '-';
-                return val % 1 === 0 ? val.toFixed(0) : parseFloat(val.toString()).toString();
-            };
+            function updateFilterUI(tab) {
+                if (tab === 'weekly') {
+                    $filterRangeContainer.html(`
+                        <label class="form-label">Rentang Tanggal</label>
+                        <div class="input-group">
+                            <input type="date" id="start_date" class="form-control" placeholder="Mulai">
+                            <input type="date" id="end_date" class="form-control" placeholder="Sampai">
+                        </div>
+                    `);
+                } else if (tab === 'monthly') {
+                    $filterRangeContainer.html(`
+                        <label class="form-label">Bulan</label>
+                        <input type="month" id="filterMonth" class="form-control">
+                    `);
+                }
 
+                $('#filterForm')[0].reset();
+            }
+
+            // Default awal
+            updateFilterUI('weekly');
             loadData('weekly');
 
-            function loadData(periode = '', tanggal = '') {
-                $.get("{{ route('kpi.get-data') }}", {
+            // Saat tab berubah → update state & UI
+            $weeklyTab.on('shown.bs.tab', function() {
+                currentTab = 'weekly';
+                updateFilterUI('weekly');
+                loadData('weekly');
+                console.log('Tab switched to weekly');
+            });
+
+            $monthlyTab.on('shown.bs.tab', function() {
+                currentTab = 'monthly';
+                updateFilterUI('monthly');
+                loadData('monthly');
+                console.log('Tab switched to monthly');
+            });
+
+            $('#btnFilter').on('click', function() {
+                console.log('Filter diklik - currentTab:', currentTab);
+
+                let params = {
+                    periode_tipe: currentTab
+                };
+
+                if (currentTab === 'weekly') {
+                    const start = $('#start_date').val();
+                    const end = $('#end_date').val();
+                    if (start) params.start_date = start;
+                    if (end) params.end_date = end;
+                } else if (currentTab === 'monthly') {
+                    const month = $('#filterMonth').val();
+                    if (month) params.month = month;
+                }
+
+                loadData(currentTab, params);
+            });
+
+            // Tombol Reset → pakai state currentTab
+            $('#btnReset').on('click', function() {
+                $('#filterForm')[0].reset();
+                console.log('Reset diklik - reload currentTab:', currentTab);
+                loadData(currentTab); // tanpa params
+            });
+
+            // Fungsi loadData (update agar terima extra params)
+            function loadData(periode = 'weekly', extraParams = {}, page = 1) {
+                const params = {
                     periode_tipe: periode,
-                    tanggal: tanggal
-                }, function(data) {
+                    page: page,
+                    per_page: 10, // bisa diubah sesuai kebutuhan
+                    ...extraParams
+                };
+
+                $.get("{{ route('kpi.get-data') }}", params, function(response) {
                     const tableBody = periode === 'weekly' ?
                         $('#tableWeekly tbody') :
                         $('#tableMonthly tbody');
 
+                    const paginationContainer = periode === 'weekly' ?
+                        $('#pagination-weekly') :
+                        $('#pagination-monthly');
+
                     tableBody.empty();
 
-                    if (data.length === 0) {
-                        const colspan = periode === 'weekly' ? 6 : 5;
-
+                    if (response.data.length === 0) {
                         tableBody.append(`
                             <tr>
-                                <td colspan="${colspan}" class="text-center py-4">
+                                <td colspan="8" class="text-center py-4">
                                     <div class="d-flex flex-column align-items-center text-muted">
                                         <i class="mdi mdi-database-off mdi-36px mb-2"></i>
                                         <span class="fw-semibold">Tidak ada data ditemukan</span>
@@ -222,69 +310,108 @@
                                 </td>
                             </tr>
                         `);
+                        paginationContainer.empty();
                         return;
                     }
 
-                    $.each(data, function(i, item) {
-                        const finishGoods = formatNumber(item.finish_goods);
-                        const kecapMatang = formatNumber(item.kecap_matang);
-                        const invoiceListrik = formatNumber(item.invoice_listrik);
-                        const steam = formatNumber(item.steam);
-                        const batubara = formatNumber(item.batubara);
+                    $.each(response.data, function(i, item) {
+                        const no = (response.current_page - 1) * response.per_page + i + 1;
+                        const finishGoods = formatNumber(item.finish_goods || 0);
+                        const kecapMatang = formatNumber(item.kecap_matang || 0);
+                        const invoiceListrik = formatNumber(item.invoice_listrik || '-');
+                        const steam = formatNumber(item.steam || '-');
+                        const batubara = formatNumber(item.batubara || '-');
+
+                        let row = `<tr><td>${no}</td>`;
 
                         if (periode === 'weekly') {
-                            const startDate = item.start_date ? `${item.start_date}` : '-';
-                            const endDate = item.end_date ? `${item.end_date}` : '-';
-
-                            tableBody.append(`
-                                <tr>
-                                    <td>${i + 1}</td>
-                                    <td>${startDate}</td>
-                                    <td>${endDate}</td>
-                                    <td>${finishGoods}</td>
-                                    <td>${kecapMatang}</td>
-                                    <td>${invoiceListrik}</td>
-                                    <td>${steam}</td>
-                                    <td>${batubara}</td>
-
-                                    <td>
-                                        <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
-                                            <i class="mdi mdi-pencil"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-danger btnDelete" data-id="${item.id}">
-                                            <i class="mdi mdi-delete"></i> Hapus
-                                        </button>
-                                    </td>
-                                </tr>
-                            `);
-
-                        } else if (periode === 'monthly') {
-                            const month = item.month ?? '-';
-
-                            tableBody.append(`
-                                <tr>
-                                    <td>${i + 1}</td>
-                                    <td>${month}</td>
-                                    <td>${finishGoods}</td>
-                                    <td>${kecapMatang}</td>
-                                    <td>${invoiceListrik}</td>
-                                    <td>${steam}</td>
-                                    <td>${batubara}</td>
-
-                                    <td>
-                                        <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
-                                            <i class="mdi mdi-pencil"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-danger btnDelete" data-id="${item.id}">
-                                            <i class="mdi mdi-delete"></i> Hapus
-                                        </button>
-                                    </td>
-                                </tr>
-                            `);
+                            row += `
+                                <td>${item.start_date || '-'}</td>
+                                <td>${item.end_date || '-'}</td>
+                                <td>${finishGoods}</td>
+                                <td>${kecapMatang}</td>
+                                <td>${steam}</td>
+                                <td>${batubara}</td>
+                            `;
+                        } else {
+                            row += `
+                                <td>${item.month || '-'}</td>
+                                <td>${finishGoods}</td>
+                                <td>${kecapMatang}</td>
+                                <td>${invoiceListrik}</td>
+                                <td>${steam}</td>
+                                <td>${batubara}</td>
+                            `;
                         }
+
+                        row += `
+                            <td>
+                                <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
+                                    <i class="mdi mdi-pencil"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger btnDelete" data-id="${item.id}">
+                                    <i class="mdi mdi-delete"></i> Hapus
+                                </button>
+                            </td></tr>`;
+
+                        tableBody.append(row);
                     });
+
+                    // Render pagination sederhana
+                    renderPagination(response, periode);
                 });
             }
+
+            // Load awal
+            loadData('weekly');
+
+            const formatNumber = (num) => {
+                const val = parseFloat(num);
+                if (isNaN(val)) return '-';
+                return val % 1 === 0 ? val.toFixed(0) : parseFloat(val.toString()).toString();
+            };
+
+            function renderPagination(data, periode) {
+                const container = periode === 'weekly' ? $('#pagination-weekly') : $('#pagination-monthly');
+                container.empty();
+
+                if (data.last_page <= 1) return;
+
+                let html = '<nav><ul class="pagination justify-content-center">';
+
+                // Previous
+                html += `<li class="page-item ${data.current_page === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${data.current_page - 1}">Previous</a>
+                </li>`;
+
+                // Nomor halaman (tampilkan 5 sekitar current)
+                const startPage = Math.max(1, data.current_page - 2);
+                const endPage = Math.min(data.last_page, data.current_page + 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    html += `<li class="page-item ${i === data.current_page ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>`;
+                }
+
+                // Next
+                html += `<li class="page-item ${data.current_page === data.last_page ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${data.current_page + 1}">Next</a>
+                </li>`;
+
+                html += '</ul></nav>';
+                container.html(html);
+            }
+
+            // Event klik pagination
+            $(document).on('click', '.pagination a[data-page]', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (page) {
+                    const periode = $('.nav-link.active').attr('id')?.replace('-tab', '') || 'weekly';
+                    loadData(periode, {}, page); // reload dengan page baru
+                }
+            });
 
             $('#weekly-tab').on('click', () => loadData('weekly'));
             $('#monthly-tab').on('click', () => loadData('monthly'));
@@ -381,29 +508,38 @@
             });
 
             // Edit data
-            $('#periodeTipe').on('change', function() {
-                const tipe = $(this).val();
+            const periodeTipe = $('#periodeTipe');
+            const groupWeeklyEdit = $('#groupWeeklyEdit');
+            const groupMonthlyEdit = $('#groupMonthlyEdit');
+            const monthlyOnlyFields = $('.monthly-only');
+            const invoiceListrik = $('#invoice_listrik');
 
-                $('#groupWeeklyEdit, #groupMonthlyEdit').addClass('d-none');
+            // Fungsi untuk update tampilan & required berdasarkan tipe periode
+            function updatePeriodeFields() {
+                const tipe = periodeTipe.val();
+
+                // Reset dulu
+                groupWeeklyEdit.addClass('d-none');
+                groupMonthlyEdit.addClass('d-none');
+                monthlyOnlyFields.addClass('d-none');
+                invoiceListrik.prop('required', false);
 
                 if (tipe === 'weekly') {
-                    $('#groupWeeklyEdit').removeClass('d-none');
+                    groupWeeklyEdit.removeClass('d-none');
                 } else if (tipe === 'monthly') {
-                    $('#groupMonthlyEdit').removeClass('d-none');
+                    groupMonthlyEdit.removeClass('d-none');
+                    monthlyOnlyFields.removeClass('d-none');
+                    invoiceListrik.prop('required', true); // wajib hanya di monthly
                 }
-            });
+            }
+
+            // Event change periode tipe
+            periodeTipe.on('change', updatePeriodeFields);
 
             $(document).on('click', '.btnEdit', function() {
                 const id = $(this).data('id');
                 $.get("{{ url('kpi/show') }}/" + id, function(res) {
                     if (res.success) {
-                        if (!res.success) {
-                            return Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: res.message
-                            });
-                        }
                         const data = res.data;
 
                         $('#modalKpiLabel').text('Edit Data Kpi');
@@ -414,19 +550,21 @@
                         if (data.periode_tipe === 'weekly') {
                             $('#editStartDate').val(data.start_date);
                             $('#editEndDate').val(data.end_date);
-                        }
-
-                        if (data.periode_tipe === 'monthly') {
+                        } else if (data.periode_tipe === 'monthly') {
                             $('#editMonth').val(data.month);
                         }
 
-                        $('#finish_goods').val(formatNumber(res.data.finish_goods));
-                        $('#kecap_matang').val(formatNumber(res.data.kecap_matang));
-                        $('#invoice_listrik').val(formatNumber(res.data.invoice_listrik));
-                        $('#steam').val(formatNumber(res.data.steam));
-                        $('#batubara').val(formatNumber(res.data.batubara));
+                        // Isi nilai lain
+                        $('#finish_goods').val(formatNumber(data.finish_goods));
+                        $('#kecap_matang').val(formatNumber(data.kecap_matang));
+                        $('#invoice_listrik').val(formatNumber(data.invoice_listrik || 0));
+                        $('#steam').val(formatNumber(data.steam || 0));
+                        $('#batubara').val(formatNumber(data.batubara || 0));
 
                         $('#modalKpi').modal('show');
+
+                        // Update tampilan field setelah data diisi
+                        updatePeriodeFields();
                     } else {
                         Swal.fire({
                             icon: 'error',

@@ -98,15 +98,47 @@ class KpiController extends Controller
     {
         $query = KpiModel::query();
 
-        // filter dinamis
+        // Filter tipe periode (wajib)
         if ($request->periode_tipe) {
             $query->where('periode_tipe', $request->periode_tipe);
+        } else {
+            // Optional: kalau tidak ada periode_tipe, bisa return error atau default
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Parameter periode_tipe wajib diisi (weekly atau monthly)',
+                'data'    => []
+            ], 400);
         }
-        // if ($request->tanggal) {
-        //     $query->whereDate('tanggal', $request->tanggal);
-        // }
 
-        $data = $query->orderBy('created_at', 'desc')->get();
+        // Filter weekly: rentang tanggal
+        if ($request->start_date) {
+            $query->where('start_date', '>=', $request->start_date);
+        }
+        if ($request->end_date) {
+            $query->where('end_date', '<=', $request->end_date);
+        }
+
+        // Filter monthly: bulan spesifik
+        if ($request->month) {
+            $query->where('month', $request->month);
+        }
+
+        // Sorting terbaru dulu (DESC berdasarkan tanggal/bulan)
+        $query->orderByRaw("
+            CASE 
+                WHEN periode_tipe = 'weekly' THEN start_date 
+                WHEN periode_tipe = 'monthly' THEN month 
+            END DESC
+        ");
+
+        // Pagination
+        $perPage = $request->input('per_page', 10);
+        $perPage = min(max($perPage, 5), 50);
+
+        $data = $query->paginate($perPage);
+
+        $data->appends($request->query());
+
         return response()->json($data);
     }
 
@@ -322,8 +354,8 @@ class KpiController extends Controller
         // Jika ada filter weekly
         elseif ($filterType === 'weekly' && $filterValue) {
             $kpiData = KpiModel::where('periode_tipe', 'weekly')
-            ->where('id', $filterValue)
-            ->first();
+                ->where('id', $filterValue)
+                ->first();
 
             if ($kpiData) {
                 $sumberKpi = 'weekly';
@@ -338,8 +370,8 @@ class KpiController extends Controller
         // Default: cari data bulanan current month
         else {
             $kpiData = KpiModel::where('periode_tipe', 'monthly')
-            ->where('month', $currentMonth)
-            ->first();
+                ->where('month', $currentMonth)
+                ->first();
 
             if ($kpiData) {
                 $sumberKpi = 'monthly';
@@ -348,10 +380,11 @@ class KpiController extends Controller
             } else {
                 // Jika tidak ada monthly current, cari monthly terbaru
                 $latestMonthly = KpiModel::where('periode_tipe', 'monthly')
-                ->orderBy('month',
-                    'desc'
-                )
-                ->first();
+                    ->orderBy(
+                        'month',
+                        'desc'
+                    )
+                    ->first();
 
                 if ($latestMonthly) {
                     $kpiData = $latestMonthly;
@@ -361,11 +394,12 @@ class KpiController extends Controller
                 } else {
                     // Jika tidak ada monthly sama sekali, ambil weekly terbaru
                     $kpiData = KpiModel::where('periode_tipe', 'weekly')
-                    ->whereDate('end_date', '<=', $today)
-                    ->orderBy('end_date',
-                        'desc'
-                    )
-                    ->first();
+                        ->whereDate('end_date', '<=', $today)
+                        ->orderBy(
+                            'end_date',
+                            'desc'
+                        )
+                        ->first();
 
                     if ($kpiData) {
                         $sumberKpi = 'weekly-latest';
@@ -402,7 +436,7 @@ class KpiController extends Controller
                     'start_date' => $startDate->format('Y-m-d'),
                     'end_date' => $endDate->format('Y-m-d'),
                     'display' => $sumberKpi === 'monthly' || $sumberKpi === 'monthly-no-kpi' || $sumberKpi === 'monthly-latest'
-                    ? Carbon::parse($startDate)->format('F Y')
+                        ? Carbon::parse($startDate)->format('F Y')
                         : $startDate->format('d M') . ' - ' . $endDate->format('d M Y')
                 ]
             ], 404);
@@ -434,13 +468,13 @@ class KpiController extends Controller
                 $delta = $nextMwh - $currentMwh;
 
                 $dailyUsage[] = [
-                        'tanggal' => $currentDate,
-                        'mwh_sekarang' => round($currentMwh, 2),
-                        'mwh_esok' => round($nextMwh, 2),
-                        'tanggal_esok' => $nextDate,
-                        'usage' => round($delta, 2),
-                        'status' => $delta >= 0 ? 'valid' : 'negative'
-                    ];
+                    'tanggal' => $currentDate,
+                    'mwh_sekarang' => round($currentMwh, 2),
+                    'mwh_esok' => round($nextMwh, 2),
+                    'tanggal_esok' => $nextDate,
+                    'usage' => round($delta, 2),
+                    'status' => $delta >= 0 ? 'valid' : 'negative'
+                ];
 
                 if ($delta >= 0) {
                     $totalUsage += $delta;
@@ -502,8 +536,8 @@ class KpiController extends Controller
                 'start_date' => $startDate->format('Y-m-d'),
                 'end_date' => $endDate->format('Y-m-d'),
                 'display' => in_array($sumberKpi, ['monthly', 'monthly-no-kpi', 'monthly-latest'])
-                ? Carbon::parse($startDate)->format('F Y')
-                : $startDate->format('d M') . ' - ' . $endDate->format('d M Y'),
+                    ? Carbon::parse($startDate)->format('F Y')
+                    : $startDate->format('d M') . ' - ' . $endDate->format('d M Y'),
                 'has_kpi_data' => $hasKpiData
             ],
 
@@ -553,15 +587,15 @@ class KpiController extends Controller
     public function getAvailableWeeks()
     {
         $weeks = KpiModel::where('periode_tipe', 'weekly')
-        ->orderBy('start_date', 'desc')
-        ->get(['id', 'start_date', 'end_date'])
-        ->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'start_date' => $item->start_date,
-                'end_date' => $item->end_date
-            ];
-        });
+            ->orderBy('start_date', 'desc')
+            ->get(['id', 'start_date', 'end_date'])
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'start_date' => $item->start_date,
+                    'end_date' => $item->end_date
+                ];
+            });
 
         return response()->json($weeks);
     }
