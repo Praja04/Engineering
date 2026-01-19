@@ -326,6 +326,8 @@
 @endsection
 
 @section('scripts')
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
     <script>
         $(document).ready(function() {
             let currentStartDate = null;
