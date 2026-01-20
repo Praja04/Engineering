@@ -236,7 +236,7 @@ class KpiController extends Controller
         if ($filterType === 'monthly' && $filterValue) {
             $kpiData = KpiModel::where('periode_tipe', 'monthly')
             ->where('month', $filterValue)
-            ->first();
+                ->first();
 
             if ($kpiData) {
                 $sumberKpi = 'monthly';
@@ -251,7 +251,7 @@ class KpiController extends Controller
         elseif ($filterType === 'weekly' && $filterValue) {
             $kpiData = KpiModel::where('periode_tipe', 'weekly')
             ->where('id', $filterValue)
-            ->first();
+                ->first();
 
             if ($kpiData) {
                 $sumberKpi = 'weekly';
@@ -285,16 +285,17 @@ class KpiController extends Controller
         // Ambil finish goods dan kecap matang jika ada
         $finishGoods = $kpiData ? $kpiData->finish_goods : null;
         $kecapMatang = $kpiData ? $kpiData->kecap_matang : null;
+        $invoiceListrik = $kpiData ? $kpiData->invoice_listrik : null;
         $hasKpiData = ($finishGoods && $kecapMatang && $finishGoods > 0 && $kecapMatang > 0);
 
         /**
          * Ambil data listrik berdasarkan range tanggal
          */
         $listrik = PemakaianListrikModel::whereBetween('waktu', [$startDate, $endDate])
-        ->whereNotNull('usage')
-        ->orderBy('panel_type')
-        ->orderBy('waktu')
-        ->get();
+            ->whereNotNull('usage')
+            ->orderBy('panel_type')
+            ->orderBy('waktu')
+            ->get();
 
         if ($listrik->isEmpty()) {
             return response()->json([
@@ -308,7 +309,7 @@ class KpiController extends Controller
                     : $startDate->format('d M') . ' - ' . $endDate->format('d M Y'),
                     'has_kpi_data' => false
                 ]
-            ], 200); // Ubah ke 200 karena ini bukan error, hanya tidak ada data
+            ], 200);
         }
 
         /**
@@ -394,27 +395,27 @@ class KpiController extends Controller
          * Response data
          */
         $response = [
-                'periode' => [
-                    'type' => $sumberKpi,
-                    'start_date' => $startDate->format('Y-m-d'),
-                    'end_date' => $endDate->format('Y-m-d'),
-                    'display' => str_contains($sumberKpi, 'monthly')
-                    ? Carbon::parse($startDate)->format('F Y')
-                    : $startDate->format('d M') . ' - ' . $endDate->format('d M Y'),
-                    'has_kpi_data' => $hasKpiData
-                ],
+            'periode' => [
+                'type' => $sumberKpi,
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'display' => str_contains($sumberKpi, 'monthly')
+                ? Carbon::parse($startDate)->format('F Y')
+                : $startDate->format('d M') . ' - ' . $endDate->format('d M Y'),
+                'has_kpi_data' => $hasKpiData
+            ],
 
-                'listrik' => [
-                    'total_produksi' => round($totalProduksi, 2),
-                    'total_bas' => round($totalBas, 2),
-                    'detail_per_panel' => array_map(function ($usage) {
-                        return round($usage, 2);
-                    }, $panelUsages),
-                    'usage_harian_per_panel' => $panelUsageDetails,
-                    'detail_produksi' => $detailProduksi,
-                    'detail_bas' => $detailBas
-                ]
-            ];
+            'listrik' => [
+                'total_produksi' => round($totalProduksi, 2),
+                'total_bas' => round($totalBas, 2),
+                'detail_per_panel' => array_map(function ($usage) {
+                    return round($usage, 2);
+                }, $panelUsages),
+                'usage_harian_per_panel' => $panelUsageDetails,
+                'detail_produksi' => $detailProduksi,
+                'detail_bas' => $detailBas
+            ]
+        ];
 
         if ($hasKpiData) {
             $kpiProduksi = ($totalProduksi * 1000) / $finishGoods;
@@ -425,16 +426,21 @@ class KpiController extends Controller
                 'kecap_matang' => $kecapMatang,
             ];
 
+            // Tambahkan invoice jika ada dan periode adalah monthly
+            if ($invoiceListrik && str_contains($sumberKpi, 'monthly')) {
+                $response['kpi_data']['invoice_listrik'] = $invoiceListrik;
+            }
+
             $response['kpi'] = [
                 'listrik_produksi' => round($kpiProduksi, 4),
                 'listrik_bas' => round($kpiBas, 4)
             ];
         } else {
             $response['kpi_data'] = [
-                    'finish_goods' => null,
-                    'kecap_matang' => null,
-                    'message' => 'Data KPI (Finish Goods & Kecap Matang) tidak tersedia untuk periode ini. Hanya menampilkan data usage listrik.'
-                ];
+                'finish_goods' => null,
+                'kecap_matang' => null,
+                'message' => 'Data KPI (Finish Goods & Kecap Matang) tidak tersedia untuk periode ini. Hanya menampilkan data usage listrik.'
+            ];
 
             $response['kpi'] = [
                 'listrik_produksi' => null,
@@ -444,6 +450,7 @@ class KpiController extends Controller
 
         return response()->json($response);
     }
+
     public function getAvailableWeeks()
     {
         $weeks = KpiModel::where('periode_tipe', 'weekly')
@@ -458,5 +465,26 @@ class KpiController extends Controller
             });
 
         return response()->json($weeks);
+    }
+
+    public function getMonthlyInvoiceListrik(Request $request)
+    {
+        // Default: bulan sekarang (format YYYY-MM)
+        $month = $request->month ?? Carbon::now()->format('Y-m');
+
+        $data = KpiModel::where('periode_tipe', 'monthly')
+        ->where('month', $month)
+            ->orderBy('month', 'desc')
+            ->get([
+                'id',
+                'month',
+                'invoice_listrik',
+            ]);
+
+        return response()->json([
+            'status' => 'success',
+            'month'  => $month,
+            'data'   => $data
+        ]);
     }
 }
