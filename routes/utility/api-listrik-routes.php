@@ -12,4 +12,5 @@ Route::prefix('utility')->group(function () {
     Route::get('/export-pemakaian-listrik', [ListrikController::class, 'exportPemakaianListrikSpreadsheet']);
     Route::get('/kpi/listrik', [KpiController::class, 'getKpiListrik']);
     Route::get('/kpi/listrik/weeks', [KpiController::class, 'getAvailableWeeks']);
+    
 });
