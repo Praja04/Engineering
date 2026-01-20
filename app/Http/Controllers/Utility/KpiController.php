@@ -631,21 +631,25 @@ class KpiController extends Controller
             // Langsung pakai kolom usage_kwh yang sudah dihitung oleh trigger
             foreach ($sortedData as $data) {
                 $usage = $data->usage ?? 0;
+                $currentDate = Carbon::parse($data->waktu)->format('Y-m-d');
+                $currentMwh = $data->mwh ?? 0;
 
                 // Detail per hari
                 $dailyUsage[] = [
                     'tanggal' => $currentDate,
-                    'mwh_sekarang' => round($currentMwh, 2),
-                    'mwh_esok' => round($nextMwh, 2),
-                    'tanggal_esok' => $nextDate,
-                    'usage' => round($delta, 2),
-                    'status' => $delta >= 0 ? 'valid' : 'negative'
+                    'mwh' => round($currentMwh, 2),
+                    'usage' => round($usage, 2),
+                    'status' => $usage >= 0 ? 'valid' : 'negative'
                 ];
 
-                if ($delta >= 0) {
-                    $totalUsage += $delta;
+                // Hanya hitung usage yang valid (>= 0)
+                if ($usage >= 0) {
+                    $totalUsage += $usage;
                 }
             }
+
+            $panelUsages[$panel] = $totalUsage;
+            $panelUsageDetails[$panel] = $dailyUsage;
 
             $panelUsages[$panel] = $totalUsage;
             $panelUsageDetails[$panel] = $dailyUsage;
