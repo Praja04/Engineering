@@ -726,8 +726,8 @@ class KpiController extends Controller
 
         // Jika ada data KPI, tambahkan ke response
         if ($hasKpiData) {
-            $kpiProduksi = $totalProduksi / $finishGoods;
-            $kpiBas = $totalBas / $kecapMatang;
+            $kpiProduksi = ($totalProduksi*1000) / $finishGoods;
+            $kpiBas = ($totalBas*1000) / $kecapMatang;
 
             $response['kpi_data'] = [
                 'finish_goods' => $finishGoods,
