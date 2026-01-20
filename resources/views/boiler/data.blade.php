@@ -175,7 +175,7 @@
                 return val % 1 === 0 ? val.toFixed(0) : parseFloat(val.toString()).toString();
             };
 
-            loadData('weekly');
+            // loadData('weekly');
 
             function loadData(periode = '', tanggal = '') {
                 $.get("{{ route('boiler.get-data') }}", {

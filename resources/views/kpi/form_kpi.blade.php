@@ -59,10 +59,16 @@
                                 placeholder="Contoh: 85.75" required>
                         </div>
                         <!-- Nilai Invoice Listrik -->
-                        <div class="mb-3">
+                        {{-- <div class="mb-3">
                             <label for="invoice_listrik" class="form-label fw-semibold">Invoice Listrik (Rp)</label>
                             <input type="number" step="0.01" id="invoice_listrik" name="invoice_listrik" class="form-control"
                                 placeholder="Contoh: 1500000">
+                        </div> --}}
+                        <!-- Nilai Invoice Listrik -->
+                        <div class="mb-3 monthly-only">
+                            <label for="invoice_listrik" class="form-label fw-semibold">Invoice Listrik (Rp)</label>
+                            <input type="number" step="0.01" id="invoice_listrik" name="invoice_listrik"
+                                class="form-control" placeholder="Contoh: 1500000">
                         </div>
                         <!-- Nilai Steam -->
                         <div class="mb-3">
@@ -96,20 +102,30 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            $('#periode_tipe').on('change', function() {
-                const val = $(this).val();
+            const $periodeTipe = $('#periode_tipe');
+            const $invoiceListrik = $('#invoice_listrik');
 
-                // Hide semua dulu
+            function updateForm() {
+                const val = $periodeTipe.val();
+
+                // Reset dulu
                 $('#formWeekly').addClass('d-none');
                 $('#formMonthly').addClass('d-none');
+                $('.monthly-only').addClass('d-none');
+                $invoiceListrik.prop('required', false);
 
-                // Show sesuai tipe
                 if (val === 'weekly') {
                     $('#formWeekly').removeClass('d-none');
                 } else if (val === 'monthly') {
                     $('#formMonthly').removeClass('d-none');
+                    $('.monthly-only').removeClass('d-none');
+                    $invoiceListrik.prop('required', true);
                 }
-            });
+            }
+
+            $periodeTipe.on('change', updateForm);
+
+            updateForm();
 
             $('#formKpi').on('submit', function(e) {
                 e.preventDefault();

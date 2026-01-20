@@ -57,6 +57,7 @@
                                 {{-- Data akan diisi melalui AJAX --}}
                             </tbody>
                         </table>
+                        <div id="pagination-container" class="mt-3"></div>
                     </div>
                 </div>
             </div>
@@ -178,21 +179,21 @@
 
             loadData();
 
-            function loadData(startDate = '', endDate = '') {
-                $.get("{{ route('boiler.get-data') }}", {
+            function loadData(startDate = '', endDate = '', page = 1) {
+                $.get("{{ url('api/boiler/get-data') }}", {
                     start_date: startDate,
-                    end_date: endDate
-                }, function(data) {
-
+                    end_date: endDate,
+                    page: page,
+                    per_page: 10
+                }, function(response) {
                     const tableBody = $('#boilerTable tbody');
-
                     tableBody.empty();
 
-                    if (data.length === 0) {
-
+                    // Tampilkan data
+                    if (response.data.length === 0) {
                         tableBody.append(`
                             <tr>
-                                <td colspan="4" class="text-center py-4">
+                                <td colspan="5" class="text-center py-4">
                                     <div class="d-flex flex-column align-items-center text-muted">
                                         <i class="mdi mdi-database-off mdi-36px mb-2"></i>
                                         <span class="fw-semibold">Tidak ada data ditemukan</span>
@@ -200,36 +201,81 @@
                                 </td>
                             </tr>
                         `);
-                        return;
+                    } else {
+                        $.each(response.data, function(i, item) {
+                            const no = (response.current_page - 1) * response.per_page + i + 1;
+                            const batuBara = formatNumber(item.batu_bara);
+                            const steam = formatNumber(item.steam);
+                            const date = item.date ? item.date : '-';
+
+                            tableBody.append(`
+                                <tr>
+                                    <td>${no}</td>
+                                    <td>${date}</td>
+                                    <td>${batuBara}</td>
+                                    <td>${steam}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
+                                            <i class="mdi mdi-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-danger btnDelete" data-id="${item.id}">
+                                            <i class="mdi mdi-delete"></i> Hapus
+                                        </button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
                     }
 
-                    $.each(data, function(i, item) {
-                        const batuBara = formatNumber(item.batu_bara);
-                        const steam = formatNumber(item.steam);
-
-                        const date = item.date ? `${item.date}` : '-';
-
-                        tableBody.append(`
-                            <tr>
-                                <td>${i + 1}</td>
-                                <td>${date}</td>
-                                <td>${batuBara}</td>
-                                <td>${steam}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
-                                        <i class="mdi mdi-pencil"></i> Edit
-                                    </button>
-                                    <button class="btn btn-sm btn-danger btnDelete" data-id="${item.id}">
-                                        <i class="mdi mdi-delete"></i> Hapus
-                                    </button>
-                                </td>
-                            </tr>
-                        `);
-
-                    });
-
+                    renderPagination(response);
                 });
             }
+
+            function renderPagination(data) {
+                const pagination = $(
+                    '#pagination-container');
+                pagination.empty();
+
+                if (data.last_page <= 1) return;
+
+                let html = '<nav><ul class="pagination justify-content-center">';
+
+                // Previous
+                html += `<li class="page-item ${data.current_page === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${data.current_page - 1}">Previous</a>
+                    </li>
+                `;
+
+                // Nomor halaman (simple: tampilkan 5 halaman sekitar current)
+                const startPage = Math.max(1, data.current_page - 2);
+                const endPage = Math.min(data.last_page, data.current_page + 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    html += `<li class="page-item ${i === data.current_page ? 'active' : ''}">
+                            <a class="page-link" href="#" data-page="${i}">${i}</a>
+                        </li>
+                    `;
+                }
+
+                // Next
+                html += `<li class="page-item ${data.current_page === data.last_page ? 'disabled' : ''}">
+                        <a class="page-link" href="#" data-page="${data.current_page + 1}">Next</a>
+                    </li>
+                `;
+
+                html += '</ul></nav>';
+                pagination.html(html);
+            }
+
+            // Event listener untuk klik pagination
+            $(document).on('click', '.pagination a[data-page]', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (page) {
+                    loadData($('#start_date').val(), $('#end_date').val(),
+                        page);
+                }
+            });
 
             const formatNumber = (num) => {
                 const val = parseFloat(num);
