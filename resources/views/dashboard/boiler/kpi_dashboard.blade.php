@@ -66,96 +66,13 @@
                 </div>
             </div>
 
-            {{-- <div class="row">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header d-flex align-items-center justify-content-between">
-                            <h5 class="card-title mb-0">Steam / Finish Goods</h5>
-                            <div class="dropdown">
-                                <a href="#"
-                                    class="dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded text-white shadow-sm"
-                                    id="dropdownFilter" data-bs-toggle="dropdown" aria-expanded="false"
-                                    style="background-color: #457b9d">
-                                    <i class="bx bx-filter-alt fs-5"></i>
-                                    <span>Filter</span>
-                                </a>
-
-
-                                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3 rounded-3"
-                                    style="min-width: 280px;" aria-labelledby="dropdownFilter">
-
-                                    <h6 class="fw-bold mb-3">Filter Data</h6>
-
-                                    <div class="mb-3">
-                                        <label for="startDateSteamFg" class="form-label">Start Date</label>
-                                        <input type="date" id="startDateSteamFg" class="form-control shadow-sm">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="endDateSteamFg" class="form-label">End Date</label>
-                                        <input type="date" id="endDateSteamFg" class="form-control shadow-sm">
-                                    </div>
-
-                                    <button class="btn btn-primary w-100 rounded-3 shadow-sm" id="filterSteamFg">
-                                        <i class="bx bx-check-circle me-1"></i> Terapkan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div id="chartSteamFg" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header d-flex align-items-center justify-content-between">
-                            <h5 class="card-title mb-0">Batu Bara / Finish Goods</h5>
-                            <div class="dropdown">
-                                <a href="#"
-                                    class="dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded text-white shadow-sm"
-                                    id="dropdownFilter" data-bs-toggle="dropdown" aria-expanded="false"
-                                    style="background-color: #f78104">
-                                    <i class="bx bx-filter-alt fs-5"></i>
-                                    <span>Filter</span>
-                                </a>
-
-
-                                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3 rounded-3"
-                                    style="min-width: 280px;" aria-labelledby="dropdownFilter">
-
-                                    <h6 class="fw-bold mb-3">Filter Data</h6>
-
-                                    <div class="mb-3">
-                                        <label for="startDateBBFg" class="form-label">Start Date</label>
-                                        <input type="date" id="startDateBBFg" class="form-control shadow-sm">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="endDateBBFg" class="form-label">End Date</label>
-                                        <input type="date" id="endDateBBFg" class="form-control shadow-sm">
-                                    </div>
-
-                                    <button class="btn btn-primary w-100 rounded-3 shadow-sm" id="filterBBFg">
-                                        <i class="bx bx-check-circle me-1"></i> Terapkan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div id="charBBFg" style="height: 350px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div> --}}
-
             <!-- CARD STEAM / FG -->
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
-                            <h5 class="card-title mb-0">Steam / Finish Goods</h5>
+                            <h5 class="card-title mb-0" id="steam-card-title">Steam / Finish Goods <span
+                                    class="d-none accounting">Accounting</span></h5>
 
                             <div class="d-flex align-items-center gap-3">
                                 <!-- Tabs -->
@@ -243,7 +160,8 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
-                            <h5 class="card-title mb-0">Batu Bara / Finish Goods</h5>
+                            <h5 class="card-title mb-0" id="bb-card-title">Batu Bara / Finish Goods <span
+                                    class="d-none accounting">Accounting</span></h5>
 
                             <div class="d-flex align-items-center gap-3">
                                 <ul class="nav nav-tabs nav-tabs-custom nav-tabs-small" role="tablist">
@@ -392,11 +310,11 @@
                                 const row = data[i];
 
                                 return `
-                                <b>${this.x}</b><br/>
-                                Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 1, '.', ',')} Ton</b><br/>
-                                Steam: <b>${Highcharts.numberFormat(row.steam, 1, '.', ',')} m³</b><br/>
-                                Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
-                            `;
+                                    <b>${this.x}</b><br/>
+                                    Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 1, '.', ',')} Ton</b><br/>
+                                    Steam: <b>${Highcharts.numberFormat(row.steam, 1, '.', ',')} m³</b><br/>
+                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
+                                `;
                             }
                         },
                         series: [{
@@ -423,235 +341,6 @@
                             }
                         }
                     });
-                });
-            }
-
-            // Chart Steam FG
-            function fetchSteamFgData(startDate = null, endDate = null) {
-                $.getJSON("{{ url('api/boiler/dashboard/steamfg') }}", {
-                    start_date: startDate,
-                    end_date: endDate
-                }, function(res) {
-                    const data = res.data || [];
-
-                    // Format label minggu: "6-12 Jan 2025" atau "Minggu 6-12 Jan"
-                    const categories = data.map(item => {
-                        const start = new Date(item.week_start);
-                        const end = new Date(item.week_end);
-                        const options = {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                        };
-                        const startStr = start.toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short'
-                        });
-                        const endStr = end.toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                        });
-                        return `${startStr} - ${endStr}`;
-                    });
-
-                    const rasioValues = data.map(item => parseFloat(item.rasio) || 0);
-
-                    Highcharts.chart('chartSteamFg', {
-                        chart: {
-                            type: 'column'
-                        },
-                        title: {
-                            text: ''
-                        },
-                        xAxis: {
-                            categories: categories,
-                            title: {
-                                text: 'Periode Minggu'
-                            },
-                            labels: {
-                                rotation: -45,
-                                style: {
-                                    fontSize: '11px'
-                                }
-                            }
-                        },
-                        yAxis: {
-                            title: {
-                                text: 'Rasio (Kg Steam / Ton FG)'
-                            },
-                            labels: {
-                                formatter: function() {
-                                    return Highcharts.numberFormat(this.value, 0, '.', ',');
-                                }
-                            }
-                        },
-                        tooltip: {
-                            shared: true,
-                            useHTML: true,
-                            formatter: function() {
-                                const i = this.points[0].point.index;
-                                const row = data[i];
-
-                                const start = new Date(row.week_start).toLocaleDateString(
-                                    'id-ID', {
-                                        day: 'numeric',
-                                        month: 'long',
-                                        year: 'numeric'
-                                    });
-                                const end = new Date(row.week_end).toLocaleDateString('id-ID', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric'
-                                });
-
-                                return `
-                                    <b>Minggu: ${start} - ${end}</b><br/>
-                                    Total Steam: <b>${Highcharts.numberFormat(row.steam, 1, '.', ',')} Kg</b><br/>
-                                    Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 0, '.', ',')} Ton</b><br/>
-                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
-                                `;
-                            }
-                        },
-                        series: [{
-                            name: 'Rasio Steam/FG',
-                            data: rasioValues,
-                            color: '#457b9d',
-                            dataLabels: {
-                                enabled: true,
-                                formatter: function() {
-                                    return Highcharts.numberFormat(this.y, 0, '.', ',');
-                                },
-                                style: {
-                                    fontWeight: 'bold',
-                                    fontSize: '11px',
-                                    color: '#1d3557'
-                                }
-                            }
-                        }],
-                        credits: {
-                            enabled: false
-                        },
-                        plotOptions: {
-                            column: {
-                                pointPadding: 0.1,
-                                borderWidth: 0
-                            }
-                        }
-                    });
-                }).fail(function() {
-                    alert('Gagal mengambil data Steam/FG');
-                });
-            }
-
-            function fetchBBFgData(startDate = null, endDate = null) {
-                $.getJSON("{{ url('api/boiler/dashboard/bbfg') }}", {
-                    start_date: startDate,
-                    end_date: endDate
-                }, function(res) {
-                    const data = res.data || [];
-
-                    const categories = data.map(item => {
-                        const start = new Date(item.week_start);
-                        const end = new Date(item.week_end);
-                        const startStr = start.toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short'
-                        });
-                        const endStr = end.toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                        });
-                        return `${startStr} - ${endStr}`;
-                    });
-
-                    const rasioValues = data.map(item => parseFloat(item.rasio) || 0);
-
-                    Highcharts.chart('charBBFg', { // pastikan ID chart-nya benar, mungkin 'chartBBFg'?
-                        chart: {
-                            type: 'column'
-                        },
-                        title: {
-                            text: ''
-                        },
-                        xAxis: {
-                            categories: categories,
-                            title: {
-                                text: 'Periode Minggu'
-                            },
-                            labels: {
-                                rotation: -45,
-                                style: {
-                                    fontSize: '11px'
-                                }
-                            }
-                        },
-                        yAxis: {
-                            title: {
-                                text: 'Rasio (Kg Batu Bara / Ton FG)'
-                            },
-                            labels: {
-                                formatter: function() {
-                                    return Highcharts.numberFormat(this.value, 0, '.', ',');
-                                }
-                            }
-                        },
-                        tooltip: {
-                            shared: true,
-                            useHTML: true,
-                            formatter: function() {
-                                const i = this.points[0].point.index;
-                                const row = data[i];
-
-                                const start = new Date(row.week_start).toLocaleDateString(
-                                    'id-ID', {
-                                        day: 'numeric',
-                                        month: 'long',
-                                        year: 'numeric'
-                                    });
-                                const end = new Date(row.week_end).toLocaleDateString('id-ID', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric'
-                                });
-
-                                return `
-                                    <b>Minggu: ${start} - ${end}</b><br/>
-                                    Total Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 1, '.', ',')} Kg</b><br/>
-                                    Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 0, '.', ',')} Ton</b><br/>
-                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
-                                `;
-                            }
-                        },
-                        series: [{
-                            name: 'Rasio Batu Bara/FG',
-                            data: rasioValues,
-                            color: '#f78104',
-                            dataLabels: {
-                                enabled: true,
-                                formatter: function() {
-                                    return Highcharts.numberFormat(this.y, 0, '.', ',');
-                                },
-                                style: {
-                                    fontWeight: 'bold',
-                                    fontSize: '11px',
-                                    color: '#c43a17'
-                                }
-                            }
-                        }],
-                        credits: {
-                            enabled: false
-                        },
-                        plotOptions: {
-                            column: {
-                                pointPadding: 0.1,
-                                borderWidth: 0
-                            }
-                        }
-                    });
-                }).fail(function() {
-                    alert('Gagal mengambil data Batu Bara/FG');
                 });
             }
 
@@ -744,9 +433,9 @@
                                 const row = data[i];
                                 return `
                                     <b>${row.week_start} s/d ${row.week_end}</b><br/>
-                                    Steam: <b>${Highcharts.numberFormat(row.steam, 1, '.', ',')}</b><br/>
-                                    Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 1, '.', ',')}</b><br/>
-                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 4, '.', ',')} Kg/Ton Kecap</b>
+                                    Steam: <b>${Highcharts.numberFormat(row.steam, 2, '.', ',')}</b><br/>
+                                    Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 2, '.', ',')}</b><br/>
+                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
                                 `;
                             }
                         },
@@ -815,9 +504,9 @@
                                 const row = data[i];
                                 return `
                                     <b>${formatMonthLabel(row.month)}</b><br/>
-                                    Steam: <b>${Highcharts.numberFormat(row.steam, 1, '.', ',')}</b><br/>
-                                    Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 1, '.', ',')}</b><br/>
-                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 4, '.', ',')} Kg/Ton Kecap</b>
+                                    Steam: <b>${Highcharts.numberFormat(row.steam, 2, '.', ',')}</b><br/>
+                                    Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 2, '.', ',')}</b><br/>
+                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
                                 `;
                             }
                         },
@@ -892,9 +581,9 @@
                                 const row = data[i];
                                 return `
                                 <b>${row.week_start} s/d ${row.week_end}</b><br/>
-                                Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 1, '.', ',')}</b><br/>
-                                Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 1, '.', ',')}</b><br/>
-                                Rasio: <b>${Highcharts.numberFormat(row.rasio, 4, '.', ',')} Kg/Ton Kecap</b>
+                                Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 2, '.', ',')}</b><br/>
+                                Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 2, '.', ',')}</b><br/>
+                                Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
                             `;
                             }
                         },
@@ -905,7 +594,7 @@
                             dataLabels: {
                                 enabled: true,
                                 formatter: function() {
-                                    return Highcharts.numberFormat(this.y, 4, '.', ',');
+                                    return Highcharts.numberFormat(this.y, 2, '.', ',');
                                 },
                                 style: {
                                     fontWeight: '600',
@@ -963,9 +652,9 @@
                                 const row = data[i];
                                 return `
                                     <b>${formatMonthLabel(row.month)}</b><br/>
-                                    Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 1, '.', ',')}</b><br/>
-                                    Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 1, '.', ',')}</b><br/>
-                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 4, '.', ',')} Kg/Ton Kecap</b>
+                                    Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 2, '.', ',')}</b><br/>
+                                    Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 2, '.', ',')}</b><br/>
+                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
                                 `;
                             }
                         },
@@ -976,7 +665,7 @@
                             dataLabels: {
                                 enabled: true,
                                 formatter: function() {
-                                    return Highcharts.numberFormat(this.y, 4, '.', ',');
+                                    return Highcharts.numberFormat(this.y, 2, '.', ',');
                                 },
                                 style: {
                                     fontWeight: '600',
@@ -1054,15 +743,28 @@
             }
 
             function setupTabFilterSwitch(tabPrefix) {
+                const titleSteam = $(`#${tabPrefix}-card-title`);
+                const titleBB = $(`#${tabPrefix}-card-title`);
+
                 $(`a[data-bs-toggle="tab"][href="#${tabPrefix}-weekly"]`).on('shown.bs.tab', function() {
                     $(`#filter-${tabPrefix}-weekly`).show();
                     $(`#filter-${tabPrefix}-monthly`).hide();
+
+                    titleSteam.find('.accounting').addClass('d-none');
+                    titleBB.find('.accounting').addClass('d-none');
                 });
 
                 $(`a[data-bs-toggle="tab"][href="#${tabPrefix}-monthly"]`).on('shown.bs.tab', function() {
                     $(`#filter-${tabPrefix}-weekly`).hide();
                     $(`#filter-${tabPrefix}-monthly`).show();
+
+                    titleSteam.find('.accounting').removeClass('d-none');
+                    titleBB.find('.accounting').removeClass('d-none');
                 });
+
+                if ($(`#${tabPrefix}-weekly`).hasClass('active')) {
+                    titleBB.find('.accounting').addClass('d-none');
+                }
             }
 
             setupTabFilterSwitch('steam');

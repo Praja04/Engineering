@@ -19,5 +19,6 @@ class BoilerModel extends Model
         'date',
         'batu_bara',
         'steam',
+        'kondensat',
     ];
 }

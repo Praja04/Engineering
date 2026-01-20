@@ -54,7 +54,7 @@
 
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Data KPI</h5>
+                    <h5 class="mb-0">Data KPI <span id="accounting" class="d-none">Accounting</span></h5>
                 </div>
                 <div class="card-body">
                     <!-- TABS -->
@@ -242,19 +242,17 @@
                 currentTab = 'weekly';
                 updateFilterUI('weekly');
                 loadData('weekly');
-                console.log('Tab switched to weekly');
+                $('#accounting').addClass('d-none').text('');
             });
 
             $monthlyTab.on('shown.bs.tab', function() {
                 currentTab = 'monthly';
                 updateFilterUI('monthly');
                 loadData('monthly');
-                console.log('Tab switched to monthly');
+                $('#accounting').removeClass('d-none').text('Accounting');
             });
 
             $('#btnFilter').on('click', function() {
-                console.log('Filter diklik - currentTab:', currentTab);
-
                 let params = {
                     periode_tipe: currentTab
                 };
@@ -275,7 +273,6 @@
             // Tombol Reset → pakai state currentTab
             $('#btnReset').on('click', function() {
                 $('#filterForm')[0].reset();
-                console.log('Reset diklik - reload currentTab:', currentTab);
                 loadData(currentTab); // tanpa params
             });
 
@@ -415,23 +412,6 @@
 
             $('#weekly-tab').on('click', () => loadData('weekly'));
             $('#monthly-tab').on('click', () => loadData('monthly'));
-
-            // Filter otomatis ketika jenis atau tanggal berubah
-            // $('#filterPeriode, #filterTanggal').on('change', function() {
-            //     const periode = $('#filterPeriode').val();
-            //     const tanggal = $('#filterTanggal').val();
-
-            //     // panggil fungsi loadData dengan parameter filter
-            //     loadData(periode, tanggal);
-            // });
-
-            // $('#btnReset').on('click', function() {
-            //     $('#filterForm')[0].reset();
-            //     $('#filterTanggal').val(today);
-
-            //     // Reload data dengan kondisi default
-            //     loadData($('#filterPeriode').val(), $('#filterTanggal').val());
-            // });
 
             // Simpan / Update data
             $form.on('submit', function(e) {

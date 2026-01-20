@@ -18,7 +18,8 @@ return new class extends Migration
             // $table->date('end_date')->nullable();
             // $table->string('month', 7)->nullable();
             $table->decimal('batu_bara', 10, 3); // ton
-            $table->decimal('steam', 10, 3);     // ton
+            $table->decimal('steam', 10, 3);     // M3
+            $table->decimal('kondensat', 10, 3);     // %
             $table->timestamps();
         });
     }

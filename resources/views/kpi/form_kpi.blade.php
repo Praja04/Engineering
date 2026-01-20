@@ -45,40 +45,37 @@
                             </div>
                         </div>
 
-                        <!-- Nilai FG -->
                         <div class="mb-3">
-                            <label for="finish_goods" class="form-label fw-semibold">Nilai Finish Goods (Ton)</label>
+                            <label for="finish_goods" class="form-label fw-semibold accounting-label">Nilai Finish Goods
+                                (Ton)</label>
                             <input type="number" step="0.01" id="finish_goods" name="finish_goods" class="form-control"
                                 placeholder="Contoh: 120.5" required>
                         </div>
 
-                        <!-- Nilai Kecap Matang -->
                         <div class="mb-3">
-                            <label for="kecap_matang" class="form-label fw-semibold">Kecap Matang (Ton)</label>
+                            <label for="kecap_matang" class="form-label fw-semibold accounting-label">Kecap Matang
+                                (Ton)</label>
                             <input type="number" step="0.01" id="kecap_matang" name="kecap_matang" class="form-control"
                                 placeholder="Contoh: 85.75" required>
                         </div>
-                        <!-- Nilai Invoice Listrik -->
-                        {{-- <div class="mb-3">
-                            <label for="invoice_listrik" class="form-label fw-semibold">Invoice Listrik (Rp)</label>
-                            <input type="number" step="0.01" id="invoice_listrik" name="invoice_listrik" class="form-control"
-                                placeholder="Contoh: 1500000">
-                        </div> --}}
-                        <!-- Nilai Invoice Listrik -->
+
                         <div class="mb-3 monthly-only">
-                            <label for="invoice_listrik" class="form-label fw-semibold">Invoice Listrik (Rp)</label>
+                            <label for="invoice_listrik" class="form-label fw-semibold accounting-label">Invoice Listrik
+                                (Rp)</label>
                             <input type="number" step="0.01" id="invoice_listrik" name="invoice_listrik"
                                 class="form-control" placeholder="Contoh: 1500000">
                         </div>
+
                         <!-- Nilai Steam -->
                         <div class="mb-3">
-                            <label for="steam" class="form-label fw-semibold">Steam (Kg)</label>
+                            <label for="steam" class="form-label fw-semibold accounting-label">Steam (Kg)</label>
                             <input type="number" step="0.01" id="steam" name="steam" class="form-control"
                                 placeholder="Contoh: 5000">
                         </div>
+
                         <!-- Nilai Batubara -->
                         <div class="mb-3">
-                            <label for="batubara" class="form-label fw-semibold">Batubara (Kg)</label>
+                            <label for="batubara" class="form-label fw-semibold accounting-label">Batubara (Kg)</label>
                             <input type="number" step="0.01" id="batubara" name="batubara" class="form-control"
                                 placeholder="Contoh: 3000">
                         </div>
@@ -105,6 +102,14 @@
             const $periodeTipe = $('#periode_tipe');
             const $invoiceListrik = $('#invoice_listrik');
 
+            // Simpan label asli saat load pertama kali
+            const originalLabels = {};
+            $('.accounting-label').each(function() {
+                const $label = $(this);
+                const id = $label.attr('for');
+                originalLabels[id] = $label.text().trim(); // simpan teks asli
+            });
+
             function updateForm() {
                 const val = $periodeTipe.val();
 
@@ -114,17 +119,36 @@
                 $('.monthly-only').addClass('d-none');
                 $invoiceListrik.prop('required', false);
 
+                // Reset semua label ke asli dulu
+                $('.accounting-label').each(function() {
+                    const $label = $(this);
+                    const id = $label.attr('for');
+                    if (originalLabels[id]) {
+                        $label.text(originalLabels[id]);
+                    }
+                });
+
                 if (val === 'weekly') {
                     $('#formWeekly').removeClass('d-none');
                 } else if (val === 'monthly') {
                     $('#formMonthly').removeClass('d-none');
                     $('.monthly-only').removeClass('d-none');
                     $invoiceListrik.prop('required', true);
+
+                    // Tambahkan "accounting" ke label yang punya class accounting-label
+                    $('.accounting-label').each(function() {
+                        const $label = $(this);
+                        const currentText = $label.text().trim();
+                        if (!currentText.endsWith('accounting')) {
+                            $label.text(currentText + ' Accounting');
+                        }
+                    });
                 }
             }
 
             $periodeTipe.on('change', updateForm);
 
+            // Jalankan pertama kali (untuk load awal atau edit)
             updateForm();
 
             $('#formKpi').on('submit', function(e) {

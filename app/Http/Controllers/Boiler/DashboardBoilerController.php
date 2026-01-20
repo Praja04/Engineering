@@ -92,14 +92,14 @@ class DashboardBoilerController extends Controller
                 $source     = 'daily';
             }
 
-            $rasio = $fgValue > 0 ? ($totalSteam / $fgValue) * 1000 : 0;
+            $rasio = $fgValue > 0 ? ($totalSteam / $fgValue) * 10 : 0;
 
             $result[] = [
                 'week_start'    => $weekStart,
                 'week_end'      => $weekEnd,
                 'steam'         => round($totalSteam, 2),
                 'finish_goods'  => $fgValue,
-                'rasio'         => round($rasio, 4),
+                'rasio'         => round($rasio, 2),
                 'source'        => $source,   // opsional: untuk debug atau tampil di frontend
             ];
         }
@@ -165,7 +165,7 @@ class DashboardBoilerController extends Controller
                 'week_end'      => $weekEnd,
                 'batu_bara'     => round($totalBb, 2),
                 'finish_goods'  => $fgValue,
-                'rasio'         => round($rasio, 4),
+                'rasio'         => round($rasio, 2),
                 'source'        => $source,   // opsional
             ];
         }
@@ -252,7 +252,7 @@ class DashboardBoilerController extends Controller
                 'month'         => $month,
                 'steam'         => round($totalSteam, 2),
                 'finish_goods'  => $fgValue,
-                'rasio'         => round($rasio, 4),
+                'rasio'         => round($rasio, 2),
                 'source_steam'  => $sourceSteam,   // opsional, untuk debug/frontend
                 'source_fg'     => $sourceFg,
             ];
@@ -335,7 +335,7 @@ class DashboardBoilerController extends Controller
                 'month'         => $month,
                 'batu_bara'     => round($totalBb, 2),
                 'finish_goods'  => $fgValue,
-                'rasio'         => round($rasio, 4),
+                'rasio'         => round($rasio, 2),
                 'source_batubara' => $sourceBb,
                 'source_fg'       => $sourceFg,
             ];
