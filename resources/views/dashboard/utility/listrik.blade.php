@@ -93,6 +93,33 @@
 
                             <!-- KPI Cards Container -->
                             <div class="kpi-cards-container">
+                                <!-- Invoice Listrik Card - Only for Monthly -->
+                                <div id="invoice-card-container" style="display: none;">
+                                    <div class="alert alert-success border-0 shadow-sm mb-4">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-sm rounded-circle bg-success d-flex align-items-center justify-content-center">
+                                                            <i class="ri-file-list-3-line fs-5 text-white"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <h5 class="alert-heading fw-semibold mb-1 text-success">Invoice Listrik</h5>
+                                                        <p class="mb-0 text-muted small">Tagihan listrik periode <span id="invoice_periode">-</span></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                                <h3 class="mb-0 fw-bold text-success" id="invoice_amount">Rp 0</h3>
+                                                <span class="badge bg-success-subtle text-success mt-1">
+                                                    <i class="ri-checkbox-circle-line me-1"></i>Lunas
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="row g-4">
                                     <!-- KPI Listrik Produksi -->
                                     <div class="col-md-6">
@@ -194,6 +221,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- Charts Grid -->
         <div class="row g-4">
@@ -487,6 +515,7 @@
         $.getJSON(url, function(data) {
             console.log('Periode:', data.periode.display);
             console.log('Has KPI Data:', data.periode.has_kpi_data);
+            console.log('Periode Type:', data.periode.type);
 
             const hasKpiData = data.periode.has_kpi_data;
 
@@ -494,6 +523,27 @@
                 // Ada data KPI - Tampilkan cards KPI
                 $('#no-kpi-alert').hide();
                 $('.kpi-cards-container').show();
+
+                // Check if invoice available (only for monthly)
+                if (data.kpi_data.invoice_listrik && data.periode.type.includes('monthly')) {
+                    const invoiceAmount = parseFloat(data.kpi_data.invoice_listrik);
+
+                    if (invoiceAmount > 0) {
+                        const formattedAmount = 'Rp ' + invoiceAmount.toLocaleString('id-ID', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        });
+
+                        $('#invoice_amount').text(formattedAmount);
+                        $('#invoice_periode').text(data.periode.display);
+                        $('#invoice-card-container').slideDown(300);
+                    } else {
+                        $('#invoice-card-container').hide();
+                    }
+                } else {
+                    // Hide invoice for weekly or when no invoice data
+                    $('#invoice-card-container').hide();
+                }
 
                 // Update values
                 $('#kpi_finish_goods').text(parseFloat(data.kpi_data.finish_goods).toLocaleString('id-ID', {
@@ -558,6 +608,7 @@
                 $('.kpi-cards-container').hide();
                 $('#no-kpi-alert').show();
                 $('#alert-periode').text(data.periode.display);
+                $('#invoice-card-container').hide();
             }
 
             $('#kpi-content').fadeIn(300);

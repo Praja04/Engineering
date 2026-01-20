@@ -28,12 +28,54 @@ class ListrikController extends Controller
         return view('utility.data_utility');
     }
 
+    // public function storeListrik(Request $request)
+    // {
+    //     // Validasi input
+    //     $validated = $request->validate([
+    //         'waktu' => 'required|date',
+    //         // 'operator' => 'required|string|max:100',
+    //         'panel_type' => 'required|in:MDP,SDP1,SDP2,SDP3,SDP4,SDP5,SDP6,SDP7,SDP8,SDP9,SDP10,SDP11,SDP12,SDP13,SDP14',
+    //         'volt' => 'nullable|numeric',
+    //         'a' => 'nullable|numeric',
+    //         'kw' => 'nullable|numeric',
+    //         'mwh' => 'nullable|numeric',
+    //         'cos' => 'nullable|numeric',
+    //     ]);
+    //     $operator = auth()->user()->username;
+    //     try {
+    //         $exists = PemakaianListrikModel::whereDate('waktu', $validated['waktu'])
+    //             ->where('panel_type', $validated['panel_type'])
+    //             ->exists();
+
+    //         if ($exists) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Data untuk panel tersebut pada tanggal yang sama sudah ada.',
+    //             ], 409); // 409 = Conflict
+    //         }
+    //         // Simpan ke database
+    //         $data = PemakaianListrikModel::create([
+    //             'waktu' => $validated['waktu'],
+    //             'operator' => $operator,
+    //             'panel_type' => $validated['panel_type'],
+    //             'volt' => $validated['volt'] ?? null,
+    //             'a' => $validated['a'] ?? null,
+    //             'kw' => $validated['kw'] ?? null,
+    //             'mwh' => $validated['mwh'] ?? null,
+    //             'cos' => $validated['cos'] ?? null,
+    //         ]);
+
+    //         return response()->json(['success' => true, 'message' => 'Data listrik berhasil disimpan.', 'data' => $data]);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menyimpan data.', 'error' => $e->getMessage()], 500);
+    //     }
+    // }
+
+
     public function storeListrik(Request $request)
     {
-        // Validasi input
         $validated = $request->validate([
             'waktu' => 'required|date',
-            // 'operator' => 'required|string|max:100',
             'panel_type' => 'required|in:MDP,SDP1,SDP2,SDP3,SDP4,SDP5,SDP6,SDP7,SDP8,SDP9,SDP10,SDP11,SDP12,SDP13,SDP14',
             'volt' => 'nullable|numeric',
             'a' => 'nullable|numeric',
@@ -41,35 +83,59 @@ class ListrikController extends Controller
             'mwh' => 'nullable|numeric',
             'cos' => 'nullable|numeric',
         ]);
+
         $operator = auth()->user()->username;
+
         try {
             $exists = PemakaianListrikModel::whereDate('waktu', $validated['waktu'])
-                ->where('panel_type', $validated['panel_type'])
-                ->exists();
+            ->where('panel_type', $validated['panel_type'])
+            ->exists();
 
             if ($exists) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data untuk panel tersebut pada tanggal yang sama sudah ada.',
-                ], 409); // 409 = Conflict
+                ], 409);
             }
-            // Simpan ke database
-            $data = PemakaianListrikModel::create([
+
+            // Simpan data baru
+            $newData = PemakaianListrikModel::create([
                 'waktu' => $validated['waktu'],
                 'operator' => $operator,
                 'panel_type' => $validated['panel_type'],
-                'volt' => $validated['volt'] ?? null,
-                'a' => $validated['a'] ?? null,
-                'kw' => $validated['kw'] ?? null,
-                'mwh' => $validated['mwh'] ?? null,
-                'cos' => $validated['cos'] ?? null,
+                'volt' => $validated['volt'],
+                'a' => $validated['a'],
+                'kw' => $validated['kw'],
+                'mwh' => $validated['mwh'],
+                'cos' => $validated['cos'],
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Data listrik berhasil disimpan.', 'data' => $data]);
+            // Cari data sebelumnya (n)
+            $prevData = PemakaianListrikModel::where('panel_type', $validated['panel_type'])
+            ->where('waktu', '<', $validated['waktu'])
+            ->orderBy('waktu', 'desc')
+            ->first();
+
+            // Hitung usage untuk data sebelumnya
+            if ($prevData && $prevData->mwh !== null && $newData->mwh !== null) {
+                $prevData->usage = $newData->mwh - $prevData->mwh;
+                $prevData->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data listrik berhasil disimpan.',
+                'data' => $newData
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menyimpan data.', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan data.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
   
 
     public function data_listrik()
@@ -82,79 +148,7 @@ class ListrikController extends Controller
     }
 
 
-    // public function getPemakaianListrikData(Request $request)
-    // {
-    //     $defaultPanelOrder = ['MDP', 'SDP1', 'SDP2', 'SDP3', 'SDP4', 'SDP5', 'SDP6', 'SDP7', 'SDP8', 'SDP9', 'SDP10', 'SDP11', 'SDP12', 'SDP13', 'SDP14'];
-
-    //     $data = PemakaianListrikModel::orderBy('waktu')->get();
-
-    //     // Group by tanggal (YYYY-MM-DD)
-    //     $grouped = $data->groupBy(function ($item) {
-    //         return date('Y-m-d', strtotime($item->waktu));
-    //     });
-
-    //     $sortedDates = $grouped->keys()->sort()->values();
-    //     $result = [];
-
-    //     foreach ($sortedDates as $index => $tanggal) {
-    //         $items = $grouped[$tanggal];
-    //         $pivot = [];
-    //         $usage = [];
-    //         $operators = [];
-
-    //         // Panel tersedia dan terurut
-    //         $availablePanels = $items->pluck('panel_type')->unique()->values()->all();
-    //         $panels = array_values(array_intersect($defaultPanelOrder, $availablePanels));
-
-    //         // Ambil operator
-    //         foreach ($panels as $panel) {
-    //             $panelItem = $items->firstWhere('panel_type', $panel);
-    //             $operators[$panel] = $panelItem?->operator ?? null;
-    //         }
-
-    //         // Ambil parameter-parameter
-    //         $parameters = ['volt', 'a', 'kw', 'mwh', 'cos'];
-    //         foreach ($parameters as $param) {
-    //             $pivot[$param] = [];
-    //             foreach ($panels as $panel) {
-    //                 $panelItem = $items->firstWhere('panel_type', $panel);
-    //                 $pivot[$param][$panel] = $panelItem?->$param ?? null;
-    //             }
-    //         }
-
-    //         // Hitung usage berdasarkan mwh selisih antar hari
-    //         if ($index < count($sortedDates) - 1) {
-    //             $nextTanggal = $sortedDates[$index + 1];
-    //             $nextItems = $grouped[$nextTanggal];
-
-    //             foreach ($panels as $panel) {
-    //                 $currentMwh = $items->firstWhere('panel_type', $panel)?->mwh;
-    //                 $nextMwh = $nextItems->firstWhere('panel_type', $panel)?->mwh;
-
-    //                 if (!is_null($currentMwh) && !is_null($nextMwh)) {
-    //                     $usage[$panel] = $nextMwh - $currentMwh;
-    //                 } else {
-    //                     $usage[$panel] = null;
-    //                 }
-    //             }
-    //         } else {
-    //             // Tanggal terakhir: usage belum bisa dihitung
-    //             foreach ($panels as $panel) {
-    //                 $usage[$panel] = null;
-    //             }
-    //         }
-
-    //         $result[] = [
-    //             'tanggal' => $tanggal,
-    //             'operator' => $operators,
-    //             'panels' => $panels,
-    //             'rows' => $pivot,
-    //             'usage' => $usage,
-    //         ];
-    //     }
-
-    //     return response()->json(array_reverse($result));
-    // }
+   
 
     public function getPemakaianListrikData(Request $request)
     {
