@@ -35,12 +35,12 @@
                             <!-- Toggle Filter Type -->
                             <div class="btn-group" role="group">
                                 <input type="radio" class="btn-check" name="filter_type_kpi" id="filter_type_monthly" value="monthly" checked>
-                                <label class="btn btn-outline-warning btn-sm" for="filter_type_monthly">
+                                <label class="btn btn-outline-light btn-sm" for="filter_type_monthly">
                                     <i class="ri-calendar-line me-1"></i>Bulanan
                                 </label>
 
                                 <input type="radio" class="btn-check" name="filter_type_kpi" id="filter_type_weekly" value="weekly">
-                                <label class="btn btn-outline-warning btn-sm" for="filter_type_weekly">
+                                <label class="btn btn-outline-light btn-sm" for="filter_type_weekly">
                                     <i class="ri-calendar-2-line me-1"></i>Mingguan
                                 </label>
                             </div>
@@ -59,6 +59,7 @@
                         </div>
                     </div>
                     <div class="card-body">
+                        <!-- Loading State -->
                         <div class="chart-loading" id="loading-kpi">
                             <div class="text-center p-5">
                                 <div class="spinner-grow text-warning" role="status">
@@ -68,97 +69,121 @@
                             </div>
                         </div>
 
+                        <!-- Content -->
                         <div id="kpi-content" style="display: none;">
-                            <div class="row g-4">
-                                <!-- KPI Listrik Produksi -->
-                                <div class="col-md-6">
-                                    <div class="kpi-card p-4 rounded-3" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-left: 4px solid #F59E0B;">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="avatar-sm rounded-circle bg-warning d-flex align-items-center justify-content-center me-3">
-                                                <i class="ri-settings-3-line fs-5 text-white"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0 fw-semibold text-warning">KPI Listrik Produksi</h6>
-                                                <p class="mb-0 small text-muted">Total SDP 1+2+3+5+9+10+11 / FG</p>
-                                            </div>
-                                        </div>
+                            <!-- Alert: Tidak Ada Data KPI -->
+                            <div id="no-kpi-alert" class="alert alert-info border-0 shadow-sm mb-4" style="display: none;">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0">
+                                        <i class="ri-information-line fs-4 text-info"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h5 class="alert-heading fw-semibold mb-2">Data KPI Tidak Tersedia</h5>
+                                        <p class="mb-2">
+                                            Data KPI (Finish Goods & Kecap Matang) belum tersedia untuk periode
+                                            <strong id="alert-periode">-</strong>.
+                                        </p>
+                                        <p class="mb-0 small">
+                                            <i class="ri-lightbulb-line me-1"></i>
+                                            Hanya menampilkan data pemakaian listrik. Untuk menghitung KPI, silakan input data Finish Goods dan Kecap Matang terlebih dahulu.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
 
-                                        <div class="row g-3">
-                                            <div class="col-6">
-                                                <div class="bg-white p-3 rounded-2 shadow-sm">
-                                                    <h6 class="text-muted small mb-1">Finish Goods</h6>
-                                                    <h5 class="mb-0 fw-bold" id="kpi_finish_goods">-</h5>
-                                                    <span class="badge bg-info-subtle text-info small mt-1">Ton</span>
+                            <!-- KPI Cards Container -->
+                            <div class="kpi-cards-container">
+                                <div class="row g-4">
+                                    <!-- KPI Listrik Produksi -->
+                                    <div class="col-md-6">
+                                        <div class="kpi-card p-4 rounded-3" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-left: 4px solid #F59E0B;">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="avatar-sm rounded-circle bg-warning d-flex align-items-center justify-content-center me-3">
+                                                    <i class="ri-settings-3-line fs-5 text-white"></i>
                                                 </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="bg-white p-3 rounded-2 shadow-sm">
-                                                    <h6 class="text-muted small mb-1">Total Listrik</h6>
-                                                    <h5 class="mb-0 fw-bold" id="kpi_total_listrik_produksi">-</h5>
-                                                    <span class="badge bg-info-subtle text-info small mt-1">Kwh</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-3 p-3 bg-white rounded-2 shadow-sm">
-                                            <div class="d-flex justify-content-between align-items-center">
                                                 <div>
-                                                    <h6 class="text-muted small mb-1">KPI Hasil</h6>
-                                                    <h4 class="mb-0 fw-bold text-warning" id="kpi_hasil_produksi">-</h4>
-                                                </div>
-                                                <div class="text-end">
-                                                    <span class="badge bg-success-subtle text-success">Target: 51 Kwh/10 ton FG</span>
+                                                    <h6 class="mb-0 fw-semibold text-warning">KPI Listrik Produksi</h6>
+                                                    <p class="mb-0 small text-muted">Total SDP 1+2+3+5+9+10+11 / FG</p>
                                                 </div>
                                             </div>
-                                            <div class="progress mt-2" style="height: 8px;">
-                                                <div class="progress-bar bg-warning" role="progressbar" id="kpi_progress_produksi" style="width: 0%"></div>
+
+                                            <div class="row g-3">
+                                                <div class="col-6">
+                                                    <div class="bg-white p-3 rounded-2 shadow-sm">
+                                                        <h6 class="text-muted small mb-1">Finish Goods</h6>
+                                                        <h5 class="mb-0 fw-bold" id="kpi_finish_goods">-</h5>
+                                                        <span class="badge bg-info-subtle text-info small mt-1">Ton</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="bg-white p-3 rounded-2 shadow-sm">
+                                                        <h6 class="text-muted small mb-1">Total Listrik</h6>
+                                                        <h5 class="mb-0 fw-bold" id="kpi_total_listrik_produksi">-</h5>
+                                                        <span class="badge bg-info-subtle text-info small mt-1">Kwh</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3 p-3 bg-white rounded-2 shadow-sm">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="text-muted small mb-1">KPI Hasil</h6>
+                                                        <h4 class="mb-0 fw-bold text-warning" id="kpi_hasil_produksi">-</h4>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span class="badge bg-success-subtle text-success">Target: 51 Kwh/10 ton FG</span>
+                                                    </div>
+                                                </div>
+                                                <div class="progress mt-2" style="height: 8px;">
+                                                    <div class="progress-bar bg-warning" role="progressbar" id="kpi_progress_produksi" style="width: 0%"></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- KPI Listrik BAS -->
-                                <div class="col-md-6">
-                                    <div class="kpi-card p-4 rounded-3" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-left: 4px solid #F59E0B;">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="avatar-sm rounded-circle bg-primary d-flex align-items-center justify-content-center me-3">
-                                                <i class="ri-building-line fs-5 text-white"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0 fw-semibold text-primary">KPI Listrik BAS</h6>
-                                                <p class="mb-0 small text-muted">Total SDP Seluruh(tanpa data total MDP) / Kecap Matang</p>
-                                            </div>
-                                        </div>
-
-                                        <div class="row g-3">
-                                            <div class="col-6">
-                                                <div class="bg-white p-3 rounded-2 shadow-sm">
-                                                    <h6 class="text-muted small mb-1">Kecap Matang</h6>
-                                                    <h5 class="mb-0 fw-bold" id="kpi_kecap_matang">-</h5>
-                                                    <span class="badge bg-info-subtle text-info small mt-1">Ton</span>
+                                    <!-- KPI Listrik BAS -->
+                                    <div class="col-md-6">
+                                        <div class="kpi-card p-4 rounded-3" style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border-left: 4px solid #F59E0B;">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="avatar-sm rounded-circle bg-primary d-flex align-items-center justify-content-center me-3">
+                                                    <i class="ri-building-line fs-5 text-white"></i>
                                                 </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="bg-white p-3 rounded-2 shadow-sm">
-                                                    <h6 class="text-muted small mb-1">Total Listrik</h6>
-                                                    <h5 class="mb-0 fw-bold" id="kpi_total_listrik_bas">-</h5>
-                                                    <span class="badge bg-info-subtle text-info small mt-1">Kwh</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-3 p-3 bg-white rounded-2 shadow-sm">
-                                            <div class="d-flex justify-content-between align-items-center">
                                                 <div>
-                                                    <h6 class="text-muted small mb-1">KPI Hasil</h6>
-                                                    <h4 class="mb-0 fw-bold text-primary" id="kpi_hasil_bas">-</h4>
-                                                </div>
-                                                <div class="text-end">
-                                                    <span class="badge bg-success-subtle text-success">Target: 75 Kwh/ton</span>
+                                                    <h6 class="mb-0 fw-semibold text-primary">KPI Listrik BAS</h6>
+                                                    <p class="mb-0 small text-muted">Total SDP Seluruh(tanpa data total MDP) / Kecap Matang</p>
                                                 </div>
                                             </div>
-                                            <div class="progress mt-2" style="height: 8px;">
-                                                <div class="progress-bar bg-primary" role="progressbar" id="kpi_progress_bas" style="width: 0%"></div>
+
+                                            <div class="row g-3">
+                                                <div class="col-6">
+                                                    <div class="bg-white p-3 rounded-2 shadow-sm">
+                                                        <h6 class="text-muted small mb-1">Kecap Matang</h6>
+                                                        <h5 class="mb-0 fw-bold" id="kpi_kecap_matang">-</h5>
+                                                        <span class="badge bg-info-subtle text-info small mt-1">Ton</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="bg-white p-3 rounded-2 shadow-sm">
+                                                        <h6 class="text-muted small mb-1">Total Listrik</h6>
+                                                        <h5 class="mb-0 fw-bold" id="kpi_total_listrik_bas">-</h5>
+                                                        <span class="badge bg-info-subtle text-info small mt-1">Kwh</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3 p-3 bg-white rounded-2 shadow-sm">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="text-muted small mb-1">KPI Hasil</h6>
+                                                        <h4 class="mb-0 fw-bold text-primary" id="kpi_hasil_bas">-</h4>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span class="badge bg-success-subtle text-success">Target: 75 Kwh/ton</span>
+                                                    </div>
+                                                </div>
+                                                <div class="progress mt-2" style="height: 8px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" id="kpi_progress_bas" style="width: 0%"></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -444,7 +469,6 @@
         });
     }
 
-    // Fetch KPI Data - Updated version
     function fetchKPIListrik(filterType = null, filterValue = null) {
         showLoading('loading-kpi');
 
@@ -461,19 +485,17 @@
         }
 
         $.getJSON(url, function(data) {
-            // Update periode display (bisa ditampilkan di UI jika diperlukan)
             console.log('Periode:', data.periode.display);
             console.log('Has KPI Data:', data.periode.has_kpi_data);
 
-            // Check if KPI data is available
             const hasKpiData = data.periode.has_kpi_data;
 
             if (hasKpiData) {
-                // Sembunyikan alert dan tampilkan KPI cards
+                // Ada data KPI - Tampilkan cards KPI
                 $('#no-kpi-alert').hide();
                 $('.kpi-cards-container').show();
 
-                // Update values - KPI data tersedia
+                // Update values
                 $('#kpi_finish_goods').text(parseFloat(data.kpi_data.finish_goods).toLocaleString('id-ID', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
@@ -494,19 +516,17 @@
                     maximumFractionDigits: 2
                 }));
 
-                // KPI Hasil Produksi: 510 Kwh / 10 ton FG
+                // KPI Hasil Produksi
                 const kpiProduksi = parseFloat(data.kpi.listrik_produksi);
                 $('#kpi_hasil_produksi').text(kpiProduksi.toLocaleString('id-ID', {
                     minimumFractionDigits: 4,
                     maximumFractionDigits: 4
                 }) + ' Kwh/10 ton FG');
 
-                // Calculate percentage for progress bar (target = 51)
                 const targetProduksi = 51;
                 const percentageProduksi = Math.min((kpiProduksi / targetProduksi) * 100, 100);
                 $('#kpi_progress_produksi').css('width', percentageProduksi + '%');
 
-                // Change color based on achievement
                 if (kpiProduksi <= targetProduksi) {
                     $('#kpi_progress_produksi').removeClass('bg-danger').addClass('bg-success');
                     $('#kpi_hasil_produksi').removeClass('text-danger').addClass('text-success');
@@ -515,19 +535,17 @@
                     $('#kpi_hasil_produksi').removeClass('text-success').addClass('text-danger');
                 }
 
-                // KPI Hasil BAS: 75 Kwh/ton kecap matang
+                // KPI Hasil BAS
                 const kpiBas = parseFloat(data.kpi.listrik_bas);
                 $('#kpi_hasil_bas').text(kpiBas.toLocaleString('id-ID', {
                     minimumFractionDigits: 4,
                     maximumFractionDigits: 4
                 }) + ' Kwh/ton');
 
-                // Calculate percentage for progress bar (target = 75)
                 const targetBas = 75;
                 const percentageBas = Math.min((kpiBas / targetBas) * 100, 100);
                 $('#kpi_progress_bas').css('width', percentageBas + '%');
 
-                // Change color based on achievement
                 if (kpiBas <= targetBas) {
                     $('#kpi_progress_bas').removeClass('bg-danger').addClass('bg-success');
                     $('#kpi_hasil_bas').removeClass('text-danger').addClass('text-success');
@@ -536,11 +554,9 @@
                     $('#kpi_hasil_bas').removeClass('text-success').addClass('text-danger');
                 }
             } else {
-                // Tampilkan alert dan sembunyikan KPI cards
+                // Tidak ada data KPI - Tampilkan alert
                 $('.kpi-cards-container').hide();
                 $('#no-kpi-alert').show();
-
-                // Update periode di alert
                 $('#alert-periode').text(data.periode.display);
             }
 
