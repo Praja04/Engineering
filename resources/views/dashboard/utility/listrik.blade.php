@@ -484,18 +484,18 @@
                     maximumFractionDigits: 2
                 }));
 
-                $('#kpi_total_listrik_produksi').text(parseFloat(data.listrik.total_produksi).toLocaleString('id-ID', {
+                $('#kpi_total_listrik_produksi').text((parseFloat(data.listrik.total_produksi) * 1000).toLocaleString('id-ID', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 }));
 
-                $('#kpi_total_listrik_bas').text(parseFloat(data.listrik.total_bas).toLocaleString('id-ID', {
+                $('#kpi_total_listrik_bas').text((parseFloat(data.listrik.total_bas)*1000).toLocaleString('id-ID', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 }));
 
                 // KPI Hasil Produksi: 510 Kwh / 10 ton FG
-                const kpiProduksi = parseFloat(data.kpi.listrik_produksi).toFixed(4);
+                const kpiProduksi = (parseFloat(data.kpi.listrik_produksi)*1000).toFixed(4);
                 $('#kpi_hasil_produksi').text(kpiProduksi + ' Kwh/10 ton FG');
 
                 // Calculate percentage for progress bar (target = 51)
@@ -513,7 +513,7 @@
                 }
 
                 // KPI Hasil BAS: 75 Kwh/ton kecap matang
-                const kpiBas = parseFloat(data.kpi.listrik_bas).toFixed(4);
+                const kpiBas = (parseFloat(data.kpi.listrik_bas)*1000).toFixed(4);
                 $('#kpi_hasil_bas').text(kpiBas + ' Kwh/ton');
 
                 // Calculate percentage for progress bar (target = 75)
