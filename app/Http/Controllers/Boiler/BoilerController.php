@@ -27,6 +27,7 @@ class BoilerController extends Controller
             'batu_bara' => 'required|numeric|min:0',
             'steam' => 'required|numeric|min:0',
             'date'   => 'required|date',
+            'kondensat'   => 'nullable|numeric|min:0',
             // 'end_date'     => 'required_if:periode_tipe,weekly|date|after_or_equal:start_date',
             // 'month'        => 'required_if:periode_tipe,monthly|date_format:Y-m'
         ]);
@@ -46,6 +47,7 @@ class BoilerController extends Controller
             'date'        => $request->date,
             'batu_bara'    => $request->batu_bara,
             'steam'        => $request->steam,
+            'kondensat'        => $request->kondensat,
         ]);
 
         return response()->json([
@@ -103,6 +105,7 @@ class BoilerController extends Controller
             'batu_bara' => 'required|numeric|min:0',
             'steam' => 'required|numeric|min:0',
             'date'   => 'required|date',
+            'kondensat'   => 'required|numeric|min:0',
             // 'end_date'     => 'required_if:periode_tipe,weekly|date|after_or_equal:start_date',
             // 'month'        => 'required_if:periode_tipe,monthly|date_format:Y-m'
         ]);
@@ -124,6 +127,7 @@ class BoilerController extends Controller
             'date'         => $request->date,
             'batu_bara'    => $request->batu_bara,
             'steam'        => $request->steam,
+            'kondensat'        => $request->kondensat,
         ]);
 
         return response()->json([

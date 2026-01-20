@@ -50,6 +50,7 @@
                                     <th>Tanggal</th>
                                     <th>Batu Bara (Ton)</th>
                                     <th>Steam (m³)</th>
+                                    <th>Kondensat (%)</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -92,6 +93,10 @@
                             <label for="steam" class="form-label">Steam (m³)</label>
                             <input type="number" id="steam" class="form-control" step="0.01" min="0">
                         </div>
+                        <div class="mb-3">
+                            <label for="kondensat" class="form-label">Kondensat (%)</label>
+                            <input type="number" id="kondensat" class="form-control" step="0.01" min="0">
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -133,6 +138,7 @@
                     date: date,
                     batu_bara: $('#batuBara').val(),
                     steam: $('#steam').val(),
+                    kondensat: $('#kondensat').val(),
                 };
 
                 $.ajax({
@@ -151,7 +157,7 @@
 
                             formBoiler.trigger('reset');
                             $('#modalBoiler').modal('hide');
-                            loadData();
+                            loadData('', '', 1);
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -206,6 +212,7 @@
                             const no = (response.current_page - 1) * response.per_page + i + 1;
                             const batuBara = formatNumber(item.batu_bara);
                             const steam = formatNumber(item.steam);
+                            const kondensat = formatNumber(item.kondensat);
                             const date = item.date ? item.date : '-';
 
                             tableBody.append(`
@@ -214,6 +221,7 @@
                                     <td>${date}</td>
                                     <td>${batuBara}</td>
                                     <td>${steam}</td>
+                                    <td>${kondensat}</td>
                                     <td>
                                         <button class="btn btn-sm btn-info me-1 btnEdit" data-id="${item.id}">
                                             <i class="mdi mdi-pencil"></i> Edit
@@ -305,6 +313,7 @@
                     $('#date').val(data.date);
                     $('#batuBara').val(formatNumber(data.batu_bara));
                     $('#steam').val(formatNumber(data.steam));
+                    $('#kondensat').val(formatNumber(data.kondensat));
 
                     $('#modalBoiler').modal('show');
                 });
@@ -346,7 +355,7 @@
                                         timer: 1000,
                                         showConfirmButton: false
                                     });
-                                    loadData('weekly');
+                                    loadData('', '', 1);
                                 } else {
                                     Swal.fire({
                                         icon: 'error',
