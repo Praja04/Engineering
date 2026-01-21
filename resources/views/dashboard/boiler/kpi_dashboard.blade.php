@@ -417,7 +417,7 @@
                         },
                         yAxis: {
                             title: {
-                                text: 'Rasio (Steam / FG x 1000)'
+                                text: 'Rasio (Steam / FG x 10)'
                             },
                             labels: {
                                 formatter: function() {
@@ -488,7 +488,7 @@
                         },
                         yAxis: {
                             title: {
-                                text: 'Rasio (Steam / FG x 1000)'
+                                text: 'Rasio (Steam / FG x 10)'
                             },
                             labels: {
                                 formatter: function() {
