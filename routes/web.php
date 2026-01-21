@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\TokenAuthController;
 //     ->name('auth.token-login');
 Route::middleware('web')->group(function () {
     Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
+    Route::get('/signin', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

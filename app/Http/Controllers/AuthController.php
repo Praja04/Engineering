@@ -88,9 +88,21 @@ class AuthController extends Controller
 
     private function redirectUser($user)
     {
-        $jabatan = strtolower($user->jabatan);
+        // $jabatan = strtolower($user->jabatan);
 
-        $path = $this->redirects[$jabatan] ?? '/';
+        // $path = $this->redirects[$jabatan] ?? '/';
+
+        // return url($path);
+        $intended = redirect()->intended()->getTargetUrl();
+
+        if ($intended !== url('/')) {  // kalau bukan default '/', berarti ada intended
+            return $intended;
+        }
+
+        // Kalau tidak ada intended, fallback ke jabatan
+        $jabatan = strtolower($user->jabatan ?? '');
+
+        $path = $this->redirects[$jabatan] ?? '/dashboard';
 
         return url($path);
     }
