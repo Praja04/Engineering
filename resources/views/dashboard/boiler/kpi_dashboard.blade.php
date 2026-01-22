@@ -66,6 +66,48 @@
                 </div>
             </div>
 
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h5 class="card-title mb-0">Kondensat</h5>
+                            <div class="dropdown">
+                                <a href="#"
+                                    class="dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded text-white shadow-sm"
+                                    id="dropdownFilter" data-bs-toggle="dropdown" aria-expanded="false"
+                                    style="background-color: #F375C2">
+                                    <i class="bx bx-filter-alt fs-5"></i>
+                                    <span>Filter</span>
+                                </a>
+
+
+                                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3 rounded-3"
+                                    style="min-width: 280px;" aria-labelledby="dropdownFilter">
+
+                                    <h6 class="fw-bold mb-3">Filter Data</h6>
+
+                                    <div class="mb-3">
+                                        <label for="bulanTerpal" class="form-label">Start Date</label>
+                                        <input type="date" id="startDateBBSteam" class="form-control shadow-sm">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="bulanTerpal" class="form-label">End Date</label>
+                                        <input type="date" id="endDateBBSteam" class="form-control shadow-sm">
+                                    </div>
+
+                                    <button class="btn btn-primary w-100 rounded-3 shadow-sm" id="filterBBSteam">
+                                        <i class="bx bx-check-circle me-1"></i> Terapkan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="chartKondensat" style="height: 350px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- CARD STEAM / FG -->
             <div class="row">
                 <div class="col-lg-12">
@@ -253,6 +295,7 @@
             populateYearSelect('yearSteamMonthly');
             populateYearSelect('yearBBMonthly');
             fetchBBSteamData();
+            fetchKondensat();
             // fetchSteamFgData();
             // fetchBBFgData();
             // loadCurrentTabData();
@@ -308,9 +351,10 @@
                             formatter: function() {
                                 const i = this.points[0].point.index;
                                 const row = data[i];
+                                const tanggal = row?.date ?? this.x;
 
                                 return `
-                                    <b>${this.x}</b><br/>
+                                    <b>${tanggal}</b><br/>
                                     Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 1, '.', ',')} Ton</b><br/>
                                     Steam: <b>${Highcharts.numberFormat(row.steam, 1, '.', ',')} m³</b><br/>
                                     Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
@@ -329,6 +373,83 @@
                                 style: {
                                     fontWeight: 'bold',
                                     color: '#006d77',
+                                }
+                            }
+                        }],
+                        plotOptions: {
+                            column: {
+                                borderRadius: 6,
+                                dataLabels: {
+                                    enabled: true
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            function fetchKondensat(startDate = null, endDate = null) {
+                $.getJSON("{{ url('api/boiler/dashboard/kondensat') }}", {
+                    start_date: startDate,
+                    end_date: endDate
+                }, function(res) {
+                    const data = res.data || [];
+
+                    const categories = data.map(item => item.date);
+
+                    const kondensatValues = data.map(item => parseFloat(item.kondensat) || 0);
+
+                    Highcharts.chart('chartKondensat', {
+                        chart: {
+                            type: 'spline'
+                        },
+                        title: {
+                            text: ''
+                        },
+                        xAxis: {
+                            categories: categories,
+                            title: {
+                                text: 'Tanggal'
+                            }
+                        },
+                        yAxis: {
+                            min: 0,
+                            max: 100,
+                            title: {
+                                text: 'Kondensat (%)'
+                            },
+                            labels: {
+                                formatter: function() {
+                                    return Highcharts.numberFormat(this.value, 0) + ' %';
+                                }
+                            }
+                        },
+                        tooltip: {
+                            shared: false,
+                            formatter: function() {
+                                const i = this.point.index;
+                                const row = data[i];
+                                const tanggal = row?.date ?? this.x;
+                                const nilai = parseFloat(row?.kondensat) || 0;
+
+                                return `
+                                    <b>${tanggal}</b><br/>
+                                    Kondensat: <b>${Highcharts.numberFormat(nilai, 2, '.', ',')} %</b>
+                                `;
+                            }
+                        },
+                        series: [{
+                            name: 'Kondensat',
+                            data: kondensatValues,
+                            color: '#F375C2',
+                            dataLabels: {
+                                enabled: true,
+                                formatter: function() {
+                                    return Highcharts.numberFormat(this.y, 2) + ' %';
+                                },
+                                style: {
+                                    fontWeight: 'bold',
+                                    color: '#000000',
                                 }
                             }
                         }],
