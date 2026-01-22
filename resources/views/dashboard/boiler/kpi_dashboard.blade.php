@@ -29,33 +29,37 @@
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0">Batu Bara / Steam</h5>
-                            <div class="dropdown">
-                                <a href="#"
-                                    class="dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded text-white shadow-sm"
-                                    id="dropdownFilter" data-bs-toggle="dropdown" aria-expanded="false"
-                                    style="background-color: #83c5be">
-                                    <i class="bx bx-filter-alt fs-5"></i>
-                                    <span>Filter</span>
-                                </a>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-danger d-flex" id="resetBBSteam">Reset</button>
+                                <div class="dropdown">
+
+                                    <a href="#"
+                                        class="dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded text-white shadow-sm"
+                                        id="dropdownFilter" data-bs-toggle="dropdown" aria-expanded="false"
+                                        style="background-color: #83c5be">
+                                        <i class="bx bx-filter-alt fs-5"></i>
+                                        <span>Filter</span>
+                                    </a>
 
 
-                                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3 rounded-3"
-                                    style="min-width: 280px;" aria-labelledby="dropdownFilter">
+                                    <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3 rounded-3"
+                                        style="min-width: 280px;" aria-labelledby="dropdownFilter">
 
-                                    <h6 class="fw-bold mb-3">Filter Data</h6>
+                                        <h6 class="fw-bold mb-3">Filter Data</h6>
 
-                                    <div class="mb-3">
-                                        <label for="bulanTerpal" class="form-label">Start Date</label>
-                                        <input type="date" id="startDateBBSteam" class="form-control shadow-sm">
+                                        <div class="mb-3">
+                                            <label for="bulanTerpal" class="form-label">Start Date</label>
+                                            <input type="date" id="startDateBBSteam" class="form-control shadow-sm">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="bulanTerpal" class="form-label">End Date</label>
+                                            <input type="date" id="endDateBBSteam" class="form-control shadow-sm">
+                                        </div>
+
+                                        <button class="btn btn-primary w-100 rounded-3 shadow-sm" id="filterBBSteam">
+                                            <i class="bx bx-check-circle me-1"></i> Terapkan
+                                        </button>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="bulanTerpal" class="form-label">End Date</label>
-                                        <input type="date" id="endDateBBSteam" class="form-control shadow-sm">
-                                    </div>
-
-                                    <button class="btn btn-primary w-100 rounded-3 shadow-sm" id="filterBBSteam">
-                                        <i class="bx bx-check-circle me-1"></i> Terapkan
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -71,33 +75,36 @@
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0">Kondensat</h5>
-                            <div class="dropdown">
-                                <a href="#"
-                                    class="dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded text-white shadow-sm"
-                                    id="dropdownFilter" data-bs-toggle="dropdown" aria-expanded="false"
-                                    style="background-color: #F375C2">
-                                    <i class="bx bx-filter-alt fs-5"></i>
-                                    <span>Filter</span>
-                                </a>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-danger d-flex" id="resetKondensat">Reset</button>
+                                <div class="dropdown">
+                                    <a href="#"
+                                        class="dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded text-white shadow-sm"
+                                        id="dropdownFilter" data-bs-toggle="dropdown" aria-expanded="false"
+                                        style="background-color: #F375C2">
+                                        <i class="bx bx-filter-alt fs-5"></i>
+                                        <span>Filter</span>
+                                    </a>
 
 
-                                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3 rounded-3"
-                                    style="min-width: 280px;" aria-labelledby="dropdownFilter">
+                                    <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3 rounded-3"
+                                        style="min-width: 280px;" aria-labelledby="dropdownFilter">
 
-                                    <h6 class="fw-bold mb-3">Filter Data</h6>
+                                        <h6 class="fw-bold mb-3">Filter Data</h6>
 
-                                    <div class="mb-3">
-                                        <label for="bulanTerpal" class="form-label">Start Date</label>
-                                        <input type="date" id="startDateBBSteam" class="form-control shadow-sm">
+                                        <div class="mb-3">
+                                            <label for="bulanTerpal" class="form-label">Start Date</label>
+                                            <input type="date" id="startKondensat" class="form-control shadow-sm">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="bulanTerpal" class="form-label">End Date</label>
+                                            <input type="date" id="endKondensat" class="form-control shadow-sm">
+                                        </div>
+
+                                        <button class="btn btn-primary w-100 rounded-3 shadow-sm" id="filterKondensat">
+                                            <i class="bx bx-check-circle me-1"></i> Terapkan
+                                        </button>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="bulanTerpal" class="form-label">End Date</label>
-                                        <input type="date" id="endDateBBSteam" class="form-control shadow-sm">
-                                    </div>
-
-                                    <button class="btn btn-primary w-100 rounded-3 shadow-sm" id="filterBBSteam">
-                                        <i class="bx bx-check-circle me-1"></i> Terapkan
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -115,69 +122,71 @@
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0" id="steam-card-title">Steam / Finish Goods <span
                                     class="d-none accounting">Accounting</span></h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-danger d-flex" id="resetSteamFg">Reset</button>
+                                <div class="d-flex align-items-center gap-3">
+                                    <!-- Tabs -->
+                                    <ul class="nav nav-tabs nav-tabs-custom nav-tabs-small" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" data-bs-toggle="tab" href="#steam-weekly"
+                                                role="tab">Weekly</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-bs-toggle="tab" href="#steam-monthly"
+                                                role="tab">Monthly</a>
+                                        </li>
+                                    </ul>
 
-                            <div class="d-flex align-items-center gap-3">
-                                <!-- Tabs -->
-                                <ul class="nav nav-tabs nav-tabs-custom nav-tabs-small" role="tablist">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" data-bs-toggle="tab" href="#steam-weekly"
-                                            role="tab">Weekly</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="tab" href="#steam-monthly"
-                                            role="tab">Monthly</a>
-                                    </li>
-                                </ul>
+                                    <!-- Filter Container -->
+                                    <div class="dropdown">
+                                        <a href="#" class="btn btn-soft-primary dropdown-toggle"
+                                            data-bs-toggle="dropdown">
+                                            <i class="bx bx-filter-alt"></i> Filter
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 300px;">
+                                            <!-- Filter Weekly -->
+                                            <div id="filter-steam-weekly" class="filter-group">
+                                                <h6 class="fw-bold mb-3">Filter Weekly</h6>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Start Date</label>
+                                                    <input type="date" id="startSteamWeekly" class="form-control">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">End Date</label>
+                                                    <input type="date" id="endSteamWeekly" class="form-control">
+                                                </div>
+                                            </div>
 
-                                <!-- Filter Container -->
-                                <div class="dropdown">
-                                    <a href="#" class="btn btn-soft-primary dropdown-toggle"
-                                        data-bs-toggle="dropdown">
-                                        <i class="bx bx-filter-alt"></i> Filter
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 300px;">
-                                        <!-- Filter Weekly -->
-                                        <div id="filter-steam-weekly" class="filter-group">
-                                            <h6 class="fw-bold mb-3">Filter Weekly</h6>
-                                            <div class="mb-3">
-                                                <label class="form-label">Start Date</label>
-                                                <input type="date" id="startSteamWeekly" class="form-control">
+                                            <!-- Filter Monthly -->
+                                            <div id="filter-steam-monthly" class="filter-group" style="display: none;">
+                                                <h6 class="fw-bold mb-3">Filter Monthly</h6>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Tahun</label>
+                                                    <select id="yearSteamMonthly" class="form-control"></select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Bulan</label>
+                                                    <select id="monthSteamMonthly" class="form-control">
+                                                        <option value="">Semua Bulan</option>
+                                                        <option value="01">Januari</option>
+                                                        <option value="02">Februari</option>
+                                                        <option value="03">Maret</option>
+                                                        <option value="04">April</option>
+                                                        <option value="05">Mei</option>
+                                                        <option value="06">Juni</option>
+                                                        <option value="07">Juli</option>
+                                                        <option value="08">Agustus</option>
+                                                        <option value="09">September</option>
+                                                        <option value="10">Oktober</option>
+                                                        <option value="11">November</option>
+                                                        <option value="12">Desember</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">End Date</label>
-                                                <input type="date" id="endSteamWeekly" class="form-control">
-                                            </div>
+
+                                            <button class="btn btn-primary w-100 mt-3" id="applyFilterSteam"> <i
+                                                    class="bx bx-check-circle me-1"></i> Terapkan</button>
                                         </div>
-
-                                        <!-- Filter Monthly -->
-                                        <div id="filter-steam-monthly" class="filter-group" style="display: none;">
-                                            <h6 class="fw-bold mb-3">Filter Monthly</h6>
-                                            <div class="mb-3">
-                                                <label class="form-label">Tahun</label>
-                                                <select id="yearSteamMonthly" class="form-control"></select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Bulan</label>
-                                                <select id="monthSteamMonthly" class="form-control">
-                                                    <option value="">Semua Bulan</option>
-                                                    <option value="01">Januari</option>
-                                                    <option value="02">Februari</option>
-                                                    <option value="03">Maret</option>
-                                                    <option value="04">April</option>
-                                                    <option value="05">Mei</option>
-                                                    <option value="06">Juni</option>
-                                                    <option value="07">Juli</option>
-                                                    <option value="08">Agustus</option>
-                                                    <option value="09">September</option>
-                                                    <option value="10">Oktober</option>
-                                                    <option value="11">November</option>
-                                                    <option value="12">Desember</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <button class="btn btn-primary w-100 mt-3" id="applyFilterSteam">Terapkan
-                                            Filter</button>
                                     </div>
                                 </div>
                             </div>
@@ -204,65 +213,67 @@
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0" id="bb-card-title">Batu Bara / Finish Goods <span
                                     class="d-none accounting">Accounting</span></h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-danger d-flex" id="resetBBFg">Reset</button>
+                                <div class="d-flex align-items-center gap-3">
+                                    <ul class="nav nav-tabs nav-tabs-custom nav-tabs-small" role="tablist">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" data-bs-toggle="tab" href="#bb-weekly"
+                                                role="tab">Weekly</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-bs-toggle="tab" href="#bb-monthly"
+                                                role="tab">Monthly</a>
+                                        </li>
+                                    </ul>
 
-                            <div class="d-flex align-items-center gap-3">
-                                <ul class="nav nav-tabs nav-tabs-custom nav-tabs-small" role="tablist">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" data-bs-toggle="tab" href="#bb-weekly"
-                                            role="tab">Weekly</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="tab" href="#bb-monthly"
-                                            role="tab">Monthly</a>
-                                    </li>
-                                </ul>
+                                    <div class="dropdown">
+                                        <a href="#" class="btn btn-soft-warning dropdown-toggle"
+                                            data-bs-toggle="dropdown">
+                                            <i class="bx bx-filter-alt"></i> Filter
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 300px;">
+                                            <div id="filter-bb-weekly" class="filter-group">
+                                                <h6 class="fw-bold mb-3">Filter Weekly</h6>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Start Date</label>
+                                                    <input type="date" id="startBBWeekly" class="form-control">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">End Date</label>
+                                                    <input type="date" id="endBBWeekly" class="form-control">
+                                                </div>
+                                            </div>
 
-                                <div class="dropdown">
-                                    <a href="#" class="btn btn-soft-warning dropdown-toggle"
-                                        data-bs-toggle="dropdown">
-                                        <i class="bx bx-filter-alt"></i> Filter
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 300px;">
-                                        <div id="filter-bb-weekly" class="filter-group">
-                                            <h6 class="fw-bold mb-3">Filter Weekly</h6>
-                                            <div class="mb-3">
-                                                <label class="form-label">Start Date</label>
-                                                <input type="date" id="startBBWeekly" class="form-control">
+                                            <div id="filter-bb-monthly" class="filter-group" style="display: none;">
+                                                <h6 class="fw-bold mb-3">Filter Monthly</h6>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Tahun</label>
+                                                    <select id="yearBBMonthly" class="form-control"></select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Bulan</label>
+                                                    <select id="monthBBMonthly" class="form-control">
+                                                        <option value="">Semua Bulan</option>
+                                                        <option value="01">Januari</option>
+                                                        <option value="02">Februari</option>
+                                                        <option value="03">Maret</option>
+                                                        <option value="04">April</option>
+                                                        <option value="05">Mei</option>
+                                                        <option value="06">Juni</option>
+                                                        <option value="07">Juli</option>
+                                                        <option value="08">Agustus</option>
+                                                        <option value="09">September</option>
+                                                        <option value="10">Oktober</option>
+                                                        <option value="11">November</option>
+                                                        <option value="12">Desember</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">End Date</label>
-                                                <input type="date" id="endBBWeekly" class="form-control">
-                                            </div>
+
+                                            <button class="btn btn-primary w-100 mt-3" id="applyFilterBB"> <i
+                                                    class="bx bx-check-circle me-1"></i> Terapkan</button>
                                         </div>
-
-                                        <div id="filter-bb-monthly" class="filter-group" style="display: none;">
-                                            <h6 class="fw-bold mb-3">Filter Monthly</h6>
-                                            <div class="mb-3">
-                                                <label class="form-label">Tahun</label>
-                                                <select id="yearBBMonthly" class="form-control"></select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Bulan</label>
-                                                <select id="monthBBMonthly" class="form-control">
-                                                    <option value="">Semua Bulan</option>
-                                                    <option value="01">Januari</option>
-                                                    <option value="02">Februari</option>
-                                                    <option value="03">Maret</option>
-                                                    <option value="04">April</option>
-                                                    <option value="05">Mei</option>
-                                                    <option value="06">Juni</option>
-                                                    <option value="07">Juli</option>
-                                                    <option value="08">Agustus</option>
-                                                    <option value="09">September</option>
-                                                    <option value="10">Oktober</option>
-                                                    <option value="11">November</option>
-                                                    <option value="12">Desember</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <button class="btn btn-primary w-100 mt-3" id="applyFilterBB">Terapkan
-                                            Filter</button>
                                     </div>
                                 </div>
                             </div>
@@ -296,9 +307,6 @@
             populateYearSelect('yearBBMonthly');
             fetchBBSteamData();
             fetchKondensat();
-            // fetchSteamFgData();
-            // fetchBBFgData();
-            // loadCurrentTabData();
             loadSteamWeekly();
             loadBBWeekly();
 
@@ -464,27 +472,6 @@
                     });
                 });
             }
-
-            $('#filterBBSteam').on('click', function() {
-                const start = $('#startDateBBSteam').val();
-                const end = $('#endDateBBSteam').val();
-
-                fetchBBSteamData(start, end);
-            });
-
-            $('#filterSteamFg').on('click', function() {
-                const start = $('#startDateSteamFg').val();
-                const end = $('#endDateSteamFg').val();
-
-                fetchSteamFgData(start, end);
-            });
-
-            $('#filterBBFg').on('click', function() {
-                const start = $('#startDateBBFg').val();
-                const end = $('#endDateBBFg').val();
-
-                fetchBBFgData(start, end);
-            });
 
             function formatWeekLabel(start, end) {
                 const s = new Date(start).toLocaleDateString('id-ID', {
@@ -802,6 +789,67 @@
                     });
                 });
             }
+
+            $('#filterBBSteam').on('click', function() {
+                const start = $('#startDateBBSteam').val();
+                const end = $('#endDateBBSteam').val();
+
+                fetchBBSteamData(start, end);
+            });
+
+            $('#filterKondensat').on('click', function() {
+                const start = $('#startKondensat').val();
+                const end = $('#endKondensat').val();
+
+                fetchKondensat(start, end);
+            });
+
+            $('#resetBBSteam').on('click', function() {
+                $('#startDateBBSteam').val('');
+                $('#endDateBBSteam').val('');
+
+                fetchBBSteamData(null, null);
+            });
+
+            $('#resetKondensat').on('click', function() {
+                $('#startDateKondensat').val('');
+                $('#endDateKondensat').val('');
+
+                fetchKondensat(null, null);
+            });
+
+            $('#resetSteamFg').on('click', function() {
+                // kosongin weekly inputs
+                $('#startSteamWeekly').val('');
+                $('#endSteamWeekly').val('');
+
+                // kosongin monthly inputs
+                $('#yearSteamMonthly').val(new Date().getFullYear()); // optional
+                $('#monthSteamMonthly').val(''); // kosongkan bulan
+
+                // reload sesuai tab aktif
+                if ($('#steam-weekly').hasClass('active')) {
+                    loadSteamWeekly(null, null);
+                } else {
+                    const year = $('#yearSteamMonthly').val() || new Date().getFullYear();
+                    loadSteamMonthly(`${year}-01-01`, `${year}-12-31`);
+                }
+            });
+
+            $('#resetBBFg').on('click', function() {
+                $('#startBBWeekly').val('');
+                $('#endBBWeekly').val('');
+
+                $('#yearBBMonthly').val(new Date().getFullYear()); // optional
+                $('#monthBBMonthly').val('');
+
+                if ($('#bb-weekly').hasClass('active')) {
+                    loadBBWeekly(null, null);
+                } else {
+                    const year = $('#yearBBMonthly').val() || new Date().getFullYear();
+                    loadBBMonthly(`${year}-01-01`, `${year}-12-31`);
+                }
+            });
 
             // Tab Steam
             $('a[data-bs-toggle="tab"][href="#steam-weekly"]').on('shown.bs.tab', () => loadSteamWeekly($(
