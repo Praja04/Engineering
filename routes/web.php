@@ -17,6 +17,7 @@ Route::middleware('web')->group(function () {
 
 ///////////   View Routes   ///////////
 Route::view('/dashboard', 'dashboard')->name('dashboard');
+Route::view('/home', 'home')->name('home');
 Route::middleware('auth')->group(function () {
 
     Route::middleware(['auth', 'access'])->group(function () {
@@ -52,6 +53,6 @@ Route::middleware('auth')->group(function () {
 
     // Boiler Routes
     @include('boiler/boiler.php');
-    // End Boiler Routes
 
+    @include('maintenance/maintenance.php');
 });

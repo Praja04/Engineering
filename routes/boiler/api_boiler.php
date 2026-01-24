@@ -12,5 +12,6 @@ Route::prefix('boiler')->group(function () {
         Route::get('/steamfg-monthly', [DashboardBoilerController::class, 'getSteamFgMonthly']);
         Route::get('/bbfg', [DashboardBoilerController::class, 'getBatuBaraFg']);
         Route::get('/bbfg-monthly', [DashboardBoilerController::class, 'getBatuBaraFgMonthly']);
+        Route::get('/kondensat', [DashboardBoilerController::class, 'getKondensat']);
     });
 });

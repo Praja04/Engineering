@@ -45,6 +45,28 @@ class DashboardBoilerController extends Controller
         ]);
     }
 
+    public function getKondensat(Request $request)
+    {
+        $query = BoilerModel::orderBy('date', 'asc');
+
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+        }
+
+        $data = $query->get()->map(function ($item) {
+            return [
+                'date' => $item->date,
+                'kondensat' => (float) $item->kondensat,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
+
     public function getSteamFg(Request $request)
     {
         $start = $request->start_date;
