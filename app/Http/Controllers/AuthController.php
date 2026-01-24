@@ -17,10 +17,10 @@ class AuthController extends Controller
     }
 
     private $redirects = [
-        'dept_head' => '/dashboard',
-        'supervisor' => '/dashboard',
-        'foreman' => '/dashboard',
-        'operator' => '/dashboard',
+        'dept_head' => '/home',
+        'supervisor' => '/home',
+        'foreman' => '/home',
+        'operator' => '/home',
     ];
 
     public function login(Request $request)
@@ -102,7 +102,7 @@ class AuthController extends Controller
         // Kalau tidak ada intended, fallback ke jabatan
         $jabatan = strtolower($user->jabatan ?? '');
 
-        $path = $this->redirects[$jabatan] ?? '/dashboard';
+        $path = $this->redirects[$jabatan] ?? '/home';
 
         return url($path);
     }
