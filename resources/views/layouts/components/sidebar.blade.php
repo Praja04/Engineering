@@ -6,7 +6,7 @@
 
     <!-- LOGO -->
     <div class="navbar-brand-box">
-        <a href="{{ route('dashboard') }}" class="logo logo-dark">
+        <a href="{{ route('home') }}" class="logo logo-dark">
             <span class="logo-sm">
                 <img src="{{ asset('assets/images/logo/kecap.png') }}" alt="" height="22">
             </span>
@@ -14,7 +14,7 @@
                 <img src="{{ asset('assets/images/logo/kecap.png') }}" alt="" height="100">
             </span>
         </a>
-        <a href="{{ route('dashboard') }}" class="logo logo-light">
+        <a href="{{ route('home') }}" class="logo logo-light">
             <span class="logo-sm">
                 <img src="{{ asset('assets/images/logo/kecap.png') }}" alt="" height="22">
             </span>
@@ -51,6 +51,7 @@
                 @include('layouts.components.sidebar-boiler.menu-boiler')
                 @include('layouts.components.sidebar-kalibrasi.menu-kalibrasi')
                 @include('layouts.components.sidebar-scoring.menu-scoring-input')
+                @include('layouts.components.sidebar-maintenance.menu-maintenance')
 
 
                 <!-- /////////////////////Data Master/////////////// -->

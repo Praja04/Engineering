@@ -17,10 +17,10 @@ class AuthController extends Controller
     }
 
     private $redirects = [
-        'dept_head' => '/dashboard',
-        'supervisor' => '/dashboard',
-        'foreman' => '/dashboard',
-        'operator' => '/dashboard',
+        'dept_head' => '/home',
+        'supervisor' => '/home',
+        'foreman' => '/home',
+        'operator' => '/home',
     ];
 
     public function login(Request $request)
@@ -88,9 +88,21 @@ class AuthController extends Controller
 
     private function redirectUser($user)
     {
-        $jabatan = strtolower($user->jabatan);
+        // $jabatan = strtolower($user->jabatan);
 
-        $path = $this->redirects[$jabatan] ?? '/';
+        // $path = $this->redirects[$jabatan] ?? '/';
+
+        // return url($path);
+        $intended = redirect()->intended()->getTargetUrl();
+
+        if ($intended !== url('/')) {  // kalau bukan default '/', berarti ada intended
+            return $intended;
+        }
+
+        // Kalau tidak ada intended, fallback ke jabatan
+        $jabatan = strtolower($user->jabatan ?? '');
+
+        $path = $this->redirects[$jabatan] ?? '/home';
 
         return url($path);
     }

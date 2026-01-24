@@ -45,6 +45,28 @@ class DashboardBoilerController extends Controller
         ]);
     }
 
+    public function getKondensat(Request $request)
+    {
+        $query = BoilerModel::orderBy('date', 'asc');
+
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+        }
+
+        $data = $query->get()->map(function ($item) {
+            return [
+                'date' => $item->date,
+                'kondensat' => (float) $item->kondensat,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
+
     public function getSteamFg(Request $request)
     {
         $start = $request->start_date;
@@ -92,14 +114,14 @@ class DashboardBoilerController extends Controller
                 $source     = 'daily';
             }
 
-            $rasio = $fgValue > 0 ? ($totalSteam / $fgValue) * 1000 : 0;
+            $rasio = $fgValue > 0 ? ($totalSteam / $fgValue) * 10 : 0;
 
             $result[] = [
                 'week_start'    => $weekStart,
                 'week_end'      => $weekEnd,
                 'steam'         => round($totalSteam, 2),
                 'finish_goods'  => $fgValue,
-                'rasio'         => round($rasio, 4),
+                'rasio'         => round($rasio, 2),
                 'source'        => $source,   // opsional: untuk debug atau tampil di frontend
             ];
         }
@@ -165,7 +187,7 @@ class DashboardBoilerController extends Controller
                 'week_end'      => $weekEnd,
                 'batu_bara'     => round($totalBb, 2),
                 'finish_goods'  => $fgValue,
-                'rasio'         => round($rasio, 4),
+                'rasio'         => round($rasio, 2),
                 'source'        => $source,   // opsional
             ];
         }
@@ -252,7 +274,7 @@ class DashboardBoilerController extends Controller
                 'month'         => $month,
                 'steam'         => round($totalSteam, 2),
                 'finish_goods'  => $fgValue,
-                'rasio'         => round($rasio, 4),
+                'rasio'         => round($rasio, 2),
                 'source_steam'  => $sourceSteam,   // opsional, untuk debug/frontend
                 'source_fg'     => $sourceFg,
             ];
@@ -335,7 +357,7 @@ class DashboardBoilerController extends Controller
                 'month'         => $month,
                 'batu_bara'     => round($totalBb, 2),
                 'finish_goods'  => $fgValue,
-                'rasio'         => round($rasio, 4),
+                'rasio'         => round($rasio, 2),
                 'source_batubara' => $sourceBb,
                 'source_fg'       => $sourceFg,
             ];

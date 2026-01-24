@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\TokenAuthController;
 //     ->name('auth.token-login');
 Route::middleware('web')->group(function () {
     Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
+    Route::get('/signin', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
@@ -16,6 +17,7 @@ Route::middleware('web')->group(function () {
 
 ///////////   View Routes   ///////////
 Route::view('/dashboard', 'dashboard')->name('dashboard');
+Route::view('/home', 'home')->name('home');
 Route::middleware('auth')->group(function () {
 
     Route::middleware(['auth', 'access'])->group(function () {
@@ -51,6 +53,6 @@ Route::middleware('auth')->group(function () {
 
     // Boiler Routes
     @include('boiler/boiler.php');
-    // End Boiler Routes
 
+    @include('maintenance/maintenance.php');
 });
