@@ -5,15 +5,16 @@ namespace App\Models\Utility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class WwtpInfluent extends Model
+class WwtpInfluentHarian extends Model
 {
     //
     use HasFactory;
 
-    protected $table = 'wwtp_influent';
+    protected $table = 'wwtp_influent_harian';
 
     protected $fillable = [
-        'wwtp_record_id',
+        'tanggal',
+        'shift',
         'pit_sparta',
         'pit_garam',
         'pit_domestik',
@@ -22,12 +23,9 @@ class WwtpInfluent extends Model
         'pit_proses_wwtp2',
         'pit_outlet',
         'pit_boiler',
-        
+        'debit1',
+        'running_wwtp1',
+        'debit2',
+        'running_wwtp2',
     ];
-
-    // Relasi ke Record (N : 1)
-    public function record()
-    {
-        return $this->belongsTo(WwtpRecord::class, 'wwtp_record_id');
-    }
 }

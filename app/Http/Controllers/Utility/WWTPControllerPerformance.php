@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Utility\WwtpPerformanceWeek;
 use App\Models\Utility\WwtpPerformanceRecord;
+use App\Models\Utility\WwtpPerformancePHharian;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Carbon;
 
@@ -14,6 +15,16 @@ class WWTPControllerPerformance extends Controller
     public function performance()
     {
         return view('utility.wwtp.performance');
+    }
+
+    public function form_performance()
+    {
+        return view('utility.wwtp.form_performance');
+    }
+
+    public function data_performance()
+    {
+        return view('utility.wwtp.data_performance');
     }
 
     /**
@@ -158,144 +169,139 @@ class WWTPControllerPerformance extends Controller
     }
 
 
-    //////////////API STATISTIK WWTP/////////////////////
-    public function getStatistics()
+    //////////////////PH harian/////////////////////
+    public function indexPHHarian()
     {
-        $totalRecords = WwtpPerformanceRecord::count();
+        $data = WwtpPerformancePHharian::orderBy('tanggal', 'desc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
-        // Last update berdasarkan created_at atau updated_at
-        $lastUpdate = WwtpPerformanceRecord::orderBy('created_at', 'desc')->first();
+        return response()->json($data);
+    }
 
-        // Current Week - ambil data dari week yang aktif
-        $today = Carbon::now();
-        $startWeek = $today->copy()->startOfWeek(Carbon::MONDAY);
-        $endWeek   = $today->copy()->endOfWeek(Carbon::SUNDAY);
+    /**
+     * Simpan data PH harian
+     */
+    public function storePHHarian(Request $request)
+    {
+        $request->validate([
+            'tanggal'  => 'required|date',
+            'shift'    => 'required|in:shift1,shift2,shift3',
+            'equalisasi_1'   => 'nullable|numeric',
+            'equalisasi_2'   => 'nullable|numeric',
+            'netralisasi'    => 'nullable|numeric',
+            'sedimentasi_1'  => 'nullable|numeric',
+            'sedimentasi_2'  => 'nullable|numeric',
+            'outlet_anaerob' => 'nullable|numeric',
+            'aerob'          => 'nullable|numeric',
+            'lumpur_aktif'   => 'nullable|numeric',
+            'clarifier_2'    => 'nullable|numeric',
+            'outlet'         => 'nullable|numeric',
+        ]);
 
-        $currentWeek = WwtpPerformanceWeek::where('week_start', '<=', $today)
-            ->where('week_end', '>=', $today)
+        // Cek apakah shift pada tanggal tersebut sudah ada
+        $existing = WwtpPerformancePHharian::where('tanggal', $request->tanggal)
+            ->where('shift', $request->shift)
             ->first();
 
-        $weeklyData = [];
-        if ($currentWeek) {
-            $weeklyData = WwtpPerformanceRecord::where('performance_week_id', $currentWeek->id)
-                ->get()
-                ->groupBy('jenis')
-                ->map(function ($group) {
-                    return [
-                        'avg_tss' => round($group->avg('tss'), 2),
-                        'avg_cod' => round($group->avg('cod'), 2),
-                        'count'   => $group->count(),
-                    ];
-                });
+        if ($existing) {
+            return response()->json([
+                'message' => 'Data PH untuk shift ini pada tanggal tersebut sudah ada. Setiap tanggal hanya boleh memiliki maksimal 3 shift (shift1, shift2, shift3).'
+            ], 409);
         }
 
-        // Current Month - berdasarkan created_at
-        $startMonth = Carbon::now()->startOfMonth();
-        $endMonth   = Carbon::now()->endOfMonth();
+        // Cek jumlah shift pada tanggal tersebut (maksimal 3)
+        $shiftCount = WwtpPerformancePHharian::where('tanggal', $request->tanggal)->count();
 
-        $monthlyData = WwtpPerformanceRecord::whereBetween('created_at', [$startMonth, $endMonth])
-            ->get()
-            ->groupBy('jenis')
-            ->map(function ($group) {
-                return [
-                    'avg_tss' => round($group->avg('tss'), 2),
-                    'avg_cod' => round($group->avg('cod'), 2),
-                ];
-            });
+        if ($shiftCount >= 3) {
+            return response()->json([
+                'message' => 'Tanggal ini sudah memiliki 3 shift. Tidak dapat menambah data lagi.'
+            ], 409);
+        }
+
+        // Simpan data PH harian
+        $phHarian = WwtpPerformancePHharian::create([
+            'tanggal'        => $request->tanggal,
+            'shift'          => $request->shift,
+            'equalisasi_1'   => $request->equalisasi_1,
+            'equalisasi_2'   => $request->equalisasi_2,
+            'netralisasi'    => $request->netralisasi,
+            'sedimentasi_1'  => $request->sedimentasi_1,
+            'sedimentasi_2'  => $request->sedimentasi_2,
+            'outlet_anaerob' => $request->outlet_anaerob,
+            'aerob'          => $request->aerob,
+            'lumpur_aktif'   => $request->lumpur_aktif,
+            'clarifier_2'    => $request->clarifier_2,
+            'outlet'         => $request->outlet,
+        ]);
 
         return response()->json([
-            'total_records'      => $totalRecords,
-            'last_update'        => $lastUpdate ? $lastUpdate->created_at : null,
-            'weekly_summary'     => $weeklyData,
-            'monthly_summary'    => $monthlyData,
+            'message' => 'Data PH harian berhasil disimpan.',
+            'data'    => $phHarian
         ]);
     }
 
     /**
-     * Get chart data for specific jenis and period
-     * Data diambil berdasarkan created_at dan dikelompokkan per week
+     * Menampilkan detail data PH harian
      */
-    public function getChartData($jenis, $period = 30)
+    public function showPHHarian($id)
     {
-        $startDate = Carbon::now()->subDays($period);
-
-        // Ambil records berdasarkan jenis dan periode
-        $records = WwtpPerformanceRecord::with('week')
-        ->where('jenis', $jenis)
-            ->where('created_at', '>=', $startDate)
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        // Format data untuk chart
-        $data = $records->map(function ($record) {
-            return [
-                'tanggal' => $record->created_at->format('Y-m-d'), // gunakan created_at
-                'week_start' => $record->week ? $record->week->week_start : null,
-                'week_end' => $record->week ? $record->week->week_end : null,
-                'tss'     => (float) $record->tss,
-                'cod'     => (float) $record->cod,
-            ];
-        });
-
+        $data = WwtpPerformancePHharian::findOrFail($id);
         return response()->json($data);
     }
 
-
     /**
-     * Get monthly comparison for last 6 months
+     * Update data PH harian
      */
-    public function getMonthlyComparison()
+    public function updatePHHarian(Request $request, $id)
     {
-        $months = [];
+        $phHarian = WwtpPerformancePHharian::findOrFail($id);
 
-        for ($i = 5; $i >= 0; $i--) {
-            $date = Carbon::now()->subMonths($i);
-            $startMonth = $date->copy()->startOfMonth();
-            $endMonth   = $date->copy()->endOfMonth();
+        $request->validate([
+            'tanggal'  => 'required|date',
+            'shift'    => 'required|in:shift1,shift2,shift3',
+            'equalisasi_1'   => 'nullable|numeric',
+            'equalisasi_2'   => 'nullable|numeric',
+            'netralisasi'    => 'nullable|numeric',
+            'sedimentasi_1'  => 'nullable|numeric',
+            'sedimentasi_2'  => 'nullable|numeric',
+            'outlet_anaerob' => 'nullable|numeric',
+            'aerob'          => 'nullable|numeric',
+            'lumpur_aktif'   => 'nullable|numeric',
+            'clarifier_2'    => 'nullable|numeric',
+            'outlet'         => 'nullable|numeric',
+        ]);
 
-            // Ambil semua records di bulan tersebut berdasarkan created_at
-            $monthlyData = WwtpPerformanceRecord::whereBetween('created_at', [$startMonth, $endMonth])
-                ->get()
-                ->groupBy('jenis')
-                ->map(function ($group) {
-                    return [
-                        'avg_tss' => round($group->avg('tss'), 2),
-                        'avg_cod' => round($group->avg('cod'), 2),
-                    ];
-                });
+        // Cek apakah shift pada tanggal tersebut sudah ada (kecuali data yang sedang diupdate)
+        $existing = WwtpPerformancePHharian::where('tanggal', $request->tanggal)
+            ->where('shift', $request->shift)
+            ->where('id', '!=', $id)
+            ->first();
 
-            $months[] = [
-                'month' => $date->format('M Y'),
-                'data'  => $monthlyData,
-            ];
+        if ($existing) {
+            return response()->json([
+                'message' => 'Data PH untuk shift ini pada tanggal tersebut sudah ada. Setiap tanggal hanya boleh memiliki maksimal 3 shift (shift1, shift2, shift3).'
+            ], 409);
         }
 
-        return response()->json($months);
+        $phHarian->update($request->all());
+
+        return response()->json([
+            'message' => 'Data PH harian berhasil diperbarui.',
+            'data' => $phHarian
+        ]);
     }
 
     /**
-     * Get recent records
+     * Hapus data PH harian
      */
-    public function getRecentRecords($limit = 10)
+    public function destroyPHHarian($id)
     {
-        $data = WwtpPerformanceRecord::with('week')
-        ->orderBy('created_at', 'desc')
-        ->limit($limit)
-            ->get();
+        $phHarian = WwtpPerformancePHharian::findOrFail($id);
+        $phHarian->delete();
 
-        return response()->json($data);
+        return response()->json(['message' => 'Data PH harian berhasil dihapus.']);
     }
 
-    /**
-     * Get weekly performance
-     */
-    public function getWeeklyPerformance()
-    {
-        $weeks = WwtpPerformanceWeek::with('records')
-        ->orderBy('week_start', 'desc')
-        ->limit(10)
-            ->get();
-
-        return response()->json($weeks);
-    }
+   
 }
