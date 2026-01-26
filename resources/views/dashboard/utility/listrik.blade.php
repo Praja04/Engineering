@@ -569,8 +569,8 @@
                 // KPI Hasil Produksi
                 const kpiProduksi = parseFloat(data.kpi.listrik_produksi);
                 $('#kpi_hasil_produksi').text(kpiProduksi.toLocaleString('id-ID', {
-                    minimumFractionDigits: 4,
-                    maximumFractionDigits: 4
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
                 }) + ' Kwh/10 ton FG');
 
                 const targetProduksi = 51;
@@ -588,8 +588,8 @@
                 // KPI Hasil BAS
                 const kpiBas = parseFloat(data.kpi.listrik_bas);
                 $('#kpi_hasil_bas').text(kpiBas.toLocaleString('id-ID', {
-                    minimumFractionDigits: 4,
-                    maximumFractionDigits: 4
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
                 }) + ' Kwh/ton');
 
                 const targetBas = 75;
