@@ -303,5 +303,145 @@ class WWTPControllerPerformance extends Controller
         return response()->json(['message' => 'Data PH harian berhasil dihapus.']);
     }
 
+    //////////////API STATISTIK WWTP/////////////////////
+    public function getStatistics()
+    {
+        $totalRecords = WwtpPerformanceRecord::count();
+
+        // Last update berdasarkan created_at atau updated_at
+        $lastUpdate = WwtpPerformanceRecord::orderBy('created_at', 'desc')->first();
+
+        // Current Week - ambil data dari week yang aktif
+        $today = Carbon::now();
+        $startWeek = $today->copy()->startOfWeek(Carbon::MONDAY);
+        $endWeek   = $today->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $currentWeek = WwtpPerformanceWeek::where('week_start', '<=', $today)
+            ->where('week_end', '>=', $today)
+            ->first();
+
+        $weeklyData = [];
+        if ($currentWeek) {
+            $weeklyData = WwtpPerformanceRecord::where('performance_week_id', $currentWeek->id)
+                ->get()
+                ->groupBy('jenis')
+                ->map(function ($group) {
+                    return [
+                        'avg_tss' => round($group->avg('tss'), 2),
+                        'avg_cod' => round($group->avg('cod'), 2),
+                        'count'   => $group->count(),
+                    ];
+                });
+        }
+
+        // Current Month - berdasarkan created_at
+        $startMonth = Carbon::now()->startOfMonth();
+        $endMonth   = Carbon::now()->endOfMonth();
+
+        $monthlyData = WwtpPerformanceRecord::whereBetween('created_at', [$startMonth, $endMonth])
+            ->get()
+            ->groupBy('jenis')
+            ->map(function ($group) {
+                return [
+                    'avg_tss' => round($group->avg('tss'), 2),
+                    'avg_cod' => round($group->avg('cod'), 2),
+                ];
+            });
+
+        return response()->json([
+            'total_records'      => $totalRecords,
+            'last_update'        => $lastUpdate ? $lastUpdate->created_at : null,
+            'weekly_summary'     => $weeklyData,
+            'monthly_summary'    => $monthlyData,
+        ]);
+    }
+
+    /**
+     * Get chart data for specific jenis and period
+     * Data diambil berdasarkan created_at dan dikelompokkan per week
+     */
+    public function getChartData($jenis, $period = 30)
+    {
+        $startDate = Carbon::now()->subDays($period);
+
+        // Ambil records berdasarkan jenis dan periode
+        $records = WwtpPerformanceRecord::with('week')
+        ->where('jenis', $jenis)
+            ->where('created_at', '>=', $startDate)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // Format data untuk chart
+        $data = $records->map(function ($record) {
+            return [
+                'tanggal' => $record->created_at->format('Y-m-d'), // gunakan created_at
+                'week_start' => $record->week ? $record->week->week_start : null,
+                'week_end' => $record->week ? $record->week->week_end : null,
+                'tss'     => (float) $record->tss,
+                'cod'     => (float) $record->cod,
+            ];
+        });
+
+        return response()->json($data);
+    }
+
+
+    /**
+     * Get monthly comparison for last 6 months
+     */
+    public function getMonthlyComparison()
+    {
+        $months = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $startMonth = $date->copy()->startOfMonth();
+            $endMonth   = $date->copy()->endOfMonth();
+
+            // Ambil semua records di bulan tersebut berdasarkan created_at
+            $monthlyData = WwtpPerformanceRecord::whereBetween('created_at', [$startMonth, $endMonth])
+                ->get()
+                ->groupBy('jenis')
+                ->map(function ($group) {
+                    return [
+                        'avg_tss' => round($group->avg('tss'), 2),
+                        'avg_cod' => round($group->avg('cod'), 2),
+                    ];
+                });
+
+            $months[] = [
+                'month' => $date->format('M Y'),
+                'data'  => $monthlyData,
+            ];
+        }
+
+        return response()->json($months);
+    }
+
+    /**
+     * Get recent records
+     */
+    public function getRecentRecords($limit = 10)
+    {
+        $data = WwtpPerformanceRecord::with('week')
+        ->orderBy('created_at', 'desc')
+        ->limit($limit)
+            ->get();
+
+        return response()->json($data);
+    }
+
+    /**
+     * Get weekly performance
+     */
+    public function getWeeklyPerformance()
+    {
+        $weeks = WwtpPerformanceWeek::with('records')
+        ->orderBy('week_start', 'desc')
+        ->limit(10)
+            ->get();
+
+        return response()->json($weeks);
+    }
    
 }
