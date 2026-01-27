@@ -380,4 +380,184 @@ class WWTPControllerProses extends Controller
 
         return response()->json(['message' => 'Data harian berhasil dihapus.']);
     }
+
+
+    /**
+     * API: Get dashboard statistics
+     */
+    public function getStatistics()
+    {
+        $totalRecords = WwtpRecord::count();
+        $totalInfluent = WwtpRecord::where('kategori', 'influent')->count();
+        $totalEffluent = WwtpRecord::where('kategori', 'effluent')->count();
+
+        $lastUpdate = WwtpRecord::orderBy('tanggal', 'desc')->first();
+
+        // Current week data
+        $startWeek = Carbon::now()->startOfWeek();
+        $endWeek = Carbon::now()->endOfWeek();
+
+        $weeklyInfluent = WwtpRecord::where('kategori', 'influent')
+            ->whereBetween('tanggal', [$startWeek, $endWeek])
+            ->with('influent')
+            ->first();
+
+        $weeklyEffluentCount = WwtpRecord::where('kategori', 'effluent')
+            ->whereBetween('tanggal', [$startWeek, $endWeek])
+            ->count();
+
+        // Calculate averages for current month
+        $startMonth = Carbon::now()->startOfMonth();
+        $endMonth = Carbon::now()->endOfMonth();
+
+        $monthlyInfluentAvg = WwtpRecord::where('kategori', 'influent')
+            ->whereBetween('tanggal', [$startMonth, $endMonth])
+            ->with('influent')
+            ->get()
+            ->avg(function ($record) {
+                if ($record->influent) {
+                    return $record->influent->pit_sparta +
+                        $record->influent->pit_garam +
+                        $record->influent->pit_domestik;
+                }
+                return 0;
+            });
+
+        $monthlyEffluentAvg = WwtpRecord::where('kategori', 'effluent')
+            ->whereBetween('tanggal', [$startMonth, $endMonth])
+            ->with('effluent')
+            ->get()
+            ->avg(function ($record) {
+                if ($record->effluent) {
+                    return $record->effluent->full_proses +
+                        $record->effluent->daf_pre;
+                }
+                return 0;
+            });
+
+        return response()->json([
+            'total_records' => $totalRecords,
+            'total_influent' => $totalInfluent,
+            'total_effluent' => $totalEffluent,
+            'last_update' => $lastUpdate ? $lastUpdate->tanggal : null,
+            'weekly_influent' => $weeklyInfluent,
+            'weekly_effluent_count' => $weeklyEffluentCount,
+            'monthly_influent_avg' => round($monthlyInfluentAvg, 2),
+            'monthly_effluent_avg' => round($monthlyEffluentAvg, 2),
+        ]);
+    }
+
+    /**
+     * API: Get chart data for influent
+     */
+    public function getInfluentChartData($period = 30)
+    {
+        $startDate = Carbon::now()->subDays($period);
+
+        $data = WwtpRecord::where('kategori', 'influent')
+            ->where('tanggal', '>=', $startDate)
+            ->with('influent')
+            ->orderBy('tanggal', 'asc')
+            ->get()
+            ->map(function ($record) {
+                return [
+                    'tanggal' => $record->tanggal,
+                    'pit_sparta' => $record->influent->pit_sparta ?? 0,
+                    'pit_garam' => $record->influent->pit_garam ?? 0,
+                    'pit_domestik' => $record->influent->pit_domestik ?? 0,
+                    'total' => ($record->influent->pit_sparta ?? 0) +
+                        ($record->influent->pit_garam ?? 0) +
+                        ($record->influent->pit_domestik ?? 0),
+                ];
+            });
+
+        return response()->json($data);
+    }
+
+    /**
+     * API: Get chart data for effluent
+     */
+    public function getEffluentChartData($period = 30)
+    {
+        $startDate = Carbon::now()->subDays($period);
+
+        $data = WwtpRecord::where('kategori', 'effluent')
+            ->where('tanggal', '>=', $startDate)
+            ->with('effluent')
+            ->orderBy('tanggal', 'asc')
+            ->get()
+            ->map(function ($record) {
+                return [
+                    'tanggal' => $record->tanggal,
+                    'full_proses' => $record->effluent->full_proses ?? 0,
+                    'daf_pre' => $record->effluent->daf_pre ?? 0,
+                    'total' => ($record->effluent->full_proses ?? 0) +
+                        ($record->effluent->daf_pre ?? 0),
+                ];
+            });
+
+        return response()->json($data);
+    }
+
+    /**
+     * API: Get monthly comparison
+     */
+    public function getMonthlyComparison()
+    {
+        $months = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $startMonth = $date->copy()->startOfMonth();
+            $endMonth = $date->copy()->endOfMonth();
+
+            // Influent total
+            $influentTotal = WwtpRecord::where('kategori', 'influent')
+                ->whereBetween('tanggal', [$startMonth, $endMonth])
+                ->with('influent')
+                ->get()
+                ->sum(function ($record) {
+                    if ($record->influent) {
+                        return $record->influent->pit_sparta +
+                            $record->influent->pit_garam +
+                            $record->influent->pit_domestik;
+                    }
+                    return 0;
+                });
+
+            // Effluent total
+            $effluentTotal = WwtpRecord::where('kategori', 'effluent')
+                ->whereBetween('tanggal', [$startMonth, $endMonth])
+                ->with('effluent')
+                ->get()
+                ->sum(function ($record) {
+                    if ($record->effluent) {
+                        return $record->effluent->full_proses +
+                            $record->effluent->daf_pre;
+                    }
+                    return 0;
+                });
+
+            $months[] = [
+                'month' => $date->format('M Y'),
+                'influent' => round($influentTotal, 2),
+                'effluent' => round($effluentTotal, 2),
+            ];
+        }
+
+        return response()->json($months);
+    }
+
+    /**
+     * API: Get recent records
+     */
+    public function getRecentRecords($limit = 10)
+    {
+        $data = WwtpRecord::with(['influent', 'effluent'])
+            ->orderBy('tanggal', 'desc')
+            ->limit($limit)
+            ->get();
+
+        return response()->json($data);
+    }
 }
