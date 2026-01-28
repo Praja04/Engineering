@@ -63,7 +63,7 @@ class MtcElectricalModel extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'waktu'   => 'datetime:H:i:s',
 
         // Boolean checklist

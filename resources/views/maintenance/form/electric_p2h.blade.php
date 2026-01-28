@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', ' Form Check Mtc Sipil')
+@section('title', ' Form Check Mtc Electric P2H')
 
 @section('styles')
     <style>
@@ -87,12 +87,12 @@
         <div class="container-fluid">
             <div class="card shadow border-0">
                 <div class="card-header bg-primary text-white fw-bold">
-                    Form Check Maintenance Sipil
+                    Form Check Maintenance Electric P2H
                 </div>
 
                 <div class="card-body">
 
-                    <form id="form-mtc-sipil" method="POST">
+                    <form id="form-mtc-electric-p2h" method="POST">
                         @csrf
 
                         <div class="row g-3">
@@ -107,12 +107,31 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label">Area
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" name="area" class="form-control" value="{{ old('area') }}"
-                                    placeholder="Office Lt.2 / Gudang A">
-                                @error('area')
+                                <label class="form-label">Departemen <span class="text-danger">*</span></label>
+                                <input type="text" name="departemen" class="form-control" value="{{ old('departemen') }}"
+                                    placeholder="Warehouse">
+                                @error('departemen')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">No Unit <span class="text-danger">*</span></label>
+                                <input type="text" name="no_unit" class="form-control" value="{{ old('no_unit') }}"
+                                    placeholder="F01">
+                                @error('no_unit')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Shift <span class="text-danger">*</span></label>
+                                <select name="shift" class="form-select">
+                                    <option value="">-- Pilih Shift --</option>
+                                    <option value="1" {{ old('shift') == 1 ? 'selected' : '' }}>Shift 1</option>
+                                    <option value="2" {{ old('shift') == 2 ? 'selected' : '' }}>Shift 2</option>
+                                    <option value="3" {{ old('shift') == 3 ? 'selected' : '' }}>Shift 3</option>
+                                </select>
+                                @error('shift')
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -127,8 +146,8 @@
                             <div class="row g-3">
                                 @foreach ($items as $i => $item)
                                     @php
-                                        $oldKondisi = old("details.$i.kondisi");
-                                        $oldKet = old("details.$i.keterangan", '');
+                                        $oldKondisi = old("items.$i.kondisi");
+                                        $oldKet = old("items.$i.keterangan", '');
                                         $idYa = "sipil_{$i}_ya";
                                         $idTidak = "sipil_{$i}_tidak";
                                     @endphp
@@ -137,20 +156,19 @@
                                         <div class="card border shadow-sm item-card {{ (string) $oldKondisi === '0' ? 'not-ok' : '' }}"
                                             data-index="{{ $i }}">
                                             <div class="card-header bg-light">
-                                                <strong class="d-block">{{ $item->jenis_perawatan }}</strong>
-                                                <small
-                                                    class="text-muted d-block mt-1">{{ $item->standar_pemeliharaan }}</small>
+                                                <strong class="d-block">{{ $item->item_pengecekan }}</strong>
+                                                <small class="text-muted d-block mt-1">{{ $item->kondisi_normal }}</small>
                                             </div>
 
                                             <div class="card-body pb-2 pt-3">
                                                 <!-- Radio Ya/Tidak -->
                                                 <div class="d-flex gap-2 mb-1">
                                                     <div class="flex-fill">
-                                                        <input type="hidden" name="details[{{ $i }}][item_id]"
+                                                        <input type="hidden" name="items[{{ $i }}][item_id]"
                                                             value="{{ $item->id }}">
 
                                                         <input id="{{ $idYa }}" type="radio"
-                                                            name="details[{{ $i }}][kondisi]" value="1"
+                                                            name="items[{{ $i }}][kondisi]" value="1"
                                                             class="visually-hidden kondisi-radio"
                                                             {{ (string) $oldKondisi === '1' ? 'checked' : '' }}>
 
@@ -162,7 +180,7 @@
 
                                                     <div class="flex-fill">
                                                         <input id="{{ $idTidak }}" type="radio"
-                                                            name="details[{{ $i }}][kondisi]" value="0"
+                                                            name="items[{{ $i }}][kondisi]" value="0"
                                                             class="visually-hidden kondisi-radio"
                                                             {{ (string) $oldKondisi === '0' ? 'checked' : '' }}>
 
@@ -178,24 +196,6 @@
                                         </div>
                                     </div>
                                 @endforeach
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Rekomendasi</label>
-                                <input type="text" name="rekomendasi" class="form-control"
-                                    value="{{ old('rekomendasi') }}">
-                                @error('rekomendasi')
-                                    <div class="text-danger small">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Korektif</label>
-                                <input type="text" name="korektif" class="form-control" value="{{ old('korektif') }}">
-                                @error('korektif')
-                                    <div class="text-danger small">{{ $message }}</div>
-                                @enderror
                             </div>
                         </div>
 
@@ -216,33 +216,35 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            const STORAGE_KEY = 'form_mtc_sipil_data';
+            const STORAGE_KEY = 'form_mtc_electric_p2h_data';
 
             function saveFormLocalStorage() {
                 const data = {};
 
-                $('#form-mtc-sipil').find('input, textarea').each(function() {
-                    const name = this.name;
-                    if (!name) return;
+                $('#form-mtc-electric-p2h')
+                    .find('input, textarea, select')
+                    .each(function() {
+                        const name = this.name;
+                        if (!name) return;
 
-                    let value;
+                        let value;
 
-                    if (this.type === 'radio') {
-                        if (this.checked) {
-                            value = this.value;
+                        if (this.type === 'radio') {
+                            if (this.checked) {
+                                value = this.value;
+                            }
+                        } else if (this.type === 'checkbox') {
+                            value = this.checked ? '1' : '0';
+                        } else {
+                            value = $(this).val() || ''; // pakai || '' biar tidak undefined
                         }
-                    } else if (this.type === 'checkbox') {
-                        value = this.checked ? '1' : '0';
-                    } else {
-                        value = $(this).val() || ''; // pakai || '' biar tidak undefined
-                    }
 
-                    if (value !== undefined && value !== null) {
-                        if (this.tagName.toLowerCase() === 'textarea' || value !== '') {
-                            data[name] = value;
+                        if (value !== undefined && value !== null) {
+                            if (this.tagName.toLowerCase() === 'textarea' || value !== '') {
+                                data[name] = value;
+                            }
                         }
-                    }
-                });
+                    });
 
                 console.log('Saved data:', data);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -265,7 +267,7 @@
                             if ($targetRadio.length) {
                                 $targetRadio.prop('checked', true);
                             }
-                        } else if ($el.is('textarea, input[type="text"], input[type="date"]')) {
+                        } else if ($el.is('textarea, input[type="text"], input[type="date"], select')) {
                             $el.val(value);
                         }
                     }
@@ -287,7 +289,7 @@
 
                             const $wrapper = $(`
                                 <div class="keterangan-wrapper mt-3">
-                                    <textarea name="details[${index}][keterangan]" class="form-control" rows="2"
+                                    <textarea name="items[${index}][keterangan]" class="form-control" rows="2"
                                             placeholder="Keterangan wajib diisi karena kondisi TIDAK"></textarea>
                                     <div class="mt-2"></div>
                                 </div>
@@ -312,24 +314,28 @@
                     saveFormLocalStorage();
                 }, 600);
 
-                updateRowState();
+                setTimeout(() => {
+                    updateRowState();
+                }, 100);
+
             }
 
             loadFormLocalStorage();
 
-            $('#form-mtc-sipil').on('change', 'input[type="radio"], textarea', function() {
-                saveFormLocalStorage();
-            });
+            $('#form-mtc-electric-p2h').on('input change', 'input[type="text"], input[type="date"], select',
+                function() {
+                    saveFormLocalStorage();
+                });
 
             function updateRowState() {
                 $('.item-card').each(function() {
                     const $card = $(this);
-                    const isTidak = $card.find('.kondisi-radio[value="0"]').is(':checked');
+                    const isTidak = $card.find('input[type="radio"][value="0"]:checked').length > 0;
                     $card.toggleClass('not-ok', isTidak);
                 });
             }
 
-            $('#form-mtc-sipil').on('change', '.kondisi-radio', function() {
+            $('#form-mtc-electric-p2h').on('change', '.kondisi-radio', function() {
                 const $radio = $(this);
                 const $card = $radio.closest('.item-card');
                 const $body = $card.find('.card-body');
@@ -353,7 +359,7 @@
                     if ($wrapper.length === 0) {
                         $wrapper = $(`
                             <div class="keterangan-wrapper mt-3">
-                                <textarea name="details[${index}][keterangan]" class="form-control" rows="2"
+                                <textarea name="items[${index}][keterangan]" class="form-control" rows="2"
                                         placeholder="Keterangan wajib diisi karena kondisi TIDAK"></textarea>
                                 <div class="mt-2"></div>
                             </div>
@@ -371,17 +377,15 @@
                     $wrapper.find('textarea').prop('required', true);
                 } else {
                     if ($wrapper.length > 0) {
-                        $wrapper.slideUp(200, function() {
-                            $wrapper.remove();
-                            saveFormLocalStorage(); // hapus dari localStorage kalau perlu
-                        });
+                        $wrapper.remove();
+                        saveFormLocalStorage();
                     }
                 }
 
                 saveFormLocalStorage();
             });
 
-            $('#form-mtc-sipil').on('submit', function(e) {
+            $('#form-mtc-electric-p2h').on('submit', function(e) {
                 e.preventDefault();
 
                 $('#clientError').addClass('d-none').text('');
@@ -419,7 +423,7 @@
                 const formData = $(this).serialize();
 
                 $.ajax({
-                    url: "{{ route('mtc.sipil.store') }}",
+                    url: "{{ route('mtc.electric-p2h.store') }}",
                     type: "POST",
                     data: formData,
                     dataType: "json",
@@ -438,7 +442,7 @@
                         $('.keterangan-wrapper').slideUp(200); // sembunyikan keterangan
                         $('textarea').val(''); // kosongkan isi
                         localStorage.removeItem(STORAGE_KEY);
-                        $('#form-mtc-sipil')[0].reset();
+                        $('#form-mtc-electric-p2h')[0].reset();
                         updateRowState();
                     },
                     error: function(xhr) {
@@ -461,7 +465,7 @@
                     cancelButtonText: 'Batal'
                 }).then(r => {
                     if (!r.isConfirmed) return;
-                    $('#form-mtc-sipil')[0].reset();
+                    $('#form-mtc-electric-p2h')[0].reset();
                     // Reset radio & tombol
                     $('.kondisi-radio').prop('checked', false);
                     $('.kondisi-btn').removeClass('active');

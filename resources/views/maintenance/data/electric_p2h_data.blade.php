@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Data Check Mtc Sipil')
+@section('title', 'Data Check Mtc Electric P2H')
 
 @section('styles')
     <style>
@@ -83,11 +83,11 @@
             <div class="card card-soft shadow-sm">
                 <div class="card-header d-flex align-items-center justify-content-between">
                     <div>
-                        <h4 class="fw-bold">Data Maintenance Sipil</h4>
+                        <h4 class="fw-bold">Data Maintenance Electric P2H</h4>
                         <div class="small-muted">List inspeksi + detail hasil pengecekan</div>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="{{ url('/mtc/form/sipil/index') }}" class="btn btn-primary">
+                        <a href="{{ url('/mtc/form/electric-p2h/index') }}" class="btn btn-primary">
                             + Input Baru
                         </a>
                     </div>
@@ -102,12 +102,12 @@
                             <input type="date" class="form-control" id="filterDate">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Area</label>
-                            <input type="text" class="form-control" id="filterArea">
+                            <label class="form-label">No Unit</label>
+                            <input type="text" class="form-control" id="filterNoUnit">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Rekomendasi</label>
-                            <input type="text" class="form-control" id="filterRekomendasi">
+                            <label class="form-label">Departemen</label>
+                            <input type="text" class="form-control" id="filterDepartemen">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label d-block">&nbsp;</label>
@@ -122,15 +122,14 @@
 
                     {{-- TABLE --}}
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle" id="tabelSipil">
+                        <table class="table table-hover align-middle" id="tabelElectricP2h">
                             <thead class="table-light">
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
-                                    <th>Waktu</th>
-                                    <th>Area</th>
-                                    <th>Ringkasan</th>
-                                    <th>Dibuat Oleh</th>
+                                    <th>No Unit</th>
+                                    <th>Departemen</th>
+                                    <th>Shift</th>
                                     <th style="width:180px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -149,7 +148,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <div>
-                        <div class="fw-bold" id="detailTitle">Detail Inspeksi Sipil</div>
+                        <div class="fw-bold" id="detailTitle">Detail Inspeksi Electric P2H</div>
                         <div class="small-muted" id="detailSub"></div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -168,13 +167,13 @@
     <div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
-                <form id="formEditSipil">
+                <form id="formEditElectricP2h">
                     @csrf
                     <input type="hidden" id="editId" name="id">
 
                     <div class="modal-header">
                         <div>
-                            <div class="fw-bold">Edit Inspeksi Mtc Sipil</div>
+                            <div class="fw-bold">Edit Inspeksi Mtc Electric P2H</div>
                             <div class="text-muted small" id="editSub"></div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -182,32 +181,41 @@
 
                     <div class="modal-body">
                         <div class="row g-3 mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Tanggal *</label>
                                 <input type="date" class="form-control" name="tanggal" id="editTanggal" required>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Area</label>
-                                <input type="text" class="form-control" name="area" id="editArea">
+                            <div class="col-md-3">
+                                <label class="form-label">Departemen</label>
+                                <input type="text" class="form-control" name="departemen" id="editDepartemen">
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Waktu</label>
-                                <input type="time" class="form-control" name="waktu" id="editWaktu" readonly>
+                            <div class="col-md-3">
+                                <label class="form-label">No Unit</label>
+                                <input type="text" class="form-control" name="no_unit" id="editNoUnit">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Shift</label>
+                                <select name="shift" class="form-select" id="editShift">
+                                    <option value="">-- Pilih Shift --</option>
+                                    <option value="1">Shift 1</option>
+                                    <option value="2">Shift 2</option>
+                                    <option value="3">Shift 3</option>
+                                </select>
                             </div>
                         </div>
 
                         <div id="editDetails"><!-- injected checklist items --></div>
 
-                        <div class="row g-3 mt-3">
+                        {{-- <div class="row g-3 mt-3">
                             <div class="col-md-6">
                                 <label class="form-label">Rekomendasi</label>
-                                <textarea class="form-control" name="rekomendasi" id="editRekomendasi" rows="2"></textarea>
+                                <textarea class="form-control" name="rekomendasi" id="editNoUnit" rows="2"></textarea>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Korektif</label>
                                 <textarea class="form-control" name="korektif" id="editKorektif" rows="2"></textarea>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
 
                     <div class="modal-footer">
@@ -226,9 +234,9 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            const API_URL = "{{ url('api/mtc/sipil/get-data') }}";
-            const DELETE_URL = "{{ url('mtc/data/sipil/delete') }}";
-            const UPDATE_URL = "{{ url('mtc/data/sipil/update') }}";
+            const API_URL = "{{ url('api/mtc/electric-p2h/get-data') }}";
+            const DELETE_URL = "{{ url('mtc/data/electric-p2h/delete') }}";
+            const UPDATE_URL = "{{ url('mtc/data/electric-p2h/update') }}";
 
             let currentRows = [];
 
@@ -245,9 +253,9 @@
 
             function statusBadge(kondisi) {
                 if (kondisi === true || kondisi === 1 || kondisi === "1")
-                    return `<span class="badge bg-success">YA</span>`;
+                    return `<span class="badge bg-success">OK</span>`;
                 if (kondisi === false || kondisi === 0 || kondisi === "0")
-                    return `<span class="badge bg-danger">TIDAK</span>`;
+                    return `<span class="badge bg-danger">NOK</span>`;
                 return `<span class="badge bg-secondary">No Check</span>`;
             }
 
@@ -270,62 +278,63 @@
             }
 
             function buildDetailHTML(row) {
-                const detailsHtml = row.details.map(d => `
+                const detailsHtml = row.details?.map(d => `
                     <div class="col-md-6 mb-3">
                         <div class="card shadow-sm h-100">
                             <div class="card-body p-3">
-                                <h6 class="card-title mb-1 fw-bold">${d.jenis_perawatan || '-'}</h6>
-                                <small class="text-muted d-block mb-2">${d.standar_pemeliharaan || '-'}</small>
-                                
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="fw-semibold">Kondisi:</span>
+                                <h6 class="card-title mb-1 fw-bold">
+                                    ${d.item?.item_pengecekan || '-'}
+                                </h6>
+                                <small class="text-muted d-block mb-2">${d.item?.kondisi_normal || '-'}</small>
+
+                                <div class="d-flex justify-content-start align-items-center mb-2">
                                     ${statusBadge(d.kondisi)}
                                 </div>
-                                
-                                ${d.kondisi === false || d.kondisi === 0 ? `<div class="small text-muted border-top pt-2 mt-2"><strong>Keterangan:</strong> ${d.keterangan || '-'}</div>` : ''}
+
+                                ${
+                                    d.kondisi === false
+                                    ? `<div class="small text-muted border-top pt-2 mt-2"><strong>Keterangan:</strong> ${d.keterangan || '-'}</div>`
+                                    : ''
+                                }
                             </div>
                         </div>
                     </div>
                 `).join('');
 
-                // Lalu di return utama, bungkus dengan row
                 return `
                     <div class="detail-meta row g-3 mb-3">
                         <div class="col-md-4">
                             <div class="meta-label">Tanggal</div>
                             <div class="meta-value">${fmtDate(row.tanggal)}</div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Waktu</div>
-                            <div class="meta-value">${row.waktu ? row.waktu.slice(0,5) : '-'}</div>
+
+                        <div class="col-md-4">
+                            <div class="meta-label">No Unit</div>
+                            <div class="meta-value">${row.no_unit ?? '-'}</div>
                         </div>
-                        <div class="col-md-5">
-                            <div class="meta-label">Area</div>
-                            <div class="meta-value">${row.area ?? '-'}</div>
+
+                        <div class="col-md-4">
+                            <div class="meta-label">Shift</div>
+                            <div class="meta-value">${row.shift ?? '-'}</div>
                         </div>
+
+                        <div class="col-md-4">
+                            <div class="meta-label">Departemen</div>
+                            <div class="meta-value">${row.departemen ?? '-'}</div>
+                        </div>
+
                         <div class="col-md-4">
                             <div class="meta-label">Dibuat oleh</div>
-                            <div class="meta-value">${row.user?.username ?? row.created_by ?? '-'}</div>
+                            <div class="meta-value">${row.created_by?.username ?? '-'}</div>
                         </div>
                     </div>
 
                     <div class="group-title mt-4 mb-3">Hasil Pengecekan</div>
                     <div class="row g-3">${detailsHtml}</div>
-
-                    <div class="row g-3 mt-4">
-                        <div class="col-md-6">
-                            <div class="group-title">Rekomendasi</div>
-                            <div class="p-3 bg-light rounded">${row.rekomendasi ?? '-'}</div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="group-title">Korektif</div>
-                            <div class="p-3 bg-light rounded">${row.korektif ?? '-'}</div>
-                        </div>
-                    </div>
                 `;
             }
 
-            const dtSipil = $('#tabelSipil').DataTable({
+            const dtElectricP2h = $('#tabelElectricP2h').DataTable({
                 processing: true,
                 serverSide: false,
                 searching: false,
@@ -333,13 +342,13 @@
                 lengthMenu: [5, 10, 25, 50, 100],
                 order: [
                     [0, 'asc']
-                ], // tanggal desc
+                ],
                 ajax: {
                     url: API_URL,
                     data: function(d) {
                         d.date = $('#filterDate').val() || null;
-                        d.area = $('#filterArea').val() || null;
-                        d.rekomendasi = $('#filterRekomendasi').val() || null;
+                        d.no_unit = $('#filterNoUnit').val() || null;
+                        d.departemen = $('#filterDepartemen').val() || null;
                     },
                     dataSrc: function(json) {
                         currentRows = json.data || [];
@@ -361,29 +370,24 @@
                         }
                     },
                     {
-                        data: 'waktu',
-                        render: d => d ? d.slice(0, 5) : '-',
+                        data: 'no_unit',
+                        orderable: false,
                         defaultContent: '-'
                     },
                     {
-                        data: 'area',
+                        data: 'departemen',
+                        orderable: false,
                         defaultContent: '-'
                     },
                     {
-                        data: null,
-                        render: function(row) {
-                            return summarize(row.details);
-                        }
-                    },
-                    {
-                        data: null,
-                        render: function(row) {
-                            return row.user?.username ?? row.created_by ?? '-';
-                        }
+                        data: 'shift',
+                        orderable: false,
+                        defaultContent: '-'
                     },
                     {
                         data: null,
                         className: 'text-center text-nowrap',
+                        orderable: false,
                         render: function(row) {
                             return `
                                 <button class="btn btn-sm btn-primary btn-detail" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>
@@ -401,11 +405,15 @@
             });
 
             // Apply/reset filter
-            $('#btnApply').on('click', () => dtSipil.ajax.reload());
+            $('#filterDate, #filterDepartemen, #filterNoUnit').on('change keyup', function() {
+                dtElectricP2h.ajax.reload();
+            });
+
+            $('#btnApply').on('click', () => dtElectricP2h.ajax.reload());
 
             $('#btnReset').on('click', () => {
-                $('#filterDate, #filterArea, #filterRekomendasi').val('');
-                dtSipil.ajax.reload();
+                $('#filterDate, #filterDepartemen, #filterNoUnit').val('');
+                dtElectricP2h.ajax.reload();
             });
 
             // Detail modal
@@ -414,8 +422,7 @@
                 const row = currentRows.find(x => x.id == id);
                 if (!row) return;
 
-                $('#detailTitle').text('Detail Inspeksi Sipil');
-                $('#detailSub').text(`${fmtDate(row.tanggal)} • ${row.waktu ? row.waktu.slice(0,5) : '-'}`);
+                $('#detailSub').text(`${fmtDate(row.tanggal)}`);
                 $('#detailBody').html(buildDetailHTML(row));
 
                 new bootstrap.Modal(document.getElementById('modalDetail')).show();
@@ -429,36 +436,47 @@
 
                 $('#editId').val(row.id);
                 $('#editTanggal').val(row.tanggal ? row.tanggal.split('T')[0] : '');
-                $('#editWaktu').val(row.waktu ? row.waktu.slice(0, 5) : '');
-                $('#editArea').val(row.area ?? '');
-                $('#editRekomendasi').val(row.rekomendasi ?? '');
-                $('#editKorektif').val(row.korektif ?? '');
+                $('#editDepartemen').val(row.departemen ?? '');
+                $('#editNoUnit').val(row.no_unit ?? '');
+                $('#editShift').val(row.shift ?? '');
 
-                $('#editSub').text(`${fmtDate(row.tanggal)} • ${row.waktu ? row.waktu.slice(0,5) : '-'}`);
+                $('#editSub').text(fmtDate(row.tanggal));
 
-                // Inject checklist items dinamis dari details
                 const editHtml = row.details.map(d => `
                     <div class="col-md-6 col-lg-4">
                         <div class="item-edit" data-item-id="${d.item_id}">
-                            <!-- Hidden item_id supaya selalu terkirim -->
-                            <input type="hidden" name="details[${d.item_id}][item_id]" value="${d.item_id}">
+                            <input type="hidden" name="items[${d.item_id}][item_id]" value="${d.item_id}">
 
-                            <div class="item-label">${d.jenis_perawatan}</div>
-                            <small class="text-muted">${d.standar_pemeliharaan}</small>
+                            <div class="item-label">
+                                ${d.item?.item_pengecekan}
+                            </div>
 
                             <div class="btn-group btn-group-sm status-3 mt-2" role="group">
-                                <input type="radio" class="btn-check edit-radio" name="details[${d.item_id}][kondisi]" id="kondisi_${d.item_id}_null" value="" ${d.kondisi === null ? 'checked' : ''}>
+
+                                <input type="radio" class="btn-check edit-radio"
+                                    name="items[${d.item_id}][kondisi]"
+                                    id="kondisi_${d.item_id}_null"
+                                    value=""
+                                    ${d.kondisi === null ? 'checked' : ''}>
                                 <label class="btn btn-outline-secondary" for="kondisi_${d.item_id}_null">No Check</label>
 
-                                <input type="radio" class="btn-check edit-radio" name="details[${d.item_id}][kondisi]" id="kondisi_${d.item_id}_ok" value="1" ${d.kondisi ? 'checked' : ''}>
+                                <input type="radio" class="btn-check edit-radio"
+                                    name="items[${d.item_id}][kondisi]"
+                                    id="kondisi_${d.item_id}_ok"
+                                    value="1" ${d.kondisi === true ? 'checked' : ''}>
                                 <label class="btn btn-outline-success" for="kondisi_${d.item_id}_ok">YA</label>
 
-                                <input type="radio" class="btn-check edit-radio" name="details[${d.item_id}][kondisi]" id="kondisi_${d.item_id}_ng" value="0" ${d.kondisi === false ? 'checked' : ''}>
+                                <input type="radio" class="btn-check edit-radio"
+                                    name="items[${d.item_id}][kondisi]"
+                                    id="kondisi_${d.item_id}_ng"
+                                    value="0" ${d.kondisi === false ? 'checked' : ''}>
                                 <label class="btn btn-outline-danger" for="kondisi_${d.item_id}_ng">TIDAK</label>
                             </div>
 
                             <div class="mt-2 ket-wrap ${d.kondisi === false ? '' : 'd-none'}">
-                                <textarea class="form-control form-control-sm ket-input" name="details[${d.item_id}][keterangan]" placeholder="Keterangan wajib jika TIDAK">${d.keterangan ?? ''}</textarea>
+                                <textarea class="form-control form-control-sm"
+                                    name="items[${d.item_id}][keterangan]"
+                                    placeholder="Keterangan wajib jika TIDAK">${d.keterangan ?? ''}</textarea>
                             </div>
                         </div>
                     </div>
@@ -468,6 +486,7 @@
 
                 new bootstrap.Modal(document.getElementById('modalEdit')).show();
             });
+
 
             // Logic radio change di edit modal
             $(document).on('change', '.edit-radio', function() {
@@ -483,7 +502,7 @@
             });
 
             // Submit edit
-            $('#formEditSipil').on('submit', function(e) {
+            $('#formEditElectricP2h').on('submit', function(e) {
                 e.preventDefault();
 
                 const id = $('#editId').val();
@@ -515,9 +534,9 @@
 
                 // Paksa kirim semua field header (ambil dari input modal)
                 formData.set('tanggal', $('#editTanggal').val() || ''); // selalu kirim, meski kosong
-                formData.set('area', $('#editArea').val() || '');
-                formData.set('rekomendasi', $('#editRekomendasi').val() || '');
-                formData.set('korektif', $('#editKorektif').val() || '');
+                formData.set('departemen', $('#editDepartemen').val() || '');
+                formData.set('no_unit', $('#editNoUnit').val() || '');
+                formData.set('shift', $('#editShift').val() || '');
 
                 // Pastikan details terkirim (sudah otomatis dari radio & textarea)
 
@@ -531,10 +550,11 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(res) {
-                        Swal.fire('Berhasil', res.message || 'Data diupdate', 'success');
+                        Swal.fire('Berhasil', res.message || 'Data berhasil diperbaharui',
+                            'success');
                         bootstrap.Modal.getInstance(document.getElementById('modalEdit'))
                             .hide();
-                        dtSipil.ajax.reload(null, false);
+                        dtElectricP2h.ajax.reload(null, false);
                     },
                     error: function(xhr) {
                         Swal.fire('Gagal', xhr.responseJSON?.message || 'Gagal update',
@@ -568,7 +588,7 @@
                         },
                         success: () => {
                             Swal.fire('Berhasil', 'Data dihapus', 'success');
-                            dtSipil.ajax.reload(null, false);
+                            dtElectricP2h.ajax.reload(null, false);
                         },
                         error: xhr => Swal.fire('Gagal', xhr.responseJSON?.message ||
                             'Gagal hapus', 'error')

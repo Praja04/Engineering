@@ -3,9 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\KpiController;
 use App\Http\Controllers\Maintenance\MtcSipilController;
+use App\Http\Controllers\Maintenance\MtcBatteryController;
 use App\Http\Controllers\Maintenance\MtcUtilityController;
+use App\Http\Controllers\Maintenance\MtcDieselP2hController;
 use App\Http\Controllers\Maintenance\MtcMotorPumpController;
 use App\Http\Controllers\Maintenance\MtcElectricalController;
+use App\Http\Controllers\Maintenance\MtcElectricP2hController;
 use App\Http\Controllers\Maintenance\MtcRefrigerasiController;
 use App\Http\Controllers\Maintenance\MtcDieselEngineController;
 use App\Http\Controllers\Maintenance\MtcElectricEngineController;
@@ -40,6 +43,18 @@ Route::middleware(['auth'])->group(function () {
             Route::prefix('sipil')->group(function () {
                 Route::get('/index', [MtcSipilController::class, 'index'])->name('mtc.sipil.index');
                 Route::post('/store', [MtcSipilController::class, 'store'])->name('mtc.sipil.store');
+            });
+            Route::prefix('battery')->group(function () {
+                Route::get('/index', [MtcBatteryController::class, 'index'])->name('mtc.battery.index');
+                Route::post('/store', [MtcBatteryController::class, 'store'])->name('mtc.battery.store');
+            });
+            Route::prefix('electric-p2h')->group(function () {
+                Route::get('/index', [MtcElectricP2hController::class, 'index'])->name('mtc.electric-p2h.index');
+                Route::post('/store', [MtcElectricP2hController::class, 'store'])->name('mtc.electric-p2h.store');
+            });
+            Route::prefix('diesel-p2h')->group(function () {
+                Route::get('/index', [MtcDieselP2hController::class, 'index'])->name('mtc.diesel-p2h.index');
+                Route::post('/store', [MtcDieselP2hController::class, 'store'])->name('mtc.diesel-p2h.store');
             });
         });
 
@@ -78,6 +93,21 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/index', [MtcSipilController::class, 'viewData'])->name('mtc.sipil.data.index');
                 Route::delete('/delete/{id}', [MtcSipilController::class, 'destroy'])->name('mtc.sipil.data.delete');
                 Route::post('/update/{id}', [MtcSipilController::class, 'update'])->name('mtc.sipil.data.update');
+            });
+            Route::prefix('battery')->group(function () {
+                Route::get('/index', [MtcBatteryController::class, 'viewData'])->name('mtc.battery.data.index');
+                Route::delete('/delete/{id}', [MtcBatteryController::class, 'destroy'])->name('mtc.battery.data.delete');
+                Route::post('/update/{id}', [MtcBatteryController::class, 'update'])->name('mtc.battery.data.update');
+            });
+            Route::prefix('electric-p2h')->group(function () {
+                Route::get('/index', [MtcElectricP2hController::class, 'viewData'])->name('mtc.electric-p2h.data.index');
+                Route::delete('/delete/{id}', [MtcElectricP2hController::class, 'destroy'])->name('mtc.electric-p2h.data.delete');
+                Route::post('/update/{id}', [MtcElectricP2hController::class, 'update'])->name('mtc.electric-p2h.data.update');
+            });
+            Route::prefix('diesel-p2h')->group(function () {
+                Route::get('/index', [MtcDieselP2hController::class, 'viewData'])->name('mtc.diesel-p2h.data.index');
+                Route::delete('/delete/{id}', [MtcDieselP2hController::class, 'destroy'])->name('mtc.diesel-p2h.data.delete');
+                Route::post('/update/{id}', [MtcDieselP2hController::class, 'update'])->name('mtc.diesel-p2h.data.update');
             });
         });
     });
