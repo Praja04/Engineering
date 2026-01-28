@@ -98,7 +98,7 @@ class MtcDieselEngineModel extends Model
      * Casting boolean supaya konsisten true/false
      */
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'waktu'   => 'datetime:H:i:s',
 
         // Engine

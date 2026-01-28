@@ -65,6 +65,20 @@
             margin: 0.5rem 0 !important;
             padding: 0 !important;
         }
+
+        .kondisi-radio:checked+.kondisi-btn {
+            color: #fff;
+        }
+
+        .kondisi-radio[value="1"]:checked+.kondisi-btn {
+            background-color: #198754;
+            border-color: #198754;
+        }
+
+        .kondisi-radio[value="0"]:checked+.kondisi-btn {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
     </style>
 @endsection
 
@@ -78,7 +92,7 @@
 
                 <div class="card-body">
 
-                    <form id="form-mtc-sipil" method="POST" action="{{ route('mtc.sipil.store') }}">
+                    <form id="form-mtc-sipil" method="POST">
                         @csrf
 
                         <div class="row g-3">

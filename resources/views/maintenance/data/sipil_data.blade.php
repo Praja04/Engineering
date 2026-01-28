@@ -67,7 +67,6 @@
             border-radius: 10px;
             padding: 10px;
             margin-bottom: 10px;
-            background: #f9f9f9;
         }
 
         .item-edit .item-label {
@@ -126,7 +125,7 @@
                         <table class="table table-hover align-middle" id="tabelSipil">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID</th>
+                                    <th>No</th>
                                     <th>Tanggal</th>
                                     <th>Waktu</th>
                                     <th>Area</th>
@@ -136,9 +135,6 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td colspan="7" class="text-center small-muted py-4">Memuat data...</td>
-                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -275,16 +271,24 @@
 
             function buildDetailHTML(row) {
                 const detailsHtml = row.details.map(d => `
-                    <div class="item-cell">
-                        <div class="item-label">
-                            <strong>${d.jenis_perawatan}</strong><br>
-                            <small class="text-muted">${d.standar_pemeliharaan}</small>
+                    <div class="col-md-6 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body p-3">
+                                <h6 class="card-title mb-1 fw-bold">${d.jenis_perawatan || '-'}</h6>
+                                <small class="text-muted d-block mb-2">${d.standar_pemeliharaan || '-'}</small>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-semibold">Kondisi:</span>
+                                    ${statusBadge(d.kondisi)}
+                                </div>
+                                
+                                ${d.kondisi === false || d.kondisi === 0 ? `<div class="small text-muted border-top pt-2 mt-2"><strong>Keterangan:</strong> ${d.keterangan || '-'}</div>` : ''}
+                            </div>
                         </div>
-                        <div>${statusBadge(d.kondisi)}</div>
                     </div>
-                    <div class="small text-muted ps-3 mb-2">${d.kondisi === false || d.kondisi === 0 ? d.keterangan || '-' : ''}</div>
                 `).join('');
 
+                // Lalu di return utama, bungkus dengan row
                 return `
                     <div class="detail-meta row g-3 mb-3">
                         <div class="col-md-4">
@@ -305,17 +309,17 @@
                         </div>
                     </div>
 
-                    <div class="group-title">Hasil Pengecekan</div>
-                    <div class="items-grid">${detailsHtml}</div>
+                    <div class="group-title mt-4 mb-3">Hasil Pengecekan</div>
+                    <div class="row g-3">${detailsHtml}</div>
 
                     <div class="row g-3 mt-4">
                         <div class="col-md-6">
                             <div class="group-title">Rekomendasi</div>
-                            <div>${row.rekomendasi ?? '-'}</div>
+                            <div class="p-3 bg-light rounded">${row.rekomendasi ?? '-'}</div>
                         </div>
                         <div class="col-md-6">
                             <div class="group-title">Korektif</div>
-                            <div>${row.korektif ?? '-'}</div>
+                            <div class="p-3 bg-light rounded">${row.korektif ?? '-'}</div>
                         </div>
                     </div>
                 `;
@@ -328,7 +332,7 @@
                 pageLength: 10,
                 lengthMenu: [5, 10, 25, 50, 100],
                 order: [
-                    [1, 'desc']
+                    [0, 'asc']
                 ], // tanggal desc
                 ajax: {
                     url: API_URL,
@@ -343,8 +347,12 @@
                     }
                 },
                 columns: [{
-                        data: 'id',
-                        title: 'ID'
+                        data: null,
+                        className: 'text-center',
+                        orderable: false,
+                        render: function(data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
                     },
                     {
                         data: 'tanggal',
@@ -381,6 +389,7 @@
                                 <button class="btn btn-sm btn-primary btn-detail" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>
                                 <button class="btn btn-sm btn-info btn-edit" data-id="${row.id}" title="Edit"><i class="mdi mdi-pencil"></i></button>
                                 <button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>
+                                <button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>
                             `;
                         }
                     }

@@ -467,6 +467,7 @@
                 },
                 columns: [{
                         data: null,
+                        className: 'text-center',
                         orderable: false,
                         render: function(data, type, row, meta) {
                             return meta.row + meta.settings._iDisplayStart + 1;
