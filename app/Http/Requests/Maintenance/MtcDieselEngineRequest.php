@@ -18,9 +18,7 @@ class MtcDieselEngineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_mesin' => ['required', 'string', 'max:255'],
-            'tanggal'    => ['required', 'date'],
-            'paket'      => ['nullable', 'string', 'max:255'],
+            'mesin_id' => ['required', 'exists:mtc_master_mesin,id'],
 
             // ======================
             // ENGINE
@@ -91,8 +89,8 @@ class MtcDieselEngineRequest extends FormRequest
             'check_baut_hanger_as_roda'               => ['nullable', 'boolean'],
 
             // Catatan
-            'keterangan' => ['nullable', 'string'],
-            'korektif'   => ['nullable', 'string', 'max:255'],
+            // 'keterangan' => ['nullable', 'string'],
+            // 'korektif'   => ['nullable', 'string', 'max:255'],
         ];
     }
 

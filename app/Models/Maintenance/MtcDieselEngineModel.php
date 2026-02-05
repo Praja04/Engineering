@@ -4,19 +4,18 @@ namespace App\Models\Maintenance;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Maintenance\MtcMainModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class MtcDieselEngineModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'mtc_diesel_engine';
+    protected $table = 'mtc_diesel_engine_inspections';
 
     protected $fillable = [
-        'nama_mesin',
-        'tanggal',
-        'waktu',
-        'paket',
+        'mesin_id',
+        'mtc_main_id',
 
         // ======================
         // ENGINE
@@ -87,20 +86,14 @@ class MtcDieselEngineModel extends Model
         'check_baut_hanger_as_roda',
 
         // Catatan
-        'keterangan',
-        'korektif',
-
-        // Audit
-        'created_by',
+        // 'keterangan',
+        // 'korektif',
     ];
 
     /**
      * Casting boolean supaya konsisten true/false
      */
     protected $casts = [
-        'tanggal' => 'date:Y-m-d',
-        'waktu'   => 'datetime:H:i:s',
-
         // Engine
         'check_kondisi_level_oli_mesin' => 'boolean',
         'check_kondisi_radiator_hose' => 'boolean',
@@ -160,11 +153,13 @@ class MtcDieselEngineModel extends Model
         'check_baut_hanger_as_roda' => 'boolean',
     ];
 
-    /**
-     * Relasi ke user pembuat
-     */
-    public function user()
+    public function main()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
+    }
+
+    public function mesin()
+    {
+        return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
     }
 }
