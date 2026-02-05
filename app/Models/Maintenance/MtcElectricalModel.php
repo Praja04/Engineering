@@ -4,19 +4,19 @@ namespace App\Models\Maintenance;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Maintenance\MtcMainModel;
+use App\Models\Maintenance\MtcMasterMesinModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class MtcElectricalModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'mtc_electrical';
+    protected $table = 'mtc_electrical_inspections';
 
     protected $fillable = [
-        'nama_mesin',
-        'tanggal',
-        'waktu',
-        'paket',
+        'mesin_id',
+        'mtc_main_id',
 
         // Panel
         'check_kunci',
@@ -56,16 +56,11 @@ class MtcElectricalModel extends Model
         'check_level_oli',
 
         // Catatan
-        'keterangan',
-        'korektif',
-
-        'created_by'
+        // 'keterangan',
+        // 'korektif',
     ];
 
     protected $casts = [
-        'tanggal' => 'date:Y-m-d',
-        'waktu'   => 'datetime:H:i:s',
-
         // Boolean checklist
         'check_kunci' => 'boolean',
         'check_koneksi_kabel' => 'boolean',
@@ -100,8 +95,13 @@ class MtcElectricalModel extends Model
         'check_level_oli' => 'boolean',
     ];
 
-    public function user()
+    public function main()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
+    }
+
+    public function mesin()
+    {
+        return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
     }
 }

@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mtc_electrical', function (Blueprint $table) {
+        Schema::create('mtc_electrical_inspections', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_mesin');
-            $table->date('tanggal');
-            $table->time('waktu');
-            $table->string('paket')->nullable();
+            $table->foreignId('mesin_id')->constrained('mtc_master_mesin')->onDelete('restrict');
+            $table->foreignId('mtc_main_id')->constrained('mtc_main')->onDelete('cascade');
 
             // Panel
             $table->boolean('check_kunci')->nullable();
@@ -56,13 +54,8 @@ return new class extends Migration
             $table->boolean('check_level_oli')->nullable();
 
             // Optional catatan (biar konsisten seperti utility)
-            $table->text('keterangan')->nullable();
-            $table->string('korektif')->nullable();
-
-            // User pembuat (kalau mau sama seperti tabel utility)
-            $table->foreignId('created_by')
-                ->constrained('users')
-                ->onDelete('restrict');
+            // $table->text('keterangan')->nullable();
+            // $table->string('korektif')->nullable();
             $table->timestamps();
         });
     }
@@ -72,6 +65,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mtc_electrical');
+        Schema::dropIfExists('mtc_electrical_inspections');
     }
 };
