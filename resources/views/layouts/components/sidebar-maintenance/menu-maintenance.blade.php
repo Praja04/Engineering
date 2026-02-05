@@ -135,6 +135,10 @@
                             </li>
                         </ul>
                     </div>
+
+                    <a href="{{ route('mtc.approval.index') }}"
+                        class="nav-link {{ request()->routeIs('mtc.approval.index') ? 'active' : '' }}">
+                        <i class="mdi mdi-view-grid"></i>Approval Mtc</a>
                 </li>
             </ul>
         </div>
