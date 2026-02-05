@@ -23,9 +23,7 @@ class MtcMotorPumpRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_mesin'    => ['required', 'string'],
-            'tanggal'     => ['required', 'date'],
-            'paket'       => ['nullable', 'string', 'max:50'],
+            'mesin_id' => ['required', 'exists:mtc_master_mesin,id'],
 
             // Motor - semua nullable boolean
             'electrical_motor'               => ['nullable', 'boolean'],
@@ -59,9 +57,6 @@ class MtcMotorPumpRequest extends FormRequest
             'oil_seal_gearbox'               => ['nullable', 'boolean'],
             'filter_udara_gearbox'           => ['nullable', 'boolean'],
             'bearing_gearbox'                => ['nullable', 'boolean'],
-
-            'keterangan'  => ['nullable', 'string'],
-            'korektif'    => ['nullable', 'string'],
         ];
     }
 

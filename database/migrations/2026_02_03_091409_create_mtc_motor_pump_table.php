@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mtc_motor_pump', function (Blueprint $table) {
+        Schema::create('mtc_motor_pump_inspections', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_mesin');
-            $table->date('tanggal');
-            $table->time('waktu');
-            $table->string('paket')->nullable();
+            $table->foreignId('mesin_id')->constrained('mtc_master_mesin')->onDelete('restrict');
+            $table->foreignId('mtc_main_id')->constrained('mtc_main')->onDelete('cascade');
 
-            // Motor
+            // ================= MOTOR =================
             $table->boolean('electrical_motor')->nullable();
             $table->boolean('putaran_motor')->nullable();
             $table->boolean('fibrasi_suara_motor')->nullable();
@@ -26,7 +24,7 @@ return new class extends Migration
             $table->boolean('pelumasan_motor')->nullable();
             $table->boolean('kebersihan_unit_body_motor')->nullable();
 
-            // Pompa
+            // ================= PUMP =================
             $table->boolean('putaran_pompa')->nullable();
             $table->boolean('shaft_karet_coupling_pompa')->nullable();
             $table->boolean('fan_belt_pompa')->nullable();
@@ -36,7 +34,7 @@ return new class extends Migration
             $table->boolean('impeler')->nullable();
             $table->boolean('kebersihan_unit_body_pompa')->nullable();
 
-            // Aksesoris
+            // ================= AKSESORIS =================
             $table->boolean('valve_aksesoris')->nullable();
             $table->boolean('cek_valve_aksesoris')->nullable();
             $table->boolean('flow_meter_aksesoris')->nullable();
@@ -44,20 +42,15 @@ return new class extends Migration
             $table->boolean('alat_ukur_aksesoris')->nullable();
             $table->boolean('kelengkapan_baut_mur_aksesoris')->nullable();
 
-            // Gearbox
+            // ================= GEARBOX =================
             $table->boolean('tambah_ganti_oli_gearbox')->nullable();
             $table->boolean('unit_area_gearbox')->nullable();
             $table->boolean('oil_seal_gearbox')->nullable();
             $table->boolean('filter_udara_gearbox')->nullable();
             $table->boolean('bearing_gearbox')->nullable();
 
-            $table->text('keterangan')->nullable();
-            $table->string('korektif')->nullable();
-
-            $table->foreignId('created_by')
-                ->constrained('users')
-                ->onDelete('restrict');
-
+            // $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
+            // $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('restrict');
             $table->timestamps();
         });
     }
@@ -67,6 +60,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mtc_master_mesin');
+
+        Schema::dropIfExists('mtc_motor_pump_inspections');
     }
 };
