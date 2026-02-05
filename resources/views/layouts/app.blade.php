@@ -46,6 +46,10 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <link href="{{ asset('material/assets/css/datatables.min.css') }}" rel="stylesheet" type="text/css" />
         <script src="{{ asset('material/assets/js/datatables.min.js') }}"></script>
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+            rel="stylesheet" />
+
 
         @yield('styles')
 
@@ -97,6 +101,8 @@
         <script src="{{ asset('material/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
         {{-- <script src="{{ asset('material/assets/js/highcharts.js') }}"></script> --}}
 
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
 
         <!-- App js -->
@@ -232,12 +238,13 @@
                         method: "GET",
                         dataType: "json",
                         success: function(response) {
+
                             const notifList = $('#notifList');
                             const notifBadge = $('#notifBadge');
 
-                            notifList.empty();
+                            notifList.html('');
 
-                            if (response.length === 0) {
+                            if (!response || response.length === 0) {
                                 notifList.html(
                                     '<p class="text-center text-muted py-3 mb-0">Tidak ada notifikasi</p>'
                                 );
@@ -246,35 +253,70 @@
                             }
 
                             const unread = response.filter(n => !n.is_read);
-                            notifBadge.text(unread.length > 0 ? unread.length : '').toggle(unread.length >
-                                0);
+
+                            notifBadge
+                                .text(unread.length || '')
+                                .toggle(unread.length > 0);
 
                             response.forEach(n => {
                                 const item = $(`
                                     <a href="${n.url}" 
-                                        class="list-group-item list-group-item-action notif-item d-flex align-items-start ${n.is_read ? 'bg-light text-muted' : 'bg-white'}"
+                                        class="list-group-item list-group-item-action notif-item d-flex align-items-start
+                                            ${n.is_read ? 'bg-light text-muted' : 'bg-white'}"
                                         data-id="${n.id}">
+
                                         <div class="flex-grow-1">
-                                            <h6 class="mb-1 ${n.is_read ? '' : 'fw-semibold'}">${n.title}</h6>
-                                            <p class="mb-1 small">${n.message}</p>
-                                            <small class="text-muted">${n.created_at}</small>
+                                            <h6 class="mb-1 ${n.is_read ? '' : 'fw-semibold'}">
+                                                ${n.title}
+                                            </h6>
+
+                                            <p class="mb-1 small">
+                                                ${n.message}
+                                            </p>
+
+                                            <small class="text-muted d-block">
+                                                <i class="bx bx-time-five me-1"></i>${n.created_at}
+                                            </small>
                                         </div>
+
                                         <div class="ms-2">
-                                            ${n.is_read 
-                                                ? '<i class="bx bx-check-circle text-success fs-5"></i>' 
-                                                : '<i class="bx bx-bell text-warning fs-5"></i>'}
+                                            ${
+                                                n.is_read
+                                                ? '<i class="bx bx-check-circle text-success fs-5"></i>'
+                                                : '<i class="bx bx-bell text-warning fs-5"></i>'
+                                            }
                                         </div>
                                     </a>
                                 `);
 
                                 notifList.append(item);
-
-                                // Hanya munculkan toastr kalau baru muncul
-                                if (!n.is_read && !seenNotifications.has(n.id)) {
-                                    toastr.info(n.message, n.title);
-                                    seenNotifications.add(n.id);
-                                }
                             });
+
+                            /* =========================
+                             * TOAST → 1 TERBARU SAJA
+                             * ========================= */
+                            if (unread.length > 0) {
+
+                                // 🔥 SORT BY TERBARU
+                                unread.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                                const latest = unread[0];
+
+                                if (!seenNotifications.has(latest.id)) {
+                                    toastr.info(
+                                        `${latest.message}<br><small>${latest.created_at}</small>`,
+                                        latest.title, {
+                                            timeOut: 5000,
+                                            extendedTimeOut: 2000,
+                                            closeButton: true,
+                                            progressBar: true,
+                                            escapeHtml: false
+                                        }
+                                    );
+
+                                    seenNotifications.add(latest.id);
+                                }
+                            }
                         },
                         error: function() {
                             console.error("Gagal memuat notifikasi");

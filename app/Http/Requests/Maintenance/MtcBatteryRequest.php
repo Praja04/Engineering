@@ -22,32 +22,14 @@ class MtcBatteryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tanggal'        => 'required|date',
-            'waktu'          => 'required|date_format:H:i',
-            'battery_type'   => 'nullable|string|max:100',
-            'no_seri'        => 'nullable|string|max:100',
-            'no_unit'        => 'nullable|string|max:100',
-            'keterangan'     => 'nullable|string',
-
-            // DETAIL (array)
-            'details'                       => 'required|array|min:1',
-            'details.*.voltase'             => ['nullable', 'boolean'],
-            'details.*.level_air_aki'       => ['nullable', 'boolean'],
-            'details.*.intercell'           => ['nullable', 'boolean'],
-            'details.*.kondisi_skun'        => ['nullable', 'boolean'],
-            'details.*.kondisi_unit'        => ['nullable', 'boolean'],
-            'details.*.grounding'           => ['nullable', 'boolean'],
-            'details.*.cell'                => 'required|integer|min:1',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'tanggal.required' => 'Tanggal wajib diisi.',
-            'waktu.required'   => 'Waktu wajib diisi.',
-            'details.required' => 'Minimal satu detail battery harus diisi.',
-            'details.*.cell.required' => 'Cell wajib diisi.',
+            'details'              => 'required|array|min:12',
+            'details.*.cell'       => 'required|integer|min:1|distinct',  // distinct biar cell tidak duplikat
+            'details.*.voltase'    => 'nullable|numeric|min:0',
+            'details.*.grounding'  => 'nullable|numeric|min:0',
+            'details.*.level_air_aki'   => 'nullable|boolean',
+            'details.*.intercell'       => 'nullable|boolean',
+            'details.*.kondisi_skun'    => 'nullable|boolean',
+            'details.*.kondisi_unit'    => 'nullable|boolean',
         ];
     }
 }

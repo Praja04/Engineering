@@ -13,27 +13,28 @@ class MtcSipilInspectionModel extends Model
     protected $table = 'mtc_sipil_inspections';
 
     protected $fillable = [
-        'tanggal',
-        'waktu',
-        'area',
-        'rekomendasi',
-        'korektif',
-        'created_by',
-        'updated_by',
+        'mtc_main_id',
+        'plumbing',
+        'plafon',
+        'lantai',
+        'dinding',
+        'jendela',
+        'pintu',
+        'rooling_fast_door',
     ];
 
     protected $casts = [
-        'tanggal' => 'date:Y-m-d',
-        'waktu'   => 'datetime:H:i:s',
+        'plumbing' => 'boolean',
+        'plafon' => 'boolean',
+        'lantai' => 'boolean',
+        'dinding' => 'boolean',
+        'jendela' => 'boolean',
+        'pintu' => 'boolean',
+        'rooling_fast_door' => 'boolean',
     ];
 
-    public function details()
+    public function main()
     {
-        return $this->hasMany(MtcSipilInspectionDetailModel::class, 'inspection_id');
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
     }
 }

@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Maintenance;
 
 use Illuminate\Http\Request;
+use App\Models\NotificationsModel;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Maintenance\MtcMainModel;
+use App\Models\Maintenance\MtcApprovalModel;
+use App\Http\Requests\Maintenance\MtcMainRequest;
 use App\Http\Requests\Maintenance\MtcSipilRequest;
-use App\Models\Maintenance\MtcSipilInspectionDetailModel;
 use App\Models\Maintenance\MtcSipilInspectionModel;
-use App\Models\Maintenance\MtcSipilItemModel;
+use App\Models\Maintenance\MtcKebutuhanMaterialModel;
+use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
 
 class MtcSipilController extends Controller
 {
     public function index()
     {
-        $items = MtcSipilItemModel::where('aktif', true)->orderBy('urutan')->get();
-
-        return view('maintenance.form.sipil', compact('items'));
+        return view('maintenance.form.sipil');
     }
 
     public function viewData()
@@ -25,61 +27,117 @@ class MtcSipilController extends Controller
         return view('maintenance.data.sipil_data');
     }
 
-    public function store(MtcSipilRequest $request)
-    {
-        $payload = $request->validated();
+    public function store(
+        MtcMainRequest $mainRequest,
+        MtcSipilRequest $detailRequest,
+        MtcKebutuhanMaterialRequest $materials
+    ) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials) {
 
-        return DB::transaction(function () use ($payload, $request) {
+            $userId = Auth::id();
 
-            // HEADER
-            $inspection = MtcSipilInspectionModel::create([
-                'tanggal'     => $payload['tanggal'],
-                'waktu'       => $payload['waktu'] ?? now()->format('H:i:s'),
-                'area'        => $payload['area'] ?? null,
-                'rekomendasi' => $payload['rekomendasi'] ?? null,
-                'korektif' => $payload['korektif'] ?? null,
-                'created_by'  => Auth::id() ?? 1,
+            // Simpan Main
+            $main = MtcMainModel::create([
+                ...$mainRequest->validated(),
+                'jenis_mtc'  => 'sipil',
+                'status'     => 'pending',
+                'created_by' => $userId,
             ]);
 
-            $rows = [];
-            foreach ($payload['details'] as $d) {
-                if (!array_key_exists('kondisi', $d) || $d['kondisi'] === null || $d['kondisi'] === '') {
-                    continue;
+            MtcSipilInspectionModel::create([
+                ...$detailRequest->validated(),
+                'mtc_main_id' => $main->id,
+            ]);
+
+            foreach ($materials->materials ?? [] as $item) {
+                MtcKebutuhanMaterialModel::create([
+                    'mtc_main_id' => $main->id,
+                    'mid'        => $item['mid'],
+                    'deskripsi'  => $item['desc'] ?? null,
+                    'qty'        => $item['qty'],
+                    'created_by' => $userId,
+                ]);
+            }
+
+            $ttdPath = null;
+
+            if ($detailRequest->filled('ttd_base64')) {
+                $user = Auth::user();
+
+                $ttdPath = saveBase64Signature(
+                    $detailRequest->ttd_base64,
+                    'mtc/sipil',
+                    $user->username,
+                    $user->departemen
+                );
+            }
+
+            $approvalFlows = [
+                [
+                    'level' => 1,
+                    'role'  => 'teknisi',
+                    'approver_id' => $userId,
+                    'auto'  => true,
+                ],
+                [
+                    'level' => 2,
+                    'role'  => 'staff',
+                    'approver_id' => 3,
+                    'auto'  => false,
+                ],
+                [
+                    'level' => 3,
+                    'role'  => 'user',
+                    'approver_id' => 4,
+                    'auto'  => false,
+                ],
+            ];
+
+            foreach ($approvalFlows as $flow) {
+
+                $isAutoApproved = $flow['auto'];
+
+                MtcApprovalModel::create([
+                    'mtc_main_id' => $main->id,
+                    'level'       => $flow['level'],
+                    'role'        => $flow['role'],
+                    'approver_id' => $flow['approver_id'],
+                    'status'      => $isAutoApproved ? 'approved' : 'pending',
+                    'ttd'         => $isAutoApproved ? $ttdPath : null,
+                    'action_at'   => $isAutoApproved ? now() : null,
+                    'action_by'   => $isAutoApproved ? $userId : null,
+                ]);
+
+                if (!$isAutoApproved) {
+                    NotificationsModel::create([
+                        'user_id'         => $flow['approver_id'],
+                        'notifiable_type' => MtcMainModel::class,
+                        'notifiable_id'   => $main->id,
+                        'title'           => 'Approval Maintenance',
+                        'message'         => 'Maintenance Sipil menunggu persetujuan Anda',
+                        'url'             => route('mtc.approval.index'),
+                        'is_read'         => false,
+                    ]);
                 }
-
-                $rows[] = [
-                    'inspection_id' => $inspection->id,
-                    'item_id'       => (int) $d['item_id'],
-                    'kondisi'       => filter_var($d['kondisi'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
-                    'keterangan'    => $d['keterangan'] ?? null,
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ];
             }
-
-            if (empty($rows)) {
-                throw new \Exception('Tidak ada data kondisi yang valid untuk disimpan');
-            }
-
-            MtcSipilInspectionDetailModel::insert($rows);
-
-            // return JSON
-            return response()->json([
-                'status'  => true,
-                'message' => 'Data inspeksi sipil berhasil disimpan',
-                'data'    => $inspection->load(['details.item']),
-            ], 201);
         });
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Data inspeksi sipil berhasil disimpan',
+        ], 201);
     }
 
     public function getData(Request $request)
     {
-        $query = MtcSipilInspectionModel::query()
+        $query = MtcMainModel::query()
+            ->where('jenis_mtc', 'sipil')
             ->orderBy('tanggal', 'desc')
             ->orderBy('waktu', 'desc')
             ->with([
-                'user:id,username',
-                'details.item'
+                'createdBy:id,username',
+                'sipil',
+                'kebutuhanMaterial'
             ]);
 
         // Filter tanggal (jika ada parameter date)
@@ -93,122 +151,81 @@ class MtcSipilController extends Controller
         }
 
         // Filter rekomendasi (partial match)
-        if ($request->filled('rekomendasi')) {
-            $query->where('rekomendasi', 'like', '%' . $request->rekomendasi . '%');
-        }
-
-        // Filter korektif (partial match)
-        if ($request->filled('korektif')) {
-            $query->where('korektif', 'like', '%' . $request->korektif . '%');
+        if ($request->filled('departemen')) {
+            $query->where('departemen', 'like', '%' . $request->departemen . '%');
         }
 
         $data = $query->get();
 
-        // Optional: transform data supaya lebih rapi di frontend (jika perlu)
-        $formatted = $data->map(function ($inspection) {
-            return [
-                'id'           => $inspection->id,
-                'tanggal'      => $inspection->tanggal,
-                'waktu'        => $inspection->waktu ? $inspection->waktu->format('H:i') : null,
-                'area'         => $inspection->area,
-                'rekomendasi'  => $inspection->rekomendasi,
-                'korektif'     => $inspection->korektif,
-                'created_by'   => $inspection->user?->username ?? 'Unknown',
-                'details'      => $inspection->details->map(function ($detail) {
-                    return [
-                        'item_id'              => $detail->item_id,
-                        'jenis_perawatan'      => $detail->item->jenis_perawatan ?? null,
-                        'standar_pemeliharaan' => $detail->item->standar_pemeliharaan ?? null,
-                        'kondisi'              => $detail->kondisi,           // true = YA, false = TIDAK
-                        'keterangan'           => $detail->keterangan,
-                    ];
-                }),
-            ];
+        return response()->json([
+            'status'  => true,
+            'message' => 'Data Mtc Sipil berhasil diambil',
+            'data'    => $data,
+        ]);
+    }
+
+    public function update(
+        MtcMainRequest $mainRequest,
+        MtcSipilRequest $detailRequest,
+        MtcKebutuhanMaterialRequest $materials,
+        $id
+    ) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $id) {
+
+            $userId = Auth::id();
+
+            $main = MtcMainModel::findOrFail($id);
+            $inspection = MtcSipilInspectionModel::where('mtc_main_id', $main->id)->firstOrFail();
+
+            $main->update([
+                ...$mainRequest->validated(),
+                'updated_by' => $userId,
+            ]);
+
+            $inspection->update([
+                ...$detailRequest->validated()
+            ]);
+
+            $existingIds = $main->kebutuhanMaterial()->pluck('id')->toArray();
+            $incomingIds = [];
+
+            foreach ($materials['materials'] as $item) {
+
+                if (!empty($item['id'])) {
+
+                    $incomingIds[] = $item['id'];
+
+                    MtcKebutuhanMaterialModel::where('id', $item['id'])
+                        ->update([
+                            'mid'        => $item['mid'],
+                            'deskripsi'  => $item['deskripsi'] ?? null,
+                            'qty'        => $item['qty'],
+                            'updated_by' => $userId,
+                        ]);
+                } else {
+
+                    $new = MtcKebutuhanMaterialModel::create([
+                        'mtc_main_id'       => $main->id,
+                        'mid'               => $item['mid'],
+                        'deskripsi'         => $item['deskripsi'] ?? null,
+                        'qty'               => $item['qty'],
+                        'created_by'        => $userId,
+                    ]);
+
+                    $incomingIds[] = $new->id;
+                }
+            }
+
+            // DELETE material yg dihapus
+            $toDelete = array_diff($existingIds, $incomingIds);
+            if ($toDelete) {
+                MtcKebutuhanMaterialModel::whereIn('id', $toDelete)->delete();
+            }
         });
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data Mtc Sipil berhasil diambil',
-            'data'    => $formatted,
-            // 'raw'     => $data, // optional: kalau frontend butuh raw data
+            'message' => 'Data inspeksi sipil berhasil diupdate',
         ]);
-    }
-
-    public function update(MtcSipilRequest $request, $id)
-    {
-        $payload = $request->validated();
-
-        return DB::transaction(function () use ($payload, $id, $request) {
-
-            $inspection = MtcSipilInspectionModel::findOrFail($id);
-
-            // Update header
-            $inspection->update([
-                'tanggal'     => $payload['tanggal'],
-                'waktu'       => $payload['waktu'] ?? $inspection->waktu ?? now()->format('H:i:s'),
-                'area'        => $payload['area'] ?? $inspection->area,
-                'rekomendasi' => $payload['rekomendasi'] ?? $inspection->rekomendasi,
-                'korektif'    => $payload['korektif'] ?? $inspection->korektif,
-                'updated_by'  => Auth::id() ?? 1,
-            ]);
-
-            // Hapus detail lama (soft-delete atau hard-delete)
-            // Kalau pakai soft-delete → $inspection->details()->delete();
-            // Kalau hard-delete (seperti store-mu) → hapus permanen
-            $inspection->details()->delete();
-
-            $rows = [];
-            foreach ($payload['details'] ?? [] as $key => $d) {
-                if (!isset($d['item_id']) || !is_numeric($d['item_id'])) {
-                    continue; // skip kalau item_id hilang
-                }
-
-                if (!array_key_exists('kondisi', $d) || $d['kondisi'] === null || $d['kondisi'] === '') {
-                    continue;
-                }
-
-                $rows[] = [
-                    'inspection_id' => $inspection->id,
-                    'item_id'       => (int) $d['item_id'],
-                    'kondisi'       => filter_var($d['kondisi'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
-                    'keterangan'    => $d['keterangan'] ?? null,
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ];
-            }
-
-            if (!empty($rows)) {
-                MtcSipilInspectionDetailModel::insert($rows);
-            }
-
-            // Reload dengan relasi
-            $inspection->refresh();
-            $inspection->load(['details.item']);
-
-            return response()->json([
-                'status'  => true,
-                'message' => 'Data inspeksi sipil berhasil diupdate',
-                'data'    => $inspection,
-            ]);
-        });
-    }
-
-    public function destroy($id)
-    {
-        $inspection = MtcSipilInspectionModel::findOrFail($id);
-
-        return DB::transaction(function () use ($inspection) {
-
-            // Hapus detail dulu
-            $inspection->details()->delete();
-
-            // Hapus header
-            $inspection->delete();
-
-            return response()->json([
-                'status'  => true,
-                'message' => 'Data inspeksi sipil berhasil dihapus',
-            ]);
-        });
     }
 }

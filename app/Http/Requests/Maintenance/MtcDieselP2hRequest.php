@@ -17,46 +17,45 @@ class MtcDieselP2hRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_mesin' => ['required', 'string'],
-            'tanggal' => ['required', 'date'],
+            'mesin_id' => ['required', 'exists:mtc_master_mesin,id'],
             'no_unit' => ['required', 'string'],
-            'departemen' => ['nullable', 'string'],
             'shift' => ['nullable', 'integer', 'in:1,2,3'],
+            'catatan' => ['nullable', 'string'],
 
-            'items' => ['required', 'array'],
-            'items.*.item_id' => ['required', 'exists:mtc_diesel_p2h_items,id'],
-            'items.*.kondisi' => ['nullable', 'in:0,1'],
-            'items.*.keterangan' => ['nullable', 'string'],
+            'klakson'                => ['nullable', 'boolean'],
+            'buzzer_back'            => ['nullable', 'boolean'],
+            'oli_mesin'              => ['nullable', 'boolean'],
+            'radiator_hose'          => ['nullable', 'boolean'],
+            'water_pump'             => ['nullable', 'boolean'],
+            'injection_system'       => ['nullable', 'boolean'],
+            'fan_vbelt'              => ['nullable', 'boolean'],
+            'turbocharger_manifold'  => ['nullable', 'boolean'],
+            'tensioner_belt'         => ['nullable', 'boolean'],
+            'starting_motor'         => ['nullable', 'boolean'],
+            'alternator'             => ['nullable', 'boolean'],
+            'control_display'        => ['nullable', 'boolean'],
+            'oli_transmisi'          => ['nullable', 'boolean'],
+            'aki'                    => ['nullable', 'boolean'],
+            'engine_mounting'        => ['nullable', 'boolean'],
+            'filter_oli_transmisi'   => ['nullable', 'boolean'],
+            'fungsi_rem'             => ['nullable', 'boolean'],
+            'fungsi_kopling'         => ['nullable', 'boolean'],
+            'oli_hydraulic'          => ['nullable', 'boolean'],
+            'hydraulic_system'       => ['nullable', 'boolean'],
+            'steering_system'        => ['nullable', 'boolean'],
+            'body_back_rest'         => ['nullable', 'boolean'],
+            'kaca_spion'             => ['nullable', 'boolean'],
+            'bucket_pin'             => ['nullable', 'boolean'],
+            'dump_pin_bushing'       => ['nullable', 'boolean'],
+            'seal_hydraulic'         => ['nullable', 'boolean'],
+            'roda_ban_baut'          => ['nullable', 'boolean'],
+            'lampu_unit'             => ['nullable', 'boolean'],
+            'baut_bearing_molen'     => ['nullable', 'boolean'],
+            'baut_hanger_as'         => ['nullable', 'boolean'],
+            'baut_grease'            => ['nullable', 'boolean'],
+            'katup_pembuangan_angin' => ['nullable', 'boolean'],
+
+            'hours_meter' => ['nullable', 'string'],
         ];
-    }
-
-
-    public function messages(): array
-    {
-        return [
-            'nama_mesin.required' => 'Nama Mesin wajib diisi.',
-            'tanggal.required' => 'Tanggal wajib diisi.',
-            'no_unit.required' => 'Nomor unit wajib diisi.',
-            'items.required'   => 'Item pengecekan tidak boleh kosong.',
-            'items.*.kondisi.boolean' => 'Nilai kondisi tidak valid.',
-        ];
-    }
-
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            foreach ($this->items ?? [] as $i => $item) {
-                if (
-                    isset($item['kondisi']) &&
-                    $item['kondisi'] == 0 &&
-                    empty($item['keterangan'])
-                ) {
-                    $validator->errors()->add(
-                        "items.$i.keterangan",
-                        'Keterangan wajib diisi jika kondisi NG.'
-                    );
-                }
-            }
-        });
     }
 }

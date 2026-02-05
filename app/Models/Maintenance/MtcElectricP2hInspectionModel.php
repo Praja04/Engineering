@@ -13,30 +13,45 @@ class MtcElectricP2hInspectionModel extends Model
     protected $table = 'mtc_electric_p2h_inspections';
 
     protected $fillable = [
-        'tanggal',
+        'mtc_main_id',
         'no_unit',
-        'departemen',
         'shift',
-        'created_by',
-        'updated_by',
+        'catatan',
+
+        'level_minyak_rem',
+        'level_oli_hydraulic',
+        'isi_air_aki',
+        'baterai',
+        'hydraulic_system',
+        'selang_hydraulic',
+        'lift_chains',
+        'fork',
+        'body_unit',
+        'lampu_kombinasi_kiri',
+        'lampu_kombinasi_kanan',
+        'lampu_sorot',
+        'lampu_sign_depan_kanan',
+        'lampu_sign_depan_kiri',
+        'klakson',
+        'buzzer_back',
+        'kaca_spion',
+        'baut_roda',
+        'ban',
+        'kebersihan_unit',
+        'panel_display',
+        'sistem_kemudi',
+        'hours_meter',
     ];
 
-    protected $casts = [
-        'tanggal' => 'date:Y-m-d',
-    ];
+    /* ================= RELATION ================= */
 
-    public function details()
+    public function main()
     {
-        return $this->hasMany(MtcElectricP2hInspectionDetailModel::class, 'inspection_id');
+        return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
     }
 
-    public function createdBy()
+    public function mesin()
     {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function updatedBy()
-    {
-        return $this->belongsTo(User::class, 'updated_by');
+        return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
     }
 }

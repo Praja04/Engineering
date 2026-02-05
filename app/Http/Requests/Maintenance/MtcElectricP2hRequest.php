@@ -17,44 +17,34 @@ class MtcElectricP2hRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tanggal' => ['required', 'date'],
             'no_unit' => ['required', 'string'],
-            'departemen' => ['nullable', 'string'],
             'shift' => ['nullable', 'integer', 'in:1,2,3'],
+            'catatan' => ['nullable', 'string'],
 
-            'items' => ['required', 'array'],
-            'items.*.item_id' => ['required', 'exists:mtc_electric_p2h_items,id'],
-            'items.*.kondisi' => ['nullable', 'in:0,1'],
-            'items.*.keterangan' => ['nullable', 'string'],
+            'level_minyak_rem'       => ['nullable', 'boolean'],
+            'level_oli_hydraulic'    => ['nullable', 'boolean'],
+            'isi_air_aki'            => ['nullable', 'boolean'],
+            'baterai'                => ['nullable', 'boolean'],
+            'hydraulic_system'       => ['nullable', 'boolean'],
+            'selang_hydraulic'       => ['nullable', 'boolean'],
+            'lift_chains'            => ['nullable', 'boolean'],
+            'fork'                   => ['nullable', 'boolean'],
+            'body_unit'              => ['nullable', 'boolean'],
+            'lampu_kombinasi_kiri'   => ['nullable', 'boolean'],
+            'lampu_kombinasi_kanan'  => ['nullable', 'boolean'],
+            'lampu_sorot'            => ['nullable', 'boolean'],
+            'lampu_sign_depan_kanan' => ['nullable', 'boolean'],
+            'lampu_sign_depan_kiri'  => ['nullable', 'boolean'],
+            'klakson'                => ['nullable', 'boolean'],
+            'buzzer_back'            => ['nullable', 'boolean'],
+            'kaca_spion'             => ['nullable', 'boolean'],
+            'baut_roda'              => ['nullable', 'boolean'],
+            'ban'                    => ['nullable', 'boolean'],
+            'kebersihan_unit'        => ['nullable', 'boolean'],
+            'panel_display'          => ['nullable', 'boolean'],
+            'sistem_kemudi'          => ['nullable', 'boolean'],
+
+            'hours_meter' => ['nullable', 'string'],
         ];
-    }
-
-
-    public function messages(): array
-    {
-        return [
-            'tanggal.required' => 'Tanggal wajib diisi.',
-            'no_unit.required' => 'Nomor unit wajib diisi.',
-            'items.required'   => 'Item pengecekan tidak boleh kosong.',
-            'items.*.kondisi.boolean' => 'Nilai kondisi tidak valid.',
-        ];
-    }
-
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            foreach ($this->items ?? [] as $i => $item) {
-                if (
-                    isset($item['kondisi']) &&
-                    $item['kondisi'] == 0 &&
-                    empty($item['keterangan'])
-                ) {
-                    $validator->errors()->add(
-                        "items.$i.keterangan",
-                        'Keterangan wajib diisi jika kondisi NG.'
-                    );
-                }
-            }
-        });
     }
 }

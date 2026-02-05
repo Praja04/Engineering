@@ -3,45 +3,135 @@
 namespace App\Http\Controllers\Maintenance;
 
 use Illuminate\Http\Request;
+use App\Models\NotificationsModel;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Maintenance\MtcMainModel;
+use App\Models\Maintenance\MtcApprovalModel;
+use App\Models\Maintenance\MtcMasterMesinModel;
+use App\Http\Requests\Maintenance\MtcMainRequest;
+use App\Models\Maintenance\MtcElectricP2hItemModel;
 use App\Http\Requests\Maintenance\MtcElectricP2hRequest;
 use App\Models\Maintenance\MtcElectricP2hInspectionModel;
-use App\Models\Maintenance\MtcElectricP2hItemModel;
 
 class MtcElectricP2hController extends Controller
 {
     public function index()
     {
-        $items = MtcElectricP2hItemModel::where('aktif', true)->orderBy('urutan')->get();
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'electric_p2h')
+            ->orderBy('id')->get();
 
-        return view('maintenance.form.electric_p2h', compact('items'));
+        return view('maintenance.form.electric_p2h', compact('mesin'));
     }
 
     public function viewData()
     {
-        return view('maintenance.data.electric_p2h_data');
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'electric_p2h')
+            ->orderBy('id')->get();
+
+        return view('maintenance.data.electric_p2h_data', compact('mesin'));
     }
 
-    public function store(MtcElectricP2hRequest $request)
-    {
-        DB::transaction(function () use ($request) {
+    public function store(
+        MtcMainRequest $mainRequest,
+        MtcElectricP2hRequest $detailRequest
+    ) {
+        DB::transaction(function () use ($mainRequest, $detailRequest) {
 
-            $inspection = MtcElectricP2hInspectionModel::create([
-                'tanggal'     => $request->tanggal,
-                'no_unit'     => $request->no_unit,
-                'departemen'  => $request->departemen,
-                'shift'       => $request->shift,
-                'created_by'  => Auth::id(),
+            $userId = Auth::id();
+
+            $tanggal = $mainRequest->validated()['tanggal'];
+            $shift   = $detailRequest->validated()['shift'];
+
+            // CEK DATA SUDAH ADA ATAU BELUM
+            $exists = MtcElectricP2hInspectionModel::where('shift', $shift)
+                ->whereHas('main', function ($q) use ($tanggal) {
+                    $q->where('tanggal', $tanggal)
+                        ->where('jenis_mtc', 'electric_p2h');
+                })
+                ->exists();
+
+            if ($exists) {
+                abort(response()->json([
+                    'status'  => false,
+                    'message' => 'Data Electric P2H untuk tanggal dan shift tersebut sudah ada.',
+                ], 422));
+            }
+
+            // Simpan Main
+            $main = MtcMainModel::create([
+                ...$mainRequest->validated(),
+                'jenis_mtc'  => 'electric_p2h',
+                'status'     => 'pending',
+                'created_by' => $userId,
             ]);
 
-            foreach ($request->items as $item) {
-                $inspection->details()->create([
-                    'item_id'    => $item['item_id'],
-                    'kondisi'    => $item['kondisi'] ?? null,
-                    'keterangan' => $item['keterangan'] ?? null,
+            MtcElectricP2hInspectionModel::create([
+                ...$detailRequest->validated(),
+                'mtc_main_id' => $main->id,
+            ]);
+
+            $ttdPath = null;
+
+            if ($detailRequest->filled('ttd_base64')) {
+                $user = Auth::user();
+
+                $ttdPath = saveBase64Signature(
+                    $detailRequest->ttd_base64,
+                    'mtc/electric-p2h',
+                    $user->username,
+                    $user->departemen
+                );
+            }
+
+            $approvalFlows = [
+                [
+                    'level' => 1,
+                    'role'  => 'teknisi',
+                    'approver_id' => $userId,
+                    'auto'  => true,
+                ],
+                [
+                    'level' => 2,
+                    'role'  => 'staff',
+                    'approver_id' => 3,
+                    'auto'  => false,
+                ],
+                [
+                    'level' => 3,
+                    'role'  => 'user',
+                    'approver_id' => 4,
+                    'auto'  => false,
+                ],
+            ];
+
+            foreach ($approvalFlows as $flow) {
+
+                $isAutoApproved = $flow['auto'];
+
+                MtcApprovalModel::create([
+                    'mtc_main_id' => $main->id,
+                    'level'       => $flow['level'],
+                    'role'        => $flow['role'],
+                    'approver_id' => $flow['approver_id'],
+                    'status'      => $isAutoApproved ? 'approved' : 'pending',
+                    'ttd'         => $isAutoApproved ? $ttdPath : null,
+                    'action_at'   => $isAutoApproved ? now() : null,
+                    'action_by'   => $isAutoApproved ? $userId : null,
                 ]);
+
+                if (!$isAutoApproved) {
+                    NotificationsModel::create([
+                        'user_id'         => $flow['approver_id'],
+                        'notifiable_type' => MtcMainModel::class,
+                        'notifiable_id'   => $main->id,
+                        'title'           => 'Approval Maintenance',
+                        'message'         => 'Maintenance Electric P2H menunggu persetujuan Anda',
+                        'url'             => route('mtc.approval.index'),
+                        'is_read'         => false,
+                    ]);
+                }
             }
         });
 
@@ -53,32 +143,34 @@ class MtcElectricP2hController extends Controller
 
     public function getData(Request $request)
     {
-        $query = MtcElectricP2hInspectionModel::query()
+        $query = MtcMainModel::query()
+            ->where('jenis_mtc', 'electric_p2h')
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
-                'details.item:id,item_pengecekan,kondisi_normal'
-            ])
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('id', 'desc');
+                'electricP2h'
+            ]);
 
         if ($request->filled('tanggal')) {
             $query->whereDate('tanggal', $request->tanggal);
         }
 
         if ($request->filled('no_unit')) {
-            $query->where('no_unit', 'like', '%' . $request->no_unit . '%');
+            $query->whereHas('electricP2h', function ($q) use ($request) {
+                $q->where('no_unit', 'like', '%' . $request->no_unit . '%');
+            });
         }
 
         if ($request->filled('shift')) {
-            $query->where('shift', $request->shift);
+            $query->whereHas('electricP2h', function ($q) use ($request) {
+                $q->where('shift', 'like', '%' . $request->shift . '%');
+            });
         }
 
         if ($request->filled('departemen')) {
             $query->where('departemen', 'like', '%' . $request->departemen . '%');
         }
-
-        // $perPage = (int) $request->get('per_page', 5);
-        // $data = $query->paginate($perPage);
 
         $data = $query->get();
 
@@ -89,67 +181,49 @@ class MtcElectricP2hController extends Controller
         ]);
     }
 
-    public function update(MtcElectricP2hRequest $request, $id)
-    {
-        DB::transaction(function () use ($request, $id) {
+    public function update(
+        MtcMainRequest $mainRequest,
+        MtcElectricP2hRequest $detailRequest,
+        $id
+    ) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $id) {
 
-            $inspection = MtcElectricP2hInspectionModel::with('details')
-                ->findOrFail($id);
+            $userId = Auth::id();
 
-            $inspection->update([
-                'tanggal'     => $request->tanggal,
-                'no_unit'     => $request->no_unit,
-                'departemen'  => $request->departemen,
-                'shift'       => $request->shift,
-                'updated_by'  => Auth::id(),
+            $tanggal = $mainRequest->validated()['tanggal'];
+            $shift   = $detailRequest->validated()['shift'];
+
+            // CEK DATA SUDAH ADA ATAU BELUM
+            $exists = MtcElectricP2hInspectionModel::where('shift', $shift)
+                ->whereHas('main', function ($q) use ($tanggal) {
+                    $q->where('tanggal', $tanggal)
+                        ->where('jenis_mtc', 'electric_p2h');
+                })
+                ->exists();
+
+            if ($exists) {
+                abort(response()->json([
+                    'status'  => false,
+                    'message' => 'Data Electric P2H untuk tanggal dan shift tersebut sudah ada.',
+                ], 422));
+            }
+
+            $main = MtcMainModel::findOrFail($id);
+            $inspection = MtcElectricP2hInspectionModel::where('mtc_main_id', $main->id)->firstOrFail();
+
+            $main->update([
+                ...$mainRequest->validated(),
+                'updated_by' => $userId,
             ]);
 
-            // Ambil item_id yang dikirim
-            $itemIds = collect($request->items)->pluck('item_id')->toArray();
-
-            // Hapus detail lama yang tidak dikirim (optional tapi rapi)
-            $inspection->details()
-                ->whereNotIn('item_id', $itemIds)
-                ->delete();
-
-            foreach ($request->items as $item) {
-
-                $inspection->details()->updateOrCreate(
-                    [
-                        'inspection_id' => $inspection->id,
-                        'item_id'       => $item['item_id'],
-                    ],
-                    [
-                        'kondisi'    => $item['kondisi'] ?? null,
-                        'keterangan' => $item['keterangan'] ?? null,
-                    ]
-                );
-            }
+            $inspection->update([
+                ...$detailRequest->validated()
+            ]);
         });
 
         return response()->json([
             'status'  => 'success',
             'message' => 'Data P2H Electric berhasil diperbarui',
-        ]);
-    }
-
-
-    public function destroy($id)
-    {
-        $inspection = MtcElectricP2hInspectionModel::find($id);
-
-        if (!$inspection) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Data tidak ditemukan',
-            ], 404);
-        }
-
-        $inspection->delete();
-
-        return response()->json([
-            'status'  => true,
-            'message' => 'Data berhasil dihapus',
         ]);
     }
 }

@@ -99,9 +99,14 @@
                             <div class="col-md-3">
                                 <label class="form-label">Nama Mesin
                                     <span class="text-danger">*</span></label>
-                                <input type="text" name="nama_mesin" class="form-control"
-                                    value="{{ old('nama_mesin') }}">
-                                @error('nama_mesin')
+                                <select name="mesin_id" id="mesin_id" class="form-control" required>
+                                    @foreach ($mesin as $item)
+                                        <option value="{{ $item->id }}">
+                                            {{ $item->nama_mesin }} - {{ $item->lokasi }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('mesin_id')
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -115,7 +120,14 @@
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
                             </div>
-
+                            <div class="col-md-3">
+                                <label class="form-label">Waktu <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" name="waktu"
+                                    value="{{ old('waktu', now()->format('H:i')) }}" required>
+                                @error('waktu')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
+                            </div>
                             <div class="col-md-3">
                                 <label class="form-label">Departemen <span class="text-danger">*</span></label>
                                 <input type="text" name="departemen" class="form-control" value="{{ old('departemen') }}"
@@ -145,6 +157,16 @@
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Hours Meter (Jam Operasional)<span
+                                        class="text-danger">*</span></label>
+                                <input type="numeric" name="hours_meter" class="form-control"
+                                    value="{{ old('hours_meter') }}" placeholder="12345">
+                                <small class="form-label fst-italic">Catat sesuai kondisi aktual di unit</small>
+                                @error('hours_meter')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
 
                         {{-- error global dari withValidator (checklist) --}}
@@ -152,60 +174,188 @@
                             <div class="alert alert-danger py-2">{{ $message }}</div>
                         @enderror
 
-                        <div class="mt-4">
-                            <div class="row g-3">
-                                @foreach ($items as $i => $item)
-                                    @php
-                                        $oldKondisi = old("items.$i.kondisi");
-                                        $oldKet = old("items.$i.keterangan", '');
-                                        $idYa = "sipil_{$i}_ya";
-                                        $idTidak = "sipil_{$i}_tidak";
-                                    @endphp
+                        @php
+                            $dieselP2h = [
+                                'klakson' => [
+                                    'label' => 'Check Klakson',
+                                    'standar' => 'Bunyi ketika tombol ditekan',
+                                ],
+                                'buzzer_back' => [
+                                    'label' => 'Check Buzzer Back',
+                                    'standar' => 'Berbunyi normal saat maju dan mundur',
+                                ],
+                                'oli_mesin' => [
+                                    'label' => 'Check Kondisi & Level Oli Mesin',
+                                    'standar' => 'Berada di level max dan tidak ada kebocoran',
+                                ],
+                                'radiator_hose' => [
+                                    'label' => 'Check Kondisi Level Radiator & Hose',
+                                    'standar' => 'Berada di level max dan tidak ada kebocoran',
+                                ],
+                                'water_pump' => [
+                                    'label' => 'Check Water Pump',
+                                    'standar' => 'Tidak ada kebocoran',
+                                ],
+                                'injection_system' => [
+                                    'label' => 'Check Injection Pump, Injector & Piping',
+                                    'standar' => 'Tidak ada kebocoran',
+                                ],
+                                'fan_vbelt' => [
+                                    'label' => 'Check Fan & V-Belt',
+                                    'standar' => 'Berfungsi baik dan V-belt tidak retak atau putus',
+                                ],
+                                'turbocharger_manifold' => [
+                                    'label' => 'Check Turbocharger & Manifold',
+                                    'standar' => 'Berfungsi baik dan terlubrikasi',
+                                ],
+                                'tensioner_belt' => [
+                                    'label' => 'Check Automatic Tensioner Belt',
+                                    'standar' => 'Berfungsi dengan baik',
+                                ],
+                                'starting_motor' => [
+                                    'label' => 'Check Fungsi Starting Motor',
+                                    'standar' => 'Berfungsi dengan baik',
+                                ],
+                                'alternator' => [
+                                    'label' => 'Check Fungsi Alternator',
+                                    'standar' => 'Berfungsi dengan baik',
+                                ],
+                                'control_display' => [
+                                    'label' => 'Check Control Display',
+                                    'standar' => 'Berfungsi normal, tidak pecah, dan tidak ada alarm',
+                                ],
+                                'oli_transmisi' => [
+                                    'label' => 'Check Kondisi & Level Oli Transmisi',
+                                    'standar' => 'Berada di level max dan tidak ada kebocoran',
+                                ],
+                                'aki' => [
+                                    'label' => 'Check Kondisi Aki & Level Air Aki',
+                                    'standar' => 'Level max, aki tidak drop, dan bersih',
+                                ],
+                                'engine_mounting' => [
+                                    'label' => 'Check Engine Mounting',
+                                    'standar' => 'Berfungsi dengan baik',
+                                ],
+                                'filter_oli_transmisi' => [
+                                    'label' => 'Check Filter Oli Transmisi',
+                                    'standar' => 'Tidak ada kebocoran oli',
+                                ],
+                                'fungsi_rem' => [
+                                    'label' => 'Check Fungsi Rem',
+                                    'standar' => 'Berfungsi dengan baik dan tidak blong',
+                                ],
+                                'fungsi_kopling' => [
+                                    'label' => 'Check Fungsi Kopling',
+                                    'standar' => 'Berfungsi dengan baik dan tidak macet',
+                                ],
+                                'oli_hydraulic' => [
+                                    'label' => 'Check Kondisi & Level Oli Hydraulic',
+                                    'standar' => 'Berada di level max dan tidak ada kebocoran',
+                                ],
+                                'hydraulic_system' => [
+                                    'label' => 'Check Fungsi Hydraulic System',
+                                    'standar' => 'Berfungsi dengan baik dan terlubrikasi',
+                                ],
+                                'steering_system' => [
+                                    'label' => 'Check Fungsi Steering System',
+                                    'standar' => 'Tidak berat dan bergerak lancar',
+                                ],
+                                'body_back_rest' => [
+                                    'label' => 'Check Kondisi Back Rest & Body',
+                                    'standar' => 'Tidak ada cacat atau penyok',
+                                ],
+                                'kaca_spion' => [
+                                    'label' => 'Check Kaca Spion',
+                                    'standar' => 'Terpasang lengkap dan tidak pecah',
+                                ],
+                                'bucket_pin' => [
+                                    'label' => 'Check Kondisi Bucket & Pin Bucket',
+                                    'standar' => 'Berfungsi baik dan tidak retak atau hilang',
+                                ],
+                                'dump_pin_bushing' => [
+                                    'label' => 'Check Kondisi Dump, Pin & Bushing',
+                                    'standar' => 'Berfungsi dan tidak retak atau hilang',
+                                ],
+                                'seal_hydraulic' => [
+                                    'label' => 'Check Kondisi Seal Hydraulic',
+                                    'standar' => 'Tidak ada kebocoran oli',
+                                ],
+                                'roda_ban_baut' => [
+                                    'label' => 'Check Kondisi Roda, Ban & Baut',
+                                    'standar' => 'Ban layak pakai dan baut terpasang kencang',
+                                ],
+                                'lampu_unit' => [
+                                    'label' => 'Check Lampu Depan & Belakang (Kanan & Kiri)',
+                                    'standar' => 'Menyala normal dan tidak pecah',
+                                ],
+                                'baut_bearing_molen' => [
+                                    'label' => 'Check Baut Bearing Molen & Gandengan',
+                                    'standar' => 'Baut terpasang utuh dan kencang',
+                                ],
+                                'baut_hanger_as' => [
+                                    'label' => 'Check Baut Hanger As Roda',
+                                    'standar' => 'Baut terpasang utuh dan kencang',
+                                ],
+                                'baut_grease' => [
+                                    'label' => 'Check Kondisi Baut Grease',
+                                    'standar' => 'Baut tidak aus dan terlumasi grease',
+                                ],
+                                'katup_pembuangan_angin' => [
+                                    'label' => 'Check Katup Pembuangan Angin',
+                                    'standar' => 'Berfungsi dengan baik',
+                                ],
+                            ];
+                        @endphp
 
-                                    <div class="col-12 col-md-6">
-                                        <div class="card border shadow-sm item-card {{ (string) $oldKondisi === '0' ? 'not-ok' : '' }}"
-                                            data-index="{{ $i }}">
-                                            <div class="card-header bg-light">
-                                                <strong class="d-block">{{ $item->item_pengecekan }}</strong>
-                                                <small class="text-muted d-block mt-1">{{ $item->kondisi_normal }}</small>
+                        <h6 class="fw-bold text-primary mb-3 mt-4">Checklist Mtc Diesel P2h</h6>
+
+                        @foreach (array_chunk($dieselP2h, 2, true) as $row)
+                            <div class="row g-3 mb-3">
+                                @foreach ($row as $field => $item)
+                                    <div class="col-md-6 col-12">
+                                        <div class="card shadow-sm item-card p-3 item-row"
+                                            data-field="{{ $field }}">
+
+                                            {{-- Judul --}}
+                                            <label class="form-label fw-semibold mb-1">
+                                                {{ $item['label'] }}
+                                            </label>
+
+                                            {{-- Standar pemeliharaan --}}
+                                            <div class="text-muted small mb-2">
+                                                {{ $item['standar'] }}
                                             </div>
 
-                                            <div class="card-body pb-2 pt-3">
-                                                <!-- Radio Ya/Tidak -->
-                                                <div class="d-flex gap-2 mb-1">
-                                                    <div class="flex-fill">
-                                                        <input type="hidden" name="items[{{ $i }}][item_id]"
-                                                            value="{{ $item->id }}">
+                                            {{-- Radio --}}
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <input type="radio" class="btn-check status-radio"
+                                                    name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                <label class="btn btn-outline-success"
+                                                    for="{{ $field }}_ok">OK</label>
 
-                                                        <input id="{{ $idYa }}" type="radio"
-                                                            name="items[{{ $i }}][kondisi]" value="1"
-                                                            class="visually-hidden kondisi-radio"
-                                                            {{ (string) $oldKondisi === '1' ? 'checked' : '' }}>
-
-                                                        <label for="{{ $idYa }}"
-                                                            class="btn btn-outline-success w-100 py-2 kondisi-btn {{ (string) $oldKondisi === '1' ? 'active' : '' }}">
-                                                            YA
-                                                        </label>
-                                                    </div>
-
-                                                    <div class="flex-fill">
-                                                        <input id="{{ $idTidak }}" type="radio"
-                                                            name="items[{{ $i }}][kondisi]" value="0"
-                                                            class="visually-hidden kondisi-radio"
-                                                            {{ (string) $oldKondisi === '0' ? 'checked' : '' }}>
-
-                                                        <label for="{{ $idTidak }}"
-                                                            class="btn btn-outline-danger w-100 py-2 kondisi-btn {{ (string) $oldKondisi === '0' ? 'active' : '' }}">
-                                                            TIDAK
-                                                        </label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Placeholder kosong untuk keterangan nanti (akan ditambahkan via JS) -->
+                                                <input type="radio" class="btn-check status-radio"
+                                                    name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
+                                                    OK</label>
                                             </div>
+
+                                            {{-- Keterangan --}}
+                                            <div class="keterangan-wrapper d-none mt-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                    name="keterangan_{{ $field }}"
+                                                    placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                            </div>
+
                                         </div>
                                     </div>
                                 @endforeach
+                            </div>
+                        @endforeach
+
+                        <div class="row mt-4 mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Catatan</label>
+                                <textarea class="form-control" name="catatan" rows="3"></textarea>
                             </div>
                         </div>
 
@@ -221,42 +371,78 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modalTtd" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Tanda Tangan Teknisi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <canvas id="signature-pad" style="border:1px solid #ccc; width:100%; height:200px;"></canvas>
+
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearTtd">
+                            Reset TTD
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnSaveTtd">
+                        Simpan & Kirim
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
             const STORAGE_KEY = 'form_mtc_diesel_p2h_data';
+            let isLoading = false;
+            let signaturePad = null;
+            let pendingFormData = null;
+
+            $('#mesin_id').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Cari nama mesin / lokasi...',
+                allowClear: true,
+                width: '100%',
+                templateResult: function(data) {
+                    if (!data.id) return data.text;
+                    return $('<span><b>' + data.text.split(' - ')[0] + '</b><br><small>' + data.text
+                        .split(' - ')[1] + '</small></span>');
+                }
+            });
 
             function saveFormLocalStorage() {
                 const data = {};
 
                 $('#form-mtc-diesel-p2h')
-                    .find('input, textarea, select')
+                    .find('input, select, textarea')
+                    .not('[name^="materials"]')
                     .each(function() {
-                        const name = this.name;
+                        const name = $(this).attr('name');
                         if (!name) return;
 
-                        let value;
-
-                        if (this.type === 'radio') {
-                            if (this.checked) {
-                                value = this.value;
+                        if ($(this).is(':radio')) {
+                            if ($(this).is(':checked')) {
+                                data[name] = $(this).val();
                             }
-                        } else if (this.type === 'checkbox') {
-                            value = this.checked ? '1' : '0';
+                        } else if ($(this).is(':checkbox')) {
+                            data[name] = $(this).is(':checked');
                         } else {
-                            value = $(this).val() || ''; // pakai || '' biar tidak undefined
-                        }
-
-                        if (value !== undefined && value !== null) {
-                            if (this.tagName.toLowerCase() === 'textarea' || value !== '') {
-                                data[name] = value;
-                            }
+                            data[name] = $(this).val();
                         }
                     });
 
-                console.log('Saved data:', data);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             }
 
@@ -264,196 +450,176 @@
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (!saved) return;
 
+                isLoading = true;
+
                 const data = JSON.parse(saved);
 
-                // Langkah 1: Set semua radio & input lain dulu (tanpa trigger change)
-                $.each(data, function(name, value) {
-                    const escapedName = name.replace(/([[\]])/g, '\\$1');
-                    const $el = $('[name="' + escapedName + '"]');
+                for (const [name, value] of Object.entries(data)) {
+                    const $inputs = $(`[name="${name}"]`);
 
-                    if ($el.length) {
-                        if ($el.is(':radio')) {
-                            const $targetRadio = $el.filter('[value="' + value + '"]');
-                            if ($targetRadio.length) {
-                                $targetRadio.prop('checked', true);
-                            }
-                        } else if ($el.is('textarea, input[type="text"], input[type="date"], select')) {
-                            $el.val(value);
-                        }
+                    if (!$inputs.length) continue;
+
+                    if ($inputs.first().is(':radio')) {
+                        $inputs.filter(`[value="${value}"]`)
+                            .prop('checked', true)
+                            .trigger('change');
+
+                    } else if ($inputs.first().is(':checkbox')) {
+                        $inputs.prop('checked', value);
+
+                    } else {
+                        $inputs.val(value).trigger('input');
                     }
+                }
+
+                $('.item-row').each(function() {
+                    updateStatusRow($(this));
                 });
 
-                // Langkah 2: Trigger change pada semua radio yang checked → ini akan membuat wrapper keterangan kalau TIDAK
-                $('.kondisi-radio:checked').each(function() {
-                    $(this).trigger('change');
-                });
-
-                // Force create wrapper untuk card yang kondisi TIDAK (jaga-jaga kalau trigger change gagal)
-                setTimeout(() => {
-                    $('.item-card').each(function() {
-                        const $card = $(this);
-                        const isTidak = $card.find('.kondisi-radio[value="0"]').is(':checked');
-                        if (isTidak && $card.find('.keterangan-wrapper').length === 0) {
-                            const index = $card.data('index');
-                            const $body = $card.find('.card-body');
-
-                            const $wrapper = $(`
-                                <div class="keterangan-wrapper mt-3">
-                                    <textarea name="items[${index}][keterangan]" class="form-control" rows="2"
-                                            placeholder="Keterangan wajib diisi karena kondisi TIDAK"></textarea>
-                                    <div class="mt-2"></div>
-                                </div>
-                            `);
-
-                            $body.append($wrapper);
-                            $wrapper.show(); // langsung tampilkan tanpa animasi
-                        }
-                    });
-
-                    // Isi value keterangan
-                    $.each(data, function(name, value) {
-                        if (name.includes('[keterangan]')) {
-                            const escapedName = name.replace(/([[\]])/g, '\\$1');
-                            const $textarea = $('[name="' + escapedName + '"]');
-                            if ($textarea.length) {
-                                $textarea.val(value);
-                            }
-                        }
-                    });
-
-                    saveFormLocalStorage();
-                }, 600);
-
-                setTimeout(() => {
-                    updateRowState();
-                }, 100);
-
+                isLoading = false;
             }
 
             loadFormLocalStorage();
 
-            $('#form-mtc-diesel-p2h').on('input change', 'input[type="text"], input[type="date"], select',
-                function() {
-                    saveFormLocalStorage();
-                });
-
-            function updateRowState() {
-                $('.item-card').each(function() {
-                    const $card = $(this);
-                    const isTidak = $card.find('input[type="radio"][value="0"]:checked').length > 0;
-                    $card.toggleClass('not-ok', isTidak);
-                });
-            }
-
-            $('#form-mtc-diesel-p2h').on('change', '.kondisi-radio', function() {
-                const $radio = $(this);
-                const $card = $radio.closest('.item-card');
-                const $body = $card.find('.card-body');
-                const index = $card.data('index'); // ambil dari data-index
-
-                // Reset active tombol
-                $card.find('.kondisi-btn').removeClass('active');
-                const $checkedRadio = $card.find('.kondisi-radio:checked');
-                if ($checkedRadio.length) {
-                    $checkedRadio.next('label.kondisi-btn').addClass('active');
-                }
-
-                // Update warna card
-                const isTidak = $card.find('.kondisi-radio[value="0"]').prop('checked');
-                $card.toggleClass('not-ok', isTidak);
-
-                // Cari wrapper keterangan
-                let $wrapper = $card.find('.keterangan-wrapper');
-
-                if (isTidak) {
-                    if ($wrapper.length === 0) {
-                        $wrapper = $(`
-                            <div class="keterangan-wrapper mt-3">
-                                <textarea name="items[${index}][keterangan]" class="form-control" rows="2"
-                                        placeholder="Keterangan wajib diisi karena kondisi TIDAK"></textarea>
-                                <div class="mt-2"></div>
-                            </div>
-                        `);
-
-                        $body.append($wrapper);
-
-                        saveFormLocalStorage();
-                    }
-
-                    $wrapper.slideDown(200, () => {
-                        $wrapper.find('textarea').focus();
-                        saveFormLocalStorage();
-                    });
-                    $wrapper.find('textarea').prop('required', true);
-                } else {
-                    if ($wrapper.length > 0) {
-                        $wrapper.remove();
-                        saveFormLocalStorage();
-                    }
-                }
-
+            $('#form-mtc-diesel-p2h').on('change input', 'input, select, textarea', function() {
                 saveFormLocalStorage();
             });
+
+            $(document).on('change', '.status-radio', function() {
+                if (isLoading) return;
+
+                const $row = $(this).closest('.item-row');
+                const isNg = $row.find('input[value="0"]').is(':checked');
+                const $ket = $row.find('.keterangan-wrapper input');
+
+                if (isNg) {
+                    $row.addClass('not-ok');
+                    $row.find('.keterangan-wrapper').removeClass('d-none');
+                    $ket.attr('required', true);
+                } else {
+                    $row.removeClass('not-ok');
+                    $row.find('.keterangan-wrapper').addClass('d-none');
+                    $ket.val('').removeAttr('required');
+                }
+
+                updateStatusRow($row);
+                saveFormLocalStorage();
+            });
+
+            function updateStatusRow($row) {
+                const isNg = $row.find('input[value="0"]').is(':checked');
+                const $wrapper = $row.find('.keterangan-wrapper');
+                const $input = $wrapper.find('input');
+
+                if (isNg) {
+                    $row.addClass('not-ok');
+                    $wrapper.removeClass('d-none');
+                    $input.attr('required', true);
+                } else {
+                    $row.removeClass('not-ok');
+                    $wrapper.addClass('d-none');
+                    $input.val('').removeAttr('required');
+                }
+            }
+
+            function collectNotOkDetails() {
+                const details = [];
+
+                $('.item-row').each(function() {
+                    const $row = $(this);
+                    const isNg = $row.find('input[value="0"]').is(':checked');
+                    if (!isNg) return;
+
+                    const label = $row.find('label.form-label').text().trim();
+                    const keterangan = $row.find('input[name^="keterangan_"]').val().trim();
+
+                    if (keterangan) {
+                        details.push(`${label}: ${keterangan}`);
+                    }
+                });
+
+                if (details.length === 0) return '';
+
+                return details.join(" | ");
+            }
 
             $('#form-mtc-diesel-p2h').on('submit', function(e) {
                 e.preventDefault();
 
-                $('#clientError').addClass('d-none').text('');
-                $('.is-invalid').removeClass('is-invalid');
+                pendingFormData = new FormData(this);
 
-                let checkedCount = 0;
-                let valid = true;
+                $('#modalTtd').modal('show');
+            });
 
-                $('.item-card').each(function() {
-                    const $card = $(this);
+            $('#modalTtd').on('shown.bs.modal', function() {
+                if (!signaturePad) {
+                    const canvas = document.getElementById('signature-pad');
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = 200;
+                    signaturePad = new SignaturePad(canvas);
+                }
+            });
 
-                    const $tidak = $card.find('.kondisi-radio[value="0"]');
-                    const $ya = $card.find('.kondisi-radio[value="1"]');
-                    const $ket = $card.find('textarea');
+            $('#btnClearTtd').on('click', function() {
+                signaturePad.clear();
+            });
 
-                    // Hitung berapa item yang sudah dipilih (Ya atau Tidak)
-                    if ($tidak.is(':checked') || $ya.is(':checked')) {
-                        checkedCount++;
-                    }
+            $('#modalTtd').on('hidden.bs.modal', function() {
+                if (signaturePad) signaturePad.clear();
+            });
 
-                    // Kalau TIDAK → keterangan wajib diisi
-                    if ($tidak.is(':checked') && !$ket.val().trim()) {
-                        $ket.addClass('is-invalid');
-                        valid = false;
-                    }
-                });
+            $('#btnSaveTtd').on('click', function() {
 
-                if (!valid) {
-                    $('#clientError')
-                        .removeClass('d-none')
-                        .text('Keterangan wajib diisi untuk item dengan kondisi TIDAK.');
+                if (!signaturePad || signaturePad.isEmpty()) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'TTD belum diisi',
+                        text: 'Silakan tanda tangan terlebih dahulu'
+                    });
                     return;
                 }
 
-                const formData = $(this).serialize();
+                const ttdBase64 = signaturePad.toDataURL('image/png');
+                const keterangan = collectNotOkDetails();
 
+                pendingFormData.append('ttd_base64', ttdBase64);
+                if (keterangan) {
+                    pendingFormData.append('keterangan', keterangan);
+                }
+                pendingFormData.delete('_token');
+                pendingFormData.append(
+                    '_token',
+                    $('meta[name="csrf-token"]').attr('content')
+                );
+
+                $('#modalTtd').modal('hide');
+
+                submitFinalForm(pendingFormData);
+            });
+
+            function submitFinalForm(formData) {
+                const $btn = $('#btn-submit');
+                $btn.prop('disabled', true);
                 $.ajax({
                     url: "{{ route('mtc.diesel-p2h.store') }}",
-                    type: "POST",
+                    type: 'POST',
                     data: formData,
-                    dataType: "json",
-                    success: function(res) {
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil',
-                            text: res.message ?? 'Data berhasil disimpan',
-                            timer: 1800,
+                            text: response.message,
+                            timer: 2000,
                             showConfirmButton: false
+                        }).then(() => {
+                            resetDieselP2hForm();
                         });
-
-                        // Reset semua form
-                        $('.kondisi-radio').prop('checked', false);
-                        $('.kondisi-btn').removeClass('active');
-                        $('.keterangan-wrapper').slideUp(200); // sembunyikan keterangan
-                        $('textarea').val(''); // kosongkan isi
-                        localStorage.removeItem(STORAGE_KEY);
-                        $('#form-mtc-diesel-p2h')[0].reset();
-                        updateRowState();
                     },
                     error: function(xhr) {
                         Swal.fire({
@@ -461,9 +627,12 @@
                             title: 'Gagal',
                             text: xhr.responseJSON?.message || 'Terjadi kesalahan'
                         });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
                     }
                 });
-            });
+            }
 
             $('#btnResetKondisi').on('click', function() {
                 Swal.fire({
@@ -475,17 +644,8 @@
                     cancelButtonText: 'Batal'
                 }).then(r => {
                     if (!r.isConfirmed) return;
-                    $('#form-mtc-diesel-p2h')[0].reset();
-                    // Reset radio & tombol
-                    $('.kondisi-radio').prop('checked', false);
-                    $('.kondisi-btn').removeClass('active');
-                    $('.keterangan-wrapper').slideUp(200, function() {
-                        $(this).remove();
-                    });
-                    $('textarea').val('');
-                    updateRowState();
 
-                    localStorage.removeItem(STORAGE_KEY);
+                    resetDieselP2hForm();
 
                     Swal.fire({
                         icon: 'success',
@@ -496,6 +656,34 @@
                     });
                 });
             });
+
+            function resetDieselP2hForm() {
+                // reset form native
+                const $form = $('#form-mtc-diesel-p2h');
+                $form[0].reset();
+
+                $('.kondisi-radio').prop('checked', false);
+                $('.kondisi-btn').removeClass('active');
+
+                $('.item-row').each(function() {
+                    const $row = $(this);
+
+                    $row.removeClass('not-ok');
+
+                    const $wrapper = $row.find('.keterangan-wrapper');
+                    const $input = $wrapper.find('input, textarea');
+
+                    $wrapper.addClass('d-none');
+                    $input
+                        .val('')
+                        .removeClass('is-invalid')
+                        .removeAttr('required');
+                });
+
+                $('#clientError').addClass('d-none').text('');
+
+                localStorage.removeItem(STORAGE_KEY);
+            }
         });
     </script>
 @endsection

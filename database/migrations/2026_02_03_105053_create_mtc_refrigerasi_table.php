@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mtc_refrigerasi', function (Blueprint $table) {
+        Schema::create('mtc_refrigerasi_inspections', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_mesin');
-            $table->date('tanggal');
-            $table->time('waktu');
-            $table->string('paket')->nullable();
+            $table->foreignId('mesin_id')->constrained('mtc_master_mesin')->onDelete('restrict');
+            $table->foreignId('mtc_main_id')->constrained('mtc_main')->onDelete('cascade');
 
             // Unit Indoor
             $table->boolean('check_filter_udara')->nullable();
@@ -44,12 +42,9 @@ return new class extends Migration
             $table->boolean('check_jalur_distribusi_udara')->nullable();
             $table->boolean('check_jalur_return_udara')->nullable();
 
-            $table->text('keterangan')->nullable();
-            $table->string('korektif')->nullable();
+            // $table->text('keterangan')->nullable();
+            // $table->string('korektif')->nullable();
 
-            $table->foreignId('created_by')
-                ->constrained('users')
-                ->onDelete('restrict');
             $table->timestamps();
         });
     }
@@ -59,6 +54,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mtc_refrigerasi');
+        Schema::dropIfExists('mtc_refrigerasi_inspections');
     }
 };
