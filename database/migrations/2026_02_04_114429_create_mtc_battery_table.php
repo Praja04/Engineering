@@ -11,28 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mtc_battery', function (Blueprint $table) {
+        Schema::create('mtc_battery_main', function (Blueprint $table) {
             $table->id();
-            $table->date('tanggal');
-            $table->time('waktu');
+            $table->foreignId('mtc_main_id')->constrained('mtc_main')->onDelete('cascade');
             $table->string('battery_type')->nullable();
             $table->string('no_seri')->nullable();
             $table->string('no_unit')->nullable();
-            $table->text('keterangan')->nullable();
-            $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('restrict');
+            $table->string('kondisi_plug_battery')->nullable();
+            $table->decimal('total_voltase', 10, 2)->nullable();
+            $table->string('catatan')->nullable();
             $table->timestamps();
         });
 
-        Schema::create('mtc_battery_detail', function (Blueprint $table) {
+        Schema::create('mtc_battery_inspections', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('battery_id')->constrained('mtc_battery')->onDelete('cascade');
-            $table->boolean('voltase')->nullable();
+            $table->foreignId('mtc_battery_id')->constrained('mtc_battery_main')->onDelete('cascade');
+            $table->decimal('voltase', 10, 2)->nullable();
             $table->boolean('level_air_aki')->nullable();
             $table->boolean('intercell')->nullable();
             $table->boolean('kondisi_skun')->nullable();
             $table->boolean('kondisi_unit')->nullable();
-            $table->boolean('grounding')->nullable();
+            $table->decimal('grounding', 10, 2)->nullable();
             $table->integer('cell');
             $table->timestamps();
         });
@@ -43,7 +42,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mtc_battery_detail');
-        Schema::dropIfExists('mtc_battery');
+        Schema::dropIfExists('mtc_battery_inspections');
+        Schema::dropIfExists('mtc_battery_main');
     }
 };

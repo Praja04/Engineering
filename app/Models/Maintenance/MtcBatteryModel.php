@@ -10,39 +10,33 @@ class MtcBatteryModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'mtc_battery';
+    protected $table = 'mtc_battery_inspections';
 
     protected $fillable = [
-        'tanggal',
-        'waktu',
-        'battery_type',
-        'no_seri',
-        'no_unit',
-        'keterangan',
-        'created_by',
-        'updated_by',
+        'mtc_battery_id',
+        'voltase',
+        'level_air_aki',
+        'intercell',
+        'kondisi_skun',
+        'kondisi_unit',
+        'grounding',
+        'cell',
     ];
 
     protected $casts = [
-        'tanggal' => 'date:Y-m-d',
-        'waktu'   => 'datetime:H:i',
+        'level_air_aki' => 'boolean',
+        'intercell' => 'boolean',
+        'kondisi_skun' => 'boolean',
+        'kondisi_unit' => 'boolean',
     ];
 
-    // Detail battery (1 battery punya banyak detail)
-    public function details()
+    public function mainBattery()
     {
-        return $this->hasMany(MtcBatteryDetailModel::class, 'battery_id');
+        return $this->belongsTo(MtcBatteryMainModel::class, 'mtc_battery_id');
     }
 
-    // User pembuat
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    // User pengupdate
-    public function updater()
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
+    // public function mesin()
+    // {
+    //     return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
+    // }
 }
