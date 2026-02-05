@@ -10,13 +10,11 @@ class MtcRefrigerasiModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'mtc_refrigerasi';
+    protected $table = 'mtc_refrigerasi_inspections';
 
     protected $fillable = [
-        'nama_mesin',
-        'tanggal',
-        'waktu',
-        'paket',
+        'mesin_id',
+        'mtc_main_id',
 
         // Unit Indoor
         'check_filter_udara',
@@ -45,15 +43,11 @@ class MtcRefrigerasiModel extends Model
         'check_jalur_return_udara',
 
         // Catatan
-        'keterangan',
-        'korektif',
-
-        'created_by',
+        // 'keterangan',
+        // 'korektif',
     ];
 
     protected $casts = [
-        'tanggal' => 'date:Y-m-d',
-        'waktu'   => 'datetime:H:i:s',
 
         // Unit Indoor
         'check_filter_udara' => 'boolean',
@@ -82,8 +76,13 @@ class MtcRefrigerasiModel extends Model
         'check_jalur_return_udara' => 'boolean',
     ];
 
-    public function user()
+    public function main()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
+    }
+
+    public function mesin()
+    {
+        return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
     }
 }

@@ -23,9 +23,7 @@ class MtcRefrigerasiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_mesin' => 'required|string|max:255',
-            'tanggal'    => 'required|date',
-            'paket'      => 'nullable|string|max:100',
+            'mesin_id' => ['required', 'exists:mtc_master_mesin,id'],
 
             // ======================
             // Unit Indoor
@@ -58,9 +56,6 @@ class MtcRefrigerasiRequest extends FormRequest
             'check_jalur_freon' => 'nullable|boolean',
             'check_jalur_distribusi_udara' => 'nullable|boolean',
             'check_jalur_return_udara' => 'nullable|boolean',
-
-            'keterangan' => 'nullable|string',
-            'korektif'   => 'nullable|string|max:255',
         ];
     }
 
