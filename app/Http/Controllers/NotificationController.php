@@ -2,12 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kalibrasi\KalibrasiSertifikatApprovalModel;
 use Illuminate\Http\Request;
+use App\Models\NotificationsModel;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Kalibrasi\KalibrasiSertifikatApprovalModel;
 
 class NotificationController extends Controller
 {
+
+    public function index()
+    {
+        $user = Auth::user();
+        $userId = $user->id;
+
+        // $approvalotification = $this->getSopApprovalNotification($userId);
+        // $barangBaruNotifications = $this->getBarangBaruNotifications($user);
+        $kalibrasiCertificate = $this->kalibrasiCertificate($userId);
+
+        $notifications = NotificationsModel::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($n) {
+                return [
+                    'id' => $n->id,
+                    'title' => $n->title,
+                    'message' => $n->message,
+                    'url' => $n->url,
+                    'type' => $n->type,
+                    'created_at' => $n->created_at->format('d F Y, H:i'),
+                    'is_read' => $n->is_read
+                ];
+            });
+
+        return response()->json($notifications);
+    }
+
     public function kalibrasiCertificate()
     {
         $userId = Auth::id();
@@ -29,22 +59,36 @@ class NotificationController extends Controller
             ];
         });
 
-        return response()->json($notifications);
+        // return response()->json($notifications);
+        return $notifications;
     }
 
     public function markAsRead($id)
     {
-        $notif = KalibrasiSertifikatApprovalModel::find($id);
+        $notif = NotificationsModel::where('id', $id)
+            // ->where('user_id', Auth::id())
+            ->first();
+
+        // Log::info("MarkAsRead dipanggil untuk ID: {$id}");
 
         if (!$notif) {
+            // Log::warning("Notifikasi ID {$id} TIDAK ditemukan!");
+
             return response()->json([
-                'status' => 'error',
+                'success' => false,
                 'message' => 'Notifikasi tidak ditemukan'
             ], 404);
         }
 
-        $notif->update(['status' => 'read']);
+        $notif->update([
+            'is_read' => true
+        ]);
 
-        return response()->json(['status' => 'success']);
+        // Log::info("Notifikasi ID {$id} berhasil ditandai read.");
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Update is read'
+        ]);
     }
 }
