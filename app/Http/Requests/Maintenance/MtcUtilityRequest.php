@@ -23,9 +23,8 @@ class MtcUtilityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_mesin' => ['required', 'string', 'max:255'],
-            'tanggal'    => ['required', 'date'],
-            'paket'      => ['nullable', 'string', 'max:255'],
+            // 'nama_mesin' => ['required', 'string', 'max:255'],
+            'mesin_id' => ['required', 'exists:mtc_master_mesin,id'],
 
             // Cooling Tower
             'cleaning_saringan_cooling_tower' => ['nullable', 'boolean'],
@@ -85,10 +84,6 @@ class MtcUtilityRequest extends FormRequest
             'check_line_chemical'                     => ['nullable', 'boolean'],
             'check_tangki_kotak'                      => ['nullable', 'boolean'],
             'check_tangki_bulat'                      => ['nullable', 'boolean'],
-
-            // Keterangan
-            'keterangan' => ['nullable', 'string'],
-            'korektif'   => ['nullable', 'string', 'max:255'],
         ];
     }
 

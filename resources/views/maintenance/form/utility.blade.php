@@ -18,6 +18,39 @@
             border-color: #dc3545 !important;
             box-shadow: 0 0 0 0.15rem rgba(220, 53, 69, .25) !important;
         }
+
+        .select2-selection__placeholder {
+            font-size: 13px;
+        }
+
+        /* === DROPDOWN OPTION === */
+        .select2-container--bootstrap-5 .select2-results__option {
+            font-size: 11px !important;
+            padding: 3px 8px !important;
+            line-height: 1.3 !important;
+        }
+
+        /* TEXT YANG TAMPIL SAAT SUDAH DIPILIH */
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            font-size: 13px !important;
+            line-height: 1.3 !important;
+        }
+
+        /* OPTION YANG AKTIF / HOVER */
+        .select2-container--bootstrap-5 .select2-results__option--highlighted,
+        .select2-container--bootstrap-5 .select2-results__option--selected {
+            font-size: 11px !important;
+        }
+
+        /* TEXT UTAMA */
+        .select2-container--bootstrap-5 .select2-results__option span {
+            font-size: 12px !important;
+        }
+
+        /* TEXT <small> */
+        .select2-container--bootstrap-5 .select2-results__option small {
+            font-size: 11px !important;
+        }
     </style>
 @endsection
 
@@ -36,15 +69,36 @@
 
                         {{-- INFORMASI UMUM --}}
                         <div class="row g-3 mb-4">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Nama Mesin <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="nama_mesin" required>
+                                <select name="mesin_id" id="mesin_id" class="form-control" required>
+                                    @foreach ($mesin as $item)
+                                        <option value="{{ $item->id }}">
+                                            {{ $item->nama_mesin }} - {{ $item->lokasi }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                {{-- <input type="text" class="form-control" name="nama_mesin" required> --}}
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Tanggal <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" name="tanggal" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label class="form-label">Waktu <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" name="waktu"
+                                    value="{{ old('waktu', now()->format('H:i')) }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Lokasi </label>
+                                <input type="text" class="form-control" name="lokasi" value="{{ old('lokasi') }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Departemen </label>
+                                <input type="text" class="form-control" name="departemen"
+                                    value="{{ old('departemen') }}">
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label">Paket</label>
                                 <select class="form-select" name="paket">
                                     <option value="">-- Pilih --</option>
@@ -149,7 +203,7 @@
                                                     OK</label>
                                             </div>
 
-                                            <small class="status-label-default">Belum dicek</small>
+
 
                                             <div class="keterangan-wrapper d-none mt-2">
                                                 <input type="text" class="form-control form-control-sm"
@@ -169,7 +223,8 @@
                             <div class="row g-3 mb-3">
                                 @foreach ($row as $field => $label)
                                     <div class="col-md-6 col-12">
-                                        <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+                                        <div class="card shadow-sm item-card p-3 item-row"
+                                            data-field="{{ $field }}">
 
                                             <label class="form-label fw-semibold">
                                                 {{ $label }}
@@ -186,8 +241,6 @@
                                                 <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
                                                     OK</label>
                                             </div>
-
-                                            <small class="status-label-default">Belum dicek</small>
 
                                             <div class="keterangan-wrapper d-none mt-2">
                                                 <input type="text" class="form-control form-control-sm"
@@ -216,17 +269,17 @@
 
                                             <div class="btn-group btn-group-sm w-100">
                                                 <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                    name="{{ $field }}" value="1"
+                                                    id="{{ $field }}_ok">
                                                 <label class="btn btn-outline-success"
                                                     for="{{ $field }}_ok">OK</label>
 
                                                 <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                    name="{{ $field }}" value="0"
+                                                    id="{{ $field }}_ng">
                                                 <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
                                                     OK</label>
                                             </div>
-
-                                            <small class="status-label-default">Belum dicek</small>
 
                                             <div class="keterangan-wrapper d-none mt-2">
                                                 <input type="text" class="form-control form-control-sm"
@@ -267,8 +320,6 @@
                                                     OK</label>
                                             </div>
 
-                                            <small class="status-label-default">Belum dicek</small>
-
                                             <div class="keterangan-wrapper d-none mt-2">
                                                 <input type="text" class="form-control form-control-sm"
                                                     name="keterangan_{{ $field }}"
@@ -307,8 +358,6 @@
                                                 <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
                                                     OK</label>
                                             </div>
-
-                                            <small class="status-label-default">Belum dicek</small>
 
                                             <div class="keterangan-wrapper d-none mt-2">
                                                 <input type="text" class="form-control form-control-sm"
@@ -349,8 +398,6 @@
                                                     OK</label>
                                             </div>
 
-                                            <small class="status-label-default">Belum dicek</small>
-
                                             <div class="keterangan-wrapper d-none mt-2">
                                                 <input type="text" class="form-control form-control-sm"
                                                     name="keterangan_{{ $field }}"
@@ -363,6 +410,56 @@
                             </div>
                         @endforeach
 
+                        {{-- Korektif --}}
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Tindakan Korektif</label>
+                                <textarea class="form-control" name="korektif" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        {{-- Kebutuhan Material --}}
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Kebutuhan Material</label>
+                                <table class="table table-bordered" id="materialTable">
+                                    <thead class="table-light text-no-wrap">
+                                        <tr>
+                                            <th style="width: 20%">MID</th>
+                                            <th>Deskripsi</th>
+                                            <th style="width: 15%">Jumlah</th>
+                                            <th class="text-center" style="width: 10%">
+                                                <button type="button" class="btn btn-sm btn-primary" id="addRow">
+                                                    +
+                                                </button>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <input type="number" name="materials[0][mid]"
+                                                    class="form-control form-control-sm" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="materials[0][desc]"
+                                                    class="form-control form-control-sm">
+                                            </td>
+                                            <td>
+                                                <input type="number" name="materials[0][qty]"
+                                                    class="form-control form-control-sm" min="1" required>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger removeRow">
+                                                    ×
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
 
                         {{-- BUTTON --}}
                         <div class="d-flex gap-2 justify-content-end mt-4">
@@ -380,26 +477,97 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modalTtd" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Tanda Tangan Teknisi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <canvas id="signature-pad" style="border:1px solid #ccc; width:100%; height:200px;"></canvas>
+
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearTtd">
+                            Reset TTD
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnSaveTtd">
+                        Simpan & Kirim
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
             const STORAGE_KEY = 'form_mtc_utility_data';
+            let index = 1;
+            let isLoading = false;
+
+            $('#mesin_id').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Cari nama mesin / lokasi...',
+                allowClear: true,
+                width: '100%',
+                templateResult: function(data) {
+                    if (!data.id) return data.text;
+                    return $('<span><b>' + data.text.split(' - ')[0] + '</b><br><small>' + data.text
+                        .split(' - ')[1] + '</small></span>');
+                }
+            });
 
             // Fungsi untuk menyimpan form ke localStorage
             function saveFormToLocalStorage() {
-                const formData = {};
-                $('#form-mtc-utility').serializeArray().forEach(item => {
-                    formData[item.name] = item.value;
+                let formData = {};
+                let materials = [];
+
+                // === FORM NORMAL ===
+                $('#form-mtc-utility')
+                    .find('input, select, textarea')
+                    .not('[name^="materials"]')
+                    .each(function() {
+                        const name = $(this).attr('name');
+                        if (!name) return;
+
+                        if ($(this).is(':radio')) {
+                            if ($(this).is(':checked')) {
+                                formData[name] = $(this).val();
+                            }
+                        } else if ($(this).is(':checkbox')) {
+                            formData[name] = $(this).is(':checked');
+                        } else {
+                            formData[name] = $(this).val();
+                        }
+                    });
+
+                // === KEBUTUHAN MATERIAL ===
+                $('#materialTable tbody tr').each(function() {
+                    const row = {
+                        mid: $(this).find('input[name*="[mid]"]').val(),
+                        desc: $(this).find('input[name*="[desc]"]').val(),
+                        qty: $(this).find('input[name*="[qty]"]').val()
+                    };
+
+                    if (row.mid || row.desc || row.qty) {
+                        materials.push(row);
+                    }
                 });
 
-                // Simpan juga status radio yang tidak ter-serialize dengan serializeArray
-                $('.status-radio:checked').each(function() {
-                    formData[$(this).attr('name')] = $(this).val();
-                });
-
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    form: formData,
+                    materials: materials
+                }));
             }
 
             // Fungsi untuk memuat data dari localStorage ke form
@@ -407,23 +575,63 @@
                 const savedData = localStorage.getItem(STORAGE_KEY);
                 if (!savedData) return;
 
+                isLoading = true;
+
                 const data = JSON.parse(savedData);
 
-                // Isi semua input, textarea, select
-                for (const [name, value] of Object.entries(data)) {
-                    const $input = $(`[name="${name}"]`);
+                // === FORM ===
+                if (data.form) {
+                    for (const [name, value] of Object.entries(data.form)) {
+                        const $input = $(`[name="${name}"]`);
 
-                    if ($input.is(':radio')) {
-                        $(`input[name="${name}"][value="${value}"]`).prop('checked', true).trigger('change');
-                    } else if ($input.is(':checkbox')) {
-                        $input.prop('checked', value === 'on');
-                    } else if ($input.is('select') || $input.is('input') || $input.is('textarea')) {
-                        $input.val(value);
+                        if ($input.is(':radio')) {
+                            $(`input[name="${name}"][value="${value}"]`)
+                                .prop('checked', true)
+                                .trigger('change');
+
+                        } else if ($input.is(':checkbox')) {
+                            $input.prop('checked', value);
+
+                        } else {
+                            $input.val(value).trigger('change');
+                        }
                     }
                 }
 
-                // Trigger change untuk radio agar UI (keterangan, warna, dll) ikut ter-update
-                $('.status-radio:checked').trigger('change');
+                // === MATERIALS ===
+                $('#materialTable tbody').empty();
+                index = 1;
+
+                if (data.materials && data.materials.length) {
+                    data.materials.forEach(item => {
+                        let row = `
+                            <tr>
+                                <td>
+                                    <input type="number" name="materials[${index}][mid]"
+                                        class="form-control form-control-sm"
+                                        value="${item.mid || ''}">
+                                </td>
+                                <td>
+                                    <input type="text" name="materials[${index}][desc]"
+                                        class="form-control form-control-sm"
+                                        value="${item.desc || ''}">
+                                </td>
+                                <td>
+                                    <input type="number" name="materials[${index}][qty]"
+                                        class="form-control form-control-sm"
+                                        value="${item.qty || ''}">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
+                                </td>
+                            </tr>
+                        `;
+                        $('#materialTable tbody').append(row);
+                        index++;
+                    });
+                }
+
+                isLoading = false;
             }
 
             // Load data saat halaman dibuka
@@ -457,6 +665,37 @@
                 saveFormToLocalStorage();
             });
 
+            // Kebutuhan Material
+            $('#addRow').on('click', function() {
+                let row = `
+                    <tr>
+                        <td>
+                            <input type="number" name="materials[${index}][mid]" class="form-control form-control-sm" required>
+                        </td>
+                        <td>
+                            <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
+                        </td>
+                        <td>
+                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1" required>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
+                        </td>
+                    </tr>
+                `;
+
+                $('#materialTable tbody').append(row);
+                index++;
+
+                saveFormToLocalStorage();
+            });
+
+            $(document).on('click', '.removeRow', function() {
+                $(this).closest('tr').remove();
+                saveFormToLocalStorage();
+            });
+            // End Kebutuhan Material
+
             function collectNotOkDetails() {
                 const details = [];
 
@@ -475,94 +714,8 @@
 
                 if (details.length === 0) return '';
 
-                return details.join(", ");
+                return details.join(" | ");
             }
-
-            $('#form-mtc-utility').on('submit', function(e) {
-                e.preventDefault();
-
-                const $form = $(this);
-                const $btn = $('#btn-submit');
-                $btn.prop('disabled', true);
-
-                let valid = true;
-
-                $('[data-required-when-not-ok]').each(function() {
-                    const $input = $(this);
-                    const $row = $input.closest('.item-row');
-                    const isNg = $row.find('input[value="0"]').is(':checked');
-
-                    if (isNg && !$input.val().trim()) {
-                        $input.addClass('is-invalid');
-                        valid = false;
-                    }
-                });
-
-                if (!valid) {
-                    $('html, body').animate({
-                        scrollTop: $('.is-invalid').first().offset().top - 120
-                    }, 300);
-                    return;
-                }
-
-                const catatanUmum = $form.find('textarea[name="keterangan"]').val()?.trim() || '';
-
-                const detailString = collectNotOkDetails();
-
-                let finalKeterangan = catatanUmum;
-                if (detailString) {
-                    if (catatanUmum) {
-                        finalKeterangan += "\n\n" + detailString;
-                    } else {
-                        finalKeterangan = detailString;
-                    }
-                }
-
-                const formData = new FormData($form[0]);
-
-                formData.set('keterangan', finalKeterangan);
-
-                $.ajax({
-                    url: "{{ route('mtc.utility.store') }}",
-                    type: 'POST',
-                    data: formData,
-                    processData: false, // ← wajib! jangan proses data sebagai string
-                    contentType: false,
-                    dataType: 'json',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        if (response.status) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil',
-                                text: response.message || 'Data berhasil disimpan',
-                                timer: 2000,
-                                showConfirmButton: false
-                            }).then(() => {
-                                localStorage.removeItem(STORAGE_KEY);
-                                $form[0].reset();
-                                $('.keterangan-wrapper').addClass('d-none');
-                                $('.status-label-default').removeClass('d-none');
-                                $('.item-row').removeClass('not-ok');
-                                $('.is-invalid').removeClass('is-invalid');
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            text: xhr.responseJSON?.message ||
-                                'Terjadi kesalahan saat menyimpan data'
-                        });
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false);
-                    }
-                });
-            });
 
             $('#btn-reset').on('click', function() {
                 Swal.fire({
@@ -574,15 +727,129 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $('#form-mtc-utility')[0].reset();
-                        $('.keterangan-wrapper').addClass('d-none');
-                        $('.status-label-default').removeClass('d-none');
-                        $('.item-row').removeClass('not-ok');
-                        $('.is-invalid').removeClass('is-invalid');
-                        localStorage.removeItem(STORAGE_KEY);
+                        resetFormUtility();
                     }
                 });
             });
+
+            function resetFormUtility() {
+                const $form = $('#form-mtc-utility');
+
+                $form[0].reset();
+
+                $form.find('select').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).val(null).trigger('change');
+                    }
+                });
+
+                // Reset UI checklist
+                $('.keterangan-wrapper').addClass('d-none');
+                $('.status-label-default').removeClass('d-none');
+                $('.item-row').removeClass('not-ok');
+                $('.is-invalid').removeClass('is-invalid');
+
+                $('#materialTable tbody').empty();
+                index = 1;
+
+                localStorage.removeItem(STORAGE_KEY);
+            }
+
+            // Tanda Tangan
+            let signaturePad = null;
+            let pendingFormData = null;
+
+            $('#form-mtc-utility').on('submit', function(e) {
+                e.preventDefault();
+
+                pendingFormData = new FormData(this);
+
+                $('#modalTtd').modal('show');
+            });
+
+            $('#modalTtd').on('shown.bs.modal', function() {
+                if (!signaturePad) {
+                    const canvas = document.getElementById('signature-pad');
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = 200;
+                    signaturePad = new SignaturePad(canvas);
+                }
+            });
+
+            $('#btnClearTtd').on('click', function() {
+                signaturePad.clear();
+            });
+
+            $('#modalTtd').on('hidden.bs.modal', function() {
+                if (signaturePad) signaturePad.clear();
+            });
+
+            $('#btnSaveTtd').on('click', function() {
+
+                if (!signaturePad || signaturePad.isEmpty()) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'TTD belum diisi',
+                        text: 'Silakan tanda tangan terlebih dahulu'
+                    });
+                    return;
+                }
+
+                const ttdBase64 = signaturePad.toDataURL('image/png');
+                const keterangan = collectNotOkDetails();
+
+                pendingFormData.append('ttd_base64', ttdBase64);
+                if (keterangan) {
+                    pendingFormData.append('keterangan', keterangan);
+                }
+                pendingFormData.delete('_token');
+                pendingFormData.append(
+                    '_token',
+                    $('meta[name="csrf-token"]').attr('content')
+                );
+
+                $('#modalTtd').modal('hide');
+
+                submitFinalForm(pendingFormData);
+            });
+
+            function submitFinalForm(formData) {
+                const $btn = $('#btn-submit');
+                $btn.prop('disabled', true);
+
+                $.ajax({
+                    url: "{{ route('mtc.utility.store') }}",
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            resetFormUtility();
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: xhr.responseJSON?.message || 'Terjadi kesalahan'
+                        });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
+                    }
+                });
+            }
         });
     </script>
 @endsection

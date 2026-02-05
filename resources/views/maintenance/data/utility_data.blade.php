@@ -157,13 +157,13 @@
                         <table class="table table-hover align-middle" id="tabelUtility">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID</th>
+                                    <th>No</th>
                                     <th>Nama Mesin</th>
+                                    <th>Lokasi</th>
                                     <th>Tanggal</th>
                                     <th>Waktu</th>
                                     <th>Paket</th>
-                                    <th>Ringkasan</th>
-                                    <th>Dibuat Oleh</th>
+                                    <th>status</th>
                                     <th style="width:180px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -220,7 +220,9 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label">Nama Mesin *</label>
-                                <input type="text" class="form-control" name="nama_mesin" id="editNamaMesin" required>
+                                <select class="form-select" name="mesin_id" id="editNamaMesin" required>
+                                    {{-- <option value="">-- Pilih Mesin --</option> --}}
+                                </select>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Tanggal *</label>
@@ -228,7 +230,14 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Paket</label>
-                                <input type="text" class="form-control" name="paket" id="editPaket">
+                                <select class="form-select" name="paket" id="editPaket">
+                                    <option value="">-- Pilih --</option>
+                                    <option>Z</option>
+                                    <option>A</option>
+                                    <option>B</option>
+                                    <option>C</option>
+                                    <option>D</option>
+                                </select>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Waktu</label>
@@ -244,6 +253,31 @@
                                 <textarea class="form-control" name="korektif" id="editKorektif" rows="3"></textarea>
                             </div>
                         </div>
+
+                        <hr class="my-4">
+
+                        <div class="fw-bold mb-2">Kebutuhan Material</div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle" id="materialTableEdit">
+                                <thead class="table-light text-nowrap">
+                                    <tr>
+                                        <th style="width: 20%">MID</th>
+                                        <th>Deskripsi</th>
+                                        <th style="width: 15%">Jumlah</th>
+                                        <th class="text-center" style="width: 10%">
+                                            <button type="button" class="btn btn-sm btn-primary"
+                                                id="btnAddMaterialEdit">
+                                                +
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="modal-footer">
@@ -257,16 +291,36 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Tracking --}}
+    <div class="modal fade" id="modalTracking" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <div class="fw-bold" id="trackingTitle">Tracking Appoval</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="trackingBody">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
             const API_URL = "{{ url('api/mtc/utility/get-data') }}";
-            const DELETE_URL = "{{ url('mtc/data/utility/delete') }}";
+            const DELETE_URL = "{{ url('mtc/main/delete') }}";
             const UPDATE_URL = "{{ url('mtc/data/utility/update') }}";
 
             let currentRows = [];
+            const mesinList = @json($mesin);
 
             const fields = {
                 cooling_tower: [
@@ -337,6 +391,37 @@
                 ],
             };
 
+            $('#editNamaMesin').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Cari nama mesin / lokasi...',
+                allowClear: true,
+                width: '100%',
+                templateResult: function(data) {
+                    if (!data.id) return data.text;
+
+                    const parts = data.text.split(' - ');
+                    return $(`
+                        <div>
+                            <strong>${parts[0]}</strong><br>
+                            <small class="text-muted">${parts[1] ?? ''}</small>
+                        </div>
+                    `);
+                }
+            });
+
+            populateMesinOptions();
+
+            function populateMesinOptions() {
+                const select = $('#editNamaMesin');
+
+                mesinList.forEach(m => {
+                    select.append(`
+                        <option value="${m.id}">
+                            ${m.nama_mesin} - ${m.lokasi}
+                        </option>
+                    `);
+                });
+            }
 
             function fmtDate(iso) {
                 if (!iso) return '-';
@@ -352,37 +437,26 @@
             function statusBadge(val) {
                 if (val === true || val === 1 || val === "1") return `<span class="badge bg-success">OK</span>`;
                 if (val === false || val === 0 || val === "0") return `<span class="badge bg-danger">No OK</span>`;
+
+                if (val === 'pending') {
+                    return `<span class="badge bg-warning">${val}</span>`
+                } else if (val === 'waiting') {
+                    return `<span class="badge bg-info">${val}</span>`
+                } else if (val === 'approved') {
+                    return `<span class="badge bg-success">${val}</span>`
+                } else if (val === 'rejected') {
+                    return `<span class="badge bg-danger">${val}</span>`
+                };
+
                 return `<span class="badge bg-secondary">No Check</span>`;
-            }
-
-            function summarize(row) {
-                const allKeys = Object.values(fields).flat().map(x => x[0]);
-                let ok = 0,
-                    ng = 0,
-                    nu = 0;
-
-                allKeys.forEach(k => {
-                    const v = row[k];
-                    if (v === true || v === 1 || v === "1") ok++;
-                    else if (v === false || v === 0 || v === "0") ng++;
-                    else nu++;
-                });
-
-                return `
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge badge-soft-success">OK: ${ok}</span>
-                        <span class="badge badge-soft-danger">No OK: ${ng}</span>
-                        <span class="badge badge-soft-secondary">No Check: ${nu}</span>
-                    </div>
-                `;
             }
 
             function buildDetailHTML(row) {
                 const section = (title, items) => {
                     const cells = items.map(([key, label]) => `
                         <div class="item-cell">
-                        <div class="item-label">${label}</div>
-                        <div>${statusBadge(row[key])}</div>
+                            <div class="item-label">${label}</div>
+                            <div>${statusBadge(row.utility?.[key])}</div>
                         </div>
                     `).join('');
 
@@ -396,13 +470,13 @@
 
                 return `
                     <div class="detail-meta row g-3 mb-2">
-                        <div class="col-md-4">
+                       <div class="col-md-3">
                             <div class="meta-label">Nama Mesin</div>
-                            <div class="meta-value">${row.nama_mesin ?? '-'}</div>
+                            <div class="meta-value">${row.utility.mesin.nama_mesin ?? '-'}</div>
                         </div>
-                        <div class="col-md-2">
-                            <div class="meta-label">Tanggal</div>
-                            <div class="meta-value">${fmtDate(row.tanggal)}</div>
+                        <div class="col-md-3">
+                            <div class="meta-label">Lokasi</div>
+                            <div class="meta-value">${row.utility.mesin.lokasi ?? '-'}</div>
                         </div>
                         <div class="col-md-2">
                             <div class="meta-label">Waktu</div>
@@ -414,7 +488,7 @@
                         </div>
                         <div class="col-md-2">
                             <div class="meta-label">Dibuat oleh</div>
-                            <div class="meta-value">${row.user?.username ?? row.created_by ?? '-'}</div>
+                            <div class="meta-value">${row.created_by.username ?? row.created_by.created_by ?? '-'}</div>
                         </div>
                     </div>
 
@@ -427,16 +501,94 @@
 
                     <div class="row g-3 mt-2">
                         <div class="col-md-6">
-                        <div class="group-title">Keterangan</div>
-                        <div>${row.keterangan ?? '-'}</div>
+                            <div class="group-title">Keterangan</div>
+                            <div>${row.utility?.keterangan ?? '-'}</div>
                         </div>
                         <div class="col-md-6">
-                        <div class="group-title">Tindakan Korektif</div>
-                        <div>${row.korektif ?? '-'}</div>
+                            <div class="group-title">Tindakan Korektif</div>
+                            <div>${row.utility?.korektif ?? '-'}</div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="group-title">Kebutuhan Material</div>
+                            ${
+                                row.kebutuhan_material
+                                ? `<div>${row.kebutuhan_material.mid} - ${row.kebutuhan_material.deskripsi} - ${row.kebutuhan_material.qty}</div>`
+                                : '<div>-</div>'
+                            }
                         </div>
                     </div>
-                    `;
+                `;
             }
+
+            function fmtDateTime(dateStr) {
+                const d = new Date(dateStr);
+                return d.toLocaleString('id-ID', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                });
+            }
+
+            function openTracking(id) {
+
+                $('#trackingTitle').text('Tracking Approval');
+                $('#trackingBody').html('<div class="text-center py-4">Memuat...</div>');
+                $('#modalTracking').modal('show');
+
+                $.get(`/mtc/main/tracking/${id}`)
+                    .done(res => {
+
+                        if (!res.status || !res.data.length) {
+                            $('#trackingBody').html(
+                                '<div class="text-muted text-center">Belum ada approval</div>');
+                            return;
+                        }
+
+                        const statusMap = {
+                            approved: 'success',
+                            rejected: 'danger',
+                            pending: 'secondary',
+                            read: 'info'
+                        };
+
+                        let html = `<ul class="list-group list-group-flush">`;
+
+                        res.data.forEach(item => {
+                            html += `
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <div>
+                                        <div class="fw-bold">
+                                            ${item.role}
+                                        </div>
+                                        <div class="text-muted small">
+                                            Approver: ${item.approver}
+                                        </div>
+                                        ${item.catatan ? `<div class="fst-italic small mt-1">${item.catatan}</div>` : ''}
+                                    </div>
+
+                                    <div class="text-end">
+                                        <span class="badge bg-${statusMap[item.status] || 'secondary'}">
+                                            ${item.status.toUpperCase()}
+                                        </span>
+                                        <div class="small text-muted mt-1">
+                                            ${item.action_at ? fmtDateTime(item.action_at) : '-'}
+                                        </div>
+                                    </div>
+                                </li>
+                            `;
+                        });
+
+                        html += `</ul>`;
+                        $('#trackingBody').html(html);
+                    })
+                    .fail(() => {
+                        $('#trackingBody').html('<div class="text-danger text-center">Terjadi kesalahan</div>');
+                    });
+            }
+
+            $(document).on('click', '.badge-status', function() {
+                const id = $(this).data('id');
+                openTracking(id);
+            });
 
             const dtUtility = $('#tabelUtility').DataTable({
                 processing: true,
@@ -474,7 +626,12 @@
                         }
                     },
                     {
-                        data: 'nama_mesin',
+                        data: 'utility.mesin.nama_mesin',
+                        orderable: false,
+                        defaultContent: '-'
+                    },
+                    {
+                        data: 'utility.mesin.lokasi',
                         orderable: false,
                         defaultContent: '-'
                     },
@@ -497,16 +654,15 @@
                     },
                     {
                         data: null,
-                        orderable: false,
                         render: function(row) {
-                            return summarize(row);
+                            return `
+                                <span class="badge cursor-pointer badge-status"
+                                    data-id="${row.id}">
+                                    ${statusBadge(row.status)}
+                                </span>
+                            `;
                         }
-                    },
-                    {
-                        data: null,
-                        render: function(row) {
-                            return row.user?.username ?? row.created_by ?? '-';
-                        }
+
                     },
                     {
                         data: null,
@@ -576,7 +732,7 @@
 
             function renderEditSection(title, items, row) {
                 const cells = items.map(([key, label]) => {
-                    const state = valToState(row[key]);
+                    const state = valToState(row.utility?.[key]);
                     return `
                         <div class="col-lg-4 col-md-6 col-12">
                             <div class="item-edit" data-field="${key}" data-label="${label}">
@@ -635,8 +791,8 @@
                 const map = {};
                 if (!text) return map;
 
-                // split by comma, tapi aman untuk spasi
-                text.split(',').map(s => s.trim()).forEach(part => {
+                // split by |, tapi aman untuk spasi
+                text.split('|').map(s => s.trim()).forEach(part => {
                     const idx = part.indexOf(':');
                     if (idx === -1) return;
                     const key = part.slice(0, idx).trim();
@@ -664,18 +820,23 @@
                 if (!row) return;
 
                 $('#editId').val(row.id);
-                $('#editNamaMesin').val(row.nama_mesin ?? '');
                 $('#editTanggal').val(toDateInputValue(row.tanggal));
                 $('#editWaktu').val((row.waktu ?? '').toString().slice(0, 5));
                 $('#editPaket').val(row.paket ?? '');
                 // $('#editKeterangan').val(row.keterangan ?? '');
-                $('#editKorektif').val(row.korektif ?? '');
+                $('#editKorektif').val(row.utility?.korektif ?? '');
+                $('#editNamaMesin')
+                    .val(row.utility?.mesin_id)
+                    .trigger('change');
 
                 $('#editSub').text(`${fmtDate(row.tanggal)} • ${row.waktu ?? '-'}`);
 
                 buildEditForm(row);
+                renderEditMaterials(
+                    row.kebutuhan_material ? [row.kebutuhan_material] : []
+                );
 
-                const ketMap = parseKeteranganPairs(row.keterangan);
+                const ketMap = parseKeteranganPairs(row.utility?.keterangan);
                 $('#editSections .item-edit').each(function() {
                     const label = $(this).data('label');
                     const field = $(this).data('field');
@@ -687,6 +848,83 @@
 
                 new bootstrap.Modal(document.getElementById('modalEdit')).show();
             });
+
+            function renderEditMaterials(materials) {
+                const tbody = $('#materialTableEdit tbody');
+                tbody.empty();
+
+                if (!materials || materials.length === 0) {
+                    addMaterialRowEdit();
+                    return;
+                }
+
+                materials.forEach((item, index) => {
+                    const row = $(materialRowTemplate(index));
+
+                    row.find('.material-id').val(item.id);
+                    row.find('.material-mid').val(item.mid);
+                    row.find('.material-deskripsi').val(item.deskripsi);
+                    row.find('.material-qty').val(item.qty);
+
+                    tbody.append(row);
+                });
+            }
+
+            function materialRowTemplate(index) {
+                return `
+                    <tr class="material-row">
+                        <input type="hidden" name="materials[${index}][id]" class="material-id">
+
+                        <td>
+                            <input type="number"
+                                name="materials[${index}][mid]"
+                                class="form-control form-control-sm material-mid">
+                        </td>
+
+                        <td>
+                            <input type="text"
+                                name="materials[${index}][deskripsi]"
+                                class="form-control form-control-sm material-deskripsi">
+                        </td>
+
+                        <td>
+                            <input type="number"
+                                name="materials[${index}][qty]"
+                                class="form-control form-control-sm material-qty"
+                                min="1">
+                        </td>
+
+                        <td class="text-center">
+                            <button type="button"
+                                    class="btn btn-sm btn-danger btnRemoveMaterial">
+                                ×
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            $('#btnAddMaterialEdit').on('click', function() {
+                addMaterialRowEdit();
+            });
+
+            function addMaterialRowEdit() {
+                const index = $('#materialTableEdit tbody tr').length;
+                $('#materialTableEdit tbody').append(materialRowTemplate(index));
+            }
+
+            $(document).on('click', '.btnRemoveMaterial', function() {
+                $(this).closest('tr').remove();
+                reindexMaterialRows();
+            });
+
+            function reindexMaterialRows() {
+                $('#materialTableEdit tbody tr').each(function(i) {
+                    $(this).find('input').each(function() {
+                        this.name = this.name.replace(/\[\d+]/, `[${i}]`);
+                    });
+                });
+            }
 
             function collectNotOkDetails() {
                 let pairs = [];
@@ -716,7 +954,7 @@
 
                 return {
                     valid,
-                    detailString: pairs.join(', ')
+                    detailString: pairs.join(' | ')
                 };
             }
 
@@ -796,7 +1034,7 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Hapus data?',
-                    text: `Data #${id} akan dihapus permanen`,
+                    text: `Data Mtc Utility akan dihapus permanen`,
                     showCancelButton: true,
                     confirmButtonText: 'Ya, hapus',
                     cancelButtonText: 'Batal'
@@ -809,11 +1047,11 @@
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
-                        success: function() {
+                        success: function(res) {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Berhasil!',
-                                text: 'Data derhasil dihapus',
+                                text: res.message || 'Data derhasil dihapus',
                                 timer: 1200,
                                 showConfirmButton: false
                             });
