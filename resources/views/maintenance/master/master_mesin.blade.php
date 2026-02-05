@@ -18,7 +18,6 @@
                                 <th>Maintenance</th>
                                 <th>Nama Mesin</th>
                                 <th>Lokasi</th>
-                                <th>Frekuensi</th>
                                 <th>Aktif</th>
                                 <th>Dibuat</th>
                                 <th width="120">Aksi</th>
@@ -68,10 +67,6 @@
                                     <label>Lokasi <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="lokasi" required>
                                 </div>
-                                <div class="mb-2">
-                                    <label>Frekuensi <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="frekuensi" required>
-                                </div>
                             </div>
 
                             <div class="modal-footer">
@@ -111,7 +106,6 @@
                                 <td>${formatJenisMtc(item.jenis_mtc)}</td>
                                 <td>${item.nama_mesin}</td>
                                 <td>${item.lokasi}</td>
-                                <td>${item.frekuensi}</td>
                                 <td>
                                     <span class="badge ${item.aktif ? 'bg-success' : 'bg-danger'}">
                                         ${item.aktif ? 'Aktif' : 'Non Aktif'}
@@ -157,7 +151,6 @@
                         jenis_mtc: $('#jenis_mtc').val(),
                         nama_mesin: $('#nama_mesin').val(),
                         lokasi: $('#lokasi').val(),
-                        frekuensi: $('#frekuensi').val(),
                         aktif: $('#aktif').val()
                     },
                     beforeSend: function() {
@@ -213,7 +206,6 @@
                 $('#jenis_mtc').val(data.jenis_mtc);
                 $('#nama_mesin').val(data.nama_mesin);
                 $('#lokasi').val(data.lokasi);
-                $('#frekuensi').val(data.frekuensi);
 
                 // boolean → string (select)
                 $('#aktif').val(data.aktif ? '1' : '0');

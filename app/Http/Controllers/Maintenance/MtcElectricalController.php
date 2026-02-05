@@ -91,13 +91,13 @@ class MtcElectricalController extends Controller
                 [
                     'level' => 2,
                     'role'  => 'staff',
-                    'approver_id' => 3,
+                    'approver_id' => $mainRequest->staff_id,
                     'auto'  => false,
                 ],
                 [
                     'level' => 3,
                     'role'  => 'user',
-                    'approver_id' => 4,
+                    'approver_id' => $mainRequest->user_id,
                     'auto'  => false,
                 ],
             ];

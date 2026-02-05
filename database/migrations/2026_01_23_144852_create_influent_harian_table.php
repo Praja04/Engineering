@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('influent_harian');
+        Schema::dropIfExists('wwtp_influent_harian');
     }
 };
