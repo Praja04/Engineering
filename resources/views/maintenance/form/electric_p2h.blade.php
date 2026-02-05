@@ -105,7 +105,11 @@
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
                             </div>
-
+                            <div class="col-md-3">
+                                <label class="form-label">Waktu <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" name="waktu"
+                                    value="{{ old('waktu', now()->format('H:i')) }}" required>
+                            </div>
                             <div class="col-md-3">
                                 <label class="form-label">Departemen <span class="text-danger">*</span></label>
                                 <input type="text" name="departemen" class="form-control" value="{{ old('departemen') }}"
@@ -135,6 +139,16 @@
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Hours Meter (Jam Operasional)<span
+                                        class="text-danger">*</span></label>
+                                <input type="numeric" name="hours_meter" class="form-control"
+                                    value="{{ old('hours_meter') }}" placeholder="12345">
+                                <small class="form-label fst-italic">Catat sesuai kondisi aktual di unit</small>
+                                @error('hours_meter')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
 
                         {{-- error global dari withValidator (checklist) --}}
@@ -142,60 +156,149 @@
                             <div class="alert alert-danger py-2">{{ $message }}</div>
                         @enderror
 
-                        <div class="mt-4">
-                            <div class="row g-3">
-                                @foreach ($items as $i => $item)
-                                    @php
-                                        $oldKondisi = old("items.$i.kondisi");
-                                        $oldKet = old("items.$i.keterangan", '');
-                                        $idYa = "sipil_{$i}_ya";
-                                        $idTidak = "sipil_{$i}_tidak";
-                                    @endphp
+                        @php
+                            $electricP2h = [
+                                'level_minyak_rem' => [
+                                    'label' => 'Check Level Minyak Rem',
+                                    'standar' => 'Berada di level max',
+                                ],
+                                'level_oli_hydraulic' => [
+                                    'label' => 'Check Level Oli Hydraulic',
+                                    'standar' => 'Berada di level max',
+                                ],
+                                'isi_air_aki' => [
+                                    'label' => 'Check Isi Air Aki',
+                                    'standar' => 'Berada di level standar',
+                                ],
+                                'baterai' => [
+                                    'label' => 'Check Baterai',
+                                    'standar' => 'Tidak kurang dari 30%',
+                                ],
+                                'hydraulic_system' => [
+                                    'label' => 'Hydraulic System',
+                                    'standar' => 'Berfungsi dengan baik dan terlubrikasi',
+                                ],
+                                'selang_hydraulic' => [
+                                    'label' => 'Selang Hydraulic',
+                                    'standar' => 'Tidak ada kebocoran oli',
+                                ],
+                                'lift_chains' => [
+                                    'label' => 'Lift Chains',
+                                    'standar' => 'Kekencangan kanan dan kiri sama serta terlubrikasi',
+                                ],
+                                'fork' => [
+                                    'label' => 'Pengecekan Fork',
+                                    'standar' => 'Tidak bengkok dan tidak patah',
+                                ],
+                                'body_unit' => [
+                                    'label' => 'Check Body Unit',
+                                    'standar' => 'Tidak lecet dan tidak penyok',
+                                ],
+                                'lampu_kombinasi_kiri' => [
+                                    'label' => 'Check Lampu Kombinasi Kiri',
+                                    'standar' => 'Menyala normal dan tidak pecah',
+                                ],
+                                'lampu_kombinasi_kanan' => [
+                                    'label' => 'Check Lampu Kombinasi Kanan',
+                                    'standar' => 'Menyala normal dan tidak pecah',
+                                ],
+                                'lampu_sorot' => [
+                                    'label' => 'Check Lampu Sorot / Head Lamp',
+                                    'standar' => 'Menyala normal dan tidak pecah',
+                                ],
+                                'lampu_sign_depan_kanan' => [
+                                    'label' => 'Check Lampu Sign Depan Kanan',
+                                    'standar' => 'Menyala normal dan tidak pecah',
+                                ],
+                                'lampu_sign_depan_kiri' => [
+                                    'label' => 'Check Lampu Sign Depan Kiri',
+                                    'standar' => 'Menyala normal dan tidak pecah',
+                                ],
+                                'klakson' => [
+                                    'label' => 'Check Klakson / Horn',
+                                    'standar' => 'Bunyi saat tombol ditekan',
+                                ],
+                                'buzzer_back' => [
+                                    'label' => 'Check Buzzer Back',
+                                    'standar' => 'Berbunyi normal saat maju dan mundur',
+                                ],
+                                'kaca_spion' => [
+                                    'label' => 'Check Kaca Spion',
+                                    'standar' => 'Terpasang dengan baik dan tidak pecah',
+                                ],
+                                'baut_roda' => [
+                                    'label' => 'Check Kekencangan Baut Roda',
+                                    'standar' => 'Kencang dan tidak patah',
+                                ],
+                                'ban' => [
+                                    'label' => 'Check Ban',
+                                    'standar' => 'Masih bagus dan layak pakai',
+                                ],
+                                'kebersihan_unit' => [
+                                    'label' => 'Check Kebersihan Unit',
+                                    'standar' => 'Bersih dari kotoran dan debu',
+                                ],
+                                'panel_display' => [
+                                    'label' => 'Check Panel Display',
+                                    'standar' => 'Berfungsi normal, tidak pecah, dan tidak ada alarm',
+                                ],
+                                'sistem_kemudi' => [
+                                    'label' => 'Sistem Kemudi',
+                                    'standar' => 'Tidak berat dan bergerak lancar',
+                                ],
+                            ];
+                        @endphp
 
-                                    <div class="col-12 col-md-6">
-                                        <div class="card border shadow-sm item-card {{ (string) $oldKondisi === '0' ? 'not-ok' : '' }}"
-                                            data-index="{{ $i }}">
-                                            <div class="card-header bg-light">
-                                                <strong class="d-block">{{ $item->item_pengecekan }}</strong>
-                                                <small class="text-muted d-block mt-1">{{ $item->kondisi_normal }}</small>
+                        <h6 class="fw-bold text-primary mb-3 mt-4">Checklist Mtc Electric P2h</h6>
+
+                        @foreach (array_chunk($electricP2h, 2, true) as $row)
+                            <div class="row g-3 mb-3">
+                                @foreach ($row as $field => $item)
+                                    <div class="col-md-6 col-12">
+                                        <div class="card shadow-sm item-card p-3 item-row"
+                                            data-field="{{ $field }}">
+
+                                            {{-- Judul --}}
+                                            <label class="form-label fw-semibold mb-1">
+                                                {{ $item['label'] }}
+                                            </label>
+
+                                            {{-- Standar pemeliharaan --}}
+                                            <div class="text-muted small mb-2">
+                                                {{ $item['standar'] }}
                                             </div>
 
-                                            <div class="card-body pb-2 pt-3">
-                                                <!-- Radio Ya/Tidak -->
-                                                <div class="d-flex gap-2 mb-1">
-                                                    <div class="flex-fill">
-                                                        <input type="hidden" name="items[{{ $i }}][item_id]"
-                                                            value="{{ $item->id }}">
+                                            {{-- Radio --}}
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <input type="radio" class="btn-check status-radio"
+                                                    name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                <label class="btn btn-outline-success"
+                                                    for="{{ $field }}_ok">OK</label>
 
-                                                        <input id="{{ $idYa }}" type="radio"
-                                                            name="items[{{ $i }}][kondisi]" value="1"
-                                                            class="visually-hidden kondisi-radio"
-                                                            {{ (string) $oldKondisi === '1' ? 'checked' : '' }}>
-
-                                                        <label for="{{ $idYa }}"
-                                                            class="btn btn-outline-success w-100 py-2 kondisi-btn {{ (string) $oldKondisi === '1' ? 'active' : '' }}">
-                                                            YA
-                                                        </label>
-                                                    </div>
-
-                                                    <div class="flex-fill">
-                                                        <input id="{{ $idTidak }}" type="radio"
-                                                            name="items[{{ $i }}][kondisi]" value="0"
-                                                            class="visually-hidden kondisi-radio"
-                                                            {{ (string) $oldKondisi === '0' ? 'checked' : '' }}>
-
-                                                        <label for="{{ $idTidak }}"
-                                                            class="btn btn-outline-danger w-100 py-2 kondisi-btn {{ (string) $oldKondisi === '0' ? 'active' : '' }}">
-                                                            TIDAK
-                                                        </label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Placeholder kosong untuk keterangan nanti (akan ditambahkan via JS) -->
+                                                <input type="radio" class="btn-check status-radio"
+                                                    name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
+                                                    OK</label>
                                             </div>
+
+                                            {{-- Keterangan --}}
+                                            <div class="keterangan-wrapper d-none mt-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                    name="keterangan_{{ $field }}"
+                                                    placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                            </div>
+
                                         </div>
                                     </div>
                                 @endforeach
+                            </div>
+                        @endforeach
+
+
+                        <div class="row mt-4 mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Catatan</label>
+                                <textarea class="form-control" name="catatan" rows="3"></textarea>
                             </div>
                         </div>
 
@@ -211,42 +314,66 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modalTtd" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Tanda Tangan Teknisi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <canvas id="signature-pad" style="border:1px solid #ccc; width:100%; height:200px;"></canvas>
+
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearTtd">
+                            Reset TTD
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnSaveTtd">
+                        Simpan & Kirim
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
             const STORAGE_KEY = 'form_mtc_electric_p2h_data';
+            let isLoading = false;
+            let signaturePad = null;
+            let pendingFormData = null;
 
             function saveFormLocalStorage() {
                 const data = {};
 
                 $('#form-mtc-electric-p2h')
-                    .find('input, textarea, select')
+                    .find('input, select, textarea')
+                    .not('[name^="materials"]')
                     .each(function() {
-                        const name = this.name;
+                        const name = $(this).attr('name');
                         if (!name) return;
 
-                        let value;
-
-                        if (this.type === 'radio') {
-                            if (this.checked) {
-                                value = this.value;
+                        if ($(this).is(':radio')) {
+                            if ($(this).is(':checked')) {
+                                data[name] = $(this).val();
                             }
-                        } else if (this.type === 'checkbox') {
-                            value = this.checked ? '1' : '0';
+                        } else if ($(this).is(':checkbox')) {
+                            data[name] = $(this).is(':checked');
                         } else {
-                            value = $(this).val() || ''; // pakai || '' biar tidak undefined
-                        }
-
-                        if (value !== undefined && value !== null) {
-                            if (this.tagName.toLowerCase() === 'textarea' || value !== '') {
-                                data[name] = value;
-                            }
+                            data[name] = $(this).val();
                         }
                     });
 
-                console.log('Saved data:', data);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             }
 
@@ -254,196 +381,176 @@
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (!saved) return;
 
+                isLoading = true;
+
                 const data = JSON.parse(saved);
 
-                // Langkah 1: Set semua radio & input lain dulu (tanpa trigger change)
-                $.each(data, function(name, value) {
-                    const escapedName = name.replace(/([[\]])/g, '\\$1');
-                    const $el = $('[name="' + escapedName + '"]');
+                for (const [name, value] of Object.entries(data)) {
+                    const $inputs = $(`[name="${name}"]`);
 
-                    if ($el.length) {
-                        if ($el.is(':radio')) {
-                            const $targetRadio = $el.filter('[value="' + value + '"]');
-                            if ($targetRadio.length) {
-                                $targetRadio.prop('checked', true);
-                            }
-                        } else if ($el.is('textarea, input[type="text"], input[type="date"], select')) {
-                            $el.val(value);
-                        }
+                    if (!$inputs.length) continue;
+
+                    if ($inputs.first().is(':radio')) {
+                        $inputs.filter(`[value="${value}"]`)
+                            .prop('checked', true)
+                            .trigger('change');
+
+                    } else if ($inputs.first().is(':checkbox')) {
+                        $inputs.prop('checked', value);
+
+                    } else {
+                        $inputs.val(value).trigger('input');
                     }
+                }
+
+                $('.item-row').each(function() {
+                    updateStatusRow($(this));
                 });
 
-                // Langkah 2: Trigger change pada semua radio yang checked → ini akan membuat wrapper keterangan kalau TIDAK
-                $('.kondisi-radio:checked').each(function() {
-                    $(this).trigger('change');
-                });
-
-                // Force create wrapper untuk card yang kondisi TIDAK (jaga-jaga kalau trigger change gagal)
-                setTimeout(() => {
-                    $('.item-card').each(function() {
-                        const $card = $(this);
-                        const isTidak = $card.find('.kondisi-radio[value="0"]').is(':checked');
-                        if (isTidak && $card.find('.keterangan-wrapper').length === 0) {
-                            const index = $card.data('index');
-                            const $body = $card.find('.card-body');
-
-                            const $wrapper = $(`
-                                <div class="keterangan-wrapper mt-3">
-                                    <textarea name="items[${index}][keterangan]" class="form-control" rows="2"
-                                            placeholder="Keterangan wajib diisi karena kondisi TIDAK"></textarea>
-                                    <div class="mt-2"></div>
-                                </div>
-                            `);
-
-                            $body.append($wrapper);
-                            $wrapper.show(); // langsung tampilkan tanpa animasi
-                        }
-                    });
-
-                    // Isi value keterangan
-                    $.each(data, function(name, value) {
-                        if (name.includes('[keterangan]')) {
-                            const escapedName = name.replace(/([[\]])/g, '\\$1');
-                            const $textarea = $('[name="' + escapedName + '"]');
-                            if ($textarea.length) {
-                                $textarea.val(value);
-                            }
-                        }
-                    });
-
-                    saveFormLocalStorage();
-                }, 600);
-
-                setTimeout(() => {
-                    updateRowState();
-                }, 100);
-
+                isLoading = false;
             }
 
             loadFormLocalStorage();
 
-            $('#form-mtc-electric-p2h').on('input change', 'input[type="text"], input[type="date"], select',
-                function() {
-                    saveFormLocalStorage();
-                });
-
-            function updateRowState() {
-                $('.item-card').each(function() {
-                    const $card = $(this);
-                    const isTidak = $card.find('input[type="radio"][value="0"]:checked').length > 0;
-                    $card.toggleClass('not-ok', isTidak);
-                });
-            }
-
-            $('#form-mtc-electric-p2h').on('change', '.kondisi-radio', function() {
-                const $radio = $(this);
-                const $card = $radio.closest('.item-card');
-                const $body = $card.find('.card-body');
-                const index = $card.data('index'); // ambil dari data-index
-
-                // Reset active tombol
-                $card.find('.kondisi-btn').removeClass('active');
-                const $checkedRadio = $card.find('.kondisi-radio:checked');
-                if ($checkedRadio.length) {
-                    $checkedRadio.next('label.kondisi-btn').addClass('active');
-                }
-
-                // Update warna card
-                const isTidak = $card.find('.kondisi-radio[value="0"]').prop('checked');
-                $card.toggleClass('not-ok', isTidak);
-
-                // Cari wrapper keterangan
-                let $wrapper = $card.find('.keterangan-wrapper');
-
-                if (isTidak) {
-                    if ($wrapper.length === 0) {
-                        $wrapper = $(`
-                            <div class="keterangan-wrapper mt-3">
-                                <textarea name="items[${index}][keterangan]" class="form-control" rows="2"
-                                        placeholder="Keterangan wajib diisi karena kondisi TIDAK"></textarea>
-                                <div class="mt-2"></div>
-                            </div>
-                        `);
-
-                        $body.append($wrapper);
-
-                        saveFormLocalStorage();
-                    }
-
-                    $wrapper.slideDown(200, () => {
-                        $wrapper.find('textarea').focus();
-                        saveFormLocalStorage();
-                    });
-                    $wrapper.find('textarea').prop('required', true);
-                } else {
-                    if ($wrapper.length > 0) {
-                        $wrapper.remove();
-                        saveFormLocalStorage();
-                    }
-                }
-
+            $('#form-mtc-electric-p2h').on('change input', 'input, select, textarea', function() {
                 saveFormLocalStorage();
             });
+
+            $(document).on('change', '.status-radio', function() {
+                if (isLoading) return;
+
+                const $row = $(this).closest('.item-row');
+                const isNg = $row.find('input[value="0"]').is(':checked');
+                const $ket = $row.find('.keterangan-wrapper input');
+
+                if (isNg) {
+                    $row.addClass('not-ok');
+                    $row.find('.keterangan-wrapper').removeClass('d-none');
+                    $ket.attr('required', true);
+                } else {
+                    $row.removeClass('not-ok');
+                    $row.find('.keterangan-wrapper').addClass('d-none');
+                    $ket.val('').removeAttr('required');
+                }
+
+                updateStatusRow($row);
+                saveFormLocalStorage();
+            });
+
+            function updateStatusRow($row) {
+                const isNg = $row.find('input[value="0"]').is(':checked');
+                const $wrapper = $row.find('.keterangan-wrapper');
+                const $input = $wrapper.find('input');
+
+                if (isNg) {
+                    $row.addClass('not-ok');
+                    $wrapper.removeClass('d-none');
+                    $input.attr('required', true);
+                } else {
+                    $row.removeClass('not-ok');
+                    $wrapper.addClass('d-none');
+                    $input.val('').removeAttr('required');
+                }
+            }
+
+            function collectNotOkDetails() {
+                const details = [];
+
+                $('.item-row').each(function() {
+                    const $row = $(this);
+                    const isNg = $row.find('input[value="0"]').is(':checked');
+                    if (!isNg) return;
+
+                    const label = $row.find('label.form-label').text().trim();
+                    const keterangan = $row.find('input[name^="keterangan_"]').val().trim();
+
+                    if (keterangan) {
+                        details.push(`${label}: ${keterangan}`);
+                    }
+                });
+
+                if (details.length === 0) return '';
+
+                return details.join(" | ");
+            }
 
             $('#form-mtc-electric-p2h').on('submit', function(e) {
                 e.preventDefault();
 
-                $('#clientError').addClass('d-none').text('');
-                $('.is-invalid').removeClass('is-invalid');
+                pendingFormData = new FormData(this);
 
-                let checkedCount = 0;
-                let valid = true;
+                $('#modalTtd').modal('show');
+            });
 
-                $('.item-card').each(function() {
-                    const $card = $(this);
+            $('#modalTtd').on('shown.bs.modal', function() {
+                if (!signaturePad) {
+                    const canvas = document.getElementById('signature-pad');
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = 200;
+                    signaturePad = new SignaturePad(canvas);
+                }
+            });
 
-                    const $tidak = $card.find('.kondisi-radio[value="0"]');
-                    const $ya = $card.find('.kondisi-radio[value="1"]');
-                    const $ket = $card.find('textarea');
+            $('#btnClearTtd').on('click', function() {
+                signaturePad.clear();
+            });
 
-                    // Hitung berapa item yang sudah dipilih (Ya atau Tidak)
-                    if ($tidak.is(':checked') || $ya.is(':checked')) {
-                        checkedCount++;
-                    }
+            $('#modalTtd').on('hidden.bs.modal', function() {
+                if (signaturePad) signaturePad.clear();
+            });
 
-                    // Kalau TIDAK → keterangan wajib diisi
-                    if ($tidak.is(':checked') && !$ket.val().trim()) {
-                        $ket.addClass('is-invalid');
-                        valid = false;
-                    }
-                });
+            $('#btnSaveTtd').on('click', function() {
 
-                if (!valid) {
-                    $('#clientError')
-                        .removeClass('d-none')
-                        .text('Keterangan wajib diisi untuk item dengan kondisi TIDAK.');
+                if (!signaturePad || signaturePad.isEmpty()) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'TTD belum diisi',
+                        text: 'Silakan tanda tangan terlebih dahulu'
+                    });
                     return;
                 }
 
-                const formData = $(this).serialize();
+                const ttdBase64 = signaturePad.toDataURL('image/png');
+                const keterangan = collectNotOkDetails();
 
+                pendingFormData.append('ttd_base64', ttdBase64);
+                if (keterangan) {
+                    pendingFormData.append('keterangan', keterangan);
+                }
+                pendingFormData.delete('_token');
+                pendingFormData.append(
+                    '_token',
+                    $('meta[name="csrf-token"]').attr('content')
+                );
+
+                $('#modalTtd').modal('hide');
+
+                submitFinalForm(pendingFormData);
+            });
+
+            function submitFinalForm(formData) {
+                const $btn = $('#btn-submit');
+                $btn.prop('disabled', true);
                 $.ajax({
                     url: "{{ route('mtc.electric-p2h.store') }}",
-                    type: "POST",
+                    type: 'POST',
                     data: formData,
-                    dataType: "json",
-                    success: function(res) {
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil',
-                            text: res.message ?? 'Data berhasil disimpan',
-                            timer: 1800,
+                            text: response.message,
+                            timer: 2000,
                             showConfirmButton: false
+                        }).then(() => {
+                            resetElectricP2hForm();
                         });
-
-                        // Reset semua form
-                        $('.kondisi-radio').prop('checked', false);
-                        $('.kondisi-btn').removeClass('active');
-                        $('.keterangan-wrapper').slideUp(200); // sembunyikan keterangan
-                        $('textarea').val(''); // kosongkan isi
-                        localStorage.removeItem(STORAGE_KEY);
-                        $('#form-mtc-electric-p2h')[0].reset();
-                        updateRowState();
                     },
                     error: function(xhr) {
                         Swal.fire({
@@ -451,9 +558,12 @@
                             title: 'Gagal',
                             text: xhr.responseJSON?.message || 'Terjadi kesalahan'
                         });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
                     }
                 });
-            });
+            }
 
             $('#btnResetKondisi').on('click', function() {
                 Swal.fire({
@@ -465,17 +575,8 @@
                     cancelButtonText: 'Batal'
                 }).then(r => {
                     if (!r.isConfirmed) return;
-                    $('#form-mtc-electric-p2h')[0].reset();
-                    // Reset radio & tombol
-                    $('.kondisi-radio').prop('checked', false);
-                    $('.kondisi-btn').removeClass('active');
-                    $('.keterangan-wrapper').slideUp(200, function() {
-                        $(this).remove();
-                    });
-                    $('textarea').val('');
-                    updateRowState();
 
-                    localStorage.removeItem(STORAGE_KEY);
+                    resetElectricP2hForm();
 
                     Swal.fire({
                         icon: 'success',
@@ -486,6 +587,35 @@
                     });
                 });
             });
+
+            function resetElectricP2hForm() {
+                // reset form native
+                const $form = $('#form-mtc-electric-p2h');
+                $form[0].reset();
+
+                $('.kondisi-radio').prop('checked', false);
+                $('.kondisi-btn').removeClass('active');
+
+                $('.item-row').each(function() {
+                    const $row = $(this);
+
+                    $row.removeClass('not-ok');
+
+                    const $wrapper = $row.find('.keterangan-wrapper');
+                    const $input = $wrapper.find('input, textarea');
+
+                    $wrapper.addClass('d-none');
+                    $input
+                        .val('')
+                        .removeClass('is-invalid')
+                        .removeAttr('required');
+                });
+
+                $('#clientError').addClass('d-none').text('');
+
+                localStorage.removeItem(STORAGE_KEY);
+            }
+
         });
     </script>
 @endsection
