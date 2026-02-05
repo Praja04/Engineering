@@ -13,31 +13,56 @@ class MtcDieselP2hInspectionModel extends Model
     protected $table = 'mtc_diesel_p2h_inspections';
 
     protected $fillable = [
-        'nama_mesin',
-        'tanggal',
+        'mesin_id',
+        'mtc_main_id',
         'no_unit',
-        'departemen',
         'shift',
-        'created_by',
-        'updated_by',
+        'catatan',
+
+        'klakson',
+        'buzzer_back',
+        'oli_mesin',
+        'radiator_hose',
+        'water_pump',
+        'injection_system',
+        'fan_vbelt',
+        'turbocharger_manifold',
+        'tensioner_belt',
+        'starting_motor',
+        'alternator',
+        'control_display',
+        'oli_transmisi',
+        'aki',
+        'engine_mounting',
+        'filter_oli_transmisi',
+        'fungsi_rem',
+        'fungsi_kopling',
+        'oli_hydraulic',
+        'hydraulic_system',
+        'steering_system',
+        'body_back_rest',
+        'kaca_spion',
+        'bucket_pin',
+        'dump_pin_bushing',
+        'seal_hydraulic',
+        'roda_ban_baut',
+        'lampu_unit',
+        'baut_bearing_molen',
+        'baut_hanger_as',
+        'baut_grease',
+        'katup_pembuangan_angin',
+        'hours_meter',
     ];
 
-    protected $casts = [
-        'tanggal' => 'date:Y-m-d',
-    ];
+    /* ================= RELATION ================= */
 
-    public function details()
+    public function main()
     {
-        return $this->hasMany(MtcDieselP2hInspectionDetailModel::class, 'inspection_id');
+        return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
     }
 
-    public function createdBy()
+    public function mesin()
     {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function updatedBy()
-    {
-        return $this->belongsTo(User::class, 'updated_by');
+        return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
     }
 }
