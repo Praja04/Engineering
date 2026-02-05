@@ -67,22 +67,22 @@ class MtcUtilityController extends Controller
 
             $approvalFlows = [
                 [
-                    'level'       => 1,
-                    'role'        => 'teknisi',
+                    'level' => 1,
+                    'role'  => 'teknisi',
                     'approver_id' => $userId,
-                    'auto'        => true,
+                    'auto'  => true,
                 ],
                 [
-                    'level'       => 2,
-                    'role'        => 'staff',
-                    'approver_id' => $userId,
-                    'auto'        => false,
+                    'level' => 2,
+                    'role'  => 'staff',
+                    'approver_id' => $mainRequest->staff_id,
+                    'auto'  => false,
                 ],
                 [
-                    'level'       => 3,
-                    'role'        => 'user',
-                    'approver_id' => $userId,
-                    'auto'        => false,
+                    'level' => 3,
+                    'role'  => 'user',
+                    'approver_id' => $mainRequest->user_id,
+                    'auto'  => false,
                 ],
             ];
 

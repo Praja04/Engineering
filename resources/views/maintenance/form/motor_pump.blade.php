@@ -401,6 +401,35 @@
         </div>
     </div>
 
+    {{-- Modal Pilih Approver --}}
+    <div class="modal fade" id="modalApprover" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Pilih Approver</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="staffDropdown" class="form-label">Staff</label>
+                        <select class="form-select" id="staffDropdown">
+                            <option value="">Pilih staff</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="userDropdown" class="form-label">User MT/MTC</label>
+                        <select class="form-select" id="userDropdown">
+                            <option value="">Pilih user</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="btnSelectApprover">Lanjut</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @section('scripts')
@@ -651,17 +680,61 @@
             }
 
             // Tanda Tangan
+            let selectedStaff = null;
+            let selectedUser = null;
             let signaturePad = null;
             let pendingFormData = null;
 
             $('#form-mtc-motorpump').on('submit', function(e) {
                 e.preventDefault();
-
                 pendingFormData = new FormData(this);
 
-                $('#modalTtd').modal('show');
+                $('#modalApprover').modal('show');
+
+                // Load staff & user maintenance dari API
+                $.get('/api/mtc/users/approvers', function(res) {
+                    const $staffDropdown = $('#staffDropdown');
+                    const $userDropdown = $('#userDropdown');
+
+                    $staffDropdown.empty().append(`<option value="">Pilih staff</option>`);
+                    res.staff.forEach(user => {
+                        $staffDropdown.append(
+                            `<option value="${user.id}">${user.username}</option>`);
+                    });
+
+                    $userDropdown.empty().append(`<option value="">Pilih user</option>`);
+                    res.user.forEach(user => {
+                        $userDropdown.append(
+                            `<option value="${user.id}">${user.username}</option>`);
+                    });
+                });
             });
 
+            // Pilih staff
+            $('#staffDropdown').on('change', function() {
+                selectedStaff = $(this).val();
+            });
+
+            // Pilih user maintenance
+            $('#userDropdown').on('change', function() {
+                selectedUser = $(this).val();
+            });
+
+            // Klik tombol pilih
+            $('#btnSelectApprover').on('click', function() {
+                if (!selectedStaff || !selectedUser) {
+                    Swal.fire('Pilih staff dan user maintenance terlebih dahulu');
+                    return;
+                }
+
+                pendingFormData.append('staff_id', selectedStaff);
+                pendingFormData.append('user_id', selectedUser);
+
+                $('#modalApprover').modal('hide');
+                $('#modalTtd').modal('show'); // lanjut modal TTD
+            });
+
+            // Inisialisasi signature pad
             $('#modalTtd').on('shown.bs.modal', function() {
                 if (!signaturePad) {
                     const canvas = document.getElementById('signature-pad');

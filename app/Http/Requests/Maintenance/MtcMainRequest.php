@@ -32,6 +32,9 @@ class MtcMainRequest extends FormRequest
             'lokasi'  => ['nullable', 'string'],
             'rekomendasi' => ['nullable', 'string'],
             'running_hour' => ['nullable', 'string'],
+
+            'staff_id' => ['required', 'string'],
+            'user_id' => ['required', 'string']
         ];
     }
 }

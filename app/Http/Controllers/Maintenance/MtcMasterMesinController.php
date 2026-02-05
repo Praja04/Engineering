@@ -23,7 +23,7 @@ class MtcMasterMesinController extends Controller
                 'jenis_mtc'  => $request->jenis_mtc,
                 'nama_mesin' => $request->nama_mesin,
                 'lokasi'     => $request->lokasi,
-                'frekuensi'  => $request->frekuensi,
+                'frekuensi'  => $request->frekuensi ?? null,
                 'aktif'      => 1,
                 'created_by' => Auth::id(),
             ]);

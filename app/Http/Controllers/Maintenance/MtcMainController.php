@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Maintenance;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\NotificationsModel;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,21 @@ class MtcMainController extends Controller
         return response()->json([
             'status' => true,
             'data'   => $approvals
+        ]);
+    }
+
+    public function getApprovers()
+    {
+        $staff = User::where('departemen', 'engineering')
+            ->where('jabatan', '!=', 'operator')
+            ->get(['id', 'username']);
+
+        $user = User::where('departemen', '!=', 'engineering')
+            ->get(['id', 'username']);
+
+        return response()->json([
+            'staff' => $staff,
+            'user'  => $user
         ]);
     }
 

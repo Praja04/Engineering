@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('departemen')->nullable();
             $table->string('lokasi')->nullable();
             $table->text('rekomendasi')->nullable();
-            $table->integer('runnning_hour')->nullable();
+            $table->integer('running_hour')->nullable();
             $table->enum('status', ['pending', 'waiting', 'approved', 'rejected'])->default('pending');
             $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('restrict');
