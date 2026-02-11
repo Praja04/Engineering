@@ -53,64 +53,64 @@ class KalibrasiPressureController extends Controller
         ]);
 
         // Kelompokkan titik berdasarkan nilai (rounded ke 1 desimal untuk deteksi "mirip")
-        $titikPerArah = [];
-        $allTitikRaw = [];
+        // $titikPerArah = [];
+        // $allTitikRaw = [];
 
-        foreach ($validated['pressure'] as $p) {
-            $titik = $p['titik_kalibrasi'];
-            $arah  = $p['tekanan'];
+        // foreach ($validated['pressure'] as $p) {
+        //     $titik = $p['titik_kalibrasi'];
+        //     $arah  = $p['tekanan'];
 
-            $allTitikRaw[] = $titik;
-            $titikRounded = round($titik, 1); // deteksi mirip, misal 198.5 & 198.6 jadi 198.5 & 198.6 → masih beda, tapi cukup
+        //     $allTitikRaw[] = $titik;
+        //     $titikRounded = round($titik, 1); // deteksi mirip, misal 198.5 & 198.6 jadi 198.5 & 198.6 → masih beda, tapi cukup
 
-            $titikPerArah[$titik][$arah] = true;
-        }
+        //     $titikPerArah[$titik][$arah] = true;
+        // }
 
         // Cek apakah ada titik yang hanya punya satu arah
-        $missingPairs = [];
-        foreach ($titikPerArah as $titik => $arah) {
-            $hasNaik  = !empty($arah['naik']);
-            $hasTurun = !empty($arah['turun']);
+        // $missingPairs = [];
+        // foreach ($titikPerArah as $titik => $arah) {
+        //     $hasNaik  = !empty($arah['naik']);
+        //     $hasTurun = !empty($arah['turun']);
 
-            if ($hasNaik xor $hasTurun) {
-                $arahAda = $hasNaik ? 'naik' : 'turun';
-                $arahKurang = $hasNaik ? 'turun' : 'naik';
-                $missingPairs[] = "Titik {$titik} hanya ada data {$arahAda}, tapi tidak ada data {$arahKurang}.";
-            }
-        }
+        //     if ($hasNaik xor $hasTurun) {
+        //         $arahAda = $hasNaik ? 'naik' : 'turun';
+        //         $arahKurang = $hasNaik ? 'turun' : 'naik';
+        //         $missingPairs[] = "Titik {$titik} hanya ada data {$arahAda}, tapi tidak ada data {$arahKurang}.";
+        //     }
+        // }
 
-        // Cek titik yang mirip tapi tidak sama (beda ≤ 1.0)
-        $uniqueTitik = array_unique($allTitikRaw);
-        sort($uniqueTitik);
+        // // Cek titik yang mirip tapi tidak sama (beda ≤ 1.0)
+        // $uniqueTitik = array_unique($allTitikRaw);
+        // sort($uniqueTitik);
 
-        $similarPairs = [];
-        for ($i = 0; $i < count($uniqueTitik) - 1; $i++) {
-            $diff = abs($uniqueTitik[$i + 1] - $uniqueTitik[$i]);
-            if ($diff > 0 && $diff <= 1.0) {
-                $similarPairs[] = $uniqueTitik[$i] . " dan " . $uniqueTitik[$i + 1];
-            }
-        }
+        // $similarPairs = [];
+        // for ($i = 0; $i < count($uniqueTitik) - 1; $i++) {
+        //     $diff = abs($uniqueTitik[$i + 1] - $uniqueTitik[$i]);
+        //     if ($diff > 0 && $diff <= 1.0) {
+        //         $similarPairs[] = $uniqueTitik[$i] . " dan " . $uniqueTitik[$i + 1];
+        //     }
+        // }
 
-        // Gabungkan semua error jadi satu pesan ringkas
-        $errors = [];
+        // // Gabungkan semua error jadi satu pesan ringkas
+        // $errors = [];
 
-        if (!empty($missingPairs)) {
-            $errors[] = "Beberapa titik kalibrasi hanya memiliki data satu arah (naik atau turun saja).";
-        }
+        // if (!empty($missingPairs)) {
+        //     $errors[] = "Beberapa titik kalibrasi hanya memiliki data satu arah (naik atau turun saja).";
+        // }
 
-        if (!empty($similarPairs)) {
-            $pairsText = implode(", ", $similarPairs);
-            $errors[] = "Terdeteksi titik yang mirip tapi tidak sama: {$pairsText}.";
-        }
+        // if (!empty($similarPairs)) {
+        //     $pairsText = implode(", ", $similarPairs);
+        //     $errors[] = "Terdeteksi titik yang mirip tapi tidak sama: {$pairsText}.";
+        // }
 
-        if (!empty($errors)) {
-            $finalMessage = "Titik kalibrasi antara tekanan naik dan turun harus sama persis.\n\n" . implode("\n", $errors) . "\n\nTolong samakan nilai titiknya (contoh: gunakan 100.0, 200.0, 300.0 untuk kedua arah).";
+        // if (!empty($errors)) {
+        //     $finalMessage = "Titik kalibrasi antara tekanan naik dan turun harus sama persis.\n\n" . implode("\n", $errors) . "\n\nTolong samakan nilai titiknya (contoh: gunakan 100.0, 200.0, 300.0 untuk kedua arah).";
 
-            return response()->json([
-                'message' => 'Validasi gagal',
-                'errors' => ['general' => [$finalMessage]] // format biar JS lama tetap jalan
-            ], 422);
-        }
+        //     return response()->json([
+        //         'message' => 'Validasi gagal',
+        //         'errors' => ['general' => [$finalMessage]] // format biar JS lama tetap jalan
+        //     ], 422);
+        // }
 
         // Simpan data utama kalibrasi
         $kalibrasi = KalibrasiModel::create([

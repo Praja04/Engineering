@@ -23,9 +23,7 @@ class MtcElectricEngineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_mesin' => ['required', 'string', 'max:255'],
-            'tanggal'    => ['required', 'date'],
-            'paket'      => ['nullable', 'string', 'max:255'],
+            'mesin_id' => ['required', 'exists:mtc_master_mesin,id'],
 
             // Forklift Electrical - General
             'check_buzzer_back' => ['nullable', 'boolean'],
@@ -80,9 +78,9 @@ class MtcElectricEngineRequest extends FormRequest
             'ganti_return_filter' => ['nullable', 'boolean'],
             'ganti_brake_oil' => ['nullable', 'boolean'],
 
-            // Catatan
-            'keterangan' => ['nullable', 'string'],
-            'korektif'   => ['nullable', 'string', 'max:255'],
+            // // Catatan
+            // 'keterangan' => ['nullable', 'string'],
+            // 'korektif'   => ['nullable', 'string', 'max:255'],
         ];
     }
 

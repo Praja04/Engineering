@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mtc_electric_engine', function (Blueprint $table) {
+        Schema::create('mtc_electric_engine_inspections', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_mesin');
-            $table->date('tanggal');
-            $table->time('waktu');
-            $table->string('paket')->nullable();
+            $table->foreignId('mesin_id')->constrained('mtc_master_mesin')->onDelete('restrict');
+            $table->foreignId('mtc_main_id')->constrained('mtc_main')->onDelete('cascade');
 
             // Forklift Electrical - General
             $table->boolean('check_buzzer_back')->nullable();
@@ -71,11 +69,8 @@ return new class extends Migration
             $table->boolean('ganti_return_filter')->nullable();
             $table->boolean('ganti_brake_oil')->nullable();
 
-            $table->text('keterangan')->nullable();
-            $table->string('korektif')->nullable();
-
-            $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('restrict');
+            // $table->text('keterangan')->nullable();
+            // $table->string('korektif')->nullable();
             $table->timestamps();
         });
     }
@@ -85,6 +80,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mtc_electric_engine');
+        Schema::dropIfExists('mtc_electric_engine_inspections');
     }
 };

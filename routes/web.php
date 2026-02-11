@@ -31,7 +31,7 @@ Route::middleware('auth')->group(function () {
         });
     });
 
-    Route::get('/notifications', [NotificationController::class, 'kalibrasiCertificate'])->name('notifications');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
 
 
     // Kalibrasi Routes

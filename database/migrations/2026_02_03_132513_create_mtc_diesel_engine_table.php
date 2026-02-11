@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mtc_diesel_engine', function (Blueprint $table) {
+        Schema::create('mtc_diesel_engine_inspections', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_mesin');
-            $table->date('tanggal');
-            $table->time('waktu');
-            $table->string('paket')->nullable();
+            $table->foreignId('mesin_id')->constrained('mtc_master_mesin')->onDelete('restrict');
+            $table->foreignId('mtc_main_id')->constrained('mtc_main')->onDelete('cascade');
 
             // | ENGINE
             $table->boolean('check_kondisi_level_oli_mesin')->nullable();
@@ -77,11 +75,8 @@ return new class extends Migration
             $table->boolean('check_baut_bearing_molen')->nullable();
             $table->boolean('check_baut_hanger_as_roda')->nullable();
 
-            $table->text('keterangan')->nullable();
-            $table->string('korektif')->nullable();
-
-            $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
-            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('restrict');
+            // $table->text('keterangan')->nullable();
+            // $table->string('korektif')->nullable();
             $table->timestamps();
         });
     }
@@ -91,6 +86,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mtc_diesel_engine');
+        Schema::dropIfExists('mtc_diesel_engine_inspections');
     }
 };

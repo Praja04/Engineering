@@ -2,20 +2,21 @@
 
 namespace App\Models\Maintenance;
 
+use App\Models\Maintenance\MtcMainModel;
+use App\Models\Maintenance\MtcMasterMesinModel;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class MtcMotorPumpModel extends Model
 {
-    // use SoftDeletes; // Uncomment jika pakai soft deletes
+    use HasFactory;
 
-    protected $table = 'mtc_motor_pump';
+    protected $table = 'mtc_motor_pump_inspections';
 
     protected $fillable = [
-        'nama_mesin',
-        'tanggal',
-        'waktu',
-        'paket',
+        'mesin_id',
+        'mtc_main_id',
 
         // Motor
         'electrical_motor',
@@ -50,14 +51,16 @@ class MtcMotorPumpModel extends Model
         'filter_udara_gearbox',
         'bearing_gearbox',
 
-        'keterangan',
-        'korektif',
-        'created_by',
+        // 'keterangan',
+        // 'korektif',
+        // 'status',
+        // 'created_by',
+        // 'updated_by',
     ];
 
     protected $casts = [
-        'tanggal'                         => 'date',
-        'waktu'                           => 'datetime:H:i:s',
+        'tanggal'                         => 'date:Y-m-d',
+        // 'waktu'                           => 'datetime:H:i',
 
         'electrical_motor'                => 'boolean',
         'putaran_motor'                   => 'boolean',
@@ -89,8 +92,28 @@ class MtcMotorPumpModel extends Model
         'bearing_gearbox'                 => 'boolean',
     ];
 
-    public function user()
+
+    public function main()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
     }
+
+    public function mesin()
+    {
+        return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
+    }
+
+    // public function kebutuhanMaterial()
+    // {
+    //     return $this->hasMany(
+    //         MtcMotorPumpKebutuhanMaterialModel::class,
+    //         'mtc_motor_pump_id',
+    //         'id'
+    //     );
+    // }
+
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class, 'created_by');
+    // }
 }

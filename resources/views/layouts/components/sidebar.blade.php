@@ -60,6 +60,7 @@
 
                     @include('layouts.components.sidebar-kalibrasi.data-master')
                     @include('layouts.components.sidebar-scoring.menu-scoring-master')
+                    @include('layouts.components.sidebar-maintenance.master-maintenance')
                 @endif
 
                 <!-- /////////////////////Manage User/////////////// -->

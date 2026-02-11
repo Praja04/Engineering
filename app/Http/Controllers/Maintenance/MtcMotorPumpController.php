@@ -3,102 +3,238 @@
 namespace App\Http\Controllers\Maintenance;
 
 use Illuminate\Http\Request;
+use App\Models\NotificationsModel;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Maintenance\MtcMainModel;
+use App\Models\Maintenance\MtcApprovalModel;
+use App\Models\Maintenance\MtcMasterMesinModel;
+use App\Http\Requests\Maintenance\MtcMainRequest;
+use App\Models\Maintenance\MtcKebutuhanMaterialModel;
 use App\Http\Requests\Maintenance\MtcMotorPumpRequest;
 use App\Models\Maintenance\MtcMotorPumpModel;
+use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
 
 class MtcMotorPumpController extends Controller
 {
     public function index()
     {
-        return view('maintenance.form.motor_pump');
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'motor_pump')
+            ->orderBy('id')->get();
+
+        return view('maintenance.form.motor_pump', compact('mesin'));
     }
 
     public function viewData()
     {
-        return view('maintenance.data.motor_pump_data');
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'motor_pump')
+            ->orderBy('id')->get();
+
+        return view('maintenance.data.motor_pump_data', compact('mesin'));
     }
 
-    public function store(MtcMotorPumpRequest $request)
-    {
-        $data = $request->validated();
+    public function store(
+        MtcMainRequest $mainRequest,
+        MtcMotorPumpRequest $detailRequest,
+        MtcKebutuhanMaterialRequest $materials
+    ) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials) {
 
-        $data['waktu'] = now()->format('H:i:s');
-        $data['created_by'] = Auth::id() ?? 1;
+            $userId = Auth::id();
 
-        // Simpan record
-        $inspection = MtcMotorPumpModel::create($data);
+            // Simpan Main
+            $main = MtcMainModel::create([
+                ...$mainRequest->validated(),
+                'jenis_mtc'     => 'motor_pump',
+                'status'     => 'pending',
+                'created_by' => $userId,
+            ]);
+
+            MtcMotorPumpModel::create([
+                ...$detailRequest->validated(),
+                'mtc_main_id' => $main->id,
+            ]);
+
+            foreach ($materials->materials ?? [] as $item) {
+                MtcKebutuhanMaterialModel::create([
+                    'mtc_main_id'   => $main->id,
+                    'mid'           => $item['mid'],
+                    'deskripsi'     => $item['desc'] ?? null,
+                    'qty'           => $item['qty'],
+                    'created_by'    => $userId,
+                ]);
+            }
+
+            $ttdPath = null;
+
+            if ($detailRequest->filled('ttd_base64')) {
+                $user = Auth::user();
+
+                $ttdPath = saveBase64Signature(
+                    $detailRequest->ttd_base64,
+                    'mtc/motor-pump',
+                    $user->username,
+                    $user->departemen
+                );
+            }
+
+            $approvalFlows = [
+                [
+                    'level' => 1,
+                    'role'  => 'teknisi',
+                    'approver_id' => $userId,
+                    'auto'  => true,
+                ],
+                [
+                    'level' => 2,
+                    'role'  => 'staff',
+                    'approver_id' => $mainRequest->staff_id,
+                    'auto'  => false,
+                ],
+                [
+                    'level' => 3,
+                    'role'  => 'user',
+                    'approver_id' => $mainRequest->user_id,
+                    'auto'  => false,
+                ],
+            ];
+
+            foreach ($approvalFlows as $flow) {
+
+                $isAutoApproved = $flow['auto'];
+
+                MtcApprovalModel::create([
+                    'mtc_main_id' => $main->id,
+                    'level'       => $flow['level'],
+                    'role'        => $flow['role'],
+                    'approver_id' => $flow['approver_id'],
+                    'status'      => $isAutoApproved ? 'approved' : 'pending',
+                    'ttd'         => $isAutoApproved ? $ttdPath : null,
+                    'action_at'   => $isAutoApproved ? now() : null,
+                    'action_by'   => $isAutoApproved ? $userId : null,
+                ]);
+
+                if (!$isAutoApproved) {
+                    NotificationsModel::create([
+                        'user_id'         => $flow['approver_id'],
+                        'notifiable_type' => MtcMainModel::class,
+                        'notifiable_id'   => $main->id,
+                        'title'           => 'Approval Maintenance',
+                        'message'         => 'Maintenance Motor Pump menunggu persetujuan Anda',
+                        'url'             => route('mtc.approval.index'),
+                        'is_read'         => false,
+                    ]);
+                }
+            }
+        });
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data Mtc Motor Pump berhasil disimpan',
-            'data'    => $inspection,
+            'message' => 'Data MTC Motor Pump berhasil disimpan',
         ], 201);
     }
 
     public function getData(Request $request)
     {
-        $query = MtcMotorPumpModel::query()
+        $query = MtcMainModel::query()
+            ->where('jenis_mtc', 'motor_pump')
             ->orderBy('tanggal', 'desc')
             ->orderBy('waktu', 'desc')
-            ->with('user:id,username');
+            ->with([
+                'createdBy:id,username',
+                'kebutuhanMaterial',
+                'motorPump.mesin:id,nama_mesin,lokasi'
+            ]);
 
+        // filter tanggal
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
         }
-        // if ($request->filled('start_date') && $request->filled('end_date')) {
-        //     $query->whereBetween('tanggal', [$request->start_date, $request->end_date]);
-        // }
 
+        // filter paket
         if ($request->filled('paket')) {
             $query->where('paket', $request->paket);
         }
 
+        // filter nama mesin (relasi)
         if ($request->filled('nama_mesin')) {
-            $query->where('nama_mesin', 'like', '%' . $request->nama_mesin . '%');
+            $query->whereHas('motorPump.mesin', function ($q) use ($request) {
+                $q->where('nama_mesin', 'like', '%' . $request->nama_mesin . '%');
+            });
         }
-
-        // $perPage = (int) $request->get('per_page', 5);
-        // $data = $query->paginate($perPage);
 
         $data = $query->get();
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data Mtc Motor Pump berhasil diambil',
+            'message' => 'Data MTC Motor Pump berhasil diambil',
             'data'    => $data,
         ]);
     }
 
-    public function update(MtcMotorPumpRequest $request, $id)
-    {
-        $row = MtcMotorPumpModel::findOrFail($id);
-        $row->update($request->validated());
+    public function update(
+        MtcMainRequest $mainRequest,
+        MtcMotorPumpRequest $detailRequest,
+        MtcKebutuhanMaterialRequest $materials,
+        $id
+    ) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $id) {
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Data berhasil diupdate',
-            'data' => $row->fresh('user:id,username')
-        ]);
-    }
+            $userId = Auth::id();
 
-    public function destroy($id)
-    {
-        $inspection = MtcMotorPumpModel::find($id);
+            $main = MtcMainModel::findOrFail($id);
+            $inspection = MtcMotorPumpModel::where('mtc_main_id', $main->id)->firstOrFail();
 
-        if (!$inspection) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Data tidak ditemukan',
-            ], 404);
-        }
+            $main->update([
+                ...$mainRequest->validated(),
+                'updated_by' => $userId,
+            ]);
 
-        $inspection->delete();
+            $inspection->update([
+                ...$detailRequest->validated()
+            ]);
+
+            $existingIds = $main->kebutuhanMaterial()->pluck('id')->toArray();
+            $incomingIds = [];
+
+            foreach ($materials['materials'] as $item) {
+
+                if (!empty($item['id'])) {
+
+                    $incomingIds[] = $item['id'];
+
+                    MtcKebutuhanMaterialModel::where('id', $item['id'])
+                        ->update([
+                            'mid'        => $item['mid'],
+                            'deskripsi'  => $item['deskripsi'] ?? null,
+                            'qty'        => $item['qty'],
+                            'updated_by' => $userId,
+                        ]);
+                } else {
+
+                    $new = MtcKebutuhanMaterialModel::create([
+                        'mtc_main_id'       => $main->id,
+                        'mid'               => $item['mid'],
+                        'deskripsi'         => $item['deskripsi'] ?? null,
+                        'qty'               => $item['qty'],
+                        'created_by'        => $userId,
+                    ]);
+
+                    $incomingIds[] = $new->id;
+                }
+            }
+
+            // DELETE material yg dihapus
+            $toDelete = array_diff($existingIds, $incomingIds);
+            if ($toDelete) {
+                MtcKebutuhanMaterialModel::whereIn('id', $toDelete)->delete();
+            }
+        });
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data berhasil dihapus',
+            'message' => 'Data berhasil diperbarui',
         ]);
     }
 }

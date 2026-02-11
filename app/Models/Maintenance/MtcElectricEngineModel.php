@@ -10,14 +10,11 @@ class MtcElectricEngineModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'mtc_electric_engine';
+    protected $table = 'mtc_electric_engine_inspections';
 
     protected $fillable = [
-        // Header
-        'nama_mesin',
-        'tanggal',
-        'waktu',
-        'paket',
+        'mesin_id',
+        'mtc_main_id',
 
         // Forklift Electrical - General
         'check_buzzer_back',
@@ -73,17 +70,11 @@ class MtcElectricEngineModel extends Model
         'ganti_brake_oil',
 
         // Catatan
-        'keterangan',
-        'korektif',
-
-        // User
-        'created_by',
+        // 'keterangan',
+        // 'korektif',
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
-        'waktu'   => 'datetime:H:i:s',
-
         // Forklift Electrical
         'check_buzzer_back' => 'boolean',
         'check_klakson' => 'boolean',
@@ -138,8 +129,13 @@ class MtcElectricEngineModel extends Model
         'ganti_brake_oil' => 'boolean',
     ];
 
-    public function user()
+    public function main()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
+    }
+
+    public function mesin()
+    {
+        return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
     }
 }

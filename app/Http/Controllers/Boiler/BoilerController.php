@@ -68,8 +68,8 @@ class BoilerController extends Controller
         } elseif ($request->end_date) {
             $query->whereDate('date', '<=', $request->end_date);
         } else {
-            $start = Carbon::now()->startOfMonth()->format('Y-m-d');
-            $end   = Carbon::now()->endOfMonth()->format('Y-m-d');
+            $end   = Carbon::today()->format('Y-m-d');
+            $start = Carbon::today()->subDays(29)->format('Y-m-d'); // total 30 hari termasuk hari ini
 
             $query->whereBetween('date', [$start, $end]);
         }

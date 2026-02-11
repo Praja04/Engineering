@@ -65,6 +65,20 @@
             margin: 0.5rem 0 !important;
             padding: 0 !important;
         }
+
+        .kondisi-radio:checked+.kondisi-btn {
+            color: #fff;
+        }
+
+        .kondisi-radio[value="1"]:checked+.kondisi-btn {
+            background-color: #198754;
+            border-color: #198754;
+        }
+
+        .kondisi-radio[value="0"]:checked+.kondisi-btn {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
     </style>
 @endsection
 
@@ -78,7 +92,7 @@
 
                 <div class="card-body">
 
-                    <form id="form-mtc-sipil" method="POST" action="{{ route('mtc.sipil.store') }}">
+                    <form id="form-mtc-sipil" method="POST">
                         @csrf
 
                         <div class="row g-3">
@@ -91,13 +105,31 @@
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
                             </div>
-
+                            <div class="col-md-3">
+                                <label class="form-label">Waktu <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" name="waktu"
+                                    value="{{ old('waktu', now()->format('H:i')) }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Departemen
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="departemen" class="form-control" value="{{ old('departemen') }}"
+                                    placeholder="Produksi">
+                                @error('departemen')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Lokasi </label>
+                                <input type="text" class="form-control" name="lokasi" value="{{ old('lokasi') }}">
+                            </div>
                             <div class="col-md-3">
                                 <label class="form-label">Area
                                     <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" name="area" class="form-control" value="{{ old('area') }}"
-                                    placeholder="Office Lt.2 / Gudang A">
+                                    placeholder="Produksi Process">
                                 @error('area')
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
@@ -109,79 +141,141 @@
                             <div class="alert alert-danger py-2">{{ $message }}</div>
                         @enderror
 
-                        <div class="mt-4">
-                            <div class="row g-3">
-                                @foreach ($items as $i => $item)
-                                    @php
-                                        $oldKondisi = old("details.$i.kondisi");
-                                        $oldKet = old("details.$i.keterangan", '');
-                                        $idYa = "sipil_{$i}_ya";
-                                        $idTidak = "sipil_{$i}_tidak";
-                                    @endphp
+                        @php
+                            $sipil = [
+                                'plumbing' => [
+                                    'label' => 'Plumbing',
+                                    'standar' => 'Tidak ada kebocoran dan mampet saluran air pada pipa',
+                                ],
+                                'plafon' => [
+                                    'label' => 'Plafon',
+                                    'standar' => 'Tidak berlubang, berjamur dan retakan pada plafon',
+                                ],
+                                'lantai' => [
+                                    'label' => 'Lantai',
+                                    'standar' => 'Tidak berlubang, retak, gompal dan jamur pada lantai',
+                                ],
+                                'dinding' => [
+                                    'label' => 'Dinding',
+                                    'standar' =>
+                                        'Tidak ada dinding retak, gompal dan cat atau wallpaper (mengelupas, berjamur, kusam)',
+                                ],
+                                'jendela' => [
+                                    'label' => 'Jendela',
+                                    'standar' =>
+                                        'Engsel berfungsi dengan baik, tidak ada retakan kaca atau cover, cat tidak kusam dan tulangan tidak cacat',
+                                ],
+                                'pintu' => [
+                                    'label' => 'Pintu',
+                                    'standar' =>
+                                        'Engsel berfungsi dengan baik, tidak ada retakan kaca atau cover, cat tidak kusam dan tulangan tidak cacat',
+                                ],
+                                'rooling_fast_door' => [
+                                    'label' => 'Rooling / Fast Door',
+                                    'standar' => 'Suara halus, rel terlubrikasi, naik dan turun normal',
+                                ],
+                            ];
+                        @endphp
 
-                                    <div class="col-12 col-md-6">
-                                        <div class="card border shadow-sm item-card {{ (string) $oldKondisi === '0' ? 'not-ok' : '' }}"
-                                            data-index="{{ $i }}">
-                                            <div class="card-header bg-light">
-                                                <strong class="d-block">{{ $item->jenis_perawatan }}</strong>
-                                                <small
-                                                    class="text-muted d-block mt-1">{{ $item->standar_pemeliharaan }}</small>
+                        <h6 class="fw-bold text-primary mb-3 mt-4">Checklist Mtc Sipil</h6>
+
+                        @foreach (array_chunk($sipil, 2, true) as $row)
+                            <div class="row g-3 mb-3">
+                                @foreach ($row as $field => $item)
+                                    <div class="col-md-6 col-12">
+                                        <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+
+                                            {{-- Judul --}}
+                                            <label class="form-label fw-semibold mb-1">
+                                                {{ $item['label'] }}
+                                            </label>
+
+                                            {{-- Standar pemeliharaan --}}
+                                            <div class="text-muted small mb-2">
+                                                {{ $item['standar'] }}
                                             </div>
 
-                                            <div class="card-body pb-2 pt-3">
-                                                <!-- Radio Ya/Tidak -->
-                                                <div class="d-flex gap-2 mb-1">
-                                                    <div class="flex-fill">
-                                                        <input type="hidden" name="details[{{ $i }}][item_id]"
-                                                            value="{{ $item->id }}">
+                                            {{-- Radio --}}
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <input type="radio" class="btn-check status-radio"
+                                                    name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                <label class="btn btn-outline-success"
+                                                    for="{{ $field }}_ok">OK</label>
 
-                                                        <input id="{{ $idYa }}" type="radio"
-                                                            name="details[{{ $i }}][kondisi]" value="1"
-                                                            class="visually-hidden kondisi-radio"
-                                                            {{ (string) $oldKondisi === '1' ? 'checked' : '' }}>
-
-                                                        <label for="{{ $idYa }}"
-                                                            class="btn btn-outline-success w-100 py-2 kondisi-btn {{ (string) $oldKondisi === '1' ? 'active' : '' }}">
-                                                            YA
-                                                        </label>
-                                                    </div>
-
-                                                    <div class="flex-fill">
-                                                        <input id="{{ $idTidak }}" type="radio"
-                                                            name="details[{{ $i }}][kondisi]" value="0"
-                                                            class="visually-hidden kondisi-radio"
-                                                            {{ (string) $oldKondisi === '0' ? 'checked' : '' }}>
-
-                                                        <label for="{{ $idTidak }}"
-                                                            class="btn btn-outline-danger w-100 py-2 kondisi-btn {{ (string) $oldKondisi === '0' ? 'active' : '' }}">
-                                                            TIDAK
-                                                        </label>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Placeholder kosong untuk keterangan nanti (akan ditambahkan via JS) -->
+                                                <input type="radio" class="btn-check status-radio"
+                                                    name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
+                                                    OK</label>
                                             </div>
+
+                                            {{-- Keterangan --}}
+                                            <div class="keterangan-wrapper d-none mt-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                    name="keterangan_{{ $field }}"
+                                                    placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                            </div>
+
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
-                        </div>
+                        @endforeach
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Rekomendasi</label>
-                                <input type="text" name="rekomendasi" class="form-control"
-                                    value="{{ old('rekomendasi') }}">
+                                <textarea class="form-control" name="rekomendasi" rows="3" value="{{ old('rekomendasi') }}"></textarea>
                                 @error('rekomendasi')
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Korektif</label>
-                                <input type="text" name="korektif" class="form-control" value="{{ old('korektif') }}">
+                                <textarea class="form-control" name="korektif" rows="3" value="{{ old('korektif') }}"></textarea>
                                 @error('korektif')
                                     <div class="text-danger small">{{ $message }}</div>
                                 @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Kebutuhan Material</label>
+                                <table class="table table-bordered" id="materialTable">
+                                    <thead class="table-light text-no-wrap">
+                                        <tr>
+                                            <th style="width: 20%">MID</th>
+                                            <th>Deskripsi</th>
+                                            <th style="width: 15%">Jumlah</th>
+                                            <th class="text-center" style="width: 10%">
+                                                <button type="button" class="btn btn-sm btn-primary" id="addRow">
+                                                    +
+                                                </button>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <input type="number" name="materials[0][mid]"
+                                                    class="form-control form-control-sm" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="materials[0][desc]"
+                                                    class="form-control form-control-sm">
+                                            </td>
+                                            <td>
+                                                <input type="number" name="materials[0][qty]"
+                                                    class="form-control form-control-sm" min="1" required>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger removeRow">
+                                                    ×
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -197,235 +291,430 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modalTtd" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Tanda Tangan Teknisi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <canvas id="signature-pad" style="border:1px solid #ccc; width:100%; height:200px;"></canvas>
+
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearTtd">
+                            Reset TTD
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnSaveTtd">
+                        Simpan & Kirim
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Pilih Approver --}}
+    <div class="modal fade" id="modalApprover" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Pilih Approver</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="staffDropdown" class="form-label">Staff</label>
+                        <select class="form-select" id="staffDropdown">
+                            <option value="">Pilih staff</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="userDropdown" class="form-label">User MT/MTC</label>
+                        <select class="form-select" id="userDropdown">
+                            <option value="">Pilih user</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="btnSelectApprover">Lanjut</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
             const STORAGE_KEY = 'form_mtc_sipil_data';
+            let index = 0;
+            let isLoading = false;
 
-            function saveFormLocalStorage() {
-                const data = {};
-
-                $('#form-mtc-sipil').find('input, textarea').each(function() {
-                    const name = this.name;
-                    if (!name) return;
-
-                    let value;
-
-                    if (this.type === 'radio') {
-                        if (this.checked) {
-                            value = this.value;
-                        }
-                    } else if (this.type === 'checkbox') {
-                        value = this.checked ? '1' : '0';
-                    } else {
-                        value = $(this).val() || ''; // pakai || '' biar tidak undefined
-                    }
-
-                    if (value !== undefined && value !== null) {
-                        if (this.tagName.toLowerCase() === 'textarea' || value !== '') {
-                            data[name] = value;
-                        }
-                    }
-                });
-
-                console.log('Saved data:', data);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            }
-
-            function loadFormLocalStorage() {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (!saved) return;
-
-                const data = JSON.parse(saved);
-
-                // Langkah 1: Set semua radio & input lain dulu (tanpa trigger change)
-                $.each(data, function(name, value) {
-                    const escapedName = name.replace(/([[\]])/g, '\\$1');
-                    const $el = $('[name="' + escapedName + '"]');
-
-                    if ($el.length) {
-                        if ($el.is(':radio')) {
-                            const $targetRadio = $el.filter('[value="' + value + '"]');
-                            if ($targetRadio.length) {
-                                $targetRadio.prop('checked', true);
-                            }
-                        } else if ($el.is('textarea, input[type="text"], input[type="date"]')) {
-                            $el.val(value);
-                        }
-                    }
-                });
-
-                // Langkah 2: Trigger change pada semua radio yang checked → ini akan membuat wrapper keterangan kalau TIDAK
-                $('.kondisi-radio:checked').each(function() {
-                    $(this).trigger('change');
-                });
-
-                // Force create wrapper untuk card yang kondisi TIDAK (jaga-jaga kalau trigger change gagal)
-                setTimeout(() => {
-                    $('.item-card').each(function() {
-                        const $card = $(this);
-                        const isTidak = $card.find('.kondisi-radio[value="0"]').is(':checked');
-                        if (isTidak && $card.find('.keterangan-wrapper').length === 0) {
-                            const index = $card.data('index');
-                            const $body = $card.find('.card-body');
-
-                            const $wrapper = $(`
-                                <div class="keterangan-wrapper mt-3">
-                                    <textarea name="details[${index}][keterangan]" class="form-control" rows="2"
-                                            placeholder="Keterangan wajib diisi karena kondisi TIDAK"></textarea>
-                                    <div class="mt-2"></div>
-                                </div>
-                            `);
-
-                            $body.append($wrapper);
-                            $wrapper.show(); // langsung tampilkan tanpa animasi
-                        }
-                    });
-
-                    // Isi value keterangan
-                    $.each(data, function(name, value) {
-                        if (name.includes('[keterangan]')) {
-                            const escapedName = name.replace(/([[\]])/g, '\\$1');
-                            const $textarea = $('[name="' + escapedName + '"]');
-                            if ($textarea.length) {
-                                $textarea.val(value);
-                            }
-                        }
-                    });
-
-                    saveFormLocalStorage();
-                }, 600);
-
-                updateRowState();
-            }
-
-            loadFormLocalStorage();
-
-            $('#form-mtc-sipil').on('change', 'input[type="radio"], textarea', function() {
-                saveFormLocalStorage();
+            $('#mesin_id').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Cari nama mesin / lokasi...',
+                allowClear: true,
+                width: '100%',
+                templateResult: function(data) {
+                    if (!data.id) return data.text;
+                    return $('<span><b>' + data.text.split(' - ')[0] + '</b><br><small>' + data.text
+                        .split(' - ')[1] + '</small></span>');
+                }
             });
 
-            function updateRowState() {
-                $('.item-card').each(function() {
-                    const $card = $(this);
-                    const isTidak = $card.find('.kondisi-radio[value="0"]').is(':checked');
-                    $card.toggleClass('not-ok', isTidak);
+            function saveFormToLocalStorage() {
+                let formData = {};
+                let materials = [];
+
+                // === FORM NORMAL ===
+                $('#form-mtc-sipil')
+                    .find('input, select, textarea')
+                    .not('[name^="materials"]')
+                    .each(function() {
+                        const name = $(this).attr('name');
+                        if (!name) return;
+
+                        if ($(this).is(':radio')) {
+                            if ($(this).is(':checked')) {
+                                formData[name] = $(this).val();
+                            }
+                        } else if ($(this).is(':checkbox')) {
+                            formData[name] = $(this).is(':checked');
+                        } else {
+                            formData[name] = $(this).val();
+                        }
+                    });
+
+                // === KEBUTUHAN MATERIAL ===
+                $('#materialTable tbody tr').each(function() {
+                    const row = {
+                        mid: $(this).find('input[name*="[mid]"]').val(),
+                        desc: $(this).find('input[name*="[desc]"]').val(),
+                        qty: $(this).find('input[name*="[qty]"]').val()
+                    };
+
+                    if (row.mid || row.desc || row.qty) {
+                        materials.push(row);
+                    }
                 });
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    form: formData,
+                    materials: materials
+                }));
             }
 
-            $('#form-mtc-sipil').on('change', '.kondisi-radio', function() {
-                const $radio = $(this);
-                const $card = $radio.closest('.item-card');
-                const $body = $card.find('.card-body');
-                const index = $card.data('index'); // ambil dari data-index
+            function loadFormFromLocalStorage() {
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                if (!savedData) return;
 
-                // Reset active tombol
-                $card.find('.kondisi-btn').removeClass('active');
-                const $checkedRadio = $card.find('.kondisi-radio:checked');
-                if ($checkedRadio.length) {
-                    $checkedRadio.next('label.kondisi-btn').addClass('active');
+                isLoading = true;
+
+                const data = JSON.parse(savedData);
+
+                // === FORM ===
+                if (data.form) {
+                    for (const [name, value] of Object.entries(data.form)) {
+                        const $input = $(`[name="${name}"]`);
+
+                        if ($input.is(':radio')) {
+                            $(`input[name="${name}"][value="${value}"]`)
+                                .prop('checked', true)
+                                .trigger('change');
+
+                        } else if ($input.is(':checkbox')) {
+                            $input.prop('checked', value);
+
+                        } else {
+                            $input.val(value).trigger('change');
+                        }
+                    }
                 }
 
-                // Update warna card
-                const isTidak = $card.find('.kondisi-radio[value="0"]').prop('checked');
-                $card.toggleClass('not-ok', isTidak);
+                // === MATERIALS ===
+                $('#materialTable tbody').empty();
+                index = 1;
 
-                // Cari wrapper keterangan
-                let $wrapper = $card.find('.keterangan-wrapper');
-
-                if (isTidak) {
-                    if ($wrapper.length === 0) {
-                        $wrapper = $(`
-                            <div class="keterangan-wrapper mt-3">
-                                <textarea name="details[${index}][keterangan]" class="form-control" rows="2"
-                                        placeholder="Keterangan wajib diisi karena kondisi TIDAK"></textarea>
-                                <div class="mt-2"></div>
-                            </div>
-                        `);
-
-                        $body.append($wrapper);
-
-                        saveFormLocalStorage();
-                    }
-
-                    $wrapper.slideDown(200, () => {
-                        $wrapper.find('textarea').focus();
-                        saveFormLocalStorage();
+                if (data.materials && data.materials.length) {
+                    data.materials.forEach(item => {
+                        let row = `
+                            <tr>
+                                <td>
+                                    <input type="number" name="materials[${index}][mid]"
+                                        class="form-control form-control-sm"
+                                        value="${item.mid || ''}">
+                                </td>
+                                <td>
+                                    <input type="text" name="materials[${index}][desc]"
+                                        class="form-control form-control-sm"
+                                        value="${item.desc || ''}">
+                                </td>
+                                <td>
+                                    <input type="number" name="materials[${index}][qty]"
+                                        class="form-control form-control-sm"
+                                        value="${item.qty || ''}">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
+                                </td>
+                            </tr>
+                        `;
+                        $('#materialTable tbody').append(row);
+                        index++;
                     });
-                    $wrapper.find('textarea').prop('required', true);
+                }
+
+                isLoading = false;
+            }
+
+            loadFormFromLocalStorage();
+
+            $('#form-mtc-sipil').on('change input', 'input, select, textarea', function() {
+                saveFormToLocalStorage();
+            });
+
+            $('.status-radio').on('change', function() {
+                const $row = $(this).closest('.item-row');
+                const isOk = $row.find('input[value="1"]').is(':checked');
+                const isNg = $row.find('input[value="0"]').is(':checked');
+                const $ket = $row.find('.keterangan-wrapper input');
+
+                if (isOk || isNg) {
+                    $row.find('.status-label-default').addClass('d-none');
+                }
+
+                if (isNg) {
+                    $row.addClass('not-ok');
+                    $row.find('.keterangan-wrapper').removeClass('d-none');
+                    $ket.attr('required', true);
                 } else {
-                    if ($wrapper.length > 0) {
-                        $wrapper.slideUp(200, function() {
-                            $wrapper.remove();
-                            saveFormLocalStorage(); // hapus dari localStorage kalau perlu
-                        });
-                    }
+                    $row.removeClass('not-ok');
+                    $row.find('.keterangan-wrapper').addClass('d-none');
+                    $ket.val('').removeClass('is-invalid').removeAttr('required');
                 }
 
-                saveFormLocalStorage();
+                saveFormToLocalStorage();
             });
+
+            $('#addRow').on('click', function() {
+                let row = `
+                    <tr>
+                        <td>
+                            <input type="number" name="materials[${index}][mid]" class="form-control form-control-sm" required>
+                        </td>
+                        <td>
+                            <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
+                        </td>
+                        <td>
+                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1" required>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
+                        </td>
+                    </tr>
+                `;
+
+                $('#materialTable tbody').append(row);
+                index++;
+
+                saveFormToLocalStorage();
+            });
+
+            $(document).on('click', '.removeRow', function() {
+                $(this).closest('tr').remove();
+                saveFormToLocalStorage();
+            });
+            // End Kebutuhan Material
+
+            $('#btnResetKondisi').on('click', function() {
+                Swal.fire({
+                    title: 'Reset Form?',
+                    text: 'Semua isian akan dikosongkan',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, reset',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        resetFormSipil();
+                    }
+                });
+            });
+
+            function resetFormSipil() {
+                const $form = $('#form-mtc-sipil');
+
+                $form[0].reset();
+
+                $form.find('select').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).val(null).trigger('change');
+                    }
+                });
+
+                $form.find('.kondisi-radio').prop('checked', false);
+                $('.kondisi-btn').removeClass('active');
+                $('.keterangan-wrapper').remove();
+                $('.item-card').removeClass('not-ok');
+                $('.is-invalid').removeClass('is-invalid');
+                $('#materialTable tbody').empty();
+                // updateRowState();
+
+                localStorage.removeItem(STORAGE_KEY);
+            }
+
+            function collectNotOkDetails() {
+                const details = [];
+
+                $('.item-row').each(function() {
+                    const $row = $(this);
+                    const isNg = $row.find('input[value="0"]').is(':checked');
+                    if (!isNg) return;
+
+                    const label = $row.find('label.form-label').text().trim();
+                    const keterangan = $row.find('input[name^="keterangan_"]').val().trim();
+
+                    if (keterangan) {
+                        details.push(`${label}: ${keterangan}`);
+                    }
+                });
+
+                if (details.length === 0) return '';
+
+                return details.join(" | ");
+            }
+
+            let signaturePad = null;
+            let pendingFormData = null;
+            let selectedStaff = null;
+            let selectedUser = null;
 
             $('#form-mtc-sipil').on('submit', function(e) {
                 e.preventDefault();
+                pendingFormData = new FormData(this);
 
-                $('#clientError').addClass('d-none').text('');
-                $('.is-invalid').removeClass('is-invalid');
+                $('#modalApprover').modal('show');
 
-                let checkedCount = 0;
-                let valid = true;
+                // Load staff & user maintenance dari API
+                $.get('/api/mtc/users/approvers', function(res) {
+                    const $staffDropdown = $('#staffDropdown');
+                    const $userDropdown = $('#userDropdown');
 
-                $('.item-card').each(function() {
-                    const $card = $(this);
+                    $staffDropdown.empty().append(`<option value="">Pilih staff</option>`);
+                    res.staff.forEach(user => {
+                        $staffDropdown.append(
+                            `<option value="${user.id}">${user.username}</option>`);
+                    });
 
-                    const $tidak = $card.find('.kondisi-radio[value="0"]');
-                    const $ya = $card.find('.kondisi-radio[value="1"]');
-                    const $ket = $card.find('textarea');
-
-                    // Hitung berapa item yang sudah dipilih (Ya atau Tidak)
-                    if ($tidak.is(':checked') || $ya.is(':checked')) {
-                        checkedCount++;
-                    }
-
-                    // Kalau TIDAK → keterangan wajib diisi
-                    if ($tidak.is(':checked') && !$ket.val().trim()) {
-                        $ket.addClass('is-invalid');
-                        valid = false;
-                    }
+                    $userDropdown.empty().append(`<option value="">Pilih user</option>`);
+                    res.user.forEach(user => {
+                        $userDropdown.append(
+                            `<option value="${user.id}">${user.username}</option>`);
+                    });
                 });
+            });
 
-                if (!valid) {
-                    $('#clientError')
-                        .removeClass('d-none')
-                        .text('Keterangan wajib diisi untuk item dengan kondisi TIDAK.');
+            // Pilih staff
+            $('#staffDropdown').on('change', function() {
+                selectedStaff = $(this).val();
+            });
+
+            // Pilih user maintenance
+            $('#userDropdown').on('change', function() {
+                selectedUser = $(this).val();
+            });
+
+            // Klik tombol pilih
+            $('#btnSelectApprover').on('click', function() {
+                if (!selectedStaff || !selectedUser) {
+                    Swal.fire('Pilih staff dan user maintenance terlebih dahulu');
                     return;
                 }
 
-                const formData = $(this).serialize();
+                pendingFormData.append('staff_id', selectedStaff);
+                pendingFormData.append('user_id', selectedUser);
 
+                $('#modalApprover').modal('hide');
+                $('#modalTtd').modal('show'); // lanjut modal TTD
+            });
+
+            $('#modalTtd').on('shown.bs.modal', function() {
+                if (!signaturePad) {
+                    const canvas = document.getElementById('signature-pad');
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = 200;
+                    signaturePad = new SignaturePad(canvas);
+                }
+            });
+
+            $('#btnClearTtd').on('click', function() {
+                signaturePad.clear();
+            });
+
+            $('#modalTtd').on('hidden.bs.modal', function() {
+                if (signaturePad) signaturePad.clear();
+            });
+
+            $('#btnSaveTtd').on('click', function() {
+
+                if (!signaturePad || signaturePad.isEmpty()) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'TTD belum diisi',
+                        text: 'Silakan tanda tangan terlebih dahulu'
+                    });
+                    return;
+                }
+
+                const ttdBase64 = signaturePad.toDataURL('image/png');
+                const keterangan = collectNotOkDetails();
+
+                pendingFormData.append('ttd_base64', ttdBase64);
+                if (keterangan) {
+                    pendingFormData.append('keterangan', keterangan);
+                }
+                pendingFormData.delete('_token');
+                pendingFormData.append(
+                    '_token',
+                    $('meta[name="csrf-token"]').attr('content')
+                );
+
+                $('#modalTtd').modal('hide');
+
+                submitFinalForm(pendingFormData);
+            });
+
+            function submitFinalForm(formData) {
+                const $btn = $('#btn-submit');
+                $btn.prop('disabled', true);
                 $.ajax({
                     url: "{{ route('mtc.sipil.store') }}",
-                    type: "POST",
+                    type: 'POST',
                     data: formData,
-                    dataType: "json",
-                    success: function(res) {
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil',
-                            text: res.message ?? 'Data berhasil disimpan',
-                            timer: 1800,
+                            text: response.message,
+                            timer: 2000,
                             showConfirmButton: false
+                        }).then(() => {
+                            resetFormSipil();
                         });
-
-                        // Reset semua form
-                        $('.kondisi-radio').prop('checked', false);
-                        $('.kondisi-btn').removeClass('active');
-                        $('.keterangan-wrapper').slideUp(200); // sembunyikan keterangan
-                        $('textarea').val(''); // kosongkan isi
-                        localStorage.removeItem(STORAGE_KEY);
-                        $('#form-mtc-sipil')[0].reset();
-                        updateRowState();
                     },
                     error: function(xhr) {
                         Swal.fire({
@@ -433,41 +722,12 @@
                             title: 'Gagal',
                             text: xhr.responseJSON?.message || 'Terjadi kesalahan'
                         });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
                     }
                 });
-            });
-
-            $('#btnResetKondisi').on('click', function() {
-                Swal.fire({
-                    title: 'Reset kondisi?',
-                    text: 'Semua checklist dan keterangan akan dikosongkan',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Reset',
-                    cancelButtonText: 'Batal'
-                }).then(r => {
-                    if (!r.isConfirmed) return;
-                    $('#form-mtc-sipil')[0].reset();
-                    // Reset radio & tombol
-                    $('.kondisi-radio').prop('checked', false);
-                    $('.kondisi-btn').removeClass('active');
-                    $('.keterangan-wrapper').slideUp(200, function() {
-                        $(this).remove();
-                    });
-                    $('textarea').val('');
-                    updateRowState();
-
-                    localStorage.removeItem(STORAGE_KEY);
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: 'Checklist telah direset',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                });
-            });
+            }
         });
     </script>
 @endsection

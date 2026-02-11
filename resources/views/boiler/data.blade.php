@@ -5,32 +5,6 @@
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
-            {{-- Card Filter --}}
-            {{-- <div class="card shadow-sm border-0 rounded-3 mb-3">
-                <div class="card-body">
-                    <form id="filterForm" class="row g-3 align-items-end">
-                        <div class="col-md-4">
-                            <label for="filterJenis" class="form-label">Jenis Input</label>
-                            <select id="filterJenis" class="form-select">
-                                <option value="">-- Semua Jenis --</option>
-                                <option value="weekly">Mingguan</option>
-                                <option value="monthly">Bulanan</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label for="filterTanggal" class="form-label">Tanggal</label>
-                            <input type="date" id="filterTanggal" class="form-control">
-                        </div>
-
-                        <div class="col-md-4 d-flex">
-                            <button type="button" id="btnReset" class="btn btn-secondary w-100">
-                                <i class="mdi mdi-refresh me-1"></i> Reset Filter
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div> --}}
 
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header d-flex justify-content-between align-items-center">

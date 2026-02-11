@@ -4,19 +4,20 @@ namespace App\Models\Maintenance;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Maintenance\MtcMainModel;
+use App\Models\Maintenance\MtcMasterMesinModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Maintenance\Utility\MtcUtilityKebutuhanMaterialModel;
 
 class MtcUtilityModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'mtc_utility';
+    protected $table = 'mtc_utility_inspections';
 
     protected $fillable = [
-        'nama_mesin',
-        'tanggal',
-        'waktu',
-        'paket',
+        'mesin_id',
+        'mtc_main_id',
 
         // Cooling Tower
         'cleaning_saringan_cooling_tower',
@@ -78,16 +79,11 @@ class MtcUtilityModel extends Model
         'check_tangki_bulat',
 
         // Keterangan
-        'keterangan',
-        'korektif',
-
-        'created_by'
+        // 'keterangan',
+        // 'korektif',
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
-        'waktu'   => 'datetime:H:i:s',
-
         // semua checklist boolean
         'cleaning_saringan_cooling_tower' => 'boolean',
         'cleaning_unit_cooling_tower' => 'boolean',
@@ -144,8 +140,13 @@ class MtcUtilityModel extends Model
         'check_tangki_bulat' => 'boolean',
     ];
 
-    public function user()
+    public function main()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
+    }
+
+    public function mesin()
+    {
+        return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
     }
 }
