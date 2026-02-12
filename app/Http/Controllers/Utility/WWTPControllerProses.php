@@ -9,6 +9,7 @@ use App\Models\Utility\WwtpInfluent;
 use App\Models\Utility\WwtpEffluent;
 use App\Models\Utility\WwtpInfluentHarian;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class WWTPControllerProses extends Controller
 {
@@ -385,6 +386,13 @@ class WWTPControllerProses extends Controller
     /**
      * API: Get dashboard statistics
      */
+    // =============================
+    // DASHBOARD API - DATA MINGGUAN
+    // =============================
+
+    /**
+     * API: Get dashboard statistics (MINGGUAN)
+     */
     public function getStatistics()
     {
         $totalRecords = WwtpRecord::count();
@@ -393,7 +401,6 @@ class WWTPControllerProses extends Controller
 
         $lastUpdate = WwtpRecord::orderBy('tanggal', 'desc')->first();
 
-        // Current week data
         $startWeek = Carbon::now()->startOfWeek();
         $endWeek = Carbon::now()->endOfWeek();
 
@@ -406,7 +413,6 @@ class WWTPControllerProses extends Controller
             ->whereBetween('tanggal', [$startWeek, $endWeek])
             ->count();
 
-        // Calculate averages for current month
         $startMonth = Carbon::now()->startOfMonth();
         $endMonth = Carbon::now()->endOfMonth();
 
@@ -418,7 +424,13 @@ class WWTPControllerProses extends Controller
                 if ($record->influent) {
                     return $record->influent->pit_sparta +
                         $record->influent->pit_garam +
-                        $record->influent->pit_domestik;
+                        $record->influent->pit_domestik+
+                        $record->influent->pit_produksi_step3 +
+                        $record->influent->pit_storage +
+                        $record->influent->pit_proses_wwtp2 +
+                        $record->influent->pit_outlet +
+                        $record->influent->pit_boiler
+                        ;
                 }
                 return 0;
             });
@@ -448,14 +460,22 @@ class WWTPControllerProses extends Controller
     }
 
     /**
-     * API: Get chart data for influent
+     * API: Get chart data for influent (MINGGUAN)
      */
-    public function getInfluentChartData($period = 30)
+    public function getInfluentChartData(Request $request)
     {
-        $startDate = Carbon::now()->subDays($period);
+        // Jika ada start_date dan end_date dari request, gunakan itu
+        // Jika tidak, default ke awal dan akhir bulan
+        $startDate = $request->input('start_date')
+        ? Carbon::parse($request->input('start_date'))
+        : Carbon::now()->startOfMonth();
+
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))
+            : Carbon::now()->endOfMonth();
 
         $data = WwtpRecord::where('kategori', 'influent')
-            ->where('tanggal', '>=', $startDate)
+            ->whereBetween('tanggal', [$startDate, $endDate])
             ->with('influent')
             ->orderBy('tanggal', 'asc')
             ->get()
@@ -465,6 +485,11 @@ class WWTPControllerProses extends Controller
                     'pit_sparta' => $record->influent->pit_sparta ?? 0,
                     'pit_garam' => $record->influent->pit_garam ?? 0,
                     'pit_domestik' => $record->influent->pit_domestik ?? 0,
+                    'pit_produksi_step3' => $record->influent->pit_produksi_step3 ?? 0,
+                    'pit_storage' => $record->influent->pit_storage ?? 0,
+                    'pit_proses_wwtp2' => $record->influent->pit_proses_wwtp2 ?? 0,
+                    'pit_outlet' => $record->influent->pit_outlet ?? 0,
+                    'pit_boiler' => $record->influent->pit_boiler ?? 0,
                     'total' => ($record->influent->pit_sparta ?? 0) +
                         ($record->influent->pit_garam ?? 0) +
                         ($record->influent->pit_domestik ?? 0),
@@ -475,14 +500,22 @@ class WWTPControllerProses extends Controller
     }
 
     /**
-     * API: Get chart data for effluent
+     * API: Get chart data for effluent (MINGGUAN)
      */
-    public function getEffluentChartData($period = 30)
+    public function getEffluentChartData(Request $request)
     {
-        $startDate = Carbon::now()->subDays($period);
+        // Jika ada start_date dan end_date dari request, gunakan itu
+        // Jika tidak, default ke awal dan akhir bulan
+        $startDate = $request->input('start_date')
+        ? Carbon::parse($request->input('start_date'))
+        : Carbon::now()->startOfMonth();
+
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))
+            : Carbon::now()->endOfMonth();
 
         $data = WwtpRecord::where('kategori', 'effluent')
-            ->where('tanggal', '>=', $startDate)
+            ->whereBetween('tanggal', [$startDate, $endDate])
             ->with('effluent')
             ->orderBy('tanggal', 'asc')
             ->get()
@@ -500,7 +533,7 @@ class WWTPControllerProses extends Controller
     }
 
     /**
-     * API: Get monthly comparison
+     * API: Get monthly comparison (MINGGUAN)
      */
     public function getMonthlyComparison()
     {
@@ -511,7 +544,6 @@ class WWTPControllerProses extends Controller
             $startMonth = $date->copy()->startOfMonth();
             $endMonth = $date->copy()->endOfMonth();
 
-            // Influent total
             $influentTotal = WwtpRecord::where('kategori', 'influent')
                 ->whereBetween('tanggal', [$startMonth, $endMonth])
                 ->with('influent')
@@ -520,12 +552,16 @@ class WWTPControllerProses extends Controller
                     if ($record->influent) {
                         return $record->influent->pit_sparta +
                             $record->influent->pit_garam +
-                            $record->influent->pit_domestik;
+                            $record->influent->pit_domestik +
+                            $record->influent->pit_produksi_step3 +
+                            $record->influent->pit_storage +
+                            $record->influent->pit_proses_wwtp2 +
+                            $record->influent->pit_outlet +
+                            $record->influent->pit_boiler;
                     }
                     return 0;
                 });
 
-            // Effluent total
             $effluentTotal = WwtpRecord::where('kategori', 'effluent')
                 ->whereBetween('tanggal', [$startMonth, $endMonth])
                 ->with('effluent')
@@ -549,7 +585,7 @@ class WWTPControllerProses extends Controller
     }
 
     /**
-     * API: Get recent records
+     * API: Get recent records (MINGGUAN)
      */
     public function getRecentRecords($limit = 10)
     {
@@ -557,6 +593,228 @@ class WWTPControllerProses extends Controller
             ->orderBy('tanggal', 'desc')
             ->limit($limit)
             ->get();
+
+        return response()->json($data);
+    }
+
+
+
+    // =============================
+    // DASHBOARD API - DATA HARIAN
+    // =============================
+
+    /**
+     * API: Get dashboard statistics (HARIAN)
+     */
+    public function getStatisticsHarian()
+    {
+        $totalRecords = WwtpInfluentHarian::count();
+
+        // Hitung total records per tanggal (1 tanggal bisa punya 3 shift)
+        $totalDays = WwtpInfluentHarian::select('tanggal')
+            ->distinct()
+            ->count();
+
+        $lastUpdate = WwtpInfluentHarian::orderBy('tanggal', 'desc')
+        ->orderBy('shift', 'desc')
+        ->first();
+
+        // Data hari ini
+        $today = Carbon::today();
+        $todayRecords = WwtpInfluentHarian::where('tanggal', $today)->count();
+
+        // Data minggu ini
+        $startWeek = Carbon::now()->startOfWeek();
+        $endWeek = Carbon::now()->endOfWeek();
+
+        $weeklyRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startWeek, $endWeek])
+            ->count();
+
+        // Data bulan ini - rata-rata per hari
+        $startMonth = Carbon::now()->startOfMonth();
+        $endMonth = Carbon::now()->endOfMonth();
+
+        $monthlyAvg = WwtpInfluentHarian::whereBetween('tanggal', [$startMonth, $endMonth])
+            ->selectRaw('tanggal, 
+                SUM(pit_sparta) as total_sparta,
+                SUM(pit_garam) as total_garam,
+                SUM(pit_domestik) as total_domestik,
+                SUM(pit_produksi_step3) as total_produksi_step3,
+                SUM(pit_storage) as total_storage,
+                SUM(pit_proses_wwtp2) as total_proses_wwtp2,
+                SUM(pit_outlet) as total_outlet,
+                SUM(pit_boiler) as total_boiler')
+            ->groupBy('tanggal')
+            ->get()
+            ->avg(function ($record) {
+                return $record->total_sparta + $record->total_garam + $record->total_domestik + 
+                       $record->total_produksi_step3 + $record->total_storage + $record->total_proses_wwtp2 + 
+                       $record->total_outlet + $record->total_boiler;
+            });
+
+        return response()->json([
+            'total_records' => $totalRecords,
+            'total_days' => $totalDays,
+            'total_shifts_today' => $todayRecords,
+            'total_shifts_this_week' => $weeklyRecords,
+            'last_update' => $lastUpdate ? $lastUpdate->tanggal : null,
+            'last_shift' => $lastUpdate ? $lastUpdate->shift : null,
+            'monthly_avg_per_day' => round($monthlyAvg ?? 0, 2),
+        ]);
+    }
+
+    /**
+     * API: Get chart data for influent harian
+     */
+    public function getInfluentHarianChartData(Request $request)
+    {
+        // Ambil start_date dan end_date dari request, default ke awal & akhir bulan
+        $startDate = $request->input('start_date')
+        ? Carbon::parse($request->input('start_date'))->startOfDay()
+            : Carbon::now()->startOfMonth();
+
+        $endDate = $request->input('end_date')
+        ? Carbon::parse($request->input('end_date'))->endOfDay()
+            : Carbon::now()->endOfMonth();
+
+        // Agregasi data per hari (sum dari semua shift)
+        $data = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal', 'asc')
+            ->get()
+            ->groupBy('tanggal')
+            ->map(function ($records, $date) {
+                $totalSparta   = $records->sum('pit_sparta');
+                $totalGaram    = $records->sum('pit_garam');
+                $totalDomestik = $records->sum('pit_domestik');
+                $totalProduksiStep3 = $records->sum('pit_produksi_step3');
+                $totalStorage = $records->sum('pit_storage');
+                $totalProsesWwtp2 = $records->sum('pit_proses_wwtp2');
+                $totalOutlet = $records->sum('pit_outlet');
+                $totalBoiler = $records->sum('pit_boiler');
+
+                return [
+                    'tanggal'      => $date,
+                    'pit_sparta'   => $totalSparta,
+                    'pit_garam'    => $totalGaram,
+                    'pit_domestik' => $totalDomestik,
+                    'pit_produksi_step3' => $totalProduksiStep3,
+                    'pit_storage' => $totalStorage,
+                    'pit_proses_wwtp2' => $totalProsesWwtp2,
+                    'pit_outlet' => $totalOutlet,
+                    'pit_boiler' => $totalBoiler,
+                    'total'        => $totalSparta + $totalGaram + $totalDomestik + $totalProduksiStep3 + $totalStorage + $totalProsesWwtp2 + $totalOutlet + $totalBoiler,
+                    'shift_count'  => $records->count(),
+                ];
+            })
+            ->values();
+
+        return response()->json($data);
+    }
+
+    /**
+     * API: Get shift breakdown data (untuk pie chart)
+     */
+    public function getShiftBreakdownData($period = 30)
+    {
+        $startDate = Carbon::now()->subDays($period);
+
+        $data = WwtpInfluentHarian::where('tanggal', '>=', $startDate)
+            ->selectRaw('shift, 
+                SUM(pit_sparta) as total_sparta,
+                SUM(pit_garam) as total_garam,
+                SUM(pit_domestik) as total_domestik,
+                SUM(pit_produksi_step3) as total_produksi_step3,
+                SUM(pit_storage) as total_storage,
+                SUM(pit_proses_wwtp2) as total_proses_wwtp2,
+                SUM(pit_outlet) as total_outlet,
+                SUM(pit_boiler) as total_boiler')
+            ->groupBy('shift')
+            ->get()
+            ->map(function ($record) {
+                return [
+                    'shift' => $record->shift,
+                    'total' => $record->total_sparta + $record->total_garam + $record->total_domestik + 
+                               $record->total_produksi_step3 + $record->total_storage + $record->total_proses_wwtp2 + 
+                               $record->total_outlet + $record->total_boiler,
+                ];
+            });
+
+        return response()->json($data);
+    }
+
+    /**
+     * API: Get monthly comparison (HARIAN)
+     */
+    public function getMonthlyComparisonHarian()
+    {
+        $months = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $startMonth = $date->copy()->startOfMonth();
+            $endMonth = $date->copy()->endOfMonth();
+
+            $influentTotal = WwtpInfluentHarian::whereBetween('tanggal', [$startMonth, $endMonth])
+                ->sum(DB::raw('pit_sparta + pit_garam + pit_domestik + pit_produksi_step3 + pit_storage + pit_proses_wwtp2 + pit_outlet + pit_boiler'));
+
+            $months[] = [
+                'month' => $date->format('M Y'),
+                'influent' => round($influentTotal, 2),
+            ];
+        }
+
+        return response()->json($months);
+    }
+
+    /**
+     * API: Get recent records harian (grouped by date)
+     */
+    public function getRecentRecordsHarian($limit = 10)
+    {
+        // Ambil tanggal-tanggal terakhir
+        $recentDates = WwtpInfluentHarian::select('tanggal')
+            ->distinct()
+            ->orderBy('tanggal', 'desc')
+            ->limit($limit)
+            ->pluck('tanggal');
+
+        // Ambil semua data untuk tanggal-tanggal tersebut
+        $data = WwtpInfluentHarian::whereIn('tanggal', $recentDates)
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('shift', 'asc')
+            ->get()
+            ->groupBy('tanggal')
+            ->map(function ($records, $date) {
+                $shifts = $records->map(function ($record) {
+                    return [
+                        'shift' => $record->shift,
+                        'pit_sparta' => $record->pit_sparta,
+                        'pit_garam' => $record->pit_garam,
+                        'pit_domestik' => $record->pit_domestik,
+                        'pit_produksi_step3' => $record->pit_produksi_step3,
+                        'pit_storage' => $record->pit_storage,
+                        'pit_proses_wwtp2' => $record->pit_proses_wwtp2,
+                        'pit_outlet' => $record->pit_outlet,
+                        'pit_boiler' => $record->pit_boiler,
+                        'debit1' => $record->debit1,
+                        'debit2' => $record->debit2,
+                    ];
+                });
+
+                $totalVolume = $records->sum(function ($record) {
+                    return $record->pit_sparta + $record->pit_garam + $record->pit_domestik +
+                           $record->pit_produksi_step3 + $record->pit_storage + $record->pit_proses_wwtp2 +
+                           $record->pit_outlet + $record->pit_boiler;
+                });
+
+                return [
+                    'tanggal' => $date,
+                    'shift_count' => $records->count(),
+                    'shifts' => $shifts,
+                    'total_volume' => $totalVolume,
+                ];
+            })
+            ->values();
 
         return response()->json($data);
     }

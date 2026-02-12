@@ -16,10 +16,17 @@ Route::prefix('wwtp')->group(function () {
 
     Route::prefix('dashboard')->group(function () {
         Route::get('/statistics', [WWTPControllerProses::class, 'getStatistics']);
-        Route::get('/influent-chart/{period?}', [WWTPControllerProses::class, 'getInfluentChartData']);
-        Route::get('/effluent-chart/{period?}', [WWTPControllerProses::class, 'getEffluentChartData']);
+        Route::get('/influent-chart', [WWTPControllerProses::class, 'getInfluentChartData']);
+        Route::get('/effluent-chart', [WWTPControllerProses::class, 'getEffluentChartData']);
         Route::get('/monthly-comparison', [WWTPControllerProses::class, 'getMonthlyComparison']);
         Route::get('/recent-records/{limit?}', [WWTPControllerProses::class, 'getRecentRecords']);
+
+        //harian
+        Route::get('/statistics-harian', [WWTPControllerProses::class, 'getStatisticsHarian']);
+        Route::get('/influent-harian-chart', [WWTPControllerProses::class, 'getInfluentHarianChartData']);
+        Route::get('/shift-breakdown/{period?}', [WWTPControllerProses::class, 'getShiftBreakdownData']);
+        Route::get('/monthly-comparison-harian', [WWTPControllerProses::class, 'getMonthlyComparisonHarian']);
+        Route::get('/recent-records-harian/{limit?}', [WWTPControllerProses::class, 'getRecentRecordsHarian']);
     });
 
     // WWTP Proses Routes - HARUS DI BAWAH /influent-harian
@@ -44,23 +51,41 @@ Route::prefix('wwtp-performance')->group(function () {
     Route::put('/ph-harian/{id}', [WWTPControllerPerformance::class, 'updatePHHarian']);
     Route::delete('/ph-harian/{id}', [WWTPControllerPerformance::class, 'destroyPHHarian']);
 
+
     Route::prefix('dashboard')->group(function () {
+        // ========== WEEKLY DATA ENDPOINTS ==========
         // Dashboard Statistics
         Route::get('/statistics', [WWTPControllerPerformance::class, 'getStatistics']);
 
-        // Chart Data per jenis (equal, anaerob, aerob, daf, outlet)
-        Route::get('/chart/{jenis}/{period?}', [WWTPControllerPerformance::class, 'getChartData'])
-            ->where('period', '[0-9]+');
+        // Chart Data per jenis (equal, anaerob, aerob, daf, outlet) with date range
+        Route::get('/chart/{jenis}', [WWTPControllerPerformance::class, 'getChartData']);
 
         // Monthly comparison (6 bulan)
         Route::get('/monthly-comparison', [WWTPControllerPerformance::class, 'getMonthlyComparison']);
 
         // Recent records (default limit 10)
         Route::get('/recent/{limit?}', [WWTPControllerPerformance::class, 'getRecentRecords'])
-            ->where('limit', '[0-9]+');
+        ->where('limit', '[0-9]+');
 
         // Weekly performance (opsional jika dipakai)
         Route::get('/weekly', [WWTPControllerPerformance::class, 'getWeeklyPerformance']);
+
+        // ========== DAILY DATA ENDPOINTS (NEW) ==========
+        // Dashboard Statistics for Daily PH Harian
+        Route::get('/statistics-harian', [WWTPControllerPerformance::class, 'getStatisticsHarian']);
+
+        // Chart Data for PH Harian with date range filter
+        Route::get('/chart-harian', [WWTPControllerPerformance::class, 'getChartDataHarian']);
+
+        // Shift breakdown data for pie chart with date range
+        Route::get('/shift-breakdown', [WWTPControllerPerformance::class, 'getShiftBreakdownData']);
+
+        // Monthly comparison for PH Harian (6 months)
+        Route::get('/monthly-comparison-harian', [WWTPControllerPerformance::class, 'getMonthlyComparisonHarian']);
+
+        // Recent PH Harian records
+        Route::get('/recent-harian/{limit?}', [WWTPControllerPerformance::class, 'getRecentRecordsHarian'])
+        ->where('limit', '[0-9]+');
     });
     Route::post('/', [WWTPControllerPerformance::class, 'store']);
     Route::delete('/{id}', [WWTPControllerPerformance::class, 'destroy']);
@@ -76,4 +101,21 @@ Route::prefix('wwtp-sludge')->group(function () {
     Route::post('/{id}', [WWTPControllerSludge::class, 'update']);
     Route::get('/', [WWTPControllerSludge::class, 'index']);
     Route::get('/{id}', [WWTPControllerSludge::class, 'show']);
+
+    Route::prefix('dashboard')->group(function () {
+
+        // Statistics endpoint
+        Route::get('statistics', [WWTPControllerSludge::class, 'getStatistics']);
+
+        // Chart data endpoints
+        Route::get('drain-chart', [WWTPControllerSludge::class, 'getDrainChart']);
+        Route::get('running-hour-chart', [WWTPControllerSludge::class, 'getRunningHourChart']);
+        Route::get('shift-breakdown', [WWTPControllerSludge::class, 'getShiftBreakdown']);
+
+        // Monthly comparison
+        Route::get('monthly-comparison', [WWTPControllerSludge::class, 'getMonthlyComparison']);
+
+        // Recent records
+        Route::get('recent-records/{limit?}', [WWTPControllerSludge::class, 'getRecentRecords']);
+    });
 });

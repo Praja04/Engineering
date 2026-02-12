@@ -173,8 +173,8 @@ class WWTPControllerPerformance extends Controller
     public function indexPHHarian()
     {
         $data = WwtpPerformancePHharian::orderBy('tanggal', 'desc')
-        ->orderBy('shift', 'asc')
-        ->get();
+            ->orderBy('shift', 'asc')
+            ->get();
 
         return response()->json($data);
     }
@@ -308,22 +308,25 @@ class WWTPControllerPerformance extends Controller
     {
         $totalRecords = WwtpPerformanceRecord::count();
 
-        // Last update berdasarkan created_at atau updated_at
+        // Last update berdasarkan created_at
         $lastUpdate = WwtpPerformanceRecord::orderBy('created_at', 'desc')->first();
 
         // Current Week - ambil data dari week yang aktif
         $today = Carbon::now();
-        $startWeek = $today->copy()->startOfWeek(Carbon::MONDAY);
-        $endWeek   = $today->copy()->endOfWeek(Carbon::SUNDAY);
 
         $currentWeek = WwtpPerformanceWeek::where('week_start', '<=', $today)
             ->where('week_end', '>=', $today)
             ->first();
 
         $weeklyData = [];
+        $totalRecordsThisWeek = 0;
+
         if ($currentWeek) {
-            $weeklyData = WwtpPerformanceRecord::where('performance_week_id', $currentWeek->id)
-                ->get()
+            $weekRecords = WwtpPerformanceRecord::where('performance_week_id', $currentWeek->id)->get();
+
+            $totalRecordsThisWeek = $weekRecords->count();
+
+            $weeklyData = $weekRecords
                 ->groupBy('jenis')
                 ->map(function ($group) {
                     return [
@@ -331,50 +334,58 @@ class WWTPControllerPerformance extends Controller
                         'avg_cod' => round($group->avg('cod'), 2),
                         'count'   => $group->count(),
                     ];
-                });
+                })
+                ->toArray(); // 🔧 Convert to array untuk consistent JSON
         }
 
         // Current Month - berdasarkan created_at
         $startMonth = Carbon::now()->startOfMonth();
         $endMonth   = Carbon::now()->endOfMonth();
 
-        $monthlyData = WwtpPerformanceRecord::whereBetween('created_at', [$startMonth, $endMonth])
-            ->get()
+        $monthlyRecords = WwtpPerformanceRecord::whereBetween('created_at', [$startMonth, $endMonth])->get();
+
+        $monthlyData = $monthlyRecords
             ->groupBy('jenis')
             ->map(function ($group) {
                 return [
                     'avg_tss' => round($group->avg('tss'), 2),
                     'avg_cod' => round($group->avg('cod'), 2),
+                    'count'   => $group->count(),
                 ];
-            });
+            })
+            ->toArray(); // 🔧 Convert to array
 
         return response()->json([
-            'total_records'      => $totalRecords,
-            'last_update'        => $lastUpdate ? $lastUpdate->created_at : null,
-            'weekly_summary'     => $weeklyData,
-            'monthly_summary'    => $monthlyData,
+            'total_records'            => $totalRecords,
+            'total_records_this_week'  => $totalRecordsThisWeek,
+            'total_records_this_month' => $monthlyRecords->count(), // 🆕 Bonus: total month
+            'last_update'              => $lastUpdate ? $lastUpdate->created_at : null,
+            'weekly_summary'           => (object) $weeklyData, // 🔧 Force as object
+            'monthly_summary'          => (object) $monthlyData, // 🔧 Force as object
         ]);
     }
 
     /**
-     * Get chart data for specific jenis and period
-     * Data diambil berdasarkan created_at dan dikelompokkan per week
+     * Get chart data for specific jenis and period with date range
+     * Data diambil berdasarkan created_at
      */
-    public function getChartData($jenis, $period = 30)
+    public function getChartData(Request $request, $jenis)
     {
-        $startDate = Carbon::now()->subDays($period);
+        // Default: start of current month to end of current month
+        $startDate = $request->query('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->query('end_date', Carbon::now()->endOfMonth()->toDateString());
 
-        // Ambil records berdasarkan jenis dan periode
+        // Ambil records berdasarkan jenis dan date range
         $records = WwtpPerformanceRecord::with('week')
-        ->where('jenis', $jenis)
-            ->where('created_at', '>=', $startDate)
+            ->where('jenis', $jenis)
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->orderBy('created_at', 'asc')
             ->get();
 
         // Format data untuk chart
         $data = $records->map(function ($record) {
             return [
-                'tanggal' => $record->created_at->format('Y-m-d'), // gunakan created_at
+                'tanggal' => $record->created_at->format('Y-m-d'),
                 'week_start' => $record->week ? $record->week->week_start : null,
                 'week_end' => $record->week ? $record->week->week_end : null,
                 'tss'     => (float) $record->tss,
@@ -424,8 +435,8 @@ class WWTPControllerPerformance extends Controller
     public function getRecentRecords($limit = 10)
     {
         $data = WwtpPerformanceRecord::with('week')
-        ->orderBy('created_at', 'desc')
-        ->limit($limit)
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
             ->get();
 
         return response()->json($data);
@@ -437,11 +448,144 @@ class WWTPControllerPerformance extends Controller
     public function getWeeklyPerformance()
     {
         $weeks = WwtpPerformanceWeek::with('records')
-        ->orderBy('week_start', 'desc')
-        ->limit(10)
+            ->orderBy('week_start', 'desc')
+            ->limit(10)
             ->get();
 
         return response()->json($weeks);
     }
-   
+
+    /**
+     * Get PH harian chart data with date range filter
+     */
+    public function getChartDataHarian(Request $request)
+    {
+        // Default: start of current month to end of current month
+        $startDate = $request->query('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->query('end_date', Carbon::now()->endOfMonth()->toDateString());
+
+        // Aggregate by date (average of all shifts per day)
+        $records = WwtpPerformancePHharian::whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal', 'asc')
+            ->get()
+            ->groupBy('tanggal')
+            ->map(function ($dayRecords) {
+                return [
+                    'tanggal' => $dayRecords->first()->tanggal,
+                    'equalisasi_1' => round($dayRecords->avg('equalisasi_1'), 2) ?? 0,
+                    'equalisasi_2' => round($dayRecords->avg('equalisasi_2'), 2) ?? 0,
+                    'netralisasi' => round($dayRecords->avg('netralisasi'), 2) ?? 0,
+                    'sedimentasi_1' => round($dayRecords->avg('sedimentasi_1'), 2) ?? 0,
+                    'sedimentasi_2' => round($dayRecords->avg('sedimentasi_2'), 2) ?? 0,
+                    'outlet_anaerob' => round($dayRecords->avg('outlet_anaerob'), 2) ?? 0,
+                    'aerob' => round($dayRecords->avg('aerob'), 2) ?? 0,
+                    'lumpur_aktif' => round($dayRecords->avg('lumpur_aktif'), 2) ?? 0,
+                    'clarifier_2' => round($dayRecords->avg('clarifier_2'), 2) ?? 0,
+                    'outlet' => round($dayRecords->avg('outlet'), 2) ?? 0,
+                    'shift_count' => $dayRecords->count(),
+                ];
+            })
+            ->values();
+
+        return response()->json($records);
+    }
+
+    /**
+     * Get shift breakdown data for pie chart
+     */
+    public function getShiftBreakdownData(Request $request)
+    {
+        // Default: start of current month to end of current month
+        $startDate = $request->query('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate = $request->query('end_date', Carbon::now()->endOfMonth()->toDateString());
+
+        $records = WwtpPerformancePHharian::whereBetween('tanggal', [$startDate, $endDate])
+            ->get()
+            ->groupBy('shift')
+            ->map(function ($group, $shift) {
+                return [
+                    'shift' => $shift,
+                    'count' => $group->count(),
+                ];
+            })
+            ->values();
+
+        return response()->json($records);
+    }
+
+    /**
+     * Get monthly comparison for PH harian (last 6 months)
+     */
+    public function getMonthlyComparisonHarian()
+    {
+        $months = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $startMonth = $date->copy()->startOfMonth();
+            $endMonth   = $date->copy()->endOfMonth();
+
+            $monthlyRecords = WwtpPerformancePHharian::whereBetween('tanggal', [$startMonth, $endMonth])->get();
+
+            $months[] = [
+                'month' => $date->format('M Y'),
+                'data' => [
+                    'equalisasi_1' => round($monthlyRecords->avg('equalisasi_1'), 2) ?? 0,
+                    'equalisasi_2' => round($monthlyRecords->avg('equalisasi_2'), 2) ?? 0,
+                    'netralisasi' => round($monthlyRecords->avg('netralisasi'), 2) ?? 0,
+                    'sedimentasi_1' => round($monthlyRecords->avg('sedimentasi_1'), 2) ?? 0,
+                    'sedimentasi_2' => round($monthlyRecords->avg('sedimentasi_2'), 2) ?? 0,
+                    'outlet_anaerob' => round($monthlyRecords->avg('outlet_anaerob'), 2) ?? 0,
+                    'aerob' => round($monthlyRecords->avg('aerob'), 2) ?? 0,
+                    'lumpur_aktif' => round($monthlyRecords->avg('lumpur_aktif'), 2) ?? 0,
+                    'clarifier_2' => round($monthlyRecords->avg('clarifier_2'), 2) ?? 0,
+                    'outlet' => round($monthlyRecords->avg('outlet'), 2) ?? 0,
+                    'shift_count' => $monthlyRecords->count(),
+                ],
+            ];
+        }
+
+        return response()->json($months);
+    }
+
+    /**
+     * Get recent PH harian records grouped by date
+     */
+    public function getRecentRecordsHarian($limit = 10)
+    {
+        // Get distinct dates
+        $dates = WwtpPerformancePHharian::selectRaw('DISTINCT tanggal')
+            ->orderBy('tanggal', 'desc')
+            ->limit($limit)
+            ->pluck('tanggal');
+
+        $data = [];
+        foreach ($dates as $date) {
+            $shifts = WwtpPerformancePHharian::where('tanggal', $date)
+                ->orderBy('shift', 'asc')
+                ->get();
+
+            $data[] = [
+                'tanggal' => $date,
+                'shift_count' => $shifts->count(),
+                'shifts' => $shifts->map(function ($shift) {
+                    return [
+                        'shift' => $shift->shift,
+                        'equalisasi_1' => $shift->equalisasi_1,
+                        'equalisasi_2' => $shift->equalisasi_2,
+                        'netralisasi' => $shift->netralisasi,
+                        'sedimentasi_1' => $shift->sedimentasi_1,
+                        'sedimentasi_2' => $shift->sedimentasi_2,
+                        'outlet_anaerob' => $shift->outlet_anaerob,
+                        'aerob' => $shift->aerob,
+                        'lumpur_aktif' => $shift->lumpur_aktif,
+                        'clarifier_2' => $shift->clarifier_2,
+                        'outlet' => $shift->outlet,
+                    ];
+                }),
+            ];
+        }
+
+        return response()->json($data);
+    }
 }
