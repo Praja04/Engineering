@@ -32,4 +32,8 @@ class DashboardUtilityController extends Controller
     {
         return view('dashboard.wwtp.dashboard_performance');
     }
+    public function wwtp_sludge()
+    {
+        return view('dashboard.wwtp.dashboard_sludge');
+    }
 }
