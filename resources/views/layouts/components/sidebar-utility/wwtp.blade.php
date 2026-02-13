@@ -11,7 +11,7 @@ $jabatan === 'supervisor' ||
 <li class="nav-item">
     <a class="nav-link menu-link {{ request()->is('wwtp/*') ? '' : 'collapsed' }}" href="#sidebarWWTP" data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->is('wwtp/*') ? 'true' : 'false' }}" aria-controls="sidebarWWTP">
         <i class="mdi mdi-water-outline"></i>
-        <span data-key="t-dashboards">WWTP</span>
+        <span data-key="t-dashboards2">WWTP</span>
     </a>
 
     <div class="collapse menu-dropdown {{ request()->is('wwtp/*') ? 'show' : '' }}" id="sidebarWWTP">

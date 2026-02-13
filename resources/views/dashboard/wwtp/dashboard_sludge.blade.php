@@ -748,7 +748,12 @@
                 }
             },
             dataLabels: {
-                enabled: false
+                enabled: true,
+                formatter: (val) => val ? val.toFixed(0) + ' m³' : '0 m³',
+                style: {
+                    fontSize: '12px',
+                    colors: ['#000']
+                }
             },
             stroke: {
                 curve: 'smooth',
@@ -782,204 +787,200 @@
         };
 
         // Drain Lumpur Chart
-        try {
-            drainLumpurChart = new ApexCharts(document.querySelector("#drainLumpurChart"), {
-                ...areaChartOptions,
-                colors: ['#4bc0c0'],
-                series: [{
-                    name: 'Drain Lumpur',
-                    data: []
-                }],
-                yaxis: {
-                    title: {
-                        text: 'Volume (m³)'
-                    },
-                    labels: {
-                        formatter: (value) => value ? value.toFixed(0) + ' m³' : '0 m³'
-                    }
+        drainLumpurChart = new ApexCharts(document.querySelector("#drainLumpurChart"), {
+            ...areaChartOptions,
+            colors: ['#4bc0c0'],
+            series: [{
+                name: 'Drain Lumpur',
+                data: []
+            }],
+            yaxis: {
+                title: {
+                    text: 'Volume (m³)'
                 },
-                tooltip: {
-                    y: {
-                        formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
-                    }
+                labels: {
+                    formatter: (value) => value ? value.toFixed(0) + ' m³' : '0 m³'
                 }
-            });
-            drainLumpurChart.render();
-            console.log('Drain lumpur chart initialized');
-        } catch (error) {
-            console.error('Error initializing drain lumpur chart:', error);
-        }
+            },
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
+                }
+            }
+        });
+        drainLumpurChart.render();
 
         // Running Hour Chart
-        try {
-            runningHourChart = new ApexCharts(document.querySelector("#runningHourChart"), {
-                ...areaChartOptions,
-                colors: ['#ff6384'],
-                series: [{
-                    name: 'Running Hour SCP',
-                    data: []
-                }],
-                yaxis: {
-                    title: {
-                        text: 'Hours'
-                    },
-                    labels: {
-                        formatter: (value) => value ? value.toFixed(0) + ' hrs' : '0 hrs'
-                    }
-                },
-                tooltip: {
-                    y: {
-                        formatter: (value) => value ? value.toFixed(2) + ' hrs' : '0 hrs'
-                    }
+        runningHourChart = new ApexCharts(document.querySelector("#runningHourChart"), {
+            ...areaChartOptions,
+            colors: ['#ff6384'],
+            series: [{
+                name: 'Running Hour SCP',
+                data: []
+            }],
+            dataLabels: {
+                enabled: true,
+                formatter: (val) => val ? val.toFixed(0) + ' hrs' : '0 hrs',
+                style: {
+                    fontSize: '12px',
+                    colors: ['#000']
                 }
-            });
-            runningHourChart.render();
-            console.log('Running hour chart initialized');
-        } catch (error) {
-            console.error('Error initializing running hour chart:', error);
-        }
+            },
+            yaxis: {
+                title: {
+                    text: 'Hours'
+                },
+                labels: {
+                    formatter: (value) => value ? value.toFixed(0) + ' hrs' : '0 hrs'
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? value.toFixed(2) + ' hrs' : '0 hrs'
+                }
+            }
+        });
+        runningHourChart.render();
 
         // Shift Pie Chart
-        try {
-            shiftPieChart = new ApexCharts(document.querySelector("#shiftPieChart"), {
-                chart: {
-                    type: 'donut',
-                    height: 320,
-                    animations: {
-                        enabled: true,
-                        easing: 'easeinout',
-                        speed: 800
-                    }
-                },
-                colors: ['#4bc0c0', '#ff6384', '#36a2eb'],
-                series: [0, 0, 0],
-                labels: ['Shift 1', 'Shift 2', 'Shift 3'],
-                legend: {
-                    position: 'bottom',
-                    horizontalAlign: 'center'
-                },
-                dataLabels: {
+        shiftPieChart = new ApexCharts(document.querySelector("#shiftPieChart"), {
+            chart: {
+                type: 'donut',
+                height: 320,
+                animations: {
                     enabled: true,
-                    formatter: (val, opts) => {
-                        return val.toFixed(1) + '%';
-                    }
-                },
-                tooltip: {
-                    y: {
-                        formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
-                    }
-                },
-                plotOptions: {
-                    pie: {
-                        donut: {
-                            size: '65%',
-                            labels: {
+                    easing: 'easeinout',
+                    speed: 800
+                }
+            },
+            colors: ['#4bc0c0', '#ff6384', '#36a2eb'],
+            series: [0, 0, 0],
+            labels: ['Shift 1', 'Shift 2', 'Shift 3'],
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center'
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: (val, opts) => val.toFixed(1) + '%'
+            },
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
+                }
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            total: {
                                 show: true,
-                                total: {
-                                    show: true,
-                                    label: 'Total',
-                                    formatter: (w) => {
-                                        const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                                        return total.toFixed(2) + ' m³';
-                                    }
+                                label: 'Total',
+                                formatter: (w) => {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toFixed(2) + ' m³';
                                 }
                             }
                         }
                     }
                 }
-            });
-            shiftPieChart.render();
-            console.log('Shift pie chart initialized');
-        } catch (error) {
-            console.error('Error initializing shift pie chart:', error);
-        }
+            }
+        });
+        shiftPieChart.render();
 
         // Monthly Comparison Chart
-        try {
-            monthlyComparisonChart = new ApexCharts(document.querySelector("#monthlyComparisonChart"), {
-                series: [{
-                        name: 'Drain Lumpur',
-                        data: []
-                    },
-                    {
-                        name: 'Running Hour SCP',
-                        data: []
-                    }
-                ],
-                chart: {
-                    type: 'bar',
-                    height: 350,
-                    toolbar: {
-                        show: true
-                    },
-                    animations: {
-                        enabled: true,
-                        easing: 'easeinout',
-                        speed: 800
-                    }
+        monthlyComparisonChart = new ApexCharts(document.querySelector("#monthlyComparisonChart"), {
+            series: [{
+                    name: 'Drain Lumpur',
+                    data: []
                 },
-                colors: ['#4bc0c0', '#ff6384'],
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: '55%',
-                        endingShape: 'rounded'
-                    }
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                stroke: {
-                    show: true,
-                    width: 2,
-                    colors: ['transparent']
-                },
-                xaxis: {
-                    categories: []
-                },
-                yaxis: [{
-                        title: {
-                            text: 'Drain Lumpur (m³)'
-                        },
-                        labels: {
-                            formatter: (value) => value ? value.toFixed(0) + ' m³' : '0 m³'
-                        }
-                    },
-                    {
-                        opposite: true,
-                        title: {
-                            text: 'Running Hour (hrs)'
-                        },
-                        labels: {
-                            formatter: (value) => value ? value.toFixed(0) + ' hrs' : '0 hrs'
-                        }
-                    }
-                ],
-                fill: {
-                    opacity: 1
-                },
-                tooltip: {
-                    y: [{
-                            formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
-                        },
-                        {
-                            formatter: (value) => value ? value.toFixed(2) + ' hrs' : '0 hrs'
-                        }
-                    ]
-                },
-                legend: {
-                    position: 'bottom',
-                    horizontalAlign: 'center'
-                },
-                grid: {
-                    borderColor: '#f1f1f1'
+                {
+                    name: 'Running Hour SCP',
+                    data: []
                 }
-            });
-            monthlyComparisonChart.render();
-            console.log('Monthly comparison chart initialized');
-        } catch (error) {
-            console.error('Error initializing monthly comparison chart:', error);
-        }
+            ],
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: {
+                    show: true
+                },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
+            },
+            colors: ['#4bc0c0', '#ff6384'],
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: (value, opts) => {
+                    const seriesIndex = opts.seriesIndex;
+                    return seriesIndex === 0 ?
+                        (value ? value.toFixed(0) + ' m³' : '0 m³') :
+                        (value ? value.toFixed(0) + ' hrs' : '0 hrs');
+                },
+                style: {
+                    fontSize: '12px',
+                    colors: ['#000']
+                }
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: []
+            },
+            yaxis: [{
+                    title: {
+                        text: 'Drain Lumpur (m³)'
+                    },
+                    labels: {
+                        formatter: (value) => value ? value.toFixed(0) + ' m³' : '0 m³'
+                    }
+                },
+                {
+                    opposite: true,
+                    title: {
+                        text: 'Running Hour (hrs)'
+                    },
+                    labels: {
+                        formatter: (value) => value ? value.toFixed(0) + ' hrs' : '0 hrs'
+                    }
+                }
+            ],
+            fill: {
+                opacity: 1
+            },
+            tooltip: {
+                y: [{
+                        formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
+                    },
+                    {
+                        formatter: (value) => value ? value.toFixed(2) + ' hrs' : '0 hrs'
+                    }
+                ]
+            },
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center'
+            },
+            grid: {
+                borderColor: '#f1f1f1'
+            }
+        });
+        monthlyComparisonChart.render();
 
         console.log('All charts initialized');
     }

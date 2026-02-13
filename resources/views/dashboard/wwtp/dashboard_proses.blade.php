@@ -1381,7 +1381,24 @@
             },
             colors: ['#4bc0c0', '#ff6384', '#36a2eb', '#ffce56', '#9966ff', '#ff9f40', '#4dc9f6', '#f67019'],
             dataLabels: {
-                enabled: false
+                enabled: true, // AKTIFKAN dataLabels
+                formatter: function(value) {
+                    if (!value || value === 0) return '0';
+                    return value.toFixed(0);
+                },
+                style: {
+                    fontSize: '10px',
+                    colors: ['#304758']
+                },
+                background: {
+                    enabled: true,
+                    foreColor: '#fff',
+                    borderRadius: 2,
+                    padding: 4,
+                    opacity: 0.9,
+                    borderWidth: 1,
+                    borderColor: '#fff'
+                }
             },
             stroke: {
                 curve: 'smooth',
@@ -1442,9 +1459,22 @@
             },
             dataLabels: {
                 enabled: true,
-                formatter: (val, opts) => {
+                formatter: function(val, opts) {
                     const value = opts.w.globals.series[opts.seriesIndex];
-                    return val.toFixed(1) + '%';
+                    if (!value || value === 0) return '0 m³';
+                    return value.toFixed(1) + ' m³\n(' + val.toFixed(1) + '%)';
+                },
+                style: {
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    colors: ['#fff']
+                },
+                dropShadow: {
+                    enabled: true,
+                    top: 1,
+                    left: 1,
+                    blur: 1,
+                    opacity: 0.45
                 }
             },
             tooltip: {
@@ -1461,6 +1491,8 @@
                             total: {
                                 show: true,
                                 label: 'Total',
+                                fontSize: '14px',
+                                fontWeight: 'bold',
                                 formatter: (w) => {
                                     const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                                     return total.toFixed(2) + ' m³';
@@ -1469,6 +1501,75 @@
                         }
                     }
                 }
+            }
+        };
+
+        const barChartOptions = {
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: {
+                    show: true
+                },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded',
+                    dataLabels: {
+                        position: 'top' // top, center, bottom
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true, // AKTIFKAN dataLabels untuk bar chart
+                formatter: function(value) {
+                    if (!value || value === 0) return '';
+                    return value.toFixed(0);
+                },
+                offsetY: -20,
+                style: {
+                    fontSize: '10px',
+                    colors: ['#304758'],
+                    fontWeight: 'bold'
+                }
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: []
+            },
+            yaxis: {
+                title: {
+                    text: 'Volume (m³)'
+                },
+                labels: {
+                    formatter: (value) => value ? value.toFixed(0) + ' m³' : '0 m³'
+                }
+            },
+            fill: {
+                opacity: 1
+            },
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
+                }
+            },
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center'
+            },
+            grid: {
+                borderColor: '#f1f1f1'
             }
         };
 
@@ -1488,8 +1589,7 @@
                     {
                         name: 'Pit Domestik',
                         data: []
-                    },
-
+                    }
                 ]
             });
             weeklyInfluentChart.render();
@@ -1545,6 +1645,8 @@
 
         try {
             weeklyMonthlyComparisonChart = new ApexCharts(document.querySelector("#weeklyMonthlyComparisonChart"), {
+                ...barChartOptions,
+                colors: ['#36a2eb', '#9966ff'],
                 series: [{
                         name: 'Influent',
                         data: []
@@ -1553,61 +1655,7 @@
                         name: 'Effluent',
                         data: []
                     }
-                ],
-                chart: {
-                    type: 'bar',
-                    height: 350,
-                    toolbar: {
-                        show: true
-                    },
-                    animations: {
-                        enabled: true,
-                        easing: 'easeinout',
-                        speed: 800
-                    }
-                },
-                colors: ['#36a2eb', '#9966ff'],
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: '55%',
-                        endingShape: 'rounded'
-                    }
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                stroke: {
-                    show: true,
-                    width: 2,
-                    colors: ['transparent']
-                },
-                xaxis: {
-                    categories: []
-                },
-                yaxis: {
-                    title: {
-                        text: 'Volume (m³)'
-                    },
-                    labels: {
-                        formatter: (value) => value ? value.toFixed(0) + ' m³' : '0 m³'
-                    }
-                },
-                fill: {
-                    opacity: 1
-                },
-                tooltip: {
-                    y: {
-                        formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
-                    }
-                },
-                legend: {
-                    position: 'bottom',
-                    horizontalAlign: 'center'
-                },
-                grid: {
-                    borderColor: '#f1f1f1'
-                }
+                ]
             });
             weeklyMonthlyComparisonChart.render();
             console.log('Weekly monthly comparison chart initialized');
@@ -1673,64 +1721,12 @@
 
         try {
             dailyMonthlyComparisonChart = new ApexCharts(document.querySelector("#dailyMonthlyComparisonChart"), {
+                ...barChartOptions,
+                colors: ['#36a2eb'],
                 series: [{
                     name: 'Influent',
                     data: []
-                }],
-                chart: {
-                    type: 'bar',
-                    height: 350,
-                    toolbar: {
-                        show: true
-                    },
-                    animations: {
-                        enabled: true,
-                        easing: 'easeinout',
-                        speed: 800
-                    }
-                },
-                colors: ['#36a2eb'],
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: '55%',
-                        endingShape: 'rounded'
-                    }
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                stroke: {
-                    show: true,
-                    width: 2,
-                    colors: ['transparent']
-                },
-                xaxis: {
-                    categories: []
-                },
-                yaxis: {
-                    title: {
-                        text: 'Volume (m³)'
-                    },
-                    labels: {
-                        formatter: (value) => value ? value.toFixed(0) + ' m³' : '0 m³'
-                    }
-                },
-                fill: {
-                    opacity: 1
-                },
-                tooltip: {
-                    y: {
-                        formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
-                    }
-                },
-                legend: {
-                    position: 'bottom',
-                    horizontalAlign: 'center'
-                },
-                grid: {
-                    borderColor: '#f1f1f1'
-                }
+                }]
             });
             dailyMonthlyComparisonChart.render();
             console.log('Daily monthly comparison chart initialized');

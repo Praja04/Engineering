@@ -37,18 +37,18 @@ $bagian = Auth::user()->bagian;
             </li>
             <li class="nav-item">
                 <a class="nav-link menu-link" href="{{ url('wwtp/dashboard/proses') }}">
-                    <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets">Proses WWTP</span>
+                    <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets1">Proses WWTP</span>
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link menu-link" href="{{ url('wwtp/dashboard/performance') }}">
-                    <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets">Performance WWTP</span>
+                    <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets1">Performance WWTP</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link menu-link" href="{{ url('wwtp/dashboard/sludge') }}">
-                    <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets">Sludge WWTP</span>
+                    <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets1">Sludge WWTP</span>
                 </a>
             </li>
         </ul>
