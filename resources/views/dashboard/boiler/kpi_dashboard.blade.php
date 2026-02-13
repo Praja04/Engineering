@@ -337,7 +337,8 @@
 
                     Highcharts.chart('chartMonthly', {
                         chart: {
-                            type: 'column'
+                            type: 'column',
+                            backgroundColor: 'transparent'
                         },
                         title: {
                             text: ''
@@ -409,7 +410,8 @@
 
                     Highcharts.chart('chartKondensat', {
                         chart: {
-                            type: 'spline'
+                            type: 'spline',
+                            backgroundColor: 'transparent'
                         },
                         title: {
                             text: ''
@@ -506,7 +508,8 @@
 
                     Highcharts.chart('chartSteamWeekly', {
                         chart: {
-                            type: 'column'
+                            type: 'column',
+                            backgroundColor: 'transparent'
                         },
                         title: {
                             text: ''
@@ -583,7 +586,8 @@
 
                     Highcharts.chart('chartSteamMonthly', {
                         chart: {
-                            type: 'column'
+                            type: 'column',
+                            backgroundColor: 'transparent'
                         },
                         title: {
                             text: ''
@@ -654,7 +658,8 @@
 
                     Highcharts.chart('chartBBWeekly', {
                         chart: {
-                            type: 'column'
+                            type: 'column',
+                            backgroundColor: 'transparent'
                         },
                         title: {
                             text: ''
@@ -731,7 +736,8 @@
 
                     Highcharts.chart('chartBBMonthly', {
                         chart: {
-                            type: 'column'
+                            type: 'column',
+                            backgroundColor: 'transparent'
                         },
                         title: {
                             text: ''
