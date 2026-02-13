@@ -1390,7 +1390,25 @@ COD: ${data.cod} mg/L
                 }
             },
             dataLabels: {
-                enabled: false
+                enabled: true, // AKTIFKAN dataLabels
+                formatter: function(value) {
+                    if (!value || value === 0) return '0';
+                    return value.toFixed(1);
+                },
+                style: {
+                    fontSize: '10px',
+                    colors: ['#304758'],
+                    fontWeight: 'bold'
+                },
+                background: {
+                    enabled: true,
+                    foreColor: '#fff',
+                    borderRadius: 2,
+                    padding: 4,
+                    opacity: 0.9,
+                    borderWidth: 1,
+                    borderColor: '#fff'
+                }
             },
             stroke: {
                 curve: 'smooth',
@@ -1404,11 +1422,17 @@ COD: ${data.cod} mg/L
             },
             tooltip: {
                 y: {
-                    formatter: (value) => value.toFixed(2)
+                    formatter: (value) => value ? value.toFixed(2) : '0'
                 }
             },
             grid: {
                 borderColor: '#f1f1f1'
+            },
+            markers: {
+                size: 4,
+                hover: {
+                    size: 6
+                }
             }
         };
 
@@ -1444,7 +1468,24 @@ COD: ${data.cod} mg/L
             },
             dataLabels: {
                 enabled: true,
-                formatter: (val) => val.toFixed(1) + '%'
+                formatter: function(val, opts) {
+                    const value = opts.w.globals.series[opts.seriesIndex];
+                    // Tampilkan nilai aktual dan persentase
+                    if (!value || value === 0) return '0';
+                    return value.toFixed(1) + '\n(' + val.toFixed(1) + '%)';
+                },
+                style: {
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    colors: ['#fff']
+                },
+                dropShadow: {
+                    enabled: true,
+                    top: 1,
+                    left: 1,
+                    blur: 1,
+                    opacity: 0.45
+                }
             },
             plotOptions: {
                 pie: {
@@ -1454,11 +1495,70 @@ COD: ${data.cod} mg/L
                             show: true,
                             total: {
                                 show: true,
-                                label: 'Total'
+                                label: 'Total',
+                                fontSize: '14px',
+                                fontWeight: 'bold',
+                                formatter: (w) => {
+                                    const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    return total.toFixed(2);
+                                }
                             }
                         }
                     }
                 }
+            }
+        };
+
+        const barChartOptions = {
+            chart: {
+                type: 'bar',
+                height: 400,
+                toolbar: {
+                    show: true
+                },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded',
+                    dataLabels: {
+                        position: 'top'
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true, // AKTIFKAN dataLabels
+                formatter: function(value) {
+                    if (!value || value === 0) return '';
+                    return value.toFixed(1);
+                },
+                offsetY: -20,
+                style: {
+                    fontSize: '10px',
+                    colors: ['#304758'],
+                    fontWeight: 'bold'
+                }
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: []
+            },
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center'
+            },
+            grid: {
+                borderColor: '#f1f1f1'
             }
         };
 
@@ -1473,6 +1573,14 @@ COD: ${data.cod} mg/L
             yaxis: {
                 title: {
                     text: 'TSS (mg/L)'
+                },
+                labels: {
+                    formatter: (value) => value ? value.toFixed(1) + ' mg/L' : '0 mg/L'
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? value.toFixed(2) + ' mg/L' : '0 mg/L'
                 }
             }
         });
@@ -1488,6 +1596,14 @@ COD: ${data.cod} mg/L
             yaxis: {
                 title: {
                     text: 'COD (mg/L)'
+                },
+                labels: {
+                    formatter: (value) => value ? value.toFixed(1) + ' mg/L' : '0 mg/L'
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? value.toFixed(2) + ' mg/L' : '0 mg/L'
                 }
             }
         });
@@ -1508,43 +1624,35 @@ COD: ${data.cod} mg/L
             yaxis: {
                 title: {
                     text: 'Concentration (mg/L)'
+                },
+                labels: {
+                    formatter: (value) => value ? value.toFixed(1) + ' mg/L' : '0 mg/L'
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? value.toFixed(2) + ' mg/L' : '0 mg/L'
                 }
             }
         });
         weeklyCombinedChart.render();
 
         weeklyMonthlyComparisonChart = new ApexCharts(document.querySelector("#weeklyMonthlyComparisonChart"), {
+            ...barChartOptions,
             series: [],
-            chart: {
-                type: 'bar',
-                height: 400,
-                stacked: false,
-                toolbar: {
-                    show: true
-                }
-            },
             colors: ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'],
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '55%',
-                    endingShape: 'rounded'
-                }
-            },
-            dataLabels: {
-                enabled: false
-            },
-            xaxis: {
-                categories: []
-            },
             yaxis: {
                 title: {
                     text: 'Average Concentration (mg/L)'
+                },
+                labels: {
+                    formatter: (value) => value ? value.toFixed(1) + ' mg/L' : '0 mg/L'
                 }
             },
-            legend: {
-                position: 'bottom',
-                horizontalAlign: 'center'
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? value.toFixed(2) + ' mg/L' : '0 mg/L'
+                }
             }
         });
         weeklyMonthlyComparisonChart.render();
@@ -1561,7 +1669,16 @@ COD: ${data.cod} mg/L
                 title: {
                     text: 'PH Level'
                 },
-               
+                labels: {
+                    formatter: (value) => value ? value.toFixed(2) : '0'
+                },
+                min: 0,
+                max: 14
+            },
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? 'PH: ' + value.toFixed(2) : 'PH: 0'
+                }
             }
         });
         dailyPhChart.render();
@@ -1570,41 +1687,33 @@ COD: ${data.cod} mg/L
             ...pieChartOptions,
             series: [0, 0, 0],
             labels: ['Shift 1', 'Shift 2', 'Shift 3'],
-            colors: ['#4bc0c0', '#ff6384', '#36a2eb']
+            colors: ['#4bc0c0', '#ff6384', '#36a2eb'],
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? value.toFixed(2) : '0'
+                }
+            }
         });
         dailyShiftPieChart.render();
 
         dailyMonthlyComparisonChart = new ApexCharts(document.querySelector("#dailyMonthlyComparisonChart"), {
+            ...barChartOptions,
             series: [],
-            chart: {
-                type: 'bar',
-                height: 400,
-                toolbar: {
-                    show: true
-                }
-            },
-            dataLabels: {
-                enabled: false
-            },
-            stroke: {
-                curve: 'smooth',
-                width: 2
-            },
-            xaxis: {
-                categories: []
-            },
+            colors: ['#3b82f6'],
             yaxis: {
                 title: {
                     text: 'Average PH Level'
                 },
-               
+                labels: {
+                    formatter: (value) => value ? value.toFixed(2) : '0'
+                },
+                min: 0,
+                max: 14
             },
-            legend: {
-                position: 'bottom',
-                horizontalAlign: 'center'
-            },
-            grid: {
-                borderColor: '#f1f1f1'
+            tooltip: {
+                y: {
+                    formatter: (value) => value ? 'PH: ' + value.toFixed(2) : 'PH: 0'
+                }
             }
         });
         dailyMonthlyComparisonChart.render();
