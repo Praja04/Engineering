@@ -152,6 +152,7 @@
                                     <th class="fw-semibold">Shift</th>
                                     <th class="fw-semibold text-center">Drain Lumpur (m³)</th>
                                     <th class="fw-semibold text-center">Running Hour SCP (jam)</th>
+                                    <th class="fw-semibold text-center">Hasil Lumpur (ton)</th>
                                     <th class="fw-semibold text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -239,6 +240,12 @@
                                         Running Hour SCP (jam) <span class="text-danger">*</span>
                                     </label>
                                     <input type="number" step="0.01" class="form-control" id="edit_running_hour_scp" name="running_hour_scp" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="edit_hasil_lumpur" class="form-label fw-semibold">
+                                        Hasil Lumpur (ton) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="edit_hasil_lumpur" name="hasil_lumpur" required>
                                 </div>
                             </div>
                         </form>
@@ -467,6 +474,7 @@
                 <td>${shiftBadge}</td>
                 <td class="text-center fw-bold">${parseFloat(item.drain_lumpur).toFixed(2)}</td>
                 <td class="text-center fw-bold">${parseFloat(item.running_hour_scp).toFixed(2)}</td>
+                <td class="text-center fw-bold">${parseFloat(item.hasil_lumpur).toFixed(2)}</td>
                 <td class="text-center">${actionButtons}</td>
             </tr>
         `);
@@ -531,6 +539,17 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="detail-item p-4 border rounded bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-muted">Hasil Lumpur</span>
+                                    <p class="fw-bold fs-3 mb-0 text-warning">${parseFloat(record.hasil_lumpur).toFixed(2)} <small class="text-muted fs-6">ton</small></p>
+                                </div>
+                                <i class="mdi mdi-clock-outline fs-1 text-warning opacity-25"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
 
@@ -565,11 +584,11 @@
                     $('#edit_shift').val(record.shift);
                     $('#edit_drain_lumpur').val(record.drain_lumpur);
                     $('#edit_running_hour_scp').val(record.running_hour_scp);
+                    $('#edit_hasil_lumpur').val(record.hasil_lumpur); // ← tambah ini
 
                     new bootstrap.Modal(document.getElementById('editSludgeModal')).show();
                 },
                 error: function(xhr) {
-                    console.error('Error loading data:', xhr);
                     showError('Gagal memuat data untuk diedit');
                 }
             });
@@ -586,7 +605,8 @@
                 tanggal: $('#edit_tanggal').val(),
                 shift: $('#edit_shift').val(),
                 drain_lumpur: $('#edit_drain_lumpur').val(),
-                running_hour_scp: $('#edit_running_hour_scp').val()
+                running_hour_scp: $('#edit_running_hour_scp').val(),
+                hasil_lumpur: $('#edit_hasil_lumpur').val()
             };
 
             $.ajax({

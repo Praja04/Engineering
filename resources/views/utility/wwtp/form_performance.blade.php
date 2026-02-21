@@ -28,11 +28,10 @@
             <div class="col-12">
                 <div class="row g-3">
                     <!-- Weekly Data Card -->
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="card form-selector-card h-100 active" data-bs-toggle="tab" data-bs-target="#weeklyForm" role="tab">
                             <div class="card-body p-4">
                                 <div class="text-center">
-                                    <!-- Icon/Image -->
                                     <div class="mb-3">
                                         <div class="avatar-xl mx-auto">
                                             <div class="avatar-title bg-success-subtle rounded-circle">
@@ -40,16 +39,10 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- Title -->
                                     <h4 class="mb-2 fw-semibold text-success">Data Mingguan</h4>
-
-                                    <!-- Description -->
                                     <p class="text-muted mb-3">
                                         Input data TSS dan COD mingguan per tahapan
                                     </p>
-
-                                    <!-- Select Button -->
                                     <div class="mt-4">
                                         <span class="badge bg-success-subtle text-success px-3 py-2">
                                             <i class="mdi mdi-cursor-pointer me-1"></i> Klik untuk Memilih
@@ -57,35 +50,26 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Active Indicator -->
                             <div class="card-active-indicator"></div>
                         </div>
                     </div>
 
                     <!-- Daily Data Card -->
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="card form-selector-card h-100" data-bs-toggle="tab" data-bs-target="#dailyForm" role="tab">
                             <div class="card-body p-4">
                                 <div class="text-center">
-                                    <!-- Icon/Image -->
                                     <div class="mb-3">
                                         <div class="avatar-xl mx-auto">
                                             <div class="avatar-title bg-primary-subtle rounded-circle">
-                                                <i class="mdi mdi-calendar-week text-success" style="font-size: 3rem;"></i>
+                                                <i class="mdi mdi-calendar-today text-primary" style="font-size: 3rem;"></i>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- Title -->
                                     <h4 class="mb-2 fw-semibold text-primary">Data Harian</h4>
-
-                                    <!-- Description -->
                                     <p class="text-muted mb-3">
                                         Input data pH harian per shift kerja
                                     </p>
-
-                                    <!-- Select Button -->
                                     <div class="mt-4">
                                         <span class="badge bg-primary-subtle text-primary px-3 py-2">
                                             <i class="mdi mdi-cursor-pointer me-1"></i> Klik untuk Memilih
@@ -93,11 +77,37 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Active Indicator -->
                             <div class="card-active-indicator"></div>
                         </div>
                     </div>
+
+                    <!-- Sample Data Card -->
+                    <div class="col-md-4">
+                        <div class="card form-selector-card h-100" data-bs-toggle="tab" data-bs-target="#sampleForm" role="tab">
+                            <div class="card-body p-4">
+                                <div class="text-center">
+                                    <div class="mb-3">
+                                        <div class="avatar-xl mx-auto">
+                                            <div class="avatar-title bg-warning-subtle rounded-circle">
+                                                <i class="mdi mdi-test-tube text-warning" style="font-size: 3rem;"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <h4 class="mb-2 fw-semibold text-warning">Data Sample</h4>
+                                    <p class="text-muted mb-3">
+                                        Input data sampel berdasarkan jenis sample WWTP
+                                    </p>
+                                    <div class="mt-4">
+                                        <span class="badge bg-warning-subtle text-warning px-3 py-2">
+                                            <i class="mdi mdi-cursor-pointer me-1"></i> Klik untuk Memilih
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-active-indicator"></div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -130,7 +140,6 @@
                             </div>
                             <div class="card-body">
                                 <form id="weeklyPerformanceForm" enctype="multipart/form-data">
-                                    <!-- Basic Information -->
                                     <div class="row mb-4">
                                         <div class="col-md-6 mb-3">
                                             <label for="weekly_tanggal" class="form-label fw-semibold">
@@ -155,7 +164,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- TSS and COD Data -->
                                     <div class="mb-4">
                                         <div class="d-flex align-items-center mb-4">
                                             <div class="flex-grow-1">
@@ -181,7 +189,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="col-md-6">
                                                 <div class="card border border-success">
                                                     <div class="card-body">
@@ -199,7 +206,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Photo Upload -->
                                     <div class="mb-4">
                                         <div class="card border">
                                             <div class="card-body">
@@ -227,7 +233,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Submit Button -->
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="d-flex justify-content-end gap-2">
@@ -268,7 +273,6 @@
                             </div>
                             <div class="card-body">
                                 <form id="dailyPHForm">
-                                    <!-- Basic Information -->
                                     <div class="row mb-4">
                                         <div class="col-md-6 mb-3">
                                             <label for="daily_tanggal" class="form-label fw-semibold">
@@ -291,7 +295,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- pH Data -->
                                     <div class="mb-4">
                                         <div class="d-flex align-items-center mb-4">
                                             <div class="flex-grow-1">
@@ -303,7 +306,6 @@
                                         </div>
 
                                         <div class="row g-3">
-                                            <!-- Row 1 -->
                                             <div class="col-md-4">
                                                 <div class="card border border-primary">
                                                     <div class="card-body">
@@ -314,11 +316,9 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_equalisasi_1" name="equalisasi_1" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Equalisasi 1</small>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="col-md-4">
                                                 <div class="card border border-primary">
                                                     <div class="card-body">
@@ -329,11 +329,9 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_equalisasi_2" name="equalisasi_2" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Equalisasi 2</small>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="col-md-4">
                                                 <div class="card border border-primary">
                                                     <div class="card-body">
@@ -344,12 +342,9 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_netralisasi" name="netralisasi" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Netralisasi</small>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <!-- Row 2 -->
                                             <div class="col-md-4">
                                                 <div class="card border">
                                                     <div class="card-body">
@@ -360,11 +355,9 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_sedimentasi_1" name="sedimentasi_1" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Sedimentasi 1</small>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="col-md-4">
                                                 <div class="card border">
                                                     <div class="card-body">
@@ -375,11 +368,9 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_sedimentasi_2" name="sedimentasi_2" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Sedimentasi 2</small>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="col-md-4">
                                                 <div class="card border">
                                                     <div class="card-body">
@@ -390,12 +381,9 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_outlet_anaerob" name="outlet_anaerob" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Outlet Anaerob</small>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <!-- Row 3 -->
                                             <div class="col-md-3">
                                                 <div class="card border">
                                                     <div class="card-body">
@@ -406,11 +394,9 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_aerob" name="aerob" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Aerob</small>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="col-md-3">
                                                 <div class="card border">
                                                     <div class="card-body">
@@ -421,11 +407,9 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_lumpur_aktif" name="lumpur_aktif" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Lumpur Aktif</small>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="col-md-3">
                                                 <div class="card border">
                                                     <div class="card-body">
@@ -436,11 +420,9 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_clarifier_2" name="clarifier_2" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Clarifier 2</small>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="col-md-3">
                                                 <div class="card border">
                                                     <div class="card-body">
@@ -451,7 +433,6 @@
                                                             <input type="number" step="0.01" class="form-control" id="daily_outlet" name="outlet" min="0" max="14" placeholder="0.00">
                                                             <span class="input-group-text bg-light">pH</span>
                                                         </div>
-                                                        <small class="form-text text-muted">pH Outlet</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -470,7 +451,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Submit Button -->
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="d-flex justify-content-end gap-2">
@@ -487,6 +467,224 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ===================== SAMPLE FORM ===================== -->
+                    <div class="tab-pane" id="sampleForm" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-light border-bottom">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-warning rounded-circle">
+                                                <i class="mdi mdi-test-tube"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h5 class="mb-0">Data Performance Sampel WWTP</h5>
+                                        <p class="text-muted mb-0">Input data parameter kualitas sampel</p>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="badge bg-warning text-dark">Sample</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+
+                                {{-- Loading state jenis sampel --}}
+                                <div id="sampleLoadingState" class="text-center py-4">
+                                    <div class="spinner-border text-warning" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="text-muted mt-2 mb-0">Memuat daftar jenis sampel...</p>
+                                </div>
+
+                                {{-- Error state jenis sampel --}}
+                                <div id="sampleErrorState" class="alert alert-danger d-none">
+                                    <i class="mdi mdi-alert-circle me-2"></i>
+                                    Gagal memuat daftar jenis sampel.
+                                    <a href="javascript:void(0)" id="retrySampleLoad" class="alert-link">Coba lagi</a>
+                                </div>
+
+                                <form id="samplePerformanceForm" class="d-none">
+                                    <!-- Tanggal & Jenis Sampel -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="sample_tanggal" class="form-label fw-semibold">
+                                                Tanggal <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="date" class="form-control" id="sample_tanggal" name="tanggal" required>
+                                            <div class="form-text">Tanggal pengambilan sampel</div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="sample_id_sampel" class="form-label fw-semibold">
+                                                Jenis Sampel <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select" id="sample_id_sampel" name="id_sampel" required>
+                                                <option value="">-- Pilih Jenis Sampel --</option>
+                                                {{-- Options diisi dari JS --}}
+                                            </select>
+                                            <div class="form-text">Pilih jenis sampel yang diuji</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Info nama sampel yang dipilih -->
+                                    <div id="selectedSampleInfo" class="alert alert-warning-subtle border border-warning-subtle d-none mb-4">
+                                        <div class="d-flex align-items-center">
+                                            <i class="mdi mdi-test-tube text-warning fs-4 me-2"></i>
+                                            <div>
+                                                <strong class="text-warning">Jenis Sampel Dipilih:</strong>
+                                                <span id="selectedSampleName" class="ms-1 fw-semibold"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Parameter Data -->
+                                    <div class="mb-4">
+                                        <div class="d-flex align-items-center mb-4">
+                                            <div class="flex-grow-1">
+                                                <h5 class="mb-1 text-warning">
+                                                    <i class="mdi mdi-flask-outline me-2"></i>Parameter Kualitas Sampel
+                                                </h5>
+                                                <p class="text-muted mb-0">Input nilai parameter hasil pengujian sampel</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-3">
+                                            <!-- TSS -->
+                                            <div class="col-md-4">
+                                                <div class="card border border-warning h-100">
+                                                    <div class="card-body">
+                                                        <label for="sample_tss" class="form-label fw-semibold">
+                                                            <i class="mdi mdi-beaker text-warning me-1"></i>
+                                                            TSS <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <input type="number" step="0.01" class="form-control" id="sample_tss" name="tss" min="0" placeholder="0.00" required>
+                                                            <span class="input-group-text bg-light">mg/L</span>
+                                                        </div>
+                                                        <small class="form-text text-muted">Total Suspended Solids</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- SV30 -->
+                                            <div class="col-md-4">
+                                                <div class="card border border-warning h-100">
+                                                    <div class="card-body">
+                                                        <label for="sample_sv30" class="form-label fw-semibold">
+                                                            <i class="mdi mdi-chart-bar text-warning me-1"></i>
+                                                            SV30 <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <input type="number" step="0.01" class="form-control" id="sample_sv30" name="sv30" min="0" placeholder="0.00" required>
+                                                            <span class="input-group-text bg-light">mL/L</span>
+                                                        </div>
+                                                        <small class="form-text text-muted">Sludge Volume 30 menit</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- pH -->
+                                            <div class="col-md-4">
+                                                <div class="card border border-warning h-100">
+                                                    <div class="card-body">
+                                                        <label for="sample_ph" class="form-label fw-semibold">
+                                                            <i class="mdi mdi-ph text-warning me-1"></i>
+                                                            pH <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <input type="number" step="0.01" class="form-control" id="sample_ph" name="ph" min="0" max="14" placeholder="0.00" required>
+                                                            <span class="input-group-text bg-light">pH</span>
+                                                        </div>
+                                                        <small class="form-text text-muted">Derajat keasaman (0–14)</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- MLSS -->
+                                            <div class="col-md-4">
+                                                <div class="card border h-100">
+                                                    <div class="card-body">
+                                                        <label for="sample_mlss" class="form-label fw-semibold">
+                                                            <i class="mdi mdi-bacteria me-1"></i>
+                                                            MLSS <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <input type="number" step="0.01" class="form-control" id="sample_mlss" name="mlss" min="0" placeholder="0.00" required>
+                                                            <span class="input-group-text bg-light">mg/L</span>
+                                                        </div>
+                                                        <small class="form-text text-muted">Mixed Liquor Suspended Solids</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- SVL -->
+                                            <div class="col-md-4">
+                                                <div class="card border h-100">
+                                                    <div class="card-body">
+                                                        <label for="sample_svl" class="form-label fw-semibold">
+                                                            <i class="mdi mdi-water-percent me-1"></i>
+                                                            SVL <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <input type="number" step="0.01" class="form-control" id="sample_svl" name="svl" min="0" placeholder="0.00" required>
+                                                            <span class="input-group-text bg-light">mL/g</span>
+                                                        </div>
+                                                        <small class="form-text text-muted">Sludge Volume Loading</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- DO -->
+                                            <div class="col-md-4">
+                                                <div class="card border h-100">
+                                                    <div class="card-body">
+                                                        <label for="sample_do" class="form-label fw-semibold">
+                                                            <i class="mdi mdi-air-filter me-1"></i>
+                                                            DO <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <input type="number" step="0.01" class="form-control" id="sample_do" name="do" min="0" placeholder="0.00" required>
+                                                            <span class="input-group-text bg-light">mg/L</span>
+                                                        </div>
+                                                        <small class="form-text text-muted">Dissolved Oxygen</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-info border-0" role="alert">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0">
+                                                <i class="mdi mdi-information fs-4"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <strong>Catatan:</strong> Pastikan jenis sampel dipilih sesuai dengan lokasi pengambilan sampel.
+                                                Semua parameter bertanda <span class="text-danger fw-bold">*</span> wajib diisi.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <button type="reset" class="btn btn-light" id="resetSampleForm">
+                                                    <i class="mdi mdi-refresh me-1"></i> Reset Form
+                                                </button>
+                                                <button type="submit" class="btn btn-warning text-dark" id="submitSampleForm">
+                                                    <i class="mdi mdi-content-save me-1"></i> Simpan Data Sampel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- ===================== END SAMPLE FORM ===================== --}}
 
                 </div>
             </div>
@@ -521,13 +719,16 @@
 </div>
 
 <style>
-    /* Original Styles */
     .card.border-primary {
         border-color: #405189 !important;
     }
 
     .card.border-success {
         border-color: #0ab39c !important;
+    }
+
+    .card.border-warning {
+        border-color: #f7b84b !important;
     }
 
     .form-control:focus,
@@ -541,56 +742,93 @@
         color: #495057;
     }
 
-    .btn-outline-primary {
-        color: #405189;
+    /* Form Selector Cards */
+    .form-selector-card {
+        cursor: pointer;
+        border: 2px solid #e9ebec;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-selector-card:hover {
         border-color: #405189;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(64, 81, 137, 0.15);
     }
 
-    .btn-outline-primary:hover {
-        background-color: #405189;
-        color: white;
+    .form-selector-card.active {
+        border-color: #f7b84b;
+        box-shadow: 0 4px 20px rgba(247, 184, 75, 0.2);
     }
 
-    .btn-outline-success {
-        color: #0ab39c;
+    /* Color the active border per card type */
+    #weeklyForm-card.form-selector-card.active,
+    [data-bs-target="#weeklyForm"].form-selector-card.active {
         border-color: #0ab39c;
+        box-shadow: 0 4px 20px rgba(10, 179, 156, 0.2);
     }
 
-    .btn-outline-success:hover {
-        background-color: #0ab39c;
-        color: white;
+    [data-bs-target="#dailyForm"].form-selector-card.active {
+        border-color: #405189;
+        box-shadow: 0 4px 20px rgba(64, 81, 137, 0.2);
     }
 
-    .form-text {
-        font-size: 0.8125rem;
+    [data-bs-target="#sampleForm"].form-selector-card.active {
+        border-color: #f7b84b;
+        box-shadow: 0 4px 20px rgba(247, 184, 75, 0.2);
+    }
+
+    .card-active-indicator {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: transparent;
+        transition: background 0.2s ease;
+    }
+
+    [data-bs-target="#weeklyForm"].form-selector-card.active .card-active-indicator {
+        background: #0ab39c;
+    }
+
+    [data-bs-target="#dailyForm"].form-selector-card.active .card-active-indicator {
+        background: #405189;
+    }
+
+    [data-bs-target="#sampleForm"].form-selector-card.active .card-active-indicator {
+        background: #f7b84b;
+    }
+
+    .alert-warning-subtle {
+        background-color: rgba(247, 184, 75, 0.08);
     }
 </style>
 
 <script src="{{ asset('material/assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 <script>
     $(document).ready(function() {
-        // Set default date to today
         const today = new Date().toISOString().split('T')[0];
         $('#daily_tanggal').val(today);
         $('#weekly_tanggal').val(today);
+        $('#sample_tanggal').val(today);
 
-        // Handle form selector card click
+        // =========================================
+        // Card selector logic
+        // =========================================
         $('.form-selector-card').on('click', function() {
-            // Remove active class from all cards
             $('.form-selector-card').removeClass('active');
-
-            // Add active class to clicked card
             $(this).addClass('active');
 
-            // Get target tab
             const target = $(this).data('bs-target');
-
-            // Show the corresponding tab
             $('.tab-pane').removeClass('show active');
             $(target).addClass('show active');
         });
 
-        // Preview foto for weekly form
+        // =========================================
+        // Preview foto weekly
+        // =========================================
         $('#weekly_foto').on('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -605,113 +843,208 @@
             }
         });
 
-        // Submit weekly performance form
+        // =========================================
+        // SUBMIT: Weekly
+        // =========================================
         $('#weeklyPerformanceForm').on('submit', function(e) {
             e.preventDefault();
-
-            const btnSubmit = $('#submitWeeklyForm');
-            const originalText = btnSubmit.html();
-            btnSubmit.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
-
-            const formData = new FormData(this);
+            const btn = $('#submitWeeklyForm');
+            const originalText = btn.html();
+            btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
 
             $.ajax({
                 url: "{{ url('api/wwtp-performance') }}",
                 method: 'POST',
-                data: formData,
+                data: new FormData(this),
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    // Show success modal
                     $('#successMessage').html(response.message || 'Data performance mingguan berhasil disimpan!');
                     $('#successModal').modal('show');
-
-                    // Reset form
                     $('#weeklyPerformanceForm')[0].reset();
                     $('#weekly_tanggal').val(today);
                     $('#weekly_foto_preview').hide();
                 },
                 error: function(xhr) {
-                    const error = xhr.responseJSON;
-                    let message = 'Terjadi kesalahan saat menyimpan data!';
-
-                    if (error && error.message) {
-                        message = error.message;
-                    } else if (error && error.errors) {
-                        message = Object.values(error.errors).flat().join('<br>');
-                    }
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        html: message,
-                        confirmButtonColor: '#3085d6'
-                    });
+                    showErrorSwal(xhr);
                 },
                 complete: function() {
-                    btnSubmit.prop('disabled', false).html(originalText);
+                    btn.prop('disabled', false).html(originalText);
                 }
             });
         });
 
-        // Submit daily pH form
+        // =========================================
+        // SUBMIT: Daily PH
+        // =========================================
         $('#dailyPHForm').on('submit', function(e) {
             e.preventDefault();
-
-            const btnSubmit = $('#submitDailyForm');
-            const originalText = btnSubmit.html();
-            btnSubmit.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
-
-            const formData = {
-                tanggal: $('#daily_tanggal').val(),
-                shift: $('#daily_shift').val(),
-                equalisasi_1: $('#daily_equalisasi_1').val() || null,
-                equalisasi_2: $('#daily_equalisasi_2').val() || null,
-                netralisasi: $('#daily_netralisasi').val() || null,
-                sedimentasi_1: $('#daily_sedimentasi_1').val() || null,
-                sedimentasi_2: $('#daily_sedimentasi_2').val() || null,
-                outlet_anaerob: $('#daily_outlet_anaerob').val() || null,
-                aerob: $('#daily_aerob').val() || null,
-                lumpur_aktif: $('#daily_lumpur_aktif').val() || null,
-                clarifier_2: $('#daily_clarifier_2').val() || null,
-                outlet: $('#daily_outlet').val() || null
-            };
+            const btn = $('#submitDailyForm');
+            const originalText = btn.html();
+            btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
 
             $.ajax({
                 url: "{{ url('api/wwtp-performance/ph-harian') }}",
                 method: 'POST',
-                data: formData,
+                data: {
+                    tanggal: $('#daily_tanggal').val(),
+                    shift: $('#daily_shift').val(),
+                    equalisasi_1: $('#daily_equalisasi_1').val() || null,
+                    equalisasi_2: $('#daily_equalisasi_2').val() || null,
+                    netralisasi: $('#daily_netralisasi').val() || null,
+                    sedimentasi_1: $('#daily_sedimentasi_1').val() || null,
+                    sedimentasi_2: $('#daily_sedimentasi_2').val() || null,
+                    outlet_anaerob: $('#daily_outlet_anaerob').val() || null,
+                    aerob: $('#daily_aerob').val() || null,
+                    lumpur_aktif: $('#daily_lumpur_aktif').val() || null,
+                    clarifier_2: $('#daily_clarifier_2').val() || null,
+                    outlet: $('#daily_outlet').val() || null,
+                },
                 success: function(response) {
-                    // Show success modal
                     $('#successMessage').html(response.message || 'Data pH harian berhasil disimpan!');
                     $('#successModal').modal('show');
-
-                    // Reset form
                     $('#dailyPHForm')[0].reset();
                     $('#daily_tanggal').val(today);
                 },
                 error: function(xhr) {
-                    const error = xhr.responseJSON;
-                    let message = 'Terjadi kesalahan saat menyimpan data!';
-
-                    if (error && error.message) {
-                        message = error.message;
-                    } else if (error && error.errors) {
-                        message = Object.values(error.errors).flat().join('<br>');
-                    }
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        html: message,
-                        confirmButtonColor: '#3085d6'
-                    });
+                    showErrorSwal(xhr);
                 },
                 complete: function() {
-                    btnSubmit.prop('disabled', false).html(originalText);
+                    btn.prop('disabled', false).html(originalText);
                 }
             });
         });
+
+        // =========================================
+        // LOAD: Jenis Sampel
+        // =========================================
+        function loadJenisSampel() {
+            $('#sampleLoadingState').removeClass('d-none');
+            $('#sampleErrorState').addClass('d-none');
+            $('#samplePerformanceForm').addClass('d-none');
+
+            $.ajax({
+                url: "{{ url('api/wwtp-performance/jenis-sampel') }}",
+                method: 'GET',
+                success: function(response) {
+                    const select = $('#sample_id_sampel');
+                    select.find('option:not(:first)').remove(); // clear existing options
+
+                    if (response.success && response.data.length > 0) {
+                        response.data.forEach(function(item) {
+                            select.append(
+                                $('<option>', {
+                                    value: item.id,
+                                    text: item.nama_sampel,
+                                    'data-nama': item.nama_sampel
+                                })
+                            );
+                        });
+                        $('#sampleLoadingState').addClass('d-none');
+                        $('#samplePerformanceForm').removeClass('d-none');
+                    } else {
+                        // No data
+                        $('#sampleLoadingState').addClass('d-none');
+                        $('#sampleErrorState')
+                            .removeClass('d-none')
+                            .html('<i class="mdi mdi-alert-circle me-2"></i>Belum ada jenis sampel yang tersedia. Tambahkan terlebih dahulu melalui manajemen master data.');
+                    }
+                },
+                error: function() {
+                    $('#sampleLoadingState').addClass('d-none');
+                    $('#sampleErrorState').removeClass('d-none').html(
+                        '<i class="mdi mdi-alert-circle me-2"></i>Gagal memuat daftar jenis sampel. ' +
+                        '<a href="javascript:void(0)" id="retrySampleLoad" class="alert-link">Coba lagi</a>'
+                    );
+                    // Re-bind retry karena HTML di-replace
+                    $(document).on('click', '#retrySampleLoad', loadJenisSampel);
+                }
+            });
+        }
+
+        // Load saat tab sample diklik
+        $('[data-bs-target="#sampleForm"]').on('click', function() {
+            // Hanya load jika belum ada option (belum pernah di-load)
+            if ($('#sample_id_sampel option').length <= 1) {
+                loadJenisSampel();
+            }
+        });
+
+        // Tampilkan info jenis sampel yang dipilih
+        $('#sample_id_sampel').on('change', function() {
+            const selected = $(this).find('option:selected');
+            if (selected.val()) {
+                $('#selectedSampleName').text(selected.data('nama'));
+                $('#selectedSampleInfo').removeClass('d-none');
+            } else {
+                $('#selectedSampleInfo').addClass('d-none');
+            }
+        });
+
+        // Reset sample form - kembalikan tanggal ke hari ini & sembunyikan info
+        $('#resetSampleForm').on('click', function() {
+            setTimeout(function() {
+                $('#sample_tanggal').val(today);
+                $('#selectedSampleInfo').addClass('d-none');
+            }, 10);
+        });
+
+        // =========================================
+        // SUBMIT: Sample
+        // =========================================
+        $('#samplePerformanceForm').on('submit', function(e) {
+            e.preventDefault();
+            const btn = $('#submitSampleForm');
+            const originalText = btn.html();
+            btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
+
+            $.ajax({
+                url: "{{ url('api/wwtp-performance/sample') }}",
+                method: 'POST',
+                data: {
+                    tanggal: $('#sample_tanggal').val(),
+                    id_sampel: $('#sample_id_sampel').val(),
+                    tss: $('#sample_tss').val(),
+                    sv30: $('#sample_sv30').val(),
+                    ph: $('#sample_ph').val(),
+                    mlss: $('#sample_mlss').val(),
+                    svl: $('#sample_svl').val(),
+                    do: $('#sample_do').val(),
+                },
+                success: function(response) {
+                    $('#successMessage').html(response.message || 'Data sampel berhasil disimpan!');
+                    $('#successModal').modal('show');
+                    $('#samplePerformanceForm')[0].reset();
+                    $('#sample_tanggal').val(today);
+                    $('#selectedSampleInfo').addClass('d-none');
+                },
+                error: function(xhr) {
+                    showErrorSwal(xhr);
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html(originalText);
+                }
+            });
+        });
+
+        // =========================================
+        // Helper: Error SweetAlert
+        // =========================================
+        function showErrorSwal(xhr) {
+            const error = xhr.responseJSON;
+            let message = 'Terjadi kesalahan saat menyimpan data!';
+            if (error && error.message) {
+                message = error.message;
+            } else if (error && error.errors) {
+                message = Object.values(error.errors).flat().join('<br>');
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                html: message,
+                confirmButtonColor: '#3085d6'
+            });
+        }
     });
 </script>
 @endsection
