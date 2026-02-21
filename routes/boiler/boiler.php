@@ -18,6 +18,7 @@ Route::middleware(['auth', 'access'])->group(function () {
 
         // Dashboard
         Route::get('/dashboard', [DashboardBoilerController::class, 'index'])->name('dashboard.boiler.realtime');
+        Route::get('/dashboard/test', [DashboardBoilerController::class, 'dashboard_realtime']);
         Route::get('/dashboard/kpi', [DashboardBoilerController::class, 'viewDashboardKpi'])->name('dashboard.boiler.kpi');
     });
 });

@@ -7,7 +7,8 @@
 <div class="page-content">
     <div class="container-fluid">
         <div class="container-fluid px-4 py-5">
-            <!-- Header Section -->
+
+            <!-- Header -->
             <div class="mb-5">
                 <h1 class="display-5 fw-bold text-primary mb-2">
                     <i class="fas fa-chart-line me-3"></i>WWTP Performance Monitoring
@@ -32,7 +33,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="col-lg-3 col-md-6">
                     <div class="card border-0 shadow-sm h-100 stat-card">
                         <div class="card-body p-4">
@@ -48,7 +48,21 @@
                         </div>
                     </div>
                 </div>
-
+                <div class="col-lg-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-3 p-3 me-3">
+                                    <i class="fas fa-vial fs-3"></i>
+                                </div>
+                                <div>
+                                    <p class="text-muted mb-1 small">Total Sample</p>
+                                    <h3 class="fw-bold mb-0" id="totalSample">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="col-lg-3 col-md-6">
                     <div class="card border-0 shadow-sm h-100 stat-card">
                         <div class="card-body p-4">
@@ -59,22 +73,6 @@
                                 <div>
                                     <p class="text-muted mb-1 small">This Week</p>
                                     <h3 class="fw-bold mb-0" id="weekPerformance">0</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6">
-                    <div class="card border-0 shadow-sm h-100 stat-card">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center">
-                                <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-3 p-3 me-3">
-                                    <i class="fas fa-calendar-day fs-3"></i>
-                                </div>
-                                <div>
-                                    <p class="text-muted mb-1 small">Today PH</p>
-                                    <h3 class="fw-bold mb-0" id="todayPH">0</h3>
                                 </div>
                             </div>
                         </div>
@@ -137,12 +135,18 @@
                                 <i class="fas fa-water me-2"></i>PH Harian
                             </button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="sample-tab" data-bs-toggle="tab" data-bs-target="#sample" type="button">
+                                <i class="fas fa-vial me-2"></i>Data Sample
+                            </button>
+                        </li>
                     </ul>
                 </div>
 
                 <div class="card-body p-4">
                     <div class="tab-content" id="dataTabsContent">
-                        <!-- Performance Mingguan Tab -->
+
+                        <!-- ===== Tab: Performance Mingguan ===== -->
                         <div class="tab-pane fade show active" id="performance" role="tabpanel">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle">
@@ -169,7 +173,7 @@
                             </div>
                         </div>
 
-                        <!-- PH Harian Tab -->
+                        <!-- ===== Tab: PH Harian ===== -->
                         <div class="tab-pane fade" id="ph" role="tabpanel">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle">
@@ -193,27 +197,81 @@
                                 </table>
                             </div>
                         </div>
+
+                        <!-- ===== Tab: Data Sample ===== -->
+                        <div class="tab-pane fade" id="sample" role="tabpanel">
+                            <!-- Filter khusus sample -->
+                            <div class="row g-3 mb-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted fw-semibold">Filter Jenis Sampel</label>
+                                    <select class="form-select" id="filterJenisSample">
+                                        <option value="">Semua Jenis Sampel</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted fw-semibold">Filter Bulan</label>
+                                    <input type="month" class="form-control" id="filterBulanSample">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted fw-semibold">Cari</label>
+                                    <input type="text" class="form-control" id="searchSample" placeholder="Cari jenis sampel...">
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-outline-secondary w-100" id="btnResetSample">
+                                        <i class="fas fa-redo me-1"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="fw-semibold">Tanggal</th>
+                                            <th class="fw-semibold">Jenis Sampel</th>
+                                            <th class="fw-semibold text-center">TSS <small class="text-muted">(mg/L)</small></th>
+                                            <th class="fw-semibold text-center">SV30 <small class="text-muted">(mL/L)</small></th>
+                                            <th class="fw-semibold text-center">pH</th>
+                                            <th class="fw-semibold text-center">MLSS <small class="text-muted">(mg/L)</small></th>
+                                            <th class="fw-semibold text-center">SVL <small class="text-muted">(mL/g)</small></th>
+                                            <th class="fw-semibold text-center">DO <small class="text-muted">(mg/L)</small></th>
+                                            <th class="fw-semibold text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sampleTableBody">
+                                        <tr>
+                                            <td colspan="9" class="text-center py-5">
+                                                <div class="spinner-border text-warning" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
+
+        {{-- =========================================================== --}}
+        {{-- MODALS: Performance --}}
+        {{-- =========================================================== --}}
 
         <!-- Detail Performance Modal -->
         <div class="modal fade" id="detailPerformanceModal" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
                     <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-flask me-2"></i>Detail Performance WWTP
-                        </h5>
+                        <h5 class="modal-title"><i class="fas fa-flask me-2"></i>Detail Performance WWTP</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body p-4" id="modalPerformanceContent">
-                        <!-- Content will be loaded dynamically -->
-                    </div>
+                    <div class="modal-body p-4" id="modalPerformanceContent"></div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                        <button type="button" class="btn btn-danger" id="btnDeletePerformance" style="display: none;">
+                        <button type="button" class="btn btn-danger" id="btnDeletePerformance" style="display:none;">
                             <i class="fas fa-trash me-2"></i>Hapus Data
                         </button>
                     </div>
@@ -226,15 +284,12 @@
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
                     <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-edit me-2"></i>Edit Data Performance
-                        </h5>
+                        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Data Performance</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4">
                         <form id="editPerformanceForm" enctype="multipart/form-data">
                             <input type="hidden" id="edit_perf_id">
-
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Jenis <span class="text-danger">*</span></label>
@@ -248,11 +303,10 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Minggu <span class="text-danger">*</span></label>
+                                    <label class="form-label fw-semibold">Minggu</label>
                                     <input type="week" class="form-control" id="edit_perf_week" readonly>
                                 </div>
                             </div>
-
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">TSS (mg/L) <span class="text-danger">*</span></label>
@@ -263,7 +317,6 @@
                                     <input type="number" step="0.01" class="form-control" id="edit_perf_cod" required>
                                 </div>
                             </div>
-
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Foto Dokumentasi</label>
                                 <input type="file" class="form-control" id="edit_perf_foto" accept="image/*">
@@ -282,22 +335,22 @@
             </div>
         </div>
 
+        {{-- =========================================================== --}}
+        {{-- MODALS: PH Harian --}}
+        {{-- =========================================================== --}}
+
         <!-- Detail PH Modal -->
         <div class="modal fade" id="detailPHModal" tabindex="-1">
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
                     <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-water me-2"></i>Detail PH Harian
-                        </h5>
+                        <h5 class="modal-title"><i class="fas fa-water me-2"></i>Detail PH Harian</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body p-4" id="modalPHContent">
-                        <!-- Content will be loaded dynamically -->
-                    </div>
+                    <div class="modal-body p-4" id="modalPHContent"></div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                        <button type="button" class="btn btn-danger" id="btnDeletePH" style="display: none;">
+                        <button type="button" class="btn btn-danger" id="btnDeletePH" style="display:none;">
                             <i class="fas fa-trash me-2"></i>Hapus Data
                         </button>
                     </div>
@@ -310,15 +363,12 @@
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
                     <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-edit me-2"></i>Edit Data PH Harian
-                        </h5>
+                        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Data PH Harian</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4">
                         <form id="editPHForm">
                             <input type="hidden" id="edit_ph_id">
-
                             <div class="row mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Tanggal <span class="text-danger">*</span></label>
@@ -334,49 +384,18 @@
                                     </select>
                                 </div>
                             </div>
-
                             <h6 class="fw-bold mb-3 text-info">Nilai PH pada Berbagai Lokasi</h6>
                             <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Equalisasi 1</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_equalisasi_1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Equalisasi 2</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_equalisasi_2">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Netralisasi</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_netralisasi">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Sedimentasi 1</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_sedimentasi_1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Sedimentasi 2</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_sedimentasi_2">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Outlet Anaerob</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_outlet_anaerob">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Aerob</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_aerob">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Lumpur Aktif</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_lumpur_aktif">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Clarifier 2</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_clarifier_2">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Outlet</label>
-                                    <input type="number" step="0.01" class="form-control" id="edit_ph_outlet">
-                                </div>
+                                <div class="col-md-4"><label class="form-label">Equalisasi 1</label><input type="number" step="0.01" class="form-control" id="edit_ph_equalisasi_1"></div>
+                                <div class="col-md-4"><label class="form-label">Equalisasi 2</label><input type="number" step="0.01" class="form-control" id="edit_ph_equalisasi_2"></div>
+                                <div class="col-md-4"><label class="form-label">Netralisasi</label><input type="number" step="0.01" class="form-control" id="edit_ph_netralisasi"></div>
+                                <div class="col-md-4"><label class="form-label">Sedimentasi 1</label><input type="number" step="0.01" class="form-control" id="edit_ph_sedimentasi_1"></div>
+                                <div class="col-md-4"><label class="form-label">Sedimentasi 2</label><input type="number" step="0.01" class="form-control" id="edit_ph_sedimentasi_2"></div>
+                                <div class="col-md-4"><label class="form-label">Outlet Anaerob</label><input type="number" step="0.01" class="form-control" id="edit_ph_outlet_anaerob"></div>
+                                <div class="col-md-4"><label class="form-label">Aerob</label><input type="number" step="0.01" class="form-control" id="edit_ph_aerob"></div>
+                                <div class="col-md-4"><label class="form-label">Lumpur Aktif</label><input type="number" step="0.01" class="form-control" id="edit_ph_lumpur_aktif"></div>
+                                <div class="col-md-4"><label class="form-label">Clarifier 2</label><input type="number" step="0.01" class="form-control" id="edit_ph_clarifier_2"></div>
+                                <div class="col-md-4"><label class="form-label">Outlet</label><input type="number" step="0.01" class="form-control" id="edit_ph_outlet"></div>
                             </div>
                         </form>
                     </div>
@@ -389,6 +408,92 @@
                 </div>
             </div>
         </div>
+
+        {{-- =========================================================== --}}
+        {{-- MODALS: Sample --}}
+        {{-- =========================================================== --}}
+
+        <!-- Detail Sample Modal -->
+        <div class="modal fade" id="detailSampleModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title"><i class="fas fa-vial me-2"></i>Detail Data Sample</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4" id="modalSampleContent"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        <button type="button" class="btn btn-danger" id="btnDeleteSample" style="display:none;">
+                            <i class="fas fa-trash me-2"></i>Hapus Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Sample Modal -->
+        <div class="modal fade" id="editSampleModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Data Sample</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form id="editSampleForm">
+                            <input type="hidden" id="edit_sample_id">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Tanggal <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="edit_sample_tanggal" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Jenis Sampel <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="edit_sample_id_sampel" required>
+                                        <option value="">-- Pilih Jenis Sampel --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <h6 class="fw-bold mb-3 text-warning">Parameter Pengujian</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">TSS (mg/L) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_tss" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">SV30 (mL/L) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_sv30" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">pH <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" min="0" max="14" class="form-control" id="edit_sample_ph" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">MLSS (mg/L) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_mlss" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">SVL (mL/g) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_svl" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">DO (mg/L) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_do" required>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-warning text-dark" id="btnSaveSample">
+                            <i class="fas fa-save me-2"></i>Simpan Perubahan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -399,7 +504,7 @@
 
     .stat-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15) !important;
     }
 
     .data-row {
@@ -407,7 +512,7 @@
     }
 
     .data-row:hover {
-        background-color: rgba(13, 110, 253, 0.05);
+        background-color: rgba(13, 110, 253, .05);
     }
 
     .nav-pills .nav-link {
@@ -426,7 +531,7 @@
 
     .detail-item:hover {
         border-color: #0d6efd !important;
-        background-color: rgba(13, 110, 253, 0.05);
+        background-color: rgba(13, 110, 253, .05);
     }
 
     .foto-preview {
@@ -437,31 +542,70 @@
     }
 
     .badge-jenis {
-        font-size: 0.85rem;
-        padding: 0.5rem 1rem;
+        font-size: .85rem;
+        padding: .5rem 1rem;
+    }
+
+    .param-badge {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px 14px;
+        min-width: 90px;
+    }
+
+    .param-badge .param-val {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .param-badge .param-lbl {
+        font-size: 0.72rem;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+
+    .param-badge .param-unit {
+        font-size: 0.7rem;
+        color: #adb5bd;
     }
 </style>
 
 <script src="{{ asset('material/assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 <script>
     $(document).ready(function() {
+
         let allPerformanceData = [];
         let allPHData = [];
+        let allSampleData = [];
+        let allJenisSampel = [];
         let currentRecordId = null;
-        let currentRecordType = 'performance';
 
-        // Get user jabatan from Laravel
         const userJabatan = "{{ Auth::user()->jabatan }}";
         const canEditDelete = userJabatan !== 'operator';
 
-        // Load data saat halaman pertama kali dimuat
+        // ================================================================
+        // INIT
+        // ================================================================
         loadPerformanceData();
 
-        // Event listeners untuk filter
-        $('#filterJenis, #filterBulan, #searchData').on('change keyup', function() {
-            filterPerformanceData();
+        $('#ph-tab').on('click', function() {
+            loadPHData();
         });
 
+        $('#sample-tab').on('click', function() {
+            loadSampleData();
+            if (allJenisSampel.length === 0) loadJenisSampelOptions();
+        });
+
+        // ================================================================
+        // FILTER - Performance
+        // ================================================================
+        $('#filterJenis, #filterBulan, #searchData').on('change keyup', filterPerformanceData);
         $('#btnReset').on('click', function() {
             $('#filterJenis').val('');
             $('#filterBulan').val('');
@@ -469,56 +613,18 @@
             filterPerformanceData();
         });
 
-        // Delete button handlers
-        $('#btnDeletePerformance').on('click', function() {
-            if (currentRecordId) {
-                Swal.fire({
-                    title: 'Konfirmasi Hapus',
-                    text: 'Apakah Anda yakin ingin menghapus data performance ini?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        deletePerformance(currentRecordId);
-                    }
-                });
-            }
+        // FILTER - Sample
+        $('#filterJenisSample, #filterBulanSample, #searchSample').on('change keyup', filterSampleData);
+        $('#btnResetSample').on('click', function() {
+            $('#filterJenisSample').val('');
+            $('#filterBulanSample').val('');
+            $('#searchSample').val('');
+            filterSampleData();
         });
 
-        $('#btnDeletePH').on('click', function() {
-            if (currentRecordId) {
-                Swal.fire({
-                    title: 'Konfirmasi Hapus',
-                    text: 'Apakah Anda yakin ingin menghapus data PH ini?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        deletePH(currentRecordId);
-                    }
-                });
-            }
-        });
-
-        // Save Performance Edit
-        $('#btnSavePerformance').on('click', function() {
-            savePerformanceEdit();
-        });
-
-        // Save PH Edit
-        $('#btnSavePH').on('click', function() {
-            savePHEdit();
-        });
-
-        // Load Performance Data
+        // ================================================================
+        // PERFORMANCE - Load & Render
+        // ================================================================
         function loadPerformanceData() {
             $.ajax({
                 url: '/api/wwtp-performance',
@@ -528,760 +634,761 @@
                     updateStatistics();
                     filterPerformanceData();
                 },
-                error: function(xhr) {
-                    console.error('Error loading performance data:', xhr);
+                error: function() {
                     showError('Gagal memuat data performance');
                 }
             });
         }
 
-        // Update Statistics
         function updateStatistics() {
-            const totalPerf = allPerformanceData.reduce((sum, week) => sum + (week.records?.length || 0), 0);
+            const totalPerf = allPerformanceData.reduce((s, w) => s + (w.records?.length || 0), 0);
             $('#totalPerformance').text(totalPerf);
-
-            // Count this week's data
             const now = new Date();
             const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 1));
             startOfWeek.setHours(0, 0, 0, 0);
-
-            const weekData = allPerformanceData.filter(week => {
-                const weekStart = new Date(week.week_start);
-                return weekStart >= startOfWeek;
-            }).reduce((sum, week) => sum + (week.records?.length || 0), 0);
-
+            const weekData = allPerformanceData
+                .filter(w => new Date(w.week_start) >= startOfWeek)
+                .reduce((s, w) => s + (w.records?.length || 0), 0);
             $('#weekPerformance').text(weekData);
         }
 
-        // Filter Performance Data
         function filterPerformanceData() {
             const jenis = $('#filterJenis').val();
             const bulan = $('#filterBulan').val();
             const search = $('#searchData').val().toLowerCase();
 
             let filtered = allPerformanceData.map(week => {
-                let filteredRecords = week.records || [];
-
-                if (jenis) {
-                    filteredRecords = filteredRecords.filter(r => r.jenis === jenis);
-                }
-
-                if (bulan) {
-                    const weekMonth = week.week_start.substring(0, 7);
-                    if (weekMonth !== bulan) {
-                        filteredRecords = [];
-                    }
-                }
-
+                let recs = week.records || [];
+                if (jenis) recs = recs.filter(r => r.jenis === jenis);
+                if (bulan && week.week_start.substring(0, 7) !== bulan) recs = [];
                 if (search) {
-                    filteredRecords = filteredRecords.filter(r => {
+                    recs = recs.filter(r => {
                         const weekStr = `${week.week_start} - ${week.week_end}`.toLowerCase();
-                        const jenisStr = getJenisLabel(r.jenis).toLowerCase();
-                        return weekStr.includes(search) || jenisStr.includes(search);
+                        return weekStr.includes(search) || getJenisLabel(r.jenis).toLowerCase().includes(search);
                     });
                 }
-
                 return {
                     ...week,
-                    records: filteredRecords
+                    records: recs
                 };
-            }).filter(week => week.records.length > 0);
+            }).filter(w => w.records.length > 0);
 
             renderPerformanceTable(filtered);
         }
 
-        // Render Performance Table
         function renderPerformanceTable(data) {
             const tbody = $('#performanceTableBody');
             tbody.empty();
-
-            if (data.length === 0) {
-                tbody.append(`
-                    <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
-                            <i class="fas fa-inbox me-2"></i>Tidak ada data performance
-                        </td>
-                    </tr>
-                `);
+            if (!data.length) {
+                tbody.append(`<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data performance</td></tr>`);
                 return;
             }
-
             data.forEach(week => {
                 week.records.forEach(record => {
-                    const jenisBadge = getJenisBadge(record.jenis);
-                    const weekRange = formatWeekRange(week.week_start, week.week_end);
-                    const hasFoto = record.foto ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-muted"></i>';
-
-                    let actionButtons = `
-                        <button class="btn btn-sm btn-outline-primary me-1" 
-                                onclick="showPerformanceDetail(${record.id})"
-                                data-bs-toggle="tooltip" 
-                                title="Lihat Detail">
-                            <i class="mdi mdi-eye"></i>
-                        </button>
-                    `;
-
+                    const hasFoto = record.foto ?
+                        '<i class="fas fa-check-circle text-success"></i>' :
+                        '<i class="fas fa-times-circle text-muted"></i>';
+                    let btns = `<button class="btn btn-sm btn-outline-primary me-1" onclick="showPerformanceDetail(${record.id})" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
                     if (canEditDelete) {
-                        actionButtons += `
-                            <button class="btn btn-sm btn-outline-success me-1" 
-                                    onclick="showPerformanceEdit(${record.id})"
-                                    data-bs-toggle="tooltip" 
-                                    title="Edit Data">
-                                <i class="mdi mdi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" 
-                                    onclick="confirmDeletePerformance(${record.id})"
-                                    data-bs-toggle="tooltip" 
-                                    title="Hapus Data">
-                                <i class="mdi mdi-trash-can"></i>
-                            </button>
-                        `;
+                        btns += `
+                        <button class="btn btn-sm btn-outline-success me-1" onclick="showPerformanceEdit(${record.id})" title="Edit"><i class="mdi mdi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="confirmDeletePerformance(${record.id})" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
                     }
-
                     tbody.append(`
-                        <tr class="data-row">
-                            <td>${weekRange}</td>
-                            <td>${jenisBadge}</td>
-                            <td class="text-center fw-bold">${record.tss}</td>
-                            <td class="text-center fw-bold">${record.cod}</td>
-                            <td class="text-center">${hasFoto}</td>
-                            <td class="text-center">${actionButtons}</td>
-                        </tr>
-                    `);
+                    <tr class="data-row">
+                        <td>${formatWeekRange(week.week_start, week.week_end)}</td>
+                        <td>${getJenisBadge(record.jenis)}</td>
+                        <td class="text-center fw-bold">${record.tss}</td>
+                        <td class="text-center fw-bold">${record.cod}</td>
+                        <td class="text-center">${hasFoto}</td>
+                        <td class="text-center">${btns}</td>
+                    </tr>`);
                 });
             });
-
-            // Initialize tooltips
             $('[data-bs-toggle="tooltip"]').tooltip();
         }
 
-        // Show Performance Edit
-        window.showPerformanceEdit = function(id) {
-            $.ajax({
-                url: `/api/wwtp-performance/${id}`,
-                method: 'GET',
-                success: function(response) {
-                    const record = response.data;
-                    currentRecordId = id;
-
-                    $('#edit_perf_id').val(record.id);
-                    $('#edit_perf_jenis').val(record.jenis);
-                    $('#edit_perf_tss').val(record.tss);
-                    $('#edit_perf_cod').val(record.cod);
-
-                    // Set week value
-                    const weekStart = new Date(record.week.week_start);
-                    const year = weekStart.getFullYear();
-                    const weekNum = getWeekNumber(weekStart);
-                    $('#edit_perf_week').val(`${year}-W${weekNum.toString().padStart(2, '0')}`);
-
-                    // Show current foto if exists
-                    if (record.foto) {
-                        $('#edit_perf_current_foto').html(`
-                            <img src="/storage/${record.foto}" class="img-thumbnail" style="max-height: 150px;" alt="Current Photo">
-                            <p class="small text-muted mt-1">Foto saat ini</p>
-                        `);
-                    } else {
-                        $('#edit_perf_current_foto').html('');
-                    }
-
-                    new bootstrap.Modal(document.getElementById('editPerformanceModal')).show();
-                },
-                error: function(xhr) {
-                    showError('Gagal memuat data untuk diedit');
-                }
-            });
-        }
-
-        // Save Performance Edit
-        function savePerformanceEdit() {
-            const id = $('#edit_perf_id').val();
-            const btnSave = $('#btnSavePerformance');
-            const originalText = btnSave.html();
-            btnSave.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
-
-            const formData = new FormData();
-            formData.append('jenis', $('#edit_perf_jenis').val());
-            formData.append('tss', $('#edit_perf_tss').val());
-            formData.append('cod', $('#edit_perf_cod').val());
-
-            const fotoFile = $('#edit_perf_foto')[0].files[0];
-            if (fotoFile) {
-                formData.append('foto', fotoFile);
-            }
-
-            $.ajax({
-                url: `/api/wwtp-performance/${id}`,
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    $('#editPerformanceModal').modal('hide');
-                    showSuccess('Data performance berhasil diperbarui');
-                    loadPerformanceData();
-                },
-                error: function(xhr) {
-                    const error = xhr.responseJSON;
-                    let message = 'Terjadi kesalahan saat menyimpan data!';
-                    if (error && error.message) {
-                        message = error.message;
-                    }
-                    showError(message);
-                },
-                complete: function() {
-                    btnSave.prop('disabled', false).html(originalText);
-                }
-            });
-        }
-
-        function getWeekNumber(date) {
-            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-            const dayNum = d.getUTCDay() || 7;
-            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        }
-
-        // Show Performance Detail
+        // ================================================================
+        // PERFORMANCE - Detail & Edit & Delete
+        // ================================================================
         window.showPerformanceDetail = function(id) {
             $.ajax({
                 url: `/api/wwtp-performance/${id}`,
                 method: 'GET',
                 success: function(response) {
-                    const record = response.data;
+                    const r = response.data;
                     currentRecordId = id;
-                    currentRecordType = 'performance';
-
-                    const jenisLabel = getJenisLabel(record.jenis);
-                    const weekRange = formatWeekRange(record.week.week_start, record.week.week_end);
-
                     let content = `
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <div class="info-box p-3 bg-light rounded">
-                                    <p class="text-muted small mb-1">Periode Minggu</p>
-                                    <p class="fw-bold mb-0">${weekRange}</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box p-3 bg-light rounded">
-                                    <p class="text-muted small mb-1">Jenis Pengukuran</p>
-                                    ${getJenisBadge(record.jenis)}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box p-3 bg-light rounded">
-                                    <p class="text-muted small mb-1">Tanggal Input</p>
-                                    <p class="fw-bold mb-0">${formatDate(record.created_at)}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <h6 class="fw-bold mb-3 text-primary">Parameter Pengukuran</h6>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <div class="detail-item p-4 border rounded bg-light">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="text-muted">TSS (Total Suspended Solids)</span>
-                                            <p class="fw-bold fs-3 mb-0 text-primary">${record.tss} <small class="text-muted fs-6">mg/L</small></p>
-                                        </div>
-                                        <i class="fas fa-molecule fs-1 text-primary opacity-25"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="detail-item p-4 border rounded bg-light">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="text-muted">COD (Chemical Oxygen Demand)</span>
-                                            <p class="fw-bold fs-3 mb-0 text-primary">${record.cod} <small class="text-muted fs-6">mg/L</small></p>
-                                        </div>
-                                        <i class="fas fa-water fs-1 text-primary opacity-25"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    if (record.foto) {
-                        content += `
-                            <h6 class="fw-bold mb-3 text-primary">Dokumentasi</h6>
-                            <div class="text-center">
-                                <img src="/storage/${record.foto}" class="foto-preview img-thumbnail" alt="Dokumentasi">
-                            </div>
-                        `;
-                    }
-
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Periode</p><p class="fw-bold mb-0">${formatWeekRange(r.week.week_start, r.week.week_end)}</p></div></div>
+                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Jenis</p>${getJenisBadge(r.jenis)}</div></div>
+                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Tanggal Input</p><p class="fw-bold mb-0">${formatDate(r.created_at)}</p></div></div>
+                    </div>
+                    <h6 class="fw-bold mb-3 text-primary">Parameter</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6"><div class="detail-item p-4 border rounded bg-light"><span class="text-muted">TSS</span><p class="fw-bold fs-3 mb-0 text-primary">${r.tss} <small class="text-muted fs-6">mg/L</small></p></div></div>
+                        <div class="col-md-6"><div class="detail-item p-4 border rounded bg-light"><span class="text-muted">COD</span><p class="fw-bold fs-3 mb-0 text-primary">${r.cod} <small class="text-muted fs-6">mg/L</small></p></div></div>
+                    </div>`;
+                    if (r.foto) content += `<h6 class="fw-bold mb-3 text-primary">Dokumentasi</h6><div class="text-center"><img src="/storage/${r.foto}" class="foto-preview img-thumbnail"></div>`;
                     $('#modalPerformanceContent').html(content);
-
-                    // Show/hide delete button based on role
-                    if (canEditDelete) {
-                        $('#btnDeletePerformance').show();
-                    } else {
-                        $('#btnDeletePerformance').hide();
-                    }
-
+                    canEditDelete ? $('#btnDeletePerformance').show() : $('#btnDeletePerformance').hide();
                     new bootstrap.Modal(document.getElementById('detailPerformanceModal')).show();
                 },
-                error: function(xhr) {
-                    console.error('Error loading detail:', xhr);
+                error: function() {
                     showError('Gagal memuat detail data');
                 }
             });
-        }
+        };
 
-        // Confirm Delete Performance
-        window.confirmDeletePerformance = function(id) {
-            currentRecordId = id;
-            Swal.fire({
-                title: 'Konfirmasi Hapus',
-                text: 'Apakah Anda yakin ingin menghapus data performance ini?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    deletePerformance(id);
-                }
-            });
-        }
-
-        // Delete Performance
-        function deletePerformance(id) {
+        window.showPerformanceEdit = function(id) {
             $.ajax({
                 url: `/api/wwtp-performance/${id}`,
-                method: 'DELETE',
+                method: 'GET',
                 success: function(response) {
-                    $('#detailPerformanceModal').modal('hide');
-                    showSuccess('Data performance berhasil dihapus');
+                    const r = response.data;
+                    currentRecordId = id;
+                    $('#edit_perf_id').val(r.id);
+                    $('#edit_perf_jenis').val(r.jenis);
+                    $('#edit_perf_tss').val(r.tss);
+                    $('#edit_perf_cod').val(r.cod);
+                    const ws = new Date(r.week.week_start);
+                    $('#edit_perf_week').val(`${ws.getFullYear()}-W${getWeekNumber(ws).toString().padStart(2,'0')}`);
+                    $('#edit_perf_current_foto').html(r.foto ? `<img src="/storage/${r.foto}" class="img-thumbnail" style="max-height:150px;">` : '');
+                    new bootstrap.Modal(document.getElementById('editPerformanceModal')).show();
+                },
+                error: function() {
+                    showError('Gagal memuat data untuk diedit');
+                }
+            });
+        };
+
+        $('#btnSavePerformance').on('click', function() {
+            const id = $('#edit_perf_id').val();
+            const btn = $(this),
+                orig = btn.html();
+            btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
+            const fd = new FormData();
+            fd.append('jenis', $('#edit_perf_jenis').val());
+            fd.append('tss', $('#edit_perf_tss').val());
+            fd.append('cod', $('#edit_perf_cod').val());
+            if ($('#edit_perf_foto')[0].files[0]) fd.append('foto', $('#edit_perf_foto')[0].files[0]);
+            $.ajax({
+                url: `/api/wwtp-performance/${id}`,
+                method: 'POST',
+                data: fd,
+                processData: false,
+                contentType: false,
+                success: function() {
+                    $('#editPerformanceModal').modal('hide');
+                    showSuccess('Data berhasil diperbarui');
                     loadPerformanceData();
                 },
                 error: function(xhr) {
-                    console.error('Error deleting performance:', xhr);
-                    showError('Gagal menghapus data performance');
+                    showErrorFromXhr(xhr);
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html(orig);
                 }
             });
-        }
+        });
 
-        // Load PH Data
+        $('#btnDeletePerformance').on('click', function() {
+            if (!currentRecordId) return;
+            confirmSwal('Hapus data performance ini?', () => {
+                $.ajax({
+                    url: `/api/wwtp-performance/${currentRecordId}`,
+                    method: 'DELETE',
+                    success: function() {
+                        $('#detailPerformanceModal').modal('hide');
+                        showSuccess('Data dihapus');
+                        loadPerformanceData();
+                    },
+                    error: function() {
+                        showError('Gagal menghapus');
+                    }
+                });
+            });
+        });
+
+        window.confirmDeletePerformance = function(id) {
+            confirmSwal('Hapus data performance ini?', () => {
+                $.ajax({
+                    url: `/api/wwtp-performance/${id}`,
+                    method: 'DELETE',
+                    success: function() {
+                        showSuccess('Data dihapus');
+                        loadPerformanceData();
+                    },
+                    error: function() {
+                        showError('Gagal menghapus');
+                    }
+                });
+            });
+        };
+
+        // ================================================================
+        // PH HARIAN - Load & Render
+        // ================================================================
         function loadPHData() {
             $.ajax({
                 url: '/api/wwtp-performance/ph-harian',
                 method: 'GET',
                 success: function(response) {
                     allPHData = response || [];
-                    updatePHStatistics();
+                    $('#totalPH').text(allPHData.length);
+                    const today = new Date().toISOString().split('T')[0];
+                    $('#todayPH').text(allPHData.filter(p => p.tanggal === today).length);
                     renderPHTable(allPHData);
                 },
-                error: function(xhr) {
-                    console.error('Error loading PH data:', xhr);
+                error: function() {
                     showError('Gagal memuat data PH');
                 }
             });
         }
 
-        // Update PH Statistics
-        function updatePHStatistics() {
-            $('#totalPH').text(allPHData.length);
-
-            // Count today's data
-            const today = new Date().toISOString().split('T')[0];
-            const todayCount = allPHData.filter(ph => ph.tanggal === today).length;
-            $('#todayPH').text(todayCount);
-        }
-
-        // Render PH Table
         function renderPHTable(data) {
             const tbody = $('#phTableBody');
             tbody.empty();
-
-            if (data.length === 0) {
-                tbody.append(`
-                    <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
-                            <i class="fas fa-inbox me-2"></i>Tidak ada data PH harian
-                        </td>
-                    </tr>
-                `);
+            if (!data.length) {
+                tbody.append(`<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data PH harian</td></tr>`);
                 return;
             }
-
             data.forEach(item => {
-                const shiftBadge = getShiftBadge(item.shift);
-
-                let actionButtons = `
-                    <button class="btn btn-sm btn-outline-primary me-1" 
-                            onclick="showPHDetail(${item.id})"
-                            data-bs-toggle="tooltip" 
-                            title="Lihat Detail">
-                        <i class="mdi mdi-eye"></i>
-                    </button>
-                `;
-
+                let btns = `<button class="btn btn-sm btn-outline-primary me-1" onclick="showPHDetail(${item.id})" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
                 if (canEditDelete) {
-                    actionButtons += `
-                        <button class="btn btn-sm btn-outline-success me-1" 
-                                onclick="showPHEdit(${item.id})"
-                                data-bs-toggle="tooltip" 
-                                title="Edit Data">
-                            <i class="mdi mdi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" 
-                                onclick="confirmDeletePH(${item.id})"
-                                data-bs-toggle="tooltip" 
-                                title="Hapus Data">
-                            <i class="mdi mdi-trash-can"></i>
-                        </button>
-                    `;
+                    btns += `
+                    <button class="btn btn-sm btn-outline-success me-1" onclick="showPHEdit(${item.id})" title="Edit"><i class="mdi mdi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDeletePH(${item.id})" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
                 }
-
                 tbody.append(`
-                    <tr class="data-row">
-                        <td>${formatDate(item.tanggal)}</td>
-                        <td>${shiftBadge}</td>
-                        <td class="text-center fw-bold">${item.equalisasi_1 || '-'}</td>
-                        <td class="text-center fw-bold">${item.equalisasi_2 || '-'}</td>
-                        <td class="text-center fw-bold">${item.outlet || '-'}</td>
-                        <td class="text-center">${actionButtons}</td>
-                    </tr>
-                `);
+                <tr class="data-row">
+                    <td>${formatDate(item.tanggal)}</td>
+                    <td>${getShiftBadge(item.shift)}</td>
+                    <td class="text-center fw-bold">${item.equalisasi_1 ?? '-'}</td>
+                    <td class="text-center fw-bold">${item.equalisasi_2 ?? '-'}</td>
+                    <td class="text-center fw-bold">${item.outlet ?? '-'}</td>
+                    <td class="text-center">${btns}</td>
+                </tr>`);
             });
-
-            // Initialize tooltips
-            $('[data-bs-toggle="tooltip"]').tooltip();
         }
 
-        // Show PH Detail
         window.showPHDetail = function(id) {
             $.ajax({
                 url: `/api/wwtp-performance/ph-harian/${id}`,
                 method: 'GET',
-                success: function(record) {
+                success: function(r) {
                     currentRecordId = id;
-                    currentRecordType = 'ph';
-
-                    const shiftLabel = getShiftLabel(record.shift);
-
-                    let content = `
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <div class="info-box p-3 bg-light rounded">
-                                    <p class="text-muted small mb-1">Tanggal</p>
-                                    <p class="fw-bold mb-0">${formatDate(record.tanggal)}</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box p-3 bg-light rounded">
-                                    <p class="text-muted small mb-1">Shift</p>
-                                    ${getShiftBadge(record.shift)}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-box p-3 bg-light rounded">
-                                    <p class="text-muted small mb-1">Waktu Input</p>
-                                    <p class="fw-bold mb-0">${formatDate(record.created_at)}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <h6 class="fw-bold mb-3 text-info">Nilai PH pada Berbagai Lokasi</h6>
-                        <div class="row g-3">
-                    `;
-
                     const phItems = [{
                             label: 'Equalisasi 1',
-                            value: record.equalisasi_1,
-                            icon: 'water'
-                        },
-                        {
+                            value: r.equalisasi_1
+                        }, {
                             label: 'Equalisasi 2',
-                            value: record.equalisasi_2,
-                            icon: 'water'
+                            value: r.equalisasi_2
                         },
                         {
                             label: 'Netralisasi',
-                            value: record.netralisasi,
-                            icon: 'water-check'
-                        },
-                        {
+                            value: r.netralisasi
+                        }, {
                             label: 'Sedimentasi 1',
-                            value: record.sedimentasi_1,
-                            icon: 'water-outline'
+                            value: r.sedimentasi_1
                         },
                         {
                             label: 'Sedimentasi 2',
-                            value: record.sedimentasi_2,
-                            icon: 'water-outline'
-                        },
-                        {
+                            value: r.sedimentasi_2
+                        }, {
                             label: 'Outlet Anaerob',
-                            value: record.outlet_anaerob,
-                            icon: 'water-outline'
+                            value: r.outlet_anaerob
                         },
                         {
                             label: 'Aerob',
-                            value: record.aerob,
-                            icon: 'water-outline'
-                        },
-                        {
+                            value: r.aerob
+                        }, {
                             label: 'Lumpur Aktif',
-                            value: record.lumpur_aktif,
-                            icon: 'water-outline'
+                            value: r.lumpur_aktif
                         },
                         {
                             label: 'Clarifier 2',
-                            value: record.clarifier_2,
-                            icon: 'water-outline'
-                        },
-                        {
+                            value: r.clarifier_2
+                        }, {
                             label: 'Outlet',
-                            value: record.outlet,
-                            icon: 'water-check'
+                            value: r.outlet
                         }
                     ];
-
-                    phItems.forEach(item => {
-                        if (item.value !== null && item.value !== undefined) {
-                            content += `
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="detail-item p-3 border rounded">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <small class="text-muted">${item.label}</small>
-                                                <p class="fw-bold fs-5 mb-0 text-info">${item.value} <small class="text-muted">pH</small></p>
-                                            </div>
-                                            <i class="mdi mdi-${item.icon} fs-3 text-info opacity-25"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    });
-
-                    content += `</div>`;
-
-                    $('#modalPHContent').html(content);
-
-                    // Show/hide delete button based on role
-                    if (canEditDelete) {
-                        $('#btnDeletePH').show();
-                    } else {
-                        $('#btnDeletePH').hide();
-                    }
-
+                    let phGrid = phItems.filter(i => i.value !== null && i.value !== undefined).map(i =>
+                        `<div class="col-md-6 col-lg-4"><div class="detail-item p-3 border rounded">
+                        <small class="text-muted">${i.label}</small>
+                        <p class="fw-bold fs-5 mb-0 text-info">${i.value} <small class="text-muted">pH</small></p>
+                    </div></div>`).join('');
+                    $('#modalPHContent').html(`
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Tanggal</p><p class="fw-bold mb-0">${formatDate(r.tanggal)}</p></div></div>
+                        <div class="col-md-6"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Shift</p>${getShiftBadge(r.shift)}</div></div>
+                    </div>
+                    <h6 class="fw-bold mb-3 text-info">Nilai PH per Lokasi</h6>
+                    <div class="row g-3">${phGrid}</div>`);
+                    canEditDelete ? $('#btnDeletePH').show() : $('#btnDeletePH').hide();
                     new bootstrap.Modal(document.getElementById('detailPHModal')).show();
                 },
-                error: function(xhr) {
-                    console.error('Error loading PH detail:', xhr);
+                error: function() {
                     showError('Gagal memuat detail data PH');
                 }
             });
-        }
+        };
 
-        // Show PH Edit
         window.showPHEdit = function(id) {
             $.ajax({
                 url: `/api/wwtp-performance/ph-harian/${id}`,
                 method: 'GET',
-                success: function(record) {
+                success: function(r) {
                     currentRecordId = id;
-
-                    $('#edit_ph_id').val(record.id);
-                    $('#edit_ph_tanggal').val(record.tanggal);
-                    $('#edit_ph_shift').val(record.shift);
-                    $('#edit_ph_equalisasi_1').val(record.equalisasi_1 || '');
-                    $('#edit_ph_equalisasi_2').val(record.equalisasi_2 || '');
-                    $('#edit_ph_netralisasi').val(record.netralisasi || '');
-                    $('#edit_ph_sedimentasi_1').val(record.sedimentasi_1 || '');
-                    $('#edit_ph_sedimentasi_2').val(record.sedimentasi_2 || '');
-                    $('#edit_ph_outlet_anaerob').val(record.outlet_anaerob || '');
-                    $('#edit_ph_aerob').val(record.aerob || '');
-                    $('#edit_ph_lumpur_aktif').val(record.lumpur_aktif || '');
-                    $('#edit_ph_clarifier_2').val(record.clarifier_2 || '');
-                    $('#edit_ph_outlet').val(record.outlet || '');
-
+                    $('#edit_ph_id').val(r.id);
+                    $('#edit_ph_tanggal').val(r.tanggal);
+                    $('#edit_ph_shift').val(r.shift);
+                    $('#edit_ph_equalisasi_1').val(r.equalisasi_1 || '');
+                    $('#edit_ph_equalisasi_2').val(r.equalisasi_2 || '');
+                    $('#edit_ph_netralisasi').val(r.netralisasi || '');
+                    $('#edit_ph_sedimentasi_1').val(r.sedimentasi_1 || '');
+                    $('#edit_ph_sedimentasi_2').val(r.sedimentasi_2 || '');
+                    $('#edit_ph_outlet_anaerob').val(r.outlet_anaerob || '');
+                    $('#edit_ph_aerob').val(r.aerob || '');
+                    $('#edit_ph_lumpur_aktif').val(r.lumpur_aktif || '');
+                    $('#edit_ph_clarifier_2').val(r.clarifier_2 || '');
+                    $('#edit_ph_outlet').val(r.outlet || '');
                     new bootstrap.Modal(document.getElementById('editPHModal')).show();
                 },
-                error: function(xhr) {
+                error: function() {
                     showError('Gagal memuat data untuk diedit');
                 }
             });
-        }
+        };
 
-        // Save PH Edit
-        function savePHEdit() {
-            const id = $('#edit_ph_id').val();
-            const btnSave = $('#btnSavePH');
-            const originalText = btnSave.html();
-            btnSave.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
-
-            const formData = {
-                tanggal: $('#edit_ph_tanggal').val(),
-                shift: $('#edit_ph_shift').val(),
-                equalisasi_1: $('#edit_ph_equalisasi_1').val() || null,
-                equalisasi_2: $('#edit_ph_equalisasi_2').val() || null,
-                netralisasi: $('#edit_ph_netralisasi').val() || null,
-                sedimentasi_1: $('#edit_ph_sedimentasi_1').val() || null,
-                sedimentasi_2: $('#edit_ph_sedimentasi_2').val() || null,
-                outlet_anaerob: $('#edit_ph_outlet_anaerob').val() || null,
-                aerob: $('#edit_ph_aerob').val() || null,
-                lumpur_aktif: $('#edit_ph_lumpur_aktif').val() || null,
-                clarifier_2: $('#edit_ph_clarifier_2').val() || null,
-                outlet: $('#edit_ph_outlet').val() || null
-            };
-
+        $('#btnSavePH').on('click', function() {
+            const id = $('#edit_ph_id').val(),
+                btn = $(this),
+                orig = btn.html();
+            btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
             $.ajax({
                 url: `/api/wwtp-performance/ph-harian/${id}`,
                 method: 'PUT',
-                data: formData,
-                success: function(response) {
+                data: {
+                    tanggal: $('#edit_ph_tanggal').val(),
+                    shift: $('#edit_ph_shift').val(),
+                    equalisasi_1: $('#edit_ph_equalisasi_1').val() || null,
+                    equalisasi_2: $('#edit_ph_equalisasi_2').val() || null,
+                    netralisasi: $('#edit_ph_netralisasi').val() || null,
+                    sedimentasi_1: $('#edit_ph_sedimentasi_1').val() || null,
+                    sedimentasi_2: $('#edit_ph_sedimentasi_2').val() || null,
+                    outlet_anaerob: $('#edit_ph_outlet_anaerob').val() || null,
+                    aerob: $('#edit_ph_aerob').val() || null,
+                    lumpur_aktif: $('#edit_ph_lumpur_aktif').val() || null,
+                    clarifier_2: $('#edit_ph_clarifier_2').val() || null,
+                    outlet: $('#edit_ph_outlet').val() || null
+                },
+                success: function() {
                     $('#editPHModal').modal('hide');
                     showSuccess('Data PH berhasil diperbarui');
                     loadPHData();
                 },
                 error: function(xhr) {
-                    const error = xhr.responseJSON;
-                    let message = 'Terjadi kesalahan saat menyimpan data!';
-                    if (error && error.message) {
-                        message = error.message;
-                    }
-                    showError(message);
+                    showErrorFromXhr(xhr);
                 },
                 complete: function() {
-                    btnSave.prop('disabled', false).html(originalText);
+                    btn.prop('disabled', false).html(orig);
+                }
+            });
+        });
+
+        $('#btnDeletePH').on('click', function() {
+            if (!currentRecordId) return;
+            confirmSwal('Hapus data PH ini?', () => {
+                $.ajax({
+                    url: `/api/wwtp-performance/ph-harian/${currentRecordId}`,
+                    method: 'DELETE',
+                    success: function() {
+                        $('#detailPHModal').modal('hide');
+                        showSuccess('Data PH dihapus');
+                        loadPHData();
+                    },
+                    error: function() {
+                        showError('Gagal menghapus data PH');
+                    }
+                });
+            });
+        });
+
+        window.confirmDeletePH = function(id) {
+            confirmSwal('Hapus data PH ini?', () => {
+                $.ajax({
+                    url: `/api/wwtp-performance/ph-harian/${id}`,
+                    method: 'DELETE',
+                    success: function() {
+                        showSuccess('Data PH dihapus');
+                        loadPHData();
+                    },
+                    error: function() {
+                        showError('Gagal menghapus data PH');
+                    }
+                });
+            });
+        };
+
+        // ================================================================
+        // SAMPLE - Load Jenis & Data
+        // ================================================================
+        function loadJenisSampelOptions() {
+            $.ajax({
+                url: '/api/wwtp-performance/jenis-sampel',
+                method: 'GET',
+                success: function(res) {
+                    allJenisSampel = res.data || [];
+                    const filterSel = $('#filterJenisSample');
+                    const editSel = $('#edit_sample_id_sampel');
+                    filterSel.find('option:not(:first)').remove();
+                    editSel.find('option:not(:first)').remove();
+                    allJenisSampel.forEach(j => {
+                        filterSel.append(`<option value="${j.id}">${j.nama_sampel}</option>`);
+                        editSel.append(`<option value="${j.id}" data-nama="${j.nama_sampel}">${j.nama_sampel}</option>`);
+                    });
                 }
             });
         }
 
-        // Confirm Delete PH
-        window.confirmDeletePH = function(id) {
-            currentRecordId = id;
+        function loadSampleData() {
+            $('#sampleTableBody').html(`<tr><td colspan="9" class="text-center py-5"><div class="spinner-border text-warning" role="status"></div></td></tr>`);
+            $.ajax({
+                url: '/api/wwtp-performance/sample',
+                method: 'GET',
+                success: function(response) {
+                    allSampleData = response.data || response || [];
+                    $('#totalSample').text(allSampleData.length);
+                    filterSampleData();
+                },
+                error: function() {
+                    showError('Gagal memuat data sample');
+                }
+            });
+        }
+
+        function filterSampleData() {
+            const jenis = $('#filterJenisSample').val();
+            const bulan = $('#filterBulanSample').val();
+            const search = $('#searchSample').val().toLowerCase();
+
+            let filtered = allSampleData.filter(s => {
+                const tgl = s.tanggal ? s.tanggal.substring(0, 7) : '';
+                const nama = (s.jenis_sampel || '').toLowerCase();
+                if (jenis && String(s.id_sampel) !== String(jenis)) return false;
+                if (bulan && tgl !== bulan) return false;
+                if (search && !nama.includes(search)) return false;
+                return true;
+            });
+            renderSampleTable(filtered);
+        }
+
+        function renderSampleTable(data) {
+            const tbody = $('#sampleTableBody');
+            tbody.empty();
+            if (!data.length) {
+                tbody.append(`<tr><td colspan="9" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data sample</td></tr>`);
+                return;
+            }
+            data.forEach(s => {
+                let btns = `<button class="btn btn-sm btn-outline-warning me-1" onclick="showSampleDetail(${s.id})" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
+                if (canEditDelete) {
+                    btns += `
+                    <button class="btn btn-sm btn-outline-success me-1" onclick="showSampleEdit(${s.id})" title="Edit"><i class="mdi mdi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteSample(${s.id})" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
+                }
+                tbody.append(`
+                <tr class="data-row">
+                    <td>${formatDate(s.tanggal)}</td>
+                    <td><span class="badge bg-warning text-dark">${s.jenis_sampel || '-'}</span></td>
+                    <td class="text-center fw-bold">${s.tss ?? '-'}</td>
+                    <td class="text-center fw-bold">${s.sv30 ?? '-'}</td>
+                    <td class="text-center fw-bold">${s.ph ?? '-'}</td>
+                    <td class="text-center fw-bold">${s.mlss ?? '-'}</td>
+                    <td class="text-center fw-bold">${s.svl ?? '-'}</td>
+                    <td class="text-center fw-bold">${s.do ?? '-'}</td>
+                    <td class="text-center">${btns}</td>
+                </tr>`);
+            });
+        }
+
+        // ================================================================
+        // SAMPLE - Detail & Edit & Delete
+        // ================================================================
+        window.showSampleDetail = function(id) {
+            $.ajax({
+                url: `/api/wwtp-performance/sample/${id}`,
+                method: 'GET',
+                success: function(response) {
+                    const s = response.data;
+                    currentRecordId = id;
+
+                    // Ambil nama sampel dari relasi object
+                    const namaSampel = s.jenis_sampel?.nama_sampel ?? s.jenis_sampel ?? '-';
+
+                    // Tanggal dari ISO string — ambil 10 karakter pertama saja
+                    const tanggalFormatted = formatDate(s.tanggal.substring(0, 10));
+
+                    const params = [{
+                            lbl: 'TSS',
+                            val: s.tss,
+                            unit: 'mg/L'
+                        },
+                        {
+                            lbl: 'SV30',
+                            val: s.sv30,
+                            unit: 'mL/L'
+                        },
+                        {
+                            lbl: 'pH',
+                            val: s.ph,
+                            unit: 'pH'
+                        },
+                        {
+                            lbl: 'MLSS',
+                            val: s.mlss,
+                            unit: 'mg/L'
+                        },
+                        {
+                            lbl: 'SVL',
+                            val: s.svl,
+                            unit: 'mL/g'
+                        },
+                        {
+                            lbl: 'DO',
+                            val: s.do,
+                            unit: 'mg/L'
+                        }
+                    ];
+
+                    const paramGrid = params.map(p => `
+                <div class="col-md-4 col-6">
+                    <div class="param-badge w-100 text-center">
+                        <span class="param-val">${p.val ?? '-'}</span>
+                        <span class="param-unit">${p.unit}</span>
+                        <span class="param-lbl">${p.lbl}</span>
+                    </div>
+                </div>`).join('');
+
+                    $('#modalSampleContent').html(`
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="info-box p-3 bg-light rounded">
+                            <p class="text-muted small mb-1">Tanggal</p>
+                            <p class="fw-bold mb-0">${tanggalFormatted}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box p-3 bg-light rounded">
+                            <p class="text-muted small mb-1">Jenis Sampel</p>
+                            <span class="badge bg-warning text-dark fs-6">${namaSampel}</span>
+                        </div>
+                    </div>
+                </div>
+                <h6 class="fw-bold mb-3 text-warning">Parameter Pengujian</h6>
+                <div class="row g-3">${paramGrid}</div>`);
+
+                    canEditDelete ? $('#btnDeleteSample').show() : $('#btnDeleteSample').hide();
+                    new bootstrap.Modal(document.getElementById('detailSampleModal')).show();
+                },
+                error: function() {
+                    showError('Gagal memuat detail sample');
+                }
+            });
+        };
+
+        window.showSampleEdit = function(id) {
+            // Pastikan jenis sampel sudah dimuat
+            if (allJenisSampel.length === 0) loadJenisSampelOptions();
+
+            $.ajax({
+                url: `/api/wwtp-performance/sample/${id}`,
+                method: 'GET',
+                success: function(response) {
+                    const s = response.data;
+                    currentRecordId = id;
+                    $('#edit_sample_id').val(s.id);
+                    $('#edit_sample_tanggal').val(s.tanggal ? s.tanggal.substring(0, 10) : '');
+                    $('#edit_sample_id_sampel').val(s.id_sampel);
+                    $('#edit_sample_tss').val(s.tss);
+                    $('#edit_sample_sv30').val(s.sv30);
+                    $('#edit_sample_ph').val(s.ph);
+                    $('#edit_sample_mlss').val(s.mlss);
+                    $('#edit_sample_svl').val(s.svl);
+                    $('#edit_sample_do').val(s.do);
+                    new bootstrap.Modal(document.getElementById('editSampleModal')).show();
+                },
+                error: function() {
+                    showError('Gagal memuat data untuk diedit');
+                }
+            });
+        };
+
+        $('#btnSaveSample').on('click', function() {
+            const id = $('#edit_sample_id').val(),
+                btn = $(this),
+                orig = btn.html();
+            btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
+            $.ajax({
+                url: `/api/wwtp-performance/sample/${id}`,
+                method: 'PUT',
+                data: {
+                    tanggal: $('#edit_sample_tanggal').val(),
+                    id_sampel: $('#edit_sample_id_sampel').val(),
+                    tss: $('#edit_sample_tss').val(),
+                    sv30: $('#edit_sample_sv30').val(),
+                    ph: $('#edit_sample_ph').val(),
+                    mlss: $('#edit_sample_mlss').val(),
+                    svl: $('#edit_sample_svl').val(),
+                    do: $('#edit_sample_do').val(),
+                },
+                success: function() {
+                    $('#editSampleModal').modal('hide');
+                    showSuccess('Data sample berhasil diperbarui');
+                    loadSampleData();
+                },
+                error: function(xhr) {
+                    showErrorFromXhr(xhr);
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html(orig);
+                }
+            });
+        });
+
+        $('#btnDeleteSample').on('click', function() {
+            if (!currentRecordId) return;
+            confirmSwal('Hapus data sample ini?', () => {
+                $.ajax({
+                    url: `/api/wwtp-performance/sample/${currentRecordId}`,
+                    method: 'DELETE',
+                    success: function() {
+                        $('#detailSampleModal').modal('hide');
+                        showSuccess('Data sample dihapus');
+                        loadSampleData();
+                    },
+                    error: function() {
+                        showError('Gagal menghapus data sample');
+                    }
+                });
+            });
+        });
+
+        window.confirmDeleteSample = function(id) {
+            confirmSwal('Hapus data sample ini?', () => {
+                $.ajax({
+                    url: `/api/wwtp-performance/sample/${id}`,
+                    method: 'DELETE',
+                    success: function() {
+                        showSuccess('Data sample dihapus');
+                        loadSampleData();
+                    },
+                    error: function() {
+                        showError('Gagal menghapus data sample');
+                    }
+                });
+            });
+        };
+
+        // ================================================================
+        // HELPERS
+        // ================================================================
+        function getJenisLabel(jenis) {
+            return {
+                equal: 'Equalisasi',
+                outlet_anaerob: 'Outlet Anaerob',
+                aerob: 'Aerob',
+                daf: 'DAF',
+                outlet: 'Outlet'
+            } [jenis] || jenis;
+        }
+
+        function getJenisBadge(jenis) {
+            return {
+                equal: '<span class="badge bg-primary badge-jenis">Equalisasi</span>',
+                outlet_anaerob: '<span class="badge bg-info badge-jenis">Outlet Anaerob</span>',
+                aerob: '<span class="badge bg-success badge-jenis">Aerob</span>',
+                daf: '<span class="badge bg-warning badge-jenis">DAF</span>',
+                outlet: '<span class="badge bg-secondary badge-jenis">Outlet</span>'
+            } [jenis] || `<span class="badge bg-secondary badge-jenis">${jenis}</span>`;
+        }
+
+        function getShiftBadge(shift) {
+            return {
+                shift1: '<span class="badge bg-primary">Shift 1</span>',
+                shift2: '<span class="badge bg-success">Shift 2</span>',
+                shift3: '<span class="badge bg-info">Shift 3</span>'
+            } [shift] || `<span class="badge bg-secondary">${shift}</span>`;
+        }
+
+        function formatWeekRange(start, end) {
+            const opt = {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            };
+            return `${new Date(start).toLocaleDateString('id-ID', opt)} - ${new Date(end).toLocaleDateString('id-ID', opt)}`;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const day = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - day);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function confirmSwal(text, onConfirm) {
             Swal.fire({
                 title: 'Konfirmasi Hapus',
-                text: 'Apakah Anda yakin ingin menghapus data PH ini?',
+                text,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    deletePH(id);
-                }
+            }).then(r => {
+                if (r.isConfirmed) onConfirm();
             });
         }
 
-        // Delete PH
-        function deletePH(id) {
-            $.ajax({
-                url: `/api/wwtp-performance/ph-harian/${id}`,
-                method: 'DELETE',
-                success: function(response) {
-                    $('#detailPHModal').modal('hide');
-                    showSuccess('Data PH berhasil dihapus');
-                    loadPHData();
-                },
-                error: function(xhr) {
-                    console.error('Error deleting PH:', xhr);
-                    showError('Gagal menghapus data PH');
-                }
-            });
-        }
-
-        // Helper Functions
-        function getJenisLabel(jenis) {
-            const labels = {
-                'equal': 'Equalisasi',
-                'outlet_anaerob': 'Outlet Anaerob',
-                'aerob': 'Aerob',
-                'daf': 'DAF',
-                'outlet': 'Outlet'
-            };
-            return labels[jenis] || jenis;
-        }
-
-        function getJenisBadge(jenis) {
-            const badges = {
-                'equal': '<span class="badge bg-primary badge-jenis">Equalisasi</span>',
-                'outlet_anaerob': '<span class="badge bg-info badge-jenis">Outlet Anaerob</span>',
-                'aerob': '<span class="badge bg-success badge-jenis">Aerob</span>',
-                'daf': '<span class="badge bg-warning badge-jenis">DAF</span>',
-                'outlet': '<span class="badge bg-secondary badge-jenis">Outlet</span>'
-            };
-            return badges[jenis] || `<span class="badge bg-secondary badge-jenis">${jenis}</span>`;
-        }
-
-        function getShiftLabel(shift) {
-            const labels = {
-                'shift1': 'Shift 1 (06:00 - 14:00)',
-                'shift2': 'Shift 2 (14:00 - 22:00)',
-                'shift3': 'Shift 3 (22:00 - 06:00)'
-            };
-            return labels[shift] || shift;
-        }
-
-        function getShiftBadge(shift) {
-            const badges = {
-                'shift1': '<span class="badge bg-primary">Shift 1</span>',
-                'shift2': '<span class="badge bg-success">Shift 2</span>',
-                'shift3': '<span class="badge bg-info">Shift 3</span>'
-            };
-            return badges[shift] || `<span class="badge bg-secondary">${shift}</span>`;
-        }
-
-        function formatWeekRange(start, end) {
-            const startDate = new Date(start);
-            const endDate = new Date(end);
-            const options = {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
-            };
-            return `${startDate.toLocaleDateString('id-ID', options)} - ${endDate.toLocaleDateString('id-ID', options)}`;
-        }
-
-        function formatDate(dateString) {
-            const options = {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            };
-            return new Date(dateString).toLocaleDateString('id-ID', options);
-        }
-
-        function showSuccess(message) {
+        function showSuccess(msg) {
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil!',
-                text: message,
+                text: msg,
                 confirmButtonColor: '#3085d6',
                 timer: 2000
             });
         }
 
-        function showError(message) {
+        function showError(msg) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
-                text: message,
+                text: msg,
                 confirmButtonColor: '#d33'
             });
         }
 
-        // Event listener untuk tab PH
-        $('#ph-tab').on('click', function() {
-            loadPHData();
-        });
-
-        // Load PH data jika tab PH sudah aktif saat page load
-        if ($('#ph-tab').hasClass('active')) {
-            loadPHData();
+        function showErrorFromXhr(xhr) {
+            const err = xhr.responseJSON;
+            let msg = 'Terjadi kesalahan saat menyimpan data!';
+            if (err?.message) msg = err.message;
+            else if (err?.errors) msg = Object.values(err.errors).flat().join('\n');
+            showError(msg);
         }
     });
 </script>

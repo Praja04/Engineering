@@ -113,45 +113,59 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <!-- Information Alert -->
-                            <div class="alert alert-warning border-0 mb-4" role="alert">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="mdi mdi-information fs-4"></i>
-                                    </div>
-                                    <div class="flex-grow-1 ms-2">
-                                        <strong>Catatan Penting:</strong>
-                                        <ul class="mb-0 mt-2">
-                                            <li>Data sludge dapat diinput maksimal <strong>3x per hari</strong> (sesuai shift 1, 2, dan 3)</li>
-                                            <li>Setiap shift hanya dapat diinput <strong>1x per tanggal</strong></li>
-                                            <li>Pastikan data yang diinput sudah benar sebelum menyimpan</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Submit Button -->
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button type="reset" class="btn btn-light">
-                                            <i class="mdi mdi-refresh me-1"></i> Reset Form
-                                        </button>
-                                        <button type="submit" class="btn btn-warning" id="submitSludgeForm">
-                                            <i class="mdi mdi-content-save me-1"></i> Simpan Data Sludge
-                                        </button>
+                                    <!-- Hasil lumpur  -->
+                                    <div class="col-md-6">
+                                        <div class="card border border-warning">
+                                            <div class="card-body">
+                                                <label for="hasil_lumpur" class="form-label fw-semibold">
+                                                    <i class="mdi mdi-water-percent text-warning me-1"></i>Hasil Lumpur <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" class="form-control" id="hasil_lumpur" name="hasil_lumpur" min="0" placeholder="0.00" required>
+                                                    <span class="input-group-text bg-light">ton</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </form>
                     </div>
+
+                    <!-- Information Alert -->
+                    <div class="alert alert-warning border-0 mb-4" role="alert">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <i class="mdi mdi-information fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-2">
+                                <strong>Catatan Penting:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Data sludge dapat diinput maksimal <strong>3x per hari</strong> (sesuai shift 1, 2, dan 3)</li>
+                                    <li>Setiap shift hanya dapat diinput <strong>1x per tanggal</strong></li>
+                                    <li>Pastikan data yang diinput sudah benar sebelum menyimpan</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="reset" class="btn btn-light">
+                                    <i class="mdi mdi-refresh me-1"></i> Reset Form
+                                </button>
+                                <button type="submit" class="btn btn-warning" id="submitSludgeForm">
+                                    <i class="mdi mdi-content-save me-1"></i> Simpan Data Sludge
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    </form>
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -270,7 +284,8 @@
                 tanggal: $('#tanggal').val(),
                 shift: $('#shift').val(),
                 drain_lumpur: $('#drain_lumpur').val(),
-                running_hour_scp: $('#running_hour_scp').val()
+                running_hour_scp: $('#running_hour_scp').val(),
+                hasil_lumpur: $('#hasil_lumpur').val()
             };
 
             $.ajax({

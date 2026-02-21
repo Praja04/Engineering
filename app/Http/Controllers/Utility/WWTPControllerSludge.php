@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Utility\WwtpSludge;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+
 class WWTPControllerSludge extends Controller
 {
     //
@@ -41,6 +42,7 @@ class WWTPControllerSludge extends Controller
             'tanggal'        => 'required|date',
             'shift'          => 'required|in:1,2,3',
             'drain_lumpur'   => 'required|numeric|min:0',
+            'hasil_lumpur'   => 'required|numeric|min:0',
             'running_hour_scp' => 'required|numeric|min:0'
         ]);
         $existing = WwtpSludge::where('tanggal', $request->tanggal)
@@ -65,6 +67,7 @@ class WWTPControllerSludge extends Controller
             'tanggal'        => $request->tanggal,
             'shift'          => $request->shift,
             'drain_lumpur'   => $request->drain_lumpur,
+            'hasil_lumpur'   => $request->hasil_lumpur,
             'running_hour_scp' => $request->running_hour_scp
         ]);
         return response()->json([
@@ -87,17 +90,24 @@ class WWTPControllerSludge extends Controller
         $harian = WwtpSludge::findOrFail($id);
 
         $request->validate([
-            'tanggal'  => 'required|date',
-            'shift'    => 'required|in:shift1,shift2,shift3',
-            'drain_lumpur'   => 'nullable|numeric',
+            'tanggal'          => 'required|date',
+            'shift'            => 'required', // ← fix: was shift1,shift2,shift3
+            'drain_lumpur'     => 'nullable|numeric|min:0',
+            'hasil_lumpur'     => 'nullable|numeric|min:0', // ← tambah ini
             'running_hour_scp' => 'nullable|numeric|min:0'
         ]);
 
-        $harian->update($request->all());
+        $harian->update($request->only([
+            'tanggal',
+            'shift',
+            'drain_lumpur',
+            'hasil_lumpur',      // ← tambah ini
+            'running_hour_scp'
+        ]));
 
         return response()->json([
             'message' => 'Data harian berhasil diperbarui.',
-            'data' => $harian
+            'data'    => $harian
         ]);
     }
 
@@ -135,8 +145,8 @@ class WWTPControllerSludge extends Controller
 
             // Last update
             $lastRecord = WwtpSludge::orderBy('tanggal', 'desc')
-            ->orderBy('shift', 'desc')
-            ->first();
+                ->orderBy('shift', 'desc')
+                ->first();
 
             // Monthly averages
             $startOfMonth = Carbon::now()->startOfMonth();
@@ -214,6 +224,29 @@ class WWTPControllerSludge extends Controller
         }
     }
 
+
+    public function getHasilLumpurChart(Request $request)
+    {
+        try {
+            $startDate = $request->input('start_date', Carbon::now()->startOfMonth());
+            $endDate = $request->input('end_date', Carbon::now()->endOfMonth());
+
+            $data = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])
+                ->select('tanggal')
+                ->selectRaw('SUM(hasil_lumpur) as total_hasil_lumpur')
+                ->groupBy('tanggal')
+                ->orderBy('tanggal', 'asc')
+                ->get();
+
+            return response()->json($data);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error fetching hasil lumpur chart data',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Get shift breakdown data
      */
@@ -224,11 +257,11 @@ class WWTPControllerSludge extends Controller
             $endDate = $request->input('end_date', Carbon::now()->endOfMonth());
 
             $data = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])
-                ->select('shift')
-                ->selectRaw('SUM(drain_lumpur) as total')
-                ->groupBy('shift')
-                ->orderBy('shift', 'asc')
-                ->get();
+                ->selectRaw('
+                SUM(drain_lumpur) as total_drain_lumpur,
+                SUM(running_hour_scp) as total_running_hour_scp,
+                SUM(hasil_lumpur) as total_hasil_lumpur')
+                ->first();
 
             return response()->json($data);
         } catch (\Exception $e) {
@@ -300,6 +333,4 @@ class WWTPControllerSludge extends Controller
             ], 500);
         }
     }
-
-
 }

@@ -714,32 +714,66 @@ class WWTPControllerProses extends Controller
     /**
      * API: Get shift breakdown data (untuk pie chart)
      */
-    public function getShiftBreakdownData($period = 30)
+    // public function getShiftBreakdownData($period = 30)
+    // {
+    //     $startDate = Carbon::now()->subDays($period);
+
+    //     $data = WwtpInfluentHarian::where('tanggal', '>=', $startDate)
+    //         ->selectRaw('shift, 
+    //             SUM(pit_sparta) as total_sparta,
+    //             SUM(pit_garam) as total_garam,
+    //             SUM(pit_domestik) as total_domestik,
+    //             SUM(pit_produksi_step3) as total_produksi_step3,
+    //             SUM(pit_storage) as total_storage,
+    //             SUM(pit_proses_wwtp2) as total_proses_wwtp2,
+    //             SUM(pit_outlet) as total_outlet,
+    //             SUM(pit_boiler) as total_boiler')
+    //         ->groupBy('shift')
+    //         ->get()
+    //         ->map(function ($record) {
+    //             return [
+    //                 'shift' => $record->shift,
+    //                 'total' => $record->total_sparta + $record->total_garam + $record->total_domestik + 
+    //                            $record->total_produksi_step3 + $record->total_storage + $record->total_proses_wwtp2 + 
+    //                            $record->total_outlet + $record->total_boiler,
+    //             ];
+    //         });
+
+    //     return response()->json($data);
+    // }
+
+    public function getShiftBreakdownData(Request $request)
     {
-        $startDate = Carbon::now()->subDays($period);
+        $startDate = $request->query('start_date')
+        ? Carbon::parse($request->query('start_date'))->startOfDay()
+        : Carbon::now()->startOfDay();
 
-        $data = WwtpInfluentHarian::where('tanggal', '>=', $startDate)
-            ->selectRaw('shift, 
-                SUM(pit_sparta) as total_sparta,
-                SUM(pit_garam) as total_garam,
-                SUM(pit_domestik) as total_domestik,
-                SUM(pit_produksi_step3) as total_produksi_step3,
-                SUM(pit_storage) as total_storage,
-                SUM(pit_proses_wwtp2) as total_proses_wwtp2,
-                SUM(pit_outlet) as total_outlet,
-                SUM(pit_boiler) as total_boiler')
-            ->groupBy('shift')
-            ->get()
-            ->map(function ($record) {
-                return [
-                    'shift' => $record->shift,
-                    'total' => $record->total_sparta + $record->total_garam + $record->total_domestik + 
-                               $record->total_produksi_step3 + $record->total_storage + $record->total_proses_wwtp2 + 
-                               $record->total_outlet + $record->total_boiler,
-                ];
-            });
+        $endDate = $request->query('end_date')
+        ? Carbon::parse($request->query('end_date'))->endOfDay()
+        : Carbon::now()->endOfDay();
 
-        return response()->json($data);
+        $data = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])
+        ->selectRaw('
+            SUM(pit_sparta) as total_sparta,
+            SUM(pit_garam) as total_garam,
+            SUM(pit_domestik) as total_domestik,
+            SUM(pit_produksi_step3) as total_produksi_step3,
+            SUM(pit_storage) as total_storage,
+            SUM(pit_proses_wwtp2) as total_proses_wwtp2,
+            SUM(pit_outlet) as total_outlet,
+            SUM(pit_boiler) as total_boiler')
+            ->first();
+
+        return response()->json([
+            'total_sparta'         => (float) $data->total_sparta,
+            'total_garam'          => (float) $data->total_garam,
+            'total_domestik'       => (float) $data->total_domestik,
+            'total_produksi_step3' => (float) $data->total_produksi_step3,
+            'total_storage'        => (float) $data->total_storage,
+            'total_proses_wwtp2'   => (float) $data->total_proses_wwtp2,
+            'total_outlet'         => (float) $data->total_outlet,
+            'total_boiler'         => (float) $data->total_boiler,
+        ]);
     }
 
     /**
