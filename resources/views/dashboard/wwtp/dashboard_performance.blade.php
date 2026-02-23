@@ -622,7 +622,7 @@
             </div>
         </div>
 
-     
+
     </div>
 </div>
 
@@ -1017,7 +1017,12 @@
             dailyShiftPieChart.updateOptions({
                 labels: Object.values(labelMap)
             });
-            dailyShiftPieChart.updateSeries(Object.keys(labelMap).map(k => parseFloat(data[k]) || 0));
+            dailyShiftPieChart.updateSeries(
+                Object.keys(labelMap).map(k => {
+                    const val = parseFloat(data[k]) || 0;
+                    return parseFloat(val.toFixed(2));
+                })
+            );
         } catch (e) {
             console.error(e);
         }
@@ -1067,7 +1072,7 @@
         await loadSampleMonthlyComparison();
     }
 
-   
+
 
     async function loadJenisSampelButtons() {
         try {
