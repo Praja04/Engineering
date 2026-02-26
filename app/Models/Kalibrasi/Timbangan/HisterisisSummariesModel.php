@@ -6,23 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Kalibrasi\KalibrasiModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class SmryPingganModel extends Model
+class HisterisisSummariesModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_tmb_pinggan_smry';
+    protected $table = 'cal_timbangan_histerisis_summaries';
 
     protected $fillable = [
         'kalibrasi_id',
-        'percobaan',
-        'smry_tengah',
-        'smry_depan',
-        'smry_belakang',
-        'smry_kiri',
-        'smry_kanan',
-        'minimum',
-        'maximum',
-        'selisih_maks',
+        'pembacaan_terkecil',
+        'setengah_kapasitas',
+        'avg_m1m2',
+        'avg_z1z2',
+        'nilai_mz',
+        'histerisis',
     ];
 
     public function kalibrasi()

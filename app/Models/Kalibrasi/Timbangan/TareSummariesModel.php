@@ -6,21 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Kalibrasi\KalibrasiModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class SmryKeseragamanSkalaModel extends Model
+class TareSummariesModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_tmb_keseragaman_skala_smry';
+    protected $table = 'cal_timbangan_tare_summaries';
 
     protected $fillable = [
         'kalibrasi_id',
-        'beban',
-        'avg_z',
-        'avg_m',
-        'selisih_zm',
-        'standar_massa',
-        'koreksi_skala',
-        'absolut_koreksi',
+        'kondisi',
+        'massa',
+        'selisih_mz',
+        'pengaruh',
     ];
 
     public function kalibrasi()

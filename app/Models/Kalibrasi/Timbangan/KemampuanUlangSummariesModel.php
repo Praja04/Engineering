@@ -6,16 +6,16 @@ use App\Models\Kalibrasi\KalibrasiModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class SmryPembacaanModel extends Model
+class KemampuanUlangSummariesModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_tmb_pembacaan_smry';
+    protected $table = 'cal_timbangan_kemampuan_ulang_summaries';
 
     protected $fillable = [
         'kalibrasi_id',
-        'kemampuan',
-        'beban',
+        'massa',
+        'jenis',
         'std_dev',
         'maks_perbedaan_akhir',
     ];

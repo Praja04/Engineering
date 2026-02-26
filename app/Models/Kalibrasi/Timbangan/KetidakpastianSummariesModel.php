@@ -3,26 +3,27 @@
 namespace App\Models\Kalibrasi\Timbangan;
 
 use App\Models\Kalibrasi\KalibrasiModel;
-use App\Models\Kalibrasi\Timbangan\PingganDetailModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PingganModel extends Model
+class KetidakpastianSummariesModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'cal_timbangan_pinggan';
+    protected $table = 'cal_timbangan_ketidakpastian_summaries';
 
     protected $fillable = [
         'kalibrasi_id',
-        'diameter',
-        'massa',
+        'kapasitas_alat',
+        'pembacaan_terkecil',
+        'timbangan_standar',
+        'skala_terkecil',
+        'max_kemampuan_ulang',
+        'drift',
+        'bouyancy',
+        'ketidakpastian_gabungan',
+        'ketidakpastian_perluas',
     ];
-
-    public function details()
-    {
-        return $this->hasMany(PingganDetailModel::class, 'pinggan_id');
-    }
 
     public function kalibrasi()
     {

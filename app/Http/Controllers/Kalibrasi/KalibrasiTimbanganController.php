@@ -2,25 +2,26 @@
 
 namespace App\Http\Controllers\Kalibrasi;
 
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Kalibrasi\KalibrasiModel;
+use App\Http\Requests\Kalibrasi\TimbanganRequest;
 use App\Models\Kalibrasi\AlatKalibrasiModel;
-use App\Models\Kalibrasi\Timbangan\TareModel;
-use App\Models\Kalibrasi\Timbangan\PingganModel;
-use App\Models\Kalibrasi\Timbangan\SmryTareModel;
+use App\Models\Kalibrasi\KalibrasiModel;
 use App\Models\Kalibrasi\KalibrasiSertifikatModel;
-use App\Models\Kalibrasi\Timbangan\PembacaanModel;
 use App\Models\Kalibrasi\Timbangan\HisterisisModel;
-use App\Models\Kalibrasi\Timbangan\SmryPingganModel;
-use App\Models\Kalibrasi\Master\MasterTimbanganModel;
-use App\Models\Kalibrasi\Timbangan\SmryPembacaanModel;
-use App\Models\Kalibrasi\Timbangan\SmryHisterisisModel;
+use App\Models\Kalibrasi\Timbangan\HisterisisSummariesModel;
+use App\Models\Kalibrasi\Timbangan\KemampuanUlangModel;
+use App\Models\Kalibrasi\Timbangan\KemampuanUlangSummariesModel;
 use App\Models\Kalibrasi\Timbangan\KeseragamanSkalaModel;
-use App\Models\Kalibrasi\Timbangan\SmryKeseragamanSkalaModel;
+use App\Models\Kalibrasi\Timbangan\KeseragamanSkalaSummariesModel;
+use App\Models\Kalibrasi\Timbangan\KetidakpastianSummariesModel;
+use App\Models\Kalibrasi\Timbangan\PingganDetailModel;
+use App\Models\Kalibrasi\Timbangan\PingganModel;
+use App\Models\Kalibrasi\Timbangan\PingganSummariesModel;
+use App\Models\Kalibrasi\Timbangan\TareModel;
+use App\Models\Kalibrasi\Timbangan\TareSummariesModel;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class KalibrasiTimbanganController extends Controller
 {
@@ -38,34 +39,22 @@ class KalibrasiTimbanganController extends Controller
         return view('kalibrasi.timbangan.data');
     }
 
-    public function store(Request $request)
+    public function store(TimbanganRequest $request)
     {
-        $validated = $request->validate([
-            // Data utama kalibrasi
-            'alat_id' => 'required|exists:alat_kalibrasi,id',
-            'lokasi_kalibrasi' => 'required|string|max:255',
-            'suhu_ruangan_final' => 'required|string|max:50',
-            'kelembaban_final' => 'required|string|max:50',
-            'tgl_kalibrasi' => 'required|date',
 
-            'pembacaan' => 'required|array',
-            'keseragaman_skala' => 'required|array',
-            'pinggan' => 'required|array',
-            'tare' => 'required|array',
-            'histerisis' => 'required|array',
-        ]);
+        $validated = $request->validated();
 
         DB::beginTransaction();
 
         try {
             $kalibrasi = KalibrasiModel::create([
-                'alat_id' => $validated['alat_id'],
-                'user_id' => Auth::id() ?? 1,
-                'lokasi_kalibrasi' => $validated['lokasi_kalibrasi'],
-                'suhu_ruangan' => $validated['suhu_ruangan_final'],
-                'kelembaban' => $validated['kelembaban_final'],
-                'tgl_kalibrasi' => $validated['tgl_kalibrasi'],
-                'tgl_kalibrasi_ulang' => Carbon::parse($validated['tgl_kalibrasi'])->addYearNoOverflow(),
+                'alat_id' => $request->alat_id,
+                'user_id' => Auth::id(),
+                'lokasi_kalibrasi' => $request->lokasi_kalibrasi,
+                'suhu_ruangan' => $request->suhu_ruangan,
+                'kelembaban' => $request->kelembaban,
+                'tgl_kalibrasi' => $request->tgl_kalibrasi,
+                'tgl_kalibrasi_ulang' => Carbon::parse($request->tgl_kalibrasi)->addYear(),
                 'jenis_kalibrasi' => 'timbangan',
             ]);
 
@@ -75,322 +64,528 @@ class KalibrasiTimbanganController extends Controller
                 'status' => 'draft'
             ]);
 
-            // Kemampuan Ulang Pembacaan
-            foreach ($validated['pembacaan'] as $namaKemampuan => $titikList) {
-                foreach ($titikList as $titikData) {
-                    $titik = $titikData['titik'] ?? null;
-                    $ulanganList = $titikData['percobaan'] ?? [];
+            // Kemampuan Ulang
+            $dataPembacaan = $request->data ?? [];
 
-                    // === Hitung selisih dan maks_perbedaan secara urut ===
-                    $selisihList = [];
-                    $maksList = [];
+            $titikMassaMap = [
+                'mendekati_nol'      => $request->titik_massa_mendekati_nol,
+                'setengah_kapasitas' => $request->titik_massa_setengah_kapasitas,
+                'full_kapasitas'     => $request->titik_massa_full_kapasitas,
+            ];
 
-                    foreach ($ulanganList as $i => $percobaan) {
-                        $pembacaanZ = $percobaan['pembacaan_z'] ?? null;
-                        $pembacaanM = $percobaan['pembacaan_m'] ?? null;
+            foreach ($dataPembacaan as $jenis => $ulanganList) {
 
-                        $selisih = (isset($pembacaanM, $pembacaanZ))
-                            ? $pembacaanM - $pembacaanZ
-                            : null;
+                // $jenis sudah mendekati_nol, setengah_kapasitas, dll
+                $selisihList = [];
 
-                        $selisihList[$i] = $selisih;
+                foreach ($ulanganList as $ulanganKe => $nilai) {
 
-                        $maksList[$i] = isset($ulanganList[$i + 1]['pembacaan_z'], $ulanganList[$i + 1]['pembacaan_m'])
-                            ? abs(($ulanganList[$i + 1]['pembacaan_m'] - $ulanganList[$i + 1]['pembacaan_z']) - $selisih)
-                            : null;
+                    $z = $nilai['z'] ?? null;
+                    $m = $nilai['m'] ?? null;
 
-                        PembacaanModel::create([
-                            'kalibrasi_id'   => $kalibrasi->id,
-                            'kemampuan'      => $namaKemampuan,
-                            'titik'          => $titik,
-                            'ulangan'        => $percobaan['ulangan_ke'] ?? null,
-                            'pembacaan_z'    => $pembacaanZ,
-                            'pembacaan_m'    => $pembacaanM,
-                            'selisih'        => $selisih,
-                            'maks_perbedaan' => $maksList[$i],
-                        ]);
+                    // Skip kalau kosong dua-duanya
+                    if (is_null($z) && is_null($m)) {
+                        continue;
                     }
 
-                    // === Simpan summary ===
-                    $filteredSelisih = array_filter($selisihList, fn($v) => $v !== null);
-                    $filteredMaks = array_filter($maksList, fn($v) => $v !== null);
+                    $selisih = (isset($z, $m)) ? $m - $z : null;
 
-                    if (count($filteredSelisih) > 0) {
-                        $mean = array_sum($filteredSelisih) / count($filteredSelisih);
-                        $stdDev = sqrt(array_sum(array_map(
-                            fn($v) => pow($v - $mean, 2),
-                            $filteredSelisih
-                        )) / count($filteredSelisih));
+                    KemampuanUlangModel::create([
+                        'kalibrasi_id' => $kalibrasi->id,
+                        'jenis'        => $jenis,
+                        'ulangan'      => $ulanganKe,
+                        'massa'        => $titikMassaMap[$jenis] ?? null,
+                        'nilai_z'      => $z,
+                        'nilai_m'      => $m,
+                        'selisih'      => $selisih,
+                    ]);
 
-                        SmryPembacaanModel::create([
-                            'kalibrasi_id' => $kalibrasi->id,
-                            'kemampuan' => $namaKemampuan,
-                            'std_dev' => round($stdDev, 8),
-                            'maks_perbedaan_akhir' => count($filteredMaks) ? max($filteredMaks) : null,
-                        ]);
+                    if (!is_null($selisih)) {
+                        $selisihList[] = $selisih;
                     }
+                }
+
+                // =========================
+                // Hitung Standard Deviasi
+                // =========================
+
+                if (count($selisihList) > 1) {
+
+                    $mean = array_sum($selisihList) / count($selisihList);
+
+                    $variance = array_sum(
+                        array_map(fn($v) => pow($v - $mean, 2), $selisihList)
+                    ) / (count($selisihList) - 1);
+
+                    $stdDev = sqrt($variance);
+
+                    $maksPerbedaanAkhir = null;
+
+                    if (count($selisihList) > 1) {
+
+                        $perbedaanList = [];
+
+                        for ($i = 1; $i < count($selisihList); $i++) {
+                            $perbedaan = abs($selisihList[$i] - $selisihList[$i - 1]);
+                            $perbedaanList[] = $perbedaan;
+                        }
+
+                        $maksPerbedaanAkhir = max($perbedaanList);
+                    }
+                    KemampuanUlangSummariesModel::create([
+                        'kalibrasi_id' => $kalibrasi->id,
+                        'massa'        => $titikMassaMap[$jenis] ?? null,
+                        'jenis'        => $jenis,
+                        'std_dev'      => $stdDev,
+                        'maks_perbedaan_akhir' => $maksPerbedaanAkhir,
+                    ]);
                 }
             }
 
+            // Keseragaman Skala
+            $keseragaman = $validated['keseragaman'] ?? [];
+
+            $grouped = [];
+
+            foreach ($keseragaman as $key => $row) {
+
+                $beban      = $row['beban'] ?? null;
+                $pembacaan  = $row['pembacaan'] ?? null;
+
+                // Skip kalau kosong dua-duanya
+                if (is_null($beban) && is_null($pembacaan)) {
+                    continue;
+                }
+
+                $label = strtoupper($key); // contoh: 1M_1, 0_3
+
+                $massaKe = 0;
+                $jenis   = null;
+
+                if (preg_match('/(\d+)M_(\d)/', $label, $match)) {
+
+                    $massaKe = (int) $match[1];
+                    $jenis   = $match[2] == '1' ? 'M1' : 'M2';
+                } elseif (preg_match('/0_(\d+)/', $label, $match)) {
+
+                    $massaKe = (int) $match[1];
+                    $jenis   = 'Z';
+                }
+
+                // Simpan data mentah
+                KeseragamanSkalaModel::create([
+                    'kalibrasi_id' => $kalibrasi->id,
+                    'massa_ke'     => $massaKe,
+                    'jenis'        => $jenis,
+                    'beban'        => $beban,
+                    'pembacaan'    => $pembacaan,
+                ]);
+
+                // Kelompokkan untuk perhitungan
+                $grouped[$massaKe][$jenis] = [
+                    'pembacaan' => $pembacaan,
+                    'beban'     => $beban,
+                ];
+            }
+
+            foreach ($grouped as $massaKe => $nilai) {
+
+                $z  = $nilai['Z']['pembacaan']  ?? null;
+                $m1 = $nilai['M1']['pembacaan'] ?? null;
+                $m2 = $nilai['M2']['pembacaan'] ?? null;
+
+                // Ambil beban dari salah satu (biasanya sama semua dalam 1 massa_ke)
+                $beban = $nilai['Z']['beban']
+                    ?? $nilai['M1']['beban']
+                    ?? $nilai['M2']['beban']
+                    ?? null;
+
+                $avg_z = $z;
+
+                $avg_m = (isset($m1, $m2))
+                    ? ($m1 + $m2) / 2
+                    : null;
+
+                $selisih_zm = (isset($avg_m, $avg_z))
+                    ? $avg_m - $avg_z
+                    : null;
+
+                $koreksi = isset($selisih_zm)
+                    ? (0 - $selisih_zm)
+                    : null;
+
+                $absolut = isset($koreksi)
+                    ? abs($koreksi)
+                    : null;
+
+                KeseragamanSkalaSummariesModel::create([
+                    'kalibrasi_id'    => $kalibrasi->id,
+                    'massa_ke'        => $massaKe,
+                    'beban'           => $titikMassaMap["setengah_kapasitas"] ?? null, // Bisa disesuaikan kalau nanti ada mapping massa tertentu
+                    'avg_z'           => $avg_z,
+                    'avg_m'           => $avg_m,
+                    'selisih_zm'      => $selisih_zm,
+                    'koreksi_skala'   => $koreksi,
+                    'absolut_koreksi' => $absolut,
+                ]);
+            }
+
             // Data Pinggan
-            $pingganData = $validated['pinggan'];
+            $pingganData = $validated['pinggan'] ?? null;
+
             if (!empty($pingganData)) {
-                foreach ($pingganData['percobaan'] ?? [] as $percobaan) {
-                    // Ambil data per percobaan
-                    $tengah    = $percobaan['tengah'] ?? null;
-                    $depan     = $percobaan['depan'] ?? null;
-                    $belakang  = $percobaan['belakang'] ?? null;
-                    $kiri      = $percobaan['kiri'] ?? null;
-                    $kanan     = $percobaan['kanan'] ?? null;
 
-                    // Simpan data mentah
-                    PingganModel::create([
-                        'kalibrasi_id' => $kalibrasi->id,
-                        'diameter'     => $pingganData['diameter'] ?? null,
-                        'massa'        => $pingganData['massa'] ?? null,
-                        'percobaan'    => $percobaan['percobaan_ke'] ?? null,
-                        'tengah'       => $tengah,
-                        'depan'        => $depan,
-                        'belakang'     => $belakang,
-                        'kiri'         => $kiri,
-                        'kanan'        => $kanan,
-                    ]);
+                $pinggan = PingganModel::create([
+                    'kalibrasi_id' => $kalibrasi->id,
+                    'diameter'     => $pingganData['diameter'] ?? null,
+                    'massa'        => $pingganData['massa'] ?? null,
+                ]);
 
-                    // === Hitung Summary Data
-                    $smryTengah   = $tengah - $tengah;
-                    $smryDepan    = isset($depan, $tengah) ? $depan - $tengah : null;
-                    $smryBelakang = isset($belakang, $tengah) ? $belakang - $tengah : null;
-                    $smryKiri     = isset($kiri, $tengah) ? $kiri - $tengah : null;
-                    $smryKanan    = isset($kanan, $tengah) ? $kanan - $tengah : null;
+                $posisiList = ['tengah', 'depan', 'belakang', 'kiri', 'kanan'];
 
-                    $pembacaan = array_filter([$tengah, $depan, $belakang, $kiri, $kanan], fn($v) => $v !== null);
+                for ($p = 1; $p <= 3; $p++) {
 
-                    $minimum   = count($pembacaan) ? min($pembacaan) : null;
-                    $maximum   = count($pembacaan) ? max($pembacaan) : null;
-                    $selisihMax = (isset($minimum, $maximum)) ? abs($maximum - $minimum) : null;
+                    $key = "percobaan_$p";
 
-                    SmryPingganModel::create([
-                        'kalibrasi_id'   => $kalibrasi->id,
-                        'percobaan'      => $percobaan['percobaan_ke'] ?? null,
-                        'smry_tengah'    => $smryTengah,
-                        'smry_depan'     => $smryDepan,
-                        'smry_belakang'  => $smryBelakang,
-                        'smry_kiri'      => $smryKiri,
-                        'smry_kanan'     => $smryKanan,
-                        'minimum'        => $minimum,
-                        'maximum'        => $maximum,
-                        'selisih_maks'   => $selisihMax,
+                    if (empty($pingganData[$key])) {
+                        continue;
+                    }
+
+                    $percobaan = $pingganData[$key];
+
+                    $nilaiPosisi = [];
+                    $adaNilai = false;
+
+                    foreach ($posisiList as $posisi) {
+
+                        $nilai = $percobaan[$posisi] ?? null;
+
+                        if (!is_null($nilai)) {
+                            $adaNilai = true;
+                        }
+
+                        $nilaiPosisi[$posisi] = $nilai;
+
+                        // Simpan detail hanya jika ada nilai
+                        if (!is_null($nilai)) {
+                            PingganDetailModel::create([
+                                'pinggan_id' => $pinggan->id,
+                                'percobaan'  => $p,
+                                'posisi'     => $posisi,
+                                'nilai'      => $nilai,
+                            ]);
+                        }
+                    }
+
+                    // Kalau semua kosong, skip summary
+                    if (!$adaNilai) {
+                        continue;
+                    }
+
+                    $tengah = $nilaiPosisi['tengah'] ?? null;
+
+                    $summary = [
+                        'tengah'   => 0,
+                        'depan'    => isset($nilaiPosisi['depan'], $tengah) ? $nilaiPosisi['depan'] - $tengah : null,
+                        'belakang' => isset($nilaiPosisi['belakang'], $tengah) ? $nilaiPosisi['belakang'] - $tengah : null,
+                        'kiri'     => isset($nilaiPosisi['kiri'], $tengah) ? $nilaiPosisi['kiri'] - $tengah : null,
+                        'kanan'    => isset($nilaiPosisi['kanan'], $tengah) ? $nilaiPosisi['kanan'] - $tengah : null,
+                    ];
+
+                    $values = array_filter($nilaiPosisi, fn($v) => $v !== null);
+
+                    $minimum    = count($values) ? min($values) : null;
+                    $maximum    = count($values) ? max($values) : null;
+                    $selisihMax = (isset($minimum, $maximum))
+                        ? abs($maximum - $minimum)
+                        : null;
+
+                    PingganSummariesModel::create([
+                        'kalibrasi_id'     => $kalibrasi->id,
+                        'percobaan'        => $p,
+                        'summary_tengah'   => $summary['tengah'],
+                        'summary_depan'    => $summary['depan'],
+                        'summary_belakang' => $summary['belakang'],
+                        'summary_kiri'     => $summary['kiri'],
+                        'summary_kanan'    => $summary['kanan'],
+                        'minimum'          => $minimum,
+                        'maximum'          => $maximum,
+                        'selisih_maks'     => $selisihMax,
                     ]);
                 }
             }
 
             // Data Tare
-            $tareData = $validated['tare'];
-            if (!empty($tareData['percobaan'])) {
+            $tareData = $validated['tare'] ?? null;
 
-                foreach ($tareData['percobaan'] as $percobaan) {
-                    // TANPA pengenolan
-                    TareModel::create([
-                        'kalibrasi_id' => $kalibrasi->id,
-                        'massa'        => $tareData['massa'] ?? 0,
-                        'tipe_tare'    => 'tanpa_pengenolan',
-                        'beban'        => $percobaan['beban_tanpa'] ?? 0,
-                        'pembacaan'    => $percobaan['pembacaan_tanpa'] ?? 0,
-                    ]);
+            if (!empty($tareData)) {
 
-                    // DENGAN pengenolan
-                    TareModel::create([
+                $massa = $tareData['massa'] ?? null;
+
+                $kondisiList = ['tanpa', 'dengan'];
+                $labelList   = ['zero_1', 'm_1', 'm_2', 'zero_2'];
+
+                $hasilSelisih = [];
+
+                foreach ($kondisiList as $kondisi) {
+
+                    if (empty($tareData[$kondisi])) {
+                        continue;
+                    }
+
+                    $data = $tareData[$kondisi];
+
+                    $zero1 = $data['zero_1'] ?? null;
+                    $m1    = $data['m_1'] ?? null;
+                    $m2    = $data['m_2'] ?? null;
+                    $zero2 = $data['zero_2'] ?? null;
+
+                    $adaNilai = false;
+
+                    // ===============================
+                    // 1️⃣ SIMPAN DETAIL (Hanya jika ada nilai)
+                    // ===============================
+                    foreach ($labelList as $label) {
+
+                        $nilai = $data[$label] ?? null;
+
+                        if (!is_null($nilai)) {
+                            $adaNilai = true;
+
+                            TareModel::create([
+                                'kalibrasi_id' => $kalibrasi->id,
+                                'kondisi'      => $kondisi,
+                                'label'        => $label,
+                                'nilai'        => $nilai,
+                            ]);
+                        }
+                    }
+
+                    if (!$adaNilai) {
+                        continue; // skip kalau semua kosong
+                    }
+
+                    // ===============================
+                    // 2️⃣ HITUNG RATA-RATA
+                    // ===============================
+
+                    $rataZ = (isset($zero1, $zero2))
+                        ? ($zero1 + $zero2) / 2
+                        : null;
+
+                    $rataM = (isset($m1, $m2))
+                        ? ($m1 + $m2) / 2
+                        : null;
+
+                    $selisih = (isset($rataM, $rataZ))
+                        ? $rataM - $rataZ
+                        : null;
+
+                    $hasilSelisih[$kondisi] = $selisih;
+
+                    // ===============================
+                    // 3️⃣ SIMPAN SUMMARY PER KONDISI
+                    // ===============================
+
+                    TareSummariesModel::create([
                         'kalibrasi_id' => $kalibrasi->id,
-                        'massa'        => $tareData['massa'] ?? 0,
-                        'tipe_tare'    => 'dengan_pengenolan',
-                        'beban'        => $percobaan['beban_dengan'] ?? 0,
-                        'pembacaan'    => $percobaan['pembacaan_dengan'] ?? 0,
+                        'kondisi'      => $kondisi,
+                        'massa'        => $massa,
+                        'rata_zero'    => $rataZ,
+                        'rata_m'       => $rataM,
+                        'selisih_mz'   => $selisih,
+                        'pengaruh'     => null,
                     ]);
                 }
 
-                // Setelah semua tersimpan, baru hitung summary ---
-                $tanpaNol = TareModel::where('kalibrasi_id', $kalibrasi->id)
-                    ->where('tipe_tare', 'tanpa_pengenolan')
-                    ->get();
+                // ===============================
+                // 4️⃣ HITUNG PENGARUH (SETELAH LOOP)
+                // ===============================
 
-                $denganNol = TareModel::where('kalibrasi_id', $kalibrasi->id)
-                    ->where('tipe_tare', 'dengan_pengenolan')
-                    ->get();
+                if (
+                    isset($hasilSelisih['tanpa']) &&
+                    isset($hasilSelisih['dengan']) &&
+                    !is_null($hasilSelisih['tanpa']) &&
+                    !is_null($hasilSelisih['dengan'])
+                ) {
 
-                if ($tanpaNol->isNotEmpty() && $denganNol->isNotEmpty()) {
-                    // pisahkan pembacaan M dan Z
-                    $zTanpa = $tanpaNol->where('beban', 'like', 'Z%')->pluck('pembacaan')->toArray();
-                    $mTanpa = $tanpaNol->where('beban', 'like', 'M%')->pluck('pembacaan')->toArray();
-                    $zDengan = $denganNol->where('beban', 'like', 'Z%')->pluck('pembacaan')->toArray();
-                    $mDengan = $denganNol->where('beban', 'like', 'M%')->pluck('pembacaan')->toArray();
-
-                    // hitung rata-rata masing-masing
-                    $rataZTanpa  = count($zTanpa)  ? array_sum($zTanpa) / count($zTanpa)  : 0;
-                    $rataMTanpa  = count($mTanpa)  ? array_sum($mTanpa) / count($mTanpa)  : 0;
-                    $rataZDengan = count($zDengan) ? array_sum($zDengan) / count($zDengan) : 0;
-                    $rataMDengan = count($mDengan) ? array_sum($mDengan) / count($mDengan) : 0;
-
-                    // rumus
-                    $selisihTanpa  = ($rataMTanpa - $rataZTanpa);
-                    $selisihDengan = ($rataMDengan - $rataZDengan);
-                    $pengaruh       = abs($selisihTanpa - $selisihDengan);
-
-                    SmryTareModel::create(
-                        [
-                            'kalibrasi_id' => $kalibrasi->id,
-                            'massa'                 => $tareData['massa'] ?? 0,
-                            'selisih_mz_tanpa_nol'  => $selisihTanpa,
-                            'selisih_mz_dengan_nol' => $selisihDengan,
-                            'pengaruh'              => $pengaruh,
-                        ]
+                    $pengaruh = abs(
+                        $hasilSelisih['tanpa'] - $hasilSelisih['dengan']
                     );
+
+                    // Update masing-masing kondisi saja
+                    TareSummariesModel::where('kalibrasi_id', $kalibrasi->id)
+                        ->whereIn('kondisi', ['tanpa', 'dengan'])
+                        ->update(['pengaruh' => $pengaruh]);
                 }
             }
 
-            // === Data Histerisis ===
-            $histerisisData = $validated['histerisis'] ?? [];
-            $grouped = [
-                1 => ['z1' => null, 'm1' => null, 'm_m' => null, 'm2' => null, 'z2' => null],
-                2 => ['z1' => null, 'm1' => null, 'm_m' => null, 'm2' => null, 'z2' => null],
-                3 => ['z1' => null, 'm1' => null, 'm_m' => null, 'm2' => null, 'z2' => null],
-            ];
+            // E. HISTERISIS
+            $histerisisData = $validated['histerisis'] ?? null;
 
-            $massaTerkecil = null;
-            $massaSetengah = null;
+            if ($histerisisData) {
 
-            // Loop semua beban
-            foreach ($histerisisData as $item) {
-                $massaTerkecil = $item['massa_terkecil'] ?? $massaTerkecil;
-                $massaSetengah = $item['massa_setengah'] ?? $massaSetengah;
-                $beban = strtoupper($item['beban']);
-                $percobaanList = $item['percobaan'] ?? [];
+                $pembacaanTerkecil = $histerisisData['pembacaan_terkecil'] ?? null;
+                $setengahKapasitas = $histerisisData['m_setengah'] ?? null;
 
-                // Isi ke struktur grouped per nomor percobaan
-                foreach ($percobaanList as $index => $nilai) {
-                    $no = $index + 1;
-                    if (str_contains($beban, 'Z_1')) {
-                        $grouped[$no]['z1'] = $nilai;
-                    } elseif (str_contains($beban, 'M_2')) {
-                        $grouped[$no]['m1'] = $nilai;
-                    } elseif (str_contains($beban, 'M+M_3')) {
-                        $grouped[$no]['m_m'] = $nilai;
-                    } elseif (str_contains($beban, 'M_4')) {
-                        $grouped[$no]['m2'] = $nilai;
-                    } elseif (str_contains($beban, 'Z_5')) {
-                        $grouped[$no]['z2'] = $nilai;
+                $labelList = ['z1', 'm1', 'm_plus', 'm2', 'z2'];
+
+                // Simpan nilai per pengulangan supaya aman
+                $grouped = [];
+
+                foreach ($labelList as $label) {
+
+                    if (!isset($histerisisData[$label])) {
+                        continue;
+                    }
+
+                    foreach ($histerisisData[$label] as $pengulangan => $nilai) {
+
+                        // Simpan detail
+                        HisterisisModel::create([
+                            'kalibrasi_id' => $kalibrasi->id,
+                            'label'        => $label,
+                            'pengulangan'  => $pengulangan,
+                            'nilai'        => $nilai,
+                        ]);
+
+                        // Kelompokkan berdasarkan pengulangan
+                        $grouped[$pengulangan][$label] = $nilai;
                     }
                 }
-            }
 
-            // Simpan ke database
-            foreach ($grouped as $noPercobaan => $nilai) {
-                $m1 = $nilai['m1'];
-                $m2 = $nilai['m2'];
-                $z1 = $nilai['z1'];
-                $z2 = $nilai['z2'];
+                $selisihM = [];
+                $selisihZ = [];
 
-                $m1_m2 = (isset($m1, $m2)) ? $m1 - $m2 : null;
-                $z1_z2 = (isset($z1, $z2)) ? $z1 - $z2 : null;
+                foreach ($grouped as $pengulangan => $data) {
 
-                HisterisisModel::create([
-                    'kalibrasi_id'       => $kalibrasi->id,
-                    'pembacaan_terkecil' => $massaTerkecil,
-                    'setengah_kapasitas' => $massaSetengah,
-                    'percobaan'          => $noPercobaan,
-                    'z1'  => $z1,
-                    'm1'  => $m1,
-                    'm_m' => $nilai['m_m'],
-                    'm2'  => $m2,
-                    'z2'  => $z2,
-                    'm1_m2' => $m1_m2,
-                    'z1_z2' => $z1_z2,
-                ]);
-            }
+                    // Hitung selisih M (m1 - m2)
+                    if (isset($data['m1'], $data['m2'])) {
+                        $selisihM[] = $data['m1'] - $data['m2'];
+                    }
 
-            // === Hitung Summary Histerisis ===
-            $histerisisRecords = HisterisisModel::where('kalibrasi_id', $kalibrasi->id)->get();
+                    // Hitung selisih Z (z1 - z2)
+                    if (isset($data['z1'], $data['z2'])) {
+                        $selisihZ[] = $data['z1'] - $data['z2'];
+                    }
+                }
 
-            if ($histerisisRecords->isNotEmpty()) {
-                $pembacaanTerkecil = $histerisisRecords->first()->pembacaan_terkecil;
-                $setengahKapasitas = $histerisisRecords->first()->setengah_kapasitas;
+                $avg_m1m2 = count($selisihM)
+                    ? array_sum($selisihM) / count($selisihM)
+                    : null;
 
-                $m1m2Values = $histerisisRecords->pluck('m1_m2')->filter(fn($v) => !is_null($v));
-                $z1z2Values = $histerisisRecords->pluck('z1_z2')->filter(fn($v) => !is_null($v));
+                $avg_z1z2 = count($selisihZ)
+                    ? array_sum($selisihZ) / count($selisihZ)
+                    : null;
 
-                $avg_m1m2 = $m1m2Values->avg() ?? 0;
-                $avg_z1z2 = $z1z2Values->avg() ?? 0;
+                $nilai_mz = null;
+                if (!is_null($avg_m1m2) && !is_null($avg_z1z2)) {
+                    $nilai_mz = $avg_m1m2 - $avg_z1z2;
+                }
 
-                $avg_mz = $avg_m1m2 - $avg_z1z2;
+                $histerisisValue = null;
 
-                $histerisisValue = ($avg_mz < 0.5 * $pembacaanTerkecil)
-                    ? $pembacaanTerkecil
-                    : $avg_mz;
+                if (!is_null($nilai_mz)) {
 
-                SmryHisterisisModel::create([
+                    $histerisisValue = abs($nilai_mz);
+
+                    // Minimal histerisis = pembacaan terkecil
+                    if (!is_null($pembacaanTerkecil) && $histerisisValue < $pembacaanTerkecil) {
+                        $histerisisValue = $pembacaanTerkecil;
+                    }
+                }
+
+                HisterisisSummariesModel::create([
                     'kalibrasi_id'       => $kalibrasi->id,
                     'pembacaan_terkecil' => $pembacaanTerkecil,
                     'setengah_kapasitas' => $setengahKapasitas,
                     'avg_m1m2'           => $avg_m1m2,
                     'avg_z1z2'           => $avg_z1z2,
-                    'avg_mz'             => $avg_mz,
+                    'nilai_mz'           => $nilai_mz,
                     'histerisis'         => $histerisisValue,
                 ]);
             }
 
-            // Data Keseragaman Skala
-            foreach ($validated['keseragaman_skala'] as $row) {
-                $massa_pengkalibrasi = $row['massa_pengkalibrasi'] ?? null;
-                $massa = $row['massa'] ?? null;
-                $bebanTimbanganList = $row['beban_timbangan'] ?? [];
-                $pembacaanSkalaList = $row['pembacaan_skala'] ?? [];
 
-                // pastikan jumlah beban_timbangan == pembacaan_skala
-                foreach ($bebanTimbanganList as $i => $bebanTimbangan) {
-                    KeseragamanSkalaModel::create([
-                        'kalibrasi_id'     => $kalibrasi->id,
-                        'massa'            => $massa_pengkalibrasi,
-                        'beban'            => $massa,
-                        'beban_timbangan'  => $bebanTimbangan,
-                        'pembacaan_skala'  => $pembacaanSkalaList[$i] ?? null,
-                    ]);
+            // HITUNG KETIDAKPASTIAN TIMBANGAN
+            $kalibrasi->load('alat');
+
+            $kapasitasRaw = trim($kalibrasi->alat->kapasitas ?? '');
+            // dd($kalibrasi->alat->kapasitas);
+
+            if ($kapasitasRaw === '') {
+                $kapasitasAlatGram = 0;
+            } else {
+                $parts = preg_split('/\s+/', $kapasitasRaw);
+
+                $angka = isset($parts[0])
+                    ? (float) str_replace(',', '.', $parts[0])
+                    : 0;
+
+                $satuan = strtolower($parts[1] ?? 'g');
+
+                switch ($satuan) {
+                    case 'ton':
+                        $kapasitasAlatGram = $angka * 1000000;
+                        break;
+
+                    case 'kg':
+                        $kapasitasAlatGram = $angka * 1000;
+                        break;
+
+                    case 'g':
+                    default:
+                        $kapasitasAlatGram = $angka;
+                        break;
                 }
             }
 
-            // === Hitung Summary Keseragaman Skala ===
-            $detailData = KeseragamanSkalaModel::where('kalibrasi_id', $kalibrasi->id)->get();
+            $pembacaanTerkecil = $request->pembacaan_terkecil ?? 0;
 
-            $groupedByMassa = $detailData->groupBy('beban');
+            $timbanganStandar = 0.9011271;
+            $skalaTerkecil = $pembacaanTerkecil / 2;
 
-            foreach ($groupedByMassa as $massa => $items) {
-                $zValue = $items->firstWhere('beban_timbangan', 'Z')['pembacaan_skala'] ?? null;
-                $m1Value = $items->firstWhere('beban_timbangan', 'M1')['pembacaan_skala'] ?? null;
-                $m2Value = $items->firstWhere('beban_timbangan', 'M2')['pembacaan_skala'] ?? null;
+            $stdList = KemampuanUlangSummariesModel::where('kalibrasi_id', $kalibrasi->id)
+                ->pluck('std_dev')
+                ->filter()
+                ->toArray();
 
-                $avg_z = $zValue;
-                $avg_m = ($m1Value !== null && $m2Value !== null)
-                    ? ($m1Value + $m2Value) / 2
-                    : null;
+            $maxKemampuanUlang = count($stdList)
+                ? max($stdList)
+                : 0;
 
-                // Selisih dan koreksi
-                $selisih_zm = ($avg_m !== null && $avg_z !== null) ? $avg_m - $avg_z : null;
-                $koreksi_skala = ($selisih_zm !== null) ? (0 - $selisih_zm) : null;
-                $absolut_koreksi = $koreksi_skala !== null ? abs($koreksi_skala) : null;
+            $drift = 0.00001;
+            $bouyancy = 0.000001 * $kapasitasAlatGram;
 
-                $master = MasterTimbanganModel::where('beban', $items->first()->beban ?? null)->first();
-                $standar_massa = $master ? $master->standar_massa : 0;
+            $ustdTimbanganStandar = $timbanganStandar / 2;
+            $ustdSkalaKecil       = $skalaTerkecil / sqrt(3);
+            $ustdKemampuanUlang   = $maxKemampuanUlang / sqrt(10);
+            $ustdDrift            = $drift / sqrt(3);
+            $ustdBouyancy         = $bouyancy / sqrt(3);
 
-                // Simpan summary
-                SmryKeseragamanSkalaModel::create([
-                    'kalibrasi_id'   => $kalibrasi->id,
-                    'beban'          => $items->first()->beban ?? null,
-                    'avg_z'          => $avg_z,
-                    'avg_m'          => $avg_m,
-                    'selisih_zm'     => $selisih_zm,
-                    'standar_massa'  => $standar_massa,
-                    'koreksi_skala'  => $koreksi_skala,
-                    'absolut_koreksi' => $absolut_koreksi,
-                ]);
-            }
+            $u1 = pow($ustdTimbanganStandar, 2);
+            $u2 = pow($ustdSkalaKecil, 2);
+            $u3 = pow($ustdKemampuanUlang, 2);
+            $u4 = pow($ustdDrift, 2);
+            $u5 = pow($ustdBouyancy, 2);
+
+            $varGabungan = $u1 + $u2 + $u3 + $u4 + $u5;
+
+            $ketidakpastianGabungan = sqrt($varGabungan);
+            $ketidakpastianPerluas  = 2 * $ketidakpastianGabungan;
+
+            KetidakpastianSummariesModel::create([
+                'kalibrasi_id'            => $kalibrasi->id,
+                'kapasitas_alat'          => $kapasitasAlatGram,
+                'pembacaan_terkecil'      => $pembacaanTerkecil,
+                'timbangan_standar'       => $timbanganStandar,
+                'skala_terkecil'          => $skalaTerkecil,
+                'max_kemampuan_ulang'     => $maxKemampuanUlang,
+                'drift'                   => $drift,
+                'bouyancy'                => $bouyancy,
+                'ketidakpastian_gabungan' => $ketidakpastianGabungan,
+                'ketidakpastian_perluas'  => $ketidakpastianPerluas,
+            ]);
 
             DB::commit();
 
@@ -413,16 +608,17 @@ class KalibrasiTimbanganController extends Controller
         try {
             $data = KalibrasiModel::with([
                 'alat',
-                'pembacaan',
-                'pembacaanSummary',
+                'kemampuanUlang',
                 'keseragamanSkala',
-                'keseragamanSummary',
-                'pinggan',
-                'pingganSummary',
+                'pinggan.details',
                 'tare',
-                'tareSummary',
                 'histerisis',
+                'kemampuanUlangSummary',
+                'keseragamanSkalaSummary',
+                'pingganSummary',
+                'tareSummary',
                 'histerisisSummary',
+                'ketidakpastianSummary',
             ])
                 ->where('jenis_kalibrasi', 'timbangan')
                 ->orderBy('created_at', 'desc')
@@ -443,10 +639,6 @@ class KalibrasiTimbanganController extends Controller
     public function destroy(string $id)
     {
         $kalibrasi = KalibrasiModel::findOrFail($id);
-
-        // $kalibrasi->jangkaSorong()->delete();
-        // $kalibrasi->jangkaSorongSummary()->delete();
-        // $kalibrasi->jangkaSorongFinalSummary()->delete();
 
         // Hapus kalibrasi utama
         $kalibrasi->delete();

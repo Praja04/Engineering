@@ -2,24 +2,25 @@
 
 namespace App\Models\Kalibrasi\Timbangan;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Kalibrasi\KalibrasiModel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class SmryHisterisisModel extends Model
+class KemampuanUlangModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_tmb_histerisis_smry';
+    protected $table = 'cal_timbangan_kemampuan_ulang';
 
     protected $fillable = [
         'kalibrasi_id',
-        'pembacaan_terkecil',
-        'setengah_kapasitas',
-        'avg_m1m2',
-        'avg_z1z2',
-        'avg_mz',
-        'histerisis',
+        'jenis',
+        'ulangan',
+        'massa',
+        'nilai_z',
+        'nilai_m',
+        'selisih',
+        'maks_perbedaan',
     ];
 
     public function kalibrasi()
