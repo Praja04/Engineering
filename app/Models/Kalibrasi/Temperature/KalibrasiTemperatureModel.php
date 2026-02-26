@@ -1,25 +1,26 @@
 <?php
 
-namespace App\Models\kalibrasi\Temperature;
+namespace App\Models\Kalibrasi\Temperature;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Kalibrasi\KalibrasiModel;
+use App\Models\Kalibrasi\Temperature\KalibrasiTemperatureDetailModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class KalibrasiTemperatureModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_temperature';
+    protected $table = 'cal_temperature';
 
     protected $fillable = [
         'kalibrasi_id',
         'titik_kalibrasi',
-        'penunjuk_standar',
-        'penunjuk_alat',
-        'koreksi_standar',
-        'suhu_standar',
-        'koreksi_alat',
+        'avg_penunjuk_alat',
+        'avg_suhu_standar',
+        'avg_kor_alat',
+        'stdev',
+        'ketidakpastian',
     ];
 
     /**
@@ -28,5 +29,10 @@ class KalibrasiTemperatureModel extends Model
     public function kalibrasi()
     {
         return $this->belongsTo(KalibrasiModel::class, 'kalibrasi_id');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(KalibrasiTemperatureDetailModel::class, 'temperature_id');
     }
 }
