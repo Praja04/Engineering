@@ -37,7 +37,6 @@
                                         <th>Tgl Kalibrasi Ulang</th>
                                         <th>Lokasi</th>
                                         <th>Kondisi Ruangan</th>
-                                        <th>Titik Kalibrasi</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -209,7 +208,7 @@
                                         <table class="table table-hover table-sm text-center mb-0">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th>No Mastes</th>
+                                                    <th>No Master</th>
                                                     <th>Nilai Master (mm)</th>
                                                     <th>Avg Pembacaan (mm)</th>
                                                     <th>Std Deviasi</th>
@@ -227,7 +226,7 @@
                         <div class="tab-pane fade" id="final-pane">
                             <div class="card border-success">
                                 <div class="card-header bg-soft-primary text-primary">
-                                    <i class="bi bi-clipboard-check me-2"></i> Summary 2
+                                    <i class="bi bi-clipboard-check me-2"></i> Final Summary
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="table-responsive">
@@ -278,8 +277,11 @@
                         renderTable();
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error fetching data:', error);
-                        alert('Gagal mengambil data. Silakan coba lagi.');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'Gagal mengambil data.',
+                            icon: 'error'
+                        });
                     }
                 });
             }
@@ -334,11 +336,6 @@
                             `
                         },
                         {
-                            data: "jangka_sorong",
-                            className: "text-center",
-                            render: data => data.length
-                        },
-                        {
                             data: null,
                             orderable: false,
                             className: "text-center",
@@ -382,6 +379,7 @@
             }
 
             function showDetailModal(id, historyData) {
+
                 const item = historyData.find(d => d.id === id);
                 if (!item) {
                     Swal.fire('Oops!', 'Data tidak ditemukan!', 'error');
@@ -389,11 +387,12 @@
                 }
 
                 const alat = item.alat ?? {};
-                const summaryList = item.jangka_sorong_summary ?? [];
-                const finalSummaryList = item.jangka_sorong_final_summary ?? [];
                 const pengukuranList = item.jangka_sorong ?? [];
+                const summary = item.jangka_sorong_summary ?? null;
 
-                // === Isi Tab Informasi ===
+                // ===============================
+                // TAB 1 - INFORMASI
+                // ===============================
                 $('#detail_kode_alat').text(alat.kode_alat ?? '-');
                 $('#detail_nama_alat').text(alat.nama_alat ?? '-');
                 $('#detail_tgl_kalibrasi').text(item.tgl_kalibrasi ?? '-');
@@ -402,22 +401,22 @@
                 $('#detail_suhu').text(item.suhu_ruangan ?? '-');
                 $('#detail_kelembaban').text(item.kelembaban ?? '-');
                 $('#detail_jenis').text(alat.jenis_kalibrasi ?? '-');
-                $('#detail_metode').text(item.alat.metode_kalibrasi ?? 'Tidak ada data metode.');
+                $('#detail_metode').text(alat.metode_kalibrasi ?? 'Tidak ada data metode.');
 
-                // === Tab Data Pengukuran (Grouped by nilai_master) ===
+                // ===============================
+                // TAB 2 - DATA PENGUKURAN
+                // ===============================
                 const pengukuranBody = $('#detail_pengukuran');
                 pengukuranBody.empty();
 
                 if (pengukuranList.length > 0) {
-                    // Group berdasarkan nilai_master (bukan master_id lagi)
-                    const grouped = {};
-                    pengukuranList.forEach(p => {
-                        const nilaiMaster = p.master?.nilai_master ?? `Master ID: ${p.master_id}`;
-                        if (!grouped[nilaiMaster]) grouped[nilaiMaster] = [];
-                        grouped[nilaiMaster].push(p);
-                    });
 
-                    Object.keys(grouped).forEach(nilaiMaster => {
+                    pengukuranList.forEach(js => {
+
+                        const nilaiMaster = js.master?.nilai_master ?? '-';
+                        const details = js.details ?? [];
+
+                        // Header titik master
                         pengukuranBody.append(`
                             <tr class="table-primary fw-bold">
                                 <td colspan="3" class="text-start ps-3">
@@ -426,60 +425,90 @@
                             </tr>
                         `);
 
-                        grouped[nilaiMaster].forEach((p, i) => {
+                        // Detail pengulangan
+                        details.forEach(d => {
                             pengukuranBody.append(`
                                 <tr>
-                                    <td>${p.no ?? i + 1}</td>
-                                    <td>${formatNumber(p.master?.nilai_master ?? '-')}</td>
-                                    <td>${formatNumber(p.nilai_pembacaan ?? '-')}</td>
+                                    <td>${d.no_pengulangan ?? '-'}</td>
+                                    <td>${formatNumber(d.nilai_master)}</td>
+                                    <td>${formatNumber(d.nilai_pembacaan)}</td>
                                 </tr>
                             `);
                         });
+
                     });
+
                 } else {
-                    pengukuranBody.append(
-                        '<tr><td colspan="3" class="text-muted">Tidak ada data pengukuran.</td></tr>');
+                    pengukuranBody.append(`
+                        <tr>
+                            <td colspan="3" class="text-muted">
+                                Tidak ada data pengukuran.
+                            </td>
+                        </tr>
+                    `);
                 }
 
-                // === Isi Tab Summary ===
+                // ===============================
+                // TAB 3 - SUMMARY PER TITIK
+                // ===============================
                 const summaryBody = $('#detail_summary');
                 summaryBody.empty();
 
-                if (summaryList.length > 0) {
-                    summaryList.forEach(s => {
+                if (pengukuranList.length > 0) {
+
+                    pengukuranList.forEach(js => {
+
                         summaryBody.append(`
                             <tr>
-                                <td>${s.master.no ?? '-'}</td>
-                                <td>${formatNumber(s.master.nilai_master) ?? '-'}</td>
-                                <td>${formatNumber(s.avg_pembacaan) ?? '-'}</td>
-                                <td>${s.std_dev ?? '-'}</td>
-                                <td>${s.koreksi ?? '-'}</td>
+                                <td>${js.master?.no ?? '-'}</td>
+                                <td>${formatNumber(js.master?.nilai_master)}</td>
+                                <td>${formatNumber(js.avg_pembacaan)}</td>
+                                <td>${formatNumber(js.std_dev)}</td>
+                                <td>${formatNumber(js.koreksi)}</td>
                             </tr>
                         `);
+
                     });
+
                 } else {
-                    summaryBody.append('<tr><td colspan="4" class="text-muted">Tidak ada data summary.</td></tr>');
+                    summaryBody.append(`
+                        <tr>
+                            <td colspan="5" class="text-muted">
+                                Tidak ada data summary.
+                            </td>
+                        </tr>
+                    `);
                 }
 
-                // === Isi Tab Final Summary ===
+                // ===============================
+                // TAB 4 - FINAL SUMMARY
+                // ===============================
                 const finalBody = $('#detail_final_summary');
                 finalBody.empty();
 
-                if (finalSummaryList.length > 0) {
-                    const f = finalSummaryList[0];
+                if (summary) {
+
                     finalBody.append(`
                         <tr>
-                            <td>${f.std_dev_total ?? '0.00000'}</td>
-                            <td>${f.ketidakpastian ?? '0.0000'}</td>
-                            <td>${f.k_2 ?? '2'}</td>
+                            <td>${formatNumber(summary.std_dev_total)}</td>
+                            <td>${formatNumber(summary.ketidakpastian)}</td>
+                            <td>${formatNumber(summary.k_2)}</td>
                         </tr>
                     `);
+
                 } else {
-                    finalBody.append(
-                        '<tr><td colspan="3" class="text-muted">Tidak ada data final summary.</td></tr>');
+                    finalBody.append(`
+                        <tr>
+                            <td colspan="3" class="text-muted">
+                                Tidak ada data final summary.
+                            </td>
+                        </tr>
+                    `);
                 }
 
-                // === Tampilkan modal ===
+                // ===============================
+                // SHOW MODAL
+                // ===============================
                 $('#detailModal').modal('show');
             }
 

@@ -247,8 +247,11 @@
                         renderTable();
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error fetching data:', error);
-                        alert('Gagal mengambil data. Silakan coba lagi.');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'Gagal mengambil data.',
+                            icon: 'error'
+                        });
                     }
                 });
             }
@@ -365,7 +368,7 @@
                 $('#detail_jenis').text(alat.jenis_kalibrasi ?? '-');
                 $('#detail_metode').text(alat.metode_kalibrasi ?? 'Tidak ada data metode.');
 
-                renderPembacaan(item);
+                renderKemampuanUlang(item);
                 renderKeseragamanSkala(item);
                 renderPinggan(item);
                 renderTare(item);
@@ -375,399 +378,341 @@
                 $('#detailModal').modal('show');
             }
 
-            function renderPembacaan(item) {
-                const pembacaan = Array.isArray(item.pembacaan) ? item.pembacaan : [];
-                const pembacaanSummary = item.pembacaan_summary ?? {};
+            function renderKemampuanUlang(item) {
+                const data = Array.isArray(item.kemampuan_ulang) ? item.kemampuan_ulang : [];
+                const summary = item.kemampuan_ulang_summary ?? null;
 
-                if (pembacaan.length === 0) {
+                if (data.length === 0) {
                     $('#detail_pembacaan').html('<p class="text-muted">Tidak ada data pembacaan.</p>');
-                } else {
-                    // Kelompokkan berdasarkan 'kemampuan'
-                    const grouped = pembacaan.reduce((acc, row) => {
-                        if (!acc[row.kemampuan]) acc[row.kemampuan] = [];
-                        acc[row.kemampuan].push(row);
-                        return acc;
-                    }, {});
-
-                    let html = '';
-
-                    Object.entries(grouped).forEach(([kemampuan, rows]) => {
-                        // Ambil semua nilai titik unik di kelompok ini
-                        const titikUnik = [...new Set(rows.map(r => r.titik).filter(Boolean))].join(', ');
-
-                        html += `
-                            <h6 class="mt-3">
-                                <strong>${kemampuan}</strong>
-                                ${titikUnik ? `<p class="text-muted">${titikUnik} gram</p>` : ''}
-                            </h6>
-                            <table class="table table-bordered table-sm mb-3">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Ulangan</th>
-                                        <th>Pembacaan Z</th>
-                                        <th>Pembacaan M</th>
-                                        <th>Selisih</th>
-                                        <th>Maks. Perbedaan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${rows.map(row => `<tr><td>${row.ulangan ?? '-'}</td><td>${row.pembacaan_z ?? '-'}</td><td>${row.pembacaan_m ?? '-'}</td><td>${row.selisih ?? '-'}</td><td>${row.maks_perbedaan ?? '-'}</td></tr>`).join('')}
-                                </tbody>
-                            </table>
-                        `;
-                    });
-
-                    $('#detail_pembacaan').html(html);
+                    $('#detail_pembacaan_summary').html('');
+                    return;
                 }
 
-                // === Bagian Summary Pembacaan (Horizontal) ===
-                if (pembacaanSummary.length > 0) {
-                    let summaryHtml = `
-                        <h6 class="mt-4"><strong>Summary Pembacaan</strong></h6>
-                        <table class="table table-bordered table-sm w-100 mb-3">
+                // Group berdasarkan jenis
+                const grouped = data.reduce((acc, row) => {
+                    if (!acc[row.jenis]) acc[row.jenis] = [];
+                    acc[row.jenis].push(row);
+                    return acc;
+                }, {});
+
+                let html = '';
+
+                Object.entries(grouped).forEach(([jenis, rows]) => {
+                    const rowHtml = rows.map(r => `
+                        <tr>
+                            <td>${r.ulangan ?? '-'}</td>
+                            <td>${r.nilai_z ?? '-'}</td>
+                            <td>${r.nilai_m ?? '-'}</td>
+                            <td>${r.selisih ?? '-'}</td>
+                            <td>${r.maks_perbedaan ?? '-'}</td>
+                        </tr>
+                    `).join('');
+
+                    html += `
+                        <h6 class="mt-3"><strong>${jenis.replace('_',' ')}</strong></h6>
+                        <table class="table table-bordered table-sm mb-3 text-center">
                             <thead class="table-light">
                                 <tr>
-                                    <th>No</th>
+                                    <th>Ulangan</th>
+                                    <th>Nilai Z</th>
+                                    <th>Nilai M</th>
+                                    <th>Selisih</th>
+                                    <th>Maks. Perbedaan</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowHtml}</tbody>
+                        </table>
+                    `;
+                });
+
+                $('#detail_pembacaan').html(html);
+
+                // === Summary ===
+                if (summary) {
+                    $('#detail_pembacaan_summary').html(`
+                        <h6 class="mt-3"><strong>Summary</strong></h6>
+                        <table class="table table-bordered table-sm text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Jenis</th>
                                     <th>Standar Deviasi</th>
                                     <th>Maks. Perbedaan Akhir</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${pembacaanSummary.map((summary, index) => `<tr><td>${index + 1}</td><td>${summary.std_dev ?? '-'}</td><td>${summary.maks_perbedaan_akhir ?? '-'}</td></tr>`).join('')}
+                                <tr>
+                                    <td>${summary.jenis ?? '-'}</td>
+                                    <td>${summary.std_dev ?? '-'}</td>
+                                    <td>${summary.maks_perbedaan_akhir ?? '-'}</td>
+                                </tr>
                             </tbody>
                         </table>
-                    `;
-
-                    $('#detail_pembacaan_summary').html(summaryHtml);
+                    `);
                 } else {
                     $('#detail_pembacaan_summary').html('<p class="text-muted">Tidak ada data summary.</p>');
                 }
             }
 
             function renderKeseragamanSkala(item) {
-                const keseragaman = Array.isArray(item.keseragaman_skala) ? item.keseragaman_skala : [];
-                const summary = item.keseragaman_summary ?? {};
+                const data = Array.isArray(item.keseragaman_skala) ? item.keseragaman_skala : [];
+                const summary = item.keseragaman_skala_summary ?? null;
 
-                // Jika tidak ada data
-                if (keseragaman.length === 0) {
-                    $('#detail_keseragaman').html('<p class="text-muted">Tidak ada data keseragaman skala.</p>');
+                if (data.length === 0) {
+                    $('#detail_keseragaman').html('<p class="text-muted">Tidak ada data keseragaman.</p>');
                     $('#detail_keseragaman_summary').html('');
                     return;
                 }
 
-                // === Kelompokkan berdasarkan nilai beban ===
-                const grouped = keseragaman.reduce((acc, row) => {
-                    const key = row.beban || 'Tidak diketahui';
-                    if (!acc[key]) acc[key] = [];
-                    acc[key].push(row);
-                    return acc;
-                }, {});
+                let html = `
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Massa Ke</th>
+                                <th>Jenis</th>
+                                <th>Beban</th>
+                                <th>Pembacaan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
 
-                let html = '';
-
-                Object.entries(grouped).forEach(([beban, rows]) => {
+                data.forEach(r => {
                     html += `
-                        <h6 class="mt-3"><strong>Beban ${beban}</strong></h6>
-                        <table class="table table-bordered table-sm mb-3">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Beban Timbangan</th>
-                                    <th>Pembacaan Skala</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rows.map(r => `<tr><td>${r.beban_timbangan ?? '-'}</td><td>${r.pembacaan_skala ?? '-'}</td></tr>`).join('')}
-                            </tbody>
-                        </table>
+                        <tr>
+                            <td>${r.massa_ke ?? '-'}</td>
+                            <td>${r.jenis ?? '-'}</td>
+                            <td>${r.beban ?? '-'}</td>
+                            <td>${r.pembacaan ?? '-'}</td>
+                        </tr>
                     `;
                 });
 
-                // Tampilkan tabel keseragaman skala
+                html += `</tbody></table>`;
                 $('#detail_keseragaman').html(html);
 
-                let summaryHtml = '';
-                if (summary.length === 0) {
-                    summaryHtml = '<p class="text-muted">Tidak ada data summary keseragaman.</p>';
-                } else {
-                    summaryHtml = `
-                        <h6 class="mt-3"><strong>Summary Keseragaman Skala</strong></h6>
+                if (summary) {
+                    $('#detail_keseragaman_summary').html(`
+                        <h6 class="mt-3"><strong>Summary</strong></h6>
                         <table class="table table-bordered table-sm text-center">
                             <thead class="table-light">
                                 <tr>
-                                    <th>No</th>
-                                    <th>Beban</th>
+                                    <th>Massa Ke</th>
                                     <th>Avg Z</th>
                                     <th>Avg M</th>
                                     <th>Selisih Z-M</th>
-                                    <th>Standar Massa</th>
                                     <th>Koreksi Skala</th>
                                     <th>Absolut Koreksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${summary.map((s, i) => `<tr><td>${i + 1}</td><td>${s.beban ?? '-'}</td><td>${s.avg_z ?? '-'}</td><td>${s.avg_m ?? '-'}</td><td>${s.selisih_zm ?? '-'}</td><td>${s.standar_massa ?? '-'}</td><td>${s.koreksi_skala ?? '-'}</td><td>${s.absolut_koreksi ?? '-'}</td></tr>`).join('')}
+                                <tr>
+                                    <td>${summary.massa_ke ?? '-'}</td>
+                                    <td>${summary.avg_z ?? '-'}</td>
+                                    <td>${summary.avg_m ?? '-'}</td>
+                                    <td>${summary.selisih_zm ?? '-'}</td>
+                                    <td>${summary.koreksi_skala ?? '-'}</td>
+                                    <td>${summary.absolut_koreksi ?? '-'}</td>
+                                </tr>
                             </tbody>
                         </table>
-                    `;
+                    `);
                 }
-
-                $('#detail_keseragaman_summary').html(summaryHtml);
             }
 
             function renderPinggan(item) {
-                // === Render Pinggan ===
                 const pinggan = item.pinggan ?? [];
-                const pingganSummary = item.pinggan_summary ?? {};
+                const summary = item.pinggan_summary ?? null;
 
-                let pingganHtml = '';
                 if (pinggan.length === 0) {
-                    pingganHtml = '<p class="text-muted">Tidak ada data pinggan.</p>';
-                } else {
-                    pingganHtml += `
-                        <h6 class="mt-3"><strong>Data Pengujian Pinggan</strong></h6>
-                        <table class="table table-bordered table-sm text-center align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>No</th>
-                                    <th>Diameter</th>
-                                    <th>Massa</th>
-                                    <th>Tengah</th>
-                                    <th>Depan</th>
-                                    <th>Belakang</th>
-                                    <th>Kiri</th>
-                                    <th>Kanan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-                    pinggan.forEach((item, index) => {
-                        pingganHtml += `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${item.diameter ?? '-'}</td>
-                                <td>${item.massa ?? '-'}</td>
-                                <td>${item.tengah ?? '-'}</td>
-                                <td>${item.depan ?? '-'}</td>
-                                <td>${item.belakang ?? '-'}</td>
-                                <td>${item.kiri ?? '-'}</td>
-                                <td>${item.kanan ?? '-'}</td>
-                            </tr>
-                        `;
-                    });
-
-                    pingganHtml += `
-                            </tbody>
-                        </table>
-                    `;
+                    $('#detail_pinggan').html('<p class="text-muted">Tidak ada data pinggan.</p>');
+                    return;
                 }
 
-                let summaryHtml = '';
-                if (pingganSummary.length === 0) {
-                    summaryHtml = '<p class="text-muted">Tidak ada data summary pinggan.</p>';
-                } else {
-                    summaryHtml = `
-                        <h6 class="mt-3"><strong>Summary Pinggan</strong></h6>
+                let html = '';
+
+                pinggan.forEach((p, index) => {
+                    const rowHtml = (p.details ?? []).map(d => `
+                        <tr>
+                            <td>${d.percobaan ?? '-'}</td>
+                            <td>${d.posisi ?? '-'}</td>
+                            <td>${d.nilai ?? '-'}</td>
+                        </tr>
+                    `).join('');
+
+                    html += `
+                        <h6 class="mt-3"><strong>Percobaan ${index + 1}</strong></h6>
+                        <p>Diameter: ${p.diameter ?? '-'} | Massa: ${p.massa ?? '-'}</p>
                         <table class="table table-bordered table-sm text-center">
                             <thead class="table-light">
                                 <tr>
-                                    <th>No</th>
-                                    <th>Tengah</th>
-                                    <th>Depan</th>
-                                    <th>Belakang</th>
-                                    <th>Kiri</th>
-                                    <th>Kanan</th>
-                                    <th>Minimum</th>
-                                    <th>Maximum</th>
-                                    <th>Selisih Maks</th>
+                                    <th>Percobaan</th>
+                                    <th>Posisi</th>
+                                    <th>Nilai</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                    `;
-
-                    pingganSummary.forEach((smry, index) => {
-                        summaryHtml += `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${smry.smry_tengah ?? '-'}</td>
-                                <td>${smry.smry_depan ?? '-'}</td>
-                                <td>${smry.smry_belakang ?? '-'}</td>
-                                <td>${smry.smry_kiri ?? '-'}</td>
-                                <td>${smry.smry_kanan ?? '-'}</td>
-                                <td>${smry.minimum ?? '-'}</td>
-                                <td>${smry.maximum ?? '-'}</td>
-                                <td>${smry.selisih_maks ?? '-'}</td>
-                            </tr>
-                        `;
-                    });
-
-                    summaryHtml += `
-                            </tbody>
+                            <tbody>${rowHtml}</tbody>
                         </table>
                     `;
+                });
+
+                $('#detail_pinggan').html(html);
+
+                if (summary) {
+                    $('#detail_pinggan_summary').html(`
+                        <h6 class="mt-3"><strong>Summary</strong></h6>
+                        <table class="table table-bordered table-sm text-center">
+                            <tbody>
+                                <tr>
+                                    <td>Minimum</td>
+                                    <td>${summary.minimum ?? '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Maximum</td>
+                                    <td>${summary.maximum ?? '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Selisih Maks</td>
+                                    <td>${summary.selisih_maks ?? '-'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `);
                 }
-
-                $('#detail_pinggan').html(pingganHtml);
-                $('#detail_pinggan_summary').html(summaryHtml);
-
             }
 
             function renderTare(item) {
-                const tare = Array.isArray(item.tare) ? item.tare : [];
+                const data = item.tare ?? [];
                 const summary = item.tare_summary ?? null;
 
-                // === Bagian Data Tare ===
-                if (tare.length === 0) {
+                if (data.length === 0) {
                     $('#detail_tare').html('<p class="text-muted">Tidak ada data tare.</p>');
-                } else {
-                    // Kelompokkan berdasarkan tipe_tare (tanpa_pengenolan / dengan_pengenolan)
-                    const grouped = tare.reduce((acc, row) => {
-                        const key = row.tipe_tare || 'tidak_diketahui';
-                        if (!acc[key]) acc[key] = [];
-                        acc[key].push(row);
-                        return acc;
-                    }, {});
-
-                    let html = '';
-
-                    Object.entries(grouped).forEach(([tipe, rows]) => {
-                        const tipeLabel = tipe === 'tanpa_pengenolan' ?
-                            'Tanpa Pengenolan' :
-                            tipe === 'dengan_pengenolan' ?
-                            'Dengan Pengenolan' :
-                            'Tidak Diketahui';
-
-                        html += `
-                            <h6 class="mt-3"><strong>${tipeLabel}</strong></h6>
-                            <table class="table table-bordered table-sm mb-3 text-center">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Beban</th>
-                                        <th>Massa</th>
-                                        <th>Pembacaan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${rows.map(row => `<tr><td>${row.beban ?? '-'}</td><td>${row.massa ?? '-'}</td><td>${row.pembacaan ?? '-'}</td></tr>`).join('')}
-                                </tbody>
-                            </table>
-                        `;
-                    });
-
-                    $('#detail_tare').html(html);
+                    return;
                 }
 
-                // === Bagian Summary Tare (Horizontal) ===
-                if (summary) {
-                    const summaryHtml = `
-                        <h6 class="mt-4"><strong>Summary Tare</strong></h6>
-                        <table class="table table-bordered table-sm text-center w-100 mb-3">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Massa</th>
-                                    <th>Selisih MZ Tanpa Nol</th>
-                                    <th>Selisih MZ Dengan Nol</th>
-                                    <th>Pengaruh</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>${summary.massa ?? '-'}</td>
-                                    <td>${summary.selisih_mz_tanpa_nol ?? '-'}</td>
-                                    <td>${summary.selisih_mz_dengan_nol ?? '-'}</td>
-                                    <td>${summary.pengaruh ?? '-'}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                let html = `
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Kondisi</th>
+                                <th>Label</th>
+                                <th>Nilai</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                data.forEach(r => {
+                    html += `
+                        <tr>
+                            <td>${r.kondisi ?? '-'}</td>
+                            <td>${r.label ?? '-'}</td>
+                            <td>${r.nilai ?? '-'}</td>
+                        </tr>
                     `;
-                    $('#detail_tare_summary').html(summaryHtml);
-                } else {
-                    $('#detail_tare_summary').html('<p class="text-muted">Tidak ada data summary tare.</p>');
+                });
+
+                html += `</tbody></table>`;
+                $('#detail_tare').html(html);
+
+                if (summary) {
+                    $('#detail_tare_summary').html(`
+                        <h6 class="mt-3"><strong>Summary</strong></h6>
+                        <table class="table table-bordered table-sm text-center">
+                            <tr>
+                                <td>Massa</td>
+                                <td>${summary.massa ?? '-'}</td>
+                            </tr>
+                            <tr>
+                                <td>Selisih MZ</td>
+                                <td>${summary.selisih_mz ?? '-'}</td>
+                            </tr>
+                            <tr>
+                                <td>Pengaruh</td>
+                                <td>${summary.pengaruh ?? '-'}</td>
+                            </tr>
+                        </table>
+                    `);
                 }
             }
 
             function renderHisterisis(item) {
-                const histerisis = item.histerisis ?? [];
-                const histerisisSummary = item.histerisis_summary ?? null;
+                const data = Array.isArray(item.histerisis) ? item.histerisis : [];
+                const summary = item.histerisis_summary ?? null;
 
-                const histerisisBody = $('#detail_histerisis');
-                histerisisBody.empty();
+                const container = $('#detail_histerisis');
+                container.empty();
 
-                if (histerisis.length > 0) {
-                    let html = `
-                        <table class="table table-bordered text-center align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th rowspan="2">Percobaan</th>
-                                    <th colspan="2">M</th>
-                                    <th colspan="2">Z</th>
-                                    <th colspan="2">Selisih</th>
-                                </tr>
-                                <tr>
-                                    <th>M1</th>
-                                    <th>M2</th>
-                                    <th>Z1</th>
-                                    <th>Z2</th>
-                                    <th>M1 - M2</th>
-                                    <th>Z1 - Z2</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-                    histerisis.forEach(h => {
-                        html += `
-                            <tr>
-                                <td>${h.percobaan ?? '-'}</td>
-                                <td>${h.m1 ?? '-'}</td>
-                                <td>${h.m2 ?? '-'}</td>
-                                <td>${h.z1 ?? '-'}</td>
-                                <td>${h.z2 ?? '-'}</td>
-                                <td>${h.m1_m2 ?? '-'}</td>
-                                <td>${h.z1_z2 ?? '-'}</td>
-                            </tr>
-                        `;
-                    });
-
-                    html += `</tbody></table>`;
-                    histerisisBody.append(html);
-
-                    if (histerisisSummary) {
-                        const s = histerisisSummary;
-                        const summaryHtml = `
-                            <div class="mt-3">
-                                <h6 class="fw-bold mb-2">Ringkasan Histerisis</h6>
-                                <table class="table table-sm table-bordered text-center align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Pembacaan Terkecil</th>
-                                            <th>½ Kapasitas</th>
-                                            <th>Rata-rata M1 - M2</th>
-                                            <th>Rata-rata Z1 - Z2</th>
-                                            <th>Rata-rata MZ</th>
-                                            <th>Histerisis</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>${s.pembacaan_terkecil ?? '-'}</td>
-                                            <td>${s.setengah_kapasitas ?? '-'}</td>
-                                            <td>${s.avg_m1m2 ?? '-'}</td>
-                                            <td>${s.avg_z1z2 ?? '-'}</td>
-                                            <td>${s.avg_mz ?? '-'}</td>
-                                            <td>${s.histerisis ?? '-'}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        `;
-                        histerisisBody.append(summaryHtml);
-                    }
-
-                } else {
-                    histerisisBody.append('<p class="text-muted">Tidak ada data histerisis.</p>');
+                if (data.length === 0) {
+                    container.append('<p class="text-muted">Tidak ada data histerisis.</p>');
+                    return;
                 }
 
+                // === Group berdasarkan pengulangan ===
+                const grouped = data.reduce((acc, row) => {
+                    if (!acc[row.pengulangan]) acc[row.pengulangan] = {};
+                    acc[row.pengulangan][row.label] = row.nilai;
+                    return acc;
+                }, {});
+
+                let html = `
+                    <table class="table table-bordered text-center align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Percobaan</th>
+                                <th>M1</th>
+                                <th>M2</th>
+                                <th>Z1</th>
+                                <th>Z2</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                Object.entries(grouped).forEach(([pengulangan, values]) => {
+                    html += `
+                        <tr>
+                            <td>${pengulangan}</td>
+                            <td>${values.m1 ?? '-'}</td>
+                            <td>${values.m2 ?? '-'}</td>
+                            <td>${values.z1 ?? '-'}</td>
+                            <td>${values.z2 ?? '-'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+                container.append(html);
+
+                // === Summary ===
+                if (summary) {
+                    container.append(`
+                        <div class="mt-3">
+                            <h6 class="fw-bold mb-2">Ringkasan Histerisis</h6>
+                            <table class="table table-sm table-bordered text-center">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Pembacaan Terkecil</th>
+                                        <th>½ Kapasitas</th>
+                                        <th>Avg M1-M2</th>
+                                        <th>Avg Z1-Z2</th>
+                                        <th>Nilai MZ</th>
+                                        <th>Histerisis</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>${summary.pembacaan_terkecil ?? '-'}</td>
+                                        <td>${summary.setengah_kapasitas ?? '-'}</td>
+                                        <td>${summary.avg_m1m2 ?? '-'}</td>
+                                        <td>${summary.avg_z1z2 ?? '-'}</td>
+                                        <td>${summary.nilai_mz ?? '-'}</td>
+                                        <td>${summary.histerisis ?? '-'}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `);
+                }
             }
 
             // Delete btn

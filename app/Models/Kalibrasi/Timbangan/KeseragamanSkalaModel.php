@@ -10,13 +10,14 @@ class KeseragamanSkalaModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_timbangan_keseragaman_skala';
+    protected $table = 'cal_timbangan_keseragaman_skala';
+
     protected $fillable = [
         'kalibrasi_id',
-        'massa',
+        'massa_ke',
+        'jenis',
         'beban',
-        'beban_timbangan',
-        'pembacaan_skala'
+        'pembacaan'
     ];
 
 

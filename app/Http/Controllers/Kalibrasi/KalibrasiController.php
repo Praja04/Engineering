@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Kalibrasi;
 
-use Exception;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use App\Models\Kalibrasi\AlatKalibrasiModel;
+use App\Models\Kalibrasi\KalibrasiModel;
+use App\Models\Kalibrasi\KalibrasiSertifikatModel;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use App\Models\Kalibrasi\KalibrasiModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use App\Exports\AlatKalibrasiTemplateExport;
-use App\Models\Kalibrasi\AlatKalibrasiModel;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class KalibrasiController extends Controller
 {
@@ -269,6 +269,37 @@ class KalibrasiController extends Controller
         }
     }
 
+    public function destroy(string $id)
+    {
+        $certifikat = KalibrasiSertifikatModel::find($id);
+
+        if (!$certifikat) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data sertifikat tidak ditemukan'
+            ], 404);
+        }
+
+        $kalibrasiId = $certifikat->kalibrasi_id;
+
+        $kalibrasi = KalibrasiModel::find($kalibrasiId);
+
+        if (!$kalibrasi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data kalibrasi tidak ditemukan'
+            ], 404);
+        }
+
+        $kalibrasi->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data kalibrasi berhasil dihapus!'
+        ]);
+    }
+
+
     public function getFilters()
     {
         $jenis = AlatKalibrasiModel::select('jenis_kalibrasi')
@@ -478,6 +509,98 @@ class KalibrasiController extends Controller
                 'status'  => 'error',
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function detail($id)
+    {
+        $main = KalibrasiModel::with(['alat', 'user',])->findOrFail($id);
+
+        // Log::info('DATA MAIN:', $main->toArray());
+
+        switch ($main->jenis_kalibrasi) {
+
+            case 'pressure':
+                $main->load('pressure');
+
+                return view(
+                    'kalibrasi.certificate.partials.pressure_details',
+                    compact('main')
+                );
+
+            case 'volumetrik':
+                $main->load('volumetrik');
+
+                return view(
+                    'kalibrasi.certificate.partials.volumetrik_details',
+                    compact('main')
+                );
+
+            case 'temperature':
+                $main->load('temperature');
+
+                return view(
+                    'kalibrasi.certificate.partials.temperature_details',
+                    compact('main')
+                );
+
+            case 'thermohygrometer':
+                $main->load('thermohygrometer');
+
+                return view(
+                    'kalibrasi.certificate.partials.thermohygrometer_details',
+                    compact('main')
+                );
+
+            case 'jangka_sorong':
+                $main->load('jangkaSorong', 'jangkaSorongSummary');
+                $data = $main->jangkaSorong()->get();
+
+                return view(
+                    'kalibrasi.certificate.partials.jangka_sorong_details',
+                    compact('data', 'main')
+                );
+
+            case 'timbangan':
+                $main->load(
+                    'kemampuanUlang',
+                    'keseragamanSkala',
+                    'pinggan',
+                    'tare',
+                    'histerisis',
+                    'kemampuanUlangSummary',
+                    'keseragamanSkalaSummary',
+                    'pingganSummary',
+                    'tareSummary',
+                    'histerisisSummary'
+                );
+
+                return view(
+                    'kalibrasi.certificate.partials.timbangan_details',
+                    compact('main')
+                );
+
+            case 'instrumen':
+                $main->load(
+                    'instrumen',
+                    'keypad',
+                );
+
+                return view(
+                    'kalibrasi.certificate.partials.instrumen_details',
+                    compact('main')
+                );
+
+            case 'dimensi':
+                $main->load('dimensi',);
+
+                return view(
+                    'kalibrasi.certificate.partials.dimensi_details',
+                    compact('main')
+                );
+
+            default:
+                abort(404);
         }
     }
 }

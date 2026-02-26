@@ -134,23 +134,25 @@
                         <table id="certificateTable"
                             class="table table-hover table-striped table-borderless align-middle text-nowrap"
                             style="display: none;">
-                            <thead class="table-info">
+                            <thead class="table-light">
                                 <tr>
-                                    <th style="width: 60px;">No</th>
+                                    <th class="text-center" style="width: 60px;">No</th>
                                     <th>Kode Alat</th>
                                     <th>Jenis Kalibrasi</th>
                                     <th>Lokasi</th>
                                     <th>Tgl Kalibrasi</th>
                                     <th>Status</th>
-                                    @if (Auth::user()->jabatan === 'foreman')
-                                        <th class="text-center">Aksi</th>
+                                    @if (Auth::user()->jabatan != 'operator')
+                                        <th class="text-center" style="width: 150px;">Aksi</th>
                                     @endif
-                                    <th class="text-center">Sertifikat</th>
-                                    <th>Keterangan</th>
+                                    {{-- <th class="text-center">Sertifikat</th> --}}
                                 </tr>
                             </thead>
                             <tbody id="tableBody"></tbody>
                         </table>
+                        <div class="d-flex justify-content-end mt-2">
+                            <ul class="pagination" id="pagination"></ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -204,6 +206,25 @@
             </form>
         </div>
     </div>
+
+    {{-- Modal Tracking --}}
+    <div class="modal fade" id="modalTracking" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <div class="fw-bold" id="trackingTitle">Tracking Appoval</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="trackingBody">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -243,7 +264,6 @@
                             jenisLoaded = true;
                         }
 
-
                         const userRole = response.role || ''; // ambil role dari backend
 
                         if (!response.data || response.data.length === 0) {
@@ -265,11 +285,20 @@
                         if (response.data && response.data.length > 0) {
                             $.each(response.data, function(index, item) {
                                 const statusSertifikat = item.certificate?.status;
-                                let statusBadge = getStatusBadge(statusSertifikat);
                                 let rowId = `collapseRow-${item.id}`;
-                                let keteranganText = '-';
+                                // let keteranganText = '-';
                                 let actionButtons = '';
                                 let sertifButtons = '';
+                                let deleteButtons = '';
+
+                                let statusBadge = `
+                                    <span class="tracking-badge"
+                                        style="cursor:pointer"
+                                        data-approvals='${JSON.stringify(item.certificate?.approvals ?? [])}'
+                                        data-status="${statusSertifikat}">
+                                        ${getStatusBadge(statusSertifikat)}
+                                    </span>
+                                `;
 
                                 // Cek kalau semua approval sudah approved
                                 const allApproved = item.certificate?.approvals?.length > 0 &&
@@ -280,8 +309,7 @@
                                 // if (allApproved) {
                                 sertifButtons += `
                                         <a href="/kalibrasi/certificate/download/${item.certificate?.id}" 
-                                        target="_blank" 
-                                        class="btn btn-outline-info btn-sm">
+                                            target="_blank" class="btn btn-outline-info btn-sm">
                                             <i class="mdi mdi-file-download-outline me-1"></i> Download
                                         </a>
                                     `;
@@ -294,103 +322,23 @@
                                             data-id="${item.certificate?.id}">
                                             <i class="mdi mdi-send-check-outline me-1"></i>Request Approval
                                         </button>
-                                    `;
 
-                                    keteranganText = `
-                                        <button class="btn btn-info btn-sm d-flex align-items-center gap-1" disabled>
-                                                <i class="mdi mdi-timer-sand"></i> Siap Diajukan
-                                            </button>
                                     `;
                                 }
 
-
-                                if (['pending', 'approved', 'rejected'].includes(
-                                        statusSertifikat)) {
-                                    let approvalsHtml = '';
-
-                                    if (item.certificate?.approvals?.length > 0) {
-                                        // Buat isi list dulu
-                                        const approvalList = item.certificate.approvals.map(
-                                            app => {
-                                                const badgeClass =
-                                                    app.status === 'approved' ?
-                                                    'bg-success' :
-                                                    app.status === 'rejected' ?
-                                                    'bg-danger' :
-                                                    app.status === 'read' ?
-                                                    'bg-info' : 'bg-warning';
-
-                                                return `
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                          <strong>${app.approver?.username ?? app.approver_email}</strong><br>
-                                                            <span class="text-muted">${app.comment ?? 'No Comment'}</span>
-                                                        </div>
-                                                        <span class="badge ${badgeClass}">${app.status}</span>
-                                                    </li>
-                                                `;
-                                            }).join('');
-
-                                        approvalsHtml = `
-                                            <div class="collapse" id="approvalDetail-${item.id}">
-                                                <ul class="list-group list-group-flush small mt-2">
-                                                    ${approvalList}
-                                                </ul>
-                                            </div>
-                                        `;
-                                    } else {
-                                        approvalsHtml =
-                                            `<p class="text-muted small mt-2 mb-0">Belum ada data approval</p>`;
-                                    }
-
-                                    let statusLabel;
-                                    if (statusSertifikat === 'pending') {
-                                        statusLabel = `
-                                            <button class="btn btn-soft-warning btn-sm d-flex align-items-center gap-1" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#approvalDetail-${item.id}">
-                                                <i class="mdi mdi-timer-sand"></i> Menunggu Approval...
-                                            </button>
-                                        `;
-                                    } else if (statusSertifikat === 'approved') {
-                                        statusLabel = `
-                                            <button class="btn btn-soft-success btn-sm d-flex align-items-center gap-1" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#approvalDetail-${item.id}">
-                                                <i class="mdi mdi-check-circle-outline"></i> Sudah Disetujui
-                                            </button>
-                                        `;
-                                    } else if (statusSertifikat === 'rejected') {
-                                        statusLabel = `
-                                            <button class="btn btn-soft-danger btn-sm d-flex align-items-center gap-1" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#approvalDetail-${item.id}">
-                                                <i class="mdi mdi-close-circle-outline"></i> Approval Ditolak
-                                            </button>
-                                        `;
-                                    } else {
-                                        statusLabel = `
-                                            <button class="btn btn-soft-secondary btn-sm d-flex align-items-center gap-1" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#approvalDetail-${item.id}">
-                                                <i class="mdi mdi-help-circle-outline"></i> Status Tidak Diketahui
-                                            </button>
-                                        `;
-                                    }
-
-                                    keteranganText = `
-                                        ${statusLabel}
-                                        ${approvalsHtml}
+                                if (['foreman', 'supervisor', 'dept_head'].includes(userRole)) {
+                                    deleteButtons += `
+                                        <button class="btn btn-outline-danger btn-sm delete-btn" 
+                                            data-id="${item.certificate?.id}">
+                                            <i class="mdi mdi-delete me-1"></i>Hapus
+                                        </button>
                                     `;
-
                                 }
 
-                                // Tombol Detail selalu ditampilkan
-                                const detailButton = `
-                                    <button class="btn btn-outline-info detail-btn btn-sm" data-bs-toggle="collapse" data-bs-target="#${rowId}" aria-expanded="false" aria-controls="${rowId}">
-                                        <i class="mdi mdi-eye-outline me-1"></i> Detail
-                                    </button>
-                                `;
 
                                 let row = `
                                     <tr>
-                                        <td>${index + 1}</td>
+                                        <td class="text-center">${index + 1}</td>
                                         <td>
                                             <span class="icon-wrapper bg-soft-info rounded p-2 me-2 d-inline-flex align-items-center justify-content-center">
                                                 <i class="mdi mdi-tools text-info fs-5"></i>
@@ -401,43 +349,21 @@
                                         <td>${item.lokasi_kalibrasi || '-'}</td>
                                         <td>${item.tgl_kalibrasi || '-'}</td>
                                         <td>${statusBadge}</td>
-                                        @if (Auth::user()->jabatan === 'foreman')
+                                        @if (Auth::user()->jabatan != 'operator')
                                             <td class="text-center">
-                                                <div class="d-flex flex-nowrap justify-content-center gap-2"> 
-                                                    ${actionButtons}
+                                                <div class="d-flex flex-nowrap justify-content-end gap-2"> 
+                                                    @if (Auth::user()->jabatan === 'foreman')
+                                                        ${actionButtons}
+                                                    @endif
+                                                    ${sertifButtons}
+                                                    ${deleteButtons}
                                                 </div>
                                             </td>
                                         @endif
-                                        <td class="text-center">
-                                            <div class="d-flex flex-nowrap justify-content-center gap-2"> 
-                                                ${sertifButtons}
-                                            </div>
-                                        </td>
-                                        <td>${keteranganText}</td> 
+                                        
                                     </tr>
                                 `;
-
-                                let detailRow = `
-                                    <tr class="collapse" id="${rowId}">
-                                        <td colspan="8"> <div class="detail-wrapper">
-                                            <div class="detail-content p-3">
-                                                <h6 class="fw-semibold mb-3">Detail Kalibrasi</h6>
-                                                <div class="row g-3 small">
-                                                    <div class="col-md-4"><strong>Nama Alat:</strong> ${item.alat?.nama_alat || '-'}</div>
-                                                    <div class="col-md-4"><strong>Kode Alat:</strong> ${item.alat?.kode_alat || '-'}</div>
-                                                    <div class="col-md-4"><strong>Status Sertifikat:</strong> ${statusBadge}</div>
-                                                    
-                                                    <div class="col-md-4"><strong>Jenis Kalibrasi:</strong> ${item.jenis_kalibrasi || '-'}</div>
-                                                    <div class="col-md-4"><strong>Lokasi Kalibrasi:</strong> ${item.lokasi_kalibrasi || '-'}</div>
-                                                    <div class="col-md-4"><strong>Tanggal Kalibrasi:</strong> ${item.tgl_kalibrasi || '-'}</div>
-
-                                                    <div class="col-md-4"><strong>Tanggal Kalibrasi Ulang:</strong> ${item.tgl_kalibrasi_ulang || '-'}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `;
-                                tbody.append(row, detailRow);
+                                tbody.append(row);
                             });
                             $("#certificateTable").fadeIn();
                         } else {
@@ -447,6 +373,8 @@
                             `);
                             $("#certificateTable").fadeIn();
                         }
+
+                        renderPagination(response.pagination);
                     },
                     error: function() {
                         Swal.fire({
@@ -520,7 +448,11 @@
                         $('#approvalModal').modal('show');
                     },
                     error: function() {
-                        alert('Gagal memuat daftar approver');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: 'Gagal memuat data!',
+                        });
                     },
                     complete: function() {
                         $btn.prop('disabled', false)
@@ -593,9 +525,114 @@
                 loadData(); // refresh data setelah reset
             });
 
+            $(document).on('click', '.tracking-badge', function() {
+
+                const approvals = $(this).data('approvals') || [];
+                const status = $(this).data('status') || '-';
+
+                let html = '';
+
+                if (approvals.length > 0) {
+
+                    approvals.forEach(app => {
+
+                        let badgeClass =
+                            app.status === 'approved' ? 'bg-success' :
+                            app.status === 'rejected' ? 'bg-danger' :
+                            app.status === 'read' ? 'bg-info' :
+                            'bg-warning';
+
+                        html += `
+                            <div class="border rounded p-3 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong>${app.approver?.username ?? app.approver_email}</strong>
+                                    <span class="badge ${badgeClass} text-uppercase">${app.status}</span>
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    ${app.comment ?? 'No Comment'}
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                } else {
+                    html = `
+                        <div class="text-center text-muted py-4">
+                            <i class="mdi mdi-information-outline fs-3 d-block mb-2"></i>
+                            Belum ada data approval
+                        </div>
+                    `;
+                }
+
+                $('#trackingTitle').text('Tracking Approval - ' + status.toUpperCase());
+                $('#trackingBody').html(html);
+
+                $('#modalTracking').modal('show');
+            });
+
+            function renderPagination(pagination, maxVisible = 5) {
+                const container = $('#pagination');
+                container.empty();
+
+                const current = pagination.current_page;
+                const last = pagination.last_page;
+
+                // Prev button
+                container.append(`
+                    <li class="page-item ${current === 1 ? 'disabled' : ''}" data-page="${current - 1}">
+                        <a href="#" class="page-link">Prev</a>
+                    </li>
+                `);
+
+                // Hitung range halaman
+                let start = Math.max(1, current - Math.floor(maxVisible / 2));
+                let end = Math.min(last, start + maxVisible - 1);
+
+                // Adjust start kalau akhir terlalu kecil
+                start = Math.max(1, end - maxVisible + 1);
+
+                // Render nomor halaman
+                for (let i = start; i <= end; i++) {
+                    container.append(`
+                        <li class="page-item ${i === current ? 'active' : ''}" data-page="${i}">
+                            <a href="#" class="page-link">${i}</a>
+                        </li>
+                    `);
+                }
+
+                // Next button
+                container.append(`
+                    <li class="page-item ${current === last ? 'disabled' : ''}" data-page="${current + 1}">
+                        <a href="#" class="page-link">Next</a>
+                    </li>
+                `);
+            }
+
+            $(document).on('click', '.pagination .page-link', function(e) {
+                e.preventDefault();
+
+                const page = $(this).closest('.page-item').data('page');
+
+                if (!page || $(this).closest('.page-item').hasClass('disabled')) return;
+
+                const filters = {
+                    tanggal: $('#filterTanggal').val(),
+                    jenis: $('#filterJenis').val(),
+                    page: page
+                };
+
+                loadData(filters);
+            });
+
             // Helper function
             function capitalizeWords(str) {
-                return str ? str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : '-';
+                if (!str) return '-';
+
+                // Ganti underscore jadi spasi
+                str = str.replace(/_/g, ' ');
+
+                // Capitalize tiap kata
+                return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
             }
 
             function getStatusBadge(status) {
@@ -614,6 +651,65 @@
                         return `<span class="badge badge-soft-light text-uppercase">${status}</span>`;
                 }
             }
+
+            $(document).on('click', '.delete-btn', function() {
+
+                const id = $(this).data('id');
+
+                if (!id) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'ID tidak ditemukan'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Yakin ingin menghapus?',
+                    text: "Data yang dihapus tidak bisa dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+
+                        $.ajax({
+                            url: `/kalibrasi/certificate/delete/${id}`,
+                            type: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(response) {
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: response.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+
+                                loadData();
+                            },
+                            error: function(xhr) {
+
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal!',
+                                    text: xhr.responseJSON?.message ||
+                                        'Terjadi kesalahan'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
         });
     </script>
 @endsection

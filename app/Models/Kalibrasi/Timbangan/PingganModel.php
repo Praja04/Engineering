@@ -2,28 +2,27 @@
 
 namespace App\Models\Kalibrasi\Timbangan;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Kalibrasi\KalibrasiModel;
+use App\Models\Kalibrasi\Timbangan\PingganDetailModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class PingganModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_timbangan_pinggan';
+    protected $table = 'cal_timbangan_pinggan';
 
     protected $fillable = [
         'kalibrasi_id',
         'diameter',
         'massa',
-        'percobaan',
-        'tengah',
-        'depan',
-        'belakang',
-        'kiri',
-        'kanan',
     ];
 
+    public function details()
+    {
+        return $this->hasMany(PingganDetailModel::class, 'pinggan_id');
+    }
 
     public function kalibrasi()
     {

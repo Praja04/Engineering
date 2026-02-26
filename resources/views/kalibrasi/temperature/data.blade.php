@@ -37,7 +37,6 @@
                                         <th>Tgl Kalibrasi Ulang</th>
                                         <th>Lokasi</th>
                                         <th>Kondisi Ruangan</th>
-                                        <th>Titik Kalibrasi</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -313,11 +312,6 @@
                             `
                         },
                         {
-                            data: "temperature",
-                            className: "text-center",
-                            render: data => data.length
-                        },
-                        {
                             data: null,
                             orderable: false,
                             className: "text-center",
@@ -354,7 +348,7 @@
                 showDetailModal(id, historyData);
             });
 
-            function formatNumberDynamic(value, maxDecimals = 2) {
+            function formatNumber(value, maxDecimals = 2) {
                 if (value === null || value === undefined || value === '' || isNaN(value)) return '-';
                 const num = parseFloat(value);
                 if (Number.isInteger(num)) return num.toString(); // tanpa koma kalau bulat
@@ -379,56 +373,82 @@
                 $('#detail_metode').text(item.alat.metode_kalibrasi);
 
                 // Render volumetrik data
+                // === Render Temperature Detail ===
                 const temperatures = Array.isArray(item.temperature) ? item.temperature : [];
                 const hitungBody = $('#hitung_data');
                 hitungBody.empty();
 
                 if (temperatures.length > 0) {
-                    temperatures.forEach(v => {
-                        hitungBody.append(`
-                            <tr>
-                                <td>${formatNumberDynamic(v.titik_kalibrasi, 2)}</td>
-                                <td>${formatNumberDynamic(v.penunjuk_standar, 2)}</td>
-                                <td>${formatNumberDynamic(v.penunjuk_alat, 2)}</td>
-                                <td>${formatNumberDynamic(v.koreksi_standar, 2)}</td>
-                                <td>${formatNumberDynamic(v.suhu_standar, 2)}</td>
-                                <td>${formatNumberDynamic(v.koreksi_alat, 2)}</td>
-                            </tr>
-                        `);
+
+                    temperatures.forEach(t => {
+
+                        const details = Array.isArray(t.details) ? t.details : [];
+
+                        if (!details.length) return;
+
+                        details.forEach((d, index) => {
+
+                            const showTitik = index === 0;
+
+                            hitungBody.append(`
+                                <tr>
+                                    <td>${showTitik ? formatNumber(t.titik_kalibrasi, 2) : ''}</td>
+                                    <td>${formatNumber(d.penunjuk_standar, 2)}</td>
+                                    <td>${formatNumber(d.penunjuk_alat, 2)}</td>
+                                    <td>${formatNumber(d.koreksi_standar, 2)}</td>
+                                    <td>${formatNumber(d.suhu_standar, 2)}</td>
+                                    <td>${formatNumber(d.koreksi_alat, 2)}</td>
+                                </tr>
+                            `);
+
+                        });
+
                     });
+
                 } else {
                     hitungBody.append(`
                         <tr>
-                            <td colspan="6" class="text-muted fst-italic">Tidak ada data pengukuran</td>
+                            <td colspan="11" class="text-muted fst-italic text-center">
+                                Tidak ada data pengukuran
+                            </td>
                         </tr>
                     `);
                 }
 
+
                 // === Render data gabungan ===
-                const gabungan = item.temperature_gabungan ?? [];
                 const gabunganBody = $('#detail_gabungan');
                 gabunganBody.empty();
 
-                if (Array.isArray(gabungan) && gabungan.length > 0) {
-                    gabungan.forEach(row => {
+                if (temperatures.length > 0) {
+
+                    temperatures.forEach(t => {
+
                         gabunganBody.append(`
                             <tr>
-                                <td>${formatNumberDynamic(row.titik_kalibrasi ?? '-')}</td>
-                                <td>${formatNumberDynamic(row.avg_penunjuk_alat, 8)}</td>
-                                <td>${formatNumberDynamic(row.avg_suhu_standar, 8)}</td>
-                                <td>${formatNumberDynamic(row.avg_kor_alat, 8)}</td>
-                                <td>${formatNumberDynamic(row.stdev, 8)}</td>
-                                <td>${formatNumberDynamic(row.ketidakpastian, 8)}</td>
+                                <td>${formatNumber(t.titik_kalibrasi, 2)}</td>
+                                <td>${formatNumber(t.avg_penunjuk_alat, 8)}</td>
+                                <td>${formatNumber(t.avg_suhu_standar, 8)}</td>
+                                <td>${formatNumber(t.avg_kor_alat, 8)}</td>
+                                <td>${formatNumber(t.stdev, 8)}</td>
+                                <td class="fw-bold text-success">
+                                    ${formatNumber(t.ketidakpastian, 8)}
+                                </td>
                             </tr>
                         `);
+
                     });
+
                 } else {
                     gabunganBody.append(`
                         <tr>
-                            <td colspan="6" class="text-muted fst-italic">Data gabungan belum tersedia</td>
+                            <td colspan="6" class="text-muted fst-italic text-center">
+                                Data gabungan belum tersedia
+                            </td>
                         </tr>
                     `);
                 }
+
 
 
                 // Show modal

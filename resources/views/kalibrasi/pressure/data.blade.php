@@ -307,8 +307,11 @@
                         renderTable();
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error fetching data:', error);
-                        alert('Gagal mengambil data. Silakan coba lagi.');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'Gagal mengambil data.',
+                            icon: 'error'
+                        });
                     }
                 });
             }
@@ -363,10 +366,10 @@
                             `
                         },
                         {
-                            data: "pressure_gabungan",
-                            render: function(data) {
-                                return data.length;
-                            },
+                            data: null,
+                            render: function(row) {
+                                return row.pressure ? row.pressure.length : 0;
+                            }
                         },
                         {
                             data: null,
@@ -440,76 +443,78 @@
                 const turunArr = pressures.filter(p => p.tekanan === 'turun')
                     .sort((a, b) => a.titik_kalibrasi - b.titik_kalibrasi);
 
-                function formatNumber(val) {
-                    const num = parseFloat(val);
-                    if (isNaN(num)) return '—';
-                    return num.toFixed(1); // hanya 1 angka desimal
+                function formatNumber(v, dec = 3) {
+                    if (v === null || v === undefined || v === '' || isNaN(parseFloat(v))) {
+                        return '—';
+                    }
+
+                    const num = parseFloat(v);
+
+                    return Number(num.toFixed(dec)).toString();
                 }
 
-                function renderList(item, arr, $body, tipe) {
-                    if (!arr.length) {
-                        $body.append('<tr><td colspan="9" class="text-center text-muted">Tidak ada data</td></tr>');
+                function renderPressureTable(item, tipe, $body) {
+                    $body.empty();
+
+                    if (!item.pressure || !item.pressure.length) {
+                        $body.append(
+                            '<tr><td colspan="11" class="text-center text-muted">Tidak ada data</td></tr>');
                         return;
                     }
 
-                    const grouped = arr.reduce((acc, p) => {
-                        if (!acc[p.titik_kalibrasi]) acc[p.titik_kalibrasi] = [];
-                        acc[p.titik_kalibrasi].push(p);
-                        return acc;
-                    }, {});
+                    item.pressure.forEach(p => {
 
-                    const suffix = tipe === 'naik' ? '_naik' : '_turun';
+                        const details = (p.details || []).filter(d => d.arah === tipe);
 
-                    Object.keys(grouped).forEach(titik => {
-                        const dataTitik = grouped[titik];
-                        const pg = item.pressure_gabungan?.find(pg => pg.titik_kalibrasi == titik);
+                        if (!details.length) return;
 
-                        dataTitik.forEach((p, i) => {
-                            const showTitik = i === 0; // tampilkan hanya di baris pertama per titik
-                            const showGabungan = i ===
-                                0; // tampilkan nilai avg/sd/u hanya di baris pertama
+                        details.forEach((d, i) => {
+
+                            const showTitik = i === 0;
 
                             $body.append(`
                                 <tr>
-                                    <td>${showTitik ? `<span class="badge bg-primary">${formatNumber(p.titik_kalibrasi)}</span>` : ''}</td>
-                                    <td>${formatNumber(p.penunjuk_standar)}</td>
-                                    <td>${formatNumber(p.penunjuk_alat)}</td>
-                                    <td>${formatNumber(p.koreksi_standar)}</td>
-                                    <td>${formatNumber(p.tekanan_standar)}</td>
-                                    <td>${formatNumber(p.koreksi_alat)}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['avg_penunjuk_alat' + suffix]) : ''}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['avg_tekanan_standar' + suffix]) : ''}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['avg_kor_alat' + suffix]) : ''}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['std_deviasi' + suffix]) : ''}</td>
-                                    <td>${showGabungan && pg ? formatNumber(pg['ketidak_pastian' + suffix]) : ''}</td>
+                                    <td>${showTitik ? `<span class="badge bg-primary">${formatNumber(p.titik_kalibrasi, 1)}</span>` : ''}</td>
+                                    <td>${formatNumber(d.penunjuk_standar)}</td>
+                                    <td>${formatNumber(d.penunjuk_alat)}</td>
+                                    <td>${formatNumber(d.koreksi_standar)}</td>
+                                    <td>${formatNumber(d.tekanan_standar)}</td>
+                                    <td>${formatNumber(d.koreksi_alat)}</td>
+
+                                    <td>${showTitik ? formatNumber(p['avg_penunjuk_alat_' + tipe]) : ''}</td>
+                                    <td>${showTitik ? formatNumber(p['avg_tekanan_standar_' + tipe]) : ''}</td>
+                                    <td>${showTitik ? formatNumber(p['avg_koreksi_alat_' + tipe]) : ''}</td>
+                                    <td>${showTitik ? formatNumber(p['std_deviasi_' + tipe], 6) : ''}</td>
+                                    <td>${showTitik ? formatNumber(p['ketidakpastian_' + tipe], 6) : ''}</td>
                                 </tr>
                             `);
                         });
+
                     });
                 }
 
-                renderList(item, naikArr, naikBody, 'naik');
-                renderList(item, turunArr, turunBody, 'turun');
+                renderPressureTable(item, 'naik', $('#pressure_naik'));
+                renderPressureTable(item, 'turun', $('#pressure_turun'));
 
                 // Render data gabungan
-                if (item.pressure_gabungan && item.pressure_gabungan.length > 0) {
-                    let tbody = $('#detail_gabungan');
-                    tbody.empty();
 
-                    $.each(item.pressure_gabungan, function(i, pg) {
-                        let row = `
+                let tbody = $('#detail_gabungan');
+                tbody.empty();
+
+                item.pressure.forEach(p => {
+
+                    tbody.append(`
                         <tr>
-                            <td><span class="badge badge-soft-primary">${formatNumber(pg.titik_kalibrasi)}</span></td>
-                            <td>${parseFloat(pg.u_naik).toFixed(9)}</td>
-                            <td>${parseFloat(pg.u_turun).toFixed(9)}</td>
-                            <td>${parseFloat(pg.u_naik_kuadrat).toFixed(9)}</td>
-                            <td>${parseFloat(pg.u_turun_kuadrat).toFixed(9)}</td>
-                            <td class="highlight-value">${parseFloat(pg.u_gabungan).toFixed(9)}</td>
+                            <td><span class="badge bg-primary">${parseFloat(p.titik_kalibrasi).toFixed(1)}</span></td>
+                            <td>${parseFloat(p.u_naik).toFixed(9)}</td>
+                            <td>${parseFloat(p.u_turun).toFixed(9)}</td>
+                            <td>${parseFloat(p.u_naik_kuadrat).toFixed(9)}</td>
+                            <td>${parseFloat(p.u_turun_kuadrat).toFixed(9)}</td>
+                            <td class="fw-bold text-success">${parseFloat(p.u_gabungan).toFixed(9)}</td>
                         </tr>
-                    `;
-                        tbody.append(row);
-                    });
-                }
+                    `);
+
+                });
 
                 // Show modal
                 $('#detailModal').modal('show');
