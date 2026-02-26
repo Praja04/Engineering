@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\NotificationsModel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Kalibrasi\KalibrasiSertifikatApprovalModel;
 
 class NotificationController extends Controller
 {
@@ -15,10 +13,6 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         $userId = $user->id;
-
-        // $approvalotification = $this->getSopApprovalNotification($userId);
-        // $barangBaruNotifications = $this->getBarangBaruNotifications($user);
-        $kalibrasiCertificate = $this->kalibrasiCertificate($userId);
 
         $notifications = NotificationsModel::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
@@ -36,31 +30,6 @@ class NotificationController extends Controller
             });
 
         return response()->json($notifications);
-    }
-
-    public function kalibrasiCertificate()
-    {
-        $userId = Auth::id();
-
-        $approvals = KalibrasiSertifikatApprovalModel::with(['sertifikat'])
-            ->where('approver_id', $userId)
-            ->whereIn('status', ['pending', 'read'])
-            ->orderByDesc('created_at')
-            ->get();
-
-        $notifications = $approvals->map(function ($a) {
-            return [
-                'id' => $a->id,
-                'title' => 'Persetujuan Diperlukan',
-                'message' => 'Sertifikat kalibrasi tanggal ' . $a->sertifikat->created_at . ' menunggu persetujuan Anda.',
-                'url' => route('kalibrasi.certificate.approvals'), // arahkan ke halaman approval
-                'created_at' => $a->created_at->diffForHumans(),
-                'is_read' => $a->status === 'read',
-            ];
-        });
-
-        // return response()->json($notifications);
-        return $notifications;
     }
 
     public function markAsRead($id)
