@@ -75,7 +75,7 @@
      </tr>
      <tr>
          <th>Korektif</th>
-         <td>: {{ $data->korektif ?? '-' }}</td>
+         <td>: {{ $main->korektif ?? '-' }}</td>
      </tr>
      <tr>
          <th>Keterangan NOK</th>
