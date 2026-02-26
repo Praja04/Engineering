@@ -2,11 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Kalibrasi\KalibrasiController;
-use App\Http\Controllers\Kalibrasi\KalibrasiMasterController;
 use App\Http\Controllers\Kalibrasi\KalibrasiPressureController;
 use App\Http\Controllers\Kalibrasi\KalibrasiTimbanganController;
 use App\Http\Controllers\Kalibrasi\KalibrasiVolumetrikController;
 use App\Http\Controllers\Kalibrasi\KalibrasiCertificateController;
+use App\Http\Controllers\Kalibrasi\KalibrasiDimensiController;
+use App\Http\Controllers\Kalibrasi\KalibrasiFlowmeterController;
+use App\Http\Controllers\Kalibrasi\KalibrasiInstrumenController;
 use App\Http\Controllers\Kalibrasi\KalibrasiTemperatureController;
 use App\Http\Controllers\Kalibrasi\KalibrasiJangkaSorongController;
 use App\Http\Controllers\Kalibrasi\KalibrasiThermohygrometerController;
@@ -25,6 +27,9 @@ Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
             Route::get('/thermohygrometer', [KalibrasiThermohygrometerController::class, 'showForm'])->name('kalibrasi.form.thermohygrometer');
             Route::get('/jangka-sorong', [KalibrasiJangkaSorongController::class, 'showForm'])->name('kalibrasi.form.jangka-sorong');
             Route::get('/timbangan', [KalibrasiTimbanganController::class, 'showForm'])->name('kalibrasi.form.timbangan');
+            Route::get('/instrumen', [KalibrasiInstrumenController::class, 'showForm'])->name('kalibrasi.form.instrumen');
+            Route::get('/dimensi', [KalibrasiDimensiController::class, 'showForm'])->name('kalibrasi.form.dimensi');
+            Route::get('/flowmeter', [KalibrasiFlowmeterController::class, 'showForm'])->name('kalibrasi.form.flowmeter');
             Route::get('/dev-page', [KalibrasiController::class, 'viewDevPage'])->name('kalibrasi.form.dev-page');
         });
 
@@ -36,6 +41,9 @@ Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
             Route::get('/thermohygrometer', [KalibrasiThermohygrometerController::class, 'viewData'])->name('kalibrasi.data.thermohygrometer');
             Route::get('/jangka-sorong', [KalibrasiJangkaSorongController::class, 'viewData'])->name('kalibrasi.data.jangka-sorong');
             Route::get('/timbangan', [KalibrasiTimbanganController::class, 'viewData'])->name('kalibrasi.data.timbangan');
+            Route::get('/instrumen', [KalibrasiInstrumenController::class, 'viewData'])->name('kalibrasi.data.instrumen');
+            Route::get('/dimensi', [KalibrasiDimensiController::class, 'viewData'])->name('kalibrasi.data.dimensi');
+            Route::get('/flowmeter', [KalibrasiFlowmeterController::class, 'viewData'])->name('kalibrasi.data.flowmeter');
             Route::get('/dev-page', [KalibrasiController::class, 'viewDevPage'])->name('kalibrasi.data.dev-page');
         });
 
@@ -50,6 +58,10 @@ Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
         Route::post('/certificate/approval/action', [KalibrasiCertificateController::class, 'handleApproval'])->name('kalibrasi.certificate.approval.action');
         Route::get('/certificate/cetak/{id}', [KalibrasiCertificateController::class, 'printSertifikat'])->name('kalibrasi.certificate.cetak');
         Route::get('/certificate/download/{id}', [KalibrasiCertificateController::class, 'downloadSertifikat'])->name('kalibrasi.certificate.download');
+        Route::delete('/certificate/delete/{id}', [KalibrasiController::class, 'destroy'])->name('kalibrasi.certificate.delete');
+        Route::get('/approval/detail/{id}', [KalibrasiController::class, 'detail'])->name('kalibrasi.certificate.download');
+        Route::post('/approval/approve/{id}', [KalibrasiCertificateController::class, 'approve'])->name('approval.approve');
+        Route::post('/approval/reject/{id}', [KalibrasiCertificateController::class, 'reject'])->name('approval.reject');
 
         // Pressure Routes
         Route::prefix('pressure')->group(function () {
@@ -61,6 +73,7 @@ Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
             Route::post('/store', [KalibrasiVolumetrikController::class, 'store'])->name('kalibrasi.volumetrik.store');
             Route::delete('/delete/{id}', [KalibrasiVolumetrikController::class, 'destroy'])->name('kalibrasi.volumetrik.delete');
         });
+
         Route::post('temperature/store', [KalibrasiTemperatureController::class, 'store'])->name('kalibrasi.temperature.store');
         Route::delete('temperature/delete/{id}', [KalibrasiTemperatureController::class, 'destroy'])->name('kalibrasi.temperature.delete');
         Route::post('thermohygrometer/store', [KalibrasiThermohygrometerController::class, 'store'])->name('kalibrasi.thermohygrometer.store');
@@ -69,6 +82,12 @@ Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
         Route::delete('jangka-sorong/delete/{id}', [KalibrasiJangkaSorongController::class, 'destroy'])->name('kalibrasi.jangka-sorong.delete');
         Route::post('timbangan/store', [KalibrasiTimbanganController::class, 'store'])->name('kalibrasi.timbangan.store');
         Route::delete('timbangan/delete/{id}', [KalibrasiTimbanganController::class, 'destroy'])->name('kalibrasi.timbangan.delete');
+        Route::post('instrumen/store', [KalibrasiInstrumenController::class, 'store'])->name('kalibrasi.instrumen.store');
+        Route::delete('instrumen/delete/{id}', [KalibrasiInstrumenController::class, 'destroy'])->name('kalibrasi.instrumen.delete');
+        Route::post('dimensi/store', [KalibrasiDimensiController::class, 'store'])->name('kalibrasi.dimensi.store');
+        Route::delete('dimensi/delete/{id}', [KalibrasiDimensiController::class, 'destroy'])->name('kalibrasi.dimensi.delete');
+        Route::post('flowmeter/store', [KalibrasiFlowmeterController::class, 'store'])->name('kalibrasi.flowmeter.store');
+        Route::delete('flowmeter/delete/{id}', [KalibrasiFlowmeterController::class, 'destroy'])->name('kalibrasi.flowmeter.delete');
     });
 });
 

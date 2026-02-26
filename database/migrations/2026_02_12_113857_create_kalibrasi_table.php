@@ -11,16 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kalibrasi', function (Blueprint $table) {
+        Schema::create('cal_main', function (Blueprint $table) {
             $table->id();
             $table->foreignId('alat_id')->constrained('alat_kalibrasi')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('jenis_kalibrasi');
             $table->string('lokasi_kalibrasi');
             $table->string('suhu_ruangan');
             $table->string('kelembaban');
             $table->date('tgl_kalibrasi');
             $table->date('tgl_kalibrasi_ulang');
-            $table->string('jenis_kalibrasi');
+            $table->text('catatan')->nullable();
             $table->timestamps();
         });
     }
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kalibrasi');
+        Schema::dropIfExists('cal_main');
     }
 };

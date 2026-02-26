@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kalibrasi_sertifikat_approvals', function (Blueprint $table) {
+        Schema::create('cal_approvals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sertifikat_id')->constrained('kalibrasi_sertifikat')->onDelete('cascade');
+            $table->foreignId('sertifikat_id')->constrained('cal_sertifikat')->onDelete('cascade');
             $table->foreignId('approver_id')->nullable()->constrained('users')->onDelete('cascade');
-            $table->string('approver_email');
             $table->enum('status', ['pending', 'read', 'approved', 'rejected'])->default('pending');
-            $table->text('comment')->nullable();     // alasan approve/reject
-            $table->timestamp('approved_at')->nullable(); // kapan action dilakukan
+            $table->integer('level')->nullable();
+            $table->string('role')->nullable();
+            $table->dateTime('action_at')->nullable();
+            $table->foreignId('action_by')->nullable()->constrained('users')->restrictOnDelete();
+            $table->text('catatan')->nullable();
+            $table->text('ttd')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kalibrasi_sertifikat_approvals');
+        Schema::dropIfExists('cal_approvals');
     }
 };

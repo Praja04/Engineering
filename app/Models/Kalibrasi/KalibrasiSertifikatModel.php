@@ -11,7 +11,7 @@ class KalibrasiSertifikatModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_sertifikat';
+    protected $table = 'cal_sertifikat';
 
     protected $fillable = [
         'kalibrasi_id',
@@ -36,6 +36,6 @@ class KalibrasiSertifikatModel extends Model
     // relasi ke approvals
     public function approvals()
     {
-        return $this->hasMany(KalibrasiSertifikatApprovalModel::class, 'sertifikat_id');
+        return $this->hasMany(KalibrasiApprovalModel::class, 'sertifikat_id');
     }
 }

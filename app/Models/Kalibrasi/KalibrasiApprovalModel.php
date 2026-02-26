@@ -7,19 +7,22 @@ use App\Helpers\NotificationHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class KalibrasiSertifikatApprovalModel extends Model
+class KalibrasiApprovalModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_sertifikat_approvals';
+    protected $table = 'cal_approvals';
 
     protected $fillable = [
         'sertifikat_id',
         'approver_id',
-        'approver_email',
         'status',
-        'comment',
-        'approved_at',
+        'level',
+        'role',
+        'action_at',
+        'action_by',
+        'catatan',
+        'ttd',
     ];
 
     // relasi ke sertifikat

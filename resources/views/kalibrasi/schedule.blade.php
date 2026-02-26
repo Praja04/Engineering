@@ -150,38 +150,8 @@
                     }
                 });
 
-                console.log(jenisSet);
-
                 // Konversi ke array & urutkan alfabet
                 const jenisList = Array.from(jenisSet).sort();
-
-                // Icon mapping (biar tetap cantik dan relevan)
-                const styleMap = {
-                    'pressure': {
-                        icon: 'mdi-gauge',
-                        color: 'btn-outline-info'
-                    },
-                    'timbangan': {
-                        icon: 'mdi-scale-balance',
-                        color: 'btn-outline-success'
-                    },
-                    'temperature': {
-                        icon: 'mdi-thermometer',
-                        color: 'btn-outline-warning'
-                    },
-                    'volumetrik': {
-                        icon: 'mdi-beaker',
-                        color: 'btn-outline-primary'
-                    },
-                    'thermohygrometer': {
-                        icon: 'mdi-ruler',
-                        color: 'btn-outline-danger'
-                    },
-                    'jangka_sorong': {
-                        icon: 'mdi-magnet',
-                        color: 'btn-outline-secondary'
-                    },
-                };
 
                 // 🎨 Generate tombol filter dinamis
                 const filterContainer = $('#filterContainer');
@@ -192,16 +162,9 @@
                 `;
 
                 jenisList.forEach(jenis => {
-                    const {
-                        icon,
-                        color
-                    } = styleMap[jenis] || {
-                        icon: 'mdi-shape',
-                        color: 'btn-outline-secondary'
-                    };
                     filterButtons += `
-                        <button class="btn btn-sm ${color} filter-btn" data-filter="${jenis}">
-                            <i class="mdi ${icon} me-1"></i>${jenis}
+                        <button class="btn btn-sm btn-outline-secondary filter-btn" data-filter="${jenis}">
+                            ${jenis}
                         </button>
                     `;
                 });
@@ -209,6 +172,9 @@
                 filterContainer.html(filterButtons);
 
                 let rows = "";
+                let validCount = 0;
+                let warningCount = 0;
+                let expiredCount = 0;
 
                 schedules.forEach((item, index) => {
                     const today = new Date();
@@ -217,9 +183,7 @@
 
                     let statusClass = "";
                     let statusBadge = "";
-                    let validCount = 0;
-                    let warningCount = 0;
-                    let expiredCount = 0;
+
 
                     if (diffDays < 0) {
                         statusClass = "status-expired";
@@ -311,15 +275,15 @@
                 switch (jenis.toLowerCase()) {
                     case "pressure":
                         return `<span class="badge badge-soft-info px-3 py-2">${jenisCap}</span>`;
-                    case "massa":
+                    case "timbangan":
                         return `<span class="badge badge-soft-success px-3 py-2">${jenisCap}</span>`;
                     case "temperature":
                         return `<span class="badge badge-soft-warning text-dark px-3 py-2">${jenisCap}</span>`;
                     case "volumetrik":
                         return `<span class="badge badge-soft-primary px-3 py-2">${jenisCap}</span>`;
-                    case "dimention":
+                    case "thermohygrometer":
                         return `<span class="badge badge-soft-danger px-3 py-2">${jenisCap}</span>`;
-                    case "magnetic":
+                    case "jangka_sorong":
                         return `<span class="badge badge-soft-secondary px-3 py-2">${jenisCap}</span>`;
                     default:
                         return `<span class="badge badge-soft-dark px-3 py-2">${jenisCap}</span>`;

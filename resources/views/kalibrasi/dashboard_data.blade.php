@@ -66,7 +66,7 @@
                     </div>
                 </div>
 
-                <!-- Kalibrasi Suhu -->
+                <!-- Kalibrasi Thermohygrometer -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-info text-dark cursor-pointer"
                         onclick="window.location.href='{{ route('kalibrasi.data.thermohygrometer') }}'">
@@ -80,7 +80,7 @@
                     </div>
                 </div>
 
-                <!-- Kalibrasi Massa -->
+                <!-- Kalibrasi Timbangan -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-warning text-dark cursor-pointer"
                         onclick="window.location.href='{{ route('kalibrasi.data.timbangan') }}'">
@@ -94,7 +94,7 @@
                     </div>
                 </div>
 
-                <!-- Kalibrasi Listrik -->
+                <!-- Kalibrasi Volumetrik -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-primary text-dark cursor-pointer"
                         onclick="window.location.href='{{ route('kalibrasi.data.volumetrik') }}'">
@@ -108,7 +108,7 @@
                     </div>
                 </div>
 
-                <!-- Kalibrasi Panjang -->
+                <!-- Kalibrasi Jangka Sorong -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-danger text-dark cursor-pointer"
                         onclick="window.location.href='{{ route('kalibrasi.data.jangka-sorong') }}'">
@@ -135,6 +135,49 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Kalibrasi Intrumen --}}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card card-animate bg-soft-info text-dark cursor-pointer"
+                        onclick="window.location.href='{{ route('kalibrasi.data.instrumen') }}'">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
+                                <i class="mdi mdi-flask fs-1 text-secondary"></i>
+                            </div>
+                            <h5 class="fw-semibold mb-1">Kalibrasi Instrumen</h5>
+                            <p class="small text-muted mb-0">pH Meter, Viscometer, Conductivity, dll.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kalibrasi Dimensi -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card card-animate bg-soft-warning text-dark cursor-pointer"
+                        onclick="window.location.href='{{ route('kalibrasi.data.dimensi') }}'">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
+                                <i class="mdi mdi-vector-square fs-1 text-warning"></i>
+                            </div>
+                            <h5 class="fw-semibold mb-1">Kalibrasi Dimensi</h5>
+                            <p class="small text-muted mb-0">dimensi, dll.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kalibrasi Flow Meter -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card card-animate bg-soft-danger text-dark cursor-pointer"
+                        onclick="window.location.href='{{ route('kalibrasi.data.flowmeter') }}'">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-circle bg-white shadow-sm mb-3 mx-auto">
+                                <i class="mdi mdi-water fs-1 text-danger"></i>
+                            </div>
+                            <h5 class="fw-semibold mb-1">Kalibrasi Flowmeter</h5>
+                            <p class="small text-muted mb-0">,Flowmeter, dll.</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>

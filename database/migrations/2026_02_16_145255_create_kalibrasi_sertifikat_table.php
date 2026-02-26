@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kalibrasi_sertifikat', function (Blueprint $table) {
+        Schema::create('cal_sertifikat', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kalibrasi_id')->constrained('kalibrasi')->onDelete('cascade');
+            $table->foreignId('kalibrasi_id')->constrained('cal_main')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // requester
             $table->enum('status', ['draft', 'pending', 'approved', 'rejected', 'issued'])->default('draft');
             $table->text('notes')->nullable();
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('kalibrasi_sertifikat');
+        Schema::dropIfExists('cal_sertifikat');
     }
 };
