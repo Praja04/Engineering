@@ -40,7 +40,7 @@
                 <div class="col-xl-12">
                     <div class="card">
                         <div class="card-header">
-                            <h4 class="card-title">History Kalibrasi Pressure</h4>
+                            <h4 class="card-title">History Kalibrasi Thermohygrometer</h4>
                         </div>
                         <div class="card-body">
                             <table class="table table-hover nowrap dt-responsive" id="historyTable" style="width:100%">
@@ -50,9 +50,8 @@
                                         <th>Kode Alat</th>
                                         <th>Tgl Kalibrasi</th>
                                         <th>Tgl Kalibrasi Ulang</th>
-                                        <th>Lokasi</th>
+                                        <th>Lokasi Kalibrsai</th>
                                         <th>Kondisi Ruangan</th>
-                                        <th>Titik Kalibrasi</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -92,7 +91,7 @@
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#result-pane">Perhitungan
-                                Gabungan</button>
+                                Summary</button>
                         </li>
                     </ul>
 
@@ -189,11 +188,11 @@
                                         <table class="table table-hover table-sm text-center mb-0">
                                             <thead class="table-light align-middle">
                                                 <tr>
-                                                    <th>Posisi Bagian</th>
+                                                    <th>Titik / Posisi Bagian</th>
                                                     <th>Penunjuk Standar</th>
                                                     <th>Penunjuk Alat</th>
                                                     <th>Koreksi Standar</th>
-                                                    <th>Nilai Standar</th>
+                                                    <th>Tekanan Standar</th>
                                                     <th>Koreksi Alat</th>
                                                     <th>Ketidakpastian</th>
                                                 </tr>
@@ -214,11 +213,11 @@
                                         <table class="table table-hover table-sm text-center mb-0">
                                             <thead class="table-light align-middle">
                                                 <tr>
-                                                    <th>Posisi Bagian</th>
+                                                    <th>Titik / Posisi Bagian</th>
                                                     <th>Penunjuk Standar</th>
                                                     <th>Penunjuk Alat</th>
                                                     <th>Koreksi Standar</th>
-                                                    <th>Nilai Standar</th>
+                                                    <th>Tekanan Standar</th>
                                                     <th>Koreksi Alat</th>
                                                     <th>Ketidakpastian</th>
                                                 </tr>
@@ -287,8 +286,11 @@
                         renderTable();
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error fetching data:', error);
-                        alert('Gagal mengambil data. Silakan coba lagi.');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'Gagal mengambil data.',
+                            icon: 'error'
+                        });
                     }
                 });
             }
@@ -343,12 +345,6 @@
                             `
                         },
                         {
-                            data: "thermohygrometer_gabungan",
-                            render: function(data) {
-                                return data.length;
-                            },
-                        },
-                        {
                             data: null,
                             orderable: false,
                             render: function(data, type, row) {
@@ -383,89 +379,116 @@
             });
 
             function showDetailModal(id, historyData) {
+
                 const item = historyData.find(x => x.id === id);
                 if (!item) return;
 
                 // === Informasi Umum ===
-                $('#detail_kode_alat').text(item.alat.kode_alat);
-                $('#detail_nama_alat').text(item.alat.nama_alat);
+                $('#detail_kode_alat').text(item.alat?.kode_alat ?? '-');
+                $('#detail_nama_alat').text(item.alat?.nama_alat ?? '-');
                 $('#detail_tgl_kalibrasi').text(formatDate(item.tgl_kalibrasi));
                 $('#detail_tgl_ulang').text(formatDate(item.tgl_kalibrasi_ulang));
-                $('#detail_lokasi').text(item.lokasi_kalibrasi);
-                $('#detail_suhu').text(item.suhu_ruangan + '°C');
-                $('#detail_kelembaban').text(item.kelembaban + '%');
-                $('#detail_jenis').text(item.jenis_kalibrasi.toUpperCase());
-                $('#detail_metode').text(item.alat.metode_kalibrasi);
+                $('#detail_lokasi').text(item.lokasi_kalibrasi ?? '-');
+                $('#detail_suhu').text((item.suhu_ruangan ?? '-') + '°C');
+                $('#detail_kelembaban').text((item.kelembaban ?? '-') + '%');
+                $('#detail_jenis').text((item.jenis_kalibrasi ?? '-').toUpperCase());
+                $('#detail_metode').text(item.alat?.metode_kalibrasi ?? '-');
 
                 const tableSuhu = $('#table_suhu');
                 const tableRh = $('#table_rh');
                 const gabBody = $('#detail_gabungan');
+
                 tableSuhu.empty();
                 tableRh.empty();
                 gabBody.empty();
 
                 const thermo = item.thermohygrometer || [];
-                const gab = item.thermohygrometer_gabungan || [];
 
-                const grouped = thermo.reduce((acc, d) => {
-                    const key = `${d.tipe_hitung}_${d.titik_kalibrasi}`;
-                    if (!acc[key]) acc[key] = [];
-                    acc[key].push(d);
-                    return acc;
-                }, {});
+                const formatNum = (v, dec = 3) => {
 
-                const formatNum = (v, dec = 2) => (isNaN(parseFloat(v)) ? '—' : parseFloat(v).toFixed(dec));
-
-                function renderTable(type, $body) {
-                    const filtered = Object.keys(grouped).filter(k => k.startsWith(type + '_'));
-                    if (!filtered.length) {
-                        $body.append(
-                            '<tr><td colspan="11" class="text-center text-muted">Tidak ada data</td></tr>');
-                        return;
+                    if (v === null || v === undefined || v === '' || isNaN(parseFloat(v))) {
+                        return '—';
                     }
 
-                    filtered.forEach(key => {
-                        const [_, titik] = key.split('_');
-                        const data = grouped[key];
-                        const g = gab.find(x => x.titik_kalibrasi == titik);
+                    const num = parseFloat(v);
 
-                        data.forEach((r, i) => {
-                            const show = i === 0;
-                            $body.append(`
+                    return Number(num.toFixed(dec)).toString();
+                };
+
+                const buildLabel = (point) => {
+                    if (point.titik_kalibrasi && point.posisi) {
+                        return `<strong>${point.titik_kalibrasi}</strong><br><small>${point.posisi}</small>`;
+                    }
+                    return point.titik_kalibrasi ?? point.posisi ?? '—';
+                };
+
+                if (!thermo.length) {
+                    tableSuhu.append('<tr><td colspan="6" class="text-center text-muted">Tidak ada data</td></tr>');
+                    tableRh.append('<tr><td colspan="6" class="text-center text-muted">Tidak ada data</td></tr>');
+                    gabBody.append('<tr><td colspan="6" class="text-center text-muted">Tidak ada data</td></tr>');
+                } else {
+
+                    thermo.forEach(point => {
+
+                        const details = point.details || [];
+
+                        if (!details.length) return;
+
+                        const rowspan = details.length;
+                        const label = buildLabel(point);
+
+                        /* ================= SUHU ================= */
+                        details.forEach((d, i) => {
+
+                            const showGroup = i === 0;
+
+                            tableSuhu.append(`
                                 <tr>
-                                    ${show ? `<td rowspan="${data.length}" class="align-middle text-center"><span class="badge bg-primary">${r.posisi}</span></td>` : ''}
-                                    <td>${formatNum(r.penunjuk_standar)}</td>
-                                    <td>${formatNum(r.penunjuk_alat)}</td>
-                                    <td>${formatNum(r.koreksi_standar)}</td>
-                                    <td>${formatNum(r.tekanan_standar)}</td>
-                                    <td>${formatNum(r.koreksi_alat)}</td>
-                                     ${show && g ? `<td rowspan="${data.length}" class="align-middle">${formatNum(g['ketidak_pastian_' + type])}</td>` : ''}
+                                    ${showGroup ? `<td rowspan="${rowspan}" class="align-middle text-center">${formatNum(label)}</td>` : ''}
+                                    <td>${formatNum(d.penunjuk_standar_suhu)}</td>
+                                    <td>${formatNum(d.penunjuk_alat_suhu)}</td>
+                                    <td>${formatNum(d.koreksi_standar_suhu)}</td>
+                                    <td>${formatNum(d.tekanan_standar_suhu)}</td>
+                                    <td>${formatNum(d.koreksi_alat_suhu)}</td>
+                                    ${showGroup ? `<td rowspan="${rowspan}" class="align-middle">${formatNum(point.ketidak_pastian_suhu)}</td>` : ''}
                                 </tr>
                             `);
                         });
-                    });
-                }
 
-                renderTable('suhu', tableSuhu);
-                renderTable('rh', tableRh);
+                        /* ================= RH ================= */
+                        details.forEach((d, i) => {
 
-                // === Gabungan ===
-                if (gab.length > 0) {
-                    gab.forEach(g => {
+                            const showGroup = i === 0;
+
+                            tableRh.append(`
+                                <tr>
+                                    ${showGroup ? `<td rowspan="${rowspan}" class="align-middle text-center">${formatNum(label)}</td>` : ''}
+                                    <td>${formatNum(d.penunjuk_standar_rh)}</td>
+                                    <td>${formatNum(d.penunjuk_alat_rh)}</td>
+                                    <td>${formatNum(d.koreksi_standar_rh)}</td>
+                                    <td>${formatNum(d.tekanan_standar_rh)}</td>
+                                    <td>${formatNum(d.koreksi_alat_rh)}</td>
+                                    ${showGroup ? `<td rowspan="${rowspan}" class="align-middle">${formatNum(point.ketidak_pastian_rh)}</td>` : ''}
+                                </tr>
+                            `);
+                        });
+
+                        /* ================= GABUNGAN ================= */
                         gabBody.append(`
                             <tr>
-                                <td><span class="badge bg-success">${g.posisi || '—'}</span></td>
-                                <td>${formatNum(g.avg_penunjuk_alat_suhu)}</td>
-                                <td>${formatNum(g.avg_penunjuk_alat_rh)}</td>
-                                <td>${formatNum(g.std_deviasi_suhu)}</td>
-                                <td>${formatNum(g.std_deviasi_rh)}</td>
-                                <td class="highlight-value">${formatNum(g.ketidak_pastian_suhu)} / ${formatNum(g.ketidak_pastian_rh)}</td>
+                                <td>${formatNum(label)}</td>
+                                <td>${formatNum(point.avg_penunjuk_alat_suhu)}</td>
+                                <td>${formatNum(point.avg_penunjuk_alat_rh)}</td>
+                                <td>${formatNum(point.std_deviasi_suhu)}</td>
+                                <td>${formatNum(point.std_deviasi_rh)}</td>
+                                <td class="highlight-value">
+                                    ${formatNum(point.ketidak_pastian_suhu)} /
+                                    ${formatNum(point.ketidak_pastian_rh)}
+                                </td>
                             </tr>
                         `);
+
                     });
-                } else {
-                    gabBody.append(
-                        '<tr><td colspan="6" class="text-center text-muted">Tidak ada data gabungan</td></tr>');
                 }
 
                 $('#detailModal').modal('show');

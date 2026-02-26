@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Kalibrasi;
 
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Kalibrasi\KalibrasiModel;
+use App\Http\Requests\Kalibrasi\ThermohygrometerRequest;
 use App\Models\Kalibrasi\AlatKalibrasiModel;
+use App\Models\Kalibrasi\KalibrasiModel;
 use App\Models\Kalibrasi\KalibrasiSertifikatModel;
+use App\Models\Kalibrasi\Thermohygrometer\KalibrasiThermohygrometerDetailModel;
 use App\Models\Kalibrasi\Thermohygrometer\KalibrasiThermohygrometerModel;
-use App\Models\Kalibrasi\Thermohygrometer\KalibrasiThermohygrometerGabModel;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class KalibrasiThermohygrometerController extends Controller
 {
@@ -29,49 +29,19 @@ class KalibrasiThermohygrometerController extends Controller
         return view('kalibrasi.thermohygrometer.data');
     }
 
-    public function store(Request $request)
+    public function store(ThermohygrometerRequest $request)
     {
-        $flattenedThermo = [];
-        foreach ($request->input('thermo', []) as $tipe => $dataTipe) {
-            foreach ($dataTipe as $titik => $rows) {
-                foreach ($rows as $index => $row) {
-                    $flattenedThermo[] = array_merge($row, [
-                        'titik_kalibrasi' => $titik,
-                        'tipe_hitung' => $tipe,
-                    ]);
-                }
-            }
-        }
-
-        // Replace thermo input dengan versi flattened
-        $request->merge(['thermo' => $flattenedThermo]);
-
-        // --- Validasi input ---
-        $validated = $request->validate([
-            'alat_id' => 'required|exists:alat_kalibrasi,id',
-            'lokasi_kalibrasi' => 'required|string|max:255',
-            'suhu_ruangan_final' => 'required|string|max:50',
-            'kelembaban_final' => 'required|string|max:50',
-            'tgl_kalibrasi' => 'required|date',
-
-            'thermo' => 'required|array|min:1',
-            'thermo.*.tipe_hitung' => 'required|in:suhu,rh',
-            'thermo.*.posisi' => 'required|string|max:100',
-            'thermo.*.titik_kalibrasi' => 'required|numeric',
-            'thermo.*.penunjuk_standar' => 'required|numeric',
-            'thermo.*.penunjuk_alat' => 'required|numeric',
-            'thermo.*.koreksi_standar' => 'nullable|numeric',
-        ]);
+        $validated = $request->validated();
 
         DB::beginTransaction();
+
         try {
-            // Simpan data utama kalibrasi
             $kalibrasi = KalibrasiModel::create([
                 'alat_id' => $validated['alat_id'],
                 'user_id' => Auth::id() ?? 1,
-                'lokasi_kalibrasi' => $validated['lokasi_kalibrasi'] ?? '-',
-                'suhu_ruangan' => $validated['suhu_ruangan_final'] ?? '-',
-                'kelembaban' => $validated['kelembaban_final'] ?? '-',
+                'lokasi_kalibrasi' => $validated['lokasi_kalibrasi'],
+                'suhu_ruangan' => $validated['suhu_ruangan'] . '°C ± 1°C' ?? '-',
+                'kelembaban' => $validated['kelembaban'] . '% ± 3%' ?? '-',
                 'tgl_kalibrasi' => $validated['tgl_kalibrasi'],
                 'tgl_kalibrasi_ulang' => Carbon::parse($validated['tgl_kalibrasi'])->addYearNoOverflow(),
                 'jenis_kalibrasi' => 'thermohygrometer',
@@ -83,85 +53,108 @@ class KalibrasiThermohygrometerController extends Controller
                 'status' => 'draft'
             ]);
 
-            // Pisahkan data titik
-            $perTitik = [];
+            foreach ($validated['data'] as $row) {
 
-            // simpan ke thermohygrometer model
-            foreach ($validated['thermo'] as $row) {
-                $titik = $row['titik_kalibrasi'];
-                $tipe = $row['tipe_hitung'];
-                $tekananStandar = $row['penunjuk_standar'] + ($row['koreksi_standar'] ?? 0);
-                $koreksiAlat = $tekananStandar - $row['penunjuk_alat'];
-
-                KalibrasiThermohygrometerModel::create([
+                $thermo = KalibrasiThermohygrometerModel::create([
                     'kalibrasi_id' => $kalibrasi->id,
-                    'titik_kalibrasi' => $titik,
-                    'tipe_hitung' => $tipe,
-                    'posisi' => $row['posisi'],
-                    'penunjuk_standar' => $row['penunjuk_standar'],
-                    'penunjuk_alat' => $row['penunjuk_alat'],
-                    'koreksi_standar' => $row['koreksi_standar'] ?? null,
-                    'tekanan_standar' => $tekananStandar,
-                    'koreksi_alat' => $koreksiAlat,
+                    'titik_kalibrasi' => $row['titik_kalibrasi'] ?? null,
+                    'posisi' => $row['posisi'] ?? null,
                 ]);
 
-                // Group berdasarkan titik dan tipe
-                $perTitik[$titik][$tipe][] = [
-                    'posisi' => $row['posisi'] ?? null,
-                    'penunjuk_alat' => $row['penunjuk_alat'],
-                    'tekanan_standar' => $tekananStandar,
-                    'koreksi_alat' => $koreksiAlat,
+                $suhuArr = [];
+                $rhArr   = [];
+
+                for ($i = 0; $i < 3; $i++) {
+
+                    $standarSuhu = $row['standar'][$i]['suhu'] ?? null;
+                    $standarRh   = $row['standar'][$i]['rh'] ?? null;
+
+                    $alatSuhu    = $row['alat'][$i]['suhu'] ?? null;
+                    $alatRh      = $row['alat'][$i]['rh'] ?? null;
+
+                    $koreksiStandarSuhu = 0;
+                    $koreksiStandarRh   = 0;
+
+                    $tekananSuhu = $standarSuhu + $koreksiStandarSuhu;
+                    $tekananRh   = $standarRh + $koreksiStandarRh;
+
+                    $koreksiAlatSuhu = $tekananSuhu - $alatSuhu;
+                    $koreksiAlatRh   = $tekananRh - $alatRh;
+
+                    KalibrasiThermohygrometerDetailModel::create([
+                        'thermohygro_id' => $thermo->id,
+                        'urutan' => $i,
+
+                        'penunjuk_standar_suhu' => $standarSuhu,
+                        'penunjuk_alat_suhu' => $alatSuhu,
+                        'koreksi_standar_suhu' => $koreksiStandarSuhu,
+                        'tekanan_standar_suhu' => $tekananSuhu,
+                        'koreksi_alat_suhu' => $koreksiAlatSuhu,
+
+                        'penunjuk_standar_rh' => $standarRh,
+                        'penunjuk_alat_rh' => $alatRh,
+                        'koreksi_standar_rh' => $koreksiStandarRh,
+                        'tekanan_standar_rh' => $tekananRh,
+                        'koreksi_alat_rh' => $koreksiAlatRh,
+                    ]);
+
+                    $suhuArr[] = ['penunjuk_alat' => $alatSuhu, 'tekanan' => $tekananSuhu];
+                    $rhArr[]   = ['penunjuk_alat' => $alatRh,   'tekanan' => $tekananRh];
+                }
+
+                // ===============================
+                // HITUNG AVG & STD
+                // ===============================
+
+                $avg = fn($arr, $key) =>
+                count($arr) ? array_sum(array_column($arr, $key)) / count($arr) : null;
+
+                $std = fn($arr, $key) =>
+                count($arr) > 1
+                    ? sqrt(array_sum(array_map(
+                        fn($x) => pow($x[$key] - $avg($arr, $key), 2),
+                        $arr
+                    )) / (count($arr) - 1))
+                    : 0;
+
+                $avgSuhuAlat = $avg($suhuArr, 'penunjuk_alat');
+                $avgSuhuTekanan = $avg($suhuArr, 'tekanan');
+
+                $avgRhAlat = $avg($rhArr, 'penunjuk_alat');
+                $avgRhTekanan = $avg($rhArr, 'tekanan');
+
+                $defaultKetidakpastianSuhu = [
+                    8  => 0.45647,
+                    20 => 0.44461,
+                    30 => 0.46721,
                 ];
-            }
 
-            $avg = fn($arr, $field) => count($arr) ? array_sum(array_column($arr, $field)) / count($arr) : null;
-            $std = fn($arr, $field) => count($arr) > 1
-                ? sqrt(array_sum(array_map(fn($x) => pow($x[$field] - $avg($arr, $field), 2), $arr)) / (count($arr) - 1))
-                : 0;
+                $defaultKetidakpastianRh = [
+                    8  => 2.80105,
+                    20 => 2.74458,
+                    30 => 2.91234,
+                ];
 
-            // Loop tiap titik kalibrasi untuk simpan ke gabungan
-            $ketidakPastian = [
-                'suhu' => 0.44461,
-                'rh'   => 2.74458,
-            ];
+                $referensi = $row['titik_kalibrasi'] ?? null;
 
-            foreach ($perTitik as $titik => $tipe) {
-                $suhu = $tipe['suhu'] ?? [];
-                $rh   = $tipe['rh'] ?? [];
-                $posisiGab = $suhu[0]['posisi'] ?? $rh[0]['posisi'] ?? null;
+                if (!$referensi && $avgSuhuTekanan !== null) {
+                    $referensi = round($avgSuhuTekanan); // atau bisa floor/ceil
+                }
 
-                // ambil ketidakpastian tetap
-                $ketidakpastianSuhu = $ketidakPastian['suhu'];
-                $ketidakpastianRh   = $ketidakPastian['rh'];
+                $ketidakpastianSuhu = $defaultKetidakpastianSuhu[$referensi] ?? 0.44461;
+                $ketidakpastianRh   = $defaultKetidakpastianRh[$referensi] ?? 2.74458;
 
-                // --- Hitung rata-rata & stdev suhu
-                $avgPenunjukAlatSuhu     = $avg($suhu, 'penunjuk_alat');
-                $avgTekananStandarSuhu   = $avg($suhu, 'tekanan_standar');
-                $avgKoreksiAlatSuhu      = $avgTekananStandarSuhu - $avgPenunjukAlatSuhu;
-                $stdDeviasiSuhu          = $std($suhu, 'tekanan_standar');
-
-                // --- Hitung rata-rata & stdev rh
-                $avgPenunjukAlatRh       = $avg($rh, 'penunjuk_alat');
-                $avgTekananStandarRh     = $avg($rh, 'tekanan_standar');
-                $avgKoreksiAlatRh        = $avgTekananStandarRh - $avgPenunjukAlatRh;
-                $stdDeviasiRh            = $std($rh, 'tekanan_standar');
-
-                // --- Simpan ke tabel gabungan
-                KalibrasiThermohygrometerGabModel::create([
-                    'kalibrasi_id' => $kalibrasi->id,
-                    'titik_kalibrasi' => $titik,
-                    'posisi' => $posisiGab,
-
-                    'avg_penunjuk_alat_suhu' => $avgPenunjukAlatSuhu,
-                    'avg_tekanan_standar_suhu' => $avgTekananStandarSuhu,
-                    'avg_kor_alat_suhu' => $avgKoreksiAlatSuhu,
-                    'std_deviasi_suhu' => $stdDeviasiSuhu,
+                $thermo->update([
+                    'avg_penunjuk_alat_suhu' => $avgSuhuAlat,
+                    'avg_tekanan_standar_suhu' => $avgSuhuTekanan,
+                    'avg_kor_alat_suhu' => $avgSuhuTekanan - $avgSuhuAlat,
+                    'std_deviasi_suhu' => $std($suhuArr, 'tekanan'),
                     'ketidak_pastian_suhu' => $ketidakpastianSuhu,
 
-                    'avg_penunjuk_alat_rh' => $avgPenunjukAlatRh,
-                    'avg_tekanan_standar_rh' => $avgTekananStandarRh,
-                    'avg_kor_alat_rh' => $avgKoreksiAlatRh,
-                    'std_deviasi_rh' => $stdDeviasiRh,
+                    'avg_penunjuk_alat_rh' => $avgRhAlat,
+                    'avg_tekanan_standar_rh' => $avgRhTekanan,
+                    'avg_kor_alat_rh' => $avgRhTekanan - $avgRhAlat,
+                    'std_deviasi_rh' => $std($rhArr, 'tekanan'),
                     'ketidak_pastian_rh' => $ketidakpastianRh,
                 ]);
             }
@@ -170,14 +163,14 @@ class KalibrasiThermohygrometerController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Data kalibrasi Thermohygrometer berhasil disimpan.',
-                'data' => $kalibrasi->load('thermohygrometer')
-            ], 200);
+                'message' => 'Thermohygrometer berhasil disimpan.',
+            ]);
         } catch (\Throwable $th) {
+
             DB::rollBack();
 
             return response()->json([
-                'message' => 'Terjadi kesalahan: ' . $th->getMessage(),
+                'message' => $th->getMessage()
             ], 500);
         }
     }
@@ -187,10 +180,7 @@ class KalibrasiThermohygrometerController extends Controller
         try {
             // ambil data kalibrasi + relasi pressure & gabungan
             $data = KalibrasiModel::with([
-                'thermohygrometer' => function ($q) {
-                    $q->orderBy('titik_kalibrasi');
-                },
-                'thermohygrometerGabungan',
+                'thermohygrometer.details',
                 'alat'
             ])
                 ->where('jenis_kalibrasi', 'thermohygrometer')
@@ -213,9 +203,6 @@ class KalibrasiThermohygrometerController extends Controller
     public function destroy(string $id)
     {
         $kalibrasi = KalibrasiModel::findOrFail($id);
-
-        $kalibrasi->thermohygrometer()->delete();
-        $kalibrasi->thermohygrometerGabungan()->delete();
 
         // Hapus kalibrasi utama
         $kalibrasi->delete();
