@@ -33,9 +33,8 @@
                                         <th>Kode Alat</th>
                                         <th>Tgl Kalibrasi</th>
                                         <th>Tgl Kalibrasi Ulang</th>
-                                        <th>Lokasi</th>
+                                        <th>Lokasi Kalibrasi</th>
                                         <th>Kondisi Ruangan</th>
-                                        <th>Titik Kalibrasi</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -74,7 +73,7 @@
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#result-pane">Hitung
-                                Gabungan</button>
+                                Summary</button>
                         </li>
                     </ul>
 
@@ -208,6 +207,7 @@
                                         <table class="table table-hover table-sm text-center mb-0">
                                             <thead class="table-light">
                                                 <tr>
+                                                    <th>Titik Kalibrasi</th>
                                                     <th>Avg Penunjuk Standar</th>
                                                     <th>Avg Koreksi</th>
                                                     <th>Std Dev Penunjuk Standar</th>
@@ -253,8 +253,11 @@
                         renderTable();
                     },
                     error: function(xhr, status, error) {
-                        console.error('Error fetching data:', error);
-                        alert('Gagal mengambil data. Silakan coba lagi.');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'Gagal mengambil data.',
+                            icon: 'error'
+                        });
                     }
                 });
             }
@@ -309,11 +312,6 @@
                             `
                         },
                         {
-                            data: "volumetrik",
-                            className: "text-center",
-                            render: data => data.length
-                        },
-                        {
                             data: null,
                             orderable: false,
                             className: "text-center",
@@ -350,7 +348,7 @@
                 showDetailModal(id, historyData);
             });
 
-            function formatNumberDynamic(value, maxDecimals = 2) {
+            function formatNumber(value, maxDecimals = 2) {
                 if (value === null || value === undefined || value === '' || isNaN(value)) return '-';
                 const num = parseFloat(value);
                 if (Number.isInteger(num)) return num.toString(); // tanpa koma kalau bulat
@@ -375,52 +373,92 @@
                 $('#detail_metode').text(item.alat.metode_kalibrasi);
 
                 // Render volumetrik data
+                // === Render Volumetrik Detail ===
                 const volumetriks = Array.isArray(item.volumetrik) ? item.volumetrik : [];
                 const hitungBody = $('#hitung_data');
                 hitungBody.empty();
 
                 if (volumetriks.length > 0) {
+
                     volumetriks.forEach(v => {
-                        hitungBody.append(`
-                            <tr>
-                                <td>${formatNumberDynamic(v.titik_kalibrasi, 2)}</td>
-                                <td>${formatNumberDynamic(v.penunjuk_standar, 2)}</td>
-                                <td>${formatNumberDynamic(v.penunjuk_alat, 2)}</td>
-                                <td>${formatNumberDynamic(v.koreksi, 2)}</td>
-                            </tr>
-                        `);
+
+                        const details = Array.isArray(v.details) ? v.details : [];
+                        const rowspan = details.length;
+
+                        if (!details.length) return;
+
+                        details.forEach((d, index) => {
+
+                            let rowHtml = `<tr>`;
+
+                            // ✅ Hanya baris pertama yang punya td titik + rowspan
+                            if (index === 0) {
+                                rowHtml += `
+                                    <td rowspan="${rowspan}" class="align-middle text-center fw-semibold">
+                                        ${formatNumber(v.titik_kalibrasi, 2)}
+                                    </td>
+                                `;
+                            }
+
+                            rowHtml += `
+                                    <td>${formatNumber(d.penunjuk_standar, 3)}</td>
+                                    <td>${formatNumber(d.penunjuk_alat, 3)}</td>
+                                    <td>${formatNumber(d.koreksi, 3)}</td>
+                                </tr>
+                            `;
+
+                            hitungBody.append(rowHtml);
+
+                        });
+
                     });
+
                 } else {
+
                     hitungBody.append(`
                         <tr>
-                            <td colspan="6" class="text-muted fst-italic">Tidak ada data pengukuran</td>
+                            <td colspan="4" class="text-muted fst-italic text-center">
+                                Tidak ada data pengukuran
+                            </td>
                         </tr>
                     `);
+
                 }
 
                 // === Render data gabungan ===
-                const gabungan = item.volumetrik_gabungan ?? null;
                 const gabunganBody = $('#detail_gabungan');
                 gabunganBody.empty();
 
-                if (gabungan) {
-                    gabunganBody.append(`
-                        <tr>
-                            <td>${formatNumberDynamic(gabungan.avg_penunjuk_standar, 8)}</td>
-                            <td>${formatNumberDynamic(gabungan.avg_koreksi, 8)}</td>
-                            <td>${formatNumberDynamic(gabungan.stdev_penunjuk_standar, 8)}</td>
-                            <td>${formatNumberDynamic(gabungan.akar_10, 8)}</td>
-                            <td>${formatNumberDynamic(gabungan.u_timbangan, 8)}</td>
-                            <td class="fw-bold bg-success-subtle">${formatNumberDynamic(gabungan.u_total, 8)}</td>
-                        </tr>
-                    `);
+                if (volumetriks.length > 0) {
+
+                    volumetriks.forEach(v => {
+
+                        gabunganBody.append(`
+                            <tr>
+                                <td>${formatNumber(v.titik_kalibrasi, 2)}</td>
+                                <td>${formatNumber(v.avg_penunjuk_standar, 8)}</td>
+                                <td>${formatNumber(v.avg_koreksi, 8)}</td>
+                                <td>${formatNumber(v.stdev_penunjuk_standar, 8)}</td>
+                                <td>${formatNumber(v.akar_10, 8)}</td>
+                                <td>${formatNumber(v.u_timbangan, 8)}</td>
+                                <td class="fw-bold bg-success-subtle">
+                                    ${formatNumber(v.u_total, 8)}
+                                </td>
+                            </tr>
+                        `);
+
+                    });
+
                 } else {
                     gabunganBody.append(`
                         <tr>
-                            <td colspan="6" class="text-muted fst-italic">Data gabungan belum tersedia</td>
+                            <td colspan="7" class="text-muted fst-italic text-center">
+                                Data hasil belum tersedia
+                            </td>
                         </tr>
                     `);
                 }
+
 
                 // Show modal
                 $('#detailModal').modal('show');

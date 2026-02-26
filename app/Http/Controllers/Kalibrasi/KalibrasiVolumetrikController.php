@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Kalibrasi;
 
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Kalibrasi\VolumetrikRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Kalibrasi\KalibrasiModel;
 use App\Models\Kalibrasi\AlatKalibrasiModel;
 use App\Models\Kalibrasi\KalibrasiSertifikatModel;
+use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikDetailModel;
 use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikModel;
-use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikGabunganModel;
 
 class KalibrasiVolumetrikController extends Controller
 {
@@ -29,32 +29,20 @@ class KalibrasiVolumetrikController extends Controller
         return view('kalibrasi.volumetrik.data');
     }
 
-    public function store(Request $request)
+    public function store(VolumetrikRequest $request)
     {
-        $validated = $request->validate([
-            // Data utama kalibrasi
-            'alat_id' => 'required|exists:alat_kalibrasi,id',
-            'lokasi_kalibrasi' => 'required|string|max:255',
-            'suhu_ruangan_final' => 'required|string|max:50',
-            'kelembaban_final' => 'required|string|max:50',
-            'tgl_kalibrasi' => 'required|date',
-
-            // Data pengukuran volumetrik
-            'data' => 'required|array|min:1',
-            'data.*.titik_kalibrasi' => 'required|numeric',
-            'data.*.penunjuk_standar' => 'required|numeric',
-            'data.*.penunjuk_alat' => 'required|numeric',
-        ]);
-
         DB::beginTransaction();
 
         try {
+
+            $validated = $request->validated();
+
             $kalibrasi = KalibrasiModel::create([
                 'alat_id' => $validated['alat_id'],
                 'user_id' => Auth::id() ?? 1,
                 'lokasi_kalibrasi' => $validated['lokasi_kalibrasi'],
-                'suhu_ruangan' => $validated['suhu_ruangan_final'],
-                'kelembaban' => $validated['kelembaban_final'],
+                'suhu_ruangan' => $validated['suhu_ruangan'] . '°C ± 1°C' ?? '-',
+                'kelembaban' => $validated['kelembaban'] . '% ± 3%' ?? '-',
                 'tgl_kalibrasi' => $validated['tgl_kalibrasi'],
                 'tgl_kalibrasi_ulang' => Carbon::parse($validated['tgl_kalibrasi'])->addYearNoOverflow(),
                 'jenis_kalibrasi' => 'volumetrik',
@@ -66,43 +54,53 @@ class KalibrasiVolumetrikController extends Controller
                 'status' => 'draft'
             ]);
 
-            $dataInput = $validated['data'];
-            $standarValues = [];
-            $koreksiValues = [];
+            foreach ($validated['data'] as $titik) {
 
-            foreach ($dataInput as $item) {
-                $koreksi = $item['penunjuk_standar'] - $item['penunjuk_alat'];
+                $standarArray = $titik['penunjuk_standar'];
+                $alatArray    = $titik['penunjuk_alat'];
 
-                KalibrasiVolumetrikModel::create([
+                $koreksiValues = [];
+
+                // hitung koreksi per repeat
+                foreach ($standarArray as $index => $standar) {
+
+                    $alat = $alatArray[$index] ?? 0;
+                    $koreksi = $standar - $alat;
+
+                    $koreksiValues[] = $koreksi;
+                }
+
+                $avgStandar = collect($standarArray)->avg();
+                $avgKoreksi = collect($koreksiValues)->avg();
+                $stdevStandar = $this->calculateStdev($standarArray);
+
+                $akar10 = sqrt(count($standarArray));
+                $uTotal = $akar10 > 0 ? $stdevStandar / $akar10 : 0;
+
+                $volumetrik = KalibrasiVolumetrikModel::create([
                     'kalibrasi_id' => $kalibrasi->id,
-                    'titik_kalibrasi' => $item['titik_kalibrasi'],
-                    'penunjuk_standar' => $item['penunjuk_standar'],
-                    'penunjuk_alat' => $item['penunjuk_alat'],
-                    'koreksi' => $koreksi,
+                    'titik_kalibrasi' => $titik['titik_kalibrasi'],
+                    'avg_penunjuk_standar' => $avgStandar,
+                    'avg_koreksi' => $avgKoreksi,
+                    'stdev_penunjuk_standar' => $stdevStandar,
+                    'akar_10' => $akar10,
+                    'u_timbangan' => null,
+                    'u_total' => $uTotal,
                 ]);
 
-                $standarValues[] = $item['penunjuk_standar'];
-                $koreksiValues[] = $koreksi;
+                foreach ($standarArray as $index => $standar) {
+
+                    $alat = $alatArray[$index] ?? 0;
+                    $koreksi = $standar - $alat;
+
+                    KalibrasiVolumetrikDetailModel::create([
+                        'volumetrik_id' => $volumetrik->id,
+                        'penunjuk_standar' => $standar,
+                        'penunjuk_alat' => $alat,
+                        'koreksi' => $koreksi,
+                    ]);
+                }
             }
-
-            // Hitung nilai gabungan
-            $avgStandar = collect($standarValues)->avg();
-            $avgKoreksi = collect($koreksiValues)->avg();
-            $stdevStandar = $this->calculateStdev($standarValues);
-            $akar10 = sqrt(10);
-            $uTimbangan = null;
-            $uTotal = $stdevStandar / $akar10;
-
-            // Simpan hasil gabungan ke tabel volumetrik_gabungan
-            KalibrasiVolumetrikGabunganModel::create([
-                'kalibrasi_id' => $kalibrasi->id,
-                'avg_penunjuk_standar' => $avgStandar,
-                'avg_koreksi' => $avgKoreksi,
-                'stdev_penunjuk_standar' => $stdevStandar,
-                'akar_10' => $akar10,
-                'u_timbangan' => $uTimbangan,
-                'u_total' => $uTotal,
-            ]);
 
             DB::commit();
 
@@ -111,6 +109,7 @@ class KalibrasiVolumetrikController extends Controller
                 'message' => 'Data kalibrasi volumetrik berhasil disimpan.',
             ]);
         } catch (\Exception $e) {
+
             DB::rollBack();
 
             return response()->json([
@@ -135,10 +134,7 @@ class KalibrasiVolumetrikController extends Controller
     {
         try {
             $data = KalibrasiModel::with([
-                'volumetrik' => function ($q) {
-                    $q->orderBy('titik_kalibrasi');
-                },
-                'volumetrikGabungan',
+                'volumetrik.details',
                 'alat'
             ])
                 ->where('jenis_kalibrasi', 'volumetrik')
@@ -160,9 +156,6 @@ class KalibrasiVolumetrikController extends Controller
     public function destroy(string $id)
     {
         $kalibrasi = KalibrasiModel::findOrFail($id);
-
-        $kalibrasi->volumetrik()->delete();
-        $kalibrasi->volumetrikGabungan()->delete();
 
         // Hapus kalibrasi utama
         $kalibrasi->delete();

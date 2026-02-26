@@ -10,14 +10,17 @@ class KalibrasiVolumetrikModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_volumetrik';
+    protected $table = 'cal_volumetrik';
 
     protected $fillable = [
         'kalibrasi_id',
         'titik_kalibrasi',
-        'penunjuk_standar',
-        'penunjuk_alat',
-        'koreksi',
+        'avg_penunjuk_standar',
+        'avg_koreksi',
+        'stdev_penunjuk_standar',
+        'akar_10',
+        'u_timbangan',
+        'u_total',
     ];
 
     /**
@@ -26,5 +29,10 @@ class KalibrasiVolumetrikModel extends Model
     public function kalibrasi()
     {
         return $this->belongsTo(KalibrasiModel::class, 'kalibrasi_id');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(KalibrasiVolumetrikDetailModel::class, 'volumetrik_id');
     }
 }
