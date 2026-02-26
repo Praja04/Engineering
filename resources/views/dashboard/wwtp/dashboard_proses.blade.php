@@ -274,40 +274,7 @@
             </div>
         </div>
 
-        <!-- Recent Records Table - Weekly -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Recent Weekly Records</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover table-nowrap align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th scope="col">Tanggal</th>
-                                        <th scope="col">Kategori</th>
-                                        <th scope="col">Details</th>
-                                        <th scope="col">Total Volume</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="weeklyRecentRecordsTable">
-                                    <tr>
-                                        <td colspan="4" class="text-center">
-                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                            Loading data...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    
 
         <!-- ========================================= -->
         <!-- SECTION: DATA HARIAN -->
@@ -480,7 +447,7 @@
             <div class="col-xl-4">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title mb-0">Distribution by Shift</h4>
+                        <h4 class="card-title mb-0">Daily Distribution</h4>
                     </div>
                     <div class="card-body">
                         <div id="dailyShiftPieChart"></div>
@@ -503,40 +470,6 @@
             </div>
         </div>
 
-        <!-- Recent Records Table - Daily -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Recent Daily Records</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover table-nowrap align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th scope="col">Tanggal</th>
-                                        <th scope="col">Shifts</th>
-                                        <th scope="col">Details</th>
-                                        <th scope="col">Total Volume</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dailyRecentRecordsTable">
-                                    <tr>
-                                        <td colspan="4" class="text-center">
-                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                            Loading data...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
     </div>
 </div>
@@ -635,7 +568,6 @@
             await updateWeeklyInfluentChart();
             await updateWeeklyEffluentChart();
             await loadWeeklyMonthlyComparison();
-            await loadWeeklyRecentRecords();
             console.log('Weekly data loaded successfully');
         } catch (error) {
             console.error('Error loading weekly data:', error);
@@ -938,76 +870,7 @@
         }
     }
 
-    async function loadWeeklyRecentRecords() {
-        try {
-            const response = await fetch('/api/wwtp/dashboard/recent-records/10');
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('Weekly recent records:', data);
-
-            const tbody = document.getElementById('weeklyRecentRecordsTable');
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = data.map(record => {
-                const date = new Date(record.tanggal);
-                const formattedDate = date.toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                });
-
-                let details = '';
-                let total = 0;
-                let badge = '';
-
-                if (record.kategori === 'influent' && record.influent) {
-                    badge = '<span class="badge bg-info-subtle text-info">Influent</span>';
-                    details = `
-                        <small class="text-muted">
-                            Sparta: ${record.influent.pit_sparta || 0} m³<br>
-                            Garam: ${record.influent.pit_garam || 0} m³<br>
-                            Domestik: ${record.influent.pit_domestik || 0} m³
-                        </small>
-                    `;
-                    total = parseFloat(record.influent.pit_sparta || 0) +
-                        parseFloat(record.influent.pit_garam || 0) +
-                        parseFloat(record.influent.pit_domestik || 0);
-                } else if (record.kategori === 'effluent' && record.effluent) {
-                    badge = '<span class="badge bg-success-subtle text-success">Effluent</span>';
-                    details = `
-                        <small class="text-muted">
-                            Full Proses: ${record.effluent.full_proses || 0} m³<br>
-                            DAF Pre: ${record.effluent.daf_pre || 0} m³
-                        </small>
-                    `;
-                    total = parseFloat(record.effluent.full_proses || 0) +
-                        parseFloat(record.effluent.daf_pre || 0);
-                }
-
-                return `
-                    <tr>
-                        <td><strong>${formattedDate}</strong></td>
-                        <td>${badge}</td>
-                        <td>${details}</td>
-                        <td><strong>${total.toFixed(2)} m³</strong></td>
-                    </tr>
-                `;
-            }).join('');
-
-        } catch (error) {
-            console.error('Error loading weekly recent records:', error);
-            document.getElementById('weeklyRecentRecordsTable').innerHTML =
-                '<tr><td colspan="4" class="text-center text-danger">Error loading data</td></tr>';
-        }
-    }
+    
 
     // =============================
     // DAILY DATA FUNCTIONS
@@ -1020,7 +883,6 @@
             await updateDailyInfluentChart();
             await updateDailyShiftBreakdownChart();
             await loadDailyMonthlyComparison();
-            await loadDailyRecentRecords();
             console.log('Daily data loaded successfully');
         } catch (error) {
             console.error('Error loading daily data:', error);
@@ -1130,6 +992,7 @@
                         data: []
                     }
                 ]);
+                await updateDailyShiftBreakdownChart(); // ← tambah ini
                 return;
             }
 
@@ -1190,6 +1053,8 @@
                 }
             ]);
 
+            await updateDailyShiftBreakdownChart(); // ← tambah ini
+
         } catch (error) {
             console.error('Error updating daily influent chart:', error);
             alert('Error loading daily influent chart data. Please try again.');
@@ -1206,14 +1071,7 @@
                 return;
             }
 
-            // Calculate days between dates for period
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            const response = await fetch(`/api/wwtp/dashboard/shift-breakdown/${diffDays}`);
-
+            const response = await fetch(`/api/wwtp/dashboard/shift-breakdown?start_date=${startDate}&end_date=${endDate}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -1221,14 +1079,28 @@
             const data = await response.json();
             console.log('Shift breakdown data:', data);
 
-            if (!data || data.length === 0) {
+            const labels = [
+                'Pit Sparta', 'Pit Garam', 'Pit Domestik', 'Pit Produksi Step 3',
+                'Pit Storage', 'Pit Proses WWTP2', 'Pit Outlet', 'Pit Boiler'
+            ];
+
+            const values = [
+                data.total_sparta || 0,
+                data.total_garam || 0,
+                data.total_domestik || 0,
+                data.total_produksi_step3 || 0,
+                data.total_storage || 0,
+                data.total_proses_wwtp2 || 0,
+                data.total_outlet || 0,
+                data.total_boiler || 0,
+            ];
+
+            const hasData = values.some(v => v > 0);
+            if (!hasData) {
                 console.warn('No shift breakdown data available');
-                dailyShiftPieChart.updateSeries([0, 0, 0]);
+                dailyShiftPieChart.updateSeries([0, 0, 0, 0, 0, 0, 0, 0]);
                 return;
             }
-
-            const labels = data.map(d => d.shift.replace('shift', 'Shift '));
-            const values = data.map(d => parseFloat(d.total) || 0);
 
             dailyShiftPieChart.updateOptions({
                 labels: labels
@@ -1272,61 +1144,7 @@
         }
     }
 
-    async function loadDailyRecentRecords() {
-        try {
-            const response = await fetch('/api/wwtp/dashboard/recent-records-harian/10');
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('Daily recent records:', data);
-
-            const tbody = document.getElementById('dailyRecentRecordsTable');
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = data.map(record => {
-                const date = new Date(record.tanggal);
-                const formattedDate = date.toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                });
-
-                const shiftDetails = record.shifts.map(shift => {
-                    return `
-                        <div class="mb-1">
-                            <span class="badge bg-primary-subtle text-primary">${shift.shift}</span>
-                            <small class="text-muted ms-2">
-                                Sparta: ${shift.pit_sparta || 0} m³ | 
-                                Garam: ${shift.pit_garam || 0} m³ | 
-                                Domestik: ${shift.pit_domestik || 0} m³
-                            </small>
-                        </div>
-                    `;
-                }).join('');
-
-                return `
-                    <tr>
-                        <td><strong>${formattedDate}</strong></td>
-                        <td><span class="badge bg-info-subtle text-info">${record.shift_count} shifts</span></td>
-                        <td>${shiftDetails}</td>
-                        <td><strong>${(record.total_volume || 0).toFixed(2)} m³</strong></td>
-                    </tr>
-                `;
-            }).join('');
-
-        } catch (error) {
-            console.error('Error loading daily recent records:', error);
-            document.getElementById('dailyRecentRecordsTable').innerHTML =
-                '<tr><td colspan="4" class="text-center text-danger">Error loading data</td></tr>';
-        }
-    }
+    
 
     // =============================
     // UTILITY FUNCTIONS
@@ -1710,8 +1528,8 @@
         try {
             dailyShiftPieChart = new ApexCharts(document.querySelector("#dailyShiftPieChart"), {
                 ...pieChartOptions,
-                series: [0, 0, 0],
-                labels: ['Shift 1', 'Shift 2', 'Shift 3']
+                series: [0, 0, 0, 0, 0, 0, 0, 0],
+                labels: ['Pit Sparta', 'Pit Garam', 'Pit Domestik', 'Pit Produksi Step 3', 'Pit Storage', 'Pit Proses WWTP2', 'Pit Outlet', 'Pit Boiler']
             });
             dailyShiftPieChart.render();
             console.log('Daily shift pie chart initialized');

@@ -16,7 +16,8 @@ class WwtpSludge extends Model
         'tanggal',
         'shift',
         'drain_lumpur',
-        'running_hour_scp'
+        'running_hour_scp',
+        'hasil_lumpur'
 
     ];
 }

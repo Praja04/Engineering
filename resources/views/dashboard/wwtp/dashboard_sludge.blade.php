@@ -1,20 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard WWTP Sludge')
+@section('title', 'Dashboard WWTP Lumpur')
 
 @section('content')
 <div class="page-content">
     <div class="container-fluid">
 
-        <!-- Page Title -->
+        <!-- Judul Halaman -->
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">Dashboard WWTP Sludge</h4>
+                    <h4 class="mb-sm-0">Dashboard WWTP Lumpur</h4>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="#">Utility</a></li>
-                            <li class="breadcrumb-item active">WWTP Sludge Dashboard</li>
+                            <li class="breadcrumb-item"><a href="#">Utilitas</a></li>
+                            <li class="breadcrumb-item active">Dashboard WWTP Lumpur</li>
                         </ol>
                     </div>
                 </div>
@@ -22,36 +22,36 @@
         </div>
 
         <!-- ========================================= -->
-        <!-- SECTION: DATA SLUDGE -->
+        <!-- BAGIAN: DATA LUMPUR -->
         <!-- ========================================= -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card bg-primary-subtle">
                     <div class="card-body">
                         <h4 class="card-title text-primary mb-0">
-                            <i class="bx bx-droplet"></i> Data Sludge Management
+                            <i class="bx bx-droplet"></i> Data Manajemen Lumpur
                         </h4>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Summary Cards -->
+        <!-- Kartu Ringkasan -->
         <div class="row">
             <div class="col-xl-3 col-md-6">
                 <div class="card card-animate">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1 overflow-hidden">
-                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Shifts</p>
+                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Shift</p>
                             </div>
                         </div>
                         <div class="d-flex align-items-end justify-content-between mt-4">
                             <div>
                                 <h4 class="fs-22 fw-semibold ff-secondary mb-4">
-                                    <span class="counter-value" id="totalShifts">0</span>
+                                    <span class="counter-value" id="totalShift">0</span>
                                 </h4>
-                                <p class="text-muted mb-0 text-truncate">All time shifts</p>
+                                <p class="text-muted mb-0 text-truncate">Semua shift</p>
                             </div>
                             <div class="avatar-sm flex-shrink-0">
                                 <span class="avatar-title bg-primary-subtle rounded fs-3">
@@ -68,16 +68,16 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1 overflow-hidden">
-                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Days</p>
+                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Hari</p>
                             </div>
                         </div>
                         <div class="d-flex align-items-end justify-content-between mt-4">
                             <div>
                                 <h4 class="fs-22 fw-semibold ff-secondary mb-4">
-                                    <span class="counter-value" id="totalDays">0</span>
+                                    <span class="counter-value" id="totalHari">0</span>
                                 </h4>
                                 <p class="text-muted mb-0">
-                                    <span id="todayStatus" class="badge bg-success-subtle text-success"></span>
+                                    <span id="statusHariIni" class="badge bg-success-subtle text-success"></span>
                                 </p>
                             </div>
                             <div class="avatar-sm flex-shrink-0">
@@ -95,15 +95,15 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1 overflow-hidden">
-                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">This Week Shifts</p>
+                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Shift Minggu Ini</p>
                             </div>
                         </div>
                         <div class="d-flex align-items-end justify-content-between mt-4">
                             <div>
                                 <h4 class="fs-22 fw-semibold ff-secondary mb-4">
-                                    <span class="counter-value" id="weekShifts">0</span>
+                                    <span class="counter-value" id="shiftMingguIni">0</span>
                                 </h4>
-                                <p class="text-muted mb-0 text-truncate">Shifts this week</p>
+                                <p class="text-muted mb-0 text-truncate">Shift minggu ini</p>
                             </div>
                             <div class="avatar-sm flex-shrink-0">
                                 <span class="avatar-title bg-success-subtle rounded fs-3">
@@ -120,15 +120,15 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1 overflow-hidden">
-                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Last Update</p>
+                                <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Pembaruan Terakhir</p>
                             </div>
                         </div>
                         <div class="d-flex align-items-end justify-content-between mt-4">
                             <div>
                                 <h6 class="fs-16 fw-semibold mb-4">
-                                    <span id="lastUpdate">-</span>
+                                    <span id="pembaruanTerakhir">-</span>
                                 </h6>
-                                <p class="text-muted mb-0 text-truncate">Latest shift</p>
+                                <p class="text-muted mb-0 text-truncate">Shift terbaru</p>
                             </div>
                             <div class="avatar-sm flex-shrink-0">
                                 <span class="avatar-title bg-warning-subtle rounded fs-3">
@@ -141,7 +141,7 @@
             </div>
         </div>
 
-        <!-- Monthly Average Cards -->
+        <!-- Kartu Rata-rata Bulanan -->
         <div class="row">
             <div class="col-xl-6">
                 <div class="card card-height-100">
@@ -153,9 +153,9 @@
                                 </span>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-medium text-muted mb-1">Avg Drain Lumpur (This Month)</p>
+                                <p class="text-uppercase fw-medium text-muted mb-1">Rata-rata Drain Lumpur (Bulan Ini)</p>
                                 <h4 class="fs-22 fw-semibold ff-secondary mb-0">
-                                    <span id="monthlyDrainAvg">0</span> <small class="fs-14 text-muted">m³</small>
+                                    <span id="rataRataDrainBulanan">0</span> <small class="fs-14 text-muted">m³</small>
                                 </h4>
                             </div>
                         </div>
@@ -173,9 +173,9 @@
                                 </span>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-medium text-muted mb-1">Avg Running Hour SCP (This Month)</p>
+                                <p class="text-uppercase fw-medium text-muted mb-1">Rata-rata Jam Operasi SCP (Bulan Ini)</p>
                                 <h4 class="fs-22 fw-semibold ff-secondary mb-0">
-                                    <span id="monthlyRunningHourAvg">0</span> <small class="fs-14 text-muted">hours</small>
+                                    <span id="rataRataJamOperasiBulanan">0</span> <small class="fs-14 text-muted">jam</small>
                                 </h4>
                             </div>
                         </div>
@@ -184,112 +184,100 @@
             </div>
         </div>
 
-        <!-- Charts Row -->
+        <!-- Baris Grafik -->
         <div class="row">
-            <!-- Drain Lumpur Trend Chart -->
+            <!-- Grafik Tren Drain Lumpur -->
             <div class="col-xl-8">
                 <div class="card">
                     <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Drain Lumpur Trend</h4>
+                        <h4 class="card-title mb-0 flex-grow-1">Tren Drain Lumpur</h4>
                         <div class="flex-shrink-0">
                             <div class="d-flex gap-2">
-                                <input type="date" class="form-control form-control-sm" id="drainStartDate" style="width: 150px;">
-                                <span class="align-self-center">to</span>
-                                <input type="date" class="form-control form-control-sm" id="drainEndDate" style="width: 150px;">
-                                <button class="btn btn-sm btn-primary" onclick="updateDrainChart()">
+                                <input type="date" class="form-control form-control-sm" id="tanggalMulaiDrain" style="width: 150px;">
+                                <span class="align-self-center">s/d</span>
+                                <input type="date" class="form-control form-control-sm" id="tanggalAkhirDrain" style="width: 150px;">
+                                <button class="btn btn-sm btn-primary" onclick="perbaruiGrafikDrain()">
                                     <i class="bx bx-search-alt"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="drainLumpurChart"></div>
+                        <div id="grafikDrainLumpur"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Shift Breakdown Pie Chart -->
+            <!-- Grafik Distribusi Shift -->
             <div class="col-xl-4">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title mb-0">Distribution by Shift</h4>
+                        <h4 class="card-title mb-0">Distribusi per Kategori</h4>
                     </div>
                     <div class="card-body">
-                        <div id="shiftPieChart"></div>
+                        <div id="grafikDistribusi"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Running Hour Chart -->
+        <!-- Grafik Jam Operasi -->
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Running Hour SCP Trend</h4>
+                        <h4 class="card-title mb-0 flex-grow-1">Tren Jam Operasi SCP</h4>
                         <div class="flex-shrink-0">
                             <div class="d-flex gap-2">
-                                <input type="date" class="form-control form-control-sm" id="runningStartDate" style="width: 150px;">
-                                <span class="align-self-center">to</span>
-                                <input type="date" class="form-control form-control-sm" id="runningEndDate" style="width: 150px;">
-                                <button class="btn btn-sm btn-primary" onclick="updateRunningHourChart()">
+                                <input type="date" class="form-control form-control-sm" id="tanggalMulaiJamOperasi" style="width: 150px;">
+                                <span class="align-self-center">s/d</span>
+                                <input type="date" class="form-control form-control-sm" id="tanggalAkhirJamOperasi" style="width: 150px;">
+                                <button class="btn btn-sm btn-primary" onclick="perbaruiGrafikJamOperasi()">
                                     <i class="bx bx-search-alt"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="runningHourChart"></div>
+                        <div id="grafikJamOperasi"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Monthly Comparison Chart -->
+        <!-- Grafik Hasil Lumpur -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header align-items-center d-flex">
+                        <h4 class="card-title mb-0 flex-grow-1">Tren Hasil Lumpur</h4>
+                        <div class="flex-shrink-0">
+                            <div class="d-flex gap-2">
+                                <input type="date" class="form-control form-control-sm" id="tanggalMulaiHasilLumpur" style="width: 150px;">
+                                <span class="align-self-center">s/d</span>
+                                <input type="date" class="form-control form-control-sm" id="tanggalAkhirHasilLumpur" style="width: 150px;">
+                                <button class="btn btn-sm btn-primary" onclick="perbaruiGrafikHasilLumpur()">
+                                    <i class="bx bx-search-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="grafikHasilLumpur"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafik Perbandingan Bulanan -->
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title mb-0">6-Month Comparison</h4>
+                        <h4 class="card-title mb-0">Perbandingan 6 Bulan Terakhir</h4>
                     </div>
                     <div class="card-body">
-                        <div id="monthlyComparisonChart"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Records Table -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Recent Sludge Records</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover table-nowrap align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th scope="col">Tanggal</th>
-                                        <th scope="col">Shift</th>
-                                        <th scope="col">Drain Lumpur</th>
-                                        <th scope="col">Running Hour SCP</th>
-                                        <th scope="col">Total Daily</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="recentRecordsTable">
-                                    <tr>
-                                        <td colspan="5" class="text-center">
-                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                            Loading data...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <div id="grafikPerbandinganBulanan"></div>
                     </div>
                 </div>
             </div>
@@ -333,408 +321,369 @@
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-    // Chart instances
-    let drainLumpurChart, runningHourChart, shiftPieChart, monthlyComparisonChart;
+    // Instansi grafik
+    let grafikDrainLumpur, grafikJamOperasi, grafikDistribusi, grafikPerbandinganBulanan, grafikHasilLumpur;
 
-    // Load all data on page load
+    // Muat semua data saat halaman dibuka
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Dashboard loading started...');
+        console.log('Dashboard mulai dimuat...');
 
-        // Set default dates
-        setDefaultDates();
+        // Set tanggal default
+        setTanggalDefault();
 
-        // Initialize charts first
-        initCharts();
+        // Inisialisasi grafik terlebih dahulu
+        inisialisasiGrafik();
 
-        // Load data after charts are initialized
+        // Muat data setelah grafik siap
         setTimeout(function() {
-            loadStatistics();
-            updateDrainChart();
-            updateRunningHourChart();
-            updateShiftBreakdown();
-            loadMonthlyComparison();
-            loadRecentRecords();
+            muatStatistik();
+            perbaruiGrafikDrain();
+            perbaruiGrafikJamOperasi();
+            perbaruiDistribusi();
+            muatPerbandinganBulanan();
+            perbaruiGrafikHasilLumpur();
         }, 100);
     });
 
-    // Set default dates for filters
-    function setDefaultDates() {
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    // Set tanggal default untuk filter
+    function setTanggalDefault() {
+        const hari = new Date();
+        const awalBulan = new Date(hari.getFullYear(), hari.getMonth(), 1);
+        const akhirBulan = new Date(hari.getFullYear(), hari.getMonth() + 1, 0);
 
-        const formatDate = (date) => {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+        const formatTanggal = (date) => {
+            const tahun = date.getFullYear();
+            const bulan = String(date.getMonth() + 1).padStart(2, '0');
+            const tgl = String(date.getDate()).padStart(2, '0');
+            return `${tahun}-${bulan}-${tgl}`;
         };
 
-        document.getElementById('drainStartDate').value = formatDate(firstDay);
-        document.getElementById('drainEndDate').value = formatDate(lastDay);
-        document.getElementById('runningStartDate').value = formatDate(firstDay);
-        document.getElementById('runningEndDate').value = formatDate(lastDay);
+        document.getElementById('tanggalMulaiDrain').value = formatTanggal(awalBulan);
+        document.getElementById('tanggalAkhirDrain').value = formatTanggal(akhirBulan);
+        document.getElementById('tanggalMulaiJamOperasi').value = formatTanggal(awalBulan);
+        document.getElementById('tanggalAkhirJamOperasi').value = formatTanggal(akhirBulan);
+        document.getElementById('tanggalMulaiHasilLumpur').value = formatTanggal(awalBulan);
+        document.getElementById('tanggalAkhirHasilLumpur').value = formatTanggal(akhirBulan);
     }
 
     // =============================
-    // LOAD STATISTICS
+    // MUAT STATISTIK
     // =============================
 
-    async function loadStatistics() {
+    async function muatStatistik() {
         try {
             const response = await fetch('/api/wwtp-sludge/dashboard/statistics');
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const data = await response.json();
-            console.log('Statistics:', data);
+            console.log('Statistik:', data);
 
-            animateValue('totalShifts', 0, data.total_shifts || 0, 1000);
-            animateValue('totalDays', 0, data.total_days || 0, 1000);
-            animateValue('weekShifts', 0, data.shifts_this_week || 0, 1000);
+            animasiNilai('totalShift', 0, data.total_shifts || 0, 1000);
+            animasiNilai('totalHari', 0, data.total_days || 0, 1000);
+            animasiNilai('shiftMingguIni', 0, data.shifts_this_week || 0, 1000);
 
             if (data.last_update) {
-                const date = new Date(data.last_update);
-                const dateStr = date.toLocaleDateString('id-ID', {
+                const tgl = new Date(data.last_update);
+                const tglStr = tgl.toLocaleDateString('id-ID', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric'
                 });
-                const shiftLabel = data.last_shift ? ` (Shift ${data.last_shift})` : '';
-                document.getElementById('lastUpdate').textContent = dateStr + shiftLabel;
+                const labelShift = data.last_shift ? ` (Shift ${data.last_shift})` : '';
+                document.getElementById('pembaruanTerakhir').textContent = tglStr + labelShift;
             }
 
-            const statusText = (data.shifts_today || 0) === 0 ?
+            const teksStatus = (data.shifts_today || 0) === 0 ?
                 'Belum ada data hari ini' :
                 `${data.shifts_today} shift hari ini`;
-            const statusClass = (data.shifts_today || 0) === 0 ?
+            const kelasStatus = (data.shifts_today || 0) === 0 ?
                 'badge bg-warning-subtle text-warning' :
                 'badge bg-success-subtle text-success';
 
-            document.getElementById('todayStatus').textContent = statusText;
-            document.getElementById('todayStatus').className = statusClass;
+            document.getElementById('statusHariIni').textContent = teksStatus;
+            document.getElementById('statusHariIni').className = kelasStatus;
 
-            document.getElementById('monthlyDrainAvg').textContent = data.monthly_drain_avg || '0';
-            document.getElementById('monthlyRunningHourAvg').textContent = data.monthly_running_hour_avg || '0';
+            document.getElementById('rataRataDrainBulanan').textContent = data.monthly_drain_avg || '0';
+            document.getElementById('rataRataJamOperasiBulanan').textContent = data.monthly_running_hour_avg || '0';
 
         } catch (error) {
-            console.error('Error loading statistics:', error);
-            alert('Error loading statistics. Please check console for details.');
+            console.error('Gagal memuat statistik:', error);
+            alert('Gagal memuat statistik. Periksa konsol untuk detail.');
         }
     }
 
     // =============================
-    // UPDATE DRAIN LUMPUR CHART
+    // PERBARUI GRAFIK DRAIN LUMPUR
     // =============================
 
-    async function updateDrainChart() {
+    async function perbaruiGrafikDrain() {
         try {
-            const startDate = document.getElementById('drainStartDate').value;
-            const endDate = document.getElementById('drainEndDate').value;
+            const tanggalMulai = document.getElementById('tanggalMulaiDrain').value;
+            const tanggalAkhir = document.getElementById('tanggalAkhirDrain').value;
 
-            if (!startDate || !endDate) {
-                console.warn('Start or end date not set');
+            if (!tanggalMulai || !tanggalAkhir) {
+                console.warn('Tanggal belum diisi');
+                return;
+            }
+            if (new Date(tanggalMulai) > new Date(tanggalAkhir)) {
+                alert('Tanggal mulai harus sebelum tanggal akhir');
                 return;
             }
 
-            if (new Date(startDate) > new Date(endDate)) {
-                alert('Start date must be before end date');
-                return;
-            }
-
-            const response = await fetch(`/api/wwtp-sludge/dashboard/drain-chart?start_date=${startDate}&end_date=${endDate}`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            const response = await fetch(`/api/wwtp-sludge/dashboard/drain-chart?start_date=${tanggalMulai}&end_date=${tanggalAkhir}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const data = await response.json();
-            console.log('Drain chart data:', data);
+            console.log('Data grafik drain:', data);
 
             if (!data || data.length === 0) {
-                console.warn('No drain data available');
-                drainLumpurChart.updateSeries([{
+                grafikDrainLumpur.updateSeries([{
                     name: 'Drain Lumpur',
                     data: []
                 }]);
                 return;
             }
 
-            const categories = data.map(d => {
-                const date = new Date(d.tanggal);
-                return date.toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short'
-                });
-            });
+            const kategori = data.map(d => new Date(d.tanggal).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short'
+            }));
+            const nilaiDrain = data.map(d => parseFloat(d.total_drain) || 0);
 
-            const drainData = data.map(d => parseFloat(d.total_drain) || 0);
-
-            drainLumpurChart.updateOptions({
+            grafikDrainLumpur.updateOptions({
                 xaxis: {
-                    categories: categories
+                    categories: kategori
                 }
             });
-
-            drainLumpurChart.updateSeries([{
+            grafikDrainLumpur.updateSeries([{
                 name: 'Drain Lumpur',
-                data: drainData
+                data: nilaiDrain
             }]);
 
+            await perbaruiDistribusi();
+
         } catch (error) {
-            console.error('Error updating drain chart:', error);
-            alert('Error loading drain chart data. Please try again.');
+            console.error('Gagal memperbarui grafik drain:', error);
+            alert('Gagal memuat data grafik drain. Coba lagi.');
         }
     }
 
     // =============================
-    // UPDATE RUNNING HOUR CHART
+    // PERBARUI GRAFIK JAM OPERASI
     // =============================
 
-    async function updateRunningHourChart() {
+    async function perbaruiGrafikJamOperasi() {
         try {
-            const startDate = document.getElementById('runningStartDate').value;
-            const endDate = document.getElementById('runningEndDate').value;
+            const tanggalMulai = document.getElementById('tanggalMulaiJamOperasi').value;
+            const tanggalAkhir = document.getElementById('tanggalAkhirJamOperasi').value;
 
-            if (!startDate || !endDate) {
-                console.warn('Start or end date not set');
+            if (!tanggalMulai || !tanggalAkhir) {
+                console.warn('Tanggal belum diisi');
+                return;
+            }
+            if (new Date(tanggalMulai) > new Date(tanggalAkhir)) {
+                alert('Tanggal mulai harus sebelum tanggal akhir');
                 return;
             }
 
-            if (new Date(startDate) > new Date(endDate)) {
-                alert('Start date must be before end date');
-                return;
-            }
-
-            const response = await fetch(`/api/wwtp-sludge/dashboard/running-hour-chart?start_date=${startDate}&end_date=${endDate}`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            const response = await fetch(`/api/wwtp-sludge/dashboard/running-hour-chart?start_date=${tanggalMulai}&end_date=${tanggalAkhir}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const data = await response.json();
-            console.log('Running hour chart data:', data);
+            console.log('Data grafik jam operasi:', data);
 
             if (!data || data.length === 0) {
-                console.warn('No running hour data available');
-                runningHourChart.updateSeries([{
-                    name: 'Running Hour SCP',
+                grafikJamOperasi.updateSeries([{
+                    name: 'Jam Operasi SCP',
                     data: []
                 }]);
                 return;
             }
 
-            const categories = data.map(d => {
-                const date = new Date(d.tanggal);
-                return date.toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short'
-                });
-            });
+            const kategori = data.map(d => new Date(d.tanggal).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short'
+            }));
+            const nilaiJamOperasi = data.map(d => parseFloat(d.total_running_hour) || 0);
 
-            const runningData = data.map(d => parseFloat(d.total_running_hour) || 0);
-
-            runningHourChart.updateOptions({
+            grafikJamOperasi.updateOptions({
                 xaxis: {
-                    categories: categories
+                    categories: kategori
                 }
             });
-
-            runningHourChart.updateSeries([{
-                name: 'Running Hour SCP',
-                data: runningData
+            grafikJamOperasi.updateSeries([{
+                name: 'Jam Operasi SCP',
+                data: nilaiJamOperasi
             }]);
 
         } catch (error) {
-            console.error('Error updating running hour chart:', error);
-            alert('Error loading running hour chart data. Please try again.');
+            console.error('Gagal memperbarui grafik jam operasi:', error);
+            alert('Gagal memuat data grafik jam operasi. Coba lagi.');
         }
     }
 
     // =============================
-    // UPDATE SHIFT BREAKDOWN
+    // PERBARUI GRAFIK HASIL LUMPUR
     // =============================
 
-    async function updateShiftBreakdown() {
+    async function perbaruiGrafikHasilLumpur() {
         try {
-            const startDate = document.getElementById('drainStartDate').value;
-            const endDate = document.getElementById('drainEndDate').value;
+            const tanggalMulai = document.getElementById('tanggalMulaiHasilLumpur').value;
+            const tanggalAkhir = document.getElementById('tanggalAkhirHasilLumpur').value;
 
-            if (!startDate || !endDate) {
-                console.warn('Dates not set for shift breakdown');
+            if (!tanggalMulai || !tanggalAkhir) {
+                console.warn('Tanggal belum diisi');
+                return;
+            }
+            if (new Date(tanggalMulai) > new Date(tanggalAkhir)) {
+                alert('Tanggal mulai harus sebelum tanggal akhir');
                 return;
             }
 
-            const response = await fetch(`/api/wwtp-sludge/dashboard/shift-breakdown?start_date=${startDate}&end_date=${endDate}`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            const response = await fetch(`/api/wwtp-sludge/dashboard/hasil-lumpur-chart?start_date=${tanggalMulai}&end_date=${tanggalAkhir}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const data = await response.json();
-            console.log('Shift breakdown data:', data);
+            console.log('Data grafik hasil lumpur:', data);
 
             if (!data || data.length === 0) {
-                console.warn('No shift breakdown data available');
-                shiftPieChart.updateSeries([0, 0, 0]);
+                grafikHasilLumpur.updateSeries([{
+                    name: 'Hasil Lumpur',
+                    data: []
+                }]);
                 return;
             }
 
-            const labels = data.map(d => `Shift ${d.shift}`);
-            const values = data.map(d => parseFloat(d.total) || 0);
+            const kategori = data.map(d => new Date(d.tanggal).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short'
+            }));
+            const nilaiHasilLumpur = data.map(d => parseFloat(d.total_hasil_lumpur) || 0);
 
-            shiftPieChart.updateOptions({
-                labels: labels
+            grafikHasilLumpur.updateOptions({
+                xaxis: {
+                    categories: kategori
+                }
             });
-            shiftPieChart.updateSeries(values);
+            grafikHasilLumpur.updateSeries([{
+                name: 'Hasil Lumpur',
+                data: nilaiHasilLumpur
+            }]);
 
         } catch (error) {
-            console.error('Error updating shift breakdown:', error);
+            console.error('Gagal memperbarui grafik hasil lumpur:', error);
         }
     }
 
     // =============================
-    // LOAD MONTHLY COMPARISON
+    // PERBARUI DISTRIBUSI
     // =============================
 
-    async function loadMonthlyComparison() {
+    async function perbaruiDistribusi() {
         try {
-            const response = await fetch('/api/wwtp-sludge/dashboard/monthly-comparison');
+            const tanggalMulai = document.getElementById('tanggalMulaiDrain').value;
+            const tanggalAkhir = document.getElementById('tanggalAkhirDrain').value;
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('Monthly comparison:', data);
-
-            if (!data || data.length === 0) {
-                console.warn('No monthly comparison data available');
+            if (!tanggalMulai || !tanggalAkhir) {
+                console.warn('Tanggal belum diisi');
                 return;
             }
 
-            monthlyComparisonChart.updateOptions({
+            const response = await fetch(`/api/wwtp-sludge/dashboard/shift-breakdown?start_date=${tanggalMulai}&end_date=${tanggalAkhir}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+            console.log('Data distribusi:', data);
+
+            const totalDrain = parseFloat(data.total_drain_lumpur) || 0;
+            const totalJamOperasi = parseFloat(data.total_running_hour_scp) || 0;
+            const totalHasilLumpur = parseFloat(data.total_hasil_lumpur) || 0;
+
+            grafikDistribusi.updateOptions({
+                labels: ['Drain Lumpur', 'Jam Operasi SCP', 'Hasil Lumpur']
+            });
+            grafikDistribusi.updateSeries([totalDrain, totalJamOperasi, totalHasilLumpur]);
+
+        } catch (error) {
+            console.error('Gagal memperbarui distribusi:', error);
+        }
+    }
+
+    // =============================
+    // MUAT PERBANDINGAN BULANAN
+    // =============================
+
+    async function muatPerbandinganBulanan() {
+        try {
+            const response = await fetch('/api/wwtp-sludge/dashboard/monthly-comparison');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+            console.log('Perbandingan bulanan:', data);
+
+            if (!data || data.length === 0) {
+                console.warn('Tidak ada data perbandingan bulanan');
+                return;
+            }
+
+            grafikPerbandinganBulanan.updateOptions({
                 xaxis: {
                     categories: data.map(d => d.month)
                 }
             });
 
-            monthlyComparisonChart.updateSeries([{
+            grafikPerbandinganBulanan.updateSeries([{
                     name: 'Drain Lumpur',
                     data: data.map(d => parseFloat(d.drain_lumpur) || 0)
                 },
                 {
-                    name: 'Running Hour SCP',
+                    name: 'Jam Operasi SCP',
                     data: data.map(d => parseFloat(d.running_hour_scp) || 0)
                 }
             ]);
 
         } catch (error) {
-            console.error('Error loading monthly comparison:', error);
+            console.error('Gagal memuat perbandingan bulanan:', error);
         }
     }
 
     // =============================
-    // LOAD RECENT RECORDS
+    // FUNGSI UTILITAS
     // =============================
 
-    async function loadRecentRecords() {
-        try {
-            const response = await fetch('/api/wwtp-sludge/dashboard/recent-records/10');
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('Recent records:', data);
-
-            const tbody = document.getElementById('recentRecordsTable');
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No data available</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = data.map(record => {
-                const date = new Date(record.tanggal);
-                const formattedDate = date.toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                });
-
-                const shiftDetails = record.shifts.map(shift => {
-                    return `
-                        <div class="mb-1">
-                            <span class="badge bg-primary-subtle text-primary">Shift ${shift.shift}</span>
-                            <small class="text-muted ms-2">
-                                Drain: ${shift.drain_lumpur || 0} m³ | 
-                                Running Hour: ${shift.running_hour_scp || 0} hrs
-                            </small>
-                        </div>
-                    `;
-                }).join('');
-
-                return `
-                    <tr>
-                        <td><strong>${formattedDate}</strong></td>
-                        <td><span class="badge bg-info-subtle text-info">${record.shift_count} shifts</span></td>
-                        <td><strong>${(record.total_drain || 0).toFixed(2)} m³</strong></td>
-                        <td><strong>${(record.total_running_hour || 0).toFixed(2)} hrs</strong></td>
-                        <td>${shiftDetails}</td>
-                    </tr>
-                `;
-            }).join('');
-
-        } catch (error) {
-            console.error('Error loading recent records:', error);
-            document.getElementById('recentRecordsTable').innerHTML =
-                '<tr><td colspan="5" class="text-center text-danger">Error loading data</td></tr>';
-        }
-    }
-
-    // =============================
-    // UTILITY FUNCTIONS
-    // =============================
-
-    function animateValue(id, start, end, duration) {
-        const obj = document.getElementById(id);
-        if (!obj) {
-            console.warn(`Element with id '${id}' not found`);
+    function animasiNilai(id, awal, akhir, durasi) {
+        const elemen = document.getElementById(id);
+        if (!elemen) {
+            console.warn(`Elemen dengan id '${id}' tidak ditemukan`);
             return;
         }
 
-        const range = end - start;
-        if (range === 0) {
-            obj.textContent = end;
+        const rentang = akhir - awal;
+        if (rentang === 0) {
+            elemen.textContent = akhir;
             return;
         }
 
-        const increment = end > start ? 1 : -1;
-        const stepTime = Math.abs(Math.floor(duration / range));
-        let current = start;
+        const langkah = akhir > awal ? 1 : -1;
+        const waktuLangkah = Math.abs(Math.floor(durasi / rentang));
+        let sekarang = awal;
 
         const timer = setInterval(function() {
-            current += increment;
-            obj.textContent = current;
-            if (current == end) {
-                clearInterval(timer);
-            }
-        }, stepTime);
+            sekarang += langkah;
+            elemen.textContent = sekarang;
+            if (sekarang == akhir) clearInterval(timer);
+        }, waktuLangkah);
     }
 
     // =============================
-    // INITIALIZE CHARTS
+    // INISIALISASI GRAFIK
     // =============================
 
-    function initCharts() {
-        console.log('Initializing charts...');
+    function inisialisasiGrafik() {
+        console.log('Menginisialisasi grafik...');
 
-        // Common chart options
-        const areaChartOptions = {
+        // Opsi grafik area umum
+        const opsiGrafikArea = {
             chart: {
                 type: 'area',
                 height: 320,
@@ -786,9 +735,9 @@
             }
         };
 
-        // Drain Lumpur Chart
-        drainLumpurChart = new ApexCharts(document.querySelector("#drainLumpurChart"), {
-            ...areaChartOptions,
+        // Grafik Drain Lumpur
+        grafikDrainLumpur = new ApexCharts(document.querySelector("#grafikDrainLumpur"), {
+            ...opsiGrafikArea,
             colors: ['#4bc0c0'],
             series: [{
                 name: 'Drain Lumpur',
@@ -799,28 +748,28 @@
                     text: 'Volume (m³)'
                 },
                 labels: {
-                    formatter: (value) => value ? value.toFixed(0) + ' m³' : '0 m³'
+                    formatter: (v) => v ? v.toFixed(0) + ' m³' : '0 m³'
                 }
             },
             tooltip: {
                 y: {
-                    formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
+                    formatter: (v) => v ? v.toFixed(2) + ' m³' : '0 m³'
                 }
             }
         });
-        drainLumpurChart.render();
+        grafikDrainLumpur.render();
 
-        // Running Hour Chart
-        runningHourChart = new ApexCharts(document.querySelector("#runningHourChart"), {
-            ...areaChartOptions,
+        // Grafik Jam Operasi
+        grafikJamOperasi = new ApexCharts(document.querySelector("#grafikJamOperasi"), {
+            ...opsiGrafikArea,
             colors: ['#ff6384'],
             series: [{
-                name: 'Running Hour SCP',
+                name: 'Jam Operasi SCP',
                 data: []
             }],
             dataLabels: {
                 enabled: true,
-                formatter: (val) => val ? val.toFixed(0) + ' hrs' : '0 hrs',
+                formatter: (val) => val ? val.toFixed(0) + ' jam' : '0 jam',
                 style: {
                     fontSize: '12px',
                     colors: ['#000']
@@ -828,22 +777,46 @@
             },
             yaxis: {
                 title: {
-                    text: 'Hours'
+                    text: 'Jam'
                 },
                 labels: {
-                    formatter: (value) => value ? value.toFixed(0) + ' hrs' : '0 hrs'
+                    formatter: (v) => v ? v.toFixed(0) + ' jam' : '0 jam'
                 }
             },
             tooltip: {
                 y: {
-                    formatter: (value) => value ? value.toFixed(2) + ' hrs' : '0 hrs'
+                    formatter: (v) => v ? v.toFixed(2) + ' jam' : '0 jam'
                 }
             }
         });
-        runningHourChart.render();
+        grafikJamOperasi.render();
 
-        // Shift Pie Chart
-        shiftPieChart = new ApexCharts(document.querySelector("#shiftPieChart"), {
+        // Grafik Hasil Lumpur
+        grafikHasilLumpur = new ApexCharts(document.querySelector("#grafikHasilLumpur"), {
+            ...opsiGrafikArea,
+            colors: ['#36a2eb'],
+            series: [{
+                name: 'Hasil Lumpur',
+                data: []
+            }],
+            yaxis: {
+                title: {
+                    text: 'Volume (ton)'
+                },
+                labels: {
+                    formatter: (v) => v ? v.toFixed(0) + ' m³' : '0 m³'
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: (v) => v ? v.toFixed(2) + ' m³' : '0 m³'
+                }
+            }
+        });
+        grafikHasilLumpur.render();
+
+        // Grafik Distribusi (Donut)
+        grafikDistribusi = new ApexCharts(document.querySelector("#grafikDistribusi"), {
             chart: {
                 type: 'donut',
                 height: 320,
@@ -855,18 +828,26 @@
             },
             colors: ['#4bc0c0', '#ff6384', '#36a2eb'],
             series: [0, 0, 0],
-            labels: ['Shift 1', 'Shift 2', 'Shift 3'],
+            labels: ['Drain Lumpur', 'Jam Operasi SCP', 'Hasil Lumpur'],
             legend: {
                 position: 'bottom',
                 horizontalAlign: 'center'
             },
             dataLabels: {
                 enabled: true,
-                formatter: (val, opts) => val.toFixed(1) + '%'
+                formatter: (val, opts) => {
+                    const nilai = opts.w.globals.series[opts.seriesIndex];
+                    return nilai.toFixed(1);
+                }
             },
             tooltip: {
                 y: {
-                    formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
+                    formatter: (nilai, {
+                        seriesIndex
+                    }) => {
+                        if (seriesIndex === 1) return nilai ? nilai.toFixed(2) + ' jam' : '0 jam';
+                        return nilai ? nilai.toFixed(2) + ' m³' : '0 m³';
+                    }
                 }
             },
             plotOptions: {
@@ -880,7 +861,7 @@
                                 label: 'Total',
                                 formatter: (w) => {
                                     const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                                    return total.toFixed(2) + ' m³';
+                                    return total.toFixed(2);
                                 }
                             }
                         }
@@ -888,16 +869,16 @@
                 }
             }
         });
-        shiftPieChart.render();
+        grafikDistribusi.render();
 
-        // Monthly Comparison Chart
-        monthlyComparisonChart = new ApexCharts(document.querySelector("#monthlyComparisonChart"), {
+        // Grafik Perbandingan Bulanan
+        grafikPerbandinganBulanan = new ApexCharts(document.querySelector("#grafikPerbandinganBulanan"), {
             series: [{
                     name: 'Drain Lumpur',
                     data: []
                 },
                 {
-                    name: 'Running Hour SCP',
+                    name: 'Jam Operasi SCP',
                     data: []
                 }
             ],
@@ -923,11 +904,10 @@
             },
             dataLabels: {
                 enabled: true,
-                formatter: (value, opts) => {
-                    const seriesIndex = opts.seriesIndex;
-                    return seriesIndex === 0 ?
-                        (value ? value.toFixed(0) + ' m³' : '0 m³') :
-                        (value ? value.toFixed(0) + ' hrs' : '0 hrs');
+                formatter: (nilai, opts) => {
+                    return opts.seriesIndex === 0 ?
+                        (nilai ? nilai.toFixed(0) + ' m³' : '0 m³') :
+                        (nilai ? nilai.toFixed(0) + ' jam' : '0 jam');
                 },
                 style: {
                     fontSize: '12px',
@@ -947,16 +927,16 @@
                         text: 'Drain Lumpur (m³)'
                     },
                     labels: {
-                        formatter: (value) => value ? value.toFixed(0) + ' m³' : '0 m³'
+                        formatter: (v) => v ? v.toFixed(0) + ' m³' : '0 m³'
                     }
                 },
                 {
                     opposite: true,
                     title: {
-                        text: 'Running Hour (hrs)'
+                        text: 'Jam Operasi (jam)'
                     },
                     labels: {
-                        formatter: (value) => value ? value.toFixed(0) + ' hrs' : '0 hrs'
+                        formatter: (v) => v ? v.toFixed(0) + ' jam' : '0 jam'
                     }
                 }
             ],
@@ -965,10 +945,10 @@
             },
             tooltip: {
                 y: [{
-                        formatter: (value) => value ? value.toFixed(2) + ' m³' : '0 m³'
+                        formatter: (v) => v ? v.toFixed(2) + ' m³' : '0 m³'
                     },
                     {
-                        formatter: (value) => value ? value.toFixed(2) + ' hrs' : '0 hrs'
+                        formatter: (v) => v ? v.toFixed(2) + ' jam' : '0 jam'
                     }
                 ]
             },
@@ -980,9 +960,9 @@
                 borderColor: '#f1f1f1'
             }
         });
-        monthlyComparisonChart.render();
+        grafikPerbandinganBulanan.render();
 
-        console.log('All charts initialized');
+        console.log('Semua grafik berhasil diinisialisasi');
     }
 </script>
 @endsection

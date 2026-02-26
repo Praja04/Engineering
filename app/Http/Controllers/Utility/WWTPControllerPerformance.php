@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Utility\WwtpPerformanceWeek;
 use App\Models\Utility\WwtpPerformanceRecord;
 use App\Models\Utility\WwtpPerformancePHharian;
+use App\Models\Utility\WwtpJenisSample;
+use App\Models\Utility\WwtpPerformanceSample;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Carbon;
 
@@ -303,6 +305,111 @@ class WWTPControllerPerformance extends Controller
         return response()->json(['message' => 'Data PH harian berhasil dihapus.']);
     }
 
+
+    ////////////// Sample            ////////////////////
+    public function indexSample()
+    {
+        $data = WwtpPerformanceSample::orderBy('tanggal', 'desc')
+        ->get();
+
+        return response()->json($data);
+    }
+    public function getJenisSampel()
+    {
+        $data = WwtpJenisSample::orderBy('nama_sampel', 'asc')->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data
+        ]);
+    }
+
+
+    public function storeSample(Request $request)
+    {
+        $validated = $request->validate([
+            'tanggal'   => 'required|date',
+            'id_sampel' => 'required|exists:wwtp_jenis_sampel,id',
+            'tss'       => 'required|numeric|min:0',
+            'sv30'      => 'required|numeric|min:0',
+            'ph'        => 'required|numeric|min:0|max:14',
+            'mlss'      => 'required|numeric|min:0',
+            'svl'       => 'required|numeric|min:0',
+            'do'        => 'required|numeric|min:0',
+        ]);
+
+        $jenisSampel = WwtpJenisSample::findOrFail($request->id_sampel);
+
+        $sample = WwtpPerformanceSample::create([
+            'tanggal'      => $validated['tanggal'],
+            'jenis_sampel' => $jenisSampel->nama_sampel,
+            'id_sampel'    => $jenisSampel->id,
+            'tss'          => $validated['tss'],
+            'sv30'         => $validated['sv30'],
+            'ph'           => $validated['ph'],
+            'mlss'         => $validated['mlss'],
+            'svl'          => $validated['svl'],
+            'do'           => $validated['do'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data performance sampel berhasil ditambahkan.',
+            'data'    => $sample->load('jenisSampel'),
+        ], 201);
+    }
+
+    public function showsample(WwtpPerformanceSample $wwtpPerformanceSample)
+    {
+        return response()->json([
+            'success' => true,
+            'data'    => $wwtpPerformanceSample->load('jenisSampel'),
+        ]);
+    }
+
+    public function updateSample(Request $request, WwtpPerformanceSample $wwtpPerformanceSample)
+    {
+        $validated = $request->validate([
+            'tanggal'   => 'required|date',
+            'id_sampel' => 'required|exists:wwtp_jenis_sampel,id',
+            'tss'       => 'required|numeric|min:0',
+            'sv30'      => 'required|numeric|min:0',
+            'ph'        => 'required|numeric|min:0|max:14',
+            'mlss'      => 'required|numeric|min:0',
+            'svl'       => 'required|numeric|min:0',
+            'do'        => 'required|numeric|min:0',
+        ]);
+
+        $jenisSampel = WwtpJenisSample::findOrFail($request->id_sampel);
+
+        $wwtpPerformanceSample->update([
+            'tanggal'      => $validated['tanggal'],
+            'jenis_sampel' => $jenisSampel->nama_sampel,
+            'id_sampel'    => $jenisSampel->id,
+            'tss'          => $validated['tss'],
+            'sv30'         => $validated['sv30'],
+            'ph'           => $validated['ph'],
+            'mlss'         => $validated['mlss'],
+            'svl'          => $validated['svl'],
+            'do'           => $validated['do'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data performance sampel berhasil diperbarui.',
+            'data'    => $wwtpPerformanceSample->load('jenisSampel'),
+        ]);
+    }
+
+    public function destroySample(WwtpPerformanceSample $wwtpPerformanceSample)
+    {
+        $wwtpPerformanceSample->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data performance sampel berhasil dihapus.',
+        ]);
+    }
     //////////////API STATISTIK WWTP/////////////////////
     public function getStatistics()
     {
@@ -495,22 +602,31 @@ class WWTPControllerPerformance extends Controller
      */
     public function getShiftBreakdownData(Request $request)
     {
-        // Default: start of current month to end of current month
-        $startDate = $request->query('start_date', Carbon::now()->startOfMonth()->toDateString());
-        $endDate = $request->query('end_date', Carbon::now()->endOfMonth()->toDateString());
+        $startDate = $request->query('start_date')
+            ? Carbon::parse($request->query('start_date'))->startOfDay()
+            : Carbon::now()->startOfDay();
 
-        $records = WwtpPerformancePHharian::whereBetween('tanggal', [$startDate, $endDate])
-            ->get()
-            ->groupBy('shift')
-            ->map(function ($group, $shift) {
-                return [
-                    'shift' => $shift,
-                    'count' => $group->count(),
-                ];
-            })
-            ->values();
+        $endDate = $request->query('end_date')
+            ? Carbon::parse($request->query('end_date'))->endOfDay()
+            : Carbon::now()->endOfDay();
 
-        return response()->json($records);
+
+
+        $data = WwtpPerformancePHharian::whereBetween('tanggal', [$startDate, $endDate])
+            ->selectRaw('
+        SUM(equalisasi_1) as total_equalisasi_1,
+        SUM(equalisasi_2) as total_equalisasi_2,
+        SUM(netralisasi) as total_netralisasi,
+        SUM(sedimentasi_1) as total_sedimentasi_1,
+        SUM(sedimentasi_2) as total_sedimentasi_2,
+        SUM(outlet_anaerob) as total_outlet_anaerob,
+        SUM(aerob) as total_aerob,
+        SUM(lumpur_aktif) as total_lumpur_aktif,
+        SUM(clarifier_2) as total_clarifier_2,
+        SUM(outlet) as total_outlet')
+            ->first();
+
+        return response()->json($data);
     }
 
     /**
@@ -587,5 +703,157 @@ class WWTPControllerPerformance extends Controller
         }
 
         return response()->json($data);
+    }
+
+
+
+
+
+    /**
+     * Get chart data sample dengan date range filter
+     * Grouped by tanggal, average per jenis sampel
+     */
+    public function getChartDataSample(Request $request)
+    {
+        $startDate = $request->query('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate   = $request->query('end_date',   Carbon::now()->endOfMonth()->toDateString());
+
+        $records = WwtpPerformanceSample::with('jenisSampel')
+        ->whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal', 'asc')
+            ->get()
+            ->groupBy('tanggal')
+            ->map(function ($dayRecords) {
+                // Group lagi per jenis sampel dalam satu hari
+                $perJenis = $dayRecords->groupBy('id_sampel')->map(function ($group) {
+                    $first = $group->first();
+                    return [
+                        'id_sampel'    => $first->id_sampel,
+                        'jenis_sampel' => $first->jenisSampel?->nama_sampel ?? $first->jenis_sampel,
+                        'avg_tss'      => round($group->avg('tss'),  2),
+                        'avg_sv30'     => round($group->avg('sv30'), 2),
+                        'avg_ph'       => round($group->avg('ph'),   2),
+                        'avg_mlss'     => round($group->avg('mlss'), 2),
+                        'avg_svl'      => round($group->avg('svl'),  2),
+                        'avg_do'       => round($group->avg('do'),   2),
+                        'count'        => $group->count(),
+                    ];
+                })->values();
+
+                return [
+                    'tanggal'    => $dayRecords->first()->tanggal,
+                    'per_jenis'  => $perJenis,
+                    'total_count' => $dayRecords->count(),
+                ];
+            })
+            ->values();
+
+        return response()->json($records);
+    }
+
+    /**
+     * Get monthly comparison sample (last 6 months)
+     * Per jenis sampel rata-rata per bulan
+     */
+    public function getMonthlyComparisonSample()
+    {
+        $months = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $date       = Carbon::now()->subMonths($i);
+            $startMonth = $date->copy()->startOfMonth();
+            $endMonth   = $date->copy()->endOfMonth();
+
+            $monthlyRecords = WwtpPerformanceSample::with('jenisSampel')
+            ->whereBetween('tanggal', [$startMonth, $endMonth])
+                ->get();
+
+            $perJenis = $monthlyRecords->groupBy('id_sampel')->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'id_sampel'    => $first->id_sampel,
+                    'jenis_sampel' => $first->jenisSampel?->nama_sampel ?? $first->jenis_sampel,
+                    'avg_tss'      => round($group->avg('tss'),  2),
+                    'avg_sv30'     => round($group->avg('sv30'), 2),
+                    'avg_ph'       => round($group->avg('ph'),   2),
+                    'avg_mlss'     => round($group->avg('mlss'), 2),
+                    'avg_svl'      => round($group->avg('svl'),  2),
+                    'avg_do'       => round($group->avg('do'),   2),
+                    'count'        => $group->count(),
+                ];
+            })->values();
+
+            $months[] = [
+                'month'       => $date->format('M Y'),
+                'total_count' => $monthlyRecords->count(),
+                'per_jenis'   => $perJenis,
+            ];
+        }
+
+        return response()->json($months);
+    }
+
+    /**
+     * Get statistik sample (untuk summary card di dashboard)
+     */
+    public function getStatisticsSample()
+    {
+        $total = WwtpPerformanceSample::count();
+
+        $today      = Carbon::today()->toDateString();
+        $startMonth = Carbon::now()->startOfMonth()->toDateString();
+        $endMonth   = Carbon::now()->endOfMonth()->toDateString();
+        $startWeek  = Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $endWeek    = Carbon::now()->endOfWeek(Carbon::SUNDAY)->toDateString();
+
+        $todayCount   = WwtpPerformanceSample::whereDate('tanggal', $today)->count();
+        $weekCount    = WwtpPerformanceSample::whereBetween('tanggal', [$startWeek, $endWeek])->count();
+        $monthCount   = WwtpPerformanceSample::whereBetween('tanggal', [$startMonth, $endMonth])->count();
+        $lastUpdate   = WwtpPerformanceSample::orderBy('created_at', 'desc')->first();
+
+        // Rata-rata parameter bulan ini per jenis sampel
+        $monthlySummary = WwtpPerformanceSample::with('jenisSampel')
+        ->whereBetween('tanggal', [$startMonth, $endMonth])
+            ->get()
+            ->groupBy('id_sampel')
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'jenis_sampel' => $first->jenisSampel?->nama_sampel ?? $first->jenis_sampel,
+                    'avg_tss'      => round($group->avg('tss'),  2),
+                    'avg_sv30'     => round($group->avg('sv30'), 2),
+                    'avg_ph'       => round($group->avg('ph'),   2),
+                    'avg_mlss'     => round($group->avg('mlss'), 2),
+                    'avg_svl'      => round($group->avg('svl'),  2),
+                    'avg_do'       => round($group->avg('do'),   2),
+                    'count'        => $group->count(),
+                ];
+            })->values();
+
+        return response()->json([
+            'total'           => $total,
+            'today_count'     => $todayCount,
+            'week_count'      => $weekCount,
+            'month_count'     => $monthCount,
+            'last_update'     => $lastUpdate?->created_at,
+            'monthly_summary' => $monthlySummary,
+        ]);
+    }
+
+    /**
+     * Get recent sample records
+     */
+    public function getRecentRecordsSample($limit = 10)
+    {
+        $data = WwtpPerformanceSample::with('jenisSampel')
+        ->orderBy('tanggal', 'desc')
+        ->orderBy('created_at', 'desc')
+        ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data
+        ]);
     }
 }

@@ -13,6 +13,10 @@ class DashboardBoilerController extends Controller
     {
         return view('boiler.dashboard');
     }
+    public function dashboard_realtime()
+    {
+        return view('dashboard.boiler.dashboard_boiler');
+    }
 
     public function viewDashboardKpi()
     {
