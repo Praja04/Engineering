@@ -5,7 +5,7 @@ use App\Http\Controllers\Boiler\BoilerController;
 use App\Http\Controllers\Boiler\SensorBoilerController;
 use App\Http\Controllers\Boiler\DashboardBoilerController;
 
-Route::middleware(['auth', 'access'])->group(function () {
+Route::middleware(['auth', 'access:Engineering,Engineering WWTP, Engineering Utility'])->group(function () {
     Route::prefix('boiler')->group(function () {
 
         Route::get('/form', [BoilerController::class, 'viewForm'])->name('boiler.form');
