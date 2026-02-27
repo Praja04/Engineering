@@ -192,7 +192,8 @@ class KalibrasiCertificateController extends Controller
 
             if (!$stillPending) {
                 $approval->sertifikat->update([
-                    'status' => 'approved'
+                    'status' => 'approved',
+                    'issued_at' => now()
                 ]);
             }
 
