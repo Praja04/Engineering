@@ -297,8 +297,9 @@
 @endsection
 
 @section('scripts')
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+    <script src="{{ asset('material/assets/js/highcharts.js') }}"></script>
+    {{-- <script src="https://code.highcharts.com/highcharts.js"></script> --}}
+    {{-- <script src="https://code.highcharts.com/stock/highstock.js"></script> --}}
     <script>
         $(document).ready(function() {
             let currentStartDate = null;
@@ -392,7 +393,8 @@
                                     <b>${tanggal}</b><br/>
                                     Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 1, '.', ',')} Ton</b><br/>
                                     Steam: <b>${Highcharts.numberFormat(row.steam, 1, '.', ',')} m³</b><br/>
-                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
+                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b></br>
+                                    Batas Ambang: <b>175</b>
                                 `;
                             }
                         },
