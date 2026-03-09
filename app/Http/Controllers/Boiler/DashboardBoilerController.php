@@ -87,7 +87,7 @@ class DashboardBoilerController extends Controller
 
         // Jika tidak ada filter, ambil hanya 30 data terakhir
         if (!$start && !$end) {
-            $dailyQuery->orderBy('date', 'desc')->limit(30);
+            $dailyQuery->orderBy('date', 'asc')->limit(30);
         } else {
             $dailyQuery->orderBy('date', 'asc');
         }
@@ -114,7 +114,7 @@ class DashboardBoilerController extends Controller
 
         // Default limit jika tidak ada filter
         if (!$start && !$end) {
-            $fgWeeklyQuery->orderBy('start_date', 'desc')->limit(30);
+            $fgWeeklyQuery->orderBy('start_date', 'asc')->limit(30);
         } else {
             $fgWeeklyQuery->orderBy('start_date');
         }
@@ -180,7 +180,7 @@ class DashboardBoilerController extends Controller
 
         // Default load hanya 30 data terakhir
         if (!$start && !$end) {
-            $dailyQuery->orderBy('date', 'desc')->limit(30);
+            $dailyQuery->orderBy('date', 'asc')->limit(30);
         } else {
             $dailyQuery->orderBy('date', 'asc');
         }
@@ -207,7 +207,7 @@ class DashboardBoilerController extends Controller
 
         // Default load hanya 30 minggu
         if (!$start && !$end) {
-            $fgWeeklyQuery->orderBy('start_date', 'desc')->limit(30);
+            $fgWeeklyQuery->orderBy('start_date', 'asc')->limit(30);
         } else {
             $fgWeeklyQuery->orderBy('start_date');
         }
@@ -274,7 +274,7 @@ class DashboardBoilerController extends Controller
         }
 
         if (!$start && !$end) {
-            $dailyQuery->orderBy('date', 'desc')->limit(365); // cukup 1 tahun
+            $dailyQuery->orderBy('date', 'asc')->limit(365); // cukup 1 tahun
         } else {
             $dailyQuery->orderBy('date', 'asc');
         }
@@ -304,7 +304,7 @@ class DashboardBoilerController extends Controller
         }
 
         if (!$startMonth && !$endMonth) {
-            $monthlyQuery->orderBy('month', 'desc')->limit(30);
+            $monthlyQuery->orderBy('month', 'asc')->limit(30);
         } else {
             $monthlyQuery->orderBy('month', 'asc');
         }
@@ -390,7 +390,7 @@ class DashboardBoilerController extends Controller
         }
 
         if (!$start && !$end) {
-            $dailyQuery->orderBy('date', 'desc')->limit(365);
+            $dailyQuery->orderBy('date', 'asc')->limit(365);
         } else {
             $dailyQuery->orderBy('date', 'asc');
         }
@@ -419,7 +419,7 @@ class DashboardBoilerController extends Controller
         }
 
         if (!$startMonth && !$endMonth) {
-            $monthlyQuery->orderBy('month', 'desc')->limit(30);
+            $monthlyQuery->orderBy('month', 'asc')->limit(30);
         } else {
             $monthlyQuery->orderBy('month', 'asc');
         }
