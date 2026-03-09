@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Kalibrasi\AlatKalibrasiModel;
 use App\Models\Kalibrasi\KalibrasiModel;
 use App\Models\Kalibrasi\KalibrasiSertifikatModel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -452,66 +453,6 @@ class KalibrasiController extends Controller
         }
     }
 
-    // Get Data Kalibrasi in Approval
-    public function getData($id)
-    {
-        try {
-            // cari data kalibrasi berdasarkan ID
-            $kalibrasi = KalibrasiModel::with('alat:id,kode_alat,nama_alat')->findOrFail($id);
-
-            // cek jenis kalibrasi
-            $jenis = strtolower($kalibrasi->jenis_kalibrasi);
-            $relasi = null;
-
-            switch ($jenis) {
-                case 'pressure':
-                    $relasi = [
-                        'pressure' => function ($q) {
-                            $q->orderBy('titik_kalibrasi');
-                        },
-                        'pressureGabungan',
-                    ];
-                    break;
-
-                case 'temperature':
-                    $relasi = [
-                        'temperature',
-                        'temperatureGabungan',
-                    ];
-                    break;
-
-                case 'mass':
-                    $relasi = [
-                        'mass',
-                        'massGabungan',
-                    ];
-                    break;
-
-                default:
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Jenis kalibrasi tidak dikenali: ' . $jenis
-                    ], 400);
-            }
-
-            // ambil data lengkap sesuai jenisnya
-            $data = KalibrasiModel::with(array_merge($relasi, ['alat:id,kode_alat,nama_alat']))
-                ->where('id', $id)
-                ->first();
-
-            return response()->json([
-                'status' => 'success',
-                'jenis_kalibrasi' => $jenis,
-                'data' => $data
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
     public function detail($id)
     {
         $main = KalibrasiModel::with(['alat', 'user',])->findOrFail($id);
@@ -602,5 +543,61 @@ class KalibrasiController extends Controller
             default:
                 abort(404);
         }
+    }
+
+    // Sticker
+
+    public function viewSticker()
+    {
+        return view('kalibrasi.sticker.sticker_kalibrasi');
+    }
+
+    public function getDataSticker(Request $request)
+    {
+        $query = KalibrasiSertifikatModel::with(['kalibrasi.alat', 'kalibrasi.user'])
+            ->where('status', 'approved');
+
+        // Filter kode alat
+        if ($request->kode_alat) {
+            $query->whereHas('kalibrasi.alat', function ($q) use ($request) {
+                $q->where('kode_alat', 'like', '%' . $request->kode_alat . '%');
+            });
+        }
+
+        // Filter tanggal
+        if ($request->tanggal) {
+            $query->whereHas('kalibrasi', function ($q) use ($request) {
+                $q->whereDate('tgl_kalibrasi', $request->tanggal);
+            });
+        }
+
+        $data = $query->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return response()->json($data);
+    }
+
+    public function downloadSticker($id)
+    {
+        $data = KalibrasiSertifikatModel::with(['kalibrasi.alat', 'kalibrasi.user'])
+            ->findOrFail($id);
+
+        $kalibrasi = $data->kalibrasi;
+
+        // 10 cm x 5 cm dalam point
+        $width  = 283.46;  // 10 cm
+        $height = 113.38;  //  cm
+
+        $customPaper = [0, 0, 283.46, 113.38];
+
+        $pdf = Pdf::loadView('kalibrasi.sticker.sticker_pdf', compact('kalibrasi'))
+            ->setPaper($customPaper)
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultPaperSize' => 'custom',
+            ]);
+
+        return $pdf->stream('sticker-kalibrasi.pdf');
     }
 }

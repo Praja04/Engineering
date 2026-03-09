@@ -49,6 +49,9 @@ Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
 
         Route::get('/schedule', [KalibrasiController::class, 'viewSchedule'])->name('kalibrasi.schedule');
         Route::get('/certificate', [KalibrasiController::class, 'viewCertificate'])->name('kalibrasi.certificate');
+        Route::get('/sticker', [KalibrasiController::class, 'viewSticker'])->name('kalibrasi.sticker');
+        Route::get('/sticker/get-data', [KalibrasiController::class, 'getDataSticker'])->name('kalibrasi.sticker.data');
+        Route::get('/sticker/download/{id}', [KalibrasiController::class, 'downloadSticker'])->name('kalibrasi.sticker.download');
         Route::post('/certificate/req-approval/{id}', [KalibrasiCertificateController::class, 'reqApproval'])->name('kalibrasi.certificate.req-approval');
         // Route::get('/certificate/approvals/', [KalibrasiCertificateController::class, 'showApprovalPage'])->name('kalibrasi.certificate.approval.detail');
         Route::get('/certificate/data', [KalibrasiCertificateController::class, 'getDataCertificate']);

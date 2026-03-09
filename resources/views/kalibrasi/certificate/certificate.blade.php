@@ -126,7 +126,7 @@
 
             <!-- Certificate List -->
             <div class="card shadow-sm rounded-3" data-aos="fade-up">
-                <div class="card-header bg-white border-0">
+                <div class="card-header border-0">
                     <h5 class="mb-0 fw-semibold">Daftar Sertifikat Kalibrasi</h5>
                 </div>
                 <div class="card-body">
@@ -356,7 +356,9 @@
                                                         ${actionButtons}
                                                     @endif
                                                     ${sertifButtons}
-                                                    ${deleteButtons}
+                                                    @if (Auth::user()->jabatan === 'foreman')
+                                                        ${deleteButtons}
+                                                    @endif
                                                 </div>
                                             </td>
                                         @endif
