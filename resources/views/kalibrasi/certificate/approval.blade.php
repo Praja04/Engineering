@@ -19,7 +19,7 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered align-middle text-nowrap">
-                            <thead>
+                            <thead class="bg-light">
                                 <tr>
                                     <th class="text-center">No</th>
                                     <th>Kode Alat</th>
@@ -41,7 +41,7 @@
                                         </td>
                                         <td>{{ $approval->sertifikat->kalibrasi->user->username ?? '-' }}</td>
                                         <td class="text-center">
-                                            <span class="badge bg-warning">Pending</span>
+                                            <span class="badge badge-soft-warning text-uppercase">Pending</span>
                                         </td>
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-info btn-detail"
