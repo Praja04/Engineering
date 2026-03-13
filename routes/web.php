@@ -18,8 +18,21 @@ Route::middleware('web')->group(function () {
 ///////////   View Routes   ///////////
 Route::view('/dashboard', 'dashboard')->name('dashboard');
 Route::view('/home', 'home')->name('home');
-Route::middleware('auth')->group(function () {
 
+Route::middleware('auth')->group(function () {
+    Route::get('/ejo', function () {
+        return view('ejo.index');
+    });
+    Route::get('/ejo/dashboard', function () {
+        return view('dashboard.ejo.dashboard');
+    })->name('ejo.dashboard');
+    Route::get('/ejo/create', function () {
+        return view('ejo.create');
+    });
+
+    Route::get('/ejo/{id}', function ($id) {
+        return view('ejo.detail', compact('id'));
+    });
     Route::middleware(['auth', 'access'])->group(function () {
         Route::prefix('users')->as('users.')->group(function () {
             Route::get('/index', [AuthController::class, 'manage_user'])->name('users.index');
@@ -47,7 +60,7 @@ Route::middleware('auth')->group(function () {
     @include 'utility/wwtp-routes.php';
     @include 'utility/chemical-routes.php';
     @include 'utility/dashboard.php';
-
+    @include 'ejo/ejo-routes.php';
 
     //////////    End View Routes   ///////////
 
