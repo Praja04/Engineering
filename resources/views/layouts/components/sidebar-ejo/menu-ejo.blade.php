@@ -25,8 +25,8 @@ $ejoMenu = [
 @if (
 $jabatan === 'dept_head' ||
 $jabatan === 'supervisor' ||
-($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering WWTP'])) ||
-($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering WWTP']))
+($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering Workshop & Project'])) ||
+($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering Workshop & Project']))
 )
 
 <li class="nav-item">
