@@ -745,8 +745,20 @@
 <div id="toastContainer"></div>
 
 <script>
+    /* ── CSRF Token Helper ── */
+    function getCsrfToken() {
+        // Coba dari meta tag terlebih dahulu
+        const meta = document.querySelector('meta[name="csrf-token"]')
+        if (meta) return meta.content
+
+        // Fallback: ambil dari cookie Laravel (laravel_session / XSRF-TOKEN)
+        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/)
+        if (match) return decodeURIComponent(match[1])
+
+        return ''
+    }
+
     /* ── Classification Data ── */
-    // Sesuaikan dengan data dari DB Anda
     const classifications = []
 
     // Load dari API
@@ -760,23 +772,19 @@
             // Fallback static data jika API belum tersedia
             const fallback = [{
                     id: 1,
-                    name: 'Mekanik',
-                    color: '#2563eb'
+                    name: 'Mekanik'
                 },
                 {
                     id: 2,
-                    name: 'Sipil',
-                    color: '#7c3aed'
+                    name: 'Sipil'
                 },
                 {
                     id: 3,
-                    name: 'Maintenance / Improvement',
-                    color: '#059669'
+                    name: 'Maintenance / Improvement'
                 },
                 {
                     id: 4,
-                    name: 'Repair Part',
-                    color: '#d97706'
+                    name: 'Repair Part'
                 },
             ]
             fallback.forEach(c => classifications.push(c))
@@ -916,24 +924,35 @@
         fetch('/api/ejo', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
                 },
                 body: JSON.stringify(payload)
             })
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) return r.json().then(e => Promise.reject(e))
+                return r.json()
+            })
             .then(res => {
                 if (res.data?.id) {
                     showToast('success', 'EJO Berhasil Dibuat!', `Ticket ${ticketId} telah tersimpan.`)
                     setTimeout(() => window.location.href = `/ejo/${res.data.id}`, 1200)
                 } else {
-                    throw new Error(res.message ?? 'Gagal')
+                    throw new Error(res.message ?? 'Gagal menyimpan EJO.')
                 }
             })
             .catch(err => {
                 btn.disabled = false
                 icon.style.display = ''
                 spinner.style.display = 'none'
-                showToast('error', 'Gagal Menyimpan', err.message ?? 'Terjadi kesalahan. Coba lagi.')
+
+                // Tangani error validasi Laravel (422)
+                if (err.errors) {
+                    const firstError = Object.values(err.errors)[0]?.[0]
+                    showToast('error', 'Validasi Gagal', firstError ?? 'Data tidak valid.')
+                } else {
+                    showToast('error', 'Gagal Menyimpan', err.message ?? 'Terjadi kesalahan. Coba lagi.')
+                }
             })
     }
 
