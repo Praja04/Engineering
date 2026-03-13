@@ -750,7 +750,7 @@
     const classifications = []
 
     // Load dari API
-    fetch('/ejo/classifications')
+    fetch('/api/ejo/classifications')
         .then(r => r.json())
         .then(data => {
             data.forEach(c => classifications.push(c))
@@ -913,7 +913,7 @@
             classification_id: document.getElementById('classificationId').value || null,
         }
 
-        fetch('/ejo', {
+        fetch('/api/ejo', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
