@@ -17,5 +17,6 @@ Route::get('scoring/mesin', [MachineScoringController::class, 'api_scoring_mesin
 @include 'utility/api-wwtp-routes.php';
 @include 'boiler/api_boiler.php';
 
+
 // Maintenance
 @include 'maintenance/api-maintenance.php';

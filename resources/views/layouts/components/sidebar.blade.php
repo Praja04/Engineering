@@ -52,6 +52,7 @@
                 @include('layouts.components.sidebar-kalibrasi.menu-kalibrasi')
                 @include('layouts.components.sidebar-scoring.menu-scoring-input')
                 @include('layouts.components.sidebar-maintenance.menu-maintenance')
+                @include('layouts.components.sidebar-ejo.menu-ejo')
 
 
                 <!-- /////////////////////Data Master/////////////// -->
