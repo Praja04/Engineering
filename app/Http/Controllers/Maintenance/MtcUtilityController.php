@@ -20,7 +20,7 @@ class MtcUtilityController extends Controller
 {
     public function index()
     {
-        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'utility')
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Utility')
             ->orderBy('id')->get();
 
         return view('maintenance.form.utility', compact('mesin'));
@@ -28,7 +28,7 @@ class MtcUtilityController extends Controller
 
     public function viewData()
     {
-        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'utility')
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Utility')
             ->orderBy('id')->get();
 
         return view('maintenance.data.utility_data', compact('mesin'));
@@ -45,7 +45,7 @@ class MtcUtilityController extends Controller
             // Simpan Main
             $main = MtcMainModel::create([
                 ...$mainRequest->validated(),
-                'jenis_mtc'     => 'utility',
+                'jenis_mtc'     => 'Utility',
                 'status'     => 'pending',
                 'created_by' => $userId,
             ]);
@@ -158,7 +158,7 @@ class MtcUtilityController extends Controller
     public function getData(Request $request)
     {
         $query = MtcMainModel::query()
-            ->where('jenis_mtc', 'utility')
+            ->where('jenis_mtc', 'Utility')
             ->orderBy('tanggal', 'desc')
             ->orderBy('waktu', 'desc')
             ->with([

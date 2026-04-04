@@ -40,6 +40,8 @@
                     @include('layouts.components.sidebar-scoring.dashboard-scoring')
                     @include('layouts.components.sidebar-boiler.dashboard')
                     @include('layouts.components.sidebar-utility.dashboard')
+                    @include('layouts.components.sidebar-maintenance.dashboard-maintenance')
+                    @include('layouts.components.sidebar-ejo.dashboard-ejo')
                 @endif
 
 

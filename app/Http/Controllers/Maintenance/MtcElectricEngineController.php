@@ -20,7 +20,7 @@ class MtcElectricEngineController extends Controller
 {
     public function index()
     {
-        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'electric_engine')
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Electric Engine')
             ->orderBy('id')->get();
 
         return view('maintenance.form.electric_engine', compact('mesin'));
@@ -28,7 +28,7 @@ class MtcElectricEngineController extends Controller
 
     public function viewData()
     {
-        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'electric_engine')
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Electric Engine')
             ->orderBy('id')->get();
 
         return view('maintenance.data.electric_engine_data', compact('mesin'));
@@ -46,7 +46,7 @@ class MtcElectricEngineController extends Controller
             // Simpan Main
             $main = MtcMainModel::create([
                 ...$mainRequest->validated(),
-                'jenis_mtc'  => 'electric_engine',
+                'jenis_mtc'  => 'Electric Engine',
                 'status'     => 'pending',
                 'created_by' => $userId,
             ]);
@@ -138,7 +138,7 @@ class MtcElectricEngineController extends Controller
     public function getData(Request $request)
     {
         $query = MtcMainModel::query()
-            ->where('jenis_mtc', 'electric_engine')
+            ->where('jenis_mtc', 'Electric Engine')
             ->orderBy('tanggal', 'desc')
             ->orderBy('waktu', 'desc')
             ->with([

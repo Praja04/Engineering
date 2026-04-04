@@ -44,7 +44,7 @@ class MtcBatteryController extends Controller
             // Simpan Main
             $main = MtcMainModel::create([
                 ...$mainRequest->validated(),
-                'jenis_mtc'  => 'battery',
+                'jenis_mtc'  => 'Battery',
                 'status'     => 'pending',
                 'created_by' => $userId,
             ]);
@@ -144,7 +144,7 @@ class MtcBatteryController extends Controller
     public function getData(Request $request)
     {
         $query = MtcMainModel::query()
-            ->where('jenis_mtc', 'battery')
+            ->where('jenis_mtc', 'Battery')
             ->orderBy('tanggal', 'desc')
             ->orderBy('waktu', 'desc')
             ->with([
@@ -157,7 +157,7 @@ class MtcBatteryController extends Controller
         }
 
         if ($request->filled('tipe_baterai')) {
-            $query->whereHas('battery', function ($q) use ($request) {
+            $query->whereHas('Battery', function ($q) use ($request) {
                 $q->where('battery_type', 'like', '%' . $request->tipe_baterai . '%');
             });
         }
@@ -166,7 +166,7 @@ class MtcBatteryController extends Controller
         if ($request->filled('unit')) {
             $search = $request->unit;
 
-            $query->whereHas('battery', function ($q) use ($search) {
+            $query->whereHas('Battery', function ($q) use ($search) {
                 $q->where('no_unit', 'like', "%{$search}%")
                     ->orWhere('no_seri', 'like', "%{$search}%");
             });
