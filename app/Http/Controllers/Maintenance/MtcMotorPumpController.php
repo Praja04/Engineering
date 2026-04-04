@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Maintenance;
-
 use Illuminate\Http\Request;
 use App\Models\NotificationsModel;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +19,7 @@ class MtcMotorPumpController extends Controller
 {
     public function index()
     {
-        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'motor_pump')
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Motor Pompa')
             ->orderBy('id')->get();
 
         return view('maintenance.form.motor_pump', compact('mesin'));
@@ -28,7 +27,7 @@ class MtcMotorPumpController extends Controller
 
     public function viewData()
     {
-        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'motor_pump')
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Motor Pompa')
             ->orderBy('id')->get();
 
         return view('maintenance.data.motor_pump_data', compact('mesin'));
@@ -46,7 +45,7 @@ class MtcMotorPumpController extends Controller
             // Simpan Main
             $main = MtcMainModel::create([
                 ...$mainRequest->validated(),
-                'jenis_mtc'     => 'motor_pump',
+                'jenis_mtc'     => 'Motor Pompa',
                 'status'     => 'pending',
                 'created_by' => $userId,
             ]);
@@ -71,7 +70,7 @@ class MtcMotorPumpController extends Controller
             if ($detailRequest->filled('ttd_base64')) {
                 $user = Auth::user();
 
-                $ttdPath = saveBase64Signature(
+                $ttdPath = \saveBase64Signature(
                     $detailRequest->ttd_base64,
                     'mtc/motor-pump',
                     $user->username,
@@ -138,7 +137,7 @@ class MtcMotorPumpController extends Controller
     public function getData(Request $request)
     {
         $query = MtcMainModel::query()
-            ->where('jenis_mtc', 'motor_pump')
+            ->where('jenis_mtc', 'Motor Pompa')
             ->orderBy('tanggal', 'desc')
             ->orderBy('waktu', 'desc')
             ->with([

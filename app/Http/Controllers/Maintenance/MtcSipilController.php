@@ -14,12 +14,15 @@ use App\Http\Requests\Maintenance\MtcSipilRequest;
 use App\Models\Maintenance\MtcSipilInspectionModel;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
 use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
+use App\Models\Maintenance\MtcMasterMesinModel;
 
 class MtcSipilController extends Controller
 {
     public function index()
     {
-        return view('maintenance.form.sipil');
+        $area = MtcMasterMesinModel::where('jenis_mtc', 'Sipil')
+        ->orderBy('id')->get();
+        return view('maintenance.form.sipil')->with(compact('area'));
     }
 
     public function viewData()
@@ -39,7 +42,7 @@ class MtcSipilController extends Controller
             // Simpan Main
             $main = MtcMainModel::create([
                 ...$mainRequest->validated(),
-                'jenis_mtc'  => 'sipil',
+                'jenis_mtc'  => 'Sipil',
                 'status'     => 'pending',
                 'created_by' => $userId,
             ]);
@@ -131,12 +134,12 @@ class MtcSipilController extends Controller
     public function getData(Request $request)
     {
         $query = MtcMainModel::query()
-            ->where('jenis_mtc', 'sipil')
+            ->where('jenis_mtc', 'Sipil')
             ->orderBy('tanggal', 'desc')
             ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
-                'sipil',
+                'Sipil',
                 'kebutuhanMaterial'
             ]);
 

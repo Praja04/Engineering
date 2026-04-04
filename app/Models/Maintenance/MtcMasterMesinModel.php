@@ -16,7 +16,8 @@ class MtcMasterMesinModel extends Model
         'jenis_mtc',
         'nama_mesin',
         'lokasi',
-        'frekuensi',
+        'dept',
+        'kode_mesin',
         'aktif',
         'created_by',
         'updated_by',
@@ -34,5 +35,11 @@ class MtcMasterMesinModel extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+    public function frekuensi()
+    {
+        return $this->hasMany(MtcMesinFrekuensiModel::class, 'mesin_id')
+        ->orderBy('satuan')
+        ->orderBy('interval');
     }
 }

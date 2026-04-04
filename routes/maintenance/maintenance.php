@@ -3,6 +3,7 @@
 use App\Http\Controllers\Maintenance\MtcApprovalController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\KpiController;
+use App\Http\Controllers\Maintenance\MtcAgendaController;
 use App\Http\Controllers\Maintenance\MtcSipilController;
 use App\Http\Controllers\Maintenance\MtcBatteryController;
 use App\Http\Controllers\Maintenance\MtcUtilityController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Maintenance\MtcMasterMesinController;
 
 Route::middleware(['auth'])->group(function () {
     Route::prefix('mtc')->group(function () {
+        Route::get('/agenda', [MtcAgendaController::class, 'index'])->name('agenda.index');
         Route::prefix('form')->group(function () {
             Route::prefix('motor-pump')->group(function () {
                 Route::get('/index', [MtcMotorPumpController::class, 'index'])->name('mtc.motor-pump.index');
@@ -123,6 +125,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/store', [MtcMasterMesinController::class, 'store'])->name('master.mtc.mesin.store');
                 Route::delete('/delete/{id}', [MtcMasterMesinController::class, 'destroy'])->name('master.mtc.mesin.delete');
                 Route::post('/update/{id}', [MtcMasterMesinController::class, 'update'])->name('master.mtc.mesin.update');
+                Route::get('/download-template', [MtcMasterMesinController::class, 'downloadTemplate'])->name('downloadTemplate');
+                Route::post('/upload-excel',     [MtcMasterMesinController::class, 'uploadExcel'])->name('uploadExcel');
             });
         });
     });

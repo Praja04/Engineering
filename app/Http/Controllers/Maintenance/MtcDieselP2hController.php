@@ -19,7 +19,7 @@ class MtcDieselP2hController extends Controller
 {
     public function index()
     {
-        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'diesel_p2h')
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Diesel P2H')
             ->orderBy('id')->get();
 
         return view('maintenance.form.diesel_p2h', compact('mesin'));
@@ -27,7 +27,7 @@ class MtcDieselP2hController extends Controller
 
     public function viewData()
     {
-        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'diesel_p2h')
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Diesel P2H')
             ->orderBy('id')->get();
 
         return view('maintenance.data.diesel_p2h_data', compact('mesin'));
@@ -48,7 +48,7 @@ class MtcDieselP2hController extends Controller
             $exists = MtcDieselP2hInspectionModel::where('shift', $shift)
                 ->whereHas('main', function ($q) use ($tanggal) {
                     $q->where('tanggal', $tanggal)
-                        ->where('jenis_mtc', 'diesel_p2h');
+                        ->where('jenis_mtc', 'Diesel P2H');
                 })
                 ->exists();
 
@@ -62,7 +62,7 @@ class MtcDieselP2hController extends Controller
             // Simpan Main
             $main = MtcMainModel::create([
                 ...$mainRequest->validated(),
-                'jenis_mtc'  => 'diesel_p2h',
+                'jenis_mtc'  => 'Diesel P2H',
                 'status'     => 'pending',
                 'created_by' => $userId,
             ]);
@@ -144,7 +144,7 @@ class MtcDieselP2hController extends Controller
     public function getData(Request $request)
     {
         $query = MtcMainModel::query()
-            ->where('jenis_mtc', 'diesel_p2h')
+            ->where('jenis_mtc', 'Diesel P2H')
             ->orderBy('tanggal', 'desc')
             ->orderBy('waktu', 'desc')
             ->with([

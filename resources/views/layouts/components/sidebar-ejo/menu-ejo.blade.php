@@ -40,12 +40,12 @@ $jabatan === 'supervisor' ||
         <ul class="nav nav-sm flex-column">
 
             {{-- Dashboard EJO --}}
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="nav-link {{ request()->is('ejo/dashboard') ? 'active' : '' }}" href="{{ url('ejo/dashboard') }}">
                     <i class="mdi mdi-view-dashboard-outline"></i>
                     <span data-key="t-ejo-dashboard">Dashboard</span>
                 </a>
-            </li>
+            </li> -->
 
             {{-- Semua EJO --}}
             <li class="nav-item">
