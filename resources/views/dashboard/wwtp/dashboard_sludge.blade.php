@@ -215,6 +215,7 @@
                         <h4 class="card-title mb-0">Distribusi per Kategori</h4>
                     </div>
                     <div class="card-body">
+                        <div id="distribusiFilter" class="mb-2 d-flex flex-wrap gap-1"></div>
                         <div id="grafikDistribusi"></div>
                     </div>
                 </div>
@@ -365,7 +366,60 @@
         document.getElementById('tanggalMulaiHasilLumpur').value = formatTanggal(awalBulan);
         document.getElementById('tanggalAkhirHasilLumpur').value = formatTanggal(akhirBulan);
     }
+    // =============================
+    // PIE CHART FILTER
+    // =============================
+    const distribusiFullData = {
+        labels: [],
+        series: [],
+        colors: []
+    };
+    const distribusiColors = ['#4bc0c0', '#ff6384', '#36a2eb'];
 
+    function buildDistribusiFilter() {
+        const container = document.getElementById('distribusiFilter');
+        if (!container) return;
+        container.innerHTML = '';
+
+        distribusiFullData.labels.forEach((label, i) => {
+            const color = distribusiColors[i % distribusiColors.length];
+            const checkId = `distribusiFilter_cb_${i}`;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'd-inline-flex align-items-center me-2 mb-1';
+            wrapper.innerHTML = `
+            <input type="checkbox" id="${checkId}" checked
+                class="form-check-input me-1"
+                style="cursor:pointer; accent-color:${color}; width:14px; height:14px;"
+                onchange="applyDistribusiFilter()">
+            <label for="${checkId}" class="form-check-label small mb-0"
+                style="cursor:pointer; color:${color}; font-weight:600;">
+                ${label}
+            </label>`;
+            container.appendChild(wrapper);
+        });
+    }
+
+    function applyDistribusiFilter() {
+        const checkboxes = document.querySelectorAll('#distribusiFilter input[type=checkbox]');
+        const selected = Array.from(checkboxes)
+            .map((cb, i) => cb.checked ? i : -1)
+            .filter(i => i !== -1);
+
+        if (!selected.length) {
+            grafikDistribusi.updateOptions({
+                labels: ['No Data'],
+                colors: ['#ccc']
+            });
+            grafikDistribusi.updateSeries([0]);
+            return;
+        }
+
+        grafikDistribusi.updateOptions({
+            labels: selected.map(i => distribusiFullData.labels[i]),
+            colors: selected.map(i => distribusiColors[i % distribusiColors.length])
+        });
+        grafikDistribusi.updateSeries(selected.map(i => distribusiFullData.series[i]));
+    }
     // =============================
     // MUAT STATISTIK
     // =============================
@@ -599,11 +653,18 @@
             const totalJamOperasi = parseFloat(data.total_running_hour_scp) || 0;
             const totalHasilLumpur = parseFloat(data.total_hasil_lumpur) || 0;
 
-            grafikDistribusi.updateOptions({
-                labels: ['Drain Lumpur', 'Jam Operasi SCP', 'Hasil Lumpur']
-            });
-            grafikDistribusi.updateSeries([totalDrain, totalJamOperasi, totalHasilLumpur]);
+            const labels = ['Drain Lumpur', 'Jam Operasi SCP', 'Hasil Lumpur'];
+            const series = [totalDrain, totalJamOperasi, totalHasilLumpur];
 
+            distribusiFullData.labels = labels;
+            distribusiFullData.series = series;
+
+            buildDistribusiFilter();
+            grafikDistribusi.updateOptions({
+                labels,
+                colors: distribusiColors
+            });
+            grafikDistribusi.updateSeries(series);
         } catch (error) {
             console.error('Gagal memperbarui distribusi:', error);
         }
@@ -830,14 +891,42 @@
             series: [0, 0, 0],
             labels: ['Drain Lumpur', 'Jam Operasi SCP', 'Hasil Lumpur'],
             legend: {
-                position: 'bottom',
-                horizontalAlign: 'center'
+                show: false
             },
             dataLabels: {
                 enabled: true,
                 formatter: (val, opts) => {
                     const nilai = opts.w.globals.series[opts.seriesIndex];
                     return nilai.toFixed(1);
+                },
+                style: {
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    colors: ['#010101'] // warna teks tetap putih
+                },
+                background: {
+                    enabled: true,
+                    foreColor: '#fff', // warna teks di dalam background
+                    borderRadius: 4,
+                    padding: 4,
+                    opacity: 0.9,
+                    borderWidth: 1,
+                    borderColor: 'transparent',
+                    // background mengikuti warna slice otomatis (default ApexCharts)
+                },
+                dropShadow: {
+                    enabled: true,
+                    top: 1,
+                    left: 1,
+                    blur: 2,
+                    opacity: 0.6
+                },
+                dropShadow: {
+                    enabled: true,
+                    top: 1,
+                    left: 1,
+                    blur: 1,
+                    opacity: 0.45
                 }
             },
             tooltip: {

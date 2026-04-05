@@ -217,6 +217,7 @@
                         <h4 class="card-title mb-0">Influent Source Distribution</h4>
                     </div>
                     <div class="card-body">
+                        <div id="weeklyInfluentPieFilter" class="mb-2 d-flex flex-wrap gap-1"></div>
                         <div id="weeklyInfluentPieChart"></div>
                     </div>
                 </div>
@@ -254,6 +255,7 @@
                         <h4 class="card-title mb-0">Effluent Process Distribution</h4>
                     </div>
                     <div class="card-body">
+                        <div id="weeklyEffluentPieFilter" class="mb-2 d-flex flex-wrap gap-1"></div>
                         <div id="weeklyEffluentPieChart"></div>
                     </div>
                 </div>
@@ -274,7 +276,7 @@
             </div>
         </div>
 
-    
+
 
         <!-- ========================================= -->
         <!-- SECTION: DATA HARIAN -->
@@ -450,6 +452,7 @@
                         <h4 class="card-title mb-0">Daily Distribution</h4>
                     </div>
                     <div class="card-body">
+                        <div id="dailyShiftPieFilter" class="mb-2 d-flex flex-wrap gap-1"></div>
                         <div id="dailyShiftPieChart"></div>
                     </div>
                 </div>
@@ -748,7 +751,15 @@
             const totalOutlet = outletData.reduce((sum, val) => sum + val, 0);
             const totalBoiler = boilerData.reduce((sum, val) => sum + val, 0);
 
-            weeklyInfluentPieChart.updateSeries([totalSparta, totalGaram, totalDomestik, totalProduksiStep3, totalStorage, totalProcesWWTP2, totalOutlet, totalBoiler]);
+            const pieLabels = ['Pit Sparta', 'Pit Garam', 'Pit Domestik', 'Pit Produksi Step 3', 'Pit Storage', 'Pit Proses WWTP2', 'Pit Outlet', 'Pit Boiler'];
+            const pieSeries = [totalSparta, totalGaram, totalDomestik, totalProduksiStep3, totalStorage, totalProcesWWTP2, totalOutlet, totalBoiler];
+            setPieData('weeklyInfluent', pieLabels, pieSeries);
+            buildPieFilter('weeklyInfluentPieFilter', pieLabels, pieChartColors, 'filterWeeklyInfluentPie');
+            weeklyInfluentPieChart.updateOptions({
+                labels: pieLabels,
+                colors: pieChartColors
+            });
+            weeklyInfluentPieChart.updateSeries(pieSeries);
 
         } catch (error) {
             console.error('Error updating weekly influent chart:', error);
@@ -825,7 +836,16 @@
             const totalFullProses = fullProsesData.reduce((sum, val) => sum + val, 0);
             const totalDafPre = dafPreData.reduce((sum, val) => sum + val, 0);
 
-            weeklyEffluentPieChart.updateSeries([totalFullProses, totalDafPre]);
+            const effluentPieLabels = ['Full Proses', 'DAF Pre'];
+            const effluentPieSeries = [totalFullProses, totalDafPre];
+            const effluentColors = ['#9966ff', '#ff9f40'];
+            setPieData('weeklyEffluent', effluentPieLabels, effluentPieSeries);
+            buildPieFilter('weeklyEffluentPieFilter', effluentPieLabels, effluentColors, 'filterWeeklyEffluentPie');
+            weeklyEffluentPieChart.updateOptions({
+                labels: effluentPieLabels,
+                colors: effluentColors
+            });
+            weeklyEffluentPieChart.updateSeries(effluentPieSeries);
 
         } catch (error) {
             console.error('Error updating weekly effluent chart:', error);
@@ -870,7 +890,7 @@
         }
     }
 
-    
+
 
     // =============================
     // DAILY DATA FUNCTIONS
@@ -1102,8 +1122,11 @@
                 return;
             }
 
+            setPieData('dailyShift', labels, values);
+            buildPieFilter('dailyShiftPieFilter', labels, pieChartColors, 'filterDailyShiftPie');
             dailyShiftPieChart.updateOptions({
-                labels: labels
+                labels: labels,
+                colors: pieChartColors
             });
             dailyShiftPieChart.updateSeries(values);
 
@@ -1144,11 +1167,110 @@
         }
     }
 
-    
+
 
     // =============================
     // UTILITY FUNCTIONS
     // =============================
+
+    const pieChartData = {
+        weeklyInfluent: {
+            labels: [],
+            series: []
+        },
+        weeklyEffluent: {
+            labels: [],
+            series: []
+        },
+        dailyShift: {
+            labels: [],
+            series: []
+        }
+    };
+
+    const pieChartColors = ['#4bc0c0', '#ff6384', '#36a2eb', '#ffce56', '#9966ff', '#ff9f40', '#4dc9f6', '#f67019'];
+
+    function buildPieFilter(containerId, labels, colors, onChangeCallback) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        labels.forEach((label, index) => {
+            const color = colors[index % colors.length];
+            const checkId = `${containerId}_cb_${index}`;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'd-inline-flex align-items-center me-2 mb-1';
+            wrapper.style.cursor = 'pointer';
+
+            wrapper.innerHTML = `
+            <input type="checkbox" id="${checkId}" checked
+                class="form-check-input me-1"
+                style="cursor:pointer; accent-color:${color}; width:14px; height:14px;"
+                onchange="${onChangeCallback}()">
+            <label for="${checkId}" class="form-check-label small mb-0" style="cursor:pointer; color:${color}; font-weight:600;">
+                ${label}
+            </label>
+        `;
+
+            container.appendChild(wrapper);
+        });
+    }
+
+    function applyPieFilter(chartInstance, dataKey, colors) {
+        const containerId = {
+            weeklyInfluent: 'weeklyInfluentPieFilter',
+            weeklyEffluent: 'weeklyEffluentPieFilter',
+            dailyShift: 'dailyShiftPieFilter'
+        } [dataKey];
+
+        const {
+            labels: fullLabels,
+            series: fullSeries
+        } = pieChartData[dataKey];
+        if (!fullLabels.length) return;
+
+        const checkboxes = document.querySelectorAll(`#${containerId} input[type=checkbox]`);
+        const selectedIndices = Array.from(checkboxes)
+            .map((cb, i) => cb.checked ? i : -1)
+            .filter(i => i !== -1);
+
+        if (selectedIndices.length === 0) {
+            chartInstance.updateOptions({
+                labels: ['No Data']
+            });
+            chartInstance.updateSeries([0]);
+            return;
+        }
+
+        const filteredLabels = selectedIndices.map(i => fullLabels[i]);
+        const filteredSeries = selectedIndices.map(i => fullSeries[i]);
+        const filteredColors = selectedIndices.map(i => colors[i % colors.length]);
+
+        chartInstance.updateOptions({
+            labels: filteredLabels,
+            colors: filteredColors
+        });
+        chartInstance.updateSeries(filteredSeries);
+    }
+
+    function filterWeeklyInfluentPie() {
+        applyPieFilter(weeklyInfluentPieChart, 'weeklyInfluent', pieChartColors);
+    }
+
+    function filterWeeklyEffluentPie() {
+        applyPieFilter(weeklyEffluentPieChart, 'weeklyEffluent', ['#9966ff', '#ff9f40']);
+    }
+
+    function filterDailyShiftPie() {
+        applyPieFilter(dailyShiftPieChart, 'dailyShift', pieChartColors);
+    }
+
+    function setPieData(dataKey, labels, series) {
+        pieChartData[dataKey].labels = labels;
+        pieChartData[dataKey].series = series;
+    }
 
     function animateValue(id, start, end, duration) {
         const obj = document.getElementById(id);
@@ -1272,8 +1394,7 @@
             },
             colors: ['#4bc0c0', '#ff6384', '#36a2eb', '#ffce56', '#9966ff', '#ff9f40', '#4dc9f6', '#f67019'],
             legend: {
-                position: 'bottom',
-                horizontalAlign: 'center'
+                show: false
             },
             dataLabels: {
                 enabled: true,
@@ -1285,7 +1406,24 @@
                 style: {
                     fontSize: '11px',
                     fontWeight: 'bold',
-                    colors: ['#fff']
+                    colors: ['#010101'] // warna teks tetap putih
+                },
+                background: {
+                    enabled: true,
+                    foreColor: '#fff', // warna teks di dalam background
+                    borderRadius: 4,
+                    padding: 4,
+                    opacity: 0.9,
+                    borderWidth: 1,
+                    borderColor: 'transparent',
+                    // background mengikuti warna slice otomatis (default ApexCharts)
+                },
+                dropShadow: {
+                    enabled: true,
+                    top: 1,
+                    left: 1,
+                    blur: 2,
+                    opacity: 0.6
                 },
                 dropShadow: {
                     enabled: true,

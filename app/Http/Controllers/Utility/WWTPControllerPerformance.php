@@ -856,4 +856,53 @@ class WWTPControllerPerformance extends Controller
             'data'    => $data
         ]);
     }
+
+    public function getPhotoGallery(Request $request)
+    {
+        $jenis     = $request->query('jenis',      'equal');
+        $startDate = $request->query('start_date', Carbon::now()->startOfMonth()->toDateString());
+        $endDate   = $request->query('end_date',   Carbon::now()->endOfMonth()->toDateString());
+
+        $records = WwtpPerformanceRecord::with('week')
+            ->where('jenis', $jenis)
+            ->whereNotNull('foto')
+            ->whereHas('week', function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('week_start', [$startDate, $endDate]);
+            })
+            ->orderByDesc(
+                WwtpPerformanceWeek::select('week_start')
+                    ->whereColumn('id', 'wwtp_performance_records.performance_week_id')
+                    ->limit(1)
+            )
+            ->get()
+            ->map(function ($record) {
+                // Handle foto path: bisa berupa 'wwtp_performance/file.jpg' atau hanya 'file.jpg'
+                $fotoUrl = null;
+                if ($record->foto) {
+                    // Jika sudah ada folder prefix, gunakan langsung; jika tidak, tambahkan folder default
+                    $fotoPath = str_contains($record->foto, '/') ? $record->foto : 'wwtp_performance/' . $record->foto;
+                    $fotoUrl  = asset('storage/' . $fotoPath);
+                }
+                return [
+                    'id'         => $record->id,
+                    'jenis'      => $record->jenis,
+                    'tss'        => $record->tss,
+                    'cod'        => $record->cod,
+                    'foto_url'   => $fotoUrl,
+                    'week_start' => optional($record->week)->week_start?->format('d M Y'),
+                    'week_end'   => optional($record->week)->week_end?->format('d M Y'),
+                    'week_label' => optional($record->week)
+                        ? optional($record->week)->week_start?->format('d M') . ' – ' . optional($record->week)->week_end?->format('d M Y')
+                        : '-',
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'jenis'  => $jenis,
+            'count'  => $records->count(),
+            'data'   => $records,
+        ]);
+    }
+ 
 }

@@ -94,7 +94,7 @@
                             <!-- KPI Cards Container -->
                             <div class="kpi-cards-container">
                                 <!-- Invoice Listrik Card - Only for Monthly -->
-                                <div id="invoice-card-container" style="display: none;">
+                                <div id="listrik-prd-card-container" style="display: none;">
                                     <div class="alert alert-success border-0 shadow-sm mb-4">
                                         <div class="row align-items-center">
                                             <div class="col-md-8">
@@ -105,16 +105,13 @@
                                                         </div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
-                                                        <h5 class="alert-heading fw-semibold mb-1 text-success">Invoice Listrik</h5>
-                                                        <p class="mb-0 text-muted small">Tagihan listrik periode <span id="invoice_periode">-</span></p>
+                                                        <h5 class="alert-heading fw-semibold mb-1 text-success">Listrik Produksi (PRD)</h5>
+                                                        <p class="mb-0 text-muted small">Pemakaian listrik periode <span id="listrik_prd_periode">-</span></p>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                                                <h3 class="mb-0 fw-bold text-success" id="invoice_amount">Rp 0</h3>
-                                                <span class="badge bg-success-subtle text-success mt-1">
-                                                    <i class="ri-checkbox-circle-line me-1"></i>Lunas
-                                                </span>
+                                                <h3 class="mb-0 fw-bold text-success" id="listrik_prd_amount">Rp 0</h3>
                                             </div>
                                         </div>
                                     </div>
@@ -308,6 +305,62 @@
                             </div>
                         </div>
                         <div id="pemakaian_listrik_chart" class="apex-charts"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Chart KPI Listrik Monthly Section -->
+        <div class="row g-4 mt-2">
+            <!-- Chart 5: Listrik PRD / 10 Ton FG -->
+            <div class="col-xl-6">
+                <div class="card trend-card border-0 shadow-sm">
+                    <div class="card-header bg-gradient-warning text-white border-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="card-title mb-1 text-white fw-semibold">Listrik PRD / 10 Ton FG</h5>
+                                <p class="mb-0 opacity-75 small">(Listrik PRD ÷ Finish Goods) × 10 — Bulanan</p>
+                            </div>
+                            <div>
+                                <input type="number" id="filter_year_prd_fg" class="form-control form-control-sm bg-white" style="width: 90px;" min="2020" max="2099">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0" style="position: relative; min-height: 350px;">
+                        <div class="chart-loading" id="loading-chart-prd-fg">
+                            <div class="text-center p-5">
+                                <div class="spinner-grow text-warning" role="status"></div>
+                                <p class="mt-3 text-muted mb-0">Memuat data...</p>
+                            </div>
+                        </div>
+                        <div id="chart_listrik_prd_fg" class="apex-charts p-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 6: Listrik BAS / Kecap Matang -->
+            <div class="col-xl-6">
+                <div class="card trend-card border-0 shadow-sm">
+                    <div class="card-header bg-gradient-warning text-white border-0">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="card-title mb-1 text-white fw-semibold">Listrik BAS / Kecap Matang</h5>
+                                <p class="mb-0 opacity-75 small">Listrik BAS ÷ Kecap Matang — Bulanan</p>
+                            </div>
+                            <div>
+                                <input type="number" id="filter_year_bas_kecap" class="form-control form-control-sm bg-white" style="width: 90px;" min="2020" max="2099">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0" style="position: relative; min-height: 350px;">
+                        <div class="chart-loading" id="loading-chart-bas-kecap">
+                            <div class="text-center p-5">
+                                <div class="spinner-grow text-warning" role="status"></div>
+                                <p class="mt-3 text-muted mb-0">Memuat data...</p>
+                            </div>
+                        </div>
+                        <div id="chart_listrik_bas_kecap" class="apex-charts p-3"></div>
                     </div>
                 </div>
             </div>
@@ -525,26 +578,24 @@
                 $('.kpi-cards-container').show();
 
                 // Check if invoice available (only for monthly)
-                if (data.kpi_data.invoice_listrik && data.periode.type.includes('monthly')) {
-                    const invoiceAmount = parseFloat(data.kpi_data.invoice_listrik);
+                if (data.kpi_data.listrik_prd && data.periode.type.includes('monthly')) {
+                    const listrikPrdAmount = parseFloat(data.kpi_data.listrik_prd);
 
-                    if (invoiceAmount > 0) {
-                        const formattedAmount = 'Rp ' + invoiceAmount.toLocaleString('id-ID', {
+                    if (listrikPrdAmount > 0) {
+                        const formattedAmount = listrikPrdAmount.toLocaleString('id-ID', {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 0
-                        });
+                        }) + ' kWh';
 
-                        $('#invoice_amount').text(formattedAmount);
-                        $('#invoice_periode').text(data.periode.display);
-                        $('#invoice-card-container').slideDown(300);
+                        $('#listrik_prd_amount').text(formattedAmount);
+                        $('#listrik_prd_periode').text(data.periode.display);
+                        $('#listrik-prd-card-container').slideDown(300);
                     } else {
-                        $('#invoice-card-container').hide();
+                        $('#listrik-prd-card-container').hide();
                     }
                 } else {
-                    // Hide invoice for weekly or when no invoice data
-                    $('#invoice-card-container').hide();
+                    $('#listrik-prd-card-container').hide();
                 }
-
                 // Update values
                 $('#kpi_finish_goods').text(parseFloat(data.kpi_data.finish_goods).toLocaleString('id-ID', {
                     minimumFractionDigits: 2,
@@ -764,6 +815,201 @@
         $('#applyListrikRange').on('click', function() {
             const dropdown = $(this).closest('.dropdown');
             dropdown.find('[data-bs-toggle="dropdown"]').dropdown('hide');
+        });
+
+        // ========== CHART 5 & 6: KPI LISTRIK MONTHLY ==========
+
+        function fetchChartPrdFg(year) {
+            showLoading('loading-chart-prd-fg');
+            $.getJSON(`/api/utility/kpi/chart/listrik-prd-fg?year=${year}`, function(res) {
+                const labels = res.data.map(d => d.bulan);
+                const values = res.data.map(d => d.nilai);
+                const target = 51;
+
+                const options = baseOptions('bar');
+                options.chart.height = 320;
+                options.series = [{
+                    name: 'Listrik PRD / 10 Ton FG',
+                    data: values
+                }];
+                options.xaxis.categories = labels;
+                options.colors = ['#F59E0B'];
+                options.yaxis = {
+                    title: {
+                        text: 'kWh / 10 Ton FG'
+                    },
+                    labels: {
+                        style: {
+                            fontSize: '12px',
+                            colors: '#8c9097'
+                        }
+                    }
+                };
+                options.annotations = {
+                    yaxis: [{
+                        y: target,
+                        borderColor: '#EF4444',
+                        strokeDashArray: 4,
+                        label: {
+                            text: `Target: ${target}`,
+                            style: {
+                                color: '#fff',
+                                background: '#EF4444',
+                                fontSize: '11px'
+                            }
+                        }
+                    }]
+                };
+                options.dataLabels = {
+                    enabled: true,
+                    formatter: val => val.toFixed(2),
+                    style: {
+                        fontSize: '11px',
+                        colors: ['#1F2937']
+                    },
+                    offsetY: -20
+                };
+                options.plotOptions = {
+                    bar: {
+                        columnWidth: '55%',
+                        borderRadius: 6,
+                        dataLabels: {
+                            position: 'top'
+                        },
+                        colors: {
+                            ranges: [{
+                                from: 0,
+                                to: target,
+                                color: '#10B981'
+                            }, {
+                                from: target,
+                                to: 9999,
+                                color: '#EF4444'
+                            }]
+                        }
+                    }
+                };
+                options.tooltip = {
+                    y: {
+                        formatter: val => `${val.toFixed(4)} kWh/10 Ton FG`
+                    }
+                };
+
+                if (chartInstances['chartPrdFg']) {
+                    chartInstances['chartPrdFg'].updateOptions(options, true, true);
+                } else {
+                    chartInstances['chartPrdFg'] = new ApexCharts(document.querySelector('#chart_listrik_prd_fg'), options);
+                    chartInstances['chartPrdFg'].render();
+                }
+            }).fail(function() {
+                $('#chart_listrik_prd_fg').html('<p class="text-center text-muted p-4">Gagal memuat data.</p>');
+            }).always(function() {
+                hideLoading('loading-chart-prd-fg');
+            });
+        }
+
+        function fetchChartBasKecap(year) {
+            showLoading('loading-chart-bas-kecap');
+            $.getJSON(`/api/utility/kpi/chart/listrik-bas-kecap?year=${year}`, function(res) {
+                const labels = res.data.map(d => d.bulan);
+                const values = res.data.map(d => d.nilai);
+                const target = 75;
+
+                const options = baseOptions('bar');
+                options.chart.height = 320;
+                options.series = [{
+                    name: 'Listrik BAS / Kecap Matang',
+                    data: values
+                }];
+                options.xaxis.categories = labels;
+                options.colors = ['#3B82F6'];
+                options.yaxis = {
+                    title: {
+                        text: 'kWh / Ton'
+                    },
+                    labels: {
+                        style: {
+                            fontSize: '12px',
+                            colors: '#8c9097'
+                        }
+                    }
+                };
+                options.annotations = {
+                    yaxis: [{
+                        y: target,
+                        borderColor: '#EF4444',
+                        strokeDashArray: 4,
+                        label: {
+                            text: `Target: ${target}`,
+                            style: {
+                                color: '#fff',
+                                background: '#EF4444',
+                                fontSize: '11px'
+                            }
+                        }
+                    }]
+                };
+                options.dataLabels = {
+                    enabled: true,
+                    formatter: val => val.toFixed(2),
+                    style: {
+                        fontSize: '11px',
+                        colors: ['#1F2937']
+                    },
+                    offsetY: -20
+                };
+                options.plotOptions = {
+                    bar: {
+                        columnWidth: '55%',
+                        borderRadius: 6,
+                        dataLabels: {
+                            position: 'top'
+                        },
+                        colors: {
+                            ranges: [{
+                                from: 0,
+                                to: target,
+                                color: '#10B981'
+                            }, {
+                                from: target,
+                                to: 9999,
+                                color: '#EF4444'
+                            }]
+                        }
+                    }
+                };
+                options.tooltip = {
+                    y: {
+                        formatter: val => `${val.toFixed(4)} kWh/Ton`
+                    }
+                };
+
+                if (chartInstances['chartBasKecap']) {
+                    chartInstances['chartBasKecap'].updateOptions(options, true, true);
+                } else {
+                    chartInstances['chartBasKecap'] = new ApexCharts(document.querySelector('#chart_listrik_bas_kecap'), options);
+                    chartInstances['chartBasKecap'].render();
+                }
+            }).fail(function() {
+                $('#chart_listrik_bas_kecap').html('<p class="text-center text-muted p-4">Gagal memuat data.</p>');
+            }).always(function() {
+                hideLoading('loading-chart-bas-kecap');
+            });
+        }
+
+        // Set default year & initial load
+        const currentYear = today.getFullYear();
+        $('#filter_year_prd_fg').val(currentYear);
+        $('#filter_year_bas_kecap').val(currentYear);
+        fetchChartPrdFg(currentYear);
+        fetchChartBasKecap(currentYear);
+
+        // Filter year change
+        $('#filter_year_prd_fg').on('change', function() {
+            if ($(this).val()) fetchChartPrdFg($(this).val());
+        });
+        $('#filter_year_bas_kecap').on('change', function() {
+            if ($(this).val()) fetchChartBasKecap($(this).val());
         });
     });
 </script>

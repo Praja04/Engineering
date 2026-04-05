@@ -3,242 +3,242 @@
 @section('title', 'Form KPI')
 
 @section('content')
-    <div class="page-content">
-        <div class="container-fluid">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="mdi mdi-chart-line me-1"></i> Form Input KPI</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form id="formKpi" method="POST">
-                        @csrf
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="mdi mdi-chart-line me-1"></i> Form Input KPI</h5>
+            </div>
+            <div class="card-body p-4">
+                <form id="formKpi" method="POST">
+                    @csrf
 
-                        <!-- Jenis Periode -->
-                        <div class="mb-3">
-                            <label for="periode_tipe" class="form-label fw-semibold">Tipe Periode</label>
-                            <select class="form-select" id="periode_tipe" name="periode_tipe" required>
-                                <option value="" disabled selected>Pilih tipe periode</option>
-                                <option value="weekly">Mingguan</option>
-                                <option value="monthly">Bulanan</option>
-                            </select>
-                        </div>
+                    <!-- Jenis Periode -->
+                    <div class="mb-3">
+                        <label for="periode_tipe" class="form-label fw-semibold">Tipe Periode</label>
+                        <select class="form-select" id="periode_tipe" name="periode_tipe" required>
+                            <option value="" disabled selected>Pilih tipe periode</option>
+                            <option value="weekly">Mingguan</option>
+                            <option value="monthly">Bulanan</option>
+                        </select>
+                    </div>
 
-                        <!-- Periode Dinamis -->
-                        <div id="formWeekly" class="d-none">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-semibold">Mulai (Start Date)</label>
-                                    <input type="date" id="start_date" name="start_date" class="form-control">
-                                </div>
+                    <!-- Periode Dinamis -->
+                    <div id="formWeekly" class="d-none">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Mulai (Start Date)</label>
+                                <input type="date" id="start_date" name="start_date" class="form-control">
+                            </div>
 
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-semibold">Sampai (End Date)</label>
-                                    <input type="date" id="end_date" name="end_date" class="form-control">
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Sampai (End Date)</label>
+                                <input type="date" id="end_date" name="end_date" class="form-control">
                             </div>
                         </div>
+                    </div>
 
-                        <div id="formMonthly" class="d-none">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Bulan</label>
-                                <input type="month" id="month" name="month" class="form-control">
-                            </div>
-                        </div>
-
+                    <div id="formMonthly" class="d-none">
                         <div class="mb-3">
-                            <label for="finish_goods" class="form-label fw-semibold accounting-label">Nilai Finish Goods
-                                (Ton)</label>
-                            <input type="number" step="0.01" id="finish_goods" name="finish_goods" class="form-control"
-                                placeholder="Contoh: 120.5" required>
+                            <label class="form-label fw-semibold">Bulan</label>
+                            <input type="month" id="month" name="month" class="form-control">
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="kecap_matang" class="form-label fw-semibold accounting-label">Kecap Matang
-                                (Ton)</label>
-                            <input type="number" step="0.01" id="kecap_matang" name="kecap_matang" class="form-control"
-                                placeholder="Contoh: 85.75" required>
-                        </div>
+                    <div class="mb-3">
+                        <label for="finish_goods" class="form-label fw-semibold accounting-label">Nilai Finish Goods
+                            (Ton)</label>
+                        <input type="number" step="0.01" id="finish_goods" name="finish_goods" class="form-control" placeholder="Contoh: 120.5" required>
+                    </div>
 
-                        <div class="mb-3 monthly-only">
-                            <label for="invoice_listrik" class="form-label fw-semibold accounting-label">Invoice Listrik
-                                (Rp)</label>
-                            <input type="number" step="0.01" id="invoice_listrik" name="invoice_listrik"
-                                class="form-control" placeholder="Contoh: 1500000">
-                        </div>
+                    <div class="mb-3">
+                        <label for="kecap_matang" class="form-label fw-semibold accounting-label">Kecap Matang
+                            (Ton)</label>
+                        <input type="number" step="0.01" id="kecap_matang" name="kecap_matang" class="form-control" placeholder="Contoh: 85.75" required>
+                    </div>
 
-                        <!-- Nilai Steam -->
-                        <div class="mb-3">
-                            <label for="steam" class="form-label fw-semibold accounting-label">Steam (Kg)</label>
-                            <input type="number" step="0.01" id="steam" name="steam" class="form-control"
-                                placeholder="Contoh: 5000">
-                        </div>
+                    <div class="mb-3 monthly-only">
+                        <label for="listrik_prd" class="form-label fw-semibold accounting-label">Listrik PRD
+                            (KWH)</label>
+                        <input type="number" step="0.01" id="listrik_prd" name="listrik_prd" class="form-control" placeholder="Contoh: 1500000">
+                    </div>
+                    <div class="mb-3 monthly-only">
+                        <label for="listrik_bas" class="form-label fw-semibold accounting-label">Listrik BAS
+                            (KWH)</label>
+                        <input type="number" step="0.01" id="listrik_bas" name="listrik_bas" class="form-control" placeholder="Contoh: 1500000">
+                    </div>
 
-                        <!-- Nilai Batubara -->
-                        <div class="mb-3">
-                            <label for="batubara" class="form-label fw-semibold accounting-label">Batubara (Kg)</label>
-                            <input type="number" step="0.01" id="batubara" name="batubara" class="form-control"
-                                placeholder="Contoh: 3000">
-                        </div>
+                    <!-- Nilai Steam -->
+                    <div class="mb-3">
+                        <label for="steam" class="form-label fw-semibold accounting-label">Steam (Kg)</label>
+                        <input type="number" step="0.01" id="steam" name="steam" class="form-control" placeholder="Contoh: 5000">
+                    </div>
 
-                        <!-- Tombol Aksi -->
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <button type="reset" class="btn btn-secondary">
-                                <i class="mdi mdi-refresh me-1"></i> Reset
-                            </button>
-                            <button type="submit" class="btn btn-success">
-                                <i class="mdi mdi-content-save me-1"></i> Simpan
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <!-- Nilai Batubara -->
+                    <div class="mb-3">
+                        <label for="batubara" class="form-label fw-semibold accounting-label">Batubara (Kg)</label>
+                        <input type="number" step="0.01" id="batubara" name="batubara" class="form-control" placeholder="Contoh: 3000">
+                    </div>
+
+                    <!-- Tombol Aksi -->
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="mdi mdi-refresh me-1"></i> Reset
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="mdi mdi-content-save me-1"></i> Simpan
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @section('scripts')
-    <script>
-        $(document).ready(function() {
-            const $periodeTipe = $('#periode_tipe');
-            const $invoiceListrik = $('#invoice_listrik');
+<script>
+    $(document).ready(function() {
+        const $periodeTipe = $('#periode_tipe');
+        const $invoiceListrik = $('#listrik_prd');
 
-            // Simpan label asli saat load pertama kali
-            const originalLabels = {};
+        // Simpan label asli saat load pertama kali
+        const originalLabels = {};
+        $('.accounting-label').each(function() {
+            const $label = $(this);
+            const id = $label.attr('for');
+            originalLabels[id] = $label.text().trim(); // simpan teks asli
+        });
+
+        function updateForm() {
+            const val = $periodeTipe.val();
+
+            // Reset dulu
+            $('#formWeekly').addClass('d-none');
+            $('#formMonthly').addClass('d-none');
+            $('.monthly-only').addClass('d-none');
+            $invoiceListrik.prop('required', false);
+
+            // Reset semua label ke asli dulu
             $('.accounting-label').each(function() {
                 const $label = $(this);
                 const id = $label.attr('for');
-                originalLabels[id] = $label.text().trim(); // simpan teks asli
+                if (originalLabels[id]) {
+                    $label.text(originalLabels[id]);
+                }
             });
 
-            function updateForm() {
-                const val = $periodeTipe.val();
+            if (val === 'weekly') {
+                $('#formWeekly').removeClass('d-none');
+            } else if (val === 'monthly') {
+                $('#formMonthly').removeClass('d-none');
+                $('.monthly-only').removeClass('d-none');
+                $invoiceListrik.prop('required', true);
 
-                // Reset dulu
-                $('#formWeekly').addClass('d-none');
-                $('#formMonthly').addClass('d-none');
-                $('.monthly-only').addClass('d-none');
-                $invoiceListrik.prop('required', false);
-
-                // Reset semua label ke asli dulu
+                // Tambahkan "accounting" ke label yang punya class accounting-label
                 $('.accounting-label').each(function() {
                     const $label = $(this);
-                    const id = $label.attr('for');
-                    if (originalLabels[id]) {
-                        $label.text(originalLabels[id]);
+                    const currentText = $label.text().trim();
+                    if (!currentText.endsWith('accounting')) {
+                        $label.text(currentText + ' Accounting');
                     }
                 });
+            }
+        }
 
-                if (val === 'weekly') {
-                    $('#formWeekly').removeClass('d-none');
-                } else if (val === 'monthly') {
-                    $('#formMonthly').removeClass('d-none');
-                    $('.monthly-only').removeClass('d-none');
-                    $invoiceListrik.prop('required', true);
+        $periodeTipe.on('change', updateForm);
 
-                    // Tambahkan "accounting" ke label yang punya class accounting-label
-                    $('.accounting-label').each(function() {
-                        const $label = $(this);
-                        const currentText = $label.text().trim();
-                        if (!currentText.endsWith('accounting')) {
-                            $label.text(currentText + ' Accounting');
-                        }
-                    });
+        // Jalankan pertama kali (untuk load awal atau edit)
+        updateForm();
+
+        $('#formKpi').on('submit', function(e) {
+            e.preventDefault();
+
+            const tipe = $('#periode_tipe').val();
+
+            // VALIDASI WEEKLY
+            if (tipe === 'weekly') {
+                const start = $('#start_date').val();
+                const end = $('#end_date').val();
+
+                if (!start || !end) {
+                    Swal.fire('Error', 'Start dan End Date wajib diisi!', 'error');
+                    return;
+                }
+
+                const diffMs = new Date(end) - new Date(start);
+                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+                if (diffDays < 6) {
+                    Swal.fire('Error', 'Rentang tanggal minimal 7 hari!', 'error');
+                    return;
                 }
             }
 
-            $periodeTipe.on('change', updateForm);
+            // VALIDASI MONTHLY
+            if (tipe === 'monthly') {
+                const month = $('#month').val();
 
-            // Jalankan pertama kali (untuk load awal atau edit)
-            updateForm();
-
-            $('#formKpi').on('submit', function(e) {
-                e.preventDefault();
-
-                const tipe = $('#periode_tipe').val();
-
-                // VALIDASI WEEKLY
-                if (tipe === 'weekly') {
-                    const start = $('#start_date').val();
-                    const end = $('#end_date').val();
-
-                    if (!start || !end) {
-                        Swal.fire('Error', 'Start dan End Date wajib diisi!', 'error');
-                        return;
-                    }
-
-                    const diffMs = new Date(end) - new Date(start);
-                    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-                    if (diffDays < 6) {
-                        Swal.fire('Error', 'Rentang tanggal minimal 7 hari!', 'error');
-                        return;
-                    }
+                if (!month) {
+                    Swal.fire('Error', 'Bulan wajib dipilih!', 'error');
+                    return;
                 }
+            }
 
-                // VALIDASI MONTHLY
-                if (tipe === 'monthly') {
-                    const month = $('#month').val();
+            const formData = $(this).serialize();
 
-                    if (!month) {
-                        Swal.fire('Error', 'Bulan wajib dipilih!', 'error');
-                        return;
+            $.ajax({
+                url: "{{ route('kpi.store') }}",
+                type: 'POST',
+                data: formData,
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: res.message,
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        $('#formKpi')[0].reset();
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Peringatan',
+                            text: res.message,
+                        });
                     }
-                }
-
-                const formData = $(this).serialize();
-
-                $.ajax({
-                    url: "{{ route('kpi.store') }}",
-                    type: 'POST',
-                    data: formData,
-                    success: function(res) {
-                        if (res.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: res.message,
-                                showConfirmButton: false,
-                                timer: 2000
-                            });
-                            $('#formKpi')[0].reset();
-                        } else {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Peringatan',
-                                text: res.message,
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        if (xhr.status === 422) {
-                            const response = xhr.responseJSON;
-                            if (response.message) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Gagal!',
-                                    text: response.message,
-                                });
-                            } else if (response.errors) {
-                                let pesan = '';
-                                Object.values(response.errors).forEach(err => {
-                                    pesan += `• ${err[0]}\n`;
-                                });
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Validasi Gagal!',
-                                    text: pesan,
-                                });
-                            }
-                        } else {
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        const response = xhr.responseJSON;
+                        if (response.message) {
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Terjadi Kesalahan!',
-                                text: 'Gagal menyimpan data KPI. Coba lagi nanti.',
+                                title: 'Gagal!',
+                                text: response.message,
+                            });
+                        } else if (response.errors) {
+                            let pesan = '';
+                            Object.values(response.errors).forEach(err => {
+                                pesan += `• ${err[0]}\n`;
+                            });
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validasi Gagal!',
+                                text: pesan,
                             });
                         }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Terjadi Kesalahan!',
+                            text: 'Gagal menyimpan data KPI. Coba lagi nanti.',
+                        });
                     }
-                });
+                }
             });
         });
-    </script>
+    });
+</script>
 @endsection
