@@ -213,10 +213,33 @@
                                                     <i class="mdi mdi-camera me-1"></i>Foto Dokumentasi
                                                 </label>
                                                 <input type="file" class="form-control" id="weekly_foto" name="foto" accept="image/*">
+                                                <div class="mt-3">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="openCameraBtn">
+                                                        <i class="mdi mdi-camera"></i> Ambil dari Kamera
+                                                    </button>
+                                                </div>
+
+                                                <!-- Camera Container -->
+                                                <div id="cameraContainer" class="mt-3 d-none">
+                                                    <video id="cameraPreview" autoplay playsinline class="w-100 rounded" style="max-height:300px;"></video>
+
+                                                    <div class="mt-2 d-flex gap-2">
+                                                        <button type="button" class="btn btn-success btn-sm" id="captureBtn">
+                                                            <i class="mdi mdi-camera"></i> Ambil Foto
+                                                        </button>
+                                                        <button type="button" class="btn btn-danger btn-sm" id="closeCameraBtn">
+                                                            Tutup Kamera
+                                                        </button>
+                                                    </div>
+
+                                                    <canvas id="snapshotCanvas" class="d-none"></canvas>
+                                                </div>
                                                 <div class="form-text">Upload foto hasil pengukuran (Opsional, max 2MB)</div>
                                                 <div id="weekly_foto_preview" class="mt-3" style="display: none;">
                                                     <img src="" alt="Preview" class="img-thumbnail" style="max-width: 200px;">
                                                 </div>
+
+
                                             </div>
                                         </div>
                                     </div>
@@ -809,6 +832,66 @@
 <script src="{{ asset('material/assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 <script>
     $(document).ready(function() {
+        let stream = null;
+
+        $('#openCameraBtn').on('click', async function() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "environment"
+                    } // kamera belakang
+                });
+
+                $('#cameraContainer').removeClass('d-none');
+                $('#cameraPreview')[0].srcObject = stream;
+
+            } catch (err) {
+                alert('Tidak bisa mengakses kamera: ' + err.message);
+            }
+        });
+
+        $('#closeCameraBtn').on('click', function() {
+            stopCamera();
+        });
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            $('#cameraContainer').addClass('d-none');
+        }
+
+        $('#captureBtn').on('click', function() {
+            const video = document.getElementById('cameraPreview');
+            const canvas = document.getElementById('snapshotCanvas');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert ke blob
+            canvas.toBlob(function(blob) {
+                const file = new File([blob], "camera.jpg", {
+                    type: "image/jpeg"
+                });
+
+                // Masukkan ke input file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                document.getElementById('weekly_foto').files = dataTransfer.files;
+
+                // Preview
+                const url = URL.createObjectURL(blob);
+                $('#weekly_foto_preview img').attr('src', url);
+                $('#weekly_foto_preview').show();
+
+                stopCamera();
+            }, 'image/jpeg', 0.9);
+        });
+        
         const today = new Date().toISOString().split('T')[0];
         $('#daily_tanggal').val(today);
         $('#weekly_tanggal').val(today);

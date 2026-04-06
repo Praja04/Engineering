@@ -44,7 +44,8 @@ Route::prefix('wwtp')->group(function () {
 });
 // WWTP Performance Routes (menggunakan prefix berbeda)
 Route::prefix('wwtp-performance')->group(function () {
-
+    Route::get('/photo-gallery', [WWTPControllerPerformance::class, 'getPhotoGallery'])
+        ->name('wwtp.performance.photo-gallery');
     Route::get('/ph-harian', [WWTPControllerPerformance::class, 'indexPHHarian']);
     Route::post('/ph-harian', [WWTPControllerPerformance::class, 'storePHHarian']);
     Route::get('/ph-harian/{id}', [WWTPControllerPerformance::class, 'showPHHarian']);

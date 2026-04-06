@@ -29,7 +29,8 @@ class KpiController extends Controller
             'start_date'   => 'nullable|required_if:periode_tipe,weekly|date',
             'end_date'     => 'nullable|required_if:periode_tipe,weekly|date|after_or_equal:start_date',
             'month'        => 'nullable|required_if:periode_tipe,monthly|date_format:Y-m',
-            'invoice_listrik' => 'nullable|numeric|min:0',
+            'listrik_prd' => 'nullable|numeric|min:0',
+            'listrik_bas' => 'nullable|numeric|min:0',
             'steam' => 'nullable|numeric|min:0',
             'batubara' => 'nullable|numeric|min:0',
 
@@ -83,7 +84,8 @@ class KpiController extends Controller
             'month'        => $jenis === 'monthly' ? $request->month : null,
             'finish_goods' => $request->finish_goods,
             'kecap_matang' => $request->kecap_matang,
-            'invoice_listrik' => $request->invoice_listrik,
+            'listrik_prd' => $request->listrik_prd,
+            'listrik_bas' => $request->listrik_bas,
             'steam' => $request->steam,
             'batubara' => $request->batubara,
         ]);
@@ -162,7 +164,8 @@ class KpiController extends Controller
             'start_date'   => 'nullable|required_if:periode_tipe,weekly|date',
             'end_date'     => 'nullable|required_if:periode_tipe,weekly|date|after_or_equal:start_date',
             'month'        => 'nullable|required_if:periode_tipe,monthly|date_format:Y-m',
-            'invoice_listrik' => 'nullable|numeric|min:0',
+            'listrik_prd' => 'nullable|numeric|min:0',
+            'listrik_bas' => 'nullable|numeric|min:0',
             'steam' => 'nullable|numeric|min:0',
             'batubara' => 'nullable|numeric|min:0',
         ]);
@@ -185,7 +188,8 @@ class KpiController extends Controller
             'month'        => $jenis === 'monthly' ? $request->month : null,
             'finish_goods' => $request->finish_goods,
             'kecap_matang' => $request->kecap_matang,
-            'invoice_listrik' => $request->invoice_listrik,
+            'listrik_prd' => $request->listrik_prd,
+            'listrik_bas' => $request->listrik_bas,
             'steam' => $request->steam,
             'batubara' => $request->batubara,
         ]);
@@ -285,7 +289,7 @@ class KpiController extends Controller
         // Ambil finish goods dan kecap matang jika ada
         $finishGoods = $kpiData ? $kpiData->finish_goods : null;
         $kecapMatang = $kpiData ? $kpiData->kecap_matang : null;
-        $invoiceListrik = $kpiData ? $kpiData->invoice_listrik : null;
+        $invoiceListrik = $kpiData ? $kpiData->listrik_prd : null;
         $hasKpiData = ($finishGoods && $kecapMatang && $finishGoods > 0 && $kecapMatang > 0);
 
         /**
@@ -428,7 +432,7 @@ class KpiController extends Controller
 
             // Tambahkan invoice jika ada dan periode adalah monthly
             if ($invoiceListrik && str_contains($sumberKpi, 'monthly')) {
-                $response['kpi_data']['invoice_listrik'] = $invoiceListrik;
+                $response['kpi_data']['listrik_prd'] = $invoiceListrik;
             }
 
             $response['kpi'] = [
@@ -478,13 +482,75 @@ class KpiController extends Controller
             ->get([
                 'id',
                 'month',
-                'invoice_listrik',
+                'listrik_prd',
             ]);
 
         return response()->json([
             'status' => 'success',
             'month'  => $month,
             'data'   => $data
+        ]);
+    }
+
+    public function getChartListrikPrdPerFg(Request $request)
+    {
+        $year = $request->input('year', Carbon::now()->year);
+
+        $data = KpiModel::where('periode_tipe', 'monthly')
+        ->where('month', 'like', $year . '-%')   // <-- fix di sini
+            ->whereNotNull('listrik_prd')
+            ->whereNotNull('finish_goods')
+            ->where('finish_goods', '>', 0)
+            ->orderBy('month', 'asc')
+            ->get(['month', 'listrik_prd', 'finish_goods']);
+
+        $chartData = $data->map(function ($item) {
+            $ratio = ($item->listrik_prd / $item->finish_goods) * 10;
+            return [
+                'bulan'        => Carbon::parse($item->month)->format('M Y'),
+                'listrik_prd'  => $item->listrik_prd,
+                'finish_goods' => $item->finish_goods,
+                'nilai'        => round($ratio, 4),
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'year'   => $year,
+            'label'  => 'Listrik PRD / 10 Ton FG',
+            'satuan' => 'kWh/Ton',
+            'data'   => $chartData,
+        ]);
+    }
+
+    public function getChartListrikBasPerKecapMatang(Request $request)
+    {
+        $year = $request->input('year', Carbon::now()->year);
+
+        $data = KpiModel::where('periode_tipe', 'monthly')
+        ->where('month', 'like', $year . '-%')   // <-- fix di sini
+            ->whereNotNull('listrik_bas')
+            ->whereNotNull('kecap_matang')
+            ->where('kecap_matang', '>', 0)
+            ->orderBy('month', 'asc')
+            ->get(['month', 'listrik_bas', 'kecap_matang']);
+
+        $chartData = $data->map(function ($item) {
+            $ratio = $item->listrik_bas / $item->kecap_matang;
+            return [
+                'bulan'        => Carbon::parse($item->month)->format('M Y'),
+                'listrik_bas'  => $item->listrik_bas,
+                'kecap_matang' => $item->kecap_matang,
+                'nilai'        => round($ratio, 4),
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'year'   => $year,
+            'label'  => 'Listrik BAS / Kecap Matang',
+            'satuan' => 'kWh/Ton',
+            'data'   => $chartData,
         ]);
     }
 }
