@@ -1831,11 +1831,11 @@
                 style: {
                     fontSize: '11px',
                     fontWeight: 'bold',
-                    colors: ['#fff']
+                    colors: ['#000000']
                 },
                 background: {
                     enabled: true,
-                    foreColor: '#fff',
+                    foreColor: '#ffffff',
                     borderRadius: 4,
                     padding: 4,
                     opacity: .9,
