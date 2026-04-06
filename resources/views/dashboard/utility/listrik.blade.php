@@ -319,7 +319,7 @@
                     <div class="card-header bg-gradient-warning text-white border-0">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <h5 class="card-title mb-1 text-white fw-semibold">Listrik PRD / 10 Ton FG</h5>
+                                <h5 class="card-title mb-1 text-white fw-semibold">KPI Listrik PRD</h5>
                                 <p class="mb-0 opacity-75 small">(Listrik PRD ÷ Finish Goods) × 10 — Bulanan</p>
                             </div>
                             <div>
@@ -345,7 +345,7 @@
                     <div class="card-header bg-gradient-warning text-white border-0">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <h5 class="card-title mb-1 text-white fw-semibold">Listrik BAS / Kecap Matang</h5>
+                                <h5 class="card-title mb-1 text-white fw-semibold">KPI Listrik BAS</h5>
                                 <p class="mb-0 opacity-75 small">Listrik BAS ÷ Kecap Matang — Bulanan</p>
                             </div>
                             <div>
