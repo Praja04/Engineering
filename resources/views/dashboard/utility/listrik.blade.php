@@ -824,7 +824,7 @@
             $.getJSON(`/api/utility/kpi/chart/listrik-prd-fg?year=${year}`, function(res) {
                 const labels = res.data.map(d => d.bulan);
                 const values = res.data.map(d => d.nilai);
-                const target = 51;
+                const target = 510;
 
                 const options = baseOptions('bar');
                 options.chart.height = 320;
