@@ -2,26 +2,28 @@
 
 @section('styles')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    body {
-        font-family: 'DM Sans', sans-serif;
-    }
+   
 
     /* ── Summary Cards ── */
     .sum-card {
-        border-radius: 10px;
-        padding: 16px 18px;
+        border-radius: 16px;
+        padding: 20px 24px;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         position: relative;
         overflow: hidden;
-        transition: transform .2s;
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,0.04) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        transition: transform .2s, box-shadow .2s;
     }
 
     .sum-card:hover {
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.06);
     }
 
     .sum-card::before {
@@ -29,152 +31,191 @@
         position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        height: 3px;
-        border-radius: 10px 10px 0 0;
+        bottom: 0;
+        width: 5px;
     }
 
-    .sum-card.overdue::before {
-        background: #dc3545;
-    }
-
-    .sum-card.critical::before {
-        background: #fd7e14;
-    }
-
-    .sum-card.upcoming::before {
-        background: #ffc107;
-    }
-
-    .sum-card.scheduled::before {
-        background: #198754;
-    }
-
-    .sum-card.no-record::before {
-        background: #6c757d;
-    }
-
-    .sum-card.no-sched::before {
-        background: #343a40;
-    }
+    .sum-card.overdue::before { background: #ef4444; }
+    .sum-card.critical::before { background: #f97316; }
+    .sum-card.upcoming::before { background: #eab308; }
+    .sum-card.scheduled::before { background: #22c55e; }
+    .sum-card.no-record::before { background: #9ca3af; }
+    .sum-card.no-sched::before { background: #4b5563; }
 
     .sum-card__count {
-        font-size: 32px;
+        font-size: 36px;
         font-weight: 800;
         line-height: 1;
+        letter-spacing: -1px;
     }
 
     .sum-card__label {
-        font-size: 10.5px;
+        font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: .08em;
+        letter-spacing: .1em;
+        font-weight: 600;
+        color: #64748b;
     }
 
     /* ── Tab bar ── */
     .tab-bar {
-        display: flex;
+        display: inline-flex;
         gap: 4px;
-        padding: 4px;
-        width: fit-content;
+        padding: 6px;
         margin-bottom: 24px;
-        border-radius: 10px;
+        border-radius: 12px;
+        background: #f1f5f9;
+        border: 1px solid rgba(0,0,0,0.03) !important;
     }
 
     .tab-btn {
-        font-size: 12px;
-        letter-spacing: .05em;
-        text-transform: uppercase;
-        padding: 8px 20px;
-        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: .02em;
+        padding: 8px 24px;
+        border-radius: 8px;
         border: none;
         background: transparent;
+        color: #64748b;
         cursor: pointer;
-        transition: background .15s, color .15s;
+        transition: all .2s ease;
+    }
+
+    .tab-btn.active {
+        background: #ffffff;
+        color: #0f172a !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .tab-btn:hover:not(.active) {
+        color: #334155;
     }
 
     /* ── Filter chips ── */
     .filter-chip {
-        font-size: 11.5px;
-        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 8px 18px;
         border-radius: 20px;
         text-decoration: none;
         display: inline-block;
-        transition: all .15s;
+        transition: all .2s;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff;
+        color: #475569 !important;
+    }
+
+    .filter-chip:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+    }
+
+    .filter-chip.active-chip {
+        background: #2563eb !important;
+        border-color: #2563eb !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
     }
 
     /* ── Agenda Table ── */
     .agenda-table thead th {
-        font-size: 10.5px;
+        font-size: 11px;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .08em;
-        padding: 12px 20px;
+        color: #475569;
+        padding: 16px 24px;
+        background: #f1f5f9;
+        border-bottom: 2px solid #e2e8f0;
         text-align: left;
         white-space: nowrap;
     }
 
     .agenda-table tbody td {
-        padding: 14px 20px;
-        font-size: 13.5px;
+        padding: 20px 24px;
+        font-size: 14px;
         vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+    }
+
+    .agenda-table tbody tr:last-child td {
+        border-bottom: none;
     }
 
     .agenda-row {
-        transition: background .12s;
+        transition: background .15s;
+    }
+
+    .agenda-row:hover {
+        background: #f8fafc;
     }
 
     /* ── Machine info ── */
     .machine-code {
         font-size: 12px;
-        margin-bottom: 3px;
+        font-weight: 600;
+        color: #2563eb;
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
     }
 
     .machine-name {
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 15px;
+        font-weight: 600;
+        color: #0f172a;
     }
 
     .machine-meta {
-        font-size: 11.5px;
-        margin-top: 2px;
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 4px;
     }
 
     /* ── Last date ── */
     .last-date {
-        font-size: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #1e293b;
     }
 
     .last-date.none {
         font-style: italic;
+        color: #94a3b8;
     }
 
     /* ── Schedule item ── */
     .sched-item {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
 
     .sched-freq {
-        font-size: 11px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #475569;
         min-width: 72px;
     }
 
     .sched-due {
-        font-size: 12px;
+        font-size: 13px;
+        color: #64748b;
     }
 
     /* ── Status badge ── */
     .status-badge {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        font-size: 10.5px;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .06em;
-        padding: 3px 10px;
-        border-radius: 20px;
+        padding: 6px 12px;
+        border-radius: 24px;
         white-space: nowrap;
-        font-weight: 500;
     }
 
     .status-badge::before {
@@ -185,256 +226,175 @@
         flex-shrink: 0;
     }
 
-    .status-badge.overdue {
-        background: rgba(220, 53, 69, .12);
-        color: #dc3545;
-        border: 1px solid rgba(220, 53, 69, .25);
-    }
+    .status-badge.overdue { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+    .status-badge.overdue::before { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
 
-    .status-badge.overdue::before {
-        background: #dc3545;
-        box-shadow: 0 0 6px #dc3545;
-    }
+    .status-badge.critical { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
+    .status-badge.critical::before { background: #f97316; box-shadow: 0 0 6px #f97316; }
 
-    .status-badge.critical {
-        background: rgba(253, 126, 20, .12);
-        color: #fd7e14;
-        border: 1px solid rgba(253, 126, 20, .25);
-    }
+    .status-badge.upcoming { background: #fefce8; color: #ca8a04; border: 1px solid #fef9c3; }
+    .status-badge.upcoming::before { background: #eab308; }
 
-    .status-badge.critical::before {
-        background: #fd7e14;
-        box-shadow: 0 0 6px #fd7e14;
-    }
+    .status-badge.scheduled { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+    .status-badge.scheduled::before { background: #22c55e; }
 
-    .status-badge.upcoming {
-        background: rgba(255, 193, 7, .10);
-        color: #e6a800;
-        border: 1px solid rgba(255, 193, 7, .25);
-    }
+    .status-badge.no_record { background: #f8fafc; color: #64748b; border: 1px solid #f1f5f9; }
+    .status-badge.no_record::before { background: #94a3b8; }
 
-    .status-badge.upcoming::before {
-        background: #ffc107;
-    }
-
-    .status-badge.scheduled {
-        background: rgba(25, 135, 84, .10);
-        color: #198754;
-        border: 1px solid rgba(25, 135, 84, .2);
-    }
-
-    .status-badge.scheduled::before {
-        background: #198754;
-    }
-
-    .status-badge.no_record {
-        background: rgba(108, 117, 125, .10);
-        color: #6c757d;
-        border: 1px solid rgba(108, 117, 125, .2);
-    }
-
-    .status-badge.no_record::before {
-        background: #6c757d;
-    }
-
-    .status-badge.no_schedule {
-        background: rgba(52, 58, 64, .10);
-        color: #6c757d;
-        border: 1px solid rgba(52, 58, 64, .2);
-    }
-
-    .status-badge.no_schedule::before {
-        background: #343a40;
-    }
+    .status-badge.no_schedule { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+    .status-badge.no_schedule::before { background: #64748b; }
 
     /* ── Days chip ── */
     .days-chip {
-        font-size: 11px;
-        padding: 2px 8px;
-        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
     }
 
-    .days-chip.neg {
-        background: rgba(220, 53, 69, .15);
-        color: #dc3545;
-    }
-
-    .days-chip.warn {
-        background: rgba(253, 126, 20, .15);
-        color: #fd7e14;
-    }
-
-    .days-chip.mid {
-        background: rgba(255, 193, 7, .12);
-        color: #e6a800;
-    }
-
-    .days-chip.ok {
-        background: rgba(25, 135, 84, .10);
-        color: #198754;
-    }
+    .days-chip.neg { background: #fef2f2; color: #ef4444; }
+    .days-chip.warn { background: #fff7ed; color: #f97316; }
+    .days-chip.mid { background: #fefce8; color: #eab308; }
+    .days-chip.ok { background: #f0fdf4; color: #22c55e; }
 
     /* ── Calendar ── */
     .cal-nav a {
-        font-size: 13px;
+        font-size: 14px;
+        font-weight: 500;
         text-decoration: none;
-        padding: 6px 14px;
-        border-radius: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        color: #475569;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         transition: all .15s;
     }
+    
+    .cal-nav a:hover { background: #f8fafc; border-color: #cbd5e1; color:#0f172a;}
 
     .cal-grid {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
         gap: 1px;
-        border-radius: 10px;
+        border-radius: 16px;
         overflow: hidden;
+        border: 1px solid #e2e8f0;
+        background: #e2e8f0;
     }
 
     .cal-day-header {
-        padding: 10px;
-        font-size: 10px;
+        padding: 12px;
+        font-size: 11px;
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: .08em;
         text-align: center;
+        background: #f8fafc;
+        color: #64748b;
     }
 
     .cal-cell {
-        min-height: 100px;
-        padding: 10px;
+        min-height: 110px;
+        padding: 12px;
+        background: #ffffff;
         transition: background .12s;
     }
 
+    .cal-cell:hover { background: #f8fafc; }
+
     .cal-day-num {
-        font-size: 12px;
-        margin-bottom: 6px;
-        width: 24px;
-        height: 24px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
+        color: #64748b;
     }
 
     .cal-cell.today .cal-day-num {
-        background: #0d6efd;
-        color: #fff;
+        background: #2563eb;
+        color: #ffffff;
         border-radius: 50%;
+        box-shadow: 0 4px 10px rgba(37,99,235,0.3);
     }
 
     .cal-event {
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 3px;
-        margin-bottom: 2px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 4px;
+        margin-bottom: 4px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 100%;
+        border: 1px solid transparent;
     }
 
-    .cal-event.overdue {
-        background: rgba(220, 53, 69, .2);
-        color: #dc3545;
-    }
-
-    .cal-event.critical {
-        background: rgba(253, 126, 20, .2);
-        color: #fd7e14;
-    }
-
-    .cal-event.upcoming {
-        background: rgba(255, 193, 7, .15);
-        color: #e6a800;
-    }
-
-    .cal-event.scheduled {
-        background: rgba(25, 135, 84, .10);
-        color: #198754;
-    }
+    .cal-event.overdue { background: #fef2f2; color: #dc2626; border-color: #fee2e2; }
+    .cal-event.critical { background: #fff7ed; color: #ea580c; border-color: #ffedd5; }
+    .cal-event.upcoming { background: #fefce8; color: #ca8a04; border-color: #fef9c3; }
+    .cal-event.scheduled { background: #f0fdf4; color: #16a34a; border-color: #dcfce7; }
 
     /* ── Pagination ── */
     .page-btn {
-        font-size: 12px;
-        padding: 6px 12px;
-        border-radius: 6px;
-        background: transparent;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 8px 14px;
+        border-radius: 8px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: #475569;
         cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
         transition: all .15s;
     }
+    
+    .page-btn:hover:not(.disabled) { background: #f8fafc; color: #0f172a; }
+    .page-btn.btn-primary { background: #2563eb; border-color: #2563eb; color: #ffffff; box-shadow: 0 4px 10px rgba(37,99,235,0.2); }
 
     /* ── Search ── */
-    .search-wrap {
-        position: relative;
-    }
-
-    .search-wrap svg {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;
-    }
-
+    .search-wrap { position: relative; }
+    .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #94a3b8; }
     .search-input {
-        font-size: 13px;
-        padding: 7px 12px 7px 34px;
-        border-radius: 6px;
-        width: 220px;
+        font-size: 14px;
+        padding: 10px 14px 10px 40px;
+        border-radius: 10px;
+        width: 250px;
+        border: 1px solid #e2e8f0;
         outline: none;
-        transition: border-color .15s;
+        transition: all .2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
+    .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
     /* ── Misc ── */
     .agenda-header__badge {
-        font-size: 11px;
-        padding: 3px 10px;
-        border-radius: 20px;
-        letter-spacing: .06em;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 24px;
+        letter-spacing: .08em;
         text-transform: uppercase;
         display: inline-block;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+        background: #eff6ff;
+        color: #2563eb;
     }
 
-    .section-divider {
-        margin: 28px 0;
-    }
-
-    @keyframes rowIn {
-        from {
-            opacity: 0;
-            transform: translateY(6px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .agenda-table tbody tr {
-        animation: rowIn .25s ease both;
-    }
+    .section-divider { margin: 32px 0; }
+    @keyframes rowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .agenda-table tbody tr { animation: rowIn .3s ease both; }
 
     @media (max-width: 900px) {
-
         .agenda-table thead th:nth-child(4),
-        .agenda-table tbody td:nth-child(4) {
-            display: none;
-        }
+        .agenda-table tbody td:nth-child(4) { display: none; }
     }
-
     @media (max-width: 640px) {
-        .cal-cell {
-            min-height: 60px;
-            padding: 6px 4px;
-        }
-
-        .cal-event {
-            display: none;
-        }
+        .cal-cell { min-height: 70px; padding: 8px 6px; }
+        .cal-event { display: none; }
     }
 </style>
 @endsection
@@ -485,7 +445,7 @@
                 <span class="text-secondary text-uppercase" style="font-size:11px;letter-spacing:.07em">Jenis Mesin</span>
                 <div class="d-flex flex-wrap gap-2">
                     @foreach ($jenisMtcList as $jenis)
-                    <a href="{{ route('agenda.index', ['jenis_mtc' => $jenis, 'month' => $calendarMonth]) }}" class="filter-chip border {{ $selectedJenis === $jenis ? 'btn btn-primary border-primary' : 'text-secondary border-secondary border-opacity-25' }}">
+                    <a href="{{ route('agenda.index', ['jenis_mtc' => $jenis, 'month' => $calendarMonth]) }}" class="filter-chip {{ $selectedJenis === $jenis ? 'active-chip' : '' }}">
                         {{ $jenis }}
                     </a>
                     @endforeach
@@ -500,10 +460,10 @@
 
             {{-- ══════════════════════════════════════ LIST PANEL ══ --}}
             <div id="tab-list">
-                <div class="card border rounded-3 overflow-hidden">
+                <div class="table-container">
 
                     {{-- Panel Header --}}
-                    <div class="card-header  border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3 py-3 px-4">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 py-4 px-4 bg-white border-bottom">
                         <div class="d-flex align-items-center gap-2">
                             <span class="fw-bold">{{ $selectedJenis }}</span>
                             <span class="badge bg-secondary bg-opacity-10 text-secondary border" id="rowCount">
@@ -547,17 +507,17 @@
                                     {{-- No. --}}
                                     <td>
                                         @if ($si === 0)
-                                        <span class="text-secondary small">{{ $i + 1 }}</span>
+                                        <span class="small">{{ $i + 1 }}</span>
                                         @endif
                                     </td>
 
                                     {{-- Mesin info --}}
                                     <td>
                                         @if ($si === 0)
-                                        <div class="machine-code text-primary">{{ $mesin->kode_mesin }}</div>
+                                        <div class="machine-code">{{ $mesin->kode_mesin }}</div>
                                         <div class="machine-name">{{ $mesin->nama_mesin }}</div>
                                         @if ($mesin->lokasi)
-                                        <div class="machine-meta text-secondary">📍 {{ $mesin->lokasi }}</div>
+                                        <div class="machine-meta">📍 {{ $mesin->lokasi }}</div>
                                         @endif
                                         @endif
                                     </td>
@@ -566,12 +526,12 @@
                                     <td>
                                         @if ($si === 0)
                                         @if ($item['last_date'])
-                                        <div class="last-date text-secondary">{{ $item['last_date']->format('d M Y') }}</div>
-                                        <div class="text-secondary mt-1" style="font-size:11px">
+                                        <div class="last-date">{{ $item['last_date']->format('d M Y') }}</div>
+                                        <div class="mt-1" style="font-size:11px">
                                             {{ $item['last_date']->diffForHumans() }}
                                         </div>
                                         @else
-                                        <span class="last-date none text-secondary">— Belum ada</span>
+                                        <span class="last-date none">— Belum ada</span>
                                         @endif
                                         @endif
                                     </td>
@@ -579,11 +539,11 @@
                                     {{-- Frekuensi & next due --}}
                                     <td>
                                         <div class="sched-item">
-                                            <span class="sched-freq text-secondary">{{ $sch['label'] }}</span>
+                                            <span class="sched-freq">{{ $sch['label'] }}</span>
                                             @if ($sch['next_due'])
-                                            <span class="sched-due text-secondary">→ {{ $sch['next_due']->format('d M Y') }}</span>
+                                            <span class="sched-due">→ {{ $sch['next_due']->format('d M Y') }}</span>
                                             @else
-                                            <span class="text-secondary fst-italic" style="font-size:11px">Tidak ada jadwal</span>
+                                            <span class="fst-italic" style="font-size:11px">Tidak ada jadwal</span>
                                             @endif
                                         </div>
                                     </td>
@@ -631,7 +591,7 @@
 
             {{-- ════════════════════════════════ CALENDAR PANEL ══ --}}
             <div id="tab-calendar" style="display:none">
-                <div class="card border rounded-3">
+                <div class="table-container">
                     <div class="p-4">
 
                         {{-- Nav --}}
@@ -719,11 +679,9 @@
     /* ── Tab switching ── */
     function switchTab(name, btn) {
         document.querySelectorAll('.tab-btn').forEach(b => {
-            b.classList.remove('active', 'btn-primary', 'text-white');
-            b.classList.add('text-secondary');
+            b.classList.remove('active');
         });
-        btn.classList.add('active', 'btn-primary', 'text-white');
-        btn.classList.remove('text-secondary');
+        btn.classList.add('active');
         ['list', 'calendar'].forEach(t => {
             document.getElementById('tab-' + t).style.display = (t === name) ? '' : 'none';
         });
@@ -811,8 +769,7 @@
         // set initial active tab style
         const firstTab = document.querySelector('.tab-btn');
         if (firstTab) {
-            firstTab.classList.add('btn-primary', 'text-white');
-            firstTab.classList.remove('text-secondary');
+            firstTab.classList.add('active');
         }
         visibleRows = Array.from(document.querySelectorAll('#agendaBody .agenda-row'));
         renderPage();

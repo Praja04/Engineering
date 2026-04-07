@@ -233,7 +233,7 @@
                                             <th class="fw-semibold text-center">SV30 <small class="text-muted">(mL/L)</small></th>
                                             <th class="fw-semibold text-center">pH</th>
                                             <th class="fw-semibold text-center">MLSS <small class="text-muted">(mg/L)</small></th>
-                                            <th class="fw-semibold text-center">SVL <small class="text-muted">(mL/g)</small></th>
+                                            <th class="fw-semibold text-center">SVI <small class="text-muted">(mL/g)</small></th>
                                             <th class="fw-semibold text-center">DO <small class="text-muted">(mg/L)</small></th>
                                             <th class="fw-semibold text-center">Aksi</th>
                                         </tr>
@@ -474,7 +474,7 @@
                                     <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_mlss" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">SVL (mL/g) <span class="text-danger">*</span></label>
+                                    <label class="form-label">SVI (mL/g) <span class="text-danger">*</span></label>
                                     <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_svl" required>
                                 </div>
                                 <div class="col-md-4">
@@ -1152,7 +1152,7 @@
                             unit: 'mg/L'
                         },
                         {
-                            lbl: 'SVL',
+                            lbl: 'SVI',
                             val: s.svl,
                             unit: 'mL/g'
                         },
