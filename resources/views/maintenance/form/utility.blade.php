@@ -477,7 +477,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center">
-                <img src="{{ asset('storage/mtc/ttd/ttd_mtc.jpeg') }}" style="max-width: 100%; border: 1px solid #ccc;">
+                <img src="{{ asset('storage/mtc/ttd/ttd_teknisi.jpeg') }}" style="max-width: 100%; border: 1px solid #ccc;">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnSaveTtd">
@@ -719,14 +719,7 @@
                 });
             });
 
-            // Event listener pakai $(document).on supaya elemen dinamis terbaca
-            $(document).on('change', '#staffDropdown', function() {
-                selectedStaff = $(this).val() || null;
-            });
-
-            $(document).on('change', '#userDropdown', function() {
-                selectedUser = $(this).val() || null;
-            });
+            
         });
 
         $(document).on('change', '#staffDropdown', function() {
