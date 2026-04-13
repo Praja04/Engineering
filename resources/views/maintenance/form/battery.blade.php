@@ -43,8 +43,12 @@
                                 <input type="date" name="tanggal" class="form-control" required>
                             </div>
                             <div class="col-md-3">
-                                <label>Waktu</label>
-                                <input type="time" name="waktu" class="form-control" required>
+                                <label>Waktu Mulai</label>
+                                <input type="time" name="waktu_mulai" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Waktu Selesai</label>
+                                <input type="time" name="waktu_selesai" class="form-control" required>
                             </div>
                             <div class="col-md-3">
                                 <label>Battery Type</label>
@@ -158,7 +162,7 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            const STORAGE_KEY = 'form_mtc_battery_data';
+          
 
             let cellIndex = 0;
             let cellNumber = 1;
@@ -274,7 +278,7 @@
             $('#btnAddCell').click(function() {
                 renderCellCard(false);
                 renumberCells();
-                saveFormToLocal();
+                 
             });
 
             function renumberCells() {
@@ -313,7 +317,7 @@
             $(document).on('click', '.btnDeleteCell', function() {
                 $(this).closest('.cell-card').remove();
                 renumberCells();
-                saveFormToLocal();
+                 
             });
 
             // STATUS LABEL + WARNA
@@ -343,7 +347,7 @@
                     $label.text('Tidak OK').removeClass('text-success fst-italic').addClass('text-danger');
                 }
 
-                saveFormToLocal(); // simpan tiap perubahan
+                  // simpan tiap perubahan
             });
 
             $('#btnReset').on('click', function() {
@@ -355,8 +359,8 @@
                     confirmButtonText: 'Ya, reset',
                     cancelButtonText: 'Batal'
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        localStorage.removeItem(STORAGE_KEY);
+                    if (result.isConfirmed) { 
+                        
                         $('#formBattery')[0].reset();
                         $('.status-label-default').each(function() {
                             $(this)
@@ -371,126 +375,10 @@
                 });
             });
 
-            function saveFormToLocal() {
-                const formData = $('#formBattery').serializeArray();
-                const data = {};
-
-                formData.forEach(item => {
-                    data[item.name] = item.value;
-                });
-
-                // Simpan status label (tetap seperti sebelumnya)
-                $('.item-card').each(function() {
-                    const $label = $(this).find('.status-label-default');
-                    const name = $(this).find('input[type="radio"]').first().attr('name');
-                    if (name) {
-                        const labelText = $label.text().trim();
-                        data[`label_${name}`] = labelText;
-                    }
-                });
-
-                data.cellCount = $('.cell-card').length;
-
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            }
-
-            function loadFormFromLocal() {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (!saved) {
-                    console.log("No saved data → keep default 12 cells");
-                    return;
-                }
-
-                let data;
-                try {
-                    data = JSON.parse(saved);
-                } catch (e) {
-                    console.error("Corrupt localStorage:", e);
-                    localStorage.removeItem(STORAGE_KEY);
-                    return;
-                }
-
-                const savedCellCount = parseInt(data.cellCount) || MIN_CELL;
-
-
-                if (savedCellCount > MIN_CELL) {
-                    $('#batteryContainer').empty(); // Kosongkan kalau ada cell tambahan
-                    cellIndex = 0;
-                    cellNumber = 1;
-
-                    for (let i = 0; i < savedCellCount; i++) {
-                        const isDefault = i < MIN_CELL; // true hanya untuk 0-11 (cell 1-12)
-                        renderCellCard(isDefault);
-                    }
-                }
-
-                setTimeout(() => {
-                    // 2. Load nilai ke semua field (radio, number, note)
-                    Object.keys(data).forEach(key => {
-
-                        const value = data[key];
-
-                        // === RADIO BOOLEAN ===
-                        if (key.startsWith('details[') && (value === '0' || value === '1')) {
-                            const radioSelector =
-                                `input[type="radio"][name="${CSS.escape(key)}"][value="${value}"]`;
-
-                            const $radio = $(radioSelector);
-                            if ($radio.length) {
-                                $radio.prop('checked', true).trigger('change');
-                            }
-                            return;
-                        }
-
-                        // === INPUT LAIN ===
-                        const $el = $(`[name="${CSS.escape(key)}"]`);
-                        if ($el.length) {
-                            $el.val(value);
-                        }
-                    });
-
-
-                    // 3. Restore label status
-                    $('.item-card').each(function(index) {
-                        const name = $(this).find('input[type="radio"]').first().attr('name');
-                        if (name && data[`label_${name}`]) {
-                            const labelText = data[`label_${name}`];
-                            const $label = $(this).find('.status-label-default');
-
-                            $label.text(labelText);
-
-                            if (labelText === 'OK') {
-                                $label.removeClass('fst-italic text-danger').addClass(
-                                    'text-success');
-                            } else if (labelText === 'Tidak OK') {
-                                $label.removeClass('fst-italic text-success').addClass(
-                                    'text-danger');
-                            } else {
-                                $label.addClass('fst-italic');
-                            }
-                        }
-                    });
-
-                    // 4. Re-number supaya urut & update index name kalau perlu
-                    renumberCells();
-
-                    // console.log(`Loaded ${$('.cell-card').length} cells. Example note:`,
-                    //     $('[name="details[0][level_air_aki]_note"]').val());
-
-                }, 50); // Delay kecil untuk DOM settle
-
-                cellIndex = savedCellCount;
-                cellNumber = savedCellCount + 1;
-            }
-
-            // Panggil save di lebih banyak tempat
-            $('#formBattery').on('change input', 'input, select, textarea', function() {
-                saveFormToLocal();
-            });
-
+           
             $(document).on('click', '.btnDeleteCell', function() {
                 $(this).closest('.cell-card').remove();
-                saveFormToLocal(); // tambahkan ini
+                  // tambahkan ini
             });
 
             function collectNotOkDetails() {
@@ -654,7 +542,7 @@
                             timer: 2000,
                             showConfirmButton: false
                         }).then(() => {
-                            localStorage.removeItem(STORAGE_KEY);
+                            
                             $('#formBattery')[0].reset();
                             $('.status-label-default').each(function() {
                                 $(this)

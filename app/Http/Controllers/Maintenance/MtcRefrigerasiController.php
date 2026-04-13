@@ -88,17 +88,12 @@ class MtcRefrigerasiController extends Controller
             }
 
             // Simpan TTD teknisi (level 1 — auto approved)
-            $ttdPath = null;
+            $ttdPaths = [
+                'teknisi' => 'mtc/ttd/ttd_teknisi.jpeg',  // TTD operator/teknisi
+                'staff'   => 'mtc/ttd/ttd_staff.jpeg',     // TTD supervisor
+                'user'    => 'mtc/ttd/ttd_user.jpeg',      // TTD user MT/MTC
+            ];
 
-            if ($detailRequest->filled('ttd_base64')) {
-                $user    = Auth::user();
-                $ttdPath = $this->saveBase64Signature(
-                    $detailRequest->ttd_base64,
-                    'mtc/refrigerasi',
-                    $user->username,
-                    $user->departemen ?? null
-                );
-            }
 
             // Approval flow
             $approvalFlows = [
@@ -125,6 +120,7 @@ class MtcRefrigerasiController extends Controller
             foreach ($approvalFlows as $flow) {
 
                 $isAutoApproved = $flow['auto'];
+                $ttdPath = $isAutoApproved ? ($ttdPaths[$flow['role']] ?? null) : null;
 
                 MtcApprovalModel::create([
                     'mtc_main_id' => $main->id,
@@ -162,7 +158,7 @@ class MtcRefrigerasiController extends Controller
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Refrigerasi')
             ->orderBy('tanggal', 'desc')
-            ->orderBy('waktu', 'desc')
+            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
                 'kebutuhanMaterial',

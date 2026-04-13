@@ -127,7 +127,8 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Tanggal</th>
-                                    <th>Waktu</th>
+                                    <th>Waktu Mulai</th>
+                                    <th>Waktu Selesai</th>  
                                     <th>No Unit</th>
                                     <th>Departemen</th>
                                     <th>Shift</th>
@@ -195,8 +196,12 @@
                                 <input type="text" class="form-control" name="no_unit" id="editNoUnit">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Waktu <span class="text-danger">*</span></label>
-                                <input type="time" class="form-control" name="waktu" id="editWaktu" required>
+                                <label class="form-label">Waktu Mulai <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" name="waktu_mulai" id="editWaktuMulai" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Waktu Selesai <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" name="waktu_selesai" id="editWaktuSelesai" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Shift</label>
@@ -422,8 +427,12 @@
                             <div class="meta-value">${row.tanggal ?? '-'}</div>
                         </div>
                         <div class="col-md-3">
-                            <div class="meta-label">Waktu</div>
-                            <div class="meta-value">${row.waktu ?? '-'}</div>
+                            <div class="meta-label">Waktu Mulai</div>
+                            <div class="meta-value">${row.waktu_mulai ?? '-'}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="meta-label">Waktu Selesai</div>
+                            <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
                         </div>
                         <div class="col-md-3">
                             <div class="meta-label">Departemen</div>
@@ -498,7 +507,12 @@
                         }
                     },
                     {
-                        data: 'waktu',
+                        data: 'waktu_mulai',
+                        orderable: false,
+                        defaultContent: '-'
+                    },
+                    {
+                        data: 'waktu_selesai',
                         orderable: false,
                         defaultContent: '-'
                     },
@@ -766,14 +780,15 @@
 
                 $('#editId').val(row.id);
                 $('#editTanggal').val(toDateInputValue(row.tanggal));
-                $('#editWaktu').val((row.waktu ?? '').toString().slice(0, 5));
+                $('#editWaktuMulai').val((row.waktu_mulai ?? '').toString().slice(0, 5));
+                $('#editWaktuSelesai').val((row.waktu_selesai ?? '').toString().slice(0, 5));
                 $('#editNoUnit').val(row.electric_p2h.no_unit ?? '');
                 $('#editShift').val(row.electric_p2h.shift ?? '');
                 $('#editDepartemen').val(row.departemen ?? '');
                 $('#editCatatan').val(row.electric_p2h.catatan ?? '');
                 $('#editHourMeter').val(row.electric_p2h.hours_meter ?? '');
 
-                $('#editSub').text(`${fmtDate(row.tanggal)} • ${row.waktu ?? '-'}`);
+                $('#editSub').text(`${fmtDate(row.tanggal)} • ${row.waktu_mulai ?? '-'} - ${row.waktu_selesai ?? '-'}`);
 
                 buildEditForm(row);
 

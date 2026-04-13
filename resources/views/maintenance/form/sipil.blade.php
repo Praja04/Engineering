@@ -105,8 +105,13 @@
                             @enderror
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Waktu <span class="text-danger">*</span></label>
-                            <input type="time" class="form-control" name="waktu" value="{{ old('waktu', now()->format('H:i')) }}" required>
+                            <label class="form-label">Waktu Mulai
+                                <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" name="waktu_mulai" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Waktu Selesai</label>
+                            <input type="time" class="form-control" name="waktu_selesai">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Departemen
@@ -127,7 +132,7 @@
                             </label>
 
                             <select name="area" id="area" class="form-control">
-                                <option value="">-- Pilih Area --</option>
+                                <option value="" disabled selected>-- Pilih Area --</option>
                                 @foreach ($area as $item)
                                 <option value="{{ $item->nama_mesin }}" data-lokasi="{{ $item->lokasi }}" data-departemen="{{ $item->dept }}">
                                     {{ $item->nama_mesin }} - {{ $item->lokasi }}
@@ -293,28 +298,18 @@
 <div class="modal fade" id="modalTtd" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header">
                 <h5 class="modal-title">Tanda Tangan Teknisi</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body text-center">
-                <canvas id="signature-pad" style="border:1px solid #ccc; width:100%; height:200px;"></canvas>
-
-                <div class="mt-2">
-                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearTtd">
-                        Reset TTD
-                    </button>
-                </div>
+                <img src="{{ asset('storage/mtc/ttd/ttd_teknisi.jpeg') }}" style="max-width: 100%; border: 1px solid #ccc;">
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnSaveTtd">
                     Simpan & Kirim
                 </button>
             </div>
-
         </div>
     </div>
 </div>
@@ -328,14 +323,17 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="staffDropdown" class="form-label">Staff</label>
+                    <label class="form-label">Staff Engineering</label>
                     <select class="form-select" id="staffDropdown">
                         <option value="">Pilih staff</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="userDropdown" class="form-label">User MT/MTC</label>
-                    <select class="form-select" id="userDropdown">
+                    <label class="form-label">User MT/MTC</label>
+                    <select class="form-select" id="userDept">
+                        <option value="">Pilih Departemen</option>
+                    </select>
+                    <select class="form-select mt-2 d-none" id="userDropdown">
                         <option value="">Pilih user</option>
                     </select>
                 </div>
@@ -352,9 +350,7 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
-        const STORAGE_KEY = 'form_mtc_sipil_data';
         let index = 0;
-        let isLoading = false;
         $('#area').on('change', function() {
             const selected = $(this).find(':selected');
 
@@ -377,126 +373,17 @@
             }
         });
 
-        function saveFormToLocalStorage() {
-            let formData = {};
-            let materials = [];
 
-            // === FORM NORMAL ===
-            $('#form-mtc-sipil')
-                .find('input, select, textarea')
-                .not('[name^="materials"]')
-                .each(function() {
-                    const name = $(this).attr('name');
-                    if (!name) return;
-
-                    if ($(this).is(':radio')) {
-                        if ($(this).is(':checked')) {
-                            formData[name] = $(this).val();
-                        }
-                    } else if ($(this).is(':checkbox')) {
-                        formData[name] = $(this).is(':checked');
-                    } else {
-                        formData[name] = $(this).val();
-                    }
-                });
-
-            // === KEBUTUHAN MATERIAL ===
-            $('#materialTable tbody tr').each(function() {
-                const row = {
-                    mid: $(this).find('input[name*="[mid]"]').val(),
-                    desc: $(this).find('input[name*="[desc]"]').val(),
-                    qty: $(this).find('input[name*="[qty]"]').val()
-                };
-
-                if (row.mid || row.desc || row.qty) {
-                    materials.push(row);
-                }
-            });
-
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                form: formData,
-                materials: materials
-            }));
-        }
-
-        function loadFormFromLocalStorage() {
-            const savedData = localStorage.getItem(STORAGE_KEY);
-            if (!savedData) return;
-
-            isLoading = true;
-
-            const data = JSON.parse(savedData);
-
-            // === FORM ===
-            if (data.form) {
-                for (const [name, value] of Object.entries(data.form)) {
-                    const $input = $(`[name="${name}"]`);
-
-                    if ($input.is(':radio')) {
-                        $(`input[name="${name}"][value="${value}"]`)
-                            .prop('checked', true)
-                            .trigger('change');
-
-                    } else if ($input.is(':checkbox')) {
-                        $input.prop('checked', value);
-
-                    } else {
-                        $input.val(value).trigger('change');
-                    }
-                }
-            }
-
-            // === MATERIALS ===
-            $('#materialTable tbody').empty();
-            index = 1;
-
-            if (data.materials && data.materials.length) {
-                data.materials.forEach(item => {
-                    let row = `
-                            <tr>
-                                <td>
-                                    <input type="number" name="materials[${index}][mid]"
-                                        class="form-control form-control-sm"
-                                        value="${item.mid || ''}">
-                                </td>
-                                <td>
-                                    <input type="text" name="materials[${index}][desc]"
-                                        class="form-control form-control-sm"
-                                        value="${item.desc || ''}">
-                                </td>
-                                <td>
-                                    <input type="number" name="materials[${index}][qty]"
-                                        class="form-control form-control-sm"
-                                        value="${item.qty || ''}">
-                                </td>
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
-                                </td>
-                            </tr>
-                        `;
-                    $('#materialTable tbody').append(row);
-                    index++;
-                });
-            }
-
-            isLoading = false;
-        }
-
-        loadFormFromLocalStorage();
-
-        $('#form-mtc-sipil').on('change input', 'input, select, textarea', function() {
-            saveFormToLocalStorage();
-        });
 
         $('.status-radio').on('change', function() {
             const $row = $(this).closest('.item-row');
-            const isOk = $row.find('input[value="1"]').is(':checked');
+            // const isOk = $row.find('input[value="1"]').is(':checked');
             const isNg = $row.find('input[value="0"]').is(':checked');
             const $ket = $row.find('.keterangan-wrapper input');
 
-            if (isOk || isNg) {
-                $row.find('.status-label-default').addClass('d-none');
-            }
+            // if (isOk || isNg) {
+            //     $row.find('.status-label-default').addClass('d-none');
+            // }
 
             if (isNg) {
                 $row.addClass('not-ok');
@@ -508,7 +395,6 @@
                 $ket.val('').removeClass('is-invalid').removeAttr('required');
             }
 
-            saveFormToLocalStorage();
         });
 
         $('#addRow').on('click', function() {
@@ -531,13 +417,10 @@
 
             $('#materialTable tbody').append(row);
             index++;
-
-            saveFormToLocalStorage();
         });
 
         $(document).on('click', '.removeRow', function() {
             $(this).closest('tr').remove();
-            saveFormToLocalStorage();
         });
         // End Kebutuhan Material
 
@@ -575,7 +458,7 @@
             $('#materialTable tbody').empty();
             // updateRowState();
 
-            localStorage.removeItem(STORAGE_KEY);
+
         }
 
         function collectNotOkDetails() {
@@ -599,7 +482,6 @@
             return details.join(" | ");
         }
 
-        let signaturePad = null;
         let pendingFormData = null;
         let selectedStaff = null;
         let selectedUser = null;
@@ -610,34 +492,57 @@
 
             $('#modalApprover').modal('show');
 
-            // Load staff & user maintenance dari API
             $.get('/api/mtc/users/approvers', function(res) {
                 const $staffDropdown = $('#staffDropdown');
-                const $userDropdown = $('#userDropdown');
-
-                $staffDropdown.empty().append(`<option value="">Pilih staff</option>`);
-                res.staff.forEach(user => {
-                    $staffDropdown.append(
-                        `<option value="${user.id}">${user.username}</option>`);
+                $staffDropdown.empty().append('<option value="">Pilih staff</option>');
+                res.staff.forEach(u => {
+                    $staffDropdown.append(`<option value="${u.id}">${u.username}</option>`);
                 });
 
-                $userDropdown.empty().append(`<option value="">Pilih user</option>`);
-                res.user.forEach(user => {
-                    $userDropdown.append(
-                        `<option value="${user.id}">${user.username}</option>`);
+                const depts = [...new Set(res.user.map(u => u.departemen))];
+                const $userDept = $('#userDept');
+                $userDept.empty().append('<option value="">Pilih Departemen</option>');
+                depts.forEach(d => $userDept.append(`<option value="${d}">${d}</option>`));
+
+                $('#userDept').off('change').on('change', function() {
+                    const dept = $(this).val();
+                    const filtered = res.user.filter(u => u.departemen === dept);
+                    const $userDropdown = $('#userDropdown');
+
+                    $userDropdown.empty().append('<option value="">Pilih user</option>');
+                    filtered.forEach(u => {
+                        $userDropdown.append(`<option value="${u.id}">${u.username}</option>`);
+                    });
+                    $userDropdown.removeClass('d-none');
+                    selectedUser = null;
                 });
             });
         });
 
-        // Pilih staff
-        $('#staffDropdown').on('change', function() {
-            selectedStaff = $(this).val();
+        $(document).on('change', '#staffDropdown', function() {
+            selectedStaff = $(this).val() || null;
         });
 
-        // Pilih user maintenance
-        $('#userDropdown').on('change', function() {
-            selectedUser = $(this).val();
+        $(document).on('change', '#userDropdown', function() {
+            selectedUser = $(this).val() || null;
         });
+
+        
+
+        $('#btnSaveTtd').on('click', function() {
+            const keterangan = collectNotOkDetails();
+
+            pendingFormData.append('ttd_path', 'mtc/ttd/ttd_teknisi.jpeg');
+            if (keterangan) {
+                pendingFormData.append('keterangan', keterangan);
+            }
+            pendingFormData.delete('_token');
+            pendingFormData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+            $('#modalTtd').modal('hide');
+            submitFinalForm(pendingFormData);
+        });
+
 
         // Klik tombol pilih
         $('#btnSelectApprover').on('click', function() {
@@ -653,22 +558,7 @@
             $('#modalTtd').modal('show'); // lanjut modal TTD
         });
 
-        $('#modalTtd').on('shown.bs.modal', function() {
-            if (!signaturePad) {
-                const canvas = document.getElementById('signature-pad');
-                canvas.width = canvas.offsetWidth;
-                canvas.height = 200;
-                signaturePad = new SignaturePad(canvas);
-            }
-        });
 
-        $('#btnClearTtd').on('click', function() {
-            signaturePad.clear();
-        });
-
-        $('#modalTtd').on('hidden.bs.modal', function() {
-            if (signaturePad) signaturePad.clear();
-        });
 
         $('#btnSaveTtd').on('click', function() {
 

@@ -50,10 +50,15 @@
          <td>: {{ $main->tanggal ?? '-' }}</td>
      </tr>
      <tr>
-         <th>Waktu</th>
-         <td>: {{ $main->waktu ?? '-' }}</td>
+         <th>Waktu Mulai</th>
+         <td>: {{ $main->waktu_mulai ?? '-' }}</td>
      </tr>
      <tr>
+         <th>Waktu Selesai</th>
+         <td>: {{ $main->waktu_selesai ?? '-' }}</td>
+     </tr>
+     <tr>
+
          <th>Departemen</th>
          <td>: {{ $main->departemen ?? '-' }}</td>
      </tr>

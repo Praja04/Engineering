@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
     @include 'utility/chemical-routes.php';
     @include 'utility/dashboard.php';
     @include 'ejo/ejo-routes.php';
+    @include 'project/project_routes.php';
 
     //////////    End View Routes   ///////////
 

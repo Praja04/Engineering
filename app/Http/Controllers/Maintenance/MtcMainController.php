@@ -39,10 +39,14 @@ class MtcMainController extends Controller
     {
         $staff = User::where('departemen', 'engineering')
             ->where('jabatan', '!=', 'operator')
+            ->where(function ($q) {
+                $q->where('bagian', 'Engineering Maintenance & Improvement')
+                  ->orWhere('bagian', 'Engineering');
+            })
             ->get(['id', 'username']);
 
         $user = User::where('departemen', '!=', 'engineering')
-            ->get(['id', 'username']);
+            ->get(['id', 'username','departemen']);
 
         return response()->json([
             'staff' => $staff,
