@@ -72,18 +72,12 @@ class MtcDieselP2hController extends Controller
                 'mtc_main_id' => $main->id,
             ]);
 
-            $ttdPath = null;
+            $ttdPaths = [
+                'teknisi' => 'mtc/ttd/ttd_teknisi.jpeg',  // TTD operator/teknisi
+                'staff'   => 'mtc/ttd/ttd_staff.jpeg',     // TTD supervisor
+                'user'    => 'mtc/ttd/ttd_user.jpeg',      // TTD user MT/MTC
+            ];
 
-            if ($detailRequest->filled('ttd_base64')) {
-                $user = Auth::user();
-
-                $ttdPath = saveBase64Signature(
-                    $detailRequest->ttd_base64,
-                    'mtc/diesel-p2h',
-                    $user->username,
-                    $user->departemen
-                );
-            }
 
             $approvalFlows = [
                 [
@@ -109,6 +103,7 @@ class MtcDieselP2hController extends Controller
             foreach ($approvalFlows as $flow) {
 
                 $isAutoApproved = $flow['auto'];
+                $ttdPath = $isAutoApproved ? ($ttdPaths[$flow['role']] ?? null) : null;
 
                 MtcApprovalModel::create([
                     'mtc_main_id' => $main->id,
@@ -146,7 +141,7 @@ class MtcDieselP2hController extends Controller
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Diesel P2H')
             ->orderBy('tanggal', 'desc')
-            ->orderBy('waktu', 'desc')
+            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
                 'dieselP2h.mesin'

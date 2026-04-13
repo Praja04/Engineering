@@ -161,7 +161,8 @@
                                     <th>Nama Mesin</th>
                                     <th>Lokasi</th>
                                     <th>Tanggal</th>
-                                    <th>Waktu</th>
+                                    <th>Waktu Mulai</th>
+                                    <th>Waktu Selesai</th>
                                     <th>Paket</th>
                                     <th>status</th>
                                     <th style="width:180px;" class="text-center">Aksi</th>
@@ -240,8 +241,12 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Waktu</label>
-                                <input type="time" class="form-control" name="waktu" id="editWaktu">
+                                <label class="form-label">Waktu Mulai</label>
+                                <input type="time" class="form-control" name="waktu_mulai" id="editWaktuMulai">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Waktu Selesai</label>
+                                <input type="time" class="form-control" name="waktu_selesai" id="editWaktuSelesai">
                             </div>
                         </div>
 
@@ -481,8 +486,12 @@
                             <div class="meta-value">${fmtDate(row.tanggal)}</div>
                         </div>
                         <div class="col-md-3">
-                            <div class="meta-label">Waktu</div>
-                            <div class="meta-value">${row.waktu ?? '-'}</div>
+                            <div class="meta-label">Waktu Mulai</div>
+                            <div class="meta-value">${row.waktu_mulai ?? '-'}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="meta-label">Waktu Selesai</div>
+                            <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
                         </div>
                         <div class="col-md-3">
                             <div class="meta-label">Paket</div>
@@ -644,7 +653,12 @@
                         }
                     },
                     {
-                        data: 'waktu',
+                        data: 'waktu_mulai',
+                        orderable: false,
+                        defaultContent: '-'
+                    },
+                    {
+                        data: 'waktu_selesai',
                         orderable: false,
                         defaultContent: '-'
                     },
@@ -710,7 +724,7 @@
                 if (!row) return;
 
                 $('#detailTitle').text('Detail Inspeksi Mtc Diesel Engine');
-                $('#detailSub').text(`${fmtDate(row.tanggal)} - ${row.waktu ?? '-'}`);
+                $('#detailSub').text(`${fmtDate(row.tanggal)} - ${row.waktu_mulai ?? '-'} - ${row.waktu_selesai ?? '-'}`);
                 $('#detailBody').html(buildDetailHTML(row));
 
                 new bootstrap.Modal(document.getElementById('modalDetail')).show();
@@ -821,14 +835,16 @@
 
                 $('#editId').val(row.id);
                 $('#editTanggal').val(toDateInputValue(row.tanggal));
-                $('#editWaktu').val((row.waktu ?? '').toString().slice(0, 5));
+                $('#editWaktuMulai').val((row.waktu_mulai ?? '').toString().slice(0, 5));
+                $('#editWaktuSelesai').val((row.waktu_selesai ?? '').toString().slice(0, 5));
+
                 $('#editPaket').val(row.paket ?? '');
                 $('#editKorektif').val(row.diesel_engine?.korektif ?? '');
                 $('#editNamaMesin')
                     .val(row.diesel_engine?.mesin_id)
                     .trigger('change');
 
-                $('#editSub').text(`${fmtDate(row.tanggal)} • ${row.waktu ?? '-'}`);
+                $('#editSub').text(`${fmtDate(row.tanggal)} • ${row.waktu_mulai ?? '-'} - ${row.waktu_selesai ?? '-'}`);
 
                 buildEditForm(row);
                 renderEditMaterials(

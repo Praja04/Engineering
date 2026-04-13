@@ -107,7 +107,9 @@
                                     <tr>
                                         <th>No</th>
                                         <th>Tanggal</th>
-                                        <th>Waktu</th>
+                                        <th>Waktu Mulai</th>
+                                        <th>Waktu Selesai</th>
+
                                         <th>Battery Type</th>
                                         <th>No Unit</th>
                                         <th>No Seri</th>
@@ -136,7 +138,8 @@
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Tanggal:</strong> <span id="modalTanggal"></span></div>
-                        <div class="col-md-4"><strong>Waktu:</strong> <span id="modalWaktu"></span></div>
+                        <div class="col-md-4"><strong>Waktu Mulai:</strong> <span id="modalWaktuMulai"></span></div>
+                        <div class="col-md-4"><strong>Waktu Selesai:</strong> <span id="modalWaktuSelesai"></span></div>
                         <div class="col-md-4"><strong>Dibuat oleh:</strong> <span id="modalUser"></span></div>
                     </div>
                     <div class="row mb-3">
@@ -196,9 +199,14 @@
                                 <input type="date" name="tanggal" id="editTanggal" class="form-control" required>
                             </div>
                             <div class="col-md-3">
-                                <label>Waktu</label>
-                                <input type="time" name="waktu" id="editWaktu" class="form-control" step="60"
-                                    value="{{ old('waktu', now()->format('H:i')) }}" required>
+                                <label>Waktu Mulai</label>
+                                <input type="time" name="waktu_mulai" id="editWaktuMulai" class="form-control" step="60"
+                                    value="{{ old('waktu_mulai', now()->format('H:i')) }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Waktu Selesai</label>
+                                <input type="time" name="waktu_selesai" id="editWaktuSelesai" class="form-control" step="60"
+                                    value="{{ old('waktu_selesai', now()->format('H:i')) }}" required>
                             </div>
                             <div class="col-md-3">
                                 <label>Battery Type</label>
@@ -300,7 +308,12 @@
                         },
                     },
                     {
-                        data: 'waktu',
+                        data: 'waktu_mulai',
+                        orderable: false,
+                        defaultContent: '-'
+                    },
+                    {
+                        data: 'waktu_selesai',
                         orderable: false,
                         defaultContent: '-'
                     },
@@ -460,7 +473,9 @@
                 // Data utama dari row (yang sudah di-flatten atau diambil dari API response)
                 $('#modalBatteryId').text(rowData.id);
                 $('#modalTanggal').text(rowData.tanggal);
-                $('#modalWaktu').text(rowData.waktu);
+                $('#modalWaktuMulai').text(rowData.waktu_mulai || '-');
+                $('#modalWaktuSelesai').text(rowData.waktu_selesai || '-');
+
 
                 // Ambil dari object battery
                 const battery = rowData.battery || {};
@@ -576,7 +591,9 @@
                 $('#editId').val(rowData.id);
                 $('#editBatteryId').text(rowData.id);
                 $('#editTanggal').val(rowData.tanggal);
-                $('#editWaktu').val(rowData.waktu);
+                $('#editWaktuMulai').val(rowData.waktu_mulai);
+                $('#editWaktuSelesai').val(rowData.waktu_selesai);
+
                 $('#editBatteryType').val(battery.battery_type || '');
                 $('#editNoUnit').val(battery.no_unit || '');
                 $('#editNoSeri').val(battery.no_seri || '');
@@ -849,9 +866,14 @@
                 const keteranganFormatted = collectNotOkDetailsEdit();
                 $('#editKeterangan').val(keteranganFormatted);
 
-                let waktu = $('#editWaktu').val();
-                if (waktu && waktu.length === 8) {
-                    $('#editWaktu').val(waktu.slice(0, 5));
+                let waktuMulai = $('#editWaktuMulai').val();
+                if (waktuMulai && waktuMulai.length === 8) {
+                    $('#editWaktuMulai').val(waktuMulai.slice(0, 5));
+                }
+
+                let waktuSelesai = $('#editWaktuSelesai').val();
+                if (waktuSelesai && waktuSelesai.length === 8) {
+                    $('#editWaktuSelesai').val(waktuSelesai.slice(0, 5));
                 }
 
                 const formData = $('#editFormBattery').serialize();

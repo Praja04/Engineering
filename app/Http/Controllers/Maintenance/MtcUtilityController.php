@@ -86,18 +86,15 @@ class MtcUtilityController extends Controller
                 ],
             ];
 
-            $ttdPath = null;
+            // $ttdPath = null;
 
-            if ($detailRequest->filled('ttd_base64')) {
-                $user = Auth::user();
 
-                $ttdPath = saveBase64Signature(
-                    $detailRequest->ttd_base64,
-                    'mtc/utility',
-                    $user->username,
-                    $user->departemen
-                );
-            }
+            $ttdPaths = [
+                'teknisi' => 'mtc/ttd/ttd_teknisi.jpeg',  // TTD operator/teknisi
+                'staff'   => 'mtc/ttd/ttd_staff.jpeg',     // TTD supervisor
+                'user'    => 'mtc/ttd/ttd_user.jpeg',      // TTD user MT/MTC
+            ];
+
 
             $approvalFlows = [
                 [
@@ -121,8 +118,10 @@ class MtcUtilityController extends Controller
             ];
 
             foreach ($approvalFlows as $flow) {
-
                 $isAutoApproved = $flow['auto'];
+
+                // Ambil ttd sesuai role
+                $ttdPath = $isAutoApproved ? ($ttdPaths[$flow['role']] ?? null) : null;
 
                 MtcApprovalModel::create([
                     'mtc_main_id' => $main->id,
@@ -130,7 +129,7 @@ class MtcUtilityController extends Controller
                     'role'        => $flow['role'],
                     'approver_id' => $flow['approver_id'],
                     'status'      => $isAutoApproved ? 'approved' : 'pending',
-                    'ttd'         => $isAutoApproved ? $ttdPath : null,
+                    'ttd'         => $ttdPath,
                     'action_at'   => $isAutoApproved ? now() : null,
                     'action_by'   => $isAutoApproved ? $userId : null,
                 ]);
@@ -160,7 +159,7 @@ class MtcUtilityController extends Controller
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Utility')
             ->orderBy('tanggal', 'desc')
-            ->orderBy('waktu', 'desc')
+            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
                 'utility.mesin:id,nama_mesin,lokasi',

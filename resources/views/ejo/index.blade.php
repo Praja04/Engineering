@@ -34,7 +34,6 @@
         background: #f1f5f9;
     }
 
-    /* ── Page Header ── */
     .ejo-header {
         display: flex;
         align-items: center;
@@ -86,7 +85,6 @@
         text-decoration: none;
     }
 
-    /* ── Import Button ── */
     .btn-import {
         display: inline-flex;
         align-items: center;
@@ -122,7 +120,32 @@
         transform: translateY(0);
     }
 
-    /* ── Drop Overlay ── */
+    .btn-template {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: var(--surface);
+        color: #7c3aed;
+        border: 1.5px solid #7c3aed;
+        border-radius: var(--radius-sm);
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s;
+    }
+
+    .btn-template:hover {
+        background: #f5f3ff;
+        color: #7c3aed;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, .2);
+    }
+
+    /* Drop Overlay */
     #dropOverlay {
         display: none;
         position: fixed;
@@ -159,11 +182,6 @@
         }
     }
 
-    .drop-zone svg {
-        color: var(--primary);
-        margin-bottom: 16px;
-    }
-
     .drop-zone h3 {
         font-size: 20px;
         font-weight: 700;
@@ -177,7 +195,7 @@
         margin: 0;
     }
 
-    /* ── Filter Card ── */
+    /* Filter */
     .filter-card {
         background: var(--surface);
         border-radius: var(--radius);
@@ -197,7 +215,6 @@
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: .6px;
-        margin-right: 4px;
         white-space: nowrap;
     }
 
@@ -265,10 +282,10 @@
         background: #fef2f2;
     }
 
-    /* ── Table Card ── */
+    /* Table */
     .data-ejo {
         margin-top: 25px;
-        padding: 26px 15px;
+        padding: 0 0 26px;
     }
 
     .table-card {
@@ -305,7 +322,6 @@
         border-radius: 20px;
     }
 
-    /* ── Table ── */
     table {
         width: 100%;
         border-collapse: collapse;
@@ -343,7 +359,6 @@
         vertical-align: middle;
     }
 
-    /* Ticket ID chip */
     .ticket-id {
         font-family: 'JetBrains Mono', monospace;
         font-size: 12.5px;
@@ -355,7 +370,7 @@
         white-space: nowrap;
     }
 
-    /* Status Badges */
+    /* ── Status Badges ── */
     .badge {
         display: inline-flex;
         align-items: center;
@@ -375,13 +390,28 @@
     }
 
     .badge-done {
-        background: var(--success-light);
-        color: var(--success);
+        background: var(--success);
+        color: var(--text);
+    }
+
+    .badge-progress {
+        background: var(--primary);
+        color: var(--text);
     }
 
     .badge-open {
-        background: var(--warning-light);
-        color: var(--warning);
+        background: var(--warning);
+        color: var(--text);
+    }
+
+    .badge-pending {
+        background: #f3f4f6;
+        color: var(--text);
+    }
+
+    .badge-cancel {
+        background: #fef2f2;
+        color: var(--text);
     }
 
     /* Progress */
@@ -410,7 +440,7 @@
         color: var(--text-muted);
     }
 
-    /* Requestor avatar */
+    /* Requestor */
     .requestor-cell {
         display: flex;
         align-items: center;
@@ -431,14 +461,13 @@
         flex-shrink: 0;
     }
 
-    /* Detail button */
     .btn-detail {
         display: inline-flex;
         align-items: center;
         gap: 5px;
         padding: 6px 14px;
-        background: var(--primary-light);
-        color: var(--primary);
+        background: var(--primary);
+        color: white;
         border: 1.5px solid rgba(37, 99, 235, .2);
         border-radius: var(--radius-sm);
         font-family: inherit;
@@ -456,7 +485,7 @@
         box-shadow: 0 4px 10px rgba(37, 99, 235, .3);
     }
 
-    /* ── Loading Overlay ── */
+    /* Loading Overlay */
     #loadingOverlay {
         display: none;
         position: fixed;
@@ -526,7 +555,7 @@
         width: 0%;
     }
 
-    /* ── Toast ── */
+    /* Toast */
     #toastContainer {
         position: fixed;
         top: 24px;
@@ -580,7 +609,6 @@
             opacity: 1;
             transform: translateX(0);
             max-height: 100px;
-            margin-bottom: 0;
         }
 
         to {
@@ -653,7 +681,6 @@
         font-size: 16px;
         line-height: 1;
         flex-shrink: 0;
-        margin-top: 1px;
     }
 
     .toast-close:hover {
@@ -664,11 +691,6 @@
     .empty-state {
         text-align: center;
         padding: 64px 24px;
-    }
-
-    .empty-state svg {
-        color: #cbd5e1;
-        margin-bottom: 16px;
     }
 
     .empty-state h4 {
@@ -715,7 +737,7 @@
         }
     }
 
-    /* ── Pagination ── */
+    /* Pagination */
     .pagination-wrap {
         display: flex;
         align-items: center;
@@ -809,7 +831,16 @@
             </div>
 
             <div style="display:flex;align-items:center;gap:10px;">
-                <input type="file" id="excelFile" name="file" hidden accept=".xlsx,.xls,.csv">
+                <input type="file" id="excelFile" name="file" hidden accept=".xlsx,.xls">
+
+                <a href="/api/ejo/template" class="btn-template">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Template
+                </a>
 
                 <a href="{{ url('ejo/create') }}" class="btn-create">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -837,7 +868,10 @@
             <select id="filterStatus" class="filter-select">
                 <option value="">Semua Status</option>
                 <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Pending">Pending</option>
                 <option value="Done">Done</option>
+                <option value="Cancel">Cancel</option>
             </select>
 
             <select id="filterClassification" class="filter-select">
@@ -849,7 +883,7 @@
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
                 </svg>
-                <input type="text" id="searchTicket" class="filter-input" placeholder="Cari Ticket ID..." style="padding-left:36px;" onkeyup="if(event.key==='Enter')loadEjo(1)">
+                <input type="text" id="searchTicket" class="filter-input" placeholder="Cari Ticket ID / Subjek..." style="padding-left:36px;" onkeyup="if(event.key==='Enter') loadEjo(1)">
             </div>
 
             <button class="btn-filter" onclick="loadEjo(1)">
@@ -895,7 +929,7 @@
                     </table>
                 </div>
 
-                <!-- Pagination -->
+                <!-- Pagination — hidden by default, shown via JS -->
                 <div class="pagination-wrap" id="paginationWrap" style="display:none;">
                     <div class="pagination-info" id="paginationInfo"></div>
                     <div class="pagination-controls" id="paginationControls"></div>
@@ -921,13 +955,13 @@
 <!-- Drag & Drop Overlay -->
 <div id="dropOverlay">
     <div class="drop-zone">
-        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--primary);margin-bottom:16px;">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
         <h3>Lepas file di sini</h3>
-        <p>File Excel (.xlsx, .xls, .csv) akan diimport otomatis</p>
+        <p>File Excel (.xlsx, .xls) akan diimport otomatis</p>
     </div>
 </div>
 
@@ -935,9 +969,9 @@
 <div id="toastContainer"></div>
 
 <script>
-    /* ══════════════════════════════
-   TOAST SYSTEM
-══════════════════════════════ */
+    /* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
     function showToast(type, title, message, duration = 4500) {
         const icons = {
             success: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
@@ -945,7 +979,6 @@
             warning: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
             info: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
         }
-
         const toast = document.createElement('div')
         toast.className = `toast toast-${type}`
         toast.innerHTML = `
@@ -954,8 +987,7 @@
             <p class="toast-title">${title}</p>
             <p class="toast-msg">${message}</p>
         </div>
-        <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>
-    `
+        <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>`
         document.getElementById('toastContainer').appendChild(toast)
         setTimeout(() => dismissToast(toast), duration)
     }
@@ -966,9 +998,9 @@
         setTimeout(() => toast.remove(), 320)
     }
 
-    /* ══════════════════════════════
+    /* ══════════════════════════════════════════════
        IMPORT
-    ══════════════════════════════ */
+    ══════════════════════════════════════════════ */
     document.getElementById('excelFile').addEventListener('change', function() {
         if (!this.files[0]) return
         importFile(this.files[0])
@@ -977,12 +1009,11 @@
 
     function importFile(file) {
         const ext = file.name.split('.').pop().toLowerCase()
-        if (!['xlsx', 'xls', 'csv'].includes(ext)) {
-            showToast('error', 'Format Tidak Didukung', 'Harap unggah file Excel (.xlsx, .xls) atau CSV.')
+        if (!['xlsx', 'xls'].includes(ext)) {
+            showToast('error', 'Format Tidak Didukung', 'Harap unggah file Excel (.xlsx atau .xls).')
             return
         }
 
-        // Show loading overlay & animate progress bar
         const overlay = document.getElementById('loadingOverlay')
         const prog = document.getElementById('fileProgress')
         overlay.classList.add('active')
@@ -998,6 +1029,9 @@
 
         fetch('/api/ejo/import', {
                 method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
+                },
                 body: formData
             })
             .then(res => res.json())
@@ -1006,7 +1040,19 @@
                 prog.style.width = '100%'
                 setTimeout(() => {
                     overlay.classList.remove('active')
-                    showToast('success', 'Import Berhasil!', `${res.count ?? 'Semua'} data berhasil diimport ke sistem.`)
+
+                    // ── Tampilkan detail hasil import ──────────────────────────
+                    if (res.result) {
+                        const r = res.result
+                        showToast(
+                            'success',
+                            'Import Berhasil!',
+                            `Inserted: ${r.inserted} | Updated: ${r.updated} | Skipped: ${r.skipped}`
+                        )
+                    } else {
+                        showToast('success', 'Import Berhasil!', res.message ?? 'Data berhasil diimport.')
+                    }
+
                     loadEjo(1)
                 }, 350)
             })
@@ -1016,26 +1062,22 @@
             })
     }
 
-    /* ══════════════════════════════
+    /* ══════════════════════════════════════════════
        DRAG & DROP
-    ══════════════════════════════ */
+    ══════════════════════════════════════════════ */
     let dragCounter = 0
-
     document.addEventListener('dragenter', e => {
         dragCounter++
         if (e.dataTransfer.types.includes('Files'))
             document.getElementById('dropOverlay').classList.add('active')
     })
-
     document.addEventListener('dragleave', () => {
         if (--dragCounter <= 0) {
             dragCounter = 0
             document.getElementById('dropOverlay').classList.remove('active')
         }
     })
-
     document.addEventListener('dragover', e => e.preventDefault())
-
     document.addEventListener('drop', e => {
         e.preventDefault()
         dragCounter = 0
@@ -1044,42 +1086,35 @@
         if (file) importFile(file)
     })
 
-    /* ══════════════════════════════
+    /* ══════════════════════════════════════════════
        LOAD TABLE
-    ══════════════════════════════ */
-    // Baca classification dari URL query string (dari sidebar)
+    ══════════════════════════════════════════════ */
     const urlParams = new URLSearchParams(window.location.search)
     const urlClassification = urlParams.get('classification') ?? ''
 
-    // Set filter classification jika ada di URL
-    if (urlClassification) {
-        const sel = document.getElementById('filterClassification')
-        if (sel) sel.value = urlClassification
-    }
-
-    let currentPage = 1
-
     function loadEjo(page = 1) {
-        currentPage = page
         const status = document.getElementById('filterStatus').value
         const search = document.getElementById('searchTicket').value
-        // Ambil dari dropdown (sudah ter-set oleh loadClassifications), fallback ke urlClassification
         const classification = document.getElementById('filterClassification')?.value ?? urlClassification
         const tbody = document.getElementById('ejoBody')
 
-        // Skeleton rows
+        // Skeleton
         tbody.innerHTML = Array(6).fill(0).map(() => `
-        <tr>
-            ${[80,100,160,90,60,120,100,80,60].map(w => `
-                <td><div class="skeleton-cell" style="width:${w}px"></div></td>
-            `).join('')}
-        </tr>
+        <tr>${[80,100,160,90,70,120,100,80,60].map(w =>
+            `<td><div class="skeleton-cell" style="width:${w}px"></div></td>`
+        ).join('')}</tr>
     `).join('')
 
-        // Sembunyikan pagination saat loading
         document.getElementById('paginationWrap').style.display = 'none'
 
-        fetch(`/api/ejo?status=${encodeURIComponent(status)}&search=${encodeURIComponent(search)}&classification=${encodeURIComponent(classification)}&page=${page}`)
+        const params = new URLSearchParams({
+            status,
+            search,
+            classification,
+            page
+        })
+
+        fetch(`/api/ejo?${params}`)
             .then(res => res.json())
             .then(res => renderTable(res))
             .catch(() => {
@@ -1089,9 +1124,9 @@
     }
 
     function renderTable(res) {
+        // Laravel paginate() → { data:[], total, per_page, last_page, current_page, from, to }
         const data = res.data ?? []
         const total = res.total ?? data.length
-        const perPage = res.per_page ?? 20
         const lastPage = res.last_page ?? 1
         const currentPg = res.current_page ?? 1
         const from = res.from ?? (data.length ? 1 : 0)
@@ -1100,18 +1135,20 @@
         document.getElementById('recordCount').textContent = `${total} data`
 
         if (data.length === 0) {
-            document.getElementById('ejoBody').innerHTML = `<tr><td colspan="9">${emptyStateHTML()}</td></tr>`
+            document.getElementById('ejoBody').innerHTML =
+                `<tr><td colspan="9">${emptyStateHTML()}</td></tr>`
             document.getElementById('paginationWrap').style.display = 'none'
             return
         }
 
         document.getElementById('ejoBody').innerHTML = data.map((ejo, i) => `
         <tr style="animation: fadeUp .3s ease ${i * 35}ms both;">
-            <td><span class="ticket-id">${ejo.ticket_id}</span></td>
+            <td><span class="ticket-id">${ejo.ticket_id ?? '—'}</span></td>
             <td style="color:var(--text-muted)">${ejo.department ?? '—'}</td>
-            <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${ejo.subject ?? ''}">${ejo.subject ?? '—'}</td>
+            <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+                title="${ejo.subject ?? ''}">${ejo.subject ?? '—'}</td>
             <td>${ejo.category ?? '—'}</td>
-            <td><span>${ejo.status}</span></td>
+            <td>${renderBadge(ejo.status)}</td>
             <td>${renderProgress(ejo.progress)}</td>
             <td>
                 <div class="requestor-cell">
@@ -1119,7 +1156,9 @@
                     <span>${ejo.requestor ?? '—'}</span>
                 </div>
             </td>
-            <td style="color:var(--text-muted);font-size:13px;white-space:nowrap">${formatDate(ejo.request_date)}</td>
+            <td style="color:var(--text-muted);font-size:13px;white-space:nowrap">
+                ${formatDate(ejo.request_date)}
+            </td>
             <td>
                 <a href="/ejo/${ejo.id}" class="btn-detail">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1135,28 +1174,61 @@
         renderPagination(currentPg, lastPage, total, from, to)
     }
 
+    /* ── Status badge ── */
+    function renderBadge(status) {
+        const map = {
+            'Done': 'badge-done',
+            'In Progress': 'badge-progress',
+            'Open': 'badge-open',
+            'Pending': 'badge-pending',
+            'Cancel': 'badge-cancel',
+        }
+        const cls = map[status] ?? 'badge-open'
+        return `<span class="badge ${cls}" style="color:white;">${status ?? '—'}</span>`
+    }
+
+    /* ── Progress bar ── */
+    function renderProgress(progress) {
+        // progress adalah array dari eager load, ambil yang pertama
+        const pct = (Array.isArray(progress) && progress.length) ?
+            (progress[0].progress_percent ?? 0) :
+            0
+        return `
+        <div class="progress-wrap">
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" style="width:${pct}%"></div>
+            </div>
+            <span class="progress-label">${pct}%</span>
+        </div>`
+    }
+
+    /* ══════════════════════════════════════════════
+       PAGINATION
+    ══════════════════════════════════════════════ */
     function renderPagination(currentPg, lastPage, total, from, to) {
+        const wrap = document.getElementById('paginationWrap')
+
+        // Sembunyikan jika hanya 1 halaman
         if (lastPage <= 1) {
-            document.getElementById('paginationWrap').style.display = 'none'
+            wrap.style.display = 'none'
             return
         }
 
-        document.getElementById('paginationWrap').style.display = 'flex'
+        wrap.style.display = 'flex'
 
-        // Info teks
         document.getElementById('paginationInfo').innerHTML =
             `Menampilkan <strong>${from}–${to}</strong> dari <strong>${total}</strong> data`
 
-        // Bangun nomor halaman dengan elipsis
         const pages = buildPageRange(currentPg, lastPage)
-
         const prevDisabled = currentPg <= 1 ? 'disabled' : ''
         const nextDisabled = currentPg >= lastPage ? 'disabled' : ''
 
         let html = `
-            <button class="pg-btn" ${prevDisabled} onclick="loadEjo(${currentPg - 1})" title="Sebelumnya">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>`
+        <button class="pg-btn" ${prevDisabled} onclick="loadEjo(${currentPg - 1})" title="Sebelumnya">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"/>
+            </svg>
+        </button>`
 
         pages.forEach(p => {
             if (p === '...') {
@@ -1167,53 +1239,40 @@
         })
 
         html += `
-            <button class="pg-btn" ${nextDisabled} onclick="loadEjo(${currentPg + 1})" title="Berikutnya">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>`
+        <button class="pg-btn" ${nextDisabled} onclick="loadEjo(${currentPg + 1})" title="Berikutnya">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"/>
+            </svg>
+        </button>`
 
         document.getElementById('paginationControls').innerHTML = html
     }
 
-    // Buat array halaman dengan elipsis: [1, '...', 4, 5, 6, '...', 12]
     function buildPageRange(current, last) {
         if (last <= 7) return Array.from({
             length: last
         }, (_, i) => i + 1)
 
-        const pages = []
-        const delta = 1 // halaman di kiri/kanan current
-
-        pages.push(1)
-
-        const left = Math.max(2, current - delta)
-        const right = Math.min(last - 1, current + delta)
+        const pages = [1]
+        const left = Math.max(2, current - 1)
+        const right = Math.min(last - 1, current + 1)
 
         if (left > 2) pages.push('...')
-
         for (let i = left; i <= right; i++) pages.push(i)
-
         if (right < last - 1) pages.push('...')
-
         pages.push(last)
 
         return pages
     }
 
-    function renderProgress(progress) {
-        const pct = (progress && progress.length) ? (progress[0].progress_percent ?? 0) : 0
-        return `
-        <div class="progress-wrap">
-            <div class="progress-bar-outer">
-                <div class="progress-bar-inner" style="width:${pct}%"></div>
-            </div>
-            <span class="progress-label">${pct}%</span>
-        </div>`
-    }
-
+    /* ══════════════════════════════════════════════
+       HELPERS
+    ══════════════════════════════════════════════ */
     function emptyStateHTML(title = 'Tidak ada data', msg = 'Coba ubah filter pencarian Anda.') {
         return `
         <div class="empty-state">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" style="color:#cbd5e1;margin-bottom:16px;">
                 <rect x="2" y="3" width="20" height="14" rx="2"/>
                 <path d="M8 21h8M12 17v4"/>
             </svg>
@@ -1240,12 +1299,9 @@
         document.getElementById('filterStatus').value = ''
         document.getElementById('searchTicket').value = ''
         document.getElementById('filterClassification').value = ''
-        // Update URL supaya sidebar tidak aktif classification lama
         history.replaceState(null, '', '/ejo')
         loadEjo(1)
     }
-
-
 
     function loadClassifications() {
         return fetch('/api/ejo/classifications')
@@ -1258,12 +1314,12 @@
                     opt.textContent = c.name + (c.type_name ? ` (${c.type_name})` : '')
                     sel.appendChild(opt)
                 })
-                // Set value SETELAH semua options sudah ditambahkan
                 if (urlClassification) sel.value = urlClassification
             })
             .catch(() => {})
     }
 
+    // Init
     loadClassifications().then(() => loadEjo(1))
 </script>
 @endsection

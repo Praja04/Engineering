@@ -41,7 +41,7 @@ class EjoTicketController extends Controller
             });
         }
 
-        $tickets = $query->latest()->paginate(20);
+        $tickets = $query->latest()->paginate(10);
 
         return response()->json($tickets);
     }

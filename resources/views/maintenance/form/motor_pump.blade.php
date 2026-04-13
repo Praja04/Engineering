@@ -3,6 +3,7 @@
 @section('title', ' Form Check Mtc Motor Pump')
 
 @section('styles')
+
 <style>
     .item-card.not-ok {
         background-color: rgba(220, 53, 69, 0.05);
@@ -51,6 +52,20 @@
     .select2-container--bootstrap-5 .select2-results__option small {
         font-size: 10px !important;
     }
+
+    #waktu_picker {
+        cursor: pointer;
+        caret-color: transparent;
+        /* sembunyikan cursor ketik */
+        user-select: none;
+    }
+
+    #waktu_selesai_picker {
+        cursor: pointer;
+        caret-color: transparent;
+        /* sembunyikan cursor ketik */
+        user-select: none;
+    }
 </style>
 @endsection
 
@@ -73,8 +88,11 @@
                             <label class="form-label">Nama Mesin <span class="text-danger">*</span></label>
                             {{-- <input type="text" class="form-control" name="mesin_id" required> --}}
                             <select name="mesin_id" id="mesin_id" class="form-control" required>
+                                <option value="" disabled selected>
+                                    Pilih mesin - lokasi
+                                </option>
                                 @foreach ($mesin as $item)
-                                <option value="{{ $item->id }}" data-lokasi="{{ $item->lokasi }}" data-departemen="{{ $item->dept }}">
+                                <option value="{{ $item->id }}" data-lokasi="{{ $item->lokasi }}" data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}">
                                     {{ $item->nama_mesin }} - {{ $item->lokasi }}
                                 </option>
                                 @endforeach
@@ -86,16 +104,24 @@
                             <input type="date" class="form-control" name="tanggal" value="{{ old('tanggal', now()->toDateString()) }}" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Waktu <span class="text-danger">*</span></label>
-                            <input type="time" class="form-control" name="waktu" value="{{ old('waktu', now()->format('H:i')) }}" required>
+                            <label class="form-label">Waktu Mulai<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="waktu_mulai" id="waktu_picker" placeholder="Pilih waktu" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Waktu Selesai</label>
+                            <input type="text" class="form-control" name="waktu_selesai" id="waktu_selesai_picker" placeholder="Pilih waktu">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Lokasi </label>
-                            <input type="text" class="form-control" name="lokasi"  required>
+                            <input type="text" class="form-control" name="lokasi" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Kode Mesin </label>
+                            <input type="text" class="form-control" name="kode_mesin" readonly>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Departemen </label>
-                            <input type="text" class="form-control" name="departemen" required>
+                            <input type="text" class="form-control" name="departemen" readonly>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Paket</label>
@@ -106,6 +132,7 @@
                                 <option>B</option>
                                 <option>C</option>
                                 <option>D</option>
+                                <option>Korektif</option>
                             </select>
                         </div>
                     </div>
@@ -341,33 +368,21 @@
 <div class="modal fade" id="modalTtd" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header">
                 <h5 class="modal-title">Tanda Tangan Teknisi</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body text-center">
-                <canvas id="signature-pad" style="border:1px solid #ccc; width:100%; height:200px;"></canvas>
-
-                <div class="mt-2">
-                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearTtd">
-                        Reset TTD
-                    </button>
-                </div>
+                <img src="{{ asset('storage/mtc/ttd/ttd_teknisi.jpeg') }}" style="max-width: 100%; border: 1px solid #ccc;">
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnSaveTtd">
                     Simpan & Kirim
                 </button>
             </div>
-
         </div>
     </div>
 </div>
-
-{{-- Modal Pilih Approver --}}
 <div class="modal fade" id="modalApprover" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -376,14 +391,17 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="staffDropdown" class="form-label">Staff</label>
+                    <label class="form-label">Staff Engineering</label>
                     <select class="form-select" id="staffDropdown">
                         <option value="">Pilih staff</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="userDropdown" class="form-label">User MT/MTC</label>
-                    <select class="form-select" id="userDropdown">
+                    <label class="form-label">User MT/MTC</label>
+                    <select class="form-select" id="userDept">
+                        <option value="">Pilih Departemen</option>
+                    </select>
+                    <select class="form-select mt-2 d-none" id="userDropdown">
                         <option value="">Pilih user</option>
                     </select>
                 </div>
@@ -395,27 +413,41 @@
         </div>
     </div>
 </div>
-
 @endsection
 
+
+
 @section('scripts')
+
 <script>
     $(document).ready(function() {
-        const STORAGE_KEY = 'form_mtc_motorpump_data';
+        flatpickr("#waktu_picker", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            minuteIncrement: 1,
+        });
+        flatpickr("#waktu_selesai_picker", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            minuteIncrement: 1,
+        });
         let index = 0;
-        let isLoading = false;
-
 
         $('#mesin_id').on('change', function() {
             const selected = $(this).find(':selected');
 
             const lokasi = selected.data('lokasi') || '';
             const departemen = selected.data('departemen') || '';
+            const kodeMesin = selected.data('kode-mesin') || '';
 
             $('input[name="lokasi"]').val(lokasi);
             $('input[name="departemen"]').val(departemen);
+            $('input[name="kode_mesin"]').val(kodeMesin);
 
-            
         });
 
 
@@ -431,130 +463,19 @@
             }
         });
 
-        // Fungsi untuk menyimpan form ke localStorage
-        function saveFormToLocalStorage() {
-            let formData = {};
-            let materials = [];
 
-            // === FORM NORMAL ===
-            $('#form-mtc-motorpump')
-                .find('input, select, textarea')
-                .not('[name^="materials"]')
-                .each(function() {
-                    const name = $(this).attr('name');
-                    if (!name) return;
 
-                    if ($(this).is(':radio')) {
-                        if ($(this).is(':checked')) {
-                            formData[name] = $(this).val();
-                        }
-                    } else if ($(this).is(':checkbox')) {
-                        formData[name] = $(this).is(':checked');
-                    } else {
-                        formData[name] = $(this).val();
-                    }
-                });
 
-            // === KEBUTUHAN MATERIAL ===
-            $('#materialTable tbody tr').each(function() {
-                const row = {
-                    mid: $(this).find('input[name*="[mid]"]').val(),
-                    desc: $(this).find('input[name*="[desc]"]').val(),
-                    qty: $(this).find('input[name*="[qty]"]').val()
-                };
-
-                if (row.mid || row.desc || row.qty) {
-                    materials.push(row);
-                }
-            });
-
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                form: formData,
-                materials: materials
-            }));
-        }
-
-        // Fungsi untuk memuat data dari localStorage ke form
-        function loadFormFromLocalStorage() {
-            const savedData = localStorage.getItem(STORAGE_KEY);
-            if (!savedData) return;
-
-            isLoading = true;
-
-            const data = JSON.parse(savedData);
-
-            // === FORM ===
-            if (data.form) {
-                for (const [name, value] of Object.entries(data.form)) {
-                    const $input = $(`[name="${name}"]`);
-
-                    if ($input.is(':radio')) {
-                        $(`input[name="${name}"][value="${value}"]`)
-                            .prop('checked', true)
-                            .trigger('change');
-
-                    } else if ($input.is(':checkbox')) {
-                        $input.prop('checked', value);
-
-                    } else {
-                        $input.val(value).trigger('change');
-                    }
-                }
-            }
-
-            // === MATERIALS ===
-            $('#materialTable tbody').empty();
-            index = 1;
-
-            if (data.materials && data.materials.length) {
-                data.materials.forEach(item => {
-                    let row = `
-                            <tr>
-                                <td>
-                                    <input type="number" name="materials[${index}][mid]"
-                                        class="form-control form-control-sm"
-                                        value="${item.mid || ''}">
-                                </td>
-                                <td>
-                                    <input type="text" name="materials[${index}][desc]"
-                                        class="form-control form-control-sm"
-                                        value="${item.desc || ''}">
-                                </td>
-                                <td>
-                                    <input type="number" name="materials[${index}][qty]"
-                                        class="form-control form-control-sm"
-                                        value="${item.qty || ''}">
-                                </td>
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
-                                </td>
-                            </tr>
-                        `;
-                    $('#materialTable tbody').append(row);
-                    index++;
-                });
-            }
-
-            isLoading = false;
-        }
-
-        // Load data saat halaman dibuka
-        loadFormFromLocalStorage();
-
-        // Simpan setiap kali ada perubahan
-        $('#form-mtc-motorpump').on('change input', 'input, select, textarea', function() {
-            saveFormToLocalStorage();
-        });
 
         $('.status-radio').on('change', function() {
             const $row = $(this).closest('.item-row');
-            const isOk = $row.find('input[value="1"]').is(':checked');
+            // const isOk = $row.find('input[value="1"]').is(':checked');
             const isNg = $row.find('input[value="0"]').is(':checked');
             const $ket = $row.find('.keterangan-wrapper input');
 
-            if (isOk || isNg) {
-                $row.find('.status-label-default').addClass('d-none');
-            }
+            // if (isOk || isNg) {
+            //     $row.find('.status-label-default').addClass('d-none');
+            // }
 
             if (isNg) {
                 $row.addClass('not-ok');
@@ -566,7 +487,6 @@
                 $ket.val('').removeClass('is-invalid').removeAttr('required');
             }
 
-            saveFormToLocalStorage();
         });
 
         function collectNotOkDetails() {
@@ -612,12 +532,11 @@
             $('#materialTable tbody').append(row);
             index++;
 
-            saveFormToLocalStorage();
+
         });
 
         $(document).on('click', '.removeRow', function() {
             $(this).closest('tr').remove();
-            saveFormToLocalStorage();
         });
         // End Kebutuhan Material
 
@@ -655,14 +574,11 @@
 
             $('#materialTable tbody').empty();
             index = 1;
-
-            localStorage.removeItem(STORAGE_KEY);
         }
 
         // Tanda Tangan
         let selectedStaff = null;
         let selectedUser = null;
-        let signaturePad = null;
         let pendingFormData = null;
 
         $('#form-mtc-motorpump').on('submit', function(e) {
@@ -671,39 +587,47 @@
 
             $('#modalApprover').modal('show');
 
-            // Load staff & user maintenance dari API
             $.get('/api/mtc/users/approvers', function(res) {
                 const $staffDropdown = $('#staffDropdown');
-                const $userDropdown = $('#userDropdown');
-
-                $staffDropdown.empty().append(`<option value="">Pilih staff</option>`);
-                res.staff.forEach(user => {
-                    $staffDropdown.append(
-                        `<option value="${user.id}">${user.username}</option>`);
+                $staffDropdown.empty().append('<option value="">Pilih staff</option>');
+                res.staff.forEach(u => {
+                    $staffDropdown.append(`<option value="${u.id}">${u.username}</option>`);
                 });
 
-                $userDropdown.empty().append(`<option value="">Pilih user</option>`);
-                res.user.forEach(user => {
-                    $userDropdown.append(
-                        `<option value="${user.id}">${user.username}</option>`);
+                const depts = [...new Set(res.user.map(u => u.departemen))];
+                const $userDept = $('#userDept');
+                $userDept.empty().append('<option value="">Pilih Departemen</option>');
+                depts.forEach(d => $userDept.append(`<option value="${d}">${d}</option>`));
+
+                $('#userDept').off('change').on('change', function() {
+                    const dept = $(this).val();
+                    const filtered = res.user.filter(u => u.departemen === dept);
+                    const $userDropdown = $('#userDropdown');
+                    $userDropdown.empty().append('<option value="">Pilih user</option>');
+                    filtered.forEach(u => {
+                        $userDropdown.append(`<option value="${u.id}">${u.username}</option>`);
+                    });
+                    $userDropdown.removeClass('d-none');
+                    selectedUser = null;
                 });
             });
         });
 
-        // Pilih staff
-        $('#staffDropdown').on('change', function() {
-            selectedStaff = $(this).val();
+        $(document).on('change', '#staffDropdown', function() {
+            selectedStaff = $(this).val() || null;
         });
 
-        // Pilih user maintenance
-        $('#userDropdown').on('change', function() {
-            selectedUser = $(this).val();
+        $(document).on('change', '#userDropdown', function() {
+            selectedUser = $(this).val() || null;
         });
 
-        // Klik tombol pilih
         $('#btnSelectApprover').on('click', function() {
             if (!selectedStaff || !selectedUser) {
-                Swal.fire('Pilih staff dan user maintenance terlebih dahulu');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pilih approver',
+                    text: 'Pilih staff dan user MT/MTC terlebih dahulu'
+                });
                 return;
             }
 
@@ -711,93 +635,22 @@
             pendingFormData.append('user_id', selectedUser);
 
             $('#modalApprover').modal('hide');
-            $('#modalTtd').modal('show'); // lanjut modal TTD
-        });
-
-        // Inisialisasi signature pad
-        $('#modalTtd').on('shown.bs.modal', function() {
-            if (!signaturePad) {
-                const canvas = document.getElementById('signature-pad');
-                canvas.width = canvas.offsetWidth;
-                canvas.height = 200;
-                signaturePad = new SignaturePad(canvas);
-            }
-        });
-
-        $('#btnClearTtd').on('click', function() {
-            signaturePad.clear();
-        });
-
-        $('#modalTtd').on('hidden.bs.modal', function() {
-            if (signaturePad) signaturePad.clear();
+            $('#modalTtd').modal('show');
         });
 
         $('#btnSaveTtd').on('click', function() {
-
-            if (!signaturePad || signaturePad.isEmpty()) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'TTD belum diisi',
-                    text: 'Silakan tanda tangan terlebih dahulu'
-                });
-                return;
-            }
-
-            const ttdBase64 = signaturePad.toDataURL('image/png');
             const keterangan = collectNotOkDetails();
 
-            pendingFormData.append('ttd_base64', ttdBase64);
+            pendingFormData.append('ttd_path', 'mtc/ttd/ttd_teknisi.jpeg');
             if (keterangan) {
                 pendingFormData.append('keterangan', keterangan);
             }
             pendingFormData.delete('_token');
-            pendingFormData.append(
-                '_token',
-                $('meta[name="csrf-token"]').attr('content')
-            );
+            pendingFormData.append('_token', $('meta[name="csrf-token"]').attr('content'));
 
             $('#modalTtd').modal('hide');
-
             submitFinalForm(pendingFormData);
         });
-
-        function submitFinalForm(formData) {
-            const $btn = $('#btn-submit');
-            $btn.prop('disabled', true);
-
-            $.ajax({
-                url: "{{ route('mtc.motor-pump.store') }}",
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: response.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        resetFormMotorPump();
-                    });
-                },
-                error: function(xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: xhr.responseJSON?.message || 'Terjadi kesalahan'
-                    });
-                },
-                complete: function() {
-                    $btn.prop('disabled', false);
-                }
-            });
-        }
 
     });
 </script>

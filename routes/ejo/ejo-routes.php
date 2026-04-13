@@ -8,8 +8,10 @@ use App\Http\Controllers\Ejo\EjoNoteController;
 use App\Http\Controllers\Ejo\EjoAttachmentController;
 use App\Http\Controllers\Ejo\EjoClassificationController;
 use App\Http\Controllers\Ejo\EjoDashboardController;
+use App\Http\Controllers\Ejo\EjoTemplateController;
 
 Route::prefix('api/ejo')->group(function () {
+    Route::get('/template', [EjoTemplateController::class, 'download']);
 
     // ── Dashboard ───────────────────────────────────────
     Route::get('/dashboard', [EjoDashboardController::class, 'index']);
