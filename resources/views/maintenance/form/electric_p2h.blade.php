@@ -338,7 +338,7 @@
 
                     <div class="d-flex gap-2 justify-content-end">
                         <button type="button" id="btnResetKondisi" class="btn btn-outline-danger">Reset</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
+                        <button type="submit" id="btn-submit" class="btn btn-primary">Simpan</button>
                     </div>
                 </form>
 
@@ -425,7 +425,7 @@
         });
 
         $(document).on('change', '.status-radio', function() {
-            if (isLoading) return;
+             
 
             const $row = $(this).closest('.item-row');
             const isNg = $row.find('input[value="0"]').is(':checked');

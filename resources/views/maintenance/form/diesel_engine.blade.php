@@ -414,28 +414,18 @@
 <div class="modal fade" id="modalTtd" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header">
                 <h5 class="modal-title">Tanda Tangan Teknisi</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body text-center">
-                <canvas id="signature-pad" style="border:1px solid #ccc; width:100%; height:200px;"></canvas>
-
-                <div class="mt-2">
-                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearTtd">
-                        Reset TTD
-                    </button>
-                </div>
+                <img src="{{ asset('storage/mtc/ttd/ttd_teknisi.jpeg') }}" style="max-width: 100%; border: 1px solid #ccc;">
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnSaveTtd">
                     Simpan & Kirim
                 </button>
             </div>
-
         </div>
     </div>
 </div>
@@ -449,14 +439,17 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="staffDropdown" class="form-label">Staff</label>
+                    <label class="form-label">Staff Engineering</label>
                     <select class="form-select" id="staffDropdown">
                         <option value="">Pilih staff</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="userDropdown" class="form-label">User MT/MTC</label>
-                    <select class="form-select" id="userDropdown">
+                    <label class="form-label">User MT/MTC</label>
+                    <select class="form-select" id="userDept">
+                        <option value="">Pilih Departemen</option>
+                    </select>
+                    <select class="form-select mt-2 d-none" id="userDropdown">
                         <option value="">Pilih user</option>
                     </select>
                 </div>
@@ -612,7 +605,7 @@
         }
 
         // Tanda Tangan
-        let signaturePad = null;
+
         let pendingFormData = null;
         let selectedStaff = null;
         let selectedUser = null;
@@ -620,95 +613,66 @@
         $('#form-mtc-diesel-engine').on('submit', function(e) {
             e.preventDefault();
             pendingFormData = new FormData(this);
-
             $('#modalApprover').modal('show');
 
-            // Load staff & user maintenance dari API
             $.get('/api/mtc/users/approvers', function(res) {
                 const $staffDropdown = $('#staffDropdown');
-                const $userDropdown = $('#userDropdown');
-
-                $staffDropdown.empty().append(`<option value="">Pilih staff</option>`);
-                res.staff.forEach(user => {
-                    $staffDropdown.append(
-                        `<option value="${user.id}">${user.username}</option>`);
+                $staffDropdown.empty().append('<option value="">Pilih staff</option>');
+                res.staff.forEach(u => {
+                    $staffDropdown.append(`<option value="${u.id}">${u.username}</option>`);
                 });
 
-                $userDropdown.empty().append(`<option value="">Pilih user</option>`);
-                res.user.forEach(user => {
-                    $userDropdown.append(
-                        `<option value="${user.id}">${user.username}</option>`);
+                const depts = [...new Set(res.user.map(u => u.departemen))];
+                const $userDept = $('#userDept');
+                $userDept.empty().append('<option value="">Pilih Departemen</option>');
+                depts.forEach(d => $userDept.append(`<option value="${d}">${d}</option>`));
+
+                $('#userDept').off('change').on('change', function() {
+                    const dept = $(this).val();
+                    const filtered = res.user.filter(u => u.departemen === dept);
+                    const $userDropdown = $('#userDropdown');
+                    $userDropdown.empty().append('<option value="">Pilih user</option>');
+                    filtered.forEach(u => {
+                        $userDropdown.append(`<option value="${u.id}">${u.username}</option>`);
+                    });
+                    $userDropdown.removeClass('d-none');
+                    selectedUser = null;
                 });
             });
         });
 
-        // Pilih staff
-        $('#staffDropdown').on('change', function() {
-            selectedStaff = $(this).val();
+        $(document).on('change', '#staffDropdown', function() {
+            selectedStaff = $(this).val() || null;
         });
 
-        // Pilih user maintenance
-        $('#userDropdown').on('change', function() {
-            selectedUser = $(this).val();
+        $(document).on('change', '#userDropdown', function() {
+            selectedUser = $(this).val() || null;
         });
 
-        // Klik tombol pilih
         $('#btnSelectApprover').on('click', function() {
             if (!selectedStaff || !selectedUser) {
-                Swal.fire('Pilih staff dan user maintenance terlebih dahulu');
-                return;
-            }
-
-            pendingFormData.append('staff_id', selectedStaff);
-            pendingFormData.append('user_id', selectedUser);
-
-            $('#modalApprover').modal('hide');
-            $('#modalTtd').modal('show'); // lanjut modal TTD
-        });
-
-        $('#modalTtd').on('shown.bs.modal', function() {
-            if (!signaturePad) {
-                const canvas = document.getElementById('signature-pad');
-                canvas.width = canvas.offsetWidth;
-                canvas.height = 200;
-                signaturePad = new SignaturePad(canvas);
-            }
-        });
-
-        $('#btnClearTtd').on('click', function() {
-            signaturePad.clear();
-        });
-
-        $('#modalTtd').on('hidden.bs.modal', function() {
-            if (signaturePad) signaturePad.clear();
-        });
-
-        $('#btnSaveTtd').on('click', function() {
-
-            if (!signaturePad || signaturePad.isEmpty()) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'TTD belum diisi',
-                    text: 'Silakan tanda tangan terlebih dahulu'
+                    title: 'Pilih approver',
+                    text: 'Pilih staff dan user MT/MTC terlebih dahulu'
                 });
                 return;
             }
+            pendingFormData.append('staff_id', selectedStaff);
+            pendingFormData.append('user_id', selectedUser);
+            $('#modalApprover').modal('hide');
+            $('#modalTtd').modal('show');
+        });
 
-            const ttdBase64 = signaturePad.toDataURL('image/png');
+        $('#btnSaveTtd').on('click', function() {
             const keterangan = collectNotOkDetails();
-
-            pendingFormData.append('ttd_base64', ttdBase64);
+            pendingFormData.append('ttd_path', 'mtc/ttd/ttd_teknisi.jpeg');
             if (keterangan) {
                 pendingFormData.append('keterangan', keterangan);
             }
             pendingFormData.delete('_token');
-            pendingFormData.append(
-                '_token',
-                $('meta[name="csrf-token"]').attr('content')
-            );
-
+            pendingFormData.append('_token', $('meta[name="csrf-token"]').attr('content'));
             $('#modalTtd').modal('hide');
-
             submitFinalForm(pendingFormData);
         });
 

@@ -503,6 +503,10 @@
 
 
         }
+        let pendingFormData = null;
+        let selectedStaff = null;
+        let selectedUser = null;
+
 
         $('#form-mtc-refrigerasi').on('submit', function(e) {
             e.preventDefault();

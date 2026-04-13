@@ -370,34 +370,24 @@
 <div class="modal fade" id="modalTtd" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header">
                 <h5 class="modal-title">Tanda Tangan Teknisi</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body text-center">
-                <canvas id="signature-pad" style="border:1px solid #ccc; width:100%; height:200px;"></canvas>
-
-                <div class="mt-2">
-                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearTtd">
-                        Reset TTD
-                    </button>
-                </div>
+                <img src="{{ asset('storage/mtc/ttd/ttd_teknisi.jpeg') }}" style="max-width: 100%; border: 1px solid #ccc;">
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnSaveTtd">
                     Simpan & Kirim
                 </button>
             </div>
-
         </div>
     </div>
 </div>
 
 {{-- Modal Pilih Approver --}}
-<div class="modal fade" id="modalApprover" tabindex="-1">
+<<div class="modal fade" id="modalApprover" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -405,14 +395,17 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="staffDropdown" class="form-label">Staff</label>
+                    <label class="form-label">Staff Engineering</label>
                     <select class="form-select" id="staffDropdown">
                         <option value="">Pilih staff</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="userDropdown" class="form-label">User MT/MTC</label>
-                    <select class="form-select" id="userDropdown">
+                    <label class="form-label">User MT/MTC</label>
+                    <select class="form-select" id="userDept">
+                        <option value="">Pilih Departemen</option>
+                    </select>
+                    <select class="form-select mt-2 d-none" id="userDropdown">
                         <option value="">Pilih user</option>
                     </select>
                 </div>
@@ -423,276 +416,294 @@
             </div>
         </div>
     </div>
-</div>
-@endsection
+    </div>
+    @endsection
 
-@section('scripts')
-<script>
-    $(document).ready(function() {
-        let signaturePad = null;
-        let pendingFormData = null;
-        $('#mesin_id').on('change', function() {
-            const selected = $(this).find(':selected');
+    @section('scripts')
+    <script>
+        $(document).ready(function() {
 
-            const departemen = selected.data('departemen') || '';
-            $('input[name="departemen"]').val(departemen);
+            let pendingFormData = null;
+            $('#mesin_id').on('change', function() {
+                const selected = $(this).find(':selected');
 
-        });
-        $('#mesin_id').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Cari nama mesin / lokasi...',
-            allowClear: true,
-            width: '100%',
-            templateResult: function(data) {
-                if (!data.id) return data.text;
-                return $('<span><b>' + data.text.split(' - ')[0] + '</b><br><small>' + data.text
-                    .split(' - ')[1] + '</small></span>');
-            }
-        });
+                const departemen = selected.data('departemen') || '';
+                $('input[name="departemen"]').val(departemen);
 
-
-
-        $(document).on('change', '.status-radio', function() {
-            if (isLoading) return;
-
-            const $row = $(this).closest('.item-row');
-            const isNg = $row.find('input[value="0"]').is(':checked');
-            const $ket = $row.find('.keterangan-wrapper input');
-
-            if (isNg) {
-                $row.addClass('not-ok');
-                $row.find('.keterangan-wrapper').removeClass('d-none');
-                $ket.attr('required', true);
-            } else {
-                $row.removeClass('not-ok');
-                $row.find('.keterangan-wrapper').addClass('d-none');
-                $ket.val('').removeAttr('required');
-            }
-
-            updateStatusRow($row);
-
-        });
-
-        function updateStatusRow($row) {
-            const isNg = $row.find('input[value="0"]').is(':checked');
-            const $wrapper = $row.find('.keterangan-wrapper');
-            const $input = $wrapper.find('input');
-
-            if (isNg) {
-                $row.addClass('not-ok');
-                $wrapper.removeClass('d-none');
-                $input.attr('required', true);
-            } else {
-                $row.removeClass('not-ok');
-                $wrapper.addClass('d-none');
-                $input.val('').removeAttr('required');
-            }
-        }
-
-        function collectNotOkDetails() {
-            const details = [];
-
-            $('.item-row').each(function() {
-                const $row = $(this);
-                const isNg = $row.find('input[value="0"]').is(':checked');
-                if (!isNg) return;
-
-                const label = $row.find('label.form-label').text().trim();
-                const keterangan = $row.find('input[name^="keterangan_"]').val().trim();
-
-                if (keterangan) {
-                    details.push(`${label}: ${keterangan}`);
+            });
+            $('#mesin_id').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Cari nama mesin / lokasi...',
+                allowClear: true,
+                width: '100%',
+                templateResult: function(data) {
+                    if (!data.id) return data.text;
+                    return $('<span><b>' + data.text.split(' - ')[0] + '</b><br><small>' + data.text
+                        .split(' - ')[1] + '</small></span>');
                 }
             });
 
-            if (details.length === 0) return '';
 
-            return details.join(" | ");
-        }
 
-        let selectedStaff = null;
-        let selectedUser = null;
+            $(document).on('change', '.status-radio', function() {
 
-        $('#form-mtc-diesel-p2h').on('submit', function(e) {
-            e.preventDefault();
-            pendingFormData = new FormData(this);
 
-            $('#modalApprover').modal('show');
+                const $row = $(this).closest('.item-row');
+                const isNg = $row.find('input[value="0"]').is(':checked');
+                const $ket = $row.find('.keterangan-wrapper input');
 
-            // Load staff & user maintenance dari API
-            $.get('/api/mtc/users/approvers', function(res) {
-                const $staffDropdown = $('#staffDropdown');
-                const $userDropdown = $('#userDropdown');
+                if (isNg) {
+                    $row.addClass('not-ok');
+                    $row.find('.keterangan-wrapper').removeClass('d-none');
+                    $ket.attr('required', true);
+                } else {
+                    $row.removeClass('not-ok');
+                    $row.find('.keterangan-wrapper').addClass('d-none');
+                    $ket.val('').removeAttr('required');
+                }
 
-                $staffDropdown.empty().append(`<option value="">Pilih staff</option>`);
-                res.staff.forEach(user => {
-                    $staffDropdown.append(
-                        `<option value="${user.id}">${user.username}</option>`);
+
+
+            });
+
+            function updateStatusRow($row) {
+                const isNg = $row.find('input[value="0"]').is(':checked');
+                const $wrapper = $row.find('.keterangan-wrapper');
+                const $input = $wrapper.find('input');
+
+                if (isNg) {
+                    $row.addClass('not-ok');
+                    $wrapper.removeClass('d-none');
+                    $input.attr('required', true);
+                } else {
+                    $row.removeClass('not-ok');
+                    $wrapper.addClass('d-none');
+                    $input.val('').removeAttr('required');
+                }
+            }
+
+            function collectNotOkDetails() {
+                const details = [];
+
+                $('.item-row').each(function() {
+                    const $row = $(this);
+                    const isNg = $row.find('input[value="0"]').is(':checked');
+                    if (!isNg) return;
+
+                    const label = $row.find('label.form-label').text().trim();
+                    const keterangan = $row.find('input[name^="keterangan_"]').val().trim();
+
+                    if (keterangan) {
+                        details.push(`${label}: ${keterangan}`);
+                    }
                 });
 
-                $userDropdown.empty().append(`<option value="">Pilih user</option>`);
-                res.user.forEach(user => {
-                    $userDropdown.append(
-                        `<option value="${user.id}">${user.username}</option>`);
+                if (details.length === 0) return '';
+
+                return details.join(" | ");
+            }
+
+            let selectedStaff = null;
+            let selectedUser = null;
+
+            $('#form-mtc-diesel-p2h').on('submit', function(e) {
+                e.preventDefault();
+                pendingFormData = new FormData(this);
+
+                $('#modalApprover').modal('show');
+
+                // Load staff & user maintenance dari API
+                $.get('/api/mtc/users/approvers', function(res) {
+                    const $staffDropdown = $('#staffDropdown');
+                    const $userDropdown = $('#userDropdown');
+
+                    $staffDropdown.empty().append(`<option value="">Pilih staff</option>`);
+                    res.staff.forEach(user => {
+                        $staffDropdown.append(
+                            `<option value="${user.id}">${user.username}</option>`);
+                    });
+
+                    $userDropdown.empty().append(`<option value="">Pilih user</option>`);
+                    res.user.forEach(user => {
+                        $userDropdown.append(
+                            `<option value="${user.id}">${user.username}</option>`);
+                    });
                 });
             });
-        });
 
-        // Pilih staff
-        $('#staffDropdown').on('change', function() {
-            selectedStaff = $(this).val();
-        });
 
-        // Pilih user maintenance
-        $('#userDropdown').on('change', function() {
-            selectedUser = $(this).val();
-        });
 
-        // Klik tombol pilih
-        $('#btnSelectApprover').on('click', function() {
-            if (!selectedStaff || !selectedUser) {
-                Swal.fire('Pilih staff dan user maintenance terlebih dahulu');
-                return;
-            }
-            pendingFormData.append('staff_id', selectedStaff);
-            pendingFormData.append('user_id', selectedUser);
+            // Flatpickr
+            flatpickr("#waktu_mulai", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                minuteIncrement: 1,
+            });
+            flatpickr("#waktu_selesai", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                minuteIncrement: 1,
+            });
 
-            $('#modalApprover').modal('hide');
-            $('#modalTtd').modal('show'); // lanjut modal TTD
-        });
+            let selectedStaff = null;
+            let selectedUser = null;
 
-        $('#modalTtd').on('shown.bs.modal', function() {
-            if (!signaturePad) {
-                const canvas = document.getElementById('signature-pad');
-                canvas.width = canvas.offsetWidth;
-                canvas.height = 200;
-                signaturePad = new SignaturePad(canvas);
-            }
-        });
+            $('#form-mtc-diesel-p2h').on('submit', function(e) {
+                e.preventDefault();
+                pendingFormData = new FormData(this);
+                $('#modalApprover').modal('show');
 
-        $('#btnClearTtd').on('click', function() {
-            signaturePad.clear();
-        });
+                $.get('/api/mtc/users/approvers', function(res) {
+                    const $staffDropdown = $('#staffDropdown');
+                    $staffDropdown.empty().append('<option value="">Pilih staff</option>');
+                    res.staff.forEach(u => {
+                        $staffDropdown.append(`<option value="${u.id}">${u.username}</option>`);
+                    });
 
-        $('#modalTtd').on('hidden.bs.modal', function() {
-            if (signaturePad) signaturePad.clear();
-        });
+                    const depts = [...new Set(res.user.map(u => u.departemen))];
+                    const $userDept = $('#userDept');
+                    $userDept.empty().append('<option value="">Pilih Departemen</option>');
+                    depts.forEach(d => $userDept.append(`<option value="${d}">${d}</option>`));
 
-        $('#btnSaveTtd').on('click', function() {
-
-            if (!signaturePad || signaturePad.isEmpty()) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'TTD belum diisi',
-                    text: 'Silakan tanda tangan terlebih dahulu'
+                    $('#userDept').off('change').on('change', function() {
+                        const dept = $(this).val();
+                        const filtered = res.user.filter(u => u.departemen === dept);
+                        const $userDropdown = $('#userDropdown');
+                        $userDropdown.empty().append('<option value="">Pilih user</option>');
+                        filtered.forEach(u => {
+                            $userDropdown.append(`<option value="${u.id}">${u.username}</option>`);
+                        });
+                        $userDropdown.removeClass('d-none');
+                        selectedUser = null;
+                    });
                 });
-                return;
+            });
+
+            $(document).on('change', '#staffDropdown', function() {
+                selectedStaff = $(this).val() || null;
+            });
+
+            $(document).on('change', '#userDropdown', function() {
+                selectedUser = $(this).val() || null;
+            });
+
+            $('#btnSelectApprover').on('click', function() {
+                if (!selectedStaff || !selectedUser) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pilih approver',
+                        text: 'Pilih staff dan user MT/MTC terlebih dahulu'
+                    });
+                    return;
+                }
+                pendingFormData.append('staff_id', selectedStaff);
+                pendingFormData.append('user_id', selectedUser);
+                $('#modalApprover').modal('hide');
+                $('#modalTtd').modal('show');
+            });
+
+            $('#btnSaveTtd').on('click', function() {
+                const keterangan = collectNotOkDetails();
+                pendingFormData.append('ttd_path', 'mtc/ttd/ttd_teknisi.jpeg');
+                if (keterangan) {
+                    pendingFormData.append('keterangan', keterangan);
+                }
+                pendingFormData.delete('_token');
+                pendingFormData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+                $('#modalTtd').modal('hide');
+                submitFinalForm(pendingFormData);
+            });
+
+            function submitFinalForm(formData) {
+                const $btn = $('#btn-submit');
+                $btn.prop('disabled', true);
+                $.ajax({
+                    url: "{{ route('mtc.diesel-p2h.store') }}",
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            resetDieselP2hForm();
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: xhr.responseJSON?.message || 'Terjadi kesalahan'
+                        });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
+                    }
+                });
             }
 
-            const ttdBase64 = signaturePad.toDataURL('image/png');
-            const keterangan = collectNotOkDetails();
+            $('#btnResetKondisi').on('click', function() {
+                Swal.fire({
+                    title: 'Reset kondisi?',
+                    text: 'Semua checklist dan keterangan akan dikosongkan',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Reset',
+                    cancelButtonText: 'Batal'
+                }).then(r => {
+                    if (!r.isConfirmed) return;
 
-            pendingFormData.append('ttd_base64', ttdBase64);
-            if (keterangan) {
-                pendingFormData.append('keterangan', keterangan);
-            }
-            pendingFormData.delete('_token');
-            pendingFormData.append(
-                '_token',
-                $('meta[name="csrf-token"]').attr('content')
-            );
+                    resetDieselP2hForm();
 
-            $('#modalTtd').modal('hide');
-
-            submitFinalForm(pendingFormData);
-        });
-
-        function submitFinalForm(formData) {
-            const $btn = $('#btn-submit');
-            $btn.prop('disabled', true);
-            $.ajax({
-                url: "{{ route('mtc.diesel-p2h.store') }}",
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil',
-                        text: response.message,
-                        timer: 2000,
+                        text: 'Checklist telah direset',
+                        timer: 1500,
                         showConfirmButton: false
-                    }).then(() => {
-                        resetDieselP2hForm();
                     });
-                },
-                error: function(xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: xhr.responseJSON?.message || 'Terjadi kesalahan'
-                    });
-                },
-                complete: function() {
-                    $btn.prop('disabled', false);
-                }
-            });
-        }
-
-        $('#btnResetKondisi').on('click', function() {
-            Swal.fire({
-                title: 'Reset kondisi?',
-                text: 'Semua checklist dan keterangan akan dikosongkan',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Reset',
-                cancelButtonText: 'Batal'
-            }).then(r => {
-                if (!r.isConfirmed) return;
-
-                resetDieselP2hForm();
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: 'Checklist telah direset',
-                    timer: 1500,
-                    showConfirmButton: false
                 });
             });
+
+            function resetDieselP2hForm() {
+                // reset form native
+                const $form = $('#form-mtc-diesel-p2h');
+                $form[0].reset();
+
+                $('.kondisi-radio').prop('checked', false);
+                $('.kondisi-btn').removeClass('active');
+
+                $('.item-row').each(function() {
+                    const $row = $(this);
+
+                    $row.removeClass('not-ok');
+
+                    const $wrapper = $row.find('.keterangan-wrapper');
+                    const $input = $wrapper.find('input, textarea');
+
+                    $wrapper.addClass('d-none');
+                    $input
+                        .val('')
+                        .removeClass('is-invalid')
+                        .removeAttr('required');
+                });
+
+                $('#clientError').addClass('d-none').text('');
+
+            }
         });
-
-        function resetDieselP2hForm() {
-            // reset form native
-            const $form = $('#form-mtc-diesel-p2h');
-            $form[0].reset();
-
-            $('.kondisi-radio').prop('checked', false);
-            $('.kondisi-btn').removeClass('active');
-
-            $('.item-row').each(function() {
-                const $row = $(this);
-
-                $row.removeClass('not-ok');
-
-                const $wrapper = $row.find('.keterangan-wrapper');
-                const $input = $wrapper.find('input, textarea');
-
-                $wrapper.addClass('d-none');
-                $input
-                    .val('')
-                    .removeClass('is-invalid')
-                    .removeAttr('required');
-            });
-
-            $('#clientError').addClass('d-none').text('');
-
-        }
-    });
-</script>
-@endsection
+    </script>
+    @endsection

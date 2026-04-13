@@ -652,6 +652,45 @@
             submitFinalForm(pendingFormData);
         });
 
+        // TAMBAHKAN INI YANG HILANG
+        function submitFinalForm(formData) {
+            const $btn = $('#btn-submit');
+            $btn.prop('disabled', true);
+
+            $.ajax({
+                url: "{{ route('mtc.motor-pump.store') }}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: response.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        resetFormMotorPump();
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: xhr.responseJSON?.message || 'Terjadi kesalahan'
+                    });
+                },
+                complete: function() {
+                    $btn.prop('disabled', false);
+                }
+            });
+        }
+
     });
 </script>
 @endsection
