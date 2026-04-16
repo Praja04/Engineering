@@ -385,15 +385,15 @@ class KalibrasiController extends Controller
                     'nama_alat' => $nama,
                     'jumlah' => $jumlah,
                     'departemen_pemilik' => $departemen,
-                    'lokasi_alat' => $lokasi,
-                    'no_kalibrasi' => $noKal,
-                    'merk' => $merk,
-                    'tipe' => $tipe,
-                    'kapasitas' => $kapasitas,
-                    'resolusi' => $resolusi,
-                    'range_penggunaan_alat' => $range_penggunaan,
-                    'limits_of_permissible_error' => $limits_error,
-                    'metode_kalibrasi' => $metodeKal
+                    // 'lokasi_alat' => $lokasi,
+                    // 'no_kalibrasi' => $noKal,
+                    // 'merk' => $merk,
+                    // 'tipe' => $tipe,
+                    // 'kapasitas' => $kapasitas,
+                    // 'resolusi' => $resolusi,
+                    // 'range_penggunaan_alat' => $range_penggunaan,
+                    // 'limits_of_permissible_error' => $limits_error,
+                    // 'metode_kalibrasi' => $metodeKal
                 ];
 
                 $data = $this->normalizePlusMinus($data);
