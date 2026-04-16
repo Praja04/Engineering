@@ -361,6 +361,10 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
+
             $('#alat_id').change(function() {
                 var id = $(this).val();
                 if (!id) {
@@ -461,7 +465,7 @@
                             fieldTracker[item.name] = 0;
                         }
 
-                        fields.eq(fieldTracker[item.name]).val(item.value);
+                        fields.eq(fieldTracker[item.name]).val(item.value).trigger('change');
 
                         fieldTracker[item.name]++;
                     });

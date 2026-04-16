@@ -591,6 +591,10 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
+
             $('#alat_id').change(function() {
                 var id = $(this).val();
                 if (!id) {
@@ -631,7 +635,7 @@
                 let data = JSON.parse(savedData);
 
                 $.each(data, function(name, value) {
-                    $form.find('[name="' + name + '"]').val(value);
+                    $form.find('[name="' + name + '"]').val(value).trigger('change');
                 });
 
                 console.log("Draft berhasil dimuat dari localStorage");

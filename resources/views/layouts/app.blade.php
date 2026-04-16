@@ -50,7 +50,42 @@
 
     @yield('styles')
 
+    <style>
+        /* Fix Select2 in Bootstrap 5 Input Group */
+        .input-group>.select2-container--bootstrap-5 {
+            flex: 1 1 auto;
+            width: 1% !important;
+        }
 
+        /* Handle border-radius for Select2 inside input-group */
+        .input-group>.select2-container--bootstrap-5 .select2-selection {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+            height: 38px !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .select2-container--bootstrap-5 .select2-selection__rendered {
+            line-height: normal !important;
+            padding-left: 0.75rem !important;
+        }
+
+        /* Adjust button to connect perfectly with Select2 */
+        .input-group>.btn {
+            height: 38px !important;
+            margin-left: -1px !important;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-group>.btn:hover {
+            z-index: 3;
+        }
+    </style>
 </head>
 
 <body class="dark">
