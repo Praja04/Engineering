@@ -189,6 +189,10 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
+
             const container = $('#containerTitik');
             const masters = @json($masters);
             const STORAGE_KEY = 'cal_jangka_sorong_form';
@@ -277,7 +281,7 @@
 
                 // ================= LOAD HEADER =================
                 Object.keys(data.header).forEach(name => {
-                    $(`[name="${name}"]`).val(data.header[name]);
+                    $(`[name="${name}"]`).val(data.header[name]).trigger('change');
                 });
 
                 // ================= GENERATE TITIK =================

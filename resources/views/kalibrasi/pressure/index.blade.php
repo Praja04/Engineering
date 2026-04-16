@@ -264,6 +264,9 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
 
             const STORAGE_KEY = 'formKalibrasiPressure';
 

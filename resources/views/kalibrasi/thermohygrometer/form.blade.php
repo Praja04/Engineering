@@ -239,6 +239,10 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
+
             const STORAGE_KEY = 'formThermohygrometer';
 
             $('#alat_id').change(function() {
@@ -329,7 +333,7 @@
                 Object.keys(data.header).forEach(name => {
                     const $el = $(`[name="${name}"]`);
                     if ($el.length) {
-                        $el.val(data.header[name]);
+                        $el.val(data.header[name]).trigger('change');
                     }
                 });
 

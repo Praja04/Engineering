@@ -256,6 +256,10 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
+
             // ---- EVENT: pilih alat ----
             $('#alat_id').on('change', function() {
                 const id = $(this).val();
@@ -345,7 +349,7 @@
                 const data = JSON.parse(draft);
 
                 // restore header
-                $('#alat_id').val(data.header.alat_id);
+                $('#alat_id').val(data.header.alat_id).trigger('change');
                 $('#lokasi_kalibrasi').val(data.header.lokasi_kalibrasi);
                 $('#suhu_ruangan').val(data.header.suhu_ruangan);
                 $('#toleransi_suhu').val(data.header.toleransi_suhu);
