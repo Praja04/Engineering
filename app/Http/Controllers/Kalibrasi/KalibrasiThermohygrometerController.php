@@ -18,7 +18,7 @@ class KalibrasiThermohygrometerController extends Controller
     public function showForm()
     {
         $alat = AlatKalibrasiModel::select('id', 'kode_alat', 'nama_alat')
-            ->where('jenis_kalibrasi', 'thermohygrometer')
+            ->whereIn('jenis_kalibrasi', ['temperature', 'thermohygrometer'])
             ->get();
 
         return view('kalibrasi.thermohygrometer.form', compact('alat'));
