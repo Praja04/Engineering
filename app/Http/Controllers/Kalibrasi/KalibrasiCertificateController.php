@@ -556,7 +556,7 @@ class KalibrasiCertificateController extends Controller
             $jenis = strtolower($kalibrasi->jenis_kalibrasi);
 
             $approvals = KalibrasiApprovalModel::where('sertifikat_id', $sertifikat->id)
-                ->with('approver') // kalau kamu punya relasi approver()
+                ->with('approver')
                 ->get()
                 ->map(function ($a) {
                     return [
@@ -564,9 +564,9 @@ class KalibrasiCertificateController extends Controller
                         'approver_id' => $a->approver_id,
                         'status' => $a->status,
                         'approver_name' => optional($a->approver)->username ?? '-',
-                        'jabatan' => $a->approver->jabatan ?? '-',
-                        'departemen' => $a->approver->departemen ?? '-',
-                        'comment' => $a->comment,
+                        'jabatan' => $a->role ?? '-', // Gunakan Role dari tabel approval (Foreman, Supervisor, Manager, User)
+                        'departemen' => optional($a->approver)->departemen ?? '-',
+                        'comment' => $a->catatan,
                         'ttd' => $a->ttd
                     ];
                 });
@@ -728,121 +728,8 @@ class KalibrasiCertificateController extends Controller
 
         $baseRow = 63;
         $nameRow = 67;
-        // Mapping tetap untuk posisi tanda tangan berdasarkan jabatan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
 
-        // Loop semua approver
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // cek status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if (!in_array($status, ['approved', 'rejected'])) {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, '');
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
-            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
-
-            $status = strtolower($approval['status'] ?? '');
-            $relativePath = $approval['ttd'] ?? null;
-
-            $isDummy = true;
-
-            // === Tentukan dummy berdasarkan status ===
-            if ($status === 'approved') {
-                $dummyPath = $approvedPath;
-            } elseif ($status === 'rejected') {
-                $dummyPath = $rejectedPath;
-            } else {
-                $dummyPath = $approvedPath;
-            }
-
-            // === Cek apakah ada TTD asli ===
-            if ($relativePath) {
-                $signaturePath = public_path('storage/' . $relativePath);
-
-                if (file_exists($signaturePath) && $status === 'approved') {
-                    $finalPath = $signaturePath;
-                    $isDummy = false;
-                } else {
-                    $finalPath = $dummyPath;
-                }
-            } else {
-                $finalPath = $dummyPath;
-            }
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight($isDummy ? 70 : 100);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX($isDummy ? 30 : 15);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-'); // kapital semua
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         $rowEnd = $row - 1;
 
@@ -972,113 +859,7 @@ class KalibrasiCertificateController extends Controller
         $baseRow = 62;
         $nameRow = 66;
 
-        // Mapping tetap untuk posisi tanda tangan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'   => 'M',
-        ];
-
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // tambahkan ini
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) continue; // skip jika tidak ada mapping kolom
-
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if (!in_array($status, ['approved', 'rejected'])) {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, '');
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
-            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
-
-            $status = strtolower($approval['status'] ?? '');
-            $relativePath = $approval['ttd'] ?? null;
-
-            $isDummy = true;
-
-            // === Tentukan dummy berdasarkan status ===
-            if ($status === 'approved') {
-                $dummyPath = $approvedPath;
-            } elseif ($status === 'rejected') {
-                $dummyPath = $rejectedPath;
-            } else {
-                $dummyPath = $approvedPath;
-            }
-
-            // === Cek apakah ada TTD asli ===
-            if ($relativePath) {
-                $signaturePath = public_path('storage/' . $relativePath);
-
-                if (file_exists($signaturePath) && $status === 'approved') {
-                    $finalPath = $signaturePath;
-                    $isDummy = false;
-                } else {
-                    $finalPath = $dummyPath;
-                }
-            } else {
-                $finalPath = $dummyPath;
-            }
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight($isDummy ? 70 : 100);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX($isDummy ? 25 : 15);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // Nama approver di bawah TTD (huruf kapital)
-            $approverName = ucfirst($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         // Tanggal diterbitkan
         $issuedDate = $sertifikat->issued_at
@@ -1135,121 +916,7 @@ class KalibrasiCertificateController extends Controller
         $baseRow = 61;
         $nameRow = 65;
 
-        // Mapping posisi tanda tangan berdasarkan jabatan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
-
-        // Loop semua approver
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if (!in_array($status, ['approved', 'rejected'])) {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, '');
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
-            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
-
-            $status = strtolower($approval['status'] ?? '');
-            $relativePath = $approval['ttd'] ?? null;
-
-            $isDummy = true;
-
-            // === Tentukan dummy berdasarkan status ===
-            if ($status === 'approved') {
-                $dummyPath = $approvedPath;
-            } elseif ($status === 'rejected') {
-                $dummyPath = $rejectedPath;
-            } else {
-                $dummyPath = $approvedPath;
-            }
-
-            // === Cek apakah ada TTD asli ===
-            if ($relativePath) {
-                $signaturePath = public_path('storage/' . $relativePath);
-
-                if (file_exists($signaturePath) && $status === 'approved') {
-                    $finalPath = $signaturePath;
-                    $isDummy = false;
-                } else {
-                    $finalPath = $dummyPath;
-                }
-            } else {
-                $finalPath = $dummyPath;
-            }
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight($isDummy ? 70 : 100);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX($isDummy ? 30 : 15);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         $rowEnd = $row - 1;
 
@@ -1427,121 +1094,7 @@ class KalibrasiCertificateController extends Controller
         $baseRow = 62;
         $nameRow = 66;
 
-        // Mapping posisi tanda tangan berdasarkan jabatan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
-
-        // Loop semua approver
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if (!in_array($status, ['approved', 'rejected'])) {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, '');
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
-            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
-
-            $status = strtolower($approval['status'] ?? '');
-            $relativePath = $approval['ttd'] ?? null;
-
-            $isDummy = true;
-
-            // === Tentukan dummy berdasarkan status ===
-            if ($status === 'approved') {
-                $dummyPath = $approvedPath;
-            } elseif ($status === 'rejected') {
-                $dummyPath = $rejectedPath;
-            } else {
-                $dummyPath = $approvedPath;
-            }
-
-            // === Cek apakah ada TTD asli ===
-            if ($relativePath) {
-                $signaturePath = public_path('storage/' . $relativePath);
-
-                if (file_exists($signaturePath) && $status === 'approved') {
-                    $finalPath = $signaturePath;
-                    $isDummy = false;
-                } else {
-                    $finalPath = $dummyPath;
-                }
-            } else {
-                $finalPath = $dummyPath;
-            }
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight($isDummy ? 70 : 100);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX($isDummy ? 30 : 15);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         $rowEnd = $row - 1;
 
@@ -1698,121 +1251,7 @@ class KalibrasiCertificateController extends Controller
         $baseRow = 55;
         $nameRow = 59;
 
-        // Mapping posisi tanda tangan berdasarkan jabatan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
-
-        // Loop semua approver
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if (!in_array($status, ['approved', 'rejected'])) {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, '');
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
-            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
-
-            $status = strtolower($approval['status'] ?? '');
-            $relativePath = $approval['ttd'] ?? null;
-
-            $isDummy = true;
-
-            // === Tentukan dummy berdasarkan status ===
-            if ($status === 'approved') {
-                $dummyPath = $approvedPath;
-            } elseif ($status === 'rejected') {
-                $dummyPath = $rejectedPath;
-            } else {
-                $dummyPath = $approvedPath;
-            }
-
-            // === Cek apakah ada TTD asli ===
-            if ($relativePath) {
-                $signaturePath = public_path('storage/' . $relativePath);
-
-                if (file_exists($signaturePath) && $status === 'approved') {
-                    $finalPath = $signaturePath;
-                    $isDummy = false;
-                } else {
-                    $finalPath = $dummyPath;
-                }
-            } else {
-                $finalPath = $dummyPath;
-            }
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight($isDummy ? 70 : 100);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX($isDummy ? 30 : 15);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         $rowEnd = $row - 1;
 
@@ -1998,121 +1437,7 @@ class KalibrasiCertificateController extends Controller
         $baseRow = 66;
         $nameRow = 70;
 
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
-
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if (!in_array($status, ['approved', 'rejected'])) {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, '');
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
-            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
-
-            $status = strtolower($approval['status'] ?? '');
-            $relativePath = $approval['ttd'] ?? null;
-
-            $isDummy = true;
-
-            // === Tentukan dummy berdasarkan status ===
-            if ($status === 'approved') {
-                $dummyPath = $approvedPath;
-            } elseif ($status === 'rejected') {
-                $dummyPath = $rejectedPath;
-            } else {
-                $dummyPath = $approvedPath;
-            }
-
-            // === Cek apakah ada TTD asli ===
-            if ($relativePath) {
-                $signaturePath = public_path('storage/' . $relativePath);
-
-                if (file_exists($signaturePath) && $status === 'approved') {
-                    $finalPath = $signaturePath;
-                    $isDummy = false;
-                } else {
-                    $finalPath = $dummyPath;
-                }
-            } else {
-                $finalPath = $dummyPath;
-            }
-
-            // dd($approval);
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setWidth($isDummy ? 70 : 100);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX($isDummy ? 30 : 15);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         // Tanggal diterbitkan
         $issuedDate = $sertifikat->issued_at
@@ -2187,122 +1512,7 @@ class KalibrasiCertificateController extends Controller
         $baseRow = 60;
         $nameRow = 64;
 
-        // Mapping posisi tanda tangan berdasarkan jabatan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
-
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if (!in_array($status, ['approved', 'rejected'])) {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, '');
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
-            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
-
-            $status = strtolower($approval['status'] ?? '');
-            $relativePath = $approval['ttd'] ?? null;
-
-            $isDummy = true;
-
-            // === Tentukan dummy berdasarkan status ===
-            if ($status === 'approved') {
-                $dummyPath = $approvedPath;
-            } elseif ($status === 'rejected') {
-                $dummyPath = $rejectedPath;
-            } else {
-                $dummyPath = $approvedPath;
-            }
-
-            // dd($dummyPath);
-
-            // === Cek apakah ada TTD asli ===
-            if ($relativePath) {
-                $signaturePath = public_path('storage/' . $relativePath);
-
-                if (file_exists($signaturePath) && $status === 'approved') {
-                    $finalPath = $signaturePath;
-                    $isDummy = false;
-                } else {
-                    $finalPath = $dummyPath;
-                }
-            } else {
-                $finalPath = $dummyPath;
-            }
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight($isDummy ? 65 : 70);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX($isDummy ? 30 : 15);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         // Kurva
         $rowEnd = $row - 1;
@@ -2421,113 +1631,7 @@ class KalibrasiCertificateController extends Controller
         $baseRow = 55;
         $nameRow = 59;
 
-        // Mapping tetap untuk posisi tanda tangan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'   => 'M',
-        ];
-
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // tambahkan ini
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) continue; // skip jika tidak ada mapping kolom
-
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if (!in_array($status, ['approved', 'rejected'])) {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, '');
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
-            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
-
-            $status = strtolower($approval['status'] ?? '');
-            $relativePath = $approval['ttd'] ?? null;
-
-            $isDummy = true;
-
-            // === Tentukan dummy berdasarkan status ===
-            if ($status === 'approved') {
-                $dummyPath = $approvedPath;
-            } elseif ($status === 'rejected') {
-                $dummyPath = $rejectedPath;
-            } else {
-                $dummyPath = $approvedPath;
-            }
-
-            // === Cek apakah ada TTD asli ===
-            if ($relativePath) {
-                $signaturePath = public_path('storage/' . $relativePath);
-
-                if (file_exists($signaturePath) && $status === 'approved') {
-                    $finalPath = $signaturePath;
-                    $isDummy = false;
-                } else {
-                    $finalPath = $dummyPath;
-                }
-            } else {
-                $finalPath = $dummyPath;
-            }
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight($isDummy ? 70 : 80);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX($isDummy ? 25 : 15);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // Nama approver di bawah TTD (huruf kapital)
-            $approverName = ucfirst($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         // Kurva
         $rowEnd = $row - 1;
@@ -2646,113 +1750,7 @@ class KalibrasiCertificateController extends Controller
         $baseRow = 60;
         $nameRow = 64;
 
-        // Mapping tetap untuk posisi tanda tangan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'   => 'M',
-        ];
-
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // tambahkan ini
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) continue; // skip jika tidak ada mapping kolom
-
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if (!in_array($status, ['approved', 'rejected'])) {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, '');
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
-            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
-
-            $status = strtolower($approval['status'] ?? '');
-            $relativePath = $approval['ttd'] ?? null;
-
-            $isDummy = true;
-
-            // === Tentukan dummy berdasarkan status ===
-            if ($status === 'approved') {
-                $dummyPath = $approvedPath;
-            } elseif ($status === 'rejected') {
-                $dummyPath = $rejectedPath;
-            } else {
-                $dummyPath = $approvedPath;
-            }
-
-            // === Cek apakah ada TTD asli ===
-            if ($relativePath) {
-                $signaturePath = public_path('storage/' . $relativePath);
-
-                if (file_exists($signaturePath) && $status === 'approved') {
-                    $finalPath = $signaturePath;
-                    $isDummy = false;
-                } else {
-                    $finalPath = $dummyPath;
-                }
-            } else {
-                $finalPath = $dummyPath;
-            }
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight($isDummy ? 70 : 80);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX($isDummy ? 25 : 15);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // Nama approver di bawah TTD (huruf kapital)
-            $approverName = ucfirst($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         // Kurva
         $rowEnd = $row - 1;
@@ -2826,5 +1824,97 @@ class KalibrasiCertificateController extends Controller
         $sheet->setCellValue('X59', "Diterbitkan tanggal : $issuedDate");
 
         return $spreadsheet;
+    }
+
+    private function _applyApprovals($sheet, $approvals, $baseRow, $nameRow)
+    {
+        // Mapping tetap untuk posisi tanda tangan berdasarkan jabatan (Role)
+        $roleColumnMap = [
+            'foreman'    => 'C',
+            'supervisor' => 'H',
+            'manager'    => 'M',
+            'dept_head'  => 'M', // legacy / alternative
+            'user'       => 'S',
+        ];
+
+        foreach ($approvals as $approval) {
+            $jabatan = strtolower($approval['jabatan'] ?? '');
+            $status = strtolower($approval['status'] ?? '');
+
+            // Default kolom berdasarkan jabatan
+            $col = $roleColumnMap[$jabatan] ?? null;
+
+            if (!$col) {
+                Log::warning("Kolom tidak ditemukan untuk jabatan (role)={$jabatan}");
+                continue;
+            }
+
+            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
+            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
+
+            // === Jika belum approve → kosongkan area ===
+            if (!in_array($status, ['approved', 'rejected'])) {
+                $sheet->mergeCells($mergeRange);
+                $sheet->mergeCells($nameRange);
+                $sheet->setCellValue($col . $nameRow, '');
+                continue;
+            }
+
+            // === Path tanda tangan ===
+            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
+            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
+            $relativePath = $approval['ttd'] ?? null;
+            $isDummy = true;
+
+            if ($status === 'approved') {
+                $dummyPath = $approvedPath;
+            } elseif ($status === 'rejected') {
+                $dummyPath = $rejectedPath;
+            } else {
+                $dummyPath = $approvedPath;
+            }
+
+            if ($relativePath) {
+                $signaturePath = public_path('storage/' . $relativePath);
+                if (file_exists($signaturePath) && $status === 'approved') {
+                    $finalPath = $signaturePath;
+                    $isDummy = false;
+                } else {
+                    $finalPath = $dummyPath;
+                }
+            } else {
+                $finalPath = $dummyPath;
+            }
+
+            // Merge area untuk area tanda tangan
+            $sheet->mergeCells($mergeRange);
+            $sheet->getStyle($mergeRange)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            // === Gambar tanda tangan ===
+            try {
+                $rangeBounds = Coordinate::rangeBoundaries($mergeRange);
+                $startColLetter = Coordinate::stringFromColumnIndex($rangeBounds[0][0]);
+
+                $drawing = new Drawing();
+                $drawing->setPath($finalPath);
+                $drawing->setHeight($isDummy ? 70 : 100);
+                $drawing->setCoordinates($startColLetter . $baseRow);
+                $drawing->setOffsetX($isDummy ? 30 : 15);
+                $drawing->setOffsetY(5);
+                $drawing->setWorksheet($sheet);
+            } catch (\Throwable $th) {
+                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
+            }
+
+            // === Nama approver di bawah tanda tangan ===
+            $approverName = strtoupper($approval['approver_name'] ?? '-'); // kapital semua
+            $sheet->mergeCells($nameRange);
+            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
+            $sheet->getStyle($nameRange)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+        }
     }
 }
