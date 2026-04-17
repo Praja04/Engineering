@@ -40,7 +40,7 @@ $jabatan === 'supervisor' ||
 
 <li class="nav-item">
     {{-- Parent: Project --}}
-    <a class="nav-link menu-link" href="{{ url('ejo') }}">
+    <a class="nav-link menu-link" href="{{ url('project') }}">
         <i class="mdi mdi-folder-outline"></i>
         <span data-key="t-project">Project</span>
     </a>

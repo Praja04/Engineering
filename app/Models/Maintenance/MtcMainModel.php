@@ -8,7 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Maintenance\MtcUtilityModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Maintenance\MtcMotorPumpModel;
-
+use App\Models\Maintenance\MtcRefrigerasiModel;
+use App\Models\Maintenance\MtcElectricEngineModel;
+use App\Models\Maintenance\MtcDieselEngineModel;
+use App\Models\Maintenance\MtcSipilInspectionModel;
+use App\Models\Maintenance\MtcBatteryMainModel;
+use App\Models\Maintenance\MtcElectricP2hInspectionModel;
+use App\Models\Maintenance\MtcDieselP2hInspectionModel;
+use App\Models\Maintenance\MtcKebutuhanMaterialModel;
+use App\Models\Maintenance\MtcApprovalModel;
 class MtcMainModel extends Model
 {
     protected $table = 'mtc_main';

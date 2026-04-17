@@ -286,7 +286,7 @@
 
                     <div class="d-flex gap-2 justify-content-end">
                         <button type="button" id="btnResetKondisi" class="btn btn-outline-danger">Reset</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
+                        <button type="submit" id="btn-submit" class="btn btn-primary">Simpan</button>
                     </div>
                 </form>
 
@@ -527,7 +527,7 @@
             selectedUser = $(this).val() || null;
         });
 
-        
+
 
         $('#btnSaveTtd').on('click', function() {
             const keterangan = collectNotOkDetails();
@@ -560,36 +560,9 @@
 
 
 
-        $('#btnSaveTtd').on('click', function() {
-
-            if (!signaturePad || signaturePad.isEmpty()) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'TTD belum diisi',
-                    text: 'Silakan tanda tangan terlebih dahulu'
-                });
-                return;
-            }
-
-            const ttdBase64 = signaturePad.toDataURL('image/png');
-            const keterangan = collectNotOkDetails();
-
-            pendingFormData.append('ttd_base64', ttdBase64);
-            if (keterangan) {
-                pendingFormData.append('keterangan', keterangan);
-            }
-            pendingFormData.delete('_token');
-            pendingFormData.append(
-                '_token',
-                $('meta[name="csrf-token"]').attr('content')
-            );
-
-            $('#modalTtd').modal('hide');
-
-            submitFinalForm(pendingFormData);
-        });
 
         function submitFinalForm(formData) {
+          
             const $btn = $('#btn-submit');
             $btn.prop('disabled', true);
             $.ajax({
