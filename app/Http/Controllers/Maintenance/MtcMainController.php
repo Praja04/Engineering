@@ -45,7 +45,7 @@ class MtcMainController extends Controller
             })
             ->get(['id', 'username']);
 
-        $user = User::where('departemen', '!=', 'engineering')
+        $user = User::where('jabatan', 'supervisor')
             ->get(['id', 'username','departemen']);
 
         return response()->json([
