@@ -5,8 +5,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Auth\TokenAuthController;
 
-// Route::get('/token-login', [TokenAuthController::class, 'loginWithToken'])
-//     ->name('auth.token-login');
+Route::get('/auth/sso/callback', [TokenAuthController::class, 'callback'])
+    ->name('auth.token-login');
+
 Route::middleware('web')->group(function () {
     Route::get('/', [AuthController::class, 'showLoginForm'])->name('home');
     Route::get('/signin', [AuthController::class, 'showLoginForm'])->name('login');
