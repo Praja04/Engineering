@@ -35,6 +35,12 @@
                         data-key="t-tkbm">
                         <i class="mdi mdi-certificate"></i>Cetificate</a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('kalibrasi.sticker') }}"
+                        class="nav-link {{ request()->routeIs('kalibrasi.sticker') ? 'active' : '' }}"
+                        data-key="t-tkbm">
+                        <i class="mdi mdi-sticker"></i>Sticker</a>
+                </li>
                 @if ($jabatan != 'operator')
                     <li class="nav-item">
                         <a href="{{ route('kalibrasi.certificate.approvals') }}"

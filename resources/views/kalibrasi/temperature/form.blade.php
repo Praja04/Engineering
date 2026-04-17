@@ -2,6 +2,37 @@
 
 @section('title', 'Form Kalibrasi Temperature')
 
+@section('styles')
+    <style>
+        .mini-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mini-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .input-mini {
+            width: 100%;
+            padding: 4px;
+            font-size: 12px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fcf0cc;
+        }
+
+        .input-mini:focus {
+            outline: none;
+            border-color: #0d6efd;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
@@ -34,7 +65,7 @@
                 </div>
 
                 <div class="card-body">
-                    <form id="formKalibrasi" method="POST">
+                    <form id="formTemperature" method="POST">
                         @csrf
                         <div class="card border border-primary border-opacity-50 mb-4">
                             <div class="card-header bg-light">
@@ -49,7 +80,8 @@
                                             <select class="form-select" id="alat_id" name="alat_id">
                                                 <option value="">-- Pilih Kode Alat --</option>
                                                 @foreach ($alat as $a)
-                                                    <option value="{{ $a->id }}">{{ $a->kode_alat }}</option>
+                                                    <option value="{{ $a->id }}">
+                                                        {{ $a->kode_alat . ' - ' . $a->nama_alat }}</option>
                                                 @endforeach
                                             </select>
                                             <button type="button" id="btnDetail" class="btn btn-outline-primary"
@@ -117,7 +149,10 @@
 
                                     <!-- SUHU -->
                                     <div class="col-12 col-md-6 col-xl-4">
-                                        <input type="hidden" name="suhu_ruangan_final" id="suhu_ruangan_final">
+                                        <label for="suhu_ruangan" class="form-label">Suhu Ruangan (°C)</label>
+                                        <input type="number" class="form-control" id="suhu_ruangan" name="suhu_ruangan"
+                                            placeholder="25">
+                                        {{-- <input type="hidden" name="suhu_ruangan_final" id="suhu_ruangan_final">
                                         <label for="suhu_ruangan" class="form-label">Suhu Ruangan</label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" id="suhu_ruangan" name="suhu_ruangan"
@@ -126,12 +161,15 @@
                                             <input type="number" class="form-control" id="toleransi_suhu"
                                                 name="toleransi_suhu" placeholder="1">
                                             <span class="input-group-text">°C</span>
-                                        </div>
+                                        </div> --}}
                                     </div>
 
                                     <!-- KELEMBABAN -->
                                     <div class="col-12 col-md-6 col-xl-4">
-                                        <input type="hidden" name="kelembaban_final" id="kelembaban_final">
+                                        <label for="kelembaban" class="form-label">Kelembaban (%)</label>
+                                        <input type="number" class="form-control" id="kelembaban" name="kelembaban"
+                                            placeholder="47">
+                                        {{-- <input type="hidden" name="kelembaban_final" id="kelembaban_final">
                                         <label for="kelembaban" class="form-label">Kelembaban</label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" id="kelembaban" name="kelembaban"
@@ -140,14 +178,13 @@
                                             <input type="number" class="form-control" id="toleransi_kelembaban"
                                                 name="toleransi_kelembaban" placeholder="3">
                                             <span class="input-group-text">%</span>
-                                        </div>
+                                        </div> --}}
                                     </div>
 
                                     <!-- TANGGAL -->
                                     <div class="col-12 col-md-6 col-xl-4">
                                         <label for="tgl_kalibrasi" class="form-label">Tanggal Kalibrasi</label>
-                                        <input type="date" class="form-control" id="tgl_kalibrasi"
-                                            name="tgl_kalibrasi">
+                                        <input type="date" class="form-control" id="tgl_kalibrasi" name="tgl_kalibrasi">
                                     </div>
                                 </div>
                             </div>
@@ -162,32 +199,46 @@
                             <div class="card-body">
 
                                 {{-- Input jumlah titik kalibrasi --}}
-                                <div class="col-xxl-3 col-md-3 mb-3">
-                                    <label for="titik_kalibrasi" class="form-label">Jumlah Titik Kalibrasi</label>
+                                <div class="col-md-6 mb-3 gy-2 align-items-center">
+                                    <label for="titik_naik" class="form-label">Jumlah Titik Kalibrasi</label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control" id="titik_kalibrasi"
-                                            name="titik_kalibrasi" min="1" max="10" placeholder="0">
-                                        <button type="button" class="btn btn-outline-primary btn-generate"
-                                            id="generateTitik">
-                                            <i class="mdi mdi-plus me-1"></i>Buat / Tambah Titik
-                                        </button>
+                                        <input type="number" class="form-control" id="jumlahTitik" name="titik_naik"
+                                            min="1" max="10" placeholder="0">
+                                        <button class="btn btn-outline-primary" type="button"
+                                            id="generateRows">Generate</button>
+                                        <button class="btn btn-outline-info" type="button" id="addRows">+ Tambah
+                                            Titik</button>
                                     </div>
                                 </div>
 
-                                {{-- Container untuk field titik kalibrasi --}}
-                                <div id="containerTitik"></div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle" id="tableTemperature">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="text-center" style="width:120px;">Titik Kalibrasi</th>
+                                                <th class="text-center">Penunjuk Standar</th>
+                                                <th class="text-center">Penunjuk Alat</th>
+                                                <th style="width:80px;" class="text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="text-center text-muted" id="emptyState">
+                                                <td colspan="4">Silakan tentukan jumlah titik kalibrasi di atas</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
 
                                 {{-- Tombol Aksi --}}
                                 <div class="text-start mt-4">
                                     <div class="d-flex flex-wrap gap-2 justify-content-start">
-                                        <button type="button" class="btn btn-outline-danger rounded-pill px-4"
-                                            id="btnResetKalibrasi">
+                                        <button type="button" class="btn btn-outline-danger" id="btnReset">
                                             <i class="mdi mdi-close-circle-outline me-1"></i> Reset Draft
                                         </button>
 
                                         <button type="submit" id="btnSimpanKalibrasi"
-                                            class="btn btn-success btnSaveKalibrasi rounded-pill px-4">
-                                            <i class="mdi mdi-send-check-outline me-1"></i> Selesai & Submit
+                                            class="btn btn-success btnSaveKalibrasi">
+                                            <i class="mdi mdi-content-save me-1"></i> Submit
                                         </button>
                                     </div>
                                 </div>
@@ -205,42 +256,9 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // ---- GENERATE TITIK ----
-            function generateTitikFields(jumlahTitik) {
-                const container = $('#containerTitik').empty();
-
-                for (let i = 1; i <= jumlahTitik; i++) {
-                    const html = `
-                        <div class="card border shadow-sm mb-3">
-                            <div class="card-body">
-                                <h5 class="mb-3 fw-bold text-primary">Titik Kalibrasi ${i}</h5>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Nilai Titik Kalibrasi (misal: 50, 100) °C</label>
-                                    <input type="number" class="form-control bg-light"
-                                        name="temperature[${i}][titik_kalibrasi]" step="0.1">
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold d-block">Penunjuk Standar</label>
-                                        <input type="number" class="form-control mb-2 bg-light" name="temperature[${i}][standar_1]" step="0.1">
-                                        <input type="number" class="form-control mb-2 bg-light" name="temperature[${i}][standar_2]" step="0.1">
-                                        <input type="number" class="form-control bg-light" name="temperature[${i}][standar_3]" step="0.1">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold d-block">Penunjuk Alat</label>
-                                        <input type="number" class="form-control mb-2 bg-light" name="temperature[${i}][alat_1]" step="0.1">
-                                        <input type="number" class="form-control mb-2 bg-light" name="temperature[${i}][alat_2]" step="0.1">
-                                        <input type="number" class="form-control bg-light" name="temperature[${i}][alat_3]" step="0.1">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    container.append(html);
-                }
-            }
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
 
             // ---- EVENT: pilih alat ----
             $('#alat_id').on('change', function() {
@@ -269,130 +287,390 @@
                 });
             });
 
-            // ---- EVENT: generate titik ----
-            $('#generateTitik').on('click', function() {
-                const jumlahTitik = parseInt($('#titik_kalibrasi').val(), 10);
-                if (isNaN(jumlahTitik) || jumlahTitik < 1) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Perhatian',
-                        text: 'Masukkan jumlah titik kalibrasi yang valid!'
+            const STORAGE_KEY = 'draft_temperature';
+
+            function saveDraft() {
+
+                const formData = {
+                    header: {
+                        alat_id: $('#alat_id').val(),
+                        lokasi_kalibrasi: $('#lokasi_kalibrasi').val(),
+                        suhu_ruangan: $('#suhu_ruangan').val(),
+                        toleransi_suhu: $('#toleransi_suhu').val(),
+                        kelembaban: $('#kelembaban').val(),
+                        toleransi_kelembaban: $('#toleransi_kelembaban').val(),
+                        tgl_kalibrasi: $('#tgl_kalibrasi').val(),
+                    },
+                    jumlahBaris: $('#tableTemperature tbody tr').length,
+                    data: []
+                };
+
+                $('#tableTemperature tbody tr').each(function() {
+
+                    const titik = $(this).find('input[name*="titik_kalibrasi"]').val();
+
+                    let standar = [];
+                    let alat = [];
+
+                    $(this).find('input[name*="penunjuk_standar"]').each(function() {
+                        standar.push($(this).val());
                     });
+
+                    $(this).find('input[name*="penunjuk_alat"]').each(function() {
+                        alat.push($(this).val());
+                    });
+
+                    // kalau semua kosong skip
+                    const isEmpty = !titik &&
+                        standar.every(v => !v) &&
+                        alat.every(v => !v);
+
+                    if (!isEmpty) {
+                        formData.data.push({
+                            titik_kalibrasi: titik,
+                            penunjuk_standar: standar,
+                            penunjuk_alat: alat
+                        });
+                    }
+                });
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+            }
+
+            $(document).on('input change', '#formTemperature input, #formTemperature select', function() {
+                saveDraft();
+            });
+
+            function loadDraft() {
+
+                const draft = localStorage.getItem(STORAGE_KEY);
+                if (!draft) return;
+
+                const data = JSON.parse(draft);
+
+                // restore header
+                $('#alat_id').val(data.header.alat_id).trigger('change');
+                $('#lokasi_kalibrasi').val(data.header.lokasi_kalibrasi);
+                $('#suhu_ruangan').val(data.header.suhu_ruangan);
+                $('#toleransi_suhu').val(data.header.toleransi_suhu);
+                $('#kelembaban').val(data.header.kelembaban);
+                $('#toleransi_kelembaban').val(data.header.toleransi_kelembaban);
+                $('#tgl_kalibrasi').val(data.header.tgl_kalibrasi);
+
+                const tbody = $('#tableTemperature tbody');
+
+                if (!data.data.length) return;
+
+                data.data.forEach((row, i) => {
+
+                    let standarInputs = '';
+                    let alatInputs = '';
+
+                    row.penunjuk_standar.forEach((val, j) => {
+                        standarInputs += `
+                            <input type="number" step="0.01"
+                                name="data[${i}][penunjuk_standar][]"
+                                value="${val}"
+                                class="input-mini">
+                        `;
+                    });
+
+                    row.penunjuk_alat.forEach((val, j) => {
+                        alatInputs += `
+                            <input type="number" step="0.01"
+                                name="data[${i}][penunjuk_alat][]"
+                                value="${val}"
+                                class="input-mini">
+                        `;
+                    });
+
+                    tbody.append(`
+                        <tr>
+                            <td class="text-center">
+                                <input type="number"
+                                    name="data[${i}][titik_kalibrasi]"
+                                    value="${row.titik_kalibrasi}"
+                                    class="input-mini text-center">
+                            </td>
+
+                            <td><div class="mini-container">${standarInputs}</div></td>
+                            <td><div class="mini-container">${alatInputs}</div></td>
+
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-danger btn-delete-row">✕</button>
+                            </td>
+                        </tr>
+                    `);
+
+                    if (i === data.data.length - 1) {
+                        $('#emptyState').remove();
+                    }
+                });
+            }
+
+            loadDraft();
+
+            // Generate baris sesuai input jumlah
+            $('#generateRows').on('click', function() {
+
+                const jumlah = parseInt($('#jumlahTitik').val());
+                const tbody = $('#tableTemperature tbody');
+                tbody.empty();
+
+                if (!jumlah || jumlah <= 0) {
+                    tbody.html(`
+                        <tr class="text-center text-muted">
+                            <td colspan="4">Masukkan jumlah titik kalibrasi yang valid.</td>
+                        </tr>
+                    `);
                     return;
                 }
-                generateTitikFields(jumlahTitik);
+
+                for (let i = 0; i < jumlah; i++) {
+
+                    let standarInputs = '';
+                    let alatInputs = '';
+
+                    for (let j = 0; j < 3; j++) {
+                        standarInputs += `
+                            <input type="number" step="0.01"
+                                name="data[${i}][penunjuk_standar][]"
+                                class="input-mini">
+                        `;
+
+                        alatInputs += `
+                            <input type="number" step="0.01"
+                                name="data[${i}][penunjuk_alat][]"
+                                class="input-mini">
+                        `;
+                    }
+
+                    tbody.append(`
+                        <tr>
+                            <td class="text-center">
+                                <input type="number"
+                                    name="data[${i}][titik_kalibrasi]"
+                                    value="${i + 1}"
+                                    class="input-mini text-center">
+                            </td>
+
+                            <td>
+                                <div class="mini-container">
+                                    ${standarInputs}
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="mini-container">
+                                    ${alatInputs}
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-danger btn-delete-row">✕</button>
+                            </td>
+                        </tr>
+                    `);
+                }
+
+                saveDraft();
+            });
+
+            $(document).on('click', '.btn-delete-row', function() {
+
+                $(this).closest('tr').remove();
+
+                // renumber ulang
+                $('#tableTemperature tbody tr').each(function(index) {
+
+                    $(this).find('input[name^="data"]').each(function() {
+
+                        const name = $(this).attr('name');
+                        const newName = name.replace(/data\[\d+\]/, `data[${index}]`);
+                        $(this).attr('name', newName);
+                    });
+
+                    $(this).find('input[name*="titik_kalibrasi"]').val(index + 1);
+                });
+
+                if ($('#tableTemperature tbody tr').length === 0) {
+                    $('#tableTemperature tbody').html(`
+                        <tr class="text-center text-muted">
+                            <td colspan="4">Silakan tentukan jumlah titik kalibrasi di atas</td>
+                        </tr>
+                    `);
+                }
+
+                saveDraft();
+            });
+
+            $('#addRows').on('click', function() {
+
+                const tbody = $('#tableTemperature tbody');
+
+                // kalau masih empty state, kosongkan dulu
+                if (tbody.find('tr').length === 1 && tbody.find('td').length === 1) {
+                    tbody.empty();
+                }
+
+                const rowIndex = tbody.find('tr').length; // index berikutnya
+
+                let standarInputs = '';
+                let alatInputs = '';
+
+                for (let j = 0; j < 3; j++) {
+                    standarInputs += `
+                        <input type="number" step="0.01"
+                            name="data[${rowIndex}][penunjuk_standar][]"
+                            
+                            class="input-mini">
+                    `;
+
+                    alatInputs += `
+                        <input type="number" step="0.01"
+                            name="data[${rowIndex}][penunjuk_alat][]"
+                            
+                            class="input-mini">
+                    `;
+                }
+
+                tbody.append(`
+                    <tr>
+                        <td class="text-center">
+                            <input type="number"
+                                name="data[${rowIndex}][titik_kalibrasi]"
+                                value="${rowIndex + 1}"
+                                class="input-mini text-center">
+                        </td>
+
+                        <td>
+                            <div class="mini-container">
+                                ${standarInputs}
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="mini-container">
+                                ${alatInputs}
+                            </div>
+                        </td>
+
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger btn-delete-row">✕</button>
+                        </td>
+                    </tr>
+                `);
+
+                saveDraft();
             });
 
             // ---- EVENT: submit ----
-            $('#formKalibrasi').on('submit', function(e) {
+            $('#formTemperature').on('submit', function(e) {
                 e.preventDefault();
 
-                const alatId = $('#alat_id').val();
-                if (!alatId) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Pilih alat dulu',
-                        text: 'Silakan pilih kode alat sebelum submit.'
-                    });
-                    return;
-                }
+                let formData = $(this).serialize();
 
-                // format suhu & kelembaban final
-                const suhu = $('#suhu_ruangan').val();
-                const tolSuhu = $('#toleransi_suhu').val();
-                const kelembaban = $('#kelembaban').val();
-                const tolKelembaban = $('#toleransi_kelembaban').val();
-
-                const suhuFormatted = suhu && tolSuhu ? `${suhu}°C ± ${tolSuhu}°C` : (suhu ? `${suhu}°C` :
-                    '');
-                const kelembabanFormatted = kelembaban && tolKelembaban ?
-                    `${kelembaban}% ± ${tolKelembaban}%` :
-                    (kelembaban ? `${kelembaban}%` : '');
-
-                $('#suhu_ruangan_final').val(suhuFormatted);
-                $('#kelembaban_final').val(kelembabanFormatted);
-
-                const formData = new FormData(this);
+                Swal.fire({
+                    title: 'Menyimpan data...',
+                    text: 'Mohon tunggu sebentar.',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
 
                 $.ajax({
                     url: "{{ route('kalibrasi.temperature.store') }}",
-                    method: 'POST',
+                    type: "POST",
                     data: formData,
-                    processData: false,
-                    contentType: false,
-                    beforeSend: function() {
-                        $('#btnSimpanKalibrasi').prop('disabled', true).text('Menyimpan...');
-                    },
-                    success: function() {
+                    success: function(res) {
+
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil!',
-                            text: 'Data kalibrasi berhasil disimpan.',
-                            timer: 1500,
+                            text: res.message ||
+                                'Data kalibrasi temperature berhasil disimpan.',
+                            timer: 2000,
                             showConfirmButton: false
                         });
 
-                        $('#formKalibrasi')[0].reset();
-                        $('#containerTitik').empty();
-                        $('#btnSimpanKalibrasi').prop('disabled', false).text(
-                            'Selesai & Submit');
-                        $('#alat_id').val('').trigger('change');
+                        // reset form
+                        $('#formTemperature')[0].reset();
+
+                        $('#tableTemperature tbody').html(`
+                            <tr class="text-center text-muted">
+                                <td colspan="4">
+                                    Silakan tentukan jumlah titik kalibrasi di atas
+                                </td>
+                            </tr>
+                        `);
+
+                        // hapus draft localStorage
+                        localStorage.removeItem(STORAGE_KEY);
                     },
                     error: function(xhr) {
-                        $('#btnSimpanKalibrasi').prop('disabled', false).text(
-                            'Selesai & Submit');
-                        const msg = xhr.status === 422 && xhr.responseJSON?.errors ?
-                            Object.values(xhr.responseJSON.errors).map(e => e.join(', ')).join(
-                                '<br>') :
-                            'Silakan coba lagi nanti.';
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal!',
-                            html: msg
-                        });
+
+                        Swal.close();
+
+                        if (xhr.status === 422) {
+
+                            let errors = xhr.responseJSON.errors;
+                            let errorMessages = '';
+
+                            $.each(errors, function(key, value) {
+                                errorMessages += `• ${value[0]}<br>`;
+                            });
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validasi Gagal',
+                                html: errorMessages
+                            });
+
+                        } else {
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: xhr.responseJSON?.message ||
+                                    'Terjadi kesalahan saat menyimpan data.'
+                            });
+                        }
                     }
                 });
             });
 
             // === Tombol Reset Draft LocalStorage ===
-            $('#btnResetKalibrasi').on('click', function(e) {
-                e.preventDefault();
-                const alatId = $('#alat_id').val();
-
-                if (!alatId) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Tidak ada alat dipilih',
-                        text: 'Silakan pilih alat dulu sebelum mereset draft.'
-                    });
-                    return;
-                }
+            $('#btnReset').on('click', function() {
 
                 Swal.fire({
+                    title: 'Hapus Draft?',
+                    text: "Data draft lokal akan dihapus permanen.",
                     icon: 'warning',
-                    title: 'Reset Draft?',
-                    text: 'Draft kalibrasi untuk alat ini akan dihapus dari penyimpanan lokal.',
                     showCancelButton: true,
-                    confirmButtonText: 'Ya, Hapus',
-                    cancelButtonText: 'Batal'
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
                 }).then((result) => {
+
                     if (result.isConfirmed) {
-                        const key = storageKeyForAlat(alatId);
-                        if (key && localStorage.getItem(key)) {
-                            localStorage.removeItem(key);
-                            console.log(`[LocalStorage] Draft dihapus untuk key: ${key}`);
-                        }
 
-                        // Bersihkan form & trigger ulang change agar state alat kosong diakui
-                        $('#formKalibrasi')[0].reset();
-                        $('#containerTitik').empty();
-                        $('#alat_id').val('').trigger('change');
+                        localStorage.removeItem(STORAGE_KEY);
 
+                        $('#formTemperature')[0].reset();
+
+                        $('#tableTemperature tbody').html(`
+                            <tr class="text-center text-muted">
+                                <td colspan="4">
+                                    Silakan tentukan jumlah titik kalibrasi di atas
+                                </td>
+                            </tr>
+                        `);
 
                         Swal.fire({
                             icon: 'success',
                             title: 'Draft Dihapus',
-                            text: 'Draft untuk alat ini telah dihapus dari localStorage.',
+                            text: 'Draft lokal berhasil dibersihkan.',
                             timer: 1500,
                             showConfirmButton: false
                         });

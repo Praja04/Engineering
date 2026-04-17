@@ -1,6 +1,33 @@
 @extends('layouts.app')
 
-@section('title', 'Form Thermohygrometer')
+@section('title', 'Form Thermometer')
+
+@section('styles')
+    <style>
+        #tableThermo {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        #tableThermo th,
+        #tableThermo td {
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        #tableThermo input {
+            width: 100%;
+            border: none;
+            outline: none;
+            text-align: center;
+            font-size: 13px;
+            padding: 4px;
+            background-color: #fcf0cc
+        }
+    </style>
+@endsection
 
 @section('content')
     <div class="page-content">
@@ -9,25 +36,33 @@
                 <div class="col-12">
                     <div class="page-title d-sm-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-2">
+                            <!-- Tombol Back -->
                             <a href="{{ route('kalibrasi.form.dashboard') }}"
                                 class="btn btn-outline-primary rounded-pill px-4 d-flex align-items-center">
-                                <i class="mdi mdi-arrow-left me-1"></i> Kembali
+                                <i class="mdi mdi-arrow-left me-1"></i>
+                                Kembali
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0 rounded-3">
+            <div class="card shadow-sm border-0 rounded-3" data-aos="fade-up" data-aos-delay="100">
                 <div class="card-header bg-soft-primary py-3">
-                    <h5 class="mb-0"><i class="mdi mdi-thermometer me-2"></i>Form Kalibrasi Thermohygrometer</h5>
+                    <div class="container-fluid">
+                        <div class="row align-items-center justify-content-between g-2">
+                            <div class="col-12 col-sm-auto d-flex align-items-center flex-wrap gap-2">
+                                <h5 class="mb-0 d-flex align-items-center">
+                                    Form Kalibrasi Thermometer
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card-body">
-                    <form id="formKalibrasiThermo" method="POST">
+                    <form id="formThermometer" method="POST">
                         @csrf
-
-                        {{-- === Data Utama === --}}
                         <div class="card border border-primary border-opacity-50 mb-4">
                             <div class="card-header bg-light">
                                 <strong><i class="mdi mdi-clipboard-list-outline me-2"></i>Data Utama Kalibrasi</strong>
@@ -41,7 +76,8 @@
                                             <select class="form-select" id="alat_id" name="alat_id">
                                                 <option value="">-- Pilih Kode Alat --</option>
                                                 @foreach ($alat as $a)
-                                                    <option value="{{ $a->id }}">{{ $a->kode_alat }}</option>
+                                                    <option value="{{ $a->id }}">
+                                                        {{ $a->kode_alat . ' - ' . $a->nama_alat }}</option>
                                                 @endforeach
                                             </select>
                                             <button type="button" id="btnDetail" class="btn btn-outline-primary"
@@ -50,10 +86,12 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+
+                                    <!-- DATA KALIBRASI -->
+                                    <div class="col-12 col-md-6 col-xl-6">
                                         <label for="lokasi_kalibrasi" class="form-label">Lokasi Kalibrasi</label>
                                         <input type="text" class="form-control" id="lokasi_kalibrasi"
-                                            name="lokasi_kalibrasi" placeholder="Laboratorium Kalibrasi" required>
+                                            name="lokasi_kalibrasi" placeholder="Laboratorium Kalibrasi">
                                     </div>
 
                                     <!-- DETAIL ALAT -->
@@ -105,176 +143,89 @@
                                         </div>
                                     </div>
 
+                                    <!-- SUHU -->
                                     <div class="col-12 col-md-6 col-xl-4">
-                                        <input type="hidden" name="suhu_ruangan_final" id="suhu_ruangan_final">
-                                        <label for="suhu_ruangan" class="form-label">Suhu Ruangan</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="suhu_ruangan" name="suhu_ruangan"
-                                                placeholder="25">
-                                            <span class="input-group-text">±</span>
-                                            <input type="number" class="form-control" id="toleransi_suhu"
-                                                name="toleransi_suhu" placeholder="1">
-                                            <span class="input-group-text">°C</span>
-                                        </div>
+                                        <label for="suhu_ruangan" class="form-label">Suhu Ruangan (°C)</label>
+                                        <input type="number" class="form-control" id="suhu_ruangan" name="suhu_ruangan"
+                                            placeholder="25">
                                     </div>
 
                                     <!-- KELEMBABAN -->
                                     <div class="col-12 col-md-6 col-xl-4">
-                                        <input type="hidden" name="kelembaban_final" id="kelembaban_final">
-                                        <label for="kelembaban" class="form-label">Kelembaban</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="kelembaban" name="kelembaban"
-                                                placeholder="47">
-                                            <span class="input-group-text">±</span>
-                                            <input type="number" class="form-control" id="toleransi_kelembaban"
-                                                name="toleransi_kelembaban" placeholder="3">
-                                            <span class="input-group-text">%</span>
-                                        </div>
+                                        <label for="kelembaban" class="form-label">Kelembaban (%)</label>
+                                        <input type="number" class="form-control" id="kelembaban" name="kelembaban"
+                                            placeholder="47">
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <!-- TANGGAL -->
+                                    <div class="col-12 col-md-6 col-xl-4">
                                         <label for="tgl_kalibrasi" class="form-label">Tanggal Kalibrasi</label>
-                                        <input type="date" class="form-control" id="tgl_kalibrasi"
-                                            name="tgl_kalibrasi" required>
+                                        <input type="date" class="form-control" id="tgl_kalibrasi" name="tgl_kalibrasi">
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- === Data Pengukuran === --}}
+                        {{-- === Data Pengukuran Pressure === --}}
                         <div class="card border border-primary border-opacity-50">
                             <div class="card-header bg-light">
-                                <strong><i class="mdi mdi-thermometer-lines me-2"></i>Data Pengukuran</strong>
+                                <strong><i class="mdi mdi-gauge me-2"></i>Data Pengukuran Pressure</strong>
                             </div>
                             <div class="card-body">
-
-                                <ul class="nav nav-pills" role="tablist">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" data-bs-toggle="tab" href="#tab-suhu">
-                                            <i class="mdi mdi-thermometer me-1"></i>Suhu (°C)
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="tab" href="#tab-rh">
-                                            <i class="mdi mdi-water-percent me-1"></i>Kelembaban (RH)
-                                        </a>
-                                    </li>
-                                </ul>
-
-                                <div class="tab-content mt-4">
-                                    {{-- Tab SUHU --}}
-                                    <div class="tab-pane fade show active" id="tab-suhu">
-                                        <table class="table table-bordered align-middle text-center">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Posisi Bagian</th>
-                                                    <th>Penunjuk Standar</th>
-                                                    <th>Penunjuk Alat</th>
-                                                    <th>Koreksi Standar</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (['kanan depan', 'kiri depan', 'kanan belakang', 'kiri belakang', 'tengah'] as $pIndex => $pos)
-                                                    @for ($i = 1; $i <= 3; $i++)
-                                                        <tr>
-                                                            @if ($i === 1)
-                                                                {{-- merge 3 row untuk posisi --}}
-                                                                <td rowspan="3"><strong>{{ ucfirst($pos) }}</strong>
-                                                                </td>
-                                                            @endif
-                                                            <td>
-                                                                <input type="number" step="0.01"
-                                                                    name="thermo[suhu][{{ $pIndex }}][{{ $i }}][penunjuk_standar]"
-                                                                    class="form-control bg-light" placeholder="0.0"
-                                                                    required>
-                                                            </td>
-                                                            <td>
-                                                                <input type="number" step="0.01"
-                                                                    name="thermo[suhu][{{ $pIndex }}][{{ $i }}][penunjuk_alat]"
-                                                                    class="form-control bg-light" placeholder="0.0"
-                                                                    required>
-                                                            </td>
-                                                            <td>
-                                                                <input type="number" step="0.01"
-                                                                    name="thermo[suhu][{{ $pIndex }}][{{ $i }}][koreksi_standar]"
-                                                                    class="form-control bg-light" placeholder="0.0">
-                                                            </td>
-                                                            <input type="hidden"
-                                                                name="thermo[suhu][{{ $pIndex }}][{{ $i }}][posisi]"
-                                                                value="{{ $pos }}">
-                                                            <input type="hidden"
-                                                                name="thermo[suhu][{{ $pIndex }}][{{ $i }}][tipe_hitung]"
-                                                                value="suhu">
-                                                        </tr>
-                                                    @endfor
-                                                    {{-- Tambahkan garis/pemisah visual setelah 3 baris --}}
-                                                    <tr class="table-primary">
-                                                        <td colspan="4"></td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {{-- Tab RH --}}
-                                    <div class="tab-pane fade" id="tab-rh">
-                                        <table class="table table-bordered align-middle text-center">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Posisi Bagian</th>
-                                                    <th>Penunjuk Standar</th>
-                                                    <th>Penunjuk Alat</th>
-                                                    <th>Koreksi Standar</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (['kanan depan', 'kiri depan', 'kanan belakang', 'kiri belakang', 'tengah'] as $pIndex => $pos)
-                                                    @for ($i = 1; $i <= 3; $i++)
-                                                        <tr>
-                                                            @if ($i === 1)
-                                                                <td rowspan="3"><strong>{{ ucfirst($pos) }}</strong>
-                                                                </td>
-                                                            @endif
-                                                            <td>
-                                                                <input type="number" step="0.01"
-                                                                    name="thermo[rh][{{ $pIndex }}][{{ $i }}][penunjuk_standar]"
-                                                                    class="form-control bg-light" placeholder="0.0"
-                                                                    required>
-                                                            </td>
-                                                            <td>
-                                                                <input type="number" step="0.01"
-                                                                    name="thermo[rh][{{ $pIndex }}][{{ $i }}][penunjuk_alat]"
-                                                                    class="form-control bg-light" placeholder="0.0"
-                                                                    required>
-                                                            </td>
-                                                            <td>
-                                                                <input type="number" step="0.01"
-                                                                    name="thermo[rh][{{ $pIndex }}][{{ $i }}][koreksi_standar]"
-                                                                    class="form-control bg-light" placeholder="0.0">
-                                                            </td>
-                                                            <input type="hidden"
-                                                                name="thermo[rh][{{ $pIndex }}][{{ $i }}][posisi]"
-                                                                value="{{ $pos }}">
-                                                            <input type="hidden"
-                                                                name="thermo[rh][{{ $pIndex }}][{{ $i }}][tipe_hitung]"
-                                                                value="rh">
-                                                        </tr>
-                                                    @endfor
-                                                    {{-- Tambahkan garis/pemisah visual setelah 3 baris --}}
-                                                    <tr class="table-primary">
-                                                        <td colspan="4"></td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
+                                <div class="col-md-6 mb-3">
+                                    <label for="titik_naik" class="form-label">Jumlah Titik Kalibrasi</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="jumlahTitik" name="titik_naik"
+                                            min="1" max="10" placeholder="0">
+                                        <button class="btn btn-outline-primary" type="button"
+                                            id="generateRows">Generate</button>
+                                        <button class="btn btn-outline-info" type="button" id="addRows">+ Tambah
+                                            Titik</button>
                                     </div>
                                 </div>
 
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="tableThermo">
+                                        <thead class="text-center align-middle text-nowrap table-light">
+                                            <tr>
+                                                <th rowspan="2">Titik Kalibrasi</th>
+                                                <th rowspan="2">Posisi Bagian</th>
+
+                                                <th colspan="2">Penunjukan Standar</th>
+                                                <th colspan="2">Penunjukan Alat</th>
+                                                <th rowspan="2" style="width:80px;" class="text-center">Aksi</th>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Suhu (°C)</th>
+                                                <th>RH (%)</th>
+                                                <th>Suhu (°C)</th>
+                                                <th>RH (%)</th>
+                                            </tr>
+
+                                        </thead>
+
+                                        <tbody>
+                                            <tr class="text-center text-muted" id="emptyState">
+                                                <td colspan="4">Silakan tentukan jumlah titik kalibrasi di atas</td>
+                                            </tr>
+                                            <!-- generate row di sini -->
+                                        </tbody>
+                                    </table>
+
+                                </div>
+
+                                <!-- Tombol Aksi -->
                                 <div class="text-start mt-4">
-                                    <button type="submit" class="btn btn-success rounded-pill px-4"
-                                        id="btnSubmitThermo">
-                                        <i class="mdi mdi-send-check-outline me-1"></i> Submit & Simpan
-                                    </button>
+                                    <div class="d-flex flex-wrap gap-2 justify-content-start">
+                                        <button type="button" class="btn btn-outline-danger" id="btnResetKalibrasi">
+                                            <i class="mdi mdi-close-circle-outline me-1"></i>Reset Draft
+                                        </button>
+                                        <button type="submit" id="btnSimpanKalibrasi"
+                                            class="btn btn-success btnSaveKalibrasi">
+                                            <i class="mdi mdi-content-save me-1"></i> Submit
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -288,6 +239,12 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
+
+            const STORAGE_KEY = 'formThermohygrometer';
+
             $('#alat_id').change(function() {
                 var id = $(this).val();
 
@@ -314,52 +271,345 @@
                 });
             });
 
-            $('#formKalibrasiThermo').on('submit', function(e) {
+            $(document).on('input change',
+                '#formThermometer input, #formThermometer select, #formThermometer textarea, #tableThermo input',
+                function() {
+                    saveForm();
+                }
+            );
+
+            function saveForm() {
+
+                const data = {
+                    header: {},
+                    rows: []
+                };
+
+                // 🔹 HEADER (yang bukan data[...])
+                $('#formThermometer').find('input, select, textarea').each(function() {
+
+                    if (this.name && !this.name.startsWith('data[')) {
+                        data.header[this.name] = $(this).val();
+                    }
+                });
+
+                // 🔹 ROWS (berdasarkan rowIndex)
+                for (let i = 0; i < rowIndex; i++) {
+
+                    let rowData = {
+                        titik_kalibrasi: $(`[name="data[${i}][titik_kalibrasi]"]`).val() || '',
+                        posisi: $(`[name="data[${i}][posisi]"]`).val() || '',
+                        standar: [],
+                        alat: []
+                    };
+
+                    for (let j = 0; j < 3; j++) {
+
+                        rowData.standar.push({
+                            suhu: $(`[name="data[${i}][standar][${j}][suhu]"]`).val() || '',
+                            rh: $(`[name="data[${i}][standar][${j}][rh]"]`).val() || ''
+                        });
+
+                        rowData.alat.push({
+                            suhu: $(`[name="data[${i}][alat][${j}][suhu]"]`).val() || '',
+                            rh: $(`[name="data[${i}][alat][${j}][rh]"]`).val() || ''
+                        });
+                    }
+
+                    data.rows.push(rowData);
+                }
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            }
+
+            function loadForm() {
+
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return;
+
+                const data = JSON.parse(saved);
+
+                // 🔹 HEADER
+                Object.keys(data.header).forEach(name => {
+                    const $el = $(`[name="${name}"]`);
+                    if ($el.length) {
+                        $el.val(data.header[name]).trigger('change');
+                    }
+                });
+
+                // 🔹 CLEAR TABLE
+                $('#tableThermo tbody').empty();
+                rowIndex = 0;
+
+                if (!data.rows || data.rows.length === 0) {
+                    return;
+                }
+
+                // 🔹 GENERATE ROWS + ISI NILAI
+                data.rows.forEach(row => {
+
+                    const currentIndex = rowIndex;
+                    addThermoPoint(); // generate kosong dulu
+
+                    // isi titik & posisi
+                    $(`[name="data[${currentIndex}][titik_kalibrasi]"]`)
+                        .val(row.titik_kalibrasi);
+
+                    $(`[name="data[${currentIndex}][posisi]"]`)
+                        .val(row.posisi);
+
+                    for (let j = 0; j < 3; j++) {
+
+                        $(`[name="data[${currentIndex}][standar][${j}][suhu]"]`)
+                            .val(row.standar[j]?.suhu || '');
+
+                        $(`[name="data[${currentIndex}][standar][${j}][rh]"]`)
+                            .val(row.standar[j]?.rh || '');
+
+                        $(`[name="data[${currentIndex}][alat][${j}][suhu]"]`)
+                            .val(row.alat[j]?.suhu || '');
+
+                        $(`[name="data[${currentIndex}][alat][${j}][rh]"]`)
+                            .val(row.alat[j]?.rh || '');
+                    }
+                });
+            }
+
+            let rowIndex = 0;
+
+            // 🔹 GENERATE TITIK
+            $('#generateRows').on('click', function() {
+
+                const jumlah = parseInt($('#jumlahTitik').val());
+                const tbody = $('#tableThermo tbody');
+                tbody.empty();
+                rowIndex = 0;
+
+                if (!jumlah || jumlah <= 0) return;
+
+                for (let i = 0; i < jumlah; i++) {
+                    addThermoPoint();
+                }
+
+                saveForm();
+            });
+
+            function addThermoPoint() {
+
+                const tbody = $('#tableThermo tbody');
+                $('#emptyState').remove(); // hapus empty state kalau ada
+
+                let rows = '';
+                const currentIndex = rowIndex;
+
+                for (let i = 0; i < 3; i++) {
+
+                    let parentCell = '';
+                    let actionCell = '';
+
+                    if (i === 0) {
+                        parentCell = `
+                            <td rowspan="3">
+                                <input type="number"
+                                    name="data[${currentIndex}][titik_kalibrasi]">
+                            </td>
+                            <td rowspan="3">
+                                <input type="text"
+                                    name="data[${currentIndex}][posisi]">
+                            </td>
+                        `;
+
+                        actionCell = `
+                            <td rowspan="3" class="text-center align-middle">
+                                <button type="button"
+                                    class="btn btn-sm btn-danger btn-delete-point"
+                                    data-index="${currentIndex}">
+                                    ✕
+                                </button>
+                            </td>
+                        `;
+                    }
+
+                    rows += `
+                        <tr data-group="${currentIndex}">
+                            ${parentCell}
+
+                            <td>
+                                <input type="number" step="0.01"
+                                    name="data[${currentIndex}][standar][${i}][suhu]">
+                            </td>
+
+                            <td>
+                                <input type="number" step="0.01"
+                                    name="data[${currentIndex}][standar][${i}][rh]">
+                            </td>
+
+                            <td>
+                                <input type="number" step="0.01"
+                                    name="data[${currentIndex}][alat][${i}][suhu]">
+                            </td>
+
+                            <td>
+                                <input type="number" step="0.01"
+                                    name="data[${currentIndex}][alat][${i}][rh]">
+                            </td>
+
+                            ${actionCell}
+                        </tr>
+                    `;
+                }
+
+                tbody.append(rows);
+                rowIndex++;
+                saveForm();
+            }
+
+            $('#addRows').on('click', function() {
+                addThermoPoint();
+            });
+
+            $(document).on('click', '.btn-delete-point', function() {
+
+                const index = $(this).data('index');
+
+                $(`#tableThermo tbody tr[data-group="${index}"]`).remove();
+
+                reindexRows();
+                saveForm();
+            });
+
+            function reindexRows() {
+
+                let newIndex = 0;
+                const groupMap = {};
+
+                $('#tableThermo tbody tr').each(function() {
+
+                    const oldIndex = $(this).data('group');
+
+                    // Kalau group lama belum dipetakan
+                    if (groupMap[oldIndex] === undefined) {
+                        groupMap[oldIndex] = newIndex++;
+                    }
+
+                    const updatedIndex = groupMap[oldIndex];
+
+                    // Update data-group
+                    $(this).attr('data-group', updatedIndex);
+
+                    // Update semua input name
+                    $(this).find('input').each(function() {
+
+                        const name = $(this).attr('name');
+                        if (!name) return;
+
+                        const newName = name.replace(/data\[\d+\]/, `data[${updatedIndex}]`);
+                        $(this).attr('name', newName);
+                    });
+
+                    // Update tombol delete
+                    $(this).find('.btn-delete-point')
+                        .attr('data-index', updatedIndex);
+                });
+
+                rowIndex = newIndex;
+            }
+
+            loadForm();
+
+            // simpan button
+            $(document).on('click', '.btnSaveKalibrasi', function(e) {
                 e.preventDefault();
-                // let formData = $(this).serialize();
-                const suhu = $('#suhu_ruangan').val();
-                const toleransiSuhu = $('#toleransi_suhu').val();
-                const kelembaban = $('#kelembaban').val();
-                const toleransiKelembaban = $('#toleransi_kelembaban').val();
-
-                // Format data gabungan
-                const suhuFormatted = suhu && toleransiSuhu ?
-                    `${suhu}°C ± ${toleransiSuhu}°C` :
-                    suhu ? `${suhu}°C` : '';
-
-                const kelembabanFormatted = kelembaban && toleransiKelembaban ?
-                    `${kelembaban}% ± ${toleransiKelembaban}%` :
-                    kelembaban ? `${kelembaban}%` : '';
-
-                // Masukkan hasil ke hidden input
-                $('#suhu_ruangan_final').val(suhuFormatted);
-                $('#kelembaban_final').val(kelembabanFormatted);
-
-                let formData = $('#formKalibrasiThermo').serializeArray();
 
                 $.ajax({
-                    url: "{{ route('kalibrasi.thermohygrometer.store') }}",
-                    type: 'POST',
-                    data: formData,
+                    url: `{{ route('kalibrasi.thermohygrometer.store') }}`,
+                    method: 'POST',
+                    data: $('#formThermometer').serialize(),
+
                     success: function(res) {
+
+                        Swal.fire('Success', res.message, 'success');
+
+                        localStorage.removeItem(STORAGE_KEY);
+
+                        $('#formThermometer')[0].reset();
+                        $('#tableThermo tbody').empty();
+                        rowIndex = 0;
+                    },
+
+                    error: function(xhr) {
+
+                        if (xhr.status === 422) {
+
+                            let errors = xhr.responseJSON.errors;
+                            let msg = '';
+
+                            Object.keys(errors).forEach(function(key) {
+                                msg += errors[key].join("<br>") + "<br>";
+                            });
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validasi Gagal',
+                                html: msg
+                            });
+
+                        } else {
+                            Swal.fire('Error', 'Terjadi kesalahan pada server!', 'error');
+                        }
+                    }
+                });
+            });
+
+
+            $(document).on('click', '#btnResetKalibrasi', function() {
+
+                Swal.fire({
+                    title: 'Reset Data?',
+                    text: 'Semua data kalibrasi akan dihapus!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Reset!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+
+                        // 🔹 Hapus local storage
+                        localStorage.removeItem(STORAGE_KEY);
+
+                        // 🔹 Reset form header
+                        if ($('#formThermometer')[0]) {
+                            $('#formThermometer')[0].reset();
+                        }
+
+                        // 🔹 Reset jumlah titik
+                        $('#jumlahTitik').val('');
+
+                        // 🔹 Kosongkan tabel
+                        $('#tableThermo tbody').html(`
+                            <tr class="text-center text-muted" id="emptyState">
+                                <td colspan="7">
+                                    Silakan tentukan jumlah titik kalibrasi di atas
+                                </td>
+                            </tr>
+                        `);
+
+                        // 🔹 Reset index
+                        rowIndex = 0;
+
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil!',
-                            text: res.message,
-                            timer: 2000,
+                            text: 'Data kalibrasi berhasil direset.',
+                            timer: 1500,
                             showConfirmButton: false
-                        });
-                        $('#formKalibrasiThermo')[0].reset();
-                    },
-                    error: function(xhr) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal!',
-                            text: xhr.responseJSON?.message || 'Terjadi kesalahan!',
                         });
                     }
                 });
             });
-        });
+        })
     </script>
 @endsection

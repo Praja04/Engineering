@@ -15,46 +15,6 @@
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
         }
 
-        .measurement-row {
-            background-color: white;
-            border-radius: 0.25rem;
-            border: 1px solid #e9ecef;
-            margin-bottom: 0.5rem;
-        }
-
-        .measurement-header {
-            background-color: #e9ecef;
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: #495057;
-        }
-
-        .info-fab {
-            position: fixed;
-            top: 80px;
-            /* jarak dari bawah layar */
-            right: 30px;
-            /* jarak dari kanan layar */
-            width: 54px;
-            height: 54px;
-            background: linear-gradient(135deg, #4c9efc, #6db9fb);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 18px rgba(46, 142, 255, 0.4);
-            color: white;
-            cursor: pointer;
-            z-index: 2000;
-            transition: all .25s ease;
-        }
-
-        /* efek hover glow */
-        .info-fab:hover {
-            transform: translateY(-4px) scale(1.08);
-            box-shadow: 0 10px 25px rgba(46, 142, 255, 0.6), 0 0 12px rgba(46, 142, 255, 0.5) inset;
-        }
-
         /* animasi pulse */
         @keyframes pulse {
             0% {
@@ -70,13 +30,55 @@
             }
         }
 
-        .info-fab::after {
-            content: "";
-            position: absolute;
-            border-radius: 50%;
+        /* Table lebih compact */
+        #tabelNaik,
+        #tabelTurun {
             width: 100%;
-            height: 100%;
-            animation: pulse 2s infinite;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        /* Padding cell diperkecil */
+        #tabelNaik th,
+        #tabelNaik td,
+        #tabelTurun th,
+        #tabelTurun td {
+            padding: 4px 5px;
+            vertical-align: middle;
+        }
+
+        /* Input dibuat kecil & rapat */
+        #tabelNaik input,
+        #tabelTurun input {
+            width: 70px;
+            padding: 3px 6px;
+            font-size: 12px;
+            text-align: center !important;
+            background-color: #fcf0cc;
+            border: none;
+            border: .3px solid #dedede;
+        }
+
+        #tabelNaik input:focus,
+        #tabelTurun input:focus {
+            border: 1px solid #bda14f;
+            outline: none;
+            box-shadow: none;
+        }
+
+
+        /* Header lebih rapi */
+        #tabelNaik thead th,
+        #tabelTurun thead th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Tombol delete kecil */
+        #tabelNaik .btn-danger {
+            padding: 2px 6px;
+            font-size: 11px;
         }
     </style>
 @endsection
@@ -94,13 +96,6 @@
                                 <i class="mdi mdi-arrow-left me-1"></i>
                                 Kembali
                             </a>
-                        </div>
-                        <div id="infoBtn" class="info-fab">
-                            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true">
-                                <circle cx="12" cy="12" r="12" fill="#2e8eff" />
-                                <text x="12" y="17" text-anchor="middle" font-size="14" font-family="Arial, sans-serif"
-                                    font-weight="700" fill="#fff">i</text>
-                            </svg>
                         </div>
                     </div>
                 </div>
@@ -135,7 +130,8 @@
                                             <select class="form-select" id="alat_id" name="alat_id">
                                                 <option value="">-- Pilih Kode Alat --</option>
                                                 @foreach ($alat as $a)
-                                                    <option value="{{ $a->id }}">{{ $a->kode_alat }}</option>
+                                                    <option value="{{ $a->id }}">
+                                                        {{ $a->kode_alat . ' - ' . $a->nama_alat }}</option>
                                                 @endforeach
                                             </select>
                                             <button type="button" id="btnDetail" class="btn btn-outline-primary"
@@ -203,37 +199,22 @@
 
                                     <!-- SUHU -->
                                     <div class="col-12 col-md-6 col-xl-4">
-                                        <input type="hidden" name="suhu_ruangan_final" id="suhu_ruangan_final">
-                                        <label for="suhu_ruangan" class="form-label">Suhu Ruangan</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="suhu_ruangan"
-                                                name="suhu_ruangan" placeholder="25">
-                                            <span class="input-group-text">±</span>
-                                            <input type="number" class="form-control" id="toleransi_suhu"
-                                                name="toleransi_suhu" placeholder="1">
-                                            <span class="input-group-text">°C</span>
-                                        </div>
+                                        <label for="suhu_ruangan" class="form-label">Suhu Ruangan (°C)</label>
+                                        <input type="number" class="form-control" id="suhu_ruangan" name="suhu_ruangan"
+                                            placeholder="25">
                                     </div>
 
                                     <!-- KELEMBABAN -->
                                     <div class="col-12 col-md-6 col-xl-4">
-                                        <input type="hidden" name="kelembaban_final" id="kelembaban_final">
-                                        <label for="kelembaban" class="form-label">Kelembaban</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="kelembaban" name="kelembaban"
-                                                placeholder="47">
-                                            <span class="input-group-text">±</span>
-                                            <input type="number" class="form-control" id="toleransi_kelembaban"
-                                                name="toleransi_kelembaban" placeholder="3">
-                                            <span class="input-group-text">%</span>
-                                        </div>
+                                        <label for="kelembaban" class="form-label">Kelembaban (%)</label>
+                                        <input type="number" class="form-control" id="kelembaban" name="kelembaban"
+                                            placeholder="47">
                                     </div>
 
                                     <!-- TANGGAL -->
                                     <div class="col-12 col-md-6 col-xl-4">
                                         <label for="tgl_kalibrasi" class="form-label">Tanggal Kalibrasi</label>
-                                        <input type="date" class="form-control" id="tgl_kalibrasi"
-                                            name="tgl_kalibrasi">
+                                        <input type="date" class="form-control" id="tgl_kalibrasi" name="tgl_kalibrasi">
                                     </div>
                                 </div>
                             </div>
@@ -245,72 +226,29 @@
                                 <strong><i class="mdi mdi-gauge me-2"></i>Data Pengukuran Pressure</strong>
                             </div>
                             <div class="card-body">
-                                <!-- Nav tabs -->
-                                <ul class="nav nav-pills" id="kalibrasiTab" role="tablist">
-                                    <li class="nav-item">
-                                        <a class="nav-link waves-effect waves-light active" data-bs-toggle="tab"
-                                            href="#tekanan-naik">
-                                            <i class="fas fa-arrow-up me-1"></i>Tekanan Naik
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link waves-effect waves-light" data-bs-toggle="tab"
-                                            href="#tekanan-turun">
-                                            <i class="fas fa-arrow-down me-1"></i>Tekanan Turun
-                                        </a>
-                                    </li>
-                                </ul>
-
-                                <div class="tab-content mt-4">
-                                    <!-- Tekanan Naik -->
-                                    <div class="tab-pane fade show active" id="tekanan-naik">
-                                        <div class="col-xxl-3 col-md-3 mb-3">
-                                            <label for="titik_naik" class="form-label">Jumlah Titik Kalibrasi</label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control" id="titik_naik"
-                                                    name="titik_naik" min="1" max="10" placeholder="0">
-                                                <button type="button" class="btn btn-outline-primary btn-generate"
-                                                    id="generateNaik">
-                                                    <i class="mdi mdi-plus me-1"></i>Buat / Tambah Titik
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div id="containerNaik"></div>
-                                    </div>
-
-                                    <!-- Tekanan Turun -->
-                                    <div class="tab-pane fade" id="tekanan-turun">
-                                        <div class="col-xxl-3 col-md-3 mb-3">
-                                            <label for="titik_turun" class="form-label">Jumlah Titik Kalibrasi</label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control" id="titik_turun"
-                                                    name="titik_turun" min="1" max="10" placeholder="0">
-                                                <button type="button" class="btn btn-outline-primary btn-generate"
-                                                    id="generateTurun">
-                                                    <i class="mdi mdi-plus me-1"></i>Buat / Tambah Titik
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div id="containerTurun"></div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="titik_naik" class="form-label">Jumlah Titik Kalibrasi</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="jumlahTitik" name="titik_naik"
+                                            min="1" max="10" placeholder="0">
+                                        <button class="btn btn-outline-primary" type="button"
+                                            onclick="generateTabel()">Generate</button>
+                                        <button class="btn btn-outline-info" type="button" onclick="addRow()">+ Tambah
+                                            Titik</button>
                                     </div>
                                 </div>
+
+                                <div id="kalibrasiContainer"></div>
 
                                 <!-- Tombol Aksi -->
                                 <div class="text-start mt-4">
                                     <div class="d-flex flex-wrap gap-2 justify-content-start">
-                                        <button type="button" class="btn btn-outline-danger rounded-pill px-4"
-                                            id="btnResetKalibrasi">
-                                            <i class="mdi mdi-close-circle-outline me-1"></i> Reset
+                                        <button type="button" class="btn btn-outline-danger" id="btnResetKalibrasi">
+                                            <i class="mdi mdi-close-circle-outline me-1"></i>Reset Draft
                                         </button>
-
-                                        <button type="submit" id="btnPreview"
-                                            class="btn btn-outline-info rounded-pill px-4">
-                                            <i class="mdi mdi-eye-outline me-1"></i> Preview
-                                        </button>
-
                                         <button type="submit" id="btnSimpanKalibrasi"
-                                            class="btn btn-success btnSaveKalibrasi rounded-pill px-4">
-                                            <i class="mdi mdi-send-check-outline me-1"></i> Submit & Kirim ke Foreman
+                                            class="btn btn-success btnSaveKalibrasi">
+                                            <i class="mdi mdi-content-save me-1"></i> Submit
                                         </button>
                                     </div>
                                 </div>
@@ -321,94 +259,16 @@
             </div>
         </div>
     </div>
-
-    {{-- Modal flow Information --}}
-    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="infoModalLabel">
-                        <i class="mdi mdi-information-outline me-2"></i> Alur Pengisian Form Kalibrasi
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <ol class="list-group list-group-numbered">
-                        <li class="list-group-item">Pilih <b>Kode Alat</b>, sistem akan otomatis mengisi informasi alat.
-                        </li>
-                        <li class="list-group-item">Isi <b>Lokasi Kalibrasi</b> sesuai tempat pelaksanaan.</li>
-                        <li class="list-group-item">Masukkan <b>Suhu Ruangan</b> beserta toleransinya (±).</li>
-                        <li class="list-group-item">Masukkan <b>Kelembaban</b> beserta toleransinya (±).</li>
-                        <li class="list-group-item">Pilih <b>Tanggal Kalibrasi</b>.</li>
-                        <li class="list-group-item">Klik <b>Simpan</b> untuk menyimpan data.</li>
-                    </ol>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Modal Preview --}}
-    <div class="modal fade" id="modalPreviewKalibrasi" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content rounded-4">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="mdi mdi-eye-outline me-2"></i>Preview Data Kalibrasi</h5>
-                    <button type="button" class="btn-close btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="previewBody">
-                    <div class="text-center text-muted py-5">
-                        <i class="mdi mdi-loading mdi-spin fs-1 mb-2"></i><br>
-                        Memuat preview...
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="mdi mdi-pencil-outline me-1"></i> Edit Lagi
-                    </button>
-                    <button class="btn btn-success" id="btnSubmitFinalFromPreview">
-                        <i class="mdi mdi-check-circle-outline me-1"></i> Submit Final
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
 
             const STORAGE_KEY = 'formKalibrasiPressure';
-
-            $(document).on('input change',
-                '#formKalibrasi input, #formKalibrasi select, #formKalibrasi textarea, #collapseDataPressure input',
-                function() {
-                    saveForm();
-                });
-
-            function saveForm() {
-                let headerData = $('#formKalibrasi').serialize();
-
-                // Ambil nilai titik naik dan turun secara eksplisit
-                let titikNaikVal = 'titik_naik=' + ($('#titik_naik').val() || 0);
-                let titikTurunVal = 'titik_turun=' + ($('#titik_turun').val() || 0);
-
-                // Ambil data pressure dinamis
-                let pressureData = $('#collapseDataPressure').find('input').serialize();
-
-                // Gabungkan semua data, pastikan titik_naik dan titik_turun ada di awal
-                let combinedData = titikNaikVal + '&' + titikTurunVal + '&' + headerData + '&' + pressureData;
-
-                localStorage.setItem(STORAGE_KEY, combinedData);
-
-                // DEBUGGING CHECK
-                console.log('✅ Data berhasil disimpan ke localStorage.');
-                console.log('Data tersimpan:', combinedData); // Sekarang cek log ini, harusnya ada titik_naik=X
-            }
 
             $('#alat_id').change(function() {
                 var id = $(this).val();
@@ -436,153 +296,266 @@
                 });
             });
 
-            // Load data dari localStorage
+            $(document).on('input change',
+                '#formKalibrasi input, #formKalibrasi select, #formKalibrasi textarea, #tabelNaik input, #tabelTurun input',
+                function() {
+                    saveForm();
+                }
+            );
+
+            function saveForm() {
+
+                const data = {
+                    header: {},
+                    rows: []
+                };
+
+                // 🔹 HEADER
+                $('#formKalibrasi').find('input, select, textarea').each(function() {
+                    if (this.name && !this.name.includes('naik_') && !this.name.includes('turun_')) {
+                        data.header[this.name] = $(this).val();
+                    }
+                });
+
+                // 🔹 ROWS
+                const totalRows = $('#tabelNaik tbody tr').length;
+
+                for (let i = 0; i < totalRows; i++) {
+
+                    let rowData = {
+                        titik_naik: $(`[name="naik_titik_${i}"]`).val(),
+                        titik_turun: $(`[name="turun_titik_${i}"]`).val(),
+                        naik: {},
+                        turun: {}
+                    };
+
+                    // Ambil input naik
+                    $('#tabelNaik tbody tr').eq(i).find('input').each(function() {
+                        rowData.naik[this.name] = $(this).val();
+                    });
+
+                    // Ambil input turun
+                    $('#tabelTurun tbody tr').eq(i).find('input').each(function() {
+                        rowData.turun[this.name] = $(this).val();
+                    });
+
+                    data.rows.push(rowData);
+                }
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            }
+
             function loadForm() {
+
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (!saved) return;
 
-                if (!saved) {
-                    console.log('❌ Tidak ada data tersimpan di localStorage.');
-                    return;
+                const data = JSON.parse(saved);
+
+                if (data.rows.length > 0) {
+                    $('#jumlahTitik').val(data.rows.length);
+                    generateTabel(data.rows.length);
                 }
 
-                console.log('✅ Memuat data dari localStorage. Data raw:', saved);
+                // 🔹 Load Header
+                Object.keys(data.header).forEach(name => {
+                    const $el = $(`[name="${name}"]`);
+                    if ($el.length) {
+                        $el.val(data.header[name]).trigger('change');
+                    }
+                });
 
-                const params = new URLSearchParams(saved);
+                // 🔹 Load Rows
+                data.rows.forEach((row, i) => {
 
-                const titikNaik = parseInt(params.get('titik_naik')) || 0;
-                const titikTurun = parseInt(params.get('titik_turun')) || 0;
-
-                if (titikNaik > 0) {
-                    $('#titik_naik').val(titikNaik);
-                    generateTitikKalibrasi('containerNaik', titikNaik);
-                }
-                if (titikTurun > 0) {
-                    $('#titik_turun').val(titikTurun);
-                    generateTitikKalibrasi('containerTurun', titikTurun);
-                }
-
-                setTimeout(() => {
-                    params.forEach((value, key) => {
-
-                        const $el = $(`[name="${key}"]`);
-
-                        if ($el.length) {
-                            // Khusus untuk select (seperti alat_id)
-                            if ($el.is('select')) {
-                                $el.val(value).trigger('change');
-                            }
-                            // Untuk input/textarea
-                            else {
-                                $el.val(value);
-                            }
-                        }
+                    // Naik
+                    Object.keys(row.naik).forEach(name => {
+                        $(`[name="${name}"]`).val(row.naik[name]);
                     });
 
-                    // 5. Update badge setelah semua nilai terisi
-                    updateAllBadges();
-                }, 50); // Delay singkat 50ms (lebih aman dari 150ms)
-            }
+                    // Turun
+                    Object.keys(row.turun).forEach(name => {
+                        $(`[name="${name}"]`).val(row.turun[name]);
+                    });
 
-            function updateAllBadges() {
-                $('#containerNaik .titik-kalibrasi-block, #containerTurun .titik-kalibrasi-block').each(function(i,
-                    block) {
-                    const containerId = $(block).parent().attr('id');
-                    const titikNo = i + 1;
-                    const $inputAlat1 = $(`#${containerId}_alat_${titikNo}_1`);
-                    const $badge = $(`#badge_${containerId}_${titikNo}`);
-
-                    // Panggil fungsi input trigger dari generateTitikKalibrasi agar badge terupdate
-                    if ($inputAlat1.length) {
-                        // Pastikan badge terupdate dengan nilai dari input
-                        $badge.text($inputAlat1.val() || "0.0");
-                    }
                 });
             }
 
-            // Fungsi generate titik kalibrasi (tetap sama)
-            function generateTitikKalibrasi(containerId, jumlah) {
-                const $container = $('#' + containerId);
+            let rowIndex = 0;
 
-                // 1. Hitung berapa banyak titik yang sudah ada (existingTitik)
-                const existingTitik = $container.children('.titik-kalibrasi-block').length;
+            window.generateTabel = function(jumlah = null) {
 
-                // 💡 Kasus 1: Mengurangi Jumlah Titik (Hapus yang berlebih)
-                if (jumlah < existingTitik) {
-                    // Hapus elemen berlebih dari belakang
-                    $container.children('.titik-kalibrasi-block').slice(jumlah).remove();
-                    console.log(`Titik yang dihapus dari ${containerId}: ${existingTitik - jumlah}`);
-                    return;
+                if (jumlah === null) {
+                    jumlah = parseInt(document.getElementById('jumlahTitik').value);
                 }
 
-                // 💡 Kasus 2: Menambah Jumlah Titik (Mulai dari existingTitik + 1)
-                if (jumlah > existingTitik) {
-                    console.log(`Menambahkan ${jumlah - existingTitik} titik baru ke ${containerId}`);
-                    for (let i = existingTitik + 1; i <= jumlah; i++) { // Mulai loop dari titik berikutnya
-                        const titikBlock = `
-                            <div class="titik-kalibrasi-block p-3 mb-3 border rounded">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="mb-0 text-primary">
-                                        Titik Kalibrasi ${i}
-                                        <span class="badge bg-primary ms-2" id="badge_${containerId}_${i}">0.0</span>
-                                    </h6>
-                                </div>
-                                ${generateMeasurementRows(containerId, i)}
-                            </div>
-                        `;
-                        $container.append(titikBlock);
+                if (!jumlah || jumlah <= 0) return;
 
-                        // Pasang event listener dan update badge untuk titik yang baru dibuat
-                        const $inputAlat1 = $(`#${containerId}_alat_${i}_1`);
-                        const $badge = $(`#badge_${containerId}_${i}`);
+                let rowsNaik = '';
+                let rowsTurun = '';
 
-                        $badge.text($inputAlat1.val() || "0.0");
-
-                        $inputAlat1.off("input").on("input", function() {
-                            $badge.text($(this).val() || "0.0");
-                            saveForm
-                                (); // Tambahkan saveForm() di sini agar auto-save saat pengukuran diubah
-                        });
-                    }
+                for (let i = 0; i < jumlah; i++) {
+                    rowsNaik += createRow(i, 'naik', jumlah);
+                    rowsTurun += createRow(i, 'turun', jumlah);
                 }
 
-                // Jika jumlah == existingTitik, tidak terjadi apa-apa (data aman)
-            }
+                document.getElementById('kalibrasiContainer').innerHTML = `
+                    ${createTable('Tekanan Naik', 'tabelNaik', rowsNaik)}
+                    <br>
+                    ${createTable('Tekanan Turun', 'tabelTurun', rowsTurun)}
+                `;
 
-            // Baris input pengukuran
-            function generateMeasurementRows(containerId, titikNo) {
+                saveForm();
+            };
+
+            function createTable(judul, tableId, rows) {
                 return `
-                    <div class="row g-3 mb-3">
-                        <!-- Penunjuk Standar -->
-                        <div class="col-12 col-md-6">
-                            <label class="form-label fw-bold d-block">Penunjuk Standar</label>
-                            <input type="number" class="form-control mb-2" id="${containerId}_standar_${titikNo}_1" name="${containerId}_standar_${titikNo}_1" step="0.1" placeholder="0.0">
-                            <input type="number" class="form-control mb-2" id="${containerId}_standar_${titikNo}_2" name="${containerId}_standar_${titikNo}_2" step="0.1" placeholder="0.0">
-                            <input type="number" class="form-control" id="${containerId}_standar_${titikNo}_3" name="${containerId}_standar_${titikNo}_3" step="0.1" placeholder="0.0">
-                        </div>
-                        <!-- Penunjuk Alat -->
-                        <div class="col-12 col-md-6">
-                            <label class="form-label fw-bold d-block">Penunjuk Alat</label>
-                            <input type="number" class="form-control mb-2" id="${containerId}_alat_${titikNo}_1" name="${containerId}_alat_${titikNo}_1" step="0.1" placeholder="0.0">
-                            <input type="number" class="form-control mb-2" id="${containerId}_alat_${titikNo}_2" name="${containerId}_alat_${titikNo}_2" step="0.1" placeholder="0.0">
-                            <input type="number" class="form-control" id="${containerId}_alat_${titikNo}_3" name="${containerId}_alat_${titikNo}_3" step="0.1" placeholder="0.0">
-                        </div>
+                    <h5 class="mt-4">${judul}</h5>
+                    <div class="table-responsive">
+                        <table id="${tableId}" class="table table-bordered table-sm text-center" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2">Titik</th>
+                                    <th colspan="3" class="text-center">Penunjuk Alat</th>
+                                    <th colspan="3" class="text-center">Penunjuk Standar</th>
+                                    <th rowspan="2" class="text-center">Aksi</th>
+                                </tr>
+                                <tr>
+                                    <th class="text-center">1</th><th class="text-center">2</th><th class="text-center">3</th>
+                                    <th class="text-center"  >1</th><th class="text-center">2</th><th class="text-center">3</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
                     </div>
                 `;
             }
 
-            // Tombol generate
-            $('#generateNaik').click(function() {
-                const jumlah = parseInt($('#titik_naik').val()) || 0;
-                generateTitikKalibrasi('containerNaik', jumlah);
-                saveForm();
-            });
+            function createRow(index, tipe, totalTitik) {
 
-            $('#generateTurun').click(function() {
-                const jumlah = parseInt($('#titik_turun').val()) || 0;
-                generateTitikKalibrasi('containerTurun', jumlah);
+                let nilaiTitik;
+
+                if (tipe === 'naik') {
+                    nilaiTitik = index;
+                } else {
+                    nilaiTitik = totalTitik - 1 - index;
+                }
+
+                const deleteButton = tipe === 'naik' ?
+                    `<button class="btn btn-sm btn-danger" type="button" onclick="deleteRow(${index})">X</button>` :
+                    '';
+
+                return `
+                    <tr id="row_${tipe}_${index}">
+                        <td class="text-center">
+                            ${nilaiTitik}
+                            <input type="hidden" name="${tipe}_titik_${index}" value="${nilaiTitik}">
+                        </td>
+
+                        <td><input type="number" step="0.01" name="${tipe}_alat_${index}_1" required></td>
+                        <td><input type="number" step="0.01" name="${tipe}_alat_${index}_2" required></td>
+                        <td><input type="number" step="0.01" name="${tipe}_alat_${index}_3" required></td>
+
+                        <td><input type="number" step="0.01" name="${tipe}_standar_${index}_1" required></td>
+                        <td><input type="number" step="0.01" name="${tipe}_standar_${index}_2" required></td>
+                        <td><input type="number" step="0.01" name="${tipe}_standar_${index}_3" required></td>
+
+                        <td>${deleteButton}</td>
+                    </tr>
+                `;
+            }
+
+            window.addRow = function() {
+
+                const tbodyNaik = document.querySelector('#tabelNaik tbody');
+                const tbodyTurun = document.querySelector('#tabelTurun tbody');
+
+                if (!tbodyNaik || !tbodyTurun) return;
+
+                const newIndex = tbodyNaik.querySelectorAll('tr').length;
+
+                tbodyNaik.insertAdjacentHTML('beforeend', createRow(newIndex, 'naik'));
+                tbodyTurun.insertAdjacentHTML('beforeend', createRow(newIndex, 'turun'));
+
                 saveForm();
-            });
+            };
+
+            window.deleteRow = function(index) {
+
+                const rowNaik = document.getElementById(`row_naik_${index}`);
+                const rowTurun = document.getElementById(`row_turun_${index}`);
+
+                if (rowNaik) rowNaik.remove();
+                if (rowTurun) rowTurun.remove();
+
+                renumberRows(); // 🔥 ini kuncinya
+                saveForm();
+            }
+
+            function renumberRows() {
+
+                const rowsNaik = document.querySelectorAll('#tabelNaik tbody tr');
+                const rowsTurun = document.querySelectorAll('#tabelTurun tbody tr');
+
+                rowsNaik.forEach((row, i) => {
+                    const total = rowsNaik.length;
+
+                    row.querySelector('td').innerHTML = `
+                        ${i}
+                        <input type="hidden" name="naik_titik_${i}" value="${i}">
+                    `;
+
+                    // 🔹 Update row id
+                    row.id = `row_naik_${i}`;
+
+                    // 🔹 Update input TITIK
+                    const titikInput = row.querySelector('.titik-input');
+                    if (titikInput) {
+                        titikInput.name = `titik_${i}`;
+                        titikInput.setAttribute('data-index', i);
+                        titikInput.setAttribute('oninput', `syncTitik(${i}, this.value)`);
+                    }
+
+                    // 🔹 Update input alat & standar
+                    row.querySelectorAll('input').forEach(input => {
+
+                        input.name = input.name
+                            .replace(/naik_(alat|standar)_\d+_/,
+                                `naik_$1_${i}_`);
+                    });
+
+                    // 🔹 Update delete button
+                    const btn = row.querySelector('button');
+                    if (btn) btn.setAttribute('onclick', `deleteRow(${i})`);
+                });
+
+
+                rowsTurun.forEach((row, i) => {
+                    const total = rowsNaik.length;
+                    row.querySelector('td').innerHTML = `
+                        ${total - 1 - i}
+                        <input type="hidden" name="turun_titik_${i}" value="${total - 1 - i}">
+                    `;
+
+                    row.id = `row_turun_${i}`;
+
+                    // 🔹 Update display titik id
+                    const span = row.querySelector('span');
+                    if (span) {
+                        span.id = `titik_display_${i}`;
+                    }
+
+                    // 🔹 Update name alat & standar
+                    row.querySelectorAll('input').forEach(input => {
+
+                        input.name = input.name
+                            .replace(/turun_(alat|standar)_\d+_/,
+                                `turun_$1_${i}_`);
+                    });
+                });
+            }
 
             // Jalankan load saat halaman dibuka
             loadForm();
@@ -591,161 +564,119 @@
             $(document).on('click', '.btnSaveKalibrasi', function(e) {
                 e.preventDefault();
 
-                const suhu = $('#suhu_ruangan').val();
-                const toleransiSuhu = $('#toleransi_suhu').val();
-                const kelembaban = $('#kelembaban').val();
-                const toleransiKelembaban = $('#toleransi_kelembaban').val();
-
-                // Format data gabungan
-                const suhuFormatted = suhu && toleransiSuhu ?
-                    `${suhu}°C ± ${toleransiSuhu}°C` :
-                    suhu ? `${suhu}°C` : '';
-
-                const kelembabanFormatted = kelembaban && toleransiKelembaban ?
-                    `${kelembaban}% ± ${toleransiKelembaban}%` :
-                    kelembaban ? `${kelembaban}%` : '';
-
-                // Masukkan hasil ke hidden input
-                $('#suhu_ruangan_final').val(suhuFormatted);
-                $('#kelembaban_final').val(kelembabanFormatted);
-
-                let formData = $('#formKalibrasi').serializeArray();
-                console.log(formData);
+                let headerData = $('#formKalibrasi').serializeArray();
                 let data = {};
 
-                formData.forEach(function(item) {
-                    data[item.name] = item.value;
+                headerData.forEach(function(item) {
+                    if (item.name !== '_token') {
+                        data[item.name] = item.value;
+                    }
                 });
 
-                let isFormFilled = formData.some(item => {
-                    if (item.name === '_token') return false;
-                    return item.value && item.value.trim() !== '';
-                });
-
+                // Cek header kosong
+                let isFormFilled = Object.values(data).some(val => val && val.trim() !== '');
                 if (!isFormFilled) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Form is empty!',
-                        text: 'Please fill in the calibration form first.'
+                        title: 'Form Kosong!',
+                        text: 'Silakan isi data header terlebih dahulu.'
                     });
                     return;
                 }
 
-                // Array gabungan pressure
                 data.pressure = [];
-                let adaNaik = false;
-                let adaTurun = false;
-                let naikCount = 0;
-                let turunCount = 0;
 
-                // Ambil data TEKANAN NAIK
-                $('#containerNaik .titik-kalibrasi-block').each(function(i, block) {
-                    for (let k = 1; k <= 3; k++) {
-                        let standar = $(block).find(
-                            `input[name="containerNaik_standar_${i+1}_${k}"]`).val();
-                        let alat = $(block).find(
-                            `input[name="containerNaik_alat_${i+1}_${k}"]`).val();
+                let rows = $('#tabelNaik tbody tr');
 
-                        if (standar || alat) {
-                            adaNaik = true;
-                            naikCount++;
-
-                            // jadikan nilai alat sebagai titik_kalibrasi
-                            let titik = alat;
-
-                            data.pressure.push({
-                                titik_kalibrasi: titik,
-                                tekanan: 'naik',
-                                penunjuk_standar: standar,
-                                penunjuk_alat: alat,
-                                koreksi_standar: 0
-                            });
-                        }
-                    }
-                });
-
-                // Ambil data TEKANAN TURUN
-                $('#containerTurun .titik-kalibrasi-block').each(function(i, block) {
-                    for (let k = 1; k <= 3; k++) {
-                        let standar = $(block).find(
-                            `input[name="containerTurun_standar_${i+1}_${k}"]`).val();
-                        let alat = $(block).find(
-                            `input[name="containerTurun_alat_${i+1}_${k}"]`).val();
-
-                        if (standar || alat) {
-                            adaTurun = true;
-                            turunCount++;
-
-                            let titik = alat; // samakan titik dengan nilai alat
-
-                            data.pressure.push({
-                                titik_kalibrasi: titik,
-                                tekanan: 'turun',
-                                penunjuk_standar: standar,
-                                penunjuk_alat: alat,
-                                koreksi_standar: 0
-                            });
-                        }
-                    }
-                });
-
-                // Validasi isi
-                if (!adaNaik || !adaTurun) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Data Tidak Lengkap!',
-                        text: 'Silakan isi data untuk tekanan atas dan bawah.'
-                    });
-                    return; // stop proses
-                }
-
-                // Validasi panjang data naik & turun harus sama
-                if (naikCount !== turunCount) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Data tidak cocok!',
-                        text: 'Jumlah titik kalibrasi untuk Tekanan Naik dan Turun harus sama.'
-                    });
+                if (rows.length === 0) {
+                    Swal.fire('Error', 'Belum ada titik kalibrasi digenerate!', 'error');
                     return;
                 }
 
+                rows.each(function(i) {
+
+                    let titik = $(`[name="naik_titik_${i}"]`).val();
+
+                    if (!titik) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Titik kosong',
+                            text: `Titik pada baris ${i + 1} belum ada`
+                        });
+                        return false; // stop loop
+                    }
+
+                    let alatNaik = [
+                        $(`[name="naik_alat_${i}_1"]`).val(),
+                        $(`[name="naik_alat_${i}_2"]`).val(),
+                        $(`[name="naik_alat_${i}_3"]`).val()
+                    ];
+
+                    let standarNaik = [
+                        $(`[name="naik_standar_${i}_1"]`).val(),
+                        $(`[name="naik_standar_${i}_2"]`).val(),
+                        $(`[name="naik_standar_${i}_3"]`).val()
+                    ];
+
+                    let alatTurun = [
+                        $(`[name="turun_alat_${i}_1"]`).val(),
+                        $(`[name="turun_alat_${i}_2"]`).val(),
+                        $(`[name="turun_alat_${i}_3"]`).val()
+                    ];
+
+                    let standarTurun = [
+                        $(`[name="turun_standar_${i}_1"]`).val(),
+                        $(`[name="turun_standar_${i}_2"]`).val(),
+                        $(`[name="turun_standar_${i}_3"]`).val()
+                    ];
+
+                    data.pressure.push({
+                        titik_kalibrasi: titik,
+                        naik: {
+                            alat: alatNaik,
+                            standar: standarNaik
+                        },
+                        turun: {
+                            alat: alatTurun,
+                            standar: standarTurun
+                        }
+                    });
+                });
+
+                // 🔥 Kirim sebagai JSON
                 $.ajax({
                     url: `{{ route('kalibrasi.pressure.store') }}`,
                     method: 'POST',
-                    data: {
+                    contentType: 'application/json',
+                    data: JSON.stringify({
                         ...data,
                         _token: '{{ csrf_token() }}'
-                    },
+                    }),
+
                     success: function(res) {
                         if (res.status === 'success') {
                             Swal.fire('Success', res.message, 'success');
 
-                            $('#formKalibrasi')[0].reset();
-                            $('#containerNaik').empty();
-                            $('#containerTurun').empty();
-                            $('#titik_naik').val('');
-                            $('#titik_turun').val('');
-
                             localStorage.removeItem(STORAGE_KEY);
+                            if ($('#formKalibrasi')[0]) {
+                                $('#formKalibrasi')[0].reset();
+                            }
+                            $('#jumlahTitik').val('');
+                            $('#kalibrasiContainer').html('');
                         } else {
-                            Swal.fire('Failed', res.message || 'Something went wrong!',
-                                'error');
+                            Swal.fire('Gagal', res.message || 'Terjadi Kesalahan!', 'error');
                         }
                     },
+
                     error: function(xhr) {
                         if (xhr.status === 422) {
                             let response = xhr.responseJSON;
-                            let msg = "";
+                            let msg = '';
 
                             if (response.errors) {
-                                if (Array.isArray(response.errors)) {
-                                    msg = response.errors.join("<br>");
-                                } else {
-                                    Object.keys(response.errors).forEach(function(key) {
-                                        msg += response.errors[key].join("<br>") +
-                                            "<br>";
-                                    });
-                                }
+                                Object.keys(response.errors).forEach(function(key) {
+                                    msg += response.errors[key].join("<br>") + "<br>";
+                                });
                             } else {
                                 msg = response.message || "Validasi gagal.";
                             }
@@ -764,156 +695,35 @@
 
             // reset button
             $(document).on('click', '#btnResetKalibrasi', function() {
-                $('#formKalibrasi')[0].reset();
-                $('#containerNaik').empty();
-                $('#containerTurun').empty();
-                $('#titik_naik').val('');
-                $('#titik_turun').val('');
-                $('#alat_id').val('').trigger('change');
-
-                localStorage.removeItem(STORAGE_KEY);
-            });
-
-            // saat dibuka
-            $('.collapse').on('show.bs.collapse', function() {
-                $(this).prev('.card-header').find('.toggle-icon')
-                    .removeClass('mdi-chevron-down')
-                    .addClass('mdi-chevron-up');
-            });
-
-            // saat ditutup
-            $('.collapse').on('hide.bs.collapse', function() {
-                $(this).prev('.card-header').find('.toggle-icon')
-                    .removeClass('mdi-chevron-up')
-                    .addClass('mdi-chevron-down');
-            });
-
-            // Info alert
-            $('#infoBtn').on('click', function(e) {
-                e.stopPropagation(); // biar ga ikut trigger collapse
                 Swal.fire({
-                    title: 'Alur Pengisian Form',
-                    html: `
-                        <style>
-                            .swal2-popup ol {
-                                padding-left: 25px;
-                                margin: 0;
-                                text-align: left;
-                            }
-                            .swal2-popup ol li {
-                                margin-bottom: 6px;
-                            }
-                        </style>
-                        <ol>
-                            <li>Pilih <b>Kode Alat</b>, sistem akan auto-fill data alat.</li>
-                            <li>Isi <b>Lokasi Kalibrasi</b> sesuai tempat.</li>
-                            <li>Masukkan <b>Suhu Ruangan</b> & toleransinya (±).</li>
-                            <li>Masukkan <b>Kelembaban</b> & toleransinya (±).</li>
-                            <li>Pilih <b>Tanggal Kalibrasi</b>.</li>
-                            <li>Isi pengukuran <b>Tekanan Naik & Tekanan Turun</b>.</li>
-                            <li>Isi pengukuran <b>Jangan sampai ada yang kosong dan berbeda</b>.</li>
-                            <li>Klik <b>Save</b> untuk menyimpan data.</li>
-                        </ol>
-                    `,
-                    icon: 'info',
-                    confirmButtonText: 'Mengerti',
-                    customClass: {
-                        popup: 'rounded-4 shadow'
+                    title: 'Reset Data?',
+                    text: 'Semua data kalibrasi akan dihapus!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Reset!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        localStorage.removeItem(STORAGE_KEY);
+                        if ($('#formKalibrasi')[0]) {
+                            $('#formKalibrasi')[0].reset();
+                        }
+                        $('#jumlahTitik').val('');
+                        $('#kalibrasiContainer').html('');
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: 'Data sementara kalibrasi pressure berhasil direset.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
                     }
                 });
+
             });
-
-            $(document).on('click', '#btnPreview', function(e) {
-                e.preventDefault();
-
-                // Ambil data utama form
-                const formData = $('#formKalibrasi').serializeArray();
-                const data = {};
-                formData.forEach(item => data[item.name] = item.value);
-
-                // Ambil titik pengukuran (naik & turun)
-                let pressureData = {
-                    naik: [],
-                    turun: []
-                };
-
-                ['Naik', 'Turun'].forEach(type => {
-                    $(`#container${type} .titik-kalibrasi-block`).each(function(index) {
-                        let titik = {
-                            no: index + 1,
-                            standar: [],
-                            alat: []
-                        };
-                        for (let j = 1; j <= 3; j++) {
-                            titik.standar.push($(
-                                    `#container${type}_standar_${index + 1}_${j}`)
-                                .val() || '-');
-                            titik.alat.push($(`#container${type}_alat_${index + 1}_${j}`)
-                                .val() || '-');
-                        }
-                        pressureData[type.toLowerCase()].push(titik);
-                    });
-                });
-
-                // ============================
-                // BAGIAN PREVIEW HTML
-                // ============================
-                let html = `
-                    <h5 class="fw-bold text-primary mb-3">Informasi Kalibrasi</h5>
-                    <div class="row">
-                         <div class="col-md-6 mb-2"><strong>Kode Alat:</strong> ${$('#alat_id option:selected').text() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Nama Alat:</strong> ${$('#nama_alat').val() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Merk:</strong> ${$('#merk').val() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Tipe:</strong> ${$('#tipe').val() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Kapasitas:</strong> ${$('#kapasitas').val() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Resolusi:</strong> ${$('#resolusi').val() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Range Penggunaan:</strong> ${$('#range_penggunaan_alat').val() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Departemen Pemilik:</strong> ${$('#departemen_pemilik').val() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Lokasi Alat:</strong> ${$('#lokasi_alat').val() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Metode Kalibrasi:</strong> ${$('#metode_kalibrasi').val() || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Lokasi Kalibrasi:</strong> ${data.lokasi_kalibrasi || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Suhu Ruangan:</strong> ${data.suhu_ruangan || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Kelembaban:</strong> ${data.kelembaban || '-'}</div>
-                        <div class="col-md-6 mb-2"><strong>Tanggal Kalibrasi:</strong> ${data.tgl_kalibrasi || '-'}</div>
-                    </div>
-
-                    <hr class="my-3">
-
-                    <h5 class="fw-bold text-success mt-4 mb-2">Tekanan Naik</h5>
-                    ${generatePreviewTable(pressureData.naik)}
-
-                    <h5 class="fw-bold text-danger mt-4 mb-2">Tekanan Turun</h5>
-                    ${generatePreviewTable(pressureData.turun)}
-                `;
-
-                $('#previewBody').html(html);
-                $('#modalPreviewKalibrasi').modal('show');
-            });
-
-            function generatePreviewTable(data) {
-                if (!data.length) return '<p class="text-muted fst-italic">Belum ada titik kalibrasi.</p>';
-
-                let rows = data.map(titik => `
-                    <tr>
-                        <td>${titik.no}</td>
-                        <td>${titik.standar.join('<br>')}</td>
-                        <td>${titik.alat.join('<br>')}</td>
-                    </tr>
-                `).join('');
-
-                return `
-                    <table class="table table-sm table-striped align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th width="10%">Titik</th>
-                                <th width="45%">Penunjuk Standar</th>
-                                <th width="45%">Penunjuk Alat</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
-            }
 
         })
     </script>

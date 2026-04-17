@@ -31,6 +31,8 @@
 
             <!-- Info List -->
             <ul style="color: #374151; font-size: 14px; line-height: 1.8; list-style-type: disc; padding-left: 20px;">
+                <li><strong>Kode Alat:</strong> {{ $sertifikat->kalibrasi->alat->kode_alat ?? '-' }}</li>
+                <li><strong>Jenis Kalibrasi:</strong> {{ $sertifikat->kalibrasi->jenis_kalibrasi ?? '-' }}</li>
                 <li><strong>Lokasi Kalibrasi:</strong> {{ $sertifikat->kalibrasi->lokasi_kalibrasi ?? '-' }}</li>
                 <li><strong>Tanggal Kalibrasi:</strong> {{ $sertifikat->kalibrasi->tgl_kalibrasi ?? '-' }}</li>
                 <li><strong>Dibuat Oleh:</strong> {{ $sertifikat->user->username ?? '-' }}</li>
@@ -54,16 +56,12 @@
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
 
             <!-- Footer -->
-            <p style="color: #6b7280; font-size: 13px; text-align: center; margin-bottom: 10px;">
-                Jika Anda memiliki pertanyaan, silakan hubungi tim kami.
-            </p>
             <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 0;">
                 Mohon jangan balas email ini.
             </p>
 
-            <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 20px;">
+            <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 10px;">
                 Terima kasih atas perhatian Anda 🙏<br>
-                <strong>{{ config('app.name') }}</strong>
             </p>
 
         </div>

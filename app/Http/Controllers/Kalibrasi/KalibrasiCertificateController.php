@@ -3,52 +3,35 @@
 namespace App\Http\Controllers\Kalibrasi;
 
 // use \Log;
+use App\Http\Controllers\Controller;
+use App\Mail\RequestApprovalMail;
+use App\Models\Kalibrasi\KalibrasiApprovalModel;
+use App\Models\Kalibrasi\KalibrasiModel;
+use App\Models\Kalibrasi\KalibrasiSertifikatModel;
+use App\Models\NotificationsModel;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Mail\RequestApprovalMail;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use App\Models\Kalibrasi\KalibrasiModel;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Chart\DataSeries;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
-use App\Models\Kalibrasi\KalibrasiSertifikatModel;
 use PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues;
-use App\Models\Kalibrasi\KalibrasiSertifikatApprovalModel;
+use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 class KalibrasiCertificateController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function reqApproval(Request $request, $id)
     {
         $request->validate([
-            'manager_id' => 'required|exists:users,id',
+            'manager_id'    => 'required|exists:users,id',
             'supervisor_id' => 'required|exists:users,id',
-            'user_id' => 'required|exists:users,id',
+            'user_id'       => 'required|exists:users,id',
         ]);
 
         $sertifikat = KalibrasiSertifikatModel::findOrFail($id);
@@ -56,125 +39,160 @@ class KalibrasiCertificateController extends Controller
         DB::beginTransaction();
 
         try {
+
             $foremanId = Auth::id();
 
+            // Urutan level approval
             $approvers = [
-                $request->manager_id,
-                $request->supervisor_id,
-                $request->user_id,
-                $foremanId,
+                1 => $foremanId,               // Foreman (auto approve)
+                2 => $request->supervisor_id,  // Supervisor
+                3 => $request->manager_id,     // Manager
+                4 => $request->user_id,        // Operator
             ];
 
-            foreach ($approvers as $approverId) {
-                if ($approverId) {
-                    $user = User::find($approverId);
+            $roleByLevel = [
+                1 => 'Foreman',
+                2 => 'Supervisor',
+                3 => 'Manager',
+                4 => 'User',
+            ];
 
-                    $status = ($user->id === $foremanId) ? 'approved' : 'pending';
-                    $approvedAt = ($status === 'approved') ? now() : null;
+            foreach ($approvers as $level => $approverId) {
 
-                    KalibrasiSertifikatApprovalModel::create([
-                        'sertifikat_id' => $sertifikat->id,
-                        'approver_id' => $user->id,
-                        'approver_email' => $user->email,
-                        'status' => $status,
-                        'approved_at' => $approvedAt,
+                if (!$approverId) continue;
+
+                $user = User::findOrFail($approverId);
+
+                $isForeman = $user->id === $foremanId;
+
+                KalibrasiApprovalModel::create([
+                    'sertifikat_id' => $sertifikat->id,
+                    'approver_id'   => $user->id,
+                    'status'        => $isForeman ? 'approved' : 'pending',
+                    'level'         => $level,
+                    'role'          => $roleByLevel[$level] ?? 'Unknown',
+                    'action_at'     => $isForeman ? now() : null,
+                    'action_by'     => $isForeman ? $foremanId : null,
+                    'catatan'       => null,
+                    'ttd'           => null,
+                ]);
+
+                if (!$isForeman) {
+
+                    // Email
+                    Mail::to($user->email)
+                        ->queue(new RequestApprovalMail($sertifikat, $user->username));
+
+                    // Notifikasi Database
+                    NotificationsModel::create([
+                        'user_id'         => $user->id,
+                        'notifiable_type' => KalibrasiSertifikatModel::class,
+                        'notifiable_id'   => $sertifikat->id,
+                        'title'           => 'Approval Kalibrasi ' . ucfirst($sertifikat->kalibrasi->jenis_kalibrasi),
+                        'message'         => 'Sertifikat kalibrasi menunggu persetujuan Anda.',
+                        'url'             => route('kalibrasi.certificate.approvals'),
+                        'is_read'         => false,
                     ]);
-
-                    // Kirim email hanya ke yang belum approve otomatis
-                    if ($status === 'pending') {
-                        Mail::to($user->email)
-                            ->send(new RequestApprovalMail($sertifikat, $user->username));
-                    }
                 }
             }
 
-            // Update status sertifikat -> kalau operator langsung approve, tetap pending ke atasannya
-            $sertifikat->update(['status' => 'pending']);
+            // Update status sertifikat
+            $sertifikat->update([
+                'status' => 'pending'
+            ]);
 
             DB::commit();
 
             return response()->json([
-                'status' => 'success',
+                'status'  => 'success',
                 'message' => 'Request approval berhasil dikirim.'
             ]);
         } catch (\Exception $e) {
+
             DB::rollBack();
 
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Gagal mengirim request approval: ' . $e->getMessage()
             ], 500);
         }
     }
 
-
-    public function handleApproval(Request $request)
+    public function approve($id, Request $request)
     {
-        $request->validate([
-            'id' => 'required|integer', // ideally this is approval_id
-            'status' => 'required|in:approved,rejected',
-            'komentar' => 'nullable|string'
-        ]);
-
-        $userId = Auth::id();
-
-        // Coba cari approval berdasarkan id (anggap id = approval.id)
-        $approval = KalibrasiSertifikatApprovalModel::where('id', $request->id)
-            ->where('approver_id', $userId)
-            ->first();
-
-        // Fallback: jika tidak ditemukan, coba treat id sebagai sertifikat_id (legacy)
-        if (!$approval) {
-            $approval = KalibrasiSertifikatApprovalModel::where('sertifikat_id', $request->id)
-                ->where('approver_id', $userId)
-                ->first();
-        }
-
-        if (!$approval) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data approval tidak ditemukan atau Anda tidak memiliki izin untuk menyetujui sertifikat ini.'
-            ], 404);
-        }
-
         DB::beginTransaction();
 
         try {
-            // Update approval row untuk approver ini
-            $approval->update([
-                'status' => $request->status,
-                'comment' => $request->komentar ?? $approval->comment,
-                'approved_at' => now(),
-            ]);
 
-            // Sekarang cek semua approval untuk sertifikat ini
-            $sertifikatId = $approval->sertifikat_id;
+            $approval = KalibrasiApprovalModel::findOrFail($id);
 
-            $allApprovals = KalibrasiSertifikatApprovalModel::where('sertifikat_id', $sertifikatId)->get();
+            $userId = Auth::id();
 
-            // Hitung status
-            $hasRejected = $allApprovals->contains(function ($a) {
-                return $a->status === 'rejected';
-            });
-
-            $allApproved = $allApprovals->every(function ($a) {
-                return $a->status === 'approved';
-            });
-
-            // Tentukan status baru untuk sertifikat global
-            if ($hasRejected) {
-                $newSertifikatStatus = 'rejected';
-            } elseif ($allApproved && $allApprovals->count() > 0) {
-                $newSertifikatStatus = 'approved';
-            } else {
-                $newSertifikatStatus = 'pending';
+            // Pastikan yang approve adalah approver yang benar
+            if ($approval->approver_id !== $userId) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Anda tidak berhak melakukan approval ini.'
+                ], 403);
             }
 
-            // Update sertifikat utama hanya jika berubah
-            $sertifikat = KalibrasiSertifikatModel::find($sertifikatId);
-            if ($sertifikat && $sertifikat->status !== $newSertifikatStatus) {
-                $sertifikat->update([
-                    'status' => $newSertifikatStatus,
+            // Cek apakah sudah pernah diproses
+            if ($approval->status !== 'pending') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Approval sudah diproses sebelumnya.'
+                ], 400);
+            }
+
+            // CEK LEVEL LOCKING
+            $lowerLevelPending = KalibrasiApprovalModel::where('sertifikat_id', $approval->sertifikat_id)
+                ->where('level', '<', $approval->level)
+                ->where('status', '!=', 'approved')
+                ->exists();
+
+            if ($lowerLevelPending) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Approval harus sesuai urutan level.'
+                ], 400);
+            }
+
+            $ttdPath = null;
+
+            if ($request->ttd_base64) {
+
+                // Ambil bagian base64 saja
+                $image = $request->ttd_base64;
+
+                $image = str_replace('data:image/png;base64,', '', $image);
+                $image = str_replace(' ', '+', $image);
+
+                $imageName = 'ttd_' . $approval->approver->username . '_' . $approval->sertifikat_id . '.png';
+
+                Storage::disk('public')->put(
+                    'ttd/kalibrasi/' . $imageName,
+                    base64_decode($image)
+                );
+
+                $ttdPath = 'ttd/kalibrasi/' . $imageName;
+            }
+
+            // Update approval
+            $approval->update([
+                'status'    => 'approved',
+                'ttd'       => $ttdPath,
+                'action_at' => now(),
+                'action_by' => Auth::id(),
+            ]);
+
+            // Cek apakah semua sudah approved
+            $stillPending = KalibrasiApprovalModel::where('sertifikat_id', $approval->sertifikat_id)
+                ->where('status', 'pending')
+                ->exists();
+
+            if (!$stillPending) {
+                $approval->sertifikat->update([
+                    'status' => 'approved',
                     'issued_at' => now()
                 ]);
             }
@@ -183,32 +201,101 @@ class KalibrasiCertificateController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => $request->status === 'approved'
-                    ? 'Sertifikat berhasil disetujui.'
-                    : 'Sertifikat berhasil ditolak.',
-                'sertifikat_status' => $newSertifikatStatus
+                'message' => 'Approval berhasil.'
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+
             DB::rollBack();
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan.'
             ], 500);
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function reject($id, Request $request)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+
+            $approval = KalibrasiApprovalModel::findOrFail($id);
+
+            if ($approval->approver_id !== Auth::id()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Anda tidak berhak melakukan reject.'
+                ], 403);
+            }
+
+            if ($approval->status !== 'pending') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Approval sudah diproses.'
+                ], 400);
+            }
+
+            // Lock level
+            $lowerLevelPending = KalibrasiApprovalModel::where('sertifikat_id', $approval->sertifikat_id)
+                ->where('level', '<', $approval->level)
+                ->where('status', '!=', 'approved')
+                ->exists();
+
+            if ($lowerLevelPending) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Reject harus sesuai urutan level.'
+                ], 400);
+            }
+
+            $approval->update([
+                'status'    => 'rejected',
+                'catatan'   => $request->catatan ?? null,
+                'action_at' => now(),
+                'action_by' => Auth::id(),
+            ]);
+
+            // Kalau ada yang reject → sertifikat langsung rejected
+            $approval->sertifikat->update([
+                'status' => 'rejected'
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Approval berhasil ditolak.'
+            ]);
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan.'
+            ], 500);
+        }
     }
 
-    public function showApprovalPage($id = null)
+    public function showApprovalPage()
     {
-        return view('kalibrasi.certificate.approval', compact('id'));
+        $user = Auth::user();
+
+        $approvals = KalibrasiApprovalModel::with([
+            'sertifikat.kalibrasi.alat',
+            'approver',
+        ])
+            ->where('status', 'pending')
+            ->where(function ($q) use ($user) {
+                $q->where('approver_id', $user->id)
+                    ->orWhere('role', $user->role);
+            })
+            ->orderBy('level')
+            ->orderBy('created_at')
+            ->get();
+
+        return view('kalibrasi.certificate.approval', compact('approvals'));
     }
 
     public function getSertifikatData(Request $request)
@@ -217,7 +304,7 @@ class KalibrasiCertificateController extends Controller
             $userId = Auth::id();
 
             // Ambil semua approval berdasarkan user login
-            $query = KalibrasiSertifikatApprovalModel::with([
+            $query = KalibrasiApprovalModel::with([
                 'sertifikat:id,kalibrasi_id,user_id,status,notes,issued_at,created_at,updated_at',
                 'sertifikat.kalibrasi:id,alat_id,user_id,lokasi_kalibrasi,tgl_kalibrasi,tgl_kalibrasi_ulang,jenis_kalibrasi,suhu_ruangan,kelembaban,created_at,updated_at',
                 'sertifikat.kalibrasi.alat:id,kode_alat,nama_alat,metode_kalibrasi',
@@ -291,10 +378,9 @@ class KalibrasiCertificateController extends Controller
                                         'id',
                                         'sertifikat_id',
                                         'approver_id',
-                                        'approver_email',
                                         'status',
-                                        'comment',
-                                        'approved_at'
+                                        'catatan',
+                                        'action_at'
                                     )->with(['approver:id,username']);
                                 }
                             ]);
@@ -314,13 +400,19 @@ class KalibrasiCertificateController extends Controller
                 ->distinct()
                 ->pluck('jenis_kalibrasi');
 
-
-            $data = $query->orderByDesc('id')->get();
+            // paginate, misal 10 per halaman
+            $data = $query->orderByDesc('id')->paginate(15);
 
             return response()->json([
                 'status' => 'success',
                 'role'   => $user->jabatan ?? null,
-                'data'   => $data,
+                'data'   => $data->items(),
+                'pagination' => [
+                    'current_page' => $data->currentPage(),
+                    'last_page'    => $data->lastPage(),
+                    'per_page'     => $data->perPage(),
+                    'total'        => $data->total(),
+                ],
                 'filterOptions' => [
                     'jenis_kalibrasi' => $jenisKalibrasi
                 ]
@@ -393,30 +485,6 @@ class KalibrasiCertificateController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
     public function processApproval(Request $request)
     {
         $request->validate([
@@ -430,7 +498,7 @@ class KalibrasiCertificateController extends Controller
         $komentar = $request->komentar;
 
         // 1. Ambil record approval yang harus diproses oleh user saat ini
-        $approval = KalibrasiSertifikatApprovalModel::where('sertifikat_id', $sertifikatId)
+        $approval = KalibrasiApprovalModel::where('sertifikat_id', $sertifikatId)
             ->where('approver_id', Auth::id())
             ->whereNull('approved_at') // Pastikan hanya memproses yang belum direspons
             ->first();
@@ -457,8 +525,8 @@ class KalibrasiCertificateController extends Controller
             $message = "Sertifikat berhasil ditolak. Status sertifikat diubah menjadi Rejected.";
         } elseif ($statusAksi === 'approved') {
             // 4. LOGIKA APPROVE: Cek apakah semua sudah approve
-            $totalApprovers = KalibrasiSertifikatApprovalModel::where('sertifikat_id', $sertifikatId)->count();
-            $approvedCount = KalibrasiSertifikatApprovalModel::where('sertifikat_id', $sertifikatId)
+            $totalApprovers = KalibrasiApprovalModel::where('sertifikat_id', $sertifikatId)->count();
+            $approvedCount = KalibrasiApprovalModel::where('sertifikat_id', $sertifikatId)
                 ->where('status', 'approved')
                 ->count();
 
@@ -472,7 +540,10 @@ class KalibrasiCertificateController extends Controller
             }
         }
 
-        return response()->json(['status' => 'success', 'message' => $message]);
+        return response()->json([
+            'status' => 'success',
+            'message' => $message
+        ]);
     }
 
     public function downloadSertifikat($id)
@@ -484,8 +555,8 @@ class KalibrasiCertificateController extends Controller
             $alat = $kalibrasi->alat;
             $jenis = strtolower($kalibrasi->jenis_kalibrasi);
 
-            $approvals = KalibrasiSertifikatApprovalModel::where('sertifikat_id', $sertifikat->id)
-                ->with('approver') // kalau kamu punya relasi approver()
+            $approvals = KalibrasiApprovalModel::where('sertifikat_id', $sertifikat->id)
+                ->with('approver')
                 ->get()
                 ->map(function ($a) {
                     return [
@@ -493,9 +564,10 @@ class KalibrasiCertificateController extends Controller
                         'approver_id' => $a->approver_id,
                         'status' => $a->status,
                         'approver_name' => optional($a->approver)->username ?? '-',
-                        'jabatan' => $a->approver->jabatan ?? '-',
-                        'departemen' => $a->approver->departemen ?? '-',
-                        'comment' => $a->comment,
+                        'jabatan' => $a->role ?? '-', // Gunakan Role dari tabel approval (Foreman, Supervisor, Manager, User)
+                        'departemen' => optional($a->approver)->departemen ?? '-',
+                        'comment' => $a->catatan,
+                        'ttd' => $a->ttd
                     ];
                 });
 
@@ -508,7 +580,7 @@ class KalibrasiCertificateController extends Controller
                 ], 404);
             }
 
-            // 🧠 Load template Excel dengan chart aktif
+            // Load template Excel dengan chart aktif
             $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
             $reader->setIncludeCharts(true);
             $spreadsheet = $reader->load($templatePath);
@@ -516,7 +588,7 @@ class KalibrasiCertificateController extends Controller
             // Load relasi sesuai jenis kalibrasi dan isi data ke template
             switch ($jenis) {
                 case 'pressure':
-                    $kalibrasi->load(['pressure', 'pressureGabungan']);
+                    $kalibrasi->load(['pressure.details']);
                     $this->_fillPressure($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
                     break;
 
@@ -526,23 +598,44 @@ class KalibrasiCertificateController extends Controller
                     break;
 
                 case 'temperature':
-                    $kalibrasi->load(['temperature', 'temperatureGabungan']);
+                    $kalibrasi->load(['temperature']);
                     $this->_fillTemperature($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
                     break;
 
                 case 'thermohygrometer':
-                    $kalibrasi->load(['thermohygrometer', 'thermohygrometerGabungan']);
+                    $kalibrasi->load(['thermohygrometer']);
                     $this->_fillThermo($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
                     break;
 
                 case 'jangka_sorong':
-                    $kalibrasi->load(['jangkaSorong', 'jangkaSorongSummary', 'jangkaSorongFinalSummary']);
+                    $kalibrasi->load(['jangkaSorong', 'jangkaSorongSummary']);
                     $this->_fillJangkaSorong($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
                     break;
 
                 case 'timbangan':
-                    $kalibrasi->load(['pembacaanSummary', 'jangkaSorongSummary', 'jangkaSorongFinalSummary']);
                     $this->_fillTimbangan($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
+                    break;
+
+                case 'instrumen':
+                    $kalibrasi->load(['instrumen', 'keypad']);
+
+                    $this->_fillInstrumen(
+                        $spreadsheet,
+                        $kalibrasi,
+                        $alat,
+                        $approvals,
+                        $sertifikat
+                    );
+                    break;
+
+                case 'dimensi':
+                    $kalibrasi->load(['dimensi']);
+                    $this->_fillDimensi($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
+                    break;
+
+                case 'flowmeter':
+                    $kalibrasi->load(['flowmeter']);
+                    $this->_fillFlowmeter($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
                     break;
 
                 default:
@@ -550,7 +643,7 @@ class KalibrasiCertificateController extends Controller
             }
 
             // Siapkan lokasi penyimpanan
-            $savePath = storage_path('assets/images/ttd/my ttd.jpg');
+            $savePath = storage_path('sertifikat/sertifikat_kalibrasi');
             if (!file_exists($savePath)) {
                 mkdir($savePath, 0755, true);
             }
@@ -575,6 +668,7 @@ class KalibrasiCertificateController extends Controller
 
     private function _fillPressure(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat)
     {
+
         $sheet = $spreadsheet->getActiveSheet();
 
         // Header Information Alat & kalibrasi
@@ -595,129 +689,51 @@ class KalibrasiCertificateController extends Controller
         $sheet->setCellValue('AA10', $kalibrasi->tgl_kalibrasi ?? '-');
         $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
 
-        // ===== Data Tekanan Naik & Turun =====
         $rowStart = 26;
         $row = $rowStart;
         $index = 0;
 
-        $totalTitik = count($kalibrasi->pressureGabungan);
-        if ($totalTitik > 0) {
-            $step = 100 / ($totalTitik - 1); // jarak antar titik (0% sampai 100%)
-        }
+        $pressures = $kalibrasi->pressure
+            ->sortBy('titik_kalibrasi')
+            ->values();
 
-        foreach ($kalibrasi->pressureGabungan as $pg) {
-            // Hitung persentase posisi titik kalibrasi
-            $persentase = $totalTitik > 1 ? $index * $step : 100; // kalau cuma 1 titik = 100%
+        $totalTitik = $pressures->count();
+
+        $step = $totalTitik > 1 ? 100 / ($totalTitik - 1) : 100;
+
+        // reverse khusus untuk TURUN
+        $pressuresDesc = $pressures->reverse()->values();
+
+        foreach ($pressures as $i => $pg) {
+
+            $persentase = $totalTitik > 1 ? $index * $step : 100;
             $sheet->setCellValue("D{$row}", round($persentase, 2));
+
+            // Ambil pasangan turun dari urutan terbalik
+            $pgTurun = $pressuresDesc[$i];
 
             $sheet->setCellValue("H{$row}", $pg->titik_kalibrasi ?? '');
             $sheet->setCellValue("L{$row}", $pg->avg_penunjuk_alat_naik ?? '');
-            $sheet->setCellValue("O{$row}", $pg->avg_penunjuk_alat_turun ?? '');
+            $sheet->setCellValue("O{$row}", $pgTurun->avg_penunjuk_alat_turun ?? '');
             $sheet->setCellValue("R{$row}", $pg->avg_tekanan_standar_naik ?? '');
-            $sheet->setCellValue("U{$row}", $pg->avg_tekanan_standar_turun ?? '');
-            $sheet->setCellValue("X{$row}", $pg->avg_kor_alat_naik ?? '');
-            $sheet->setCellValue("AA{$row}", $pg->avg_kor_alat_turun ?? '');
+            $sheet->setCellValue("U{$row}", $pgTurun->avg_tekanan_standar_turun ?? '');
+            $sheet->setCellValue("X{$row}", $pg->avg_koreksi_alat_naik ?? '');
+            $sheet->setCellValue("AA{$row}", $pgTurun->avg_koreksi_alat_turun ?? '');
             $sheet->setCellValue("AD{$row}", $pg->u_gabungan ?? '');
 
             $row++;
             $index++;
         }
 
+
         $baseRow = 63;
         $nameRow = 67;
-        // Mapping tetap untuk posisi tanda tangan berdasarkan jabatan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
 
-        // Loop semua approver
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // cek status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if ($status !== 'approved') {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama juga
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
-            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
-            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight(70);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX(30);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-'); // kapital semua
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-        }
-
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         $rowEnd = $row - 1;
 
-        if ($totalTitik > 0) {
+        if ($kalibrasi->pressure->count() > 0) {
             $chartCollection = $sheet->getChartCollection();
 
             foreach ($chartCollection as $chart) {
@@ -822,100 +838,28 @@ class KalibrasiCertificateController extends Controller
         $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
 
         $row = 26;
-        $u_total = $kalibrasi->volumetrikGabungan->u_total ?? null;
-        $formatted_u_total = $u_total !== null ? number_format((float)$u_total, 3, '.', '') : '-';
-        foreach ($kalibrasi->volumetrik as $v) {
-            $sheet->setCellValue("D{$row}", $v->titik_kalibrasi ?? '-');
-            $sheet->setCellValue("L{$row}", $v->penunjuk_alat ?? '-');
-            $sheet->setCellValue("R{$row}", $v->penunjuk_standar ?? '-');
-            $sheet->setCellValue("X{$row}", $v->koreksi ?? '-');
 
-            $sheet->setCellValue("AD{$row}", $formatted_u_total);
+        $volumetriks = $kalibrasi->volumetrik
+            ->sortBy('titik_kalibrasi')
+            ->values();
+
+        foreach ($volumetriks as $v) {
+            $firstDetail = $v->details->first();
+            $penunjukAlatPertama = $firstDetail->penunjuk_alat ?? '-';
+
+            $sheet->setCellValue("D{$row}", $v->titik_kalibrasi ?? '-');
+            $sheet->setCellValue("L{$row}", $penunjukAlatPertama);
+            $sheet->setCellValue("R{$row}", $v->avg_penunjuk_standar ?? '-');
+            $sheet->setCellValue("X{$row}", $v->avg_koreksi ?? '-');
+            $sheet->setCellValue("AD{$row}", $v->u_total ?? '-');
+
             $row++;
         }
 
         $baseRow = 62;
         $nameRow = 66;
 
-        // Mapping tetap untuk posisi tanda tangan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'   => 'M',
-        ];
-
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // tambahkan ini
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) continue; // skip jika tidak ada mapping kolom
-
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // Kosongkan area jika belum approve
-            if ($status !== 'approved') {
-                Log::info("Skip karena belum approve: {$approval['approver_name']}");
-                $sheet->mergeCells($mergeRange);
-                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama juga
-                continue;
-            }
-
-            // Path tanda tangan
-            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
-            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
-            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight(70);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX(25);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // Nama approver di bawah TTD (huruf kapital)
-            $approverName = ucfirst($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         // Tanggal diterbitkan
         $issuedDate = $sertifikat->issued_at
@@ -951,123 +895,32 @@ class KalibrasiCertificateController extends Controller
         // ===== Data Tekanan Naik & Turun =====
         $rowStart = 25;
         $row = $rowStart;
-        $index = 0;
 
-        $totalTitik = count($kalibrasi->temperatureGabungan);
+        $temperatures = $kalibrasi->temperature
+            ->sortBy('titik_kalibrasi')
+            ->values();
 
-        foreach ($kalibrasi->temperatureGabungan as $tg) {
-            // Hitung persentase posisi titik kalibrasi
-            // $persentase = $totalTitik > 1 ? $index * $step : 100; // kalau cuma 1 titik = 100%
-            // $sheet->setCellValue("D{$row}", round($persentase, 2));
+        $totalTitik = $temperatures->count();
+
+        foreach ($temperatures as $tg) {
+
             $sheet->setCellValue("D{$row}", $tg->titik_kalibrasi ?? '');
             $sheet->setCellValue("L{$row}", $tg->avg_penunjuk_alat ?? '');
-            // $sheet->setCellValue("O{$row}", $tg->avg_penunjuk_alat_turun ?? '');
             $sheet->setCellValue("R{$row}", $tg->avg_suhu_standar ?? '');
-            // $sheet->setCellValue("U{$row}", $tg->avg_tekanan_standar_turun ?? '');
             $sheet->setCellValue("X{$row}", $tg->avg_kor_alat ?? '');
-            // $sheet->setCellValue("AA{$row}", $tg->avg_kor_alat_turun ?? '');
             $sheet->setCellValue("AD{$row}", $tg->ketidakpastian ?? '');
-            // $sheet->setCellValue("AG{$row}", $tg->u_gabungan ?? '');
 
             $row++;
-            $index++;
         }
 
         $baseRow = 61;
         $nameRow = 65;
 
-        // Mapping posisi tanda tangan berdasarkan jabatan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
-
-        // Loop semua approver
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if ($status !== 'approved') {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
-            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
-            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight(70);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX(30);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         $rowEnd = $row - 1;
 
-        if ($totalTitik > 0) {
+        if ($kalibrasi->temperature->count() > 0) {
             $chartCollection = $sheet->getChartCollection();
 
             foreach ($chartCollection as $chart) {
@@ -1165,19 +1018,21 @@ class KalibrasiCertificateController extends Controller
         $row = $rowStart;
         $startRow = $row;
 
-        $totalTitik = count($kalibrasi->thermohygrometerGabungan);
+        $thermo = $kalibrasi->thermohygrometer;
 
-        $totalData = $kalibrasi->thermohygrometerGabungan->count();
-        $first = $kalibrasi->thermohygrometerGabungan->first();
+        $totalTitik = $thermo->count();
+
+        $first = $thermo->first();
 
         $ketidakpastian_suhu = $first->ketidak_pastian_suhu ?? '';
-        $ketidakpastian_rh = $first->ketidak_pastian_rh ?? '';
-        foreach ($kalibrasi->thermohygrometerGabungan as $tg) {
-            // Pastikan nilai yang akan dihitung tidak null
-            $avg_tekanan_standar_suhu = $tg->avg_tekanan_standar_suhu ?? 0;
-            $avg_penunjuk_alat_suhu = $tg->avg_penunjuk_alat_suhu ?? 0;
+        $ketidakpastian_rh   = $first->ketidak_pastian_rh ?? '';
 
-            // Hitung selisih (R - L)
+        foreach ($thermo as $tg) {
+
+            $avg_tekanan_standar_suhu = (float) ($tg->avg_tekanan_standar_suhu ?? 0);
+            $avg_penunjuk_alat_suhu   = (float) ($tg->avg_penunjuk_alat_suhu ?? 0);
+
+            // Hitung selisih
             $selisih = $avg_tekanan_standar_suhu - $avg_penunjuk_alat_suhu;
 
             $posisi = $tg->posisi ?? '';
@@ -1185,142 +1040,61 @@ class KalibrasiCertificateController extends Controller
             $posisi = ucwords(strtolower($posisi));
 
             // Isi data ke Excel
+            $sheet->setCellValue("D{$row}", $tg->titik_kalibrasi);
             $sheet->setCellValue("H{$row}", $posisi);
             $sheet->setCellValue("L{$row}", $avg_penunjuk_alat_suhu);
             $sheet->setCellValue("O{$row}", $tg->avg_penunjuk_alat_rh ?? '');
             $sheet->setCellValue("R{$row}", $avg_tekanan_standar_suhu);
             $sheet->setCellValue("U{$row}", $tg->avg_tekanan_standar_rh ?? '');
-            $sheet->setCellValue("X{$row}", round($selisih, 2)); // hasil R - L
+            $sheet->setCellValue("X{$row}", round($selisih, 2));
             $sheet->setCellValue("AA{$row}", $tg->avg_kor_alat_rh ?? '');
 
             $row++;
         }
 
-        // Tentukan baris terakhir setelah loop
         $endRow = $row - 1;
 
-        // Range merge
-        $rangeSuhu = "AD{$startRow}:AF{$endRow}";
-        $rangeRh   = "AG{$startRow}:AI{$endRow}";
+        if ($totalTitik > 0) {
 
-        // Cek dan unmerge hanya jika memang terdaftar
-        $mergedCells = $sheet->getMergeCells();
+            $rangeSuhu = "AD{$startRow}:AF{$endRow}";
+            $rangeRh   = "AG{$startRow}:AI{$endRow}";
 
-        if (isset($mergedCells[$rangeSuhu])) {
-            $sheet->unmergeCells($rangeSuhu);
+            // Unmerge kalau sudah pernah di-merge
+            $mergedCells = $sheet->getMergeCells();
+
+            if (isset($mergedCells[$rangeSuhu])) {
+                $sheet->unmergeCells($rangeSuhu);
+            }
+
+            if (isset($mergedCells[$rangeRh])) {
+                $sheet->unmergeCells($rangeRh);
+            }
+
+            // Merge sesuai panjang titik
+            $sheet->mergeCells($rangeSuhu);
+            $sheet->mergeCells($rangeRh);
+
+            // Ambil dari first (lebih aman)
+            $sheet->setCellValue("AD{$startRow}", $ketidakpastian_suhu);
+            $sheet->setCellValue("AG{$startRow}", $ketidakpastian_rh);
+
+            // Center alignment
+            $sheet->getStyle($rangeSuhu)
+                ->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+            $sheet->getStyle($rangeRh)
+                ->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
         }
-        if (isset($mergedCells[$rangeRh])) {
-            $sheet->unmergeCells($rangeRh);
-        }
 
-        // Merge ulang
-        $sheet->mergeCells($rangeSuhu);
-        $sheet->mergeCells($rangeRh);
-
-        $sheet->setCellValue("AD{$startRow}", $ketidakpastian_suhu);
-        $sheet->setCellValue("AG{$startRow}", $ketidakpastian_rh);
-
-        $sheet->getStyle("AD{$startRow}:AF{$endRow}")
-            ->getAlignment()
-            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-
-        $sheet->getStyle("AG{$startRow}:AI{$endRow}")
-            ->getAlignment()
-            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
         $baseRow = 62;
         $nameRow = 66;
 
-        // Mapping posisi tanda tangan berdasarkan jabatan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
-
-        // Loop semua approver
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if ($status !== 'approved') {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
-            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
-            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight(70);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX(30);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         $rowEnd = $row - 1;
 
@@ -1434,11 +1208,14 @@ class KalibrasiCertificateController extends Controller
         $row = $rowStart;
         $startRow = $row;
 
-        $totalTitik = count($kalibrasi->jangkaSorongSummary);
+        $jangkaSorong = $kalibrasi->jangkaSorong
+            ->sortBy('master_ke')
+            ->values();
 
-        foreach ($kalibrasi->jangkaSorongSummary as $tg) {
+        $totalTitik = $jangkaSorong->count();
 
-            // Isi data ke Excel
+        foreach ($jangkaSorong as $tg) {
+
             $sheet->setCellValue("D{$row}", $tg->master->nilai_master ?? '');
             $sheet->setCellValue("L{$row}", $tg->avg_pembacaan ?? '');
             $sheet->setCellValue("R{$row}", $tg->master->nilai_master ?? '');
@@ -1451,7 +1228,7 @@ class KalibrasiCertificateController extends Controller
         $endRow = $row - 1;
 
         // Range merge
-        $ketidakPastianNilai = optional($kalibrasi->jangkaSorongFinalSummary->first())->ketidakpastian ?? '';
+        $ketidakPastianNilai = optional($kalibrasi->jangkaSorongSummary->first())->ketidakpastian ?? '';
         $ketidakPastian = "AD{$startRow}:AI{$endRow}";
 
         // Cek dan unmerge hanya jika memang terdaftar
@@ -1474,94 +1251,7 @@ class KalibrasiCertificateController extends Controller
         $baseRow = 55;
         $nameRow = 59;
 
-        // Mapping posisi tanda tangan berdasarkan jabatan
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
-
-        // Loop semua approver
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if ($status !== 'approved') {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
-            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
-            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight(70);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX(30);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         $rowEnd = $row - 1;
 
@@ -1659,30 +1349,25 @@ class KalibrasiCertificateController extends Controller
         $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
 
         // Data Kemampuan Ulang Pembacaan
-        if (!empty($kalibrasi->pembacaanSummary) && count($kalibrasi->pembacaanSummary) >= 3) {
-            $summaryList = $kalibrasi->pembacaanSummary;
+        $summaryList = $kalibrasi->kemampuanUlangSummary;
 
-            $cellMap = [
-                0 => 27, // Mendekati nol
-                1 => 28, // Setengah kapasitas
-                2 => 29, // Kapasitas maksimum
-            ];
+        $map = [
+            'mendekati_nol'      => 27,
+            'setengah_kapasitas' => 28,
+            'full_kapasitas'     => 29,
+        ];
 
-            foreach ($summaryList as $index => $summary) {
-                if (isset($cellMap[$index])) {
-                    $row = $cellMap[$index];
+        foreach ($map as $jenis => $row) {
 
-                    $beban       = $summary->beban       ?? 0;
-                    $stdDev      = $summary->std_dev     ?? 0;
-                    $perbedaan   = $summary->maks_perbedaan_akhir   ?? 0;
+            $summary = $summaryList?->firstWhere('jenis', $jenis);
 
-                    $sheet->setCellValue("N{$row}", $beban);
-                    $sheet->setCellValue("S{$row}", $stdDev);
-                    $sheet->setCellValue("X{$row}", $perbedaan);
-                }
-            }
-        } else {
-            foreach ([27, 28, 29] as $row) {
+            if ($summary) {
+
+                $sheet->setCellValue("N{$row}", $summary->massa ?? '-'); // tidak ada beban di response
+                $sheet->setCellValue("S{$row}", (float) $summary->std_dev);
+                $sheet->setCellValue("X{$row}", $summary->maks_perbedaan_akhir ?? '-');
+            } else {
+
                 $sheet->setCellValue("N{$row}", '-');
                 $sheet->setCellValue("S{$row}", '-');
                 $sheet->setCellValue("X{$row}", '-');
@@ -1690,147 +1375,69 @@ class KalibrasiCertificateController extends Controller
         }
 
         // Data Keseragaman Skala
-        if (!empty($kalibrasi->keseragamanSummary)) {
-            $keseragamanList = $kalibrasi->keseragamanSummary;
+        $keseragaman = $kalibrasi->keseragamanSkalaSummary()
+            ->orderBy('massa_ke')
+            ->get();
 
-            $startRow = 37; // baris awal untuk keseragaman
-            foreach ($keseragamanList as $i => $data) {
+        if ($keseragaman->isNotEmpty()) {
+
+            $startRow = 37;
+
+            foreach ($keseragaman as $i => $data) {
+
                 $row = $startRow + $i;
-                $beban    = $data->beban ?? '-';
-                $koreksi  = $data->koreksi_skala ?? '-';
 
-                $sheet->setCellValue("C{$row}", $beban);
-                $sheet->setCellValue("I{$row}", $koreksi);
+                $sheet->setCellValue("C{$row}", $data->beban ?? '-');
+                $sheet->setCellValue("I{$row}", $data->koreksi_skala ?? '-');
             }
-        } else {
-            Log::info('Tidak ada data keseragaman skala untuk kalibrasi ID: ' . ($kalibrasi->id ?? '-'));
         }
 
         // Data Pengaruh Pada Pinggan
-        if (!empty($kalibrasi->pingganSummary)) {
-            $percobaan1 = collect($kalibrasi->pingganSummary)->firstWhere('percobaan', 1);
+        $pinggan = $kalibrasi->pingganSummary;
 
-            if ($percobaan1) {
-                $row = 40; // baris awal pengisian pinggan
+        if ($pinggan) {
 
-                $sheet->setCellValue("R{$row}", $percobaan1->smry_tengah ?? '-');
-                $sheet->setCellValue("U{$row}", $percobaan1->smry_depan ?? '-');
-                $sheet->setCellValue("X{$row}", $percobaan1->smry_belakang ?? '-');
-                $sheet->setCellValue("AA{$row}", $percobaan1->smry_kiri ?? '-');
-                $sheet->setCellValue("AD{$row}", $percobaan1->smry_kanan ?? '-');
-                $sheet->setCellValue("AG{$row}", $percobaan1->selisih_maks ?? '-');
-            } else {
-                Log::info('Percobaan ke-1 tidak ditemukan untuk kalibrasi ID: ' . ($kalibrasi->id ?? '-'));
-            }
+            $row = 40;
+
+            $sheet->setCellValue("R{$row}", $pinggan->summary_tengah ?? '-');
+            $sheet->setCellValue("U{$row}", $pinggan->summary_depan ?? '-');
+            $sheet->setCellValue("X{$row}", $pinggan->summary_belakang ?? '-');
+            $sheet->setCellValue("AA{$row}", $pinggan->summary_kiri ?? '-');
+            $sheet->setCellValue("AD{$row}", $pinggan->summary_kanan ?? '-');
+            $sheet->setCellValue("AG{$row}", $pinggan->selisih_maks ?? '-');
         }
 
         // Data Pengnolan Beban (Tare)
-        if (!empty($kalibrasi->tareSummary)) {
-            $tare = $kalibrasi->tareSummary;
+        $tareCollection = $kalibrasi->tareSummary;
 
-            $sheet->setCellValue('V48', $tare->selisih_mz_tanpa_nol ?? '-');
-            $sheet->setCellValue('V49', $tare->selisih_mz_dengan_nol ?? '-');
+        if ($tareCollection && $tareCollection->count()) {
+
+            $tanpa  = $tareCollection->firstWhere('kondisi', 'tanpa');
+            $dengan = $tareCollection->firstWhere('kondisi', 'dengan');
+
+            $sheet->setCellValue('V48', $tanpa->selisih_mz ?? '-');
+            $sheet->setCellValue('V49', $dengan->selisih_mz ?? '-');
         }
 
         // Histerisis
-        if (!empty($kalibrasi->histerisisSummary)) {
-            $tare = $kalibrasi->histerisisSummary;
+        $histerisis = $kalibrasi->histerisisSummary;
 
-            $sheet->setCellValue('AD48', $tare->setengah_kapasitas ?? '-');
-            $sheet->setCellValue('AG48', $tare->histerisis ?? '-');
+        if ($histerisis) {
+            $sheet->setCellValue('AD48', $histerisis->setengah_kapasitas ?? '-');
+            $sheet->setCellValue('AG48', $histerisis->histerisis ?? '-');
         }
 
         // Ketidak Pastian
+        $kp = $kalibrasi->ketidakpastianSummary;
+
+        if ($kp) {
+            $sheet->setCellValue('N49', $kp->ketidakpastian_perluas ?? '-');
+        }
 
         $baseRow = 66;
         $nameRow = 70;
 
-        $roleColumnMap = [
-            'foreman'    => 'C',
-            'supervisor' => 'H',
-            'dept_head'  => 'M',
-        ];
-
-        foreach ($approvals as $approval) {
-            $jabatan = strtolower($approval['jabatan'] ?? '');
-            $departemen = strtolower($approval['departemen'] ?? '');
-            $status = strtolower($approval['status'] ?? ''); // status approval
-
-            // Default kolom berdasarkan jabatan
-            $col = $roleColumnMap[$jabatan] ?? null;
-
-            // Jika foreman dari departemen non-engineering → pindah ke kolom S
-            if ($jabatan === 'foreman' && $departemen !== 'engineering') {
-                $col = 'S';
-            }
-
-            if (!$col) {
-                Log::warning("Kolom tidak ditemukan untuk jabatan={$jabatan}, departemen={$departemen}");
-                continue;
-            }
-
-            // Tentukan range merge
-            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
-            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
-
-            // === Jika belum approve → kosongkan area ===
-            if ($status !== 'approved') {
-                Log::info("Belum approve: {$approval['approver_name']} (status={$status})");
-                $sheet->mergeCells($mergeRange);
-                $sheet->mergeCells($nameRange);
-                $sheet->setCellValue($col . $nameRow, ''); // kosongkan nama
-                continue;
-            }
-
-            // === Path tanda tangan ===
-            $signaturePath = public_path("assets/images/ttd/{$approval['approver_id']}.png");
-            $dummyPath = public_path('assets/images/ttd/my ttd.jpg');
-            $finalPath = file_exists($signaturePath) ? $signaturePath : $dummyPath;
-
-            // Merge area untuk area tanda tangan
-            $sheet->mergeCells($mergeRange);
-            $sheet->getStyle($mergeRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-
-            // === Gambar tanda tangan ===
-            try {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::rangeBoundaries($mergeRange);
-                $startCol = $rangeBounds[0][0];
-                $endCol   = $rangeBounds[1][0];
-
-                $startColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startCol);
-                $endColLetter   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endCol);
-
-                // Hitung total lebar kolom
-                $totalWidth = 0;
-                for ($j = $startCol; $j <= $endCol; $j++) {
-                    $totalWidth += $sheet->getColumnDimensionByColumn($j)->getWidth();
-                }
-
-                // Posisi gambar agak tengah
-                $offsetX = ($totalWidth * 6.2 / 2) - 25;
-                if ($offsetX < 0) $offsetX = 0;
-
-                $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawing->setPath($finalPath);
-                $drawing->setHeight(70);
-                $drawing->setCoordinates($startColLetter . $baseRow);
-                $drawing->setOffsetX(30);
-                $drawing->setOffsetY(5);
-                $drawing->setWorksheet($sheet);
-            } catch (\Throwable $th) {
-                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
-            }
-
-            // === Nama approver di bawah tanda tangan ===
-            $approverName = strtoupper($approval['approver_name'] ?? '-');
-            $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
-            $sheet->getStyle($nameRange)->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-        }
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
         // Tanggal diterbitkan
         $issuedDate = $sertifikat->issued_at
@@ -1840,5 +1447,474 @@ class KalibrasiCertificateController extends Controller
         $sheet->setCellValue('X65', "Diterbitkan tanggal : $issuedDate");
 
         return $spreadsheet;
+    }
+
+    private function _fillInstrumen(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat)
+    {
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('I7', $alat->departemen_pemilik ?? '-');
+        $sheet->setCellValue('I8', $alat->lokasi_alat ?? '-');
+        $sheet->setCellValue('I9', $alat->no_kalibrasi ?? '-');
+        $sheet->setCellValue('I10', $alat->nama_alat ?? '-');
+        $sheet->setCellValue('I11', $alat->merk ?? '-');
+        $sheet->setCellValue('I12', $alat->tipe ?? '-');
+        $sheet->setCellValue('I13', $alat->kapasitas ?? '-');
+        $sheet->setCellValue('I14', $alat->resolusi ?? '-');
+        $sheet->setCellValue('AA7', $alat->range_penggunaan_alat ?? '-');
+        $sheet->setCellValue('AA8', $alat->limits_of_permissible_error ?? '-');
+        $sheet->setCellValue('AA9', $alat->kode_alat ?? '-');
+        $sheet->setCellValue('I15', $kalibrasi->lokasi_kalibrasi ?? '-');
+        $sheet->setCellValue('I16', $kalibrasi->suhu_ruangan ?? '-');
+        $sheet->setCellValue('I17', $kalibrasi->kelembaban ?? '-');
+        $sheet->setCellValue('AA10', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
+
+        $rowStart = 26;
+        $row = $rowStart;
+
+        $instruments = $kalibrasi->instrumen
+            ->sortBy('titik_kalibrasi')
+            ->values();
+
+        $totalTitik = $instruments->count();
+
+        foreach ($instruments as $tg) {
+
+            $n = 5; // jumlah pengulangan
+
+            $uRepeat = $tg->std_dev / sqrt($n);
+
+            $uMaster = match ($tg->titik_kalibrasi) {
+                '4'  => 0.02,
+                '7'  => 0.02,
+                '10' => 0.03,
+                default => 0.02,
+            };
+
+            // Gabungan
+            $uGab = sqrt(
+                pow($uRepeat, 2) +
+                    pow($uMaster, 2)
+            );
+
+            $U = 2 * $uGab;
+
+            $sheet->setCellValue("D{$row}", $tg->titik_kalibrasi ?? '');
+            $sheet->setCellValue("L{$row}", $tg->avg_pembacaan ?? '');
+            $sheet->setCellValue("R{$row}", $tg->nilai_master ?? '');
+            $sheet->setCellValue("X{$row}", $tg->koreksi ?? '');
+            $sheet->setCellValue("AD{$row}", $uGab);
+
+            $row++;
+        }
+
+        $baseRow = 60;
+        $nameRow = 64;
+
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
+
+        // Kurva
+        $rowEnd = $row - 1;
+
+        if ($kalibrasi->instrumen->count() > 0) {
+            $chartCollection = $sheet->getChartCollection();
+
+            foreach ($chartCollection as $chart) {
+                if (!$chart || !$chart->getPlotArea()) continue;
+
+                $plotArea = $chart->getPlotArea();
+                $oldSeries = $plotArea->getPlotGroup();
+
+                if (empty($oldSeries)) continue;
+
+                $categoryRange = 'Sertifikat!$D$' . $rowStart . ':$D$' . $rowEnd; // Titik kalibrasi (kategori)
+                $titikKalibrasiRange = 'Sertifikat!$D$' . $rowStart . ':$D$' . $rowEnd; // nilai titik kalibrasi juga bisa numerik
+                $alatUkurRange = 'Sertifikat!$L$' . $rowStart . ':$L$' . $rowEnd;
+                $alatStandarRange = 'Sertifikat!$R$' . $rowStart . ':$R$' . $rowEnd;
+
+                $categoryAxis = [
+                    new DataSeriesValues(
+                        'String',
+                        null,
+                        null,
+                        $totalTitik,
+                        range(1, $totalTitik) // isi kategori dengan 1,2,3,...
+                    )
+                ];
+
+                $seriesList = [
+                    [
+                        'label' => '"Titik Kalibrasi"',
+                        'range' => $titikKalibrasiRange,
+                        'order' => [0],
+                    ],
+                    [
+                        'label' => '"Pembacaan Alat"',
+                        'range' => $alatUkurRange,
+                        'order' => [1],
+                    ],
+                    [
+                        'label' => '"Pembacaan Standar"',
+                        'range' => $alatStandarRange,
+                        'order' => [2],
+                    ]
+                ];
+
+                $newSeries = [];
+                foreach ($seriesList as $s) {
+                    $newSeries[] = new DataSeries(
+                        DataSeries::TYPE_LINECHART,           // tipe chart
+                        null,                                 // grouping
+                        $s['order'],                          // urutan
+                        [new DataSeriesValues('String', $s['label'], null, 1)], // legend
+                        $categoryAxis,                        // kategori
+                        [new DataSeriesValues('Number', $s['range'], null, $totalTitik)] // nilai
+                    );
+                }
+
+                $newPlotArea = new PlotArea(null, $newSeries);
+                $chart->setPlotArea($newPlotArea);
+            }
+        }
+
+        // Tanggal diterbitkan
+        $issuedDate = $sertifikat->issued_at
+            ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
+            : '-';
+
+        $sheet->setCellValue('X59', "Diterbitkan tanggal : $issuedDate");
+
+        return $spreadsheet;
+    }
+
+    private function _fillDimensi(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat)
+    {
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('I7', $alat->departemen_pemilik ?? '-');
+        $sheet->setCellValue('I8', $alat->lokasi_alat ?? '-');
+        $sheet->setCellValue('I9', $alat->no_kalibrasi ?? '-');
+        $sheet->setCellValue('I10', $alat->nama_alat ?? '-');
+        $sheet->setCellValue('I11', $alat->merk ?? '-');
+        $sheet->setCellValue('I12', $alat->tipe ?? '-');
+        $sheet->setCellValue('I13', $alat->kapasitas ?? '-');
+        $sheet->setCellValue('I14', $alat->resolusi ?? '-');
+        $sheet->setCellValue('AA7', $alat->range_penggunaan_alat ?? '-');
+        $sheet->setCellValue('AA8', $alat->limits_of_permissible_error ?? '-');
+        $sheet->setCellValue('AA9', $alat->kode_alat ?? '-');
+        $sheet->setCellValue('I15', $kalibrasi->lokasi_kalibrasi ?? '-');
+        $sheet->setCellValue('I16', $kalibrasi->suhu_ruangan ?? '-');
+        $sheet->setCellValue('I17', $kalibrasi->kelembaban ?? '-');
+        $sheet->setCellValue('AA10', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
+
+        $rowStart = 26;
+        $row = 26;
+
+        $dimention = $kalibrasi->dimensi
+            ->sortBy('titik_kalibrasi')
+            ->values();
+
+        $totalTitik = $dimention->count();
+
+        foreach ($dimention as $v) {
+            $sheet->setCellValue("D{$row}", $v->titik_kalibrasi ?? '-');
+            $sheet->setCellValue("L{$row}", $v->nilai_master ?? '-');
+            $sheet->setCellValue("R{$row}", $v->avg_pembacaan ?? '-');
+            $sheet->setCellValue("X{$row}", $v->koreksi ?? '-');
+            $sheet->setCellValue("AD{$row}", $v->ketidakpastian ?? '-');
+
+            $row++;
+        }
+
+        $baseRow = 55;
+        $nameRow = 59;
+
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
+
+        // Kurva
+        $rowEnd = $row - 1;
+
+        if ($kalibrasi->dimensi->count() > 0) {
+            $chartCollection = $sheet->getChartCollection();
+
+            foreach ($chartCollection as $chart) {
+                if (!$chart || !$chart->getPlotArea()) continue;
+
+                $plotArea = $chart->getPlotArea();
+                $oldSeries = $plotArea->getPlotGroup();
+
+                if (empty($oldSeries)) continue;
+
+                $categoryRange = 'Sertifikat!$D$' . $rowStart . ':$D$' . $rowEnd; // Titik kalibrasi (kategori)
+                $titikKalibrasiRange = 'Sertifikat!$D$' . $rowStart . ':$D$' . $rowEnd; // nilai titik kalibrasi juga bisa numerik
+                $alatUkurRange = 'Sertifikat!$L$' . $rowStart . ':$L$' . $rowEnd;
+                $alatStandarRange = 'Sertifikat!$R$' . $rowStart . ':$R$' . $rowEnd;
+
+                $categoryAxis = [
+                    new DataSeriesValues(
+                        'String',
+                        null,
+                        null,
+                        $totalTitik,
+                        range(1, $totalTitik) // isi kategori dengan 1,2,3,...
+                    )
+                ];
+
+                $seriesList = [
+                    [
+                        'label' => '"Titik Kalibrasi"',
+                        'range' => $titikKalibrasiRange,
+                        'order' => [0],
+                    ],
+                    [
+                        'label' => '"Pembacaan Alat"',
+                        'range' => $alatUkurRange,
+                        'order' => [1],
+                    ],
+                    [
+                        'label' => '"Pembacaan Standar"',
+                        'range' => $alatStandarRange,
+                        'order' => [2],
+                    ]
+                ];
+
+                $newSeries = [];
+                foreach ($seriesList as $s) {
+                    $newSeries[] = new DataSeries(
+                        DataSeries::TYPE_LINECHART,           // tipe chart
+                        null,                                 // grouping
+                        $s['order'],                          // urutan
+                        [new DataSeriesValues('String', $s['label'], null, 1)], // legend
+                        $categoryAxis,                        // kategori
+                        [new DataSeriesValues('Number', $s['range'], null, $totalTitik)] // nilai
+                    );
+                }
+
+                $newPlotArea = new PlotArea(null, $newSeries);
+                $chart->setPlotArea($newPlotArea);
+            }
+        }
+
+        // Tanggal diterbitkan
+        $issuedDate = $sertifikat->issued_at
+            ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
+            : '-';
+
+        $sheet->setCellValue('X54', "Diterbitkan tanggal : $issuedDate");
+
+        return $spreadsheet;
+    }
+
+    private function _fillFlowmeter(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat)
+    {
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('I7', $alat->departemen_pemilik ?? '-');
+        $sheet->setCellValue('I8', $alat->lokasi_alat ?? '-');
+        $sheet->setCellValue('I9', $alat->no_kalibrasi ?? '-');
+        $sheet->setCellValue('I10', $alat->nama_alat ?? '-');
+        $sheet->setCellValue('I11', $alat->merk ?? '-');
+        $sheet->setCellValue('I12', $alat->tipe ?? '-');
+        $sheet->setCellValue('I13', $alat->kapasitas ?? '-');
+        $sheet->setCellValue('I14', $alat->resolusi ?? '-');
+        $sheet->setCellValue('AA7', $alat->range_penggunaan_alat ?? '-');
+        $sheet->setCellValue('AA8', $alat->limits_of_permissible_error ?? '-');
+        $sheet->setCellValue('AA9', $alat->kode_alat ?? '-');
+        $sheet->setCellValue('I15', $kalibrasi->lokasi_kalibrasi ?? '-');
+        $sheet->setCellValue('I16', $kalibrasi->suhu_ruangan ?? '-');
+        $sheet->setCellValue('I17', $kalibrasi->kelembaban ?? '-');
+        $sheet->setCellValue('AA10', $kalibrasi->tgl_kalibrasi ?? '-');
+        $sheet->setCellValue('AA11', $kalibrasi->tgl_kalibrasi_ulang ?? '-');
+
+        $rowStart = 25;
+        $row = 25;
+
+        $flowmter = $kalibrasi->flowmeter
+            ->sortBy('titik_kalibrasi')
+            ->values();
+
+        $totalTitik = $flowmter->count();
+
+        foreach ($flowmter as $v) {
+            $sheet->setCellValue("D{$row}", $v->titik_kalibrasi ?? '-');
+            $sheet->setCellValue("L{$row}", $v->avg_pembacaan ?? '-');
+            $sheet->setCellValue("R{$row}", $v->nilai_master ?? '-');
+            $sheet->setCellValue("X{$row}", $v->koreksi ?? '-');
+            $sheet->setCellValue("AD{$row}", $v->ketidakpastian ?? '-');
+
+            $row++;
+        }
+
+        $baseRow = 60;
+        $nameRow = 64;
+
+        $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
+
+        // Kurva
+        $rowEnd = $row - 1;
+
+        if ($kalibrasi->flowmeter->count() > 0) {
+            $chartCollection = $sheet->getChartCollection();
+
+            foreach ($chartCollection as $chart) {
+                if (!$chart || !$chart->getPlotArea()) continue;
+
+                $plotArea = $chart->getPlotArea();
+                $oldSeries = $plotArea->getPlotGroup();
+
+                if (empty($oldSeries)) continue;
+
+                $categoryRange = 'Sertifikat!$D$' . $rowStart . ':$D$' . $rowEnd; // Titik kalibrasi (kategori)
+                $titikKalibrasiRange = 'Sertifikat!$D$' . $rowStart . ':$D$' . $rowEnd; // nilai titik kalibrasi juga bisa numerik
+                $alatUkurRange = 'Sertifikat!$L$' . $rowStart . ':$L$' . $rowEnd;
+                $alatStandarRange = 'Sertifikat!$R$' . $rowStart . ':$R$' . $rowEnd;
+
+                $categoryAxis = [
+                    new DataSeriesValues(
+                        'String',
+                        null,
+                        null,
+                        $totalTitik,
+                        range(1, $totalTitik) // isi kategori dengan 1,2,3,...
+                    )
+                ];
+
+                $seriesList = [
+                    [
+                        'label' => '"Titik Kalibrasi"',
+                        'range' => $titikKalibrasiRange,
+                        'order' => [0],
+                    ],
+                    [
+                        'label' => '"Pembacaan Alat"',
+                        'range' => $alatUkurRange,
+                        'order' => [1],
+                    ],
+                    [
+                        'label' => '"Pembacaan Standar"',
+                        'range' => $alatStandarRange,
+                        'order' => [2],
+                    ]
+                ];
+
+                $newSeries = [];
+                foreach ($seriesList as $s) {
+                    $newSeries[] = new DataSeries(
+                        DataSeries::TYPE_LINECHART,           // tipe chart
+                        null,                                 // grouping
+                        $s['order'],                          // urutan
+                        [new DataSeriesValues('String', $s['label'], null, 1)], // legend
+                        $categoryAxis,                        // kategori
+                        [new DataSeriesValues('Number', $s['range'], null, $totalTitik)] // nilai
+                    );
+                }
+
+                $newPlotArea = new PlotArea(null, $newSeries);
+                $chart->setPlotArea($newPlotArea);
+            }
+        }
+
+        // Tanggal diterbitkan
+        $issuedDate = $sertifikat->issued_at
+            ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
+            : '-';
+
+        $sheet->setCellValue('X59', "Diterbitkan tanggal : $issuedDate");
+
+        return $spreadsheet;
+    }
+
+    private function _applyApprovals($sheet, $approvals, $baseRow, $nameRow)
+    {
+        // Mapping tetap untuk posisi tanda tangan berdasarkan jabatan (Role)
+        $roleColumnMap = [
+            'foreman'    => 'C',
+            'supervisor' => 'H',
+            'manager'    => 'M',
+            'dept_head'  => 'M', // legacy / alternative
+            'user'       => 'S',
+        ];
+
+        foreach ($approvals as $approval) {
+            $jabatan = strtolower($approval['jabatan'] ?? '');
+            $status = strtolower($approval['status'] ?? '');
+
+            // Default kolom berdasarkan jabatan
+            $col = $roleColumnMap[$jabatan] ?? null;
+
+            if (!$col) {
+                Log::warning("Kolom tidak ditemukan untuk jabatan (role)={$jabatan}");
+                continue;
+            }
+
+            $mergeRange = "{$col}{$baseRow}:" . chr(ord($col) + 4) . "{$baseRow}";
+            $nameRange  = "{$col}{$nameRow}:" . chr(ord($col) + 4) . "{$nameRow}";
+
+            // === Jika belum approve → kosongkan area ===
+            if (!in_array($status, ['approved', 'rejected'])) {
+                $sheet->mergeCells($mergeRange);
+                $sheet->mergeCells($nameRange);
+                $sheet->setCellValue($col . $nameRow, '');
+                continue;
+            }
+
+            // === Path tanda tangan ===
+            $approvedPath = public_path('assets/images/ttd/approved_sticker.png');
+            $rejectedPath = public_path('assets/images/ttd/rejected_sticker.png');
+            $relativePath = $approval['ttd'] ?? null;
+            $isDummy = true;
+
+            if ($status === 'approved') {
+                $dummyPath = $approvedPath;
+            } elseif ($status === 'rejected') {
+                $dummyPath = $rejectedPath;
+            } else {
+                $dummyPath = $approvedPath;
+            }
+
+            if ($relativePath) {
+                $signaturePath = public_path('storage/' . $relativePath);
+                if (file_exists($signaturePath) && $status === 'approved') {
+                    $finalPath = $signaturePath;
+                    $isDummy = false;
+                } else {
+                    $finalPath = $dummyPath;
+                }
+            } else {
+                $finalPath = $dummyPath;
+            }
+
+            // Merge area untuk area tanda tangan
+            $sheet->mergeCells($mergeRange);
+            $sheet->getStyle($mergeRange)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            // === Gambar tanda tangan ===
+            try {
+                $rangeBounds = Coordinate::rangeBoundaries($mergeRange);
+                $startColLetter = Coordinate::stringFromColumnIndex($rangeBounds[0][0]);
+
+                $drawing = new Drawing();
+                $drawing->setPath($finalPath);
+                $drawing->setHeight($isDummy ? 70 : 100);
+                $drawing->setCoordinates($startColLetter . $baseRow);
+                $drawing->setOffsetX($isDummy ? 30 : 15);
+                $drawing->setOffsetY(5);
+                $drawing->setWorksheet($sheet);
+            } catch (\Throwable $th) {
+                Log::warning('Gagal memuat TTD: ' . $th->getMessage());
+            }
+
+            // === Nama approver di bawah tanda tangan ===
+            $approverName = strtoupper($approval['approver_name'] ?? '-'); // kapital semua
+            $sheet->mergeCells($nameRange);
+            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
+            $sheet->getStyle($nameRange)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+        }
     }
 }

@@ -10,20 +10,13 @@ class HisterisisModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_timbangan_histerisis';
+    protected $table = 'cal_timbangan_histerisis';
 
     protected $fillable = [
         'kalibrasi_id',
-        'pembacaan_terkecil',
-        'setengah_kapasitas',
-        'percobaan',
-        'z1',
-        'm1',
-        'm_m',
-        'm2',
-        'z2',
-        'm1_m2',
-        'z1_z2',
+        'label',
+        'pengulangan',
+        'nilai',
     ];
 
 

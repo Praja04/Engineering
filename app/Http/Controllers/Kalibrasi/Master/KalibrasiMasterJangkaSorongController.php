@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Kalibrasi\Master;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kalibrasi\JangkaSorong\CalJangkaSorongMasterModel;
 use Illuminate\Http\Request;
-use App\Models\Kalibrasi\Master\MasterJangkaSorongModel;
 
 class KalibrasiMasterJangkaSorongController extends Controller
 {
@@ -16,11 +16,11 @@ class KalibrasiMasterJangkaSorongController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'no' => 'required|unique:kalibrasi_jangka_sorong_master,no',
+            'no' => 'required|unique:cal_jangka_sorong_master,no',
             'nilai_master' => 'required|numeric',
         ]);
 
-        MasterJangkaSorongModel::create($validated);
+        CalJangkaSorongMasterModel::create($validated);
 
         return response()->json([
             'status' => 'success',
@@ -31,13 +31,13 @@ class KalibrasiMasterJangkaSorongController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return MasterJangkaSorongModel::all();
+            return CalJangkaSorongMasterModel::all();
         }
     }
 
     public function show($id)
     {
-        return MasterJangkaSorongModel::findOrFail($id);
+        return CalJangkaSorongMasterModel::findOrFail($id);
     }
 
     public function update(Request $request, $id)
@@ -47,7 +47,7 @@ class KalibrasiMasterJangkaSorongController extends Controller
             'nilai_master' => 'required|numeric',
         ]);
 
-        $data = MasterJangkaSorongModel::findOrFail($id);
+        $data = CalJangkaSorongMasterModel::findOrFail($id);
         $data->update($validated);
 
         return response()->json([
@@ -59,7 +59,7 @@ class KalibrasiMasterJangkaSorongController extends Controller
 
     public function destroy($id)
     {
-        MasterJangkaSorongModel::findOrFail($id)->delete();
+        CalJangkaSorongMasterModel::findOrFail($id)->delete();
         return response()->json(['status' => 'success']);
     }
 }

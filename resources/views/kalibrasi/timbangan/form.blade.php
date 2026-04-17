@@ -10,6 +10,10 @@
         #collapseDetailAlat span {
             color: #0d6efd;
         }
+
+        .kemampuan-ulang-table input {
+            background-color: #fcf0cc;
+        }
     </style>
 @endsection
 
@@ -62,7 +66,8 @@
                                             <select class="form-select" id="alat_id" name="alat_id" required>
                                                 <option value="">-- Pilih Alat --</option>
                                                 @foreach ($alat as $alat)
-                                                    <option value="{{ $alat->id }}">{{ $alat->nama_alat }}</option>
+                                                    <option value="{{ $alat->id }}">
+                                                        {{ $alat->kode_alat . ' - ' . $alat->nama_alat }}</option>
                                                 @endforeach
                                             </select>
                                             <button type="button" id="btnDetail" class="btn btn-outline-primary"
@@ -132,34 +137,26 @@
                                 </div>
 
                                 <div class="row g-3 mb-4">
-                                    <div class="col-md-4 col-12">
-                                        <input type="hidden" name="suhu_ruangan_final" id="suhu_ruangan_final">
-                                        <label for="suhu_ruangan" class="form-label">Suhu Ruangan</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="suhu_ruangan" name="suhu_ruangan"
-                                                placeholder="25">
-                                            <span class="input-group-text">±</span>
-                                            <input type="number" class="form-control" id="toleransi_suhu"
-                                                name="toleransi_suhu" placeholder="1">
-                                            <span class="input-group-text">°C</span>
-                                        </div>
+                                    <div class="col-md-3 col-12">
+                                        <label for="suhu_ruangan" class="form-label">Suhu Ruangan (°C)</label>
+                                        <input type="number" class="form-control" id="suhu_ruangan" name="suhu_ruangan"
+                                            placeholder="25">
                                     </div>
-                                    <div class="col-md-4 col-12">
-                                        <input type="hidden" name="kelembaban_final" id="kelembaban_final">
-                                        <label for="kelembaban" class="form-label">Kelembaban</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="kelembaban" name="kelembaban"
-                                                placeholder="47">
-                                            <span class="input-group-text">±</span>
-                                            <input type="number" class="form-control" id="toleransi_kelembaban"
-                                                name="toleransi_kelembaban" placeholder="3">
-                                            <span class="input-group-text">%</span>
-                                        </div>
+                                    <div class="col-md-3 col-12">
+                                        <label for="kelembaban" class="form-label">Kelembaban (%)</label>
+                                        <input type="number" class="form-control" id="kelembaban" name="kelembaban"
+                                            placeholder="47">
                                     </div>
-                                    <div class="col-md-4 col-sm-12">
+                                    <div class="col-md-3 col-12">
                                         <label class="form-label fw-semibold">Tanggal Kalibrasi</label>
-                                        <input type="date" name="tgl_kalibrasi" id="tgl_kalibrasi"
-                                            class="form-control" required>
+                                        <input type="date" name="tgl_kalibrasi" id="tgl_kalibrasi" class="form-control"
+                                            required>
+                                    </div>
+                                    <div class="col-md-3 col-12">
+                                        <label for="pembacaan_terkecil" class="form-label">Pmebacaan Terkecil
+                                            (gram)</label>
+                                        <input type="number" class="form-control" id="pembacaan_terkecil"
+                                            name="pembacaan_terkecil" placeholder="1000">
                                     </div>
                                 </div>
                             </div>
@@ -173,397 +170,412 @@
                             </div>
 
                             <div class="card-body">
-                                <div class="accordion" id="accordionKalibrasi">
+                                <h5 class="text-left fw-bold mb-4 mt-2">
+                                    <span class="bg-soft-primary px-3 py-2">A. Pengujian Kemampuan Ulang Pembacaan
+                                        (Mendekati
+                                        Nol)</span>
+                                </h5>
 
-                                    {{-- === Bagian 1: Pembacaan === --}}
-                                    <div class="accordion-item mb-2">
-                                        <h2 class="accordion-header" id="headingPembacaan">
-                                            <button class="accordion-button fw-semibold collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapsePembacaan"
-                                                aria-expanded="false" aria-controls="collapsePembacaan">
-                                                <i class="mdi mdi-beaker-outline me-2 text-primary"></i>
-                                                Kemampuan Ulang Pembacaan
-                                            </button>
-                                        </h2>
-                                        <div id="collapsePembacaan" class="accordion-collapse collapse"
-                                            aria-labelledby="headingPembacaan" data-bs-parent="#accordionKalibrasi">
-                                            <div class="accordion-body">
-                                                <div class="row">
-                                                    @foreach (['Mendekati Nol', 'Setengah Kapasitas Maksimum', 'Kapasitas Maksimum'] as $kemampuan)
-                                                        <div class="col-md-6 mb-4">
-                                                            <div class="border rounded p-3 h-100">
-                                                                <h5 class="mb-3 text-primary text-center fs-6">Kemampuan
-                                                                    {{ $kemampuan }}</h5>
+                                <div class="table-responsive">
+                                    <table
+                                        class="table table-bordered text-center align-middle mb-0 kemampuan-ulang-table">
 
-                                                                <div
-                                                                    class="d-flex justify-content-center align-items-center mb-3">
-                                                                    <label for="titik_{{ Str::slug($kemampuan) }}"
-                                                                        class="form-label fw-bold me-3 mb-0">
-                                                                        Titik Massa:
-                                                                    </label>
-                                                                    <input type="number"
-                                                                        class="form-control form-control-sm w-50"
-                                                                        id="titik_{{ Str::slug($kemampuan) }}"
-                                                                        name="titik_massa_{{ Str::slug($kemampuan) }}"
-                                                                        placeholder="Masukkan massa">
-                                                                </div>
+                                        {{-- HEADER LEVEL 1 --}}
+                                        <thead>
+                                            <tr class="table-light">
+                                                <th rowspan="4" style="width:80px" class="align-middle">Ulangan Ke-
+                                                </th>
+                                                <th colspan="2">Mendekati Nol</th>
+                                                <th colspan="2">Setengah Kapasitas</th>
+                                                <th colspan="2">Full Kapasitas</th>
+                                            </tr>
 
-                                                                <div class="table-responsive">
-                                                                    <table
-                                                                        class="table table-sm table-bordered align-middle text-center mb-0">
-                                                                        <thead class="table-secondary"
-                                                                            style="font-size: 11px;">
-                                                                            <tr>
-                                                                                <th style="width: 60px;">Ulangan</th>
-                                                                                <th>Pembacaan Z</th>
-                                                                                <th>Pembacaan M</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            @for ($i = 1; $i <= 10; $i++)
-                                                                                <tr>
-                                                                                    <td class="form-control-sm">
-                                                                                        {{ $i }}</td>
-                                                                                    <td>
-                                                                                        <input type="number"
-                                                                                            step="0.0001"
-                                                                                            class="form-control form-control-sm text-center bg-light"
-                                                                                            name="pembacaan_z_{{ Str::slug($kemampuan) }}_{{ $i }}">
-                                                                                    </td>
-                                                                                    <td>
-                                                                                        <input type="number"
-                                                                                            step="0.0001"
-                                                                                            class="form-control form-control-sm text-center bg-light"
-                                                                                            name="pembacaan_m_{{ Str::slug($kemampuan) }}_{{ $i }}">
-                                                                                    </td>
-                                                                                </tr>
-                                                                            @endfor
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                            {{-- HEADER LEVEL 2 (Titik Massa) --}}
+                                            <tr>
+                                                @foreach (['mendekati_nol', 'setengah_kapasitas', 'full_kapasitas'] as $slug)
+                                                    <th colspan="2">
+                                                        <input type="number"
+                                                            class="form-control form-control-sm text-center"
+                                                            name="titik_massa_{{ $slug }}"
+                                                            placeholder="Titik Massa (gram)">
+                                                    </th>
+                                                @endforeach
+                                            </tr>
+
+                                            {{-- HEADER LEVEL 3 --}}
+                                            <tr class="table-light">
+                                                <th>Z</th>
+                                                <th>M</th>
+                                                <th>Z</th>
+                                                <th>M</th>
+                                                <th>Z</th>
+                                                <th>M</th>
+                                            </tr>
+                                        </thead>
+
+                                        {{-- BODY --}}
+                                        <tbody>
+                                            @for ($i = 1; $i <= 10; $i++)
+                                                <tr>
+                                                    <td>{{ $i }}</td>
+
+                                                    @foreach (['mendekati_nol', 'setengah_kapasitas', 'full_kapasitas'] as $slug)
+                                                        <td>
+                                                            <input type="number" step="0.01"
+                                                                class="form-control form-control-sm text-center"
+                                                                name="data[{{ $slug }}][{{ $i }}][z]">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.01"
+                                                                class="form-control form-control-sm text-center"
+                                                                name="data[{{ $slug }}][{{ $i }}][m]">
+                                                        </td>
                                                     @endforeach
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                                </tr>
+                                            @endfor
+                                        </tbody>
 
-                                    {{-- === Bagian 2: KeseragamanSkala === --}}
-                                    <div class="accordion-item mb-2">
-                                        <h2 class="accordion-header" id="headingKeseragamanSkala">
-                                            <button class="accordion-button fw-semibold collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapseKeseragamanSkala"
-                                                aria-expanded="false" aria-controls="collapseKeseragamanSkala">
-                                                <i class="mdi mdi-sigma me-2 text-info"></i>
-                                                Keseragaman Skala
-                                            </button>
-                                        </h2>
-                                        <div id="collapseKeseragamanSkala" class="accordion-collapse collapse"
-                                            aria-labelledby="headingKeseragamanSkala"
-                                            data-bs-parent="#accordionKalibrasi">
-                                            <div class="accordion-body">
-                                                <div class="row mb-3">
-                                                    <div class="col-md-4">
-                                                        <label class="form-label fw-semibold">Massa Pengkalibrasi
-                                                            (g)</label>
-                                                        <input type="number" class="form-control form-control-sm"
-                                                            id="massa_pengkalibrasi"
-                                                            placeholder="Masukkan massa pengkalibrasi">
-                                                    </div>
-                                                </div>
+                                    </table>
+                                </div>
 
-                                                <hr>
+                                <h5 class="text-left fw-bold mb-3 mt-4">
+                                    <span class="bg-soft-primary px-3 py-2">B. Keseragaman Skala</span>
+                                </h5>
 
-                                                <div id="keseragaman-container">
-                                                    <!-- Set Keseragaman akan ditambahkan dinamis di sini -->
-                                                </div>
+                                <div class="table-responsive">
+                                    <table
+                                        class="table table-bordered text-center align-middle mb-0 kemampuan-ulang-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width:120px">Beban Timbangan</th>
+                                                <th style="width:150px">Beban (gram)</th>
+                                                <th style="width:150px">Pembacaan Skala</th>
+                                            </tr>
+                                        </thead>
 
-                                                <div class="mt-3">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                                        id="addKeseragaman">
-                                                        + Tambah Massa (g)
-                                                    </button>
-                                                </div>
+                                        <tbody>
+                                            {{-- Pola: 0 → 1M → 1M → 0 → 2M → 2M → ... → 9M --}}
+                                            @for ($i = 1; $i <= 9; $i++)
+                                                {{-- Nol sebelum M --}}
+                                                <tr>
+                                                    <td>0</td>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="number"
+                                                            step="0.01"
+                                                            name="keseragaman[0_{{ $i }}][beban]">
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="number"
+                                                            step="0.01"
+                                                            name="keseragaman[0_{{ $i }}][pembacaan]">
+                                                    </td>
+                                                </tr>
 
-                                            </div>
-                                        </div>
-                                    </div>
+                                                @if ($i > 0)
+                                                    {{-- M pertama --}}
+                                                    <tr>
+                                                        <td>{{ $i }}M</td>
+                                                        <td>
+                                                            <input class="form-control form-control-sm" type="number"
+                                                                step="0.01"
+                                                                name="keseragaman[{{ $i }}M_1][beban]">
+                                                        </td>
+                                                        <td>
+                                                            <input class="form-control form-control-sm" type="number"
+                                                                step="0.01"
+                                                                name="keseragaman[{{ $i }}M_1][pembacaan]">
+                                                        </td>
+                                                    </tr>
 
-                                    {{-- === Bagian 3: Pinggan === --}}
-                                    <div class="accordion-item mb-2">
-                                        <h2 class="accordion-header" id="headingPinggan">
-                                            <button class="accordion-button fw-semibold collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapsePinggan"
-                                                aria-expanded="false" aria-controls="collapsePinggan">
-                                                <i class="mdi mdi-circle-multiple-outline me-2 text-success"></i>
-                                                Pengaruh Penyimpanan Pada Pinggan
-                                            </button>
-                                        </h2>
-                                        <div id="collapsePinggan" class="accordion-collapse collapse"
-                                            aria-labelledby="headingPinggan" data-bs-parent="#accordionKalibrasi">
-                                            <div class="accordion-body">
-                                                <div class="mb-3 row">
-                                                    <div class="col-md-6">
-                                                        <label for="diameter_pinggan" class="form-label fw-semibold">
-                                                            Diameter Pinggan (cm)
-                                                        </label>
-                                                        <input type="number" step="0.01" class="form-control"
-                                                            id="diameter_pinggan" name="pinggan[diameter]"
-                                                            placeholder="Masukkan diameter pinggan">
-                                                    </div>
+                                                    {{-- M kedua --}}
+                                                    <tr>
+                                                        <td>{{ $i }}M</td>
+                                                        <td>
+                                                            <input class="form-control form-control-sm" type="number"
+                                                                step="0.01"
+                                                                name="keseragaman[{{ $i }}M_2][beban]">
+                                                        </td>
+                                                        <td>
+                                                            <input class="form-control form-control-sm" type="number"
+                                                                step="0.01"
+                                                                name="keseragaman[{{ $i }}M_2][pembacaan]">
+                                                        </td>
+                                                    </tr>
+                                                @endif
+                                            @endfor
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                                                    <div class="col-md-6">
-                                                        <label for="massa_pinggan" class="form-label fw-semibold">
-                                                            Massa Pinggan (g)
-                                                        </label>
-                                                        <input type="number" step="0.0001" class="form-control"
-                                                            id="massa_pinggan" name="pinggan[massa]"
-                                                            placeholder="Masukkan massa pinggan">
-                                                    </div>
-                                                </div>
+                                <h5 class="text-left fw-bold mt-4 mb-3">
+                                    <span class="bg-soft-primary px-3 py-2">C. Pengaruh Penyimpanan Pada Pinggan</span>
+                                </h5>
 
-                                                {{-- Tabel Percobaan --}}
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered align-middle text-center">
-                                                        <thead>
-                                                            <tr>
-                                                                <th rowspan="2" style="width: 80px;">
-                                                                    Percobaan</th>
-                                                                <th colspan="5">Sisi Pengukuran</th>
-                                                            </tr>
-                                                            <tr>
-                                                                <th>Tengah</th>
-                                                                <th>Depan</th>
-                                                                <th>Belakang</th>
-                                                                <th>Kiri</th>
-                                                                <th>Kanan</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @for ($i = 1; $i <= 3; $i++)
-                                                                <tr class="pinggan-percobaan">
-                                                                    <td><strong>{{ $i }}</strong>
-                                                                    </td>
-                                                                    @foreach (['tengah', 'depan', 'belakang', 'kiri', 'kanan'] as $sisi)
-                                                                        <td>
-                                                                            <input type="number" step="0.0001"
-                                                                                class="form-control form-control-sm text-center bg-light sisi-{{ $sisi }}"
-                                                                                placeholder="0.0000">
-                                                                        </td>
-                                                                    @endforeach
-                                                                </tr>
-                                                            @endfor
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="table-responsive">
+                                    <table
+                                        class="table table-bordered text-center align-middle mb-0 kemampuan-ulang-table">
+                                        <tbody>
 
-                                    {{-- === Bagian 4: Tare === --}}
-                                    <div class="accordion-item mb-2">
-                                        <h2 class="accordion-header" id="headingTare">
-                                            <button class="accordion-button fw-semibold collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapseTare"
-                                                aria-expanded="false" aria-controls="collapseTare">
-                                                <i class="mdi mdi-arrow-decision-outline me-2 text-warning"></i>
-                                                Pengaruh Pengenolan Beban (Tare)
-                                            </button>
-                                        </h2>
-                                        <div id="collapseTare" class="accordion-collapse collapse"
-                                            aria-labelledby="headingTare" data-bs-parent="#accordionKalibrasi">
-                                            <div class="accordion-body">{{-- === Input Pengenolan (Tare) === --}}
-                                                <div class="row mb-3">
-                                                    <div class="col-md-4">
-                                                        <label class="form-label fw-semibold">
-                                                            Massa (gram)
-                                                        </label>
-                                                        <input type="number" step="0.0001" id="massa_tare"
-                                                            class="form-control form-control-sm bg-light"
-                                                            placeholder="Masukkan massa diatas pinggan...">
-                                                    </div>
-                                                </div>
+                                            {{-- Diameter --}}
+                                            <tr>
+                                                <td colspan="2" style="text-align:left;"><strong>Diameter
+                                                        Pinggan</strong></td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="pinggan[diameter]" class="info-input">
+                                                </td>
+                                                <td style="text-align:left;">mm</td>
+                                            </tr>
 
-                                                {{-- === Tabel Tanpa & Dengan Pengenolan === --}}
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered align-middle text-center">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th colspan="2" class="text-danger">Tanpa Pengenolan
-                                                                </th>
-                                                                <th colspan="2" class="text-success">Memakai Pengenolan
-                                                                </th>
-                                                            </tr>
-                                                            <tr>
-                                                                <th>Beban (g)</th>
-                                                                <th>Pembacaan (g)</th>
-                                                                <th>Beban (g)</th>
-                                                                <th>Pembacaan (g)</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="tare_table_body">
-                                                            @php
-                                                                $rows = [
-                                                                    [
-                                                                        'beban_tanpa' => [
-                                                                            'label' => 'Z',
-                                                                            'value' => 'Z1',
-                                                                        ],
-                                                                        'beban_tare' => [
-                                                                            'label' => 'Z',
-                                                                            'value' => 'Z1',
-                                                                        ],
-                                                                    ],
-                                                                    [
-                                                                        'beban_tanpa' => [
-                                                                            'label' => 'M',
-                                                                            'value' => 'M1',
-                                                                        ],
-                                                                        'beban_tare' => [
-                                                                            'label' => 'M',
-                                                                            'value' => 'M1',
-                                                                        ],
-                                                                    ],
-                                                                    [
-                                                                        'beban_tanpa' => [
-                                                                            'label' => 'M',
-                                                                            'value' => 'M2',
-                                                                        ],
-                                                                        'beban_tare' => [
-                                                                            'label' => 'M',
-                                                                            'value' => 'M2',
-                                                                        ],
-                                                                    ],
-                                                                    [
-                                                                        'beban_tanpa' => [
-                                                                            'label' => 'Z',
-                                                                            'value' => 'Z2',
-                                                                        ],
-                                                                        'beban_tare' => [
-                                                                            'label' => 'Z',
-                                                                            'value' => 'Z2',
-                                                                        ],
-                                                                    ],
-                                                                ];
-                                                            @endphp
+                                            {{-- Massa --}}
+                                            <tr>
+                                                <td colspan="2" style="text-align:left;"><strong>Massa Diatas
+                                                        Pinggan</strong></td>
+                                                <td>:</td>
+                                                <td>
+                                                    <input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="pinggan[massa]" class="info-input">
+                                                </td>
+                                                <td style="text-align:left;">gram</td>
+                                            </tr>
 
-                                                            @foreach ($rows as $row)
-                                                                <tr class="tare-row">
-                                                                    <td>
-                                                                        <strong
-                                                                            data-value="{{ $row['beban_tanpa']['value'] }}">
-                                                                            {{ $row['beban_tanpa']['label'] }}
-                                                                        </strong>
-                                                                    </td>
-                                                                    <td>
-                                                                        <input type="number" step="0.0001"
-                                                                            class="form-control form-control-sm text-center bg-light tare-tanpa"
-                                                                            placeholder="0.0000">
-                                                                    </td>
-                                                                    <td>
-                                                                        <strong
-                                                                            data-value="{{ $row['beban_tare']['value'] }}">
-                                                                            {{ $row['beban_tare']['label'] }}
-                                                                        </strong>
-                                                                    </td>
-                                                                    <td>
-                                                                        <input type="number" step="0.0001"
-                                                                            class="form-control form-control-sm text-center bg-light tare-dengan"
-                                                                            placeholder="0.0000">
-                                                                    </td>
-                                                                </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                            {{-- Loop Percobaan --}}
+                                            @for ($p = 1; $p <= 3; $p++)
+                                                {{-- Judul Percobaan --}}
+                                                <tr>
+                                                    <td colspan="5" style="text-align:left;"><strong>Percobaan
+                                                            {{ $p }}</strong></td>
+                                                </tr>
 
-                                    {{-- === Bagian 5: Histerisis === --}}
-                                    <div class="accordion-item mb-2">
-                                        <h2 class="accordion-header" id="headingHisterisis">
-                                            <button class="accordion-button fw-semibold collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapseHisterisis"
-                                                aria-expanded="false" aria-controls="collapseHisterisis">
-                                                <i class="mdi mdi-chart-bell-curve-cumulative me-2 text-danger"></i>
-                                                Histerisis
-                                            </button>
-                                        </h2>
-                                        <div id="collapseHisterisis" class="accordion-collapse collapse"
-                                            aria-labelledby="headingHisterisis" data-bs-parent="#accordionKalibrasi">
-                                            <div class="accordion-body">
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <label for="massa_terkecil" class="form-label fw-semibold">Massa
-                                                            Terkecil</label>
-                                                        <input type="number" step="0.0001" id="massa_terkecil"
-                                                            class="form-control form-control-sm bg-light"
-                                                            placeholder="Masukkan massa terkecil">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label for="massa_setengah" class="form-label fw-semibold">Massa
-                                                            Setengah Kapasitas</label>
-                                                        <input type="number" step="0.0001" id="massa_setengah"
-                                                            class="form-control form-control-sm bg-light"
-                                                            placeholder="Masukkan massa setengah kapasitas">
-                                                    </div>
-                                                </div>
+                                                {{-- Posisi --}}
+                                                <tr class="table-light">
+                                                    <th>Tengah</th>
+                                                    <th>Depan</th>
+                                                    <th>Belakang</th>
+                                                    <th>Kiri</th>
+                                                    <th>Kanan</th>
+                                                </tr>
 
-                                                <hr>
+                                                {{-- Input --}}
+                                                <tr>
+                                                    <td><input class="form-control form-control-sm" type="number"
+                                                            step="0.01"
+                                                            name="pinggan[percobaan_{{ $p }}][tengah]"></td>
+                                                    <td><input class="form-control form-control-sm" type="number"
+                                                            step="0.01"
+                                                            name="pinggan[percobaan_{{ $p }}][depan]"></td>
+                                                    <td><input class="form-control form-control-sm" type="number"
+                                                            step="0.01"
+                                                            name="pinggan[percobaan_{{ $p }}][belakang]"></td>
+                                                    <td><input class="form-control form-control-sm" type="number"
+                                                            step="0.01"
+                                                            name="pinggan[percobaan_{{ $p }}][kiri]"></td>
+                                                    <td><input class="form-control form-control-sm" type="number"
+                                                            step="0.01"
+                                                            name="pinggan[percobaan_{{ $p }}][kanan]"></td>
+                                                </tr>
+                                            @endfor
 
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-bordered align-middle text-center">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th rowspan="2" class="align-middle">Beban</th>
-                                                                <th colspan="3">Percobaan</th>
-                                                            </tr>
-                                                            <tr>
-                                                                <th>1</th>
-                                                                <th>2</th>
-                                                                <th>3</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="histerisis_table_body">
-                                                            @php
-                                                                $rows = ['Z', 'M', 'M+M', 'M', 'Z'];
-                                                            @endphp
-                                                            @foreach ($rows as $index => $beban)
-                                                                <tr data-beban="{{ $beban }}_{{ $index + 1 }}">
-                                                                    <td><strong>{{ $beban }}</strong></td>
-                                                                    @for ($i = 1; $i <= 3; $i++)
-                                                                        <td>
-                                                                            <input type="number" step="0.0001"
-                                                                                class="form-control form-control-sm text-center bg-light histerisis-input"
-                                                                                placeholder="0.0000">
-                                                                        </td>
-                                                                    @endfor
-                                                                </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <h5 class="text-left fw-bold mt-4 mb-3">
+                                    <span class="bg-soft-primary px-3 py-2">D. Pengaruh Pengenolan Beban (Tare)</span>
+                                </h5>
+
+                                <div class="table-responsive">
+                                    <table
+                                        class="table table-bordered text-center align-middle mb-0 kemampuan-ulang-table">
+                                        <tbody>
+
+                                            {{-- Massa --}}
+                                            <tr>
+                                                <td colspan="3" style="text-align:left;">
+                                                    <strong>Massa Diatas Pinggan (gram)</strong>
+                                                </td>
+                                                <td>
+                                                    <input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="tare[massa]" class="info-input">
+                                                </td>
+                                            </tr>
+
+                                            {{-- Header Tanpa / Dengan Tare --}}
+                                            <tr>
+                                                <th colspan="2">Tanpa Pengenolan</th>
+                                                <th colspan="2">Memakai Pengenolan</th>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Beban</th>
+                                                <th>Pembacaan</th>
+                                                <th>Beban</th>
+                                                <th>Pembacaan</th>
+                                            </tr>
+
+                                            {{-- Zero --}}
+                                            <tr>
+                                                <td>Zero</td>
+                                                <td><input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="tare[tanpa][zero_1]"></td>
+                                                <td>Zero</td>
+                                                <td><input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="tare[dengan][zero_1]">
+                                                </td>
+                                            </tr>
+
+                                            {{-- M 1 --}}
+                                            <tr>
+                                                <td>M</td>
+                                                <td><input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="tare[tanpa][m_1]"></td>
+                                                <td>M</td>
+                                                <td><input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="tare[dengan][m_1]"></td>
+                                            </tr>
+
+                                            {{-- M 2 --}}
+                                            <tr>
+                                                <td>M</td>
+                                                <td><input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="tare[tanpa][m_2]"></td>
+                                                <td>M</td>
+                                                <td><input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="tare[dengan][m_2]"></td>
+                                            </tr>
+
+                                            {{-- Zero akhir --}}
+                                            <tr>
+                                                <td>Zero</td>
+                                                <td><input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="tare[tanpa][zero_2]"></td>
+                                                <td>Zero</td>
+                                                <td><input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="tare[dengan][zero_2]">
+                                                </td>
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <h5 class="text-left fw-bold mt-4 mb-3">
+                                    <span class="bg-soft-primary px-3 py-2"> E. Histerisis</span>
+                                </h5>
+
+                                <div class="table-responsive">
+                                    <table
+                                        class="table table-bordered text-center align-middle mb-0 kemampuan-ulang-table">
+                                        <tbody>
+
+                                            {{-- Pembacaan Terkecil --}}
+                                            <tr>
+                                                <td colspan="3" style="text-align:left;">
+                                                    <strong>Pembacaan Terkecil Timbangan</strong>
+                                                </td>
+                                                <td>
+                                                    <input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="histerisis[pembacaan_terkecil]"
+                                                        class="info-input">
+                                                </td>
+                                                <td style="text-align:left;">gram</td>
+                                            </tr>
+
+                                            {{-- M Setengah Kapasitas --}}
+                                            <tr>
+                                                <td colspan="3" style="text-align:left;">
+                                                    <strong>M (Setengah Kapasitas Timbangan)</strong>
+                                                </td>
+                                                <td>
+                                                    <input class="form-control form-control-sm" type="number"
+                                                        step="0.01" name="histerisis[m_setengah]" class="info-input">
+                                                </td>
+                                                <td style="text-align:left;">gram</td>
+                                            </tr>
+
+                                            {{-- Header utama --}}
+                                            <tr>
+                                                <th colspan="2">Beban Diatas Pinggan</th>
+
+                                                <th>1</th>
+                                                <th>2</th>
+                                                <th>3</th>
+                                            </tr>
+
+                                            {{-- Zero Awal --}}
+                                            <tr>
+                                                <td>Zero</td>
+                                                <td>Z1</td>
+                                                @for ($i = 1; $i <= 3; $i++)
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="number"
+                                                            step="0.01" name="histerisis[z1][{{ $i }}]">
+                                                    </td>
+                                                @endfor
+                                            </tr>
+
+                                            {{-- M naik --}}
+                                            <tr>
+                                                <td>M</td>
+                                                <td>m1</td>
+                                                @for ($i = 1; $i <= 3; $i++)
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="number"
+                                                            step="0.01" name="histerisis[m1][{{ $i }}]">
+                                                    </td>
+                                                @endfor
+                                            </tr>
+
+                                            {{-- M + M' --}}
+                                            <tr>
+                                                <td>M + M'</td>
+                                                <td></td>
+                                                @for ($i = 1; $i <= 3; $i++)
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="number"
+                                                            step="0.01"
+                                                            name="histerisis[m_plus][{{ $i }}]">
+                                                    </td>
+                                                @endfor
+                                            </tr>
+
+                                            {{-- M turun --}}
+                                            <tr>
+                                                <td>M</td>
+                                                <td>m2</td>
+                                                @for ($i = 1; $i <= 3; $i++)
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="number"
+                                                            step="0.01" name="histerisis[m2][{{ $i }}]">
+                                                    </td>
+                                                @endfor
+                                            </tr>
+
+                                            {{-- Zero akhir --}}
+                                            <tr>
+                                                <td>Zero</td>
+                                                <td>Z2</td>
+                                                @for ($i = 1; $i <= 3; $i++)
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="number"
+                                                            step="0.01" name="histerisis[z2][{{ $i }}]">
+                                                    </td>
+                                                @endfor
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
                                 </div>
 
                                 <div class="text-start mt-4">
                                     <div class="d-flex flex-wrap gap-2 justify-content-start">
-                                        <button type="button" class="btn btn-outline-danger rounded-pill px-4"
-                                            id="btnReset">
-                                            <i class="mdi mdi-close-circle-outline me-1"></i> Reset
+                                        <button type="button" class="btn btn-outline-danger" id="btnReset">
+                                            <i class="mdi mdi-close-circle-outline me-1"></i> Reset Draft
                                         </button>
-                                        {{-- 
-                                        <button type="button" id="btnPreview"
-                                            class="btn btn-outline-info rounded-pill px-4">
-                                            <i class="mdi mdi-eye-outline me-1"></i> Preview
-                                        </button> --}}
 
-                                        <button type="submit" class="btn btn-success rounded-pill px-4">
-                                            <i class="mdi mdi-content-save me-1"></i> Submit Kalibrasi
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="mdi mdi-content-save me-1"></i> Submit
                                         </button>
                                     </div>
                                 </div>
@@ -579,6 +591,10 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
+            $('#alat_id').select2({
+                theme: 'bootstrap-5'
+            });
+
             $('#alat_id').change(function() {
                 var id = $(this).val();
                 if (!id) {
@@ -607,214 +623,45 @@
                 });
             });
 
-            $('#addKeseragaman').on('click', function() {
-                const index = $('.keseragaman-set').length + 1;
+            const STORAGE_KEY = "draft_kalibrasi_timbangan";
+            const $form = $("#formTimbangan");
 
-                const template = `
-                    <div class="keseragaman-set border rounded p-3 mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold mb-0">Set Massa #${index}</h6>
-                            <button type="button" class="btn btn-sm btn-danger remove-set">Hapus</button>
-                        </div>
-                        
-                        <div class="row mb-2">
-                            <div class="col-md-4">
-                                <label class="form-label">Massa (g)</label>
-                                <input type="number" step="0.0001" class="form-control form-control-sm massa-keseragaman" placeholder="5000">
-                            </div>
-                        </div>
+            // ==============================
+            // LOAD DATA DARI LOCALSTORAGE
+            // ==============================
+            let savedData = localStorage.getItem(STORAGE_KEY);
 
-                        <table class="table table-sm table-bordered text-center align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Beban Timbangan</th>
-                                    <th>Pembacaan Skala</th>
-                                </tr>
-                            </thead>
-                            <tbody class="keseragaman-body">
-                                <tr>
-                                    <td data-beban="Z">Z</td>
-                                    <td><input type="number" step="0.0001" class="form-control form-control-sm pembacaan-skala" placeholder="0.0000"></td>
-                                </tr>
-                                <tr>
-                                    <td data-beban="M1">M</td>
-                                    <td><input type="number" step="0.0001" class="form-control form-control-sm pembacaan-skala" placeholder="0.0000"></td>
-                                </tr>
-                                <tr>
-                                    <td data-beban="M2">M</td>
-                                    <td><input type="number" step="0.0001" class="form-control form-control-sm pembacaan-skala" placeholder="0.0000"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+            if (savedData) {
+                let data = JSON.parse(savedData);
 
-                $('#keseragaman-container').append(template);
-            });
+                $.each(data, function(name, value) {
+                    $form.find('[name="' + name + '"]').val(value).trigger('change');
+                });
 
-            // Hapus set keseragaman
-            $(document).on('click', '.remove-set', function() {
-                $(this).closest('.keseragaman-set').remove();
+                console.log("Draft berhasil dimuat dari localStorage");
+            }
+
+            $form.on("input change", "input, select, textarea", function() {
+
+                let formData = {};
+
+                $form.find("input, select, textarea").each(function() {
+                    let name = $(this).attr("name");
+                    if (name) {
+                        formData[name] = $(this).val();
+                    }
+                });
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
             });
 
             $('#formTimbangan').on('submit', function(e) {
                 e.preventDefault();
-                let formData = {};
-
-                // === 1. Format suhu & kelembaban ===
-                const suhu = $('#suhu_ruangan').val();
-                const toleransiSuhu = $('#toleransi_suhu').val();
-                const kelembaban = $('#kelembaban').val();
-                const toleransiKelembaban = $('#toleransi_kelembaban').val();
-
-                const suhuFormatted = suhu && toleransiSuhu ?
-                    `${suhu}°C ± ${toleransiSuhu}°C` :
-                    suhu ? `${suhu}°C` : '';
-
-                const kelembabanFormatted = kelembaban && toleransiKelembaban ?
-                    `${kelembaban}% ± ${toleransiKelembaban}%` :
-                    kelembaban ? `${kelembaban}%` : '';
-
-                $('#suhu_ruangan_final').val(suhuFormatted);
-                $('#kelembaban_final').val(kelembabanFormatted);
-
-                // 2 kemampuan pembacaan
-                let pembacaan = {};
-                ['Mendekati Nol', 'Setengah Kapasitas Maksimum', 'Kapasitas Maksimum'].forEach(function(
-                    kemampuan) {
-                    const slug = kemampuan.toLowerCase().replace(/\s+/g,
-                        '-'); // slugify untuk cari input sesuai nama
-
-                    // Ambil nilai titik massa
-                    const titikMassa = $(`#titik_${slug}`).val();
-
-                    // Siapkan array percobaan (ulangan)
-                    let percobaanList = [];
-
-                    for (let i = 1; i <= 10; i++) {
-                        const z = $(`input[name="pembacaan_z_${slug}_${i}"]`).val();
-                        const m = $(`input[name="pembacaan_m_${slug}_${i}"]`).val();
-
-                        // Skip jika kosong semua
-                        if (z === '' && m === '') continue;
-
-                        percobaanList.push({
-                            ulangan_ke: i,
-                            pembacaan_z: z || null,
-                            pembacaan_m: m || null,
-                        });
-                    }
-
-                    // Masukkan ke pembacaan jika ada data
-                    pembacaan[kemampuan] = [{
-                        titik: titikMassa || null,
-                        percobaan: percobaanList
-                    }];
-                });
-
-                // === 3. Data pinggan ===
-                const diameter = parseFloat($('#diameter_pinggan').val()) || null;
-                const massa = parseFloat($('#massa_pinggan').val()) || null;
-                const percobaanPinggan = [];
-
-                $('.pinggan-percobaan').each(function(index) {
-                    percobaanPinggan.push({
-                        percobaan_ke: index + 1,
-                        tengah: parseFloat($(this).find('.sisi-tengah').val()) || null,
-                        depan: parseFloat($(this).find('.sisi-depan').val()) || null,
-                        belakang: parseFloat($(this).find('.sisi-belakang').val()) || null,
-                        kiri: parseFloat($(this).find('.sisi-kiri').val()) || null,
-                        kanan: parseFloat($(this).find('.sisi-kanan').val()) || null,
-                    });
-                });
-
-                // === 4. Data pengenolan tare ===
-                const massaTare = parseFloat($('#massa_tare').val()) || null;
-                const dataTare = [];
-
-                $('#tare_table_body tr').each(function(index) {
-                    dataTare.push({
-                        beban_tanpa: $(this).find('td:eq(0) strong').data('value'),
-                        pembacaan_tanpa: parseFloat($(this).find('.tare-tanpa').val()) ||
-                            null,
-                        beban_dengan: $(this).find('td:eq(0) strong').data('value'),
-                        pembacaan_dengan: parseFloat($(this).find('.tare-dengan').val()) ||
-                            null,
-                    });
-                });
-
-                // === 5. Data Histerisis ===
-                const massaTerkecil = parseFloat($('#massa_terkecil').val()) || null;
-                const massaSetengah = parseFloat($('#massa_setengah').val()) || null;
-                const dataHisterisis = [];
-
-                $('#histerisis_table_body tr').each(function() {
-                    const percobaan = [];
-                    $(this).find('input').each(function() {
-                        percobaan.push(parseFloat($(this).val()) || null);
-                    });
-
-                    dataHisterisis.push({
-                        massa_terkecil: massaTerkecil,
-                        massa_setengah: massaSetengah,
-                        beban: $(this).data('beban'),
-                        percobaan: percobaan
-                    });
-                });
-
-                const massaPengkalibrasi = parseFloat($('#massa_pengkalibrasi').val()) || null;
-                const dataKeseragaman = [];
-
-                $('.keseragaman-set').each(function() {
-                    const massa = parseFloat($(this).find('.massa-keseragaman').val()) || null;
-                    const bebanList = [];
-                    const pembacaanList = [];
-
-                    $(this).find('.keseragaman-body tr').each(function() {
-                        const beban = $(this).find('td').eq(0).data('beban');
-                        const pembacaan = parseFloat($(this).find('.pembacaan-skala')
-                            .val()) || null;
-                        bebanList.push(beban);
-                        pembacaanList.push(pembacaan);
-                    });
-
-                    dataKeseragaman.push({
-                        massa_pengkalibrasi: massaPengkalibrasi,
-                        massa: massa,
-                        beban_timbangan: bebanList,
-                        pembacaan_skala: pembacaanList
-                    });
-                });
-
-                // === 4. Siapkan form data utama ===
-                formData = {
-                    alat_id: $('#alat_id').val(),
-                    lokasi_kalibrasi: $('#lokasi_kalibrasi').val(),
-                    suhu_ruangan_final: $('#suhu_ruangan_final').val(),
-                    kelembaban_final: $('#kelembaban_final').val(),
-                    tgl_kalibrasi: $('#tgl_kalibrasi').val(),
-                    pembacaan: pembacaan,
-                    pinggan: {
-                        diameter: diameter,
-                        massa: massa,
-                        percobaan: percobaanPinggan
-                    },
-                    tare: {
-                        massa: massaTare,
-                        percobaan: dataTare
-                    },
-                    histerisis: dataHisterisis,
-                    keseragaman_skala: dataKeseragaman
-                };
 
                 $.ajax({
                     url: "{{ route('kalibrasi.timbangan.store') }}",
                     method: 'POST',
-                    data: JSON.stringify(formData),
-                    contentType: 'application/json',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
+                    data: $(this).serialize(), // <<< ini saja
                     success: function(response) {
                         Swal.fire({
                             icon: 'success',
@@ -824,6 +671,7 @@
                             timer: 2000
                         });
 
+                        localStorage.removeItem(STORAGE_KEY);
                         $('#formTimbangan')[0].reset();
                     },
                     error: function(xhr) {
@@ -837,12 +685,36 @@
                 });
             });
 
-            // reset button
-            $(document).on('click', '#btnReset', function() {
-                $('#formTimbangan')[0].reset();
-                $('#alat_id').val('').trigger('change');
+            $("#btnReset").click(function() {
 
-                $('#collapseAlatDetail').collapse('hide');
+                Swal.fire({
+                    title: 'Hapus Draft?',
+                    text: "Semua data yang belum disimpan akan hilang!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+
+                        localStorage.removeItem(STORAGE_KEY);
+                        $form[0].reset();
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Draft dihapus!',
+                            text: 'Data draft berhasil dibersihkan.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                    }
+
+                });
+
             });
         });
     </script>

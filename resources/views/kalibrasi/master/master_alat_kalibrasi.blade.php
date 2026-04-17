@@ -181,6 +181,9 @@
                                     <option value="volumetrik">Volumetrik</option>
                                     <option value="thermohygrometer">Thermohygrometer</option>
                                     <option value="jangka_sorong">Jangka Sorong</option>
+                                    <option value="instrumen">Instrumen</option>
+                                    <option value="dimensi">Dimensi</option>
+                                    <option value="flowmeter">Flowmeter</option>
                                 </select>
                             </div>
                             <div class="col-xxl-3 col-md-6">
@@ -304,6 +307,9 @@
                                 <option value="volumetrik">Volumetrik</option>
                                 <option value="thermohygrometer">Thermohygrometer</option>
                                 <option value="jangka_sorong">Jangka Sorong</option>
+                                <option value="instrumen">Instrumen</option>
+                                <option value="dimensi">Dimensi</option>
+                                <option value="flowmeter">Flowmeter</option>
                             </select>
                         </div>
                         <div class="col-md-6">

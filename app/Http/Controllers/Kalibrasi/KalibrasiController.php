@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers\Kalibrasi;
 
-use Exception;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use App\Models\Kalibrasi\AlatKalibrasiModel;
+use App\Models\Kalibrasi\KalibrasiModel;
+use App\Models\Kalibrasi\KalibrasiSertifikatModel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use App\Models\Kalibrasi\KalibrasiModel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use App\Exports\AlatKalibrasiTemplateExport;
-use App\Models\Kalibrasi\AlatKalibrasiModel;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class KalibrasiController extends Controller
 {
@@ -269,6 +270,37 @@ class KalibrasiController extends Controller
         }
     }
 
+    public function destroy(string $id)
+    {
+        $certifikat = KalibrasiSertifikatModel::find($id);
+
+        if (!$certifikat) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data sertifikat tidak ditemukan'
+            ], 404);
+        }
+
+        $kalibrasiId = $certifikat->kalibrasi_id;
+
+        $kalibrasi = KalibrasiModel::find($kalibrasiId);
+
+        if (!$kalibrasi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data kalibrasi tidak ditemukan'
+            ], 404);
+        }
+
+        $kalibrasi->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data kalibrasi berhasil dihapus!'
+        ]);
+    }
+
+
     public function getFilters()
     {
         $jenis = AlatKalibrasiModel::select('jenis_kalibrasi')
@@ -353,15 +385,15 @@ class KalibrasiController extends Controller
                     'nama_alat' => $nama,
                     'jumlah' => $jumlah,
                     'departemen_pemilik' => $departemen,
-                    'lokasi_alat' => $lokasi,
-                    'no_kalibrasi' => $noKal,
-                    'merk' => $merk,
-                    'tipe' => $tipe,
-                    'kapasitas' => $kapasitas,
-                    'resolusi' => $resolusi,
-                    'range_penggunaan_alat' => $range_penggunaan,
-                    'limits_of_permissible_error' => $limits_error,
-                    'metode_kalibrasi' => $metodeKal
+                    // 'lokasi_alat' => $lokasi,
+                    // 'no_kalibrasi' => $noKal,
+                    // 'merk' => $merk,
+                    // 'tipe' => $tipe,
+                    // 'kapasitas' => $kapasitas,
+                    // 'resolusi' => $resolusi,
+                    // 'range_penggunaan_alat' => $range_penggunaan,
+                    // 'limits_of_permissible_error' => $limits_error,
+                    // 'metode_kalibrasi' => $metodeKal
                 ];
 
                 $data = $this->normalizePlusMinus($data);
@@ -421,63 +453,151 @@ class KalibrasiController extends Controller
         }
     }
 
-    // Get Data Kalibrasi in Approval
-    public function getData($id)
+    public function detail($id)
     {
-        try {
-            // cari data kalibrasi berdasarkan ID
-            $kalibrasi = KalibrasiModel::with('alat:id,kode_alat,nama_alat')->findOrFail($id);
+        $main = KalibrasiModel::with(['alat', 'user',])->findOrFail($id);
 
-            // cek jenis kalibrasi
-            $jenis = strtolower($kalibrasi->jenis_kalibrasi);
-            $relasi = null;
+        // Log::info('DATA MAIN:', $main->toArray());
 
-            switch ($jenis) {
-                case 'pressure':
-                    $relasi = [
-                        'pressure' => function ($q) {
-                            $q->orderBy('titik_kalibrasi');
-                        },
-                        'pressureGabungan',
-                    ];
-                    break;
+        switch ($main->jenis_kalibrasi) {
 
-                case 'temperature':
-                    $relasi = [
-                        'temperature',
-                        'temperatureGabungan',
-                    ];
-                    break;
+            case 'pressure':
+                $main->load('pressure');
 
-                case 'mass':
-                    $relasi = [
-                        'mass',
-                        'massGabungan',
-                    ];
-                    break;
+                return view(
+                    'kalibrasi.certificate.partials.pressure_details',
+                    compact('main')
+                );
 
-                default:
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Jenis kalibrasi tidak dikenali: ' . $jenis
-                    ], 400);
-            }
+            case 'volumetrik':
+                $main->load('volumetrik');
 
-            // ambil data lengkap sesuai jenisnya
-            $data = KalibrasiModel::with(array_merge($relasi, ['alat:id,kode_alat,nama_alat']))
-                ->where('id', $id)
-                ->first();
+                return view(
+                    'kalibrasi.certificate.partials.volumetrik_details',
+                    compact('main')
+                );
 
-            return response()->json([
-                'status' => 'success',
-                'jenis_kalibrasi' => $jenis,
-                'data' => $data
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            case 'temperature':
+                $main->load('temperature');
+
+                return view(
+                    'kalibrasi.certificate.partials.temperature_details',
+                    compact('main')
+                );
+
+            case 'thermohygrometer':
+                $main->load('thermohygrometer');
+
+                return view(
+                    'kalibrasi.certificate.partials.thermohygrometer_details',
+                    compact('main')
+                );
+
+            case 'jangka_sorong':
+                $main->load('jangkaSorong', 'jangkaSorongSummary');
+                $data = $main->jangkaSorong()->get();
+
+                return view(
+                    'kalibrasi.certificate.partials.jangka_sorong_details',
+                    compact('data', 'main')
+                );
+
+            case 'timbangan':
+                $main->load(
+                    'kemampuanUlang',
+                    'keseragamanSkala',
+                    'pinggan',
+                    'tare',
+                    'histerisis',
+                    'kemampuanUlangSummary',
+                    'keseragamanSkalaSummary',
+                    'pingganSummary',
+                    'tareSummary',
+                    'histerisisSummary'
+                );
+
+                return view(
+                    'kalibrasi.certificate.partials.timbangan_details',
+                    compact('main')
+                );
+
+            case 'instrumen':
+                $main->load(
+                    'instrumen',
+                    'keypad',
+                );
+
+                return view(
+                    'kalibrasi.certificate.partials.instrumen_details',
+                    compact('main')
+                );
+
+            case 'dimensi':
+                $main->load('dimensi',);
+
+                return view(
+                    'kalibrasi.certificate.partials.dimensi_details',
+                    compact('main')
+                );
+
+            default:
+                abort(404);
         }
+    }
+
+    // Sticker
+
+    public function viewSticker()
+    {
+        return view('kalibrasi.sticker.sticker_kalibrasi');
+    }
+
+    public function getDataSticker(Request $request)
+    {
+        $query = KalibrasiSertifikatModel::with(['kalibrasi.alat', 'kalibrasi.user'])
+            ->where('status', 'approved');
+
+        // Filter kode alat
+        if ($request->kode_alat) {
+            $query->whereHas('kalibrasi.alat', function ($q) use ($request) {
+                $q->where('kode_alat', 'like', '%' . $request->kode_alat . '%');
+            });
+        }
+
+        // Filter tanggal
+        if ($request->tanggal) {
+            $query->whereHas('kalibrasi', function ($q) use ($request) {
+                $q->whereDate('tgl_kalibrasi', $request->tanggal);
+            });
+        }
+
+        $data = $query->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return response()->json($data);
+    }
+
+    public function downloadSticker($id)
+    {
+        $data = KalibrasiSertifikatModel::with(['kalibrasi.alat', 'kalibrasi.user'])
+            ->findOrFail($id);
+
+        $kalibrasi = $data->kalibrasi;
+
+        // 10 cm x 5 cm dalam point
+        $width  = 283.46;  // 10 cm
+        $height = 113.38;  //  cm
+
+        $customPaper = [0, 0, 283.46, 113.38];
+
+        $pdf = Pdf::loadView('kalibrasi.sticker.sticker_pdf', compact('kalibrasi'))
+            ->setPaper($customPaper)
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultPaperSize' => 'custom',
+            ]);
+
+        return $pdf->stream('sticker-kalibrasi.pdf');
     }
 }

@@ -10,14 +10,13 @@ class TareModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_timbangan_tare';
+    protected $table = 'cal_timbangan_tare';
 
     protected $fillable = [
         'kalibrasi_id',
-        'massa',
-        'tipe_tare',
-        'beban',
-        'pembacaan'
+        'kondisi',
+        'label',
+        'nilai',
     ];
 
     public function kalibrasi()

@@ -70,19 +70,31 @@ class DashboardBoilerController extends Controller
         ]);
     }
 
-
     public function getSteamFg(Request $request)
     {
         $start = $request->start_date;
         $end   = $request->end_date;
 
-        // 1. Ambil semua data harian steam (selalu siapkan sebagai fallback)
         $dailyQuery = BoilerModel::query();
-        if ($start) $dailyQuery->whereDate('date', '>=', $start);
-        if ($end)   $dailyQuery->whereDate('date', '<=', $end);
-        $dailySteamData = $dailyQuery->orderBy('date', 'asc')->get(['date', 'steam']);
 
-        if ($dailySteamData->isEmpty() && !$request->has('start_date')) {
+        if ($start) {
+            $dailyQuery->whereDate('date', '>=', $start);
+        }
+
+        if ($end) {
+            $dailyQuery->whereDate('date', '<=', $end);
+        }
+
+        // Jika tidak ada filter, ambil hanya 30 data terakhir
+        if (!$start && !$end) {
+            $dailyQuery->orderBy('date', 'asc')->limit(30);
+        } else {
+            $dailyQuery->orderBy('date', 'asc');
+        }
+
+        $dailySteamData = $dailyQuery->get(['date', 'steam']);
+
+        if ($dailySteamData->isEmpty()) {
             return response()->json([
                 "status"  => "success",
                 "message" => "Tidak ada data steam",
@@ -90,30 +102,44 @@ class DashboardBoilerController extends Controller
             ]);
         }
 
-        // 2. Ambil semua KPI weekly yang overlap dengan range
         $fgWeeklyQuery = KpiModel::where('periode_tipe', 'weekly');
-        if ($start) $fgWeeklyQuery->where('end_date', '>=', $start);
-        if ($end)   $fgWeeklyQuery->where('start_date', '<=', $end);
-        $fgWeekly = $fgWeeklyQuery->orderBy('start_date')->get();
+
+        if ($start) {
+            $fgWeeklyQuery->where('end_date', '>=', $start);
+        }
+
+        if ($end) {
+            $fgWeeklyQuery->where('start_date', '<=', $end);
+        }
+
+        // Default limit jika tidak ada filter
+        if (!$start && !$end) {
+            $fgWeeklyQuery->orderBy('start_date', 'asc')->limit(30);
+        } else {
+            $fgWeeklyQuery->orderBy('start_date');
+        }
+
+        $fgWeekly = $fgWeeklyQuery->get();
 
         $result = [];
 
         foreach ($fgWeekly as $week) {
+
             $weekStart = $week->start_date;
             $weekEnd   = $week->end_date;
             $fgValue   = (float) $week->finish_goods;
 
-            // Prioritas: pakai nilai manual dari KPI jika ada
             $steamFromKpi = $week->steam;
 
             if ($steamFromKpi !== null && $steamFromKpi > 0) {
                 $totalSteam = (float) $steamFromKpi;
                 $source     = 'kpi';
             } else {
-                // Fallback ke akumulasi harian
+
                 $steamInWeek = $dailySteamData
                     ->filter(fn($item) => $item->date >= $weekStart && $item->date <= $weekEnd)
                     ->sum('steam');
+
                 $totalSteam = (float) $steamInWeek;
                 $source     = 'daily';
             }
@@ -121,12 +147,12 @@ class DashboardBoilerController extends Controller
             $rasio = $fgValue > 0 ? ($totalSteam / $fgValue) * 10 : 0;
 
             $result[] = [
-                'week_start'    => $weekStart,
-                'week_end'      => $weekEnd,
-                'steam'         => round($totalSteam, 2),
-                'finish_goods'  => $fgValue,
-                'rasio'         => round($rasio, 2),
-                'source'        => $source,   // opsional: untuk debug atau tampil di frontend
+                'week_start'   => $weekStart,
+                'week_end'     => $weekEnd,
+                'steam'        => round($totalSteam, 2),
+                'finish_goods' => $fgValue,
+                'rasio'        => round($rasio, 2),
+                'source'       => $source,
             ];
         }
 
@@ -144,9 +170,22 @@ class DashboardBoilerController extends Controller
 
         // 1. Ambil data harian batu bara (fallback)
         $dailyQuery = BoilerModel::query();
-        if ($start) $dailyQuery->whereDate('date', '>=', $start);
-        if ($end)   $dailyQuery->whereDate('date', '<=', $end);
-        $dailyBbData = $dailyQuery->orderBy('date', 'asc')->get(['date', 'batu_bara']);
+        if ($start) {
+            $dailyQuery->whereDate('date', '>=', $start);
+        }
+
+        if ($end) {
+            $dailyQuery->whereDate('date', '<=', $end);
+        }
+
+        // Default load hanya 30 data terakhir
+        if (!$start && !$end) {
+            $dailyQuery->orderBy('date', 'asc')->limit(30);
+        } else {
+            $dailyQuery->orderBy('date', 'asc');
+        }
+
+        $dailyBbData = $dailyQuery->get(['date', 'batu_bara']);
 
         if ($dailyBbData->isEmpty() && !$request->has('start_date')) {
             return response()->json([
@@ -158,9 +197,22 @@ class DashboardBoilerController extends Controller
 
         // 2. Ambil KPI weekly
         $fgWeeklyQuery = KpiModel::where('periode_tipe', 'weekly');
-        if ($start) $fgWeeklyQuery->where('end_date', '>=', $start);
-        if ($end)   $fgWeeklyQuery->where('start_date', '<=', $end);
-        $fgWeekly = $fgWeeklyQuery->orderBy('start_date')->get();
+        if ($start) {
+            $fgWeeklyQuery->where('end_date', '>=', $start);
+        }
+
+        if ($end) {
+            $fgWeeklyQuery->where('start_date', '<=', $end);
+        }
+
+        // Default load hanya 30 minggu
+        if (!$start && !$end) {
+            $fgWeeklyQuery->orderBy('start_date', 'asc')->limit(30);
+        } else {
+            $fgWeeklyQuery->orderBy('start_date');
+        }
+
+        $fgWeekly = $fgWeeklyQuery->get();
 
         $result = [];
 
@@ -213,9 +265,21 @@ class DashboardBoilerController extends Controller
 
         // 1. Ambil data harian steam (selalu siapkan sebagai fallback)
         $dailyQuery = BoilerModel::query();
-        if ($start) $dailyQuery->whereDate('date', '>=', $start);
-        if ($end)   $dailyQuery->whereDate('date', '<=', $end);
-        $dailyData = $dailyQuery->orderBy('date', 'asc')->get(['date', 'steam']);
+        if ($start) {
+            $dailyQuery->whereDate('date', '>=', $start);
+        }
+
+        if ($end) {
+            $dailyQuery->whereDate('date', '<=', $end);
+        }
+
+        if (!$start && !$end) {
+            $dailyQuery->orderBy('date', 'asc')->limit(365); // cukup 1 tahun
+        } else {
+            $dailyQuery->orderBy('date', 'asc');
+        }
+
+        $dailyData = $dailyQuery->get(['date', 'steam']);
 
         if ($dailyData->isEmpty() && !$request->has('start_date')) {
             return response()->json([
@@ -231,8 +295,20 @@ class DashboardBoilerController extends Controller
 
         // 2. Ambil KPI Monthly (prioritas utama untuk steam & FG)
         $monthlyQuery = KpiModel::where('periode_tipe', 'monthly');
-        if ($startMonth) $monthlyQuery->where('month', '>=', $startMonth);
-        if ($endMonth)   $monthlyQuery->where('month', '<=', $endMonth);
+        if ($startMonth) {
+            $monthlyQuery->where('month', '>=', $startMonth);
+        }
+
+        if ($endMonth) {
+            $monthlyQuery->where('month', '<=', $endMonth);
+        }
+
+        if (!$startMonth && !$endMonth) {
+            $monthlyQuery->orderBy('month', 'asc')->limit(30);
+        } else {
+            $monthlyQuery->orderBy('month', 'asc');
+        }
+
         $kpiMonthly = $monthlyQuery->get(['month', 'finish_goods', 'steam']);
 
         // 3. Ambil FG Weekly sebagai fallback FG (jika monthly FG kosong)
@@ -246,7 +322,11 @@ class DashboardBoilerController extends Controller
         $result = [];
 
         // Ambil semua bulan unik dari steam harian (atau dari KPI monthly kalau lebih lengkap)
-        $allMonths = $steamByMonth->keys()->merge($kpiMonthly->pluck('month'))->unique()->sort();
+        $allMonths = $steamByMonth->keys()
+            ->merge($kpiMonthly->pluck('month'))
+            ->unique()
+            ->sort()
+            ->take(30);;
 
         foreach ($allMonths as $month) {
             // Prioritas steam: dari KPI monthly jika ada
@@ -301,9 +381,21 @@ class DashboardBoilerController extends Controller
 
         // Data harian batu bara (fallback)
         $dailyQuery = BoilerModel::query();
-        if ($start) $dailyQuery->whereDate('date', '>=', $start);
-        if ($end)   $dailyQuery->whereDate('date', '<=', $end);
-        $dailyData = $dailyQuery->orderBy('date', 'asc')->get(['date', 'batu_bara']);
+        if ($start) {
+            $dailyQuery->whereDate('date', '>=', $start);
+        }
+
+        if ($end) {
+            $dailyQuery->whereDate('date', '<=', $end);
+        }
+
+        if (!$start && !$end) {
+            $dailyQuery->orderBy('date', 'asc')->limit(365);
+        } else {
+            $dailyQuery->orderBy('date', 'asc');
+        }
+
+        $dailyData = $dailyQuery->get(['date', 'batu_bara']);
 
         if ($dailyData->isEmpty() && !$request->has('start_date')) {
             return response()->json([
@@ -318,8 +410,20 @@ class DashboardBoilerController extends Controller
 
         // KPI Monthly (prioritas batubara & FG)
         $monthlyQuery = KpiModel::where('periode_tipe', 'monthly');
-        if ($startMonth) $monthlyQuery->where('month', '>=', $startMonth);
-        if ($endMonth)   $monthlyQuery->where('month', '<=', $endMonth);
+        if ($startMonth) {
+            $monthlyQuery->where('month', '>=', $startMonth);
+        }
+
+        if ($endMonth) {
+            $monthlyQuery->where('month', '<=', $endMonth);
+        }
+
+        if (!$startMonth && !$endMonth) {
+            $monthlyQuery->orderBy('month', 'asc')->limit(30);
+        } else {
+            $monthlyQuery->orderBy('month', 'asc');
+        }
+
         $kpiMonthly = $monthlyQuery->get(['month', 'finish_goods', 'batubara']);
 
         // FG Weekly fallback
@@ -332,7 +436,7 @@ class DashboardBoilerController extends Controller
 
         $result = [];
 
-        $allMonths = $bbByMonth->keys()->merge($kpiMonthly->pluck('month'))->unique()->sort();
+        $allMonths = $bbByMonth->keys()->merge($kpiMonthly->pluck('month'))->unique()->sort()->take(30);
 
         foreach ($allMonths as $month) {
             $monthlyRecord = $kpiMonthly->firstWhere('month', $month);
