@@ -142,10 +142,10 @@
                                 <th>Lokasi</th>
                                 <th>Tgl Kalibrasi</th>
                                 <th>Status</th>
-                                @if (Auth::user()->jabatan != 'operator')
+                                <!-- @if (Auth::user()->jabatan != 'operator') -->
                                 <th class="text-center" style="width: 150px;">Aksi</th>
-                                @endif
-                                {{-- <th class="text-center">Sertifikat</th> --}}
+                                <!-- @endif -->
+                                <!-- <th class="text-center">Sertifikat</th> -->
                             </tr>
                         </thead>
                         <tbody id="tableBody"></tbody>
