@@ -168,30 +168,38 @@ class MtcApprovalController extends Controller
                 'action_by' => Auth::id(),
             ]);
 
-            // cari approval level berikutnya
-            $nextApproval = MtcApprovalModel::where('mtc_main_id', $approval->mtc_main_id)
-                ->where('level', $approval->level + 1)
-                ->first();
+            // 🔍 cek apakah masih ada approval yang pending
+            $remainingApproval = MtcApprovalModel::where('mtc_main_id', $approval->mtc_main_id)
+                ->where('status', 'pending')
+                ->exists();
 
-            if ($nextApproval) {
+            if ($remainingApproval) {
 
-                // kirim notif ke approver berikutnya
-                NotificationsModel::create([
-                    'user_id'         => $nextApproval->approver_id,
-                    'notifiable_type' => MtcMainModel::class,
-                    'notifiable_id'   => $approval->mtc_main_id,
-                    'title'           => 'Approval Maintenance',
-                    'message'         => 'Maintenance menunggu persetujuan Anda',
-                    'url'             => route('mtc.approval.index'),
-                    'is_read'         => false,
-                ]);
+                // ambil next approval berdasarkan level terkecil yang masih pending
+                $nextApproval = MtcApprovalModel::where('mtc_main_id', $approval->mtc_main_id)
+                    ->where('status', 'pending')
+                    ->orderBy('level', 'asc')
+                    ->first();
 
-                // main masih waiting
+                // kirim notif ke approver berikutnya (jika ada)
+                if ($nextApproval) {
+                    NotificationsModel::create([
+                        'user_id'         => $nextApproval->approver_id,
+                        'notifiable_type' => MtcMainModel::class,
+                        'notifiable_id'   => $approval->mtc_main_id,
+                        'title'           => 'Approval Maintenance',
+                        'message'         => 'Maintenance menunggu persetujuan Anda',
+                        'url'             => route('mtc.approval.index'),
+                        'is_read'         => false,
+                    ]);
+                }
+
+                // status masih waiting
                 MtcMainModel::where('id', $approval->mtc_main_id)
                     ->update(['status' => 'waiting']);
             } else {
 
-                // approval terakhir
+                // ✅ semua approval sudah selesai
                 MtcMainModel::where('id', $approval->mtc_main_id)
                     ->update(['status' => 'approved']);
             }

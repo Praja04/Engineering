@@ -134,37 +134,44 @@ class MtcElectricEngineController extends Controller
     {
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Electric Engine')
-            ->orderBy('tanggal', 'desc')
-            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
                 'kebutuhanMaterial',
                 'electricEngine.mesin:id,nama_mesin,lokasi'
             ]);
 
-        // filter tanggal
+        // 🔍 filter tanggal
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
         }
 
-        // filter paket
+        // 🔍 filter paket
         if ($request->filled('paket')) {
             $query->where('paket', $request->paket);
         }
 
-        // filter nama mesin (relasi)
+        // 🔍 filter nama mesin
         if ($request->filled('nama_mesin')) {
             $query->whereHas('electricEngine.mesin', function ($q) use ($request) {
                 $q->where('nama_mesin', 'like', '%' . $request->nama_mesin . '%');
             });
         }
 
-        $data = $query->get();
+        // 🔥 total setelah filter
+        $total = $query->count();
+
+        // 🔥 ambil data sesuai DataTables
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->skip($request->start)
+            ->take($request->length)
+            ->get();
 
         return response()->json([
-            'status'  => true,
-            'message' => 'Data Mtc Electric Engine berhasil diambil',
-            'data'    => $data,
+            "draw" => intval($request->draw),
+            "recordsTotal" => $total,
+            "recordsFiltered" => $total,
+            "data" => $data
         ]);
     }
 

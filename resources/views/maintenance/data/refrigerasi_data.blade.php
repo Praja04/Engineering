@@ -456,6 +456,12 @@
                             <div class="meta-label">Waktu Selesai</div>
                             <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
                         </div>
+                        ${row.paket === 'Korektif' ? `
+                        <div class="col-md-3">
+                            <div class="meta-label">Tanggal Selesai</div>
+                            <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
+                        </div>
+                        ` : ''}
                         <div class="col-md-3">
                             <div class="meta-label">Paket</div>
                             <div class="meta-value">${row.paket ?? '-'}</div>
@@ -565,7 +571,7 @@
 
         const dtRefrigerasi = $('#tabelRefrigerasi').DataTable({
             processing: true,
-            serverSide: false,
+            serverSide: true,
             searching: false,
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50, 100],
@@ -579,6 +585,9 @@
                     d.date = $('#filterDate').val() || null;
                     d.paket = $('#filterPaket').val() || null;
                     d.nama_mesin = $('#filterNama').val() || null;
+                    // penting untuk pagination
+                    d.start = d.start;
+                    d.length = d.length;
                 },
                 dataSrc: function(json) {
                     // simpan untuk modal detail

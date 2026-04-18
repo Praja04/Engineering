@@ -140,39 +140,50 @@ class MtcElectricP2hController extends Controller
     {
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Electrical P2H')
-            ->orderBy('tanggal', 'desc')
-            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
                 'electricP2h'
             ]);
 
+        // 🔍 filter tanggal
         if ($request->filled('tanggal')) {
             $query->whereDate('tanggal', $request->tanggal);
         }
 
+        // 🔍 filter no unit
         if ($request->filled('no_unit')) {
             $query->whereHas('electricP2h', function ($q) use ($request) {
                 $q->where('no_unit', 'like', '%' . $request->no_unit . '%');
             });
         }
 
+        // 🔍 filter shift
         if ($request->filled('shift')) {
             $query->whereHas('electricP2h', function ($q) use ($request) {
                 $q->where('shift', 'like', '%' . $request->shift . '%');
             });
         }
 
+        // 🔍 filter departemen
         if ($request->filled('departemen')) {
             $query->where('departemen', 'like', '%' . $request->departemen . '%');
         }
 
-        $data = $query->get();
+        // 🔥 total setelah filter
+        $total = $query->count();
+
+        // 🔥 ambil data sesuai DataTables
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->skip($request->start)
+            ->take($request->length)
+            ->get();
 
         return response()->json([
-            'status'  => true,
-            'message' => 'Data P2H Electric berhasil diambil',
-            'data'    => $data,
+            "draw" => intval($request->draw),
+            "recordsTotal" => $total,
+            "recordsFiltered" => $total,
+            "data" => $data
         ]);
     }
 

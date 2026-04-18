@@ -130,35 +130,42 @@ class MtcSipilController extends Controller
     {
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Sipil')
-            ->orderBy('tanggal', 'desc')
-            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
                 'Sipil',
                 'kebutuhanMaterial'
             ]);
 
-        // Filter tanggal (jika ada parameter date)
+        // 🔍 filter tanggal
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
         }
 
-        // Filter area (partial match)
+        // 🔍 filter area
         if ($request->filled('area')) {
             $query->where('area', 'like', '%' . $request->area . '%');
         }
 
-        // Filter rekomendasi (partial match)
+        // 🔍 filter departemen
         if ($request->filled('departemen')) {
             $query->where('departemen', 'like', '%' . $request->departemen . '%');
         }
 
-        $data = $query->get();
+        // 🔥 total setelah filter
+        $total = $query->count();
+
+        // 🔥 ambil data sesuai pagination DataTables
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->skip($request->start)
+            ->take($request->length)
+            ->get();
 
         return response()->json([
-            'status'  => true,
-            'message' => 'Data Mtc Sipil berhasil diambil',
-            'data'    => $data,
+            "draw" => intval($request->draw),
+            "recordsTotal" => $total,
+            "recordsFiltered" => $total,
+            "data" => $data
         ]);
     }
 

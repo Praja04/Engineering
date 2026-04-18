@@ -511,7 +511,7 @@
 
         const dtSipil = $('#tabelSipil').DataTable({
             processing: true,
-            serverSide: false,
+            serverSide: true,
             searching: false,
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50, 100],
@@ -524,6 +524,9 @@
                     d.date = $('#filterDate').val() || null;
                     d.area = $('#filterArea').val() || null;
                     d.departemen = $('#filterDepartmen').val() || null;
+                    // penting untuk pagination
+                    d.start = d.start;
+                    d.length = d.length;
                 },
                 dataSrc: function(json) {
                     currentRows = json.data || [];

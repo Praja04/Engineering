@@ -83,7 +83,9 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Tanggal <span class="text-danger">*</span></label>
+                            <label class="form-label" id="label_tanggal">
+                                Tanggal <span class="text-danger">*</span>
+                            </label>
                             <input type="date" class="form-control" name="tanggal" required>
                         </div>
                         <div class="col-md-3">
@@ -122,6 +124,10 @@
                                 <option>D</option>
                                 <option>Korektif</option>
                             </select>
+                        </div>
+                        <div class="col-md-3 d-none" id="tanggal_selesai_wrapper">
+                            <label class="form-label">Tanggal Selesai</label>
+                            <input type="date" class="form-control" name="tanggal_selesai">
                         </div>
                     </div>
 
@@ -431,7 +437,26 @@
 <script>
     $(document).ready(function() {
         let index = 0;
+        $('select[name="paket"]').on('change', function() {
+            const val = $(this).val();
 
+            if (val === 'Korektif') {
+                $('#tanggal_selesai_wrapper').removeClass('d-none');
+                $('input[name="tanggal_selesai"]').attr('required', true);
+
+                // 🔥 Ubah label
+                $('#label_tanggal').html('Tanggal Mulai <span class="text-danger">*</span>');
+
+            } else {
+                $('#tanggal_selesai_wrapper').addClass('d-none');
+                $('input[name="tanggal_selesai"]')
+                    .val('')
+                    .removeAttr('required');
+
+                // 🔥 Balikin ke default
+                $('#label_tanggal').html('Tanggal <span class="text-danger">*</span>');
+            }
+        });
         $('#mesin_id').on('change', function() {
             const selected = $(this).find(':selected');
 
@@ -555,7 +580,8 @@
                     $(this).val(null).trigger('change');
                 }
             });
-
+            $('#tanggal_selesai_wrapper').addClass('d-none');
+            $('input[name="tanggal_selesai"]').val('').removeAttr('required');
             // Reset UI checklist
             $('.keterangan-wrapper').addClass('d-none');
             $('.status-label-default').removeClass('d-none');

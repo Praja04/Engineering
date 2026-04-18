@@ -132,8 +132,6 @@ class MtcMotorPumpController extends Controller
     {
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Motor Pompa')
-            ->orderBy('tanggal', 'desc')
-            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
                 'kebutuhanMaterial',
@@ -150,19 +148,28 @@ class MtcMotorPumpController extends Controller
             $query->where('paket', $request->paket);
         }
 
-        // filter nama mesin (relasi)
+        // filter nama mesin
         if ($request->filled('nama_mesin')) {
             $query->whereHas('motorPump.mesin', function ($q) use ($request) {
                 $q->where('nama_mesin', 'like', '%' . $request->nama_mesin . '%');
             });
         }
 
-        $data = $query->get();
+        // 🔥 total sebelum paging
+        $total = $query->count();
+
+        // 🔥 ambil data sesuai DataTables
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->skip($request->start)
+            ->take($request->length)
+            ->get();
 
         return response()->json([
-            'status'  => true,
-            'message' => 'Data MTC Motor Pump berhasil diambil',
-            'data'    => $data,
+            "draw" => intval($request->draw),
+            "recordsTotal" => $total,
+            "recordsFiltered" => $total,
+            "data" => $data
         ]);
     }
 

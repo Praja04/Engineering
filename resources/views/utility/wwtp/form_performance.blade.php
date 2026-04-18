@@ -575,7 +575,7 @@
 
                                         <div class="row g-3">
                                             <!-- TSS -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-12">
                                                 <div class="card border border-warning h-100">
                                                     <div class="card-body">
                                                         <label for="sample_tss" class="form-label fw-semibold">
@@ -592,7 +592,7 @@
                                             </div>
 
                                             <!-- SV30 -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-12">
                                                 <div class="card border border-warning h-100">
                                                     <div class="card-body">
                                                         <label for="sample_sv30" class="form-label fw-semibold">
@@ -609,7 +609,7 @@
                                             </div>
 
                                             <!-- pH -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-12">
                                                 <div class="card border border-warning h-100">
                                                     <div class="card-body">
                                                         <label for="sample_ph" class="form-label fw-semibold">
@@ -626,7 +626,7 @@
                                             </div>
 
                                             <!-- MLSS -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-12">
                                                 <div class="card border h-100">
                                                     <div class="card-body">
                                                         <label for="sample_mlss" class="form-label fw-semibold">
@@ -643,12 +643,12 @@
                                             </div>
 
                                             <!-- SVL -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-12">
                                                 <div class="card border h-100">
                                                     <div class="card-body">
                                                         <label for="sample_svl" class="form-label fw-semibold">
                                                             <i class="mdi mdi-water-percent me-1"></i>
-                                                            SVL <span class="text-danger">*</span>
+                                                            SVI <span class="text-danger">*</span>
                                                         </label>
                                                         <div class="input-group">
                                                             <input type="number" step="0.01" class="form-control" id="sample_svl" name="svl" min="0" placeholder="0.00" required>
@@ -660,7 +660,7 @@
                                             </div>
 
                                             <!-- DO -->
-                                            <div class="col-md-4">
+                                            <div class="col-md-12">
                                                 <div class="card border h-100">
                                                     <div class="card-body">
                                                         <label for="sample_do" class="form-label fw-semibold">
