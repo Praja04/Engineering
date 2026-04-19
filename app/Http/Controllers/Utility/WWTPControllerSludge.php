@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Utility;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Utility\WwtpSludge;
+use App\Models\Utility\WwtpPengangkutanSludge;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -43,7 +44,9 @@ class WWTPControllerSludge extends Controller
             'shift'          => 'required|in:1,2,3',
             'drain_lumpur'   => 'required|numeric|min:0',
             'hasil_lumpur'   => 'required|numeric|min:0',
-            'running_hour_scp' => 'required|numeric|min:0'
+            'running_hour_scp' => 'required|numeric|min:0',
+            'sludge_content' => 'nullable|numeric|min:0'
+
         ]);
         $existing = WwtpSludge::where('tanggal', $request->tanggal)
             ->where('shift', $request->shift)
@@ -68,7 +71,9 @@ class WWTPControllerSludge extends Controller
             'shift'          => $request->shift,
             'drain_lumpur'   => $request->drain_lumpur,
             'hasil_lumpur'   => $request->hasil_lumpur,
-            'running_hour_scp' => $request->running_hour_scp
+            'running_hour_scp' => $request->running_hour_scp,
+            'sludge_content' => $request->sludge_content
+
         ]);
         return response()->json([
             'status'  => 'success',
@@ -94,7 +99,8 @@ class WWTPControllerSludge extends Controller
             'shift'            => 'required', // ← fix: was shift1,shift2,shift3
             'drain_lumpur'     => 'nullable|numeric|min:0',
             'hasil_lumpur'     => 'nullable|numeric|min:0', // ← tambah ini
-            'running_hour_scp' => 'nullable|numeric|min:0'
+            'running_hour_scp' => 'nullable|numeric|min:0',
+            'sludge_content'   => 'nullable|numeric|min:0'
         ]);
 
         $harian->update($request->only([
@@ -102,7 +108,8 @@ class WWTPControllerSludge extends Controller
             'shift',
             'drain_lumpur',
             'hasil_lumpur',      // ← tambah ini
-            'running_hour_scp'
+            'running_hour_scp',
+            'sludge_content'
         ]));
 
         return response()->json([
@@ -332,5 +339,113 @@ class WWTPControllerSludge extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+
+    // Pengangkutan sludge
+    
+    public function index_pengangkutan()
+    {
+        $data = WwtpPengangkutanSludge::orderBy('week_start', 'desc')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $data
+        ]);
+    }
+
+    /**
+     * Simpan data pengangkutan sludge
+     */
+    public function store_pengangkutan(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+            'jumlah_pengangkutan' => 'required|numeric|min:0',
+        ]);
+
+        $tanggal = Carbon::parse($request->tanggal);
+
+        $startWeek = $tanggal->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $endWeek   = $tanggal->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+
+        // optional: cegah double input dalam 1 minggu
+        $existing = WwtpPengangkutanSludge::where('week_start', $startWeek)->first();
+        if ($existing) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data untuk minggu ini sudah ada.'
+            ], 409);
+        }
+
+        $data = WwtpPengangkutanSludge::create([
+            'week_start' => $startWeek,
+            'week_end'   => $endWeek,
+            'jumlah_pengangkutan' => $request->jumlah_pengangkutan,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data berhasil disimpan.',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Detail data
+     */
+    public function show_pengangkutan($id)
+    {
+        $data = WwtpPengangkutanSludge::findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $data
+        ]);
+    }
+
+    /**
+     * Update data
+     */
+    public function update_pengangkutan(Request $request, $id)
+    {
+        $data = WwtpPengangkutanSludge::findOrFail($id);
+
+        $request->validate([
+            'tanggal' => 'required|date',
+            'jumlah_pengangkutan' => 'required|numeric|min:0',
+        ]);
+
+        $tanggal = Carbon::parse($request->tanggal);
+
+        $startWeek = $tanggal->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $endWeek   = $tanggal->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+
+        $data->update([
+            'week_start' => $startWeek,
+            'week_end'   => $endWeek,
+            'jumlah_pengangkutan' => $request->jumlah_pengangkutan,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data berhasil diperbarui.',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Hapus data
+     */
+    public function destroy_pengangkutan($id)
+    {
+        $data = WwtpPengangkutanSludge::findOrFail($id);
+        $data->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Data berhasil dihapus.'
+        ]);
     }
 }

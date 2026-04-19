@@ -42,6 +42,7 @@ Route::prefix('wwtp')->group(function () {
     );
     Route::delete('/{id}', [WWTPControllerProses::class, 'destroy']);
 });
+
 // WWTP Performance Routes (menggunakan prefix berbeda)
 Route::prefix('wwtp-performance')->group(function () {
     Route::get('/photo-gallery', [WWTPControllerPerformance::class, 'getPhotoGallery'])
@@ -81,7 +82,7 @@ Route::prefix('wwtp-performance')->group(function () {
 
         // Recent records (default limit 10)
         Route::get('/recent/{limit?}', [WWTPControllerPerformance::class, 'getRecentRecords'])
-        ->where('limit', '[0-9]+');
+            ->where('limit', '[0-9]+');
 
         // Weekly performance (opsional jika dipakai)
         Route::get('/weekly', [WWTPControllerPerformance::class, 'getWeeklyPerformance']);
@@ -101,7 +102,7 @@ Route::prefix('wwtp-performance')->group(function () {
 
         // Recent PH Harian records
         Route::get('/recent-harian/{limit?}', [WWTPControllerPerformance::class, 'getRecentRecordsHarian'])
-        ->where('limit', '[0-9]+');
+            ->where('limit', '[0-9]+');
     });
 
     Route::post('/', [WWTPControllerPerformance::class, 'store']);
@@ -113,11 +114,7 @@ Route::prefix('wwtp-performance')->group(function () {
 
 // WWTP Sludge Routes
 Route::prefix('wwtp-sludge')->group(function () {
-    Route::post('/', [WWTPControllerSludge::class, 'store']);
-    Route::delete('/{id}', [WWTPControllerSludge::class, 'destroy']);
-    Route::post('/{id}', [WWTPControllerSludge::class, 'update']);
-    Route::get('/', [WWTPControllerSludge::class, 'index']);
-    Route::get('/{id}', [WWTPControllerSludge::class, 'show']);
+
 
     Route::prefix('dashboard')->group(function () {
 
@@ -136,4 +133,19 @@ Route::prefix('wwtp-sludge')->group(function () {
         // Recent records
         Route::get('recent-records/{limit?}', [WWTPControllerSludge::class, 'getRecentRecords']);
     });
+
+    Route::prefix('pengangkutan')->group(function () {
+        Route::post('/', [WWTPControllerSludge::class, 'store_pengangkutan']);
+        Route::delete('/{id}', [WWTPControllerSludge::class, 'destroy_pengangkutan']);
+        Route::post('/{id}', [WWTPControllerSludge::class, 'update_pengangkutan']);
+        Route::get('/', [WWTPControllerSludge::class, 'index_pengangkutan']);
+        Route::get('/{id}', [WWTPControllerSludge::class, 'show_pengangkutan']);
+    });
+  
+
+    Route::post('/', [WWTPControllerSludge::class, 'store']);
+    Route::delete('/{id}', [WWTPControllerSludge::class, 'destroy']);
+    Route::post('/{id}', [WWTPControllerSludge::class, 'update']);
+    Route::get('/', [WWTPControllerSludge::class, 'index']);
+    Route::get('/{id}', [WWTPControllerSludge::class, 'show']);
 });

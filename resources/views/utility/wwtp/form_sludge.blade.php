@@ -26,114 +26,166 @@
         <!-- Form Content -->
         <div class="row">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-light border-bottom">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <div class="avatar-xs">
-                                    <div class="avatar-title bg-warning rounded-circle">
-                                        <i class="mdi mdi-delete-variant"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <h5 class="mb-0">Data Sludge WWTP Harian</h5>
-                                <p class="text-muted mb-0">Input data drain lumpur dan running hour per shift</p>
-                            </div>
-                            <div class="flex-shrink-0">
-                                <span class="badge bg-warning">Harian</span>
+                <!-- MODE SELECTOR -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card mode-card active-mode" id="mode-sludge" style="cursor:pointer;">
+                            <div class="card-body text-center">
+                                <i class="mdi mdi-delete-variant fs-2 text-warning"></i>
+                                <h5 class="mt-2">Sludge Harian</h5>
+                                <p class="text-muted mb-0">Input drain, hasil & running hour per shift</p>
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-md-6">
+                        <div class="card mode-card" id="mode-pengangkutan" style="cursor:pointer;">
+                            <div class="card-body text-center">
+                                <i class="mdi mdi-truck-fast fs-2 text-primary"></i>
+                                <h5 class="mt-2">Pengangkutan Sludge</h5>
+                                <p class="text-muted mb-0">Input total pengangkutan per minggu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+
+
                     <div class="card-body">
-                        <form id="sludgeForm">
-                            <!-- Basic Information -->
-                            <div class="row mb-4">
-                                <div class="col-md-6 mb-3">
-                                    <label for="tanggal" class="form-label fw-semibold">
-                                        Tanggal <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="date" class="form-control" id="tanggal" name="tanggal" required>
-                                    <div class="form-text">Tanggal pencatatan data</div>
+                        <div id="form-sludge">
+                            <form id="sludgeForm">
+                                <!-- Basic Information -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="tanggal" class="form-label fw-semibold">
+                                            Tanggal <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date" class="form-control" id="tanggal" name="tanggal" required>
+                                        <div class="form-text">Tanggal pencatatan data</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="shift" class="form-label fw-semibold">
+                                            Shift <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select" id="shift" name="shift" required>
+                                            <option value="">-- Pilih Shift --</option>
+                                            <option value="1">Shift 1 (06:00 - 14:00)</option>
+                                            <option value="2">Shift 2 (14:00 - 22:00)</option>
+                                            <option value="3">Shift 3 (22:00 - 06:00)</option>
+                                        </select>
+                                        <div class="form-text">Shift kerja yang bertugas</div>
+                                    </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="shift" class="form-label fw-semibold">
-                                        Shift <span class="text-danger">*</span>
-                                    </label>
-                                    <select class="form-select" id="shift" name="shift" required>
-                                        <option value="">-- Pilih Shift --</option>
-                                        <option value="1">Shift 1 (06:00 - 14:00)</option>
-                                        <option value="2">Shift 2 (14:00 - 22:00)</option>
-                                        <option value="3">Shift 3 (22:00 - 06:00)</option>
-                                    </select>
-                                    <div class="form-text">Shift kerja yang bertugas</div>
+
+                                <!-- Sludge Data -->
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center mb-4">
+                                        <div class="flex-grow-1">
+                                            <h5 class="mb-1 text-warning">
+                                                <i class="mdi mdi-delete-variant me-2"></i>Data Sludge Management
+                                            </h5>
+                                            <p class="text-muted mb-0">Input data pengelolaan lumpur hasil proses WWTP</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <!-- Drain Lumpur -->
+                                        <div class="col-md-6">
+                                            <div class="card border border-warning">
+                                                <div class="card-body">
+                                                    <label for="drain_lumpur" class="form-label fw-semibold">
+                                                        <i class="mdi mdi-hydraulic-oil-level text-warning me-1"></i>Drain Lumpur <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="drain_lumpur" name="drain_lumpur" min="0" placeholder="0.00" required>
+                                                        <span class="input-group-text bg-light">m³</span>
+                                                    </div>
+                                                    <small class="form-text text-muted">Volume lumpur yang dikeluarkan dari sistem</small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Running Hour SCP -->
+                                        <div class="col-md-6">
+                                            <div class="card border border-warning">
+                                                <div class="card-body">
+                                                    <label for="running_hour_scp" class="form-label fw-semibold">
+                                                        <i class="mdi mdi-clock-outline text-warning me-1"></i>Running Hour SCP <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="running_hour_scp" name="running_hour_scp" min="0" placeholder="0.00" required>
+                                                        <span class="input-group-text bg-light">jam</span>
+                                                    </div>
+                                                    <small class="form-text text-muted">Waktu operasional Sludge Collection Pump</small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Hasil lumpur  -->
+                                        <div class="col-md-6">
+                                            <div class="card border border-warning">
+                                                <div class="card-body">
+                                                    <label for="hasil_lumpur" class="form-label fw-semibold">
+                                                        <i class="mdi mdi-water-percent text-warning me-1"></i>Hasil Lumpur <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="hasil_lumpur" name="hasil_lumpur" min="0" placeholder="0.00" required>
+                                                        <span class="input-group-text bg-light">ton</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sludge Content  -->
+                                        <div class="col-md-6">
+                                            <div class="card border border-warning">
+                                                <div class="card-body">
+                                                    <label for="sludge_content" class="form-label fw-semibold">
+                                                        <i class="mdi mdi-water-percent text-warning me-1"></i>Content Sludge(%) <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="sludge_content" name="sludge_content" min="0" placeholder="0.00" required>
+                                                        <span class="input-group-text bg-light">%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+
+                        <div id="form-pengangkutan" style="display:none;">
+                            <div class="card">
+                                <div class="card-body">
+
+                                    <h5 class="mb-3 text-primary">
+                                        <i class="mdi mdi-truck-fast me-1"></i> Input Pengangkutan Sludge
+                                    </h5>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Tanggal</label>
+                                        <input type="date" class="form-control" id="tanggal_pengangkutan">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Jumlah Pengangkutan (ton/mobil)</label>
+                                        <input type="number" class="form-control" id="jumlah_pengangkutan" min="0">
+                                    </div>
+
+                                    <button class="btn btn-primary" id="btnPengangkutan">
+                                        Simpan Pengangkutan
+                                    </button>
+
                                 </div>
                             </div>
-
-                            <!-- Sludge Data -->
-                            <div class="mb-4">
-                                <div class="d-flex align-items-center mb-4">
-                                    <div class="flex-grow-1">
-                                        <h5 class="mb-1 text-warning">
-                                            <i class="mdi mdi-delete-variant me-2"></i>Data Sludge Management
-                                        </h5>
-                                        <p class="text-muted mb-0">Input data pengelolaan lumpur hasil proses WWTP</p>
-                                    </div>
-                                </div>
-
-                                <div class="row g-3">
-                                    <!-- Drain Lumpur -->
-                                    <div class="col-md-6">
-                                        <div class="card border border-warning">
-                                            <div class="card-body">
-                                                <label for="drain_lumpur" class="form-label fw-semibold">
-                                                    <i class="mdi mdi-hydraulic-oil-level text-warning me-1"></i>Drain Lumpur <span class="text-danger">*</span>
-                                                </label>
-                                                <div class="input-group">
-                                                    <input type="number" step="0.01" class="form-control" id="drain_lumpur" name="drain_lumpur" min="0" placeholder="0.00" required>
-                                                    <span class="input-group-text bg-light">m³</span>
-                                                </div>
-                                                <small class="form-text text-muted">Volume lumpur yang dikeluarkan dari sistem</small>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Running Hour SCP -->
-                                    <div class="col-md-6">
-                                        <div class="card border border-warning">
-                                            <div class="card-body">
-                                                <label for="running_hour_scp" class="form-label fw-semibold">
-                                                    <i class="mdi mdi-clock-outline text-warning me-1"></i>Running Hour SCP <span class="text-danger">*</span>
-                                                </label>
-                                                <div class="input-group">
-                                                    <input type="number" step="0.01" class="form-control" id="running_hour_scp" name="running_hour_scp" min="0" placeholder="0.00" required>
-                                                    <span class="input-group-text bg-light">jam</span>
-                                                </div>
-                                                <small class="form-text text-muted">Waktu operasional Sludge Collection Pump</small>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Hasil lumpur  -->
-                                    <div class="col-md-6">
-                                        <div class="card border border-warning">
-                                            <div class="card-body">
-                                                <label for="hasil_lumpur" class="form-label fw-semibold">
-                                                    <i class="mdi mdi-water-percent text-warning me-1"></i>Hasil Lumpur <span class="text-danger">*</span>
-                                                </label>
-                                                <div class="input-group">
-                                                    <input type="number" step="0.01" class="form-control" id="hasil_lumpur" name="hasil_lumpur" min="0" placeholder="0.00" required>
-                                                    <span class="input-group-text bg-light">ton</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        </div>
                     </div>
 
                     <!-- Information Alert -->
-                    <div class="alert alert-warning border-0 mb-4" role="alert">
+                    <div class="alert alert-warning border-0 mb-4" role="alert" id="alert">
                         <div class="d-flex">
                             <div class="flex-shrink-0">
                                 <i class="mdi mdi-information fs-4"></i>
@@ -263,11 +315,74 @@
         background-color: rgba(241, 180, 76, 0.1);
         border-left: 4px solid #f1b44c;
     }
+
+    .mode-card {
+        border: 2px solid transparent;
+        transition: 0.2s;
+    }
+
+    .mode-card:hover {
+        border-color: #ddd;
+    }
+
+    .active-mode {
+        border-color: #f1b44c !important;
+        box-shadow: 0 0 10px rgba(241, 180, 76, 0.3);
+    }
 </style>
 
 <script src="{{ asset('material/assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 <script>
     $(document).ready(function() {
+
+        let mode = 'sludge'; // default
+
+        // SWITCH MODE SLUDGE
+        $('#mode-sludge').on('click', function() {
+            mode = 'sludge';
+
+            $('#mode-sludge').addClass('active-mode');
+            $('#mode-pengangkutan').removeClass('active-mode');
+            $('#alert').show();
+            $('#form-sludge').show();
+            $('#form-pengangkutan').hide();
+        });
+
+        // SWITCH MODE PENGANGKUTAN
+        $('#mode-pengangkutan').on('click', function() {
+            mode = 'pengangkutan';
+
+            $('#mode-pengangkutan').addClass('active-mode');
+            $('#mode-sludge').removeClass('active-mode');
+            $('#alert').hide();
+            $('#form-sludge').hide();
+            $('#form-pengangkutan').show();
+        });
+
+        // SUBMIT PENGANGKUTAN
+        $('#btnPengangkutan').on('click', function() {
+
+            const data = {
+                tanggal: $('#tanggal_pengangkutan').val(),
+                jumlah_pengangkutan: $('#jumlah_pengangkutan').val()
+            };
+
+            $.ajax({
+                url: "{{ url('api/wwtp-sludge/pengangkutan') }}",
+                method: "POST",
+                data: data,
+                success: function(res) {
+                    Swal.fire('Success', res.message, 'success');
+
+                    $('#tanggal_pengangkutan').val('');
+                    $('#jumlah_pengangkutan').val('');
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.message || 'Error', 'error');
+                }
+            });
+
+        });
         // Set default date to today
         const today = new Date().toISOString().split('T')[0];
         $('#tanggal').val(today);
@@ -285,7 +400,8 @@
                 shift: $('#shift').val(),
                 drain_lumpur: $('#drain_lumpur').val(),
                 running_hour_scp: $('#running_hour_scp').val(),
-                hasil_lumpur: $('#hasil_lumpur').val()
+                hasil_lumpur: $('#hasil_lumpur').val(),
+                sludge_content: $('#sludge_content').val()
             };
 
             $.ajax({
