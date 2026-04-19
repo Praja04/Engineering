@@ -131,42 +131,48 @@ class MtcDieselEngineController extends Controller
             'message' => 'Data Mtc Diesel Engine berhasil disimpan',
         ], 201);
     }
-
     public function getData(Request $request)
     {
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Diesel Engine')
-            ->orderBy('tanggal', 'desc')
-            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
                 'dieselEngine.mesin:id,nama_mesin,lokasi',
                 'kebutuhanMaterial'
             ]);
 
-        // filter tanggal
+        // 🔍 filter tanggal
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
         }
 
-        // filter paket
+        // 🔍 filter paket
         if ($request->filled('paket')) {
             $query->where('paket', $request->paket);
         }
 
-        // filter nama mesin (relasi)
+        // 🔍 filter nama mesin
         if ($request->filled('nama_mesin')) {
             $query->whereHas('dieselEngine.mesin', function ($q) use ($request) {
                 $q->where('nama_mesin', 'like', '%' . $request->nama_mesin . '%');
             });
         }
 
-        $data = $query->get();
+        // 🔥 total setelah filter
+        $total = $query->count();
+
+        // 🔥 pagination DataTables
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->skip($request->start)
+            ->take($request->length)
+            ->get();
 
         return response()->json([
-            'status'  => true,
-            'message' => 'Data Mtc Diesel Engine berhasil diambil',
-            'data'    => $data,
+            "draw" => intval($request->draw),
+            "recordsTotal" => $total,
+            "recordsFiltered" => $total,
+            "data" => $data
         ]);
     }
 

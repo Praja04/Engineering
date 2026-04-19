@@ -140,39 +140,48 @@ class MtcBatteryController extends Controller
     {
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Battery')
-            ->orderBy('tanggal', 'desc')
-            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
                 'battery.details',
             ]);
 
+        // 🔍 filter tanggal
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
         }
 
+        // 🔍 filter tipe baterai
         if ($request->filled('tipe_baterai')) {
-            $query->whereHas('Battery', function ($q) use ($request) {
+            $query->whereHas('battery', function ($q) use ($request) {
                 $q->where('battery_type', 'like', '%' . $request->tipe_baterai . '%');
             });
         }
 
-        // Filter unit → cari di no_unit ATAU no_seri di relasi battery
+        // 🔍 filter unit (no_unit atau no_seri)
         if ($request->filled('unit')) {
             $search = $request->unit;
 
-            $query->whereHas('Battery', function ($q) use ($search) {
+            $query->whereHas('battery', function ($q) use ($search) {
                 $q->where('no_unit', 'like', "%{$search}%")
-                    ->orWhere('no_seri', 'like', "%{$search}%");
+                ->orWhere('no_seri', 'like', "%{$search}%");
             });
         }
 
-        $data = $query->get();
+        // 🔥 total setelah filter
+        $total = $query->count();
+
+        // 🔥 pagination DataTables
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->skip($request->start)
+            ->take($request->length)
+            ->get();
 
         return response()->json([
-            'status'  => true,
-            'message' => 'Data Mtc Battery berhasil diambil',
-            'data'    => $data,
+            "draw" => intval($request->draw),
+            "recordsTotal" => $total,
+            "recordsFiltered" => $total,
+            "data" => $data
         ]);
     }
 

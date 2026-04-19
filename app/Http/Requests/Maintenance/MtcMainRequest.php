@@ -26,6 +26,7 @@ class MtcMainRequest extends FormRequest
             'waktu_mulai'     => ['required', 'date_format:H:i'],
             'waktu_selesai' => ['nullable', 'date_format:H:i'],
             'paket'     => ['nullable', 'string', 'max:50'],
+            'tanggal_selesai' => 'nullable|date|required_if:paket,Korektif',
             'keterangan'  => ['nullable', 'string'],
             'korektif'    => ['nullable', 'string'],
             'area'        => ['nullable', 'string'],

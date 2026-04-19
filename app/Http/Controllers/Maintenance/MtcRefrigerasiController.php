@@ -157,34 +157,45 @@ class MtcRefrigerasiController extends Controller
     {
         $query = MtcMainModel::query()
             ->where('jenis_mtc', 'Refrigerasi')
-            ->orderBy('tanggal', 'desc')
-            // ->orderBy('waktu', 'desc')
             ->with([
                 'createdBy:id,username',
-                'kebutuhanMaterial',
                 'refrigerasi.mesin:id,nama_mesin,lokasi',
+                // ⚠️ optional: comment kalau berat
+                // 'kebutuhanMaterial',
             ]);
 
+        // filter tanggal
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
         }
 
+        // filter paket
         if ($request->filled('paket')) {
             $query->where('paket', $request->paket);
         }
 
+        // filter nama mesin
         if ($request->filled('nama_mesin')) {
             $query->whereHas('refrigerasi.mesin', function ($q) use ($request) {
                 $q->where('nama_mesin', 'like', '%' . $request->nama_mesin . '%');
             });
         }
 
-        $data = $query->get();
+        // 🔥 total data
+        $total = $query->count();
+
+        // 🔥 pagination (inti solusi)
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->skip($request->start)
+            ->take($request->length)
+            ->get();
 
         return response()->json([
-            'status'  => true,
-            'message' => 'Data Mtc Refrigerasi berhasil diambil',
-            'data'    => $data,
+            "draw" => intval($request->draw),
+            "recordsTotal" => $total,
+            "recordsFiltered" => $total,
+            "data" => $data
         ]);
     }
 

@@ -24,6 +24,7 @@ class MtcMainModel extends Model
     protected $fillable = [
         'jenis_mtc',
         'tanggal',
+        'tanggal_selesai',
         'waktu_mulai',
         'waktu_selesai',
         'paket',
