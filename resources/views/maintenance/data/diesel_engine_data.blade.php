@@ -520,13 +520,15 @@
                         </div>
                         <div class="col-md-6">
                             <div class="group-title">Tindakan Korektif</div>
-                            <div>${row.diesel_engine?.korektif ?? '-'}</div>
+                            <div>${row.korektif ?? '-'}</div>
                         </div>
                         <div class="col-md-12">
                             <div class="group-title">Kebutuhan Material</div>
-                            ${
-                                row.kebutuhan_material
-                                ? `<div>${row.kebutuhan_material.mid} - ${row.kebutuhan_material.deskripsi} - ${row.kebutuhan_material.qty}</div>`
+                           ${
+                                row.kebutuhan_material && row.kebutuhan_material.length
+                                ? row.kebutuhan_material.map(m => `
+                                    <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
+                                `).join('')
                                 : '<div>-</div>'
                             }
                         </div>

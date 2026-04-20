@@ -124,14 +124,14 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Waktu Mulai<span class="text-danger">*</span></label>
-                            <input type="time" class="form-control" name="waktu_mulai" required>
+                            <input type="text" class="form-control" name="waktu_mulai" id="waktu_mulai" placeholder="Pilih waktu" required>
                             @error('waktu_mulai')
                             <div class="text-danger small">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Waktu Selesai</label>
-                            <input type="time" class="form-control" name="waktu_selesai" required>
+                            <input type="text" class="form-control" name="waktu_selesai" id="waktu_selesai" placeholder="Pilih waktu">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Departemen <span class="text-danger">*</span></label>
@@ -162,7 +162,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Hours Meter (Jam Operasional)<span class="text-danger">*</span></label>
-                            <input type="numeric" name="hours_meter" class="form-control" value="{{ old('hours_meter') }}" placeholder="12345">
+                            <input type="number" name="hours_meter" class="form-control" value="{{ old('hours_meter') }}" placeholder="12345">
                             <small class="form-label fst-italic">Catat sesuai kondisi aktual di unit</small>
                             @error('hours_meter')
                             <div class="text-danger small">{{ $message }}</div>
@@ -422,7 +422,21 @@
     @section('scripts')
     <script>
         $(document).ready(function() {
-
+            // Flatpickr
+            flatpickr("#waktu_mulai", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                minuteIncrement: 1,
+            });
+            flatpickr("#waktu_selesai", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                minuteIncrement: 1,
+            });
             let pendingFormData = null;
             $('#mesin_id').on('change', function() {
                 const selected = $(this).find(':selected');
@@ -533,24 +547,9 @@
 
 
 
-            // Flatpickr
-            flatpickr("#waktu_mulai", {
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: "H:i",
-                time_24hr: true,
-                minuteIncrement: 1,
-            });
-            flatpickr("#waktu_selesai", {
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: "H:i",
-                time_24hr: true,
-                minuteIncrement: 1,
-            });
 
-            let selectedStaff = null;
-            let selectedUser = null;
+
+
 
             $('#form-mtc-diesel-p2h').on('submit', function(e) {
                 e.preventDefault();
