@@ -107,11 +107,11 @@
                         <div class="col-md-3">
                             <label class="form-label">Waktu Mulai
                                 <span class="text-danger">*</span></label>
-                            <input type="time" class="form-control" name="waktu_mulai" required>
+                            <input type="text" class="form-control" name="waktu_mulai" id="waktu_mulai" placeholder="Pilih waktu" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Waktu Selesai</label>
-                            <input type="time" class="form-control" name="waktu_selesai">
+                            <input type="text" class="form-control" name="waktu_selesai" id="waktu_selesai" placeholder="Pilih waktu">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Departemen
@@ -351,6 +351,21 @@
 <script>
     $(document).ready(function() {
         let index = 0;
+        flatpickr("#waktu_mulai", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            minuteIncrement: 1,
+        });
+
+        flatpickr("#waktu_selesai", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            minuteIncrement: 1,
+        });
         $('#area').on('change', function() {
             const selected = $(this).find(':selected');
 
@@ -562,7 +577,7 @@
 
 
         function submitFinalForm(formData) {
-          
+
             const $btn = $('#btn-submit');
             $btn.prop('disabled', true);
             $.ajax({

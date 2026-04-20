@@ -44,11 +44,11 @@
                         </div>
                         <div class="col-md-3">
                             <label>Waktu Mulai</label>
-                            <input type="time" name="waktu_mulai" class="form-control" required>
+                            <input type="text" name="waktu_mulai" id="waktu_mulai" class="form-control" placeholder="Pilih waktu" required>
                         </div>
                         <div class="col-md-3">
                             <label>Waktu Selesai</label>
-                            <input type="time" name="waktu_selesai" class="form-control" required>
+                            <input type="text" name="waktu_selesai" id="waktu_selesai" class="form-control" placeholder="Pilih waktu">
                         </div>
                         <div class="col-md-3">
                             <label>Battery Type</label>
@@ -156,7 +156,21 @@
 <script>
     $(document).ready(function() {
 
+        flatpickr("#waktu_mulai", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            minuteIncrement: 1,
+        });
 
+        flatpickr("#waktu_selesai", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            minuteIncrement: 1,
+        });
         let cellIndex = 0;
         let cellNumber = 1;
         const MIN_CELL = 12;
@@ -411,21 +425,7 @@
         let selectedStaff = null;
         let selectedUser = null;
 
-        // Flatpickr
-        flatpickr("#waktu_mulai", {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: true,
-            minuteIncrement: 1,
-        });
-        flatpickr("#waktu_selesai", {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: true,
-            minuteIncrement: 1,
-        });
+
 
         $('#formBattery').on('submit', function(e) {
             e.preventDefault();
