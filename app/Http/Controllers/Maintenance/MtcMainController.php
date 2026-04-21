@@ -81,12 +81,12 @@ class MtcMainController extends Controller
         ]);
     }
 
-    public function downloadMaintenanceData(Request $request, $jenis_mtc)
+    public function downloadMaintenanceData(Request $request, $jenis_mtc, $id)
     {
         try {
             switch ($jenis_mtc) {
                 case 'Motor Pompa':
-                    return $this->exportMotorPump();
+                    return $this->exportMotorPump($id);
                 case 'Utility':
                     return $this->exportUtility();
                 case 'Electrical':
@@ -127,7 +127,7 @@ class MtcMainController extends Controller
         $drawing->setWorksheet($sheet);
     }
 
-    private function exportMotorPump()
+    private function exportMotorPump($id)
     {
         $path = public_path('assets/templates/maintenance/motor_pump.xlsx');
 
@@ -139,6 +139,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Motor Pompa')
+            ->where('id', $id)
             ->with('motorPump', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
