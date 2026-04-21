@@ -503,12 +503,12 @@
                         <div class="col-md-12">
                             <div class="group-title">Kebutuhan Material</div>
                            ${
-    row.kebutuhan_material && row.kebutuhan_material.length
-    ? row.kebutuhan_material.map(m => `
-        <div>${m.mid} - ${m.deskripsi} - ${m.qty}</div>
-      `).join('')
-    : '<div>-</div>'
-}
+                                row.kebutuhan_material && row.kebutuhan_material.length
+                                ? row.kebutuhan_material.map(m => `
+                                    <div>${m.mid} - ${m.deskripsi} - ${m.qty}</div>
+                                `).join('')
+                                : '<div>-</div>'
+                            }
                         </div>
                     </div>
                     `;
@@ -1070,6 +1070,17 @@
                     }
                 });
             });
+        });
+
+        // Download handler for maintenance data
+        $(document).on('click', '.btn-print', function() {
+            const id = $(this).data('id');
+            // The 'jenis_mtc' for this specific view is 'Motor Pump'
+            const jenisMtc = 'Electrical';
+            const downloadUrl = `/mtc/download-data/${jenisMtc}`;
+
+            // Trigger the download
+            window.open(downloadUrl, '_blank');
         });
     });
 </script>

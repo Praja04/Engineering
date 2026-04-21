@@ -17,6 +17,7 @@ use App\Models\Maintenance\MtcElectricP2hInspectionModel;
 use App\Models\Maintenance\MtcDieselP2hInspectionModel;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
 use App\Models\Maintenance\MtcApprovalModel;
+
 class MtcMainModel extends Model
 {
     protected $table = 'mtc_main';
@@ -38,6 +39,10 @@ class MtcMainModel extends Model
         'running_hour',
         'created_by',
         'updated_by',
+    ];
+
+    protected $casts = [
+        'tanggal' => 'date',
     ];
 
     // ================= RELATIONS =================

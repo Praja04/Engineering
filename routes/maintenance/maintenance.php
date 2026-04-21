@@ -129,5 +129,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/upload-excel',     [MtcMasterMesinController::class, 'uploadExcel'])->name('uploadExcel');
             });
         });
+
+        // Route for downloading maintenance data
+        Route::get('/download-data/{jenis_mtc}', [MtcMainController::class, 'downloadMaintenanceData'])->name('mtc.download.data');
     });
 });
