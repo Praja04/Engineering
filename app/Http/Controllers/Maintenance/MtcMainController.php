@@ -88,23 +88,23 @@ class MtcMainController extends Controller
                 case 'Motor Pompa':
                     return $this->exportMotorPump($id);
                 case 'Utility':
-                    return $this->exportUtility();
+                    return $this->exportUtility($id);
                 case 'Electrical':
-                    return $this->exportElectrical();
+                    return $this->exportElectrical($id);
                 case 'Refrigerasi':
-                    return $this->exportRefrigerasi();
+                    return $this->exportRefrigerasi($id);
                 case 'Electric Engine':
-                    return $this->exportElectricEngine();
+                    return $this->exportElectricEngine($id);
                 case 'Diesel Engine':
-                    return $this->exportDieselEngine();
+                    return $this->exportDieselEngine($id);
                 case 'Battery':
-                    return $this->exportBattery();
+                    return $this->exportBattery($id);
                 case 'Sipil':
-                    return $this->exportSipil();
+                    return $this->exportSipil($id);
                 case 'Electric P2h':
-                    return $this->exportElectricP2h();
+                    return $this->exportElectricP2h($id);
                 case 'Diesel P2h':
-                    return $this->exportDieselP2h();
+                    return $this->exportDieselP2h($id);
                 default:
                     return response()->json(['message' => 'Jenis maintenance tidak valid'], 404);
             }
@@ -208,24 +208,6 @@ class MtcMainController extends Controller
                 }
             }
 
-            // mapping ke field
-            $keteranganMap = [];
-
-            if (!empty($main->keterangan)) {
-                $items = explode('|', $main->keterangan);
-
-                foreach ($items as $item) {
-                    $parts = explode(':', $item, 2);
-
-                    if (count($parts) == 2) {
-                        $key = trim($parts[0]);   // sekarang sudah field name
-                        $val = trim($parts[1]);
-
-                        $keteranganMap[$key] = $val;
-                    }
-                }
-            }
-
             foreach ($fieldRowMap as $field => $row) {
 
                 $value = $inspection->{$field};
@@ -241,7 +223,6 @@ class MtcMainController extends Controller
                 // kolom kondisi
                 $sheet->setCellValue('D' . $row, $kondisi);
 
-                // 🔥 langsung ambil dari key field
                 $ket = $keteranganMap[$field] ?? '';
                 $sheet->setCellValue('E' . $row, $ket);
             }
@@ -282,7 +263,7 @@ class MtcMainController extends Controller
         return $this->downloadExcel($spreadsheet, 'motor_pump');
     }
 
-    private function exportUtility()
+    private function exportUtility($id)
     {
         $path = public_path('assets/templates/maintenance/utility.xlsx');
 
@@ -294,6 +275,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Utility')
+            ->where('id', $id)
             ->with('utility', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
@@ -369,6 +351,24 @@ class MtcMainController extends Controller
             $sheet->setCellValue('F3', $main->utility->mesin->nama_mesin ?? '-');
             $sheet->setCellValue('A65', 'Tindakan Korektif : ' . $main->korektif);
 
+            // ================= PARSE KETERANGAN =================
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
+
             foreach ($fieldRowMap as $field => $row) {
 
                 $value = $inspection->{$field};
@@ -382,7 +382,9 @@ class MtcMainController extends Controller
                 }
 
                 $sheet->setCellValue('D' . $row, $kondisi);
-                $sheet->setCellValue('E' . $row, $main->keterangan ?? '');
+
+                $ket = $keteranganMap[$field] ?? '';
+                $sheet->setCellValue('E' . $row, $ket);
             }
 
             // KEBUTUHAN MATERIAL
@@ -429,7 +431,7 @@ class MtcMainController extends Controller
         return $this->downloadExcel($spreadsheet, 'utility');
     }
 
-    private function exportElectrical()
+    private function exportElectrical($id)
     {
         $path = public_path('assets/templates/maintenance/electrical.xlsx');
 
@@ -441,6 +443,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Electrical')
+            ->where('id', $id)
             ->with('electrical', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
@@ -494,6 +497,23 @@ class MtcMainController extends Controller
             $sheet->setCellValue('F3', $main->electrical->mesin->nama_mesin ?? '-');
             $sheet->setCellValue('A47', 'Tindakan Korektif : ' . $main->korektif);
 
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
+
             foreach ($fieldRowMap as $field => $row) {
 
                 $value = $inspection->{$field};
@@ -507,7 +527,8 @@ class MtcMainController extends Controller
                 }
 
                 $sheet->setCellValue('D' . $row, $kondisi);
-                $sheet->setCellValue('E' . $row, $main->keterangan ?? '');
+                $ket = $keteranganMap[$field] ?? '';
+                $sheet->setCellValue('E' . $row, $ket);
             }
 
             // KEBUTUHAN MATERIAL
