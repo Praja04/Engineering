@@ -50,12 +50,6 @@ class MtcMotorPumpModel extends Model
         'oil_seal_gearbox',
         'filter_udara_gearbox',
         'bearing_gearbox',
-
-        // 'keterangan',
-        // 'korektif',
-        // 'status',
-        // 'created_by',
-        // 'updated_by',
     ];
 
     protected $casts = [

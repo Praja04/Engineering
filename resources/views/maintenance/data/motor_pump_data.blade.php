@@ -1093,6 +1093,18 @@
             });
         });
 
+
+        // Download handler for maintenance data
+        $(document).on('click', '.btn-print', function() {
+            const id = $(this).data('id');
+            // The 'jenis_mtc' for this specific view is 'Motor Pump'
+            const jenisMtc = 'Motor Pompa';
+            const downloadUrl = `/mtc/download-data/${jenisMtc}`;
+
+            // Trigger the download
+            window.open(downloadUrl, '_blank');
+        });
+
     });
 </script>
 @endsection
