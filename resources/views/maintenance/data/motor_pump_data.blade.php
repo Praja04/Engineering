@@ -496,11 +496,11 @@
                             <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
                         </div>
                         ${row.paket === 'Korektif' ? `
-                                            <div class="col-md-3">
-                                                <div class="meta-label">Tanggal Selesai</div>
-                                                <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
-                                            </div>
-                                            ` : ''}
+                                                    <div class="col-md-3">
+                                                        <div class="meta-label">Tanggal Selesai</div>
+                                                        <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
+                                                    </div>
+                                                    ` : ''}
                         <div class="col-md-3">
                             <div class="meta-label">Paket</div>
                             <div class="meta-value">${row.paket ?? '-'}</div>
@@ -530,8 +530,8 @@
                            ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                                        <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                    `).join('')
+                                                                <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
+                                                            `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -743,12 +743,24 @@
                 new bootstrap.Modal(document.getElementById('modalDetail')).show();
             });
 
+            // function toDateInputValue(iso) {
+            //     // iso: "2026-01-21T17:00:00.000000Z" -> "2026-01-21"
+            //     if (!iso) return '';
+            //     const d = new Date(iso);
+            //     if (isNaN(d.getTime())) return iso.slice(0, 10);
+            //     return d.toISOString().slice(0, 10);
+            // }
             function toDateInputValue(iso) {
-                // iso: "2026-01-21T17:00:00.000000Z" -> "2026-01-21"
                 if (!iso) return '';
+
                 const d = new Date(iso);
                 if (isNaN(d.getTime())) return iso.slice(0, 10);
-                return d.toISOString().slice(0, 10);
+
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+
+                return `${year}-${month}-${day}`;
             }
 
             function valToState(v) {
@@ -956,7 +968,7 @@
                 $('#editSections .item-edit').each(function() {
                     const label = $(this).data('label');
                     const field = $(this).data('field');
-                    const v = ketMap[label];
+                    const v = ketMap[field];
                     if (v) {
                         $(this).find('.ket-input').val(v);
                     }
