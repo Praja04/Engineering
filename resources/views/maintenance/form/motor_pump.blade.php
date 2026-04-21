@@ -231,7 +231,7 @@
                                         <div class="card shadow-sm item-card p-3 item-row"
                                             data-field="{{ $field }}">
 
-                                            <label class="form-label fw-semibold">
+                                            <label class="form-label fw-semibold" data-label="{{ $field }}">
                                                 {{ $label }}
                                             </label>
 
@@ -270,7 +270,7 @@
                                         <div class="card shadow-sm item-card p-3 item-row"
                                             data-field="{{ $field }}">
 
-                                            <label class="form-label fw-semibold">
+                                            <label class="form-label fw-semibold" data-label="{{ $field }}">
                                                 {{ $label }}
                                             </label>
 
@@ -309,7 +309,7 @@
                                         <div class="card shadow-sm item-card p-3 item-row"
                                             data-field="{{ $field }}">
 
-                                            <label class="form-label fw-semibold">
+                                            <label class="form-label fw-semibold" data-label="{{ $field }}">
                                                 {{ $label }}
                                             </label>
 
@@ -458,8 +458,6 @@
         </div>
     </div>
 @endsection
-
-
 
 @section('scripts')
 

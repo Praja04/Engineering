@@ -496,11 +496,11 @@
                             <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
                         </div>
                         ${row.paket === 'Korektif' ? `
-                                                                    <div class="col-md-3">
-                                                                        <div class="meta-label">Tanggal Selesai</div>
-                                                                        <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
-                                                                    </div>
-                                                                    ` : ''}
+                                                                        <div class="col-md-3">
+                                                                            <div class="meta-label">Tanggal Selesai</div>
+                                                                            <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
+                                                                        </div>
+                                                                        ` : ''}
                         <div class="col-md-3">
                             <div class="meta-label">Paket</div>
                             <div class="meta-value">${row.paket ?? '-'}</div>
@@ -530,8 +530,8 @@
                            ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                                                                <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                            `).join('')
+                                                                                    <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
+                                                                                `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -908,16 +908,14 @@
                 const map = {};
                 if (!text) return map;
 
-                // Split by | untuk setiap pair
                 const parts = text.split('|');
 
                 parts.forEach(part => {
                     const clean = part.trim();
                     if (!clean) return;
 
-                    // Split by : untuk memisahkan key dan value
                     const colonIndex = clean.indexOf(':');
-                    if (colonIndex === -1) return; // tidak ada ':'
+                    if (colonIndex === -1) return;
 
                     const key = clean.substring(0, colonIndex).trim();
                     const val = clean.substring(colonIndex + 1).trim();
