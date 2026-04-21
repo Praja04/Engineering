@@ -187,7 +187,8 @@ class MtcMainController extends Controller
             // ================= HEADER =================
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('F3', $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F3', ':' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F4', ':' . $main->paket ?? '-');
             $sheet->setCellValue('A39', 'Tindakan Korektif : ' . ($main->korektif ?? ''));
 
             // ================= PARSE KETERANGAN =================
@@ -348,7 +349,8 @@ class MtcMainController extends Controller
             // header (sekali isi aja, bukan per row)
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('F3', $main->utility->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F3', ': ' . $main->utility->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F4', ':' . $main->paket ?? '-');
             $sheet->setCellValue('A65', 'Tindakan Korektif : ' . $main->korektif);
 
             // ================= PARSE KETERANGAN =================
@@ -495,6 +497,7 @@ class MtcMainController extends Controller
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
             $sheet->setCellValue('F3', $main->electrical->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F4', ': ' . $main->paket ?? '-');
             $sheet->setCellValue('A47', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
@@ -627,7 +630,8 @@ class MtcMainController extends Controller
             // header (sekali isi aja, bukan per row)
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('F3', $main->refrigerasi->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F3', ': ' . $main->refrigerasi->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F4', ': ' . $main->paket ?? '-');
             $sheet->setCellValue('A33', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
