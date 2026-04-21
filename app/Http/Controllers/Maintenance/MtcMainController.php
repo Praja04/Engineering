@@ -575,7 +575,7 @@ class MtcMainController extends Controller
         return $this->downloadExcel($spreadsheet, 'electrical');
     }
 
-    private function exportRefrigerasi()
+    private function exportRefrigerasi($id)
     {
         $path = public_path('assets/templates/maintenance/refrigerasi.xlsx');
 
@@ -587,6 +587,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Refrigerasi')
+            ->where('id', $id)
             ->with('refrigerasi', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
@@ -629,6 +630,23 @@ class MtcMainController extends Controller
             $sheet->setCellValue('F3', $main->refrigerasi->mesin->nama_mesin ?? '-');
             $sheet->setCellValue('A33', 'Tindakan Korektif : ' . $main->korektif);
 
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
+
             foreach ($fieldRowMap as $field => $row) {
 
                 $value = $inspection->{$field};
@@ -642,7 +660,8 @@ class MtcMainController extends Controller
                 }
 
                 $sheet->setCellValue('D' . $row, $kondisi);
-                $sheet->setCellValue('E' . $row, $main->keterangan ?? '');
+                $ket = $keteranganMap[$field] ?? '';
+                $sheet->setCellValue('E' . $row, $ket);
             }
 
             // KEBUTUHAN MATERIAL
@@ -689,7 +708,7 @@ class MtcMainController extends Controller
         return $this->downloadExcel($spreadsheet, 'refrigerasi');
     }
 
-    private function exportElectricEngine()
+    private function exportElectricEngine($id)
     {
         $path = public_path('assets/templates/maintenance/electric_engine.xlsx');
 
@@ -701,6 +720,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Electric Engine')
+            ->where('id', $id)
             ->with('electricEngine', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
@@ -765,10 +785,28 @@ class MtcMainController extends Controller
             if (!$inspection) continue;
 
             // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('F3', $main->electricEngine->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('B4', ':' . $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('G3', $main->electricEngine->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('G4', $main->running_hour ?? '-');
             $sheet->setCellValue('A62', 'Tindakan Korektif : ' . $main->korektif);
+
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
 
             foreach ($fieldRowMap as $field => $row) {
 
@@ -783,7 +821,8 @@ class MtcMainController extends Controller
                 }
 
                 $sheet->setCellValue('E' . $row, $kondisi);
-                $sheet->setCellValue('F' . $row, $main->keterangan ?? '');
+                $ket = $keteranganMap[$field] ?? '';
+                $sheet->setCellValue('F' . $row, $ket);
             }
 
             // KEBUTUHAN MATERIAL
@@ -830,7 +869,7 @@ class MtcMainController extends Controller
         return $this->downloadExcel($spreadsheet, 'electric_engine');
     }
 
-    private function exportDieselEngine()
+    private function exportDieselEngine($id)
     {
         $path = public_path('assets/templates/maintenance/diesel_engine.xlsx');
 
@@ -842,6 +881,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Diesel Engine')
+            ->where('id', $id)
             ->with('dieselEngine', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
@@ -911,11 +951,28 @@ class MtcMainController extends Controller
             if (!$inspection) continue;
 
             // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('B4', ':' . $main->waktu_mulai ?? '-');
             $sheet->setCellValue('G3', $main->dieselEngine->mesin->nama_mesin ?? '-');
             $sheet->setCellValue('G4', $main->running_hour ?? '-');
             $sheet->setCellValue('A59', 'Tindakan Korektif : ' . $main->korektif);
+
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
 
             foreach ($fieldRowMap as $field => $row) {
 
@@ -930,7 +987,8 @@ class MtcMainController extends Controller
                 }
 
                 $sheet->setCellValue('E' . $row, $kondisi);
-                $sheet->setCellValue('F' . $row, $main->keterangan ?? '');
+                $ket = $keteranganMap[$field] ?? '';
+                $sheet->setCellValue('F' . $row, $ket);
             }
 
             // KEBUTUHAN MATERIAL
@@ -977,7 +1035,7 @@ class MtcMainController extends Controller
         return $this->downloadExcel($spreadsheet, 'diesel_engine');
     }
 
-    private function exportBattery()
+    private function exportBattery($id)
     {
         $path = public_path('assets/templates/maintenance/battery.xlsx');
 
@@ -989,6 +1047,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Battery')
+            ->where('id', $id)
             ->with('battery', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
@@ -1107,9 +1166,26 @@ class MtcMainController extends Controller
             // header (sekali isi aja, bukan per row)
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('G3', $main->area ?? '-');
+            $sheet->setCellValue('G3', ': ' . $main->area ?? '-');
             $sheet->setCellValue('A15', 'Rekomendasi : ' . $main->rekomendasi);
             $sheet->setCellValue('A16', 'Tindakan Korektif : ' . $main->korektif);
+
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
 
             foreach ($fieldRowMap as $field => $row) {
 
@@ -1125,7 +1201,8 @@ class MtcMainController extends Controller
                     $sheet->setCellValue('E' . $row, '✗');
                 }
 
-                $sheet->setCellValue('F' . $row, $main->keterangan ?? '');
+                $ket = $keteranganMap[$field] ?? '';
+                $sheet->setCellValue('F' . $row, $ket);
             }
 
             // KEBUTUHAN MATERIAL
@@ -1171,10 +1248,10 @@ class MtcMainController extends Controller
             break;
         }
 
-        return $this->downloadExcel($spreadsheet, 'diesel_engine');
+        return $this->downloadExcel($spreadsheet, 'sipil');
     }
 
-    private function exportElectricP2h()
+    private function exportElectricP2h($id)
     {
         $path = public_path('assets/templates/maintenance/electric_p2h.xlsx');
 
@@ -1186,6 +1263,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Electric P2h')
+            ->where('id', $id)
             ->with('electricP2h', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
@@ -1301,7 +1379,7 @@ class MtcMainController extends Controller
         return $this->downloadExcel($spreadsheet, 'electric_p2h');
     }
 
-    private function exportDieselP2h()
+    private function exportDieselP2h($id)
     {
         $path = public_path('assets/templates/maintenance/diesel_p2h.xlsx');
 
@@ -1313,6 +1391,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Diesel P2h')
+            ->where('id', $id)
             ->with('dieselP2h', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
