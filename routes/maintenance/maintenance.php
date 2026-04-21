@@ -131,6 +131,6 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // Route for downloading maintenance data
-        Route::get('/download-data/{jenis_mtc}', [MtcMainController::class, 'downloadMaintenanceData'])->name('mtc.download.data');
+        Route::get('/download-data/{jenis_mtc}/{id}', [MtcMainController::class, 'downloadMaintenanceData'])->name('mtc.download.data');
     });
 });

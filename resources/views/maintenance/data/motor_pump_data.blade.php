@@ -496,11 +496,11 @@
                             <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
                         </div>
                         ${row.paket === 'Korektif' ? `
-                                                    <div class="col-md-3">
-                                                        <div class="meta-label">Tanggal Selesai</div>
-                                                        <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
-                                                    </div>
-                                                    ` : ''}
+                                                                    <div class="col-md-3">
+                                                                        <div class="meta-label">Tanggal Selesai</div>
+                                                                        <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
+                                                                    </div>
+                                                                    ` : ''}
                         <div class="col-md-3">
                             <div class="meta-label">Paket</div>
                             <div class="meta-value">${row.paket ?? '-'}</div>
@@ -530,8 +530,8 @@
                            ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                                                <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                            `).join('')
+                                                                                <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
+                                                                            `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -1127,7 +1127,7 @@
                 const id = $(this).data('id');
                 // The 'jenis_mtc' for this specific view is 'Motor Pump'
                 const jenisMtc = 'Motor Pompa';
-                const downloadUrl = `/mtc/download-data/${jenisMtc}`;
+                const downloadUrl = `/mtc/download-data/${jenisMtc}/` + id;
 
                 // Trigger the download
                 window.open(downloadUrl, '_blank');
