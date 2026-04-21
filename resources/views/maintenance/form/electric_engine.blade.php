@@ -127,6 +127,7 @@
                                     <option>C</option>
                                     <option>D</option>
                                     <option>Korektif</option>
+                                    <option>Checkpoint</option>
                                 </select>
                             </div>
                             <div class="col-md-3 d-none" id="tanggal_selesai_wrapper">
@@ -509,6 +510,7 @@
                     $('#label_tanggal').html('Tanggal <span class="text-danger">*</span>');
                 }
             });
+
             $('#mesin_id').on('change', function() {
                 const selected = $(this).find(':selected');
 
