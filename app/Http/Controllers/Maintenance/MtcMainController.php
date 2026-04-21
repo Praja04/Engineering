@@ -179,14 +179,51 @@ class MtcMainController extends Controller
         ];
 
         foreach ($data as $main) {
+
             $inspection = $main->motorPump;
             if (!$inspection) continue;
 
-            // header (sekali isi aja, bukan per row)
+            // ================= HEADER =================
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('F3', $main->motorPump->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('A39', 'Tindakan Korektif : ' . $main->korektif);
+            $sheet->setCellValue('F3', $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('A39', 'Tindakan Korektif : ' . ($main->korektif ?? ''));
+
+            // ================= PARSE KETERANGAN =================
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
+
+            // mapping ke field
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);   // sekarang sudah field name
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
 
             foreach ($fieldRowMap as $field => $row) {
 
@@ -200,11 +237,14 @@ class MtcMainController extends Controller
                     $kondisi = '';
                 }
 
+                // kolom kondisi
                 $sheet->setCellValue('D' . $row, $kondisi);
-                $sheet->setCellValue('E' . $row, $main->keterangan ?? '');
+
+                // 🔥 langsung ambil dari key field
+                $ket = $keteranganMap[$field] ?? '';
+                $sheet->setCellValue('E' . $row, $ket);
             }
 
-            // 🔥 KEBUTUHAN MATERIAL
             $materialRow = 41;
 
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
@@ -217,24 +257,17 @@ class MtcMainController extends Controller
                 }
             }
 
-            // Sticker Approval
+            // ================= APPROVAL =================
             if ($main->approvals && $main->approvals->count()) {
-
                 foreach ($main->approvals as $item) {
-
-                    // hanya kalau approved
                     if ($item->status !== 'approved') continue;
-
                     switch (strtolower($item->role)) {
-
                         case 'teknisi':
                             $this->insertApprovalSticker($sheet, 'G51');
                             break;
-
                         case 'staff':
                             $this->insertApprovalSticker($sheet, 'G53');
                             break;
-
                         case 'user':
                             $this->insertApprovalSticker($sheet, 'G55');
                             break;
@@ -1232,7 +1265,7 @@ class MtcMainController extends Controller
                             break;
 
                         default:
-                            continue;
+                            break;
                     }
 
                     // insert sticker
@@ -1370,7 +1403,7 @@ class MtcMainController extends Controller
                             break;
 
                         default:
-                            continue;
+                            break;
                     }
 
                     // insert sticker
