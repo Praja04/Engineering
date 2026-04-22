@@ -4,9 +4,31 @@ namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class DashboardUtilityController extends Controller
 {
+    public function getApprovers()
+    {
+        $staff = User::where('departemen', 'engineering')
+            ->where('jabatan', '!=', 'operator')
+            ->where('jabatan', '!=', 'dept_head')
+            ->where(function ($q) {
+                $q->where('bagian', 'Engineering WWTP')
+                    ->orWhere('bagian', 'Engineering');
+            })
+            ->get(['id', 'username']);
+
+        $user = User::where('jabatan', 'supervisor')
+        ->Where('departemen', 'engineering')
+            ->get(['id', 'username', 'departemen']);
+
+        return response()->json([
+            'staff' => $staff,
+            'user'  => $user
+        ]);
+    }
+
     //
     public function utility()
     {

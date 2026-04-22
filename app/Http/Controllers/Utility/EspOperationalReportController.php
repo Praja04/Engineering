@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Utility;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Utility\EspOperationalReport;
+use App\Models\Utility\EspShiftReport;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EspOperationalReportController extends Controller
@@ -120,7 +122,7 @@ class EspOperationalReportController extends Controller
         $grup           = $request->get('grup');
         $tanggalBerikut = Carbon::parse($tanggal)->addDay()->format('Y-m-d');
 
-        // Peta jam => baris Excel (sesuai template esp.xlsx)
+        // ── Peta jam => baris Excel (kolom B–F, data operasional) ─────
         $jamRow = [
             '06:00' => 6,  '07:00' => 7,  '08:00' => 8,  '09:00' => 9,
             '10:00' => 10, '11:00' => 11, '12:00' => 12, '13:00' => 13,
@@ -130,22 +132,31 @@ class EspOperationalReportController extends Controller
             '02:00' => 26, '03:00' => 27, '04:00' => 28, '05:00' => 29,
         ];
 
-        // Ambil data
-        $query = EspOperationalReport::whereIn('tanggal_laporan', [$tanggal, $tanggalBerikut]);
-        if ($grup) $query->where('grup', $grup);
-        $rows = $query->get()->keyBy(fn ($r) => Carbon::parse($r->jam_laporan)->format('H:i'));
+        // ── Ambil data operasional ─────────────────────────────────────
+        $queryOp = EspOperationalReport::whereIn('tanggal_laporan', [$tanggal, $tanggalBerikut]);
+        if ($grup) $queryOp->where('grup', $grup);
+        $opRows = $queryOp->get()->keyBy(fn ($r) => Carbon::parse($r->jam_laporan)->format('H:i'));
 
-        // Load template
+        // ── Ambil data shift untuk tanggal yang sama ───────────────────
+        // Shift report hanya per tanggal (1 record/hari)
+        $shiftQuery = EspShiftReport::where('tanggal_laporan', $tanggal);
+        if ($grup) {
+            // Jika filter grup aktif, ambil shift berdasarkan grup operator jika ada field-nya
+            // Kalau tidak ada, tetap ambil record hari itu
+        }
+        $shift = $shiftQuery->with(['operator', 'foreman', 'supervisor'])->latest()->first();
+
+        // ── Load template ──────────────────────────────────────────────
         $templatePath = storage_path('app/templates/esp.xlsx');
         $spreadsheet  = IOFactory::load($templatePath);
         $sheet        = $spreadsheet->getActiveSheet();
 
-        // Isi tanggal
+        // ── Isi tanggal & grup ─────────────────────────────────────────
         $sheet->setCellValue('J1', $tanggal . ($grup ? ' | Grup ' . $grup : ''));
 
-        // Isi data per jam
+        // ── Isi data operasional per jam (kolom B–F) ───────────────────
         foreach ($jamRow as $jam => $row) {
-            $record = $rows->get($jam);
+            $record = $opRows->get($jam);
             if (!$record) continue;
 
             $sheet->setCellValue('B' . $row, $record->arus_primer);
@@ -155,7 +166,110 @@ class EspOperationalReportController extends Controller
             $sheet->setCellValue('F' . $row, $record->suhu_thermal);
         }
 
-        // Stream download
+        // ── Isi data shift (kolom H–K) ─────────────────────────────────
+        // Mapping sesuai template esp.xlsx:
+        //   I5  = Total pemakaian air (HMI)
+        //   I7  = Total pemakaian steam
+        //   I8  = Total pemakaian batu bara
+        //   I9  = Efisiensi batu bara
+        //   I11 = Running Hour (Awal), J11 = Running Hour (Akhir)
+        //   I12 = Pengisian Air Feedtank (Awal), J12 = (Akhir)
+        //   I13 = Pengisian Batu bara
+        //   I18 = BWT SCF (Volume Chemical)
+        //   I19 = BWT SRTF (Volume Chemical)
+        //   K18 = Dosis
+        if ($shift) {
+            $sheet->setCellValue('J5',  $shift->pemakaian_air);
+            $sheet->setCellValue('J6',  $shift->pemakaian_air);
+            $sheet->setCellValue('I7',  $shift->pemakaian_steam);
+            $sheet->setCellValue('I8',  $shift->pemakaian_batubara);
+            $sheet->setCellValue('I9',  $shift->efisiensi_batubara);
+            $sheet->setCellValue('I11', $shift->running_hour_awal);
+            $sheet->setCellValue('J11', $shift->running_hour_akhir);
+            $sheet->setCellValue('I12', $shift->feed_tank_awal);
+            $sheet->setCellValue('J12', $shift->feed_tank_akhir);
+            $sheet->setCellValue('I13', $shift->pengisian_batubara);
+            $sheet->setCellValue('I18', $shift->chemical_scf);
+            $sheet->setCellValue('I19', $shift->chemical_srtf);
+            $sheet->setCellValue('K18', $shift->dosis);
+        }
+
+        // ── Insert TTD (jika shift sudah diapprove) ────────────────────
+        // Path gambar TTD:
+        //   Operator   : storage/operasional/ttd/ttd_teknisi.jpeg
+        //   Foreman    : storage/operasional/ttd/ttd_staff.jpeg
+        //   Supervisor : storage/operasional/ttd/ttd_user_eng.jpeg
+        //
+        // Area TTD di template (merged cells):
+        //   A32:C34  = Dibuat oleh (Operator)
+        //   D32:G34  = Diperiksa oleh (Foreman/Staff)
+        //   H32:K34  = Disetujui oleh (Supervisor)
+
+        $ttdBasePath = public_path('storage/operasional/ttd');
+
+        $ttdConfig = [
+            // [ status_required, image_file, anchor_col, anchor_row, width_px, height_px ]
+            'operator'   => [
+                'file'       => $ttdBasePath . '/ttd_teknisi.jpeg',
+                'anchor'     => 'A32',
+                'col_offset' => 1,   // offset in EMU from anchor col (small margin)
+                'row_offset' => 5,
+                'width'      => 100,
+                'height'     => 50,
+            ],
+            'foreman'    => [
+                'file'       => $ttdBasePath . '/ttd_staff.jpeg',
+                'anchor'     => 'D32',
+                'col_offset' => 1,
+                'row_offset' => 5,
+                'width'      => 100,
+                'height'     => 50,
+            ],
+            'supervisor' => [
+                'file'       => $ttdBasePath . '/ttd_user_eng.jpeg',
+                'anchor'     => 'H32',
+                'col_offset' => 1,
+                'row_offset' => 5,
+                'width'      => 100,
+                'height'     => 50,
+            ],
+        ];
+
+        // Tentukan TTD mana yang perlu dimasukkan berdasarkan status approval
+        $insertTtd = [];
+
+        if ($shift) {
+            // Operator selalu ada jika ada shift record (status minimal approved_operator)
+            $insertTtd[] = 'operator';
+
+            if (in_array($shift->status, ['approved_foreman', 'approved_supervisor'])) {
+                $insertTtd[] = 'foreman';
+            }
+
+            if ($shift->status === 'approved_supervisor') {
+                $insertTtd[] = 'supervisor';
+            }
+        }
+
+        foreach ($insertTtd as $role) {
+            $cfg  = $ttdConfig[$role];
+            $file = $cfg['file'];
+
+            if (!file_exists($file)) continue;
+
+            $drawing = new Drawing();
+            $drawing->setName('TTD ' . ucfirst($role));
+            $drawing->setDescription('Tanda tangan ' . $role);
+            $drawing->setPath($file);
+            $drawing->setCoordinates($cfg['anchor']);
+            $drawing->setOffsetX($cfg['col_offset']);
+            $drawing->setOffsetY($cfg['row_offset']);
+            $drawing->setWidth($cfg['width']);
+            $drawing->setHeight($cfg['height']);
+            $drawing->setWorksheet($sheet);
+        }
+
+        // ── Stream download ────────────────────────────────────────────
         $filename = 'ESP_Operational_' . $tanggal . ($grup ? '_Grup' . $grup : '') . '.xlsx';
 
         return new StreamedResponse(function () use ($spreadsheet) {
