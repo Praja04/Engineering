@@ -17,6 +17,7 @@ use App\Models\Maintenance\MtcKebutuhanMaterialModel;
 use App\Http\Requests\Maintenance\MtcRefrigerasiRequest;
 use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
 use Illuminate\Support\Str;
+
 class MtcRefrigerasiController extends Controller
 {
     // ── Helper: simpan TTD base64 ke storage ────────────────────────────────────
@@ -25,7 +26,7 @@ class MtcRefrigerasiController extends Controller
         string $folder,
         string $username,
         ?string $departemen = null
-     ): string {
+    ): string {
         // Hapus prefix "data:image/png;base64," jika ada
         $imageData = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
         $decoded   = base64_decode($imageData);
@@ -161,7 +162,7 @@ class MtcRefrigerasiController extends Controller
                 'createdBy:id,username',
                 'refrigerasi.mesin:id,nama_mesin,lokasi',
                 // ⚠️ optional: comment kalau berat
-                // 'kebutuhanMaterial',
+                'kebutuhanMaterial',
             ]);
 
         // filter tanggal

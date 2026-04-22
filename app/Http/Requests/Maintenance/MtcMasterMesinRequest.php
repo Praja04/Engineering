@@ -25,7 +25,7 @@ class MtcMasterMesinRequest extends FormRequest
             'jenis_mtc'  => ['required', 'string'],
             'nama_mesin' => ['required', 'string'],
             'lokasi'     => ['nullable', 'string'],
-            'frekuensi'  => ['nullable', 'string'],
+            // 'frekuensi'  => ['nullable', 'string'],
             // 'aktif'      => ['required', 'boolean'],
         ];
     }

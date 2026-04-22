@@ -35,8 +35,8 @@ class MtcMainRequest extends FormRequest
             'rekomendasi' => ['nullable', 'string'],
             'running_hour' => ['nullable', 'string'],
 
-            'staff_id' => ['required', 'string'],
-            'user_id' => ['required', 'string']
+            'staff_id' => ['nullable', 'string'],
+            'user_id' => ['nullable', 'string']
         ];
     }
 }

@@ -138,6 +138,7 @@
                                                 <option value="quality control">Quality Control</option>
                                                 <option value="produksi">Produksi</option>
                                                 <option value="warehouse">Warehouse</option>
+                                                <option value="hrga">HRGA</option>
                                             </select>
                                             <div class="invalid-feedback">Please select a Departemen.</div>
                                         </div>

@@ -200,13 +200,13 @@
                             </div>
                             <div class="col-md-3">
                                 <label>Waktu Mulai</label>
-                                <input type="time" name="waktu_mulai" id="editWaktuMulai" class="form-control" step="60"
-                                    value="{{ old('waktu_mulai', now()->format('H:i')) }}" required>
+                                <input type="time" name="waktu_mulai" id="editWaktuMulai" class="form-control"
+                                    step="60" value="{{ old('waktu_mulai', now()->format('H:i')) }}" required>
                             </div>
                             <div class="col-md-3">
                                 <label>Waktu Selesai</label>
-                                <input type="time" name="waktu_selesai" id="editWaktuSelesai" class="form-control" step="60"
-                                    value="{{ old('waktu_selesai', now()->format('H:i')) }}" required>
+                                <input type="time" name="waktu_selesai" id="editWaktuSelesai" class="form-control"
+                                    step="60" value="{{ old('waktu_selesai', now()->format('H:i')) }}" required>
                             </div>
                             <div class="col-md-3">
                                 <label>Battery Type</label>
@@ -954,6 +954,16 @@
                 });
             });
 
+            // Download handler for maintenance data
+            $(document).on('click', '.btn-print', function() {
+                const id = $(this).data('id');
+                // The 'jenis_mtc' for this specific view is 'Motor Pump'
+                const jenisMtc = 'Battery';
+                const downloadUrl = `/mtc/download-data/${jenisMtc}/` + id;
+
+                // Trigger the download
+                window.open(downloadUrl, '_blank');
+            });
         });
     </script>
 @endsection
