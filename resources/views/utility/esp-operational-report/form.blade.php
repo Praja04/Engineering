@@ -292,6 +292,37 @@
                                 </div>
                                 @endif
 
+                                {{-- ══ PILIH FOREMAN & SUPERVISOR ══ --}}
+                                <div class="row g-3 mb-3">
+                                    <div class="col-12">
+                                        <h6 class="fw-semibold text-muted border-bottom pb-2">
+                                            <i class="ri-user-star-line me-1"></i>Penanggungjawab Approval
+                                        </h6>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">
+                                            Foreman <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select" name="foreman_id" id="select-foreman" required>
+                                            <option value="">— Memuat data... —</option>
+                                        </select>
+                                        <div class="form-text text-muted fs-12">
+                                            <i class="ri-info-line me-1"></i>Approval tahap pertama
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">
+                                            Supervisor <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select" name="supervisor_id" id="select-supervisor" required>
+                                            <option value="">— Memuat data... —</option>
+                                        </select>
+                                        <div class="form-text text-muted fs-12">
+                                            <i class="ri-info-line me-1"></i>Final approval
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="row g-3">
                                     {{-- PEMAKAIAN --}}
                                     <div class="col-12">
@@ -300,23 +331,23 @@
                                         </h6>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Pemakaian Air (m³)</label>
                                         <input type="number" step="0.01" class="form-control" name="pemakaian_air" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Pemakaian Steam (ton)</label>
                                         <input type="number" step="0.01" class="form-control" name="pemakaian_steam" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Pemakaian Batubara (ton)</label>
                                         <input type="number" step="0.01" class="form-control" name="pemakaian_batubara" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Efisiensi Batubara (%)</label>
                                         <input type="number" step="0.01" class="form-control" name="efisiensi_batubara" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Pengisian Batubara (ton)</label>
                                         <input type="number" step="0.01" class="form-control" name="pengisian_batubara" placeholder="0.00">
                                     </div>
@@ -328,19 +359,19 @@
                                         </h6>
                                     </div>
 
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">RH Awal (jam)</label>
                                         <input type="number" step="0.01" class="form-control" name="running_hour_awal" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">RH Akhir (jam)</label>
                                         <input type="number" step="0.01" class="form-control" name="running_hour_akhir" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Feed Tank Awal (m³)</label>
                                         <input type="number" step="0.01" class="form-control" name="feed_tank_awal" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Feed Tank Akhir (m³)</label>
                                         <input type="number" step="0.01" class="form-control" name="feed_tank_akhir" placeholder="0.00">
                                     </div>
@@ -352,15 +383,15 @@
                                         </h6>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Chemical SCF (L)</label>
                                         <input type="number" step="0.01" class="form-control" name="chemical_scf" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Chemical SRTF (L)</label>
                                         <input type="number" step="0.01" class="form-control" name="chemical_srtf" placeholder="0.00">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-medium">Dosis (ppm)</label>
                                         <input type="number" step="0.01" class="form-control" name="dosis" placeholder="0.00">
                                     </div>
@@ -433,6 +464,31 @@
             $('#input-tanggal-shift').val(iso);
         }
 
+        // ── LOAD APPROVERS (Foreman & Supervisor) ───────────────────────
+        function loadApprovers() {
+            $.get('/api/utility/users/approvers', function(data) {
+                // Isi dropdown Foreman — dari data.staff (jabatan bukan operator, dept engineering)
+                const foremanList = data.staff ?? [];
+                let foremanOpts = '<option value="">— Pilih Foreman —</option>';
+                foremanList.forEach(function(u) {
+                    foremanOpts += `<option value="${u.id}">${u.username}</option>`;
+                });
+                $('#select-foreman').html(foremanOpts);
+
+                // Isi dropdown Supervisor — dari data.user (jabatan supervisor)
+                const supervisorList = data.user ?? [];
+                let supervisorOpts = '<option value="">— Pilih Supervisor —</option>';
+                supervisorList.forEach(function(u) {
+                    supervisorOpts += `<option value="${u.id}">${u.username}</option>`;
+                });
+                $('#select-supervisor').html(supervisorOpts);
+            }).fail(function() {
+                $('#select-foreman').html('<option value="">Gagal memuat data</option>');
+                $('#select-supervisor').html('<option value="">Gagal memuat data</option>');
+                toastr.error('Gagal memuat daftar approver');
+            });
+        }
+
         // ── TOGGLE SECTION ───────────────────────────────────────────────
         function showSection(target) {
             $('#section-pilihan').hide();
@@ -448,6 +504,7 @@
 
         $('#btn-pick-shift').on('click', function() {
             showSection('#section-shift');
+            loadApprovers(); // Load approvers saat form shift dibuka
         });
 
         $('.btn-back').on('click', function() {
@@ -527,16 +584,24 @@
         // ── SUBMIT SHIFT REPORT ──────────────────────────────────────────
         $('#form-shift').on('submit', function(e) {
             e.preventDefault();
+
+            // Validasi foreman & supervisor wajib dipilih
+            if (!$('#select-foreman').val()) {
+                toastr.error('Silakan pilih Foreman terlebih dahulu');
+                return;
+            }
+            if (!$('#select-supervisor').val()) {
+                toastr.error('Silakan pilih Supervisor terlebih dahulu');
+                return;
+            }
+
             const $btn = $('#btn-submit-shift');
             $btn.prop('disabled', true).html('<i class="ri-loader-4-line me-1"></i>Menyimpan...');
-
-            // Pastikan tanggal ikut ter-submit (untuk operator pakai hidden input)
-            const formData = $(this).serialize();
 
             $.ajax({
                 url: '{{ route("esp-shift-report.store") }}',
                 method: 'POST',
-                data: formData,
+                data: $(this).serialize(),
                 success: function(res) {
                     Swal.fire({
                         icon: 'success',
@@ -552,6 +617,9 @@
                         $('#display-tanggal-shift').text(tgl);
                         $('#input-tanggal-shift').val(tgl);
                     }
+
+                    // Reset & reload approvers
+                    loadApprovers();
                 },
                 error: function(xhr) {
                     const msg = xhr.responseJSON?.message ?? 'Terjadi kesalahan';

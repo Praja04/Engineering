@@ -62,6 +62,8 @@ Route::middleware('auth')->group(function () {
     @include 'utility/chemical-routes.php';
     @include 'utility/dashboard.php';
     @include 'utility/esp-routes.php';
+    @include 'utility/water-softener-routes.php';
+    @include 'utility/capacitor-bank-routes.php';
     @include 'ejo/ejo-routes.php';
     @include 'project/project_routes.php';
 
