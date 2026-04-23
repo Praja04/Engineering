@@ -42,6 +42,10 @@ class MtcApprovalController extends Controller
             return 'mtc/ttd/ttd_user_prd.jpeg';
         } else if ($jabatan === 'supervisor' && $departemen === 'warehouse') {
             return 'mtc/ttd/ttd_user_warehouse.jpeg';
+        } else if ($jabatan === 'supervisor' && $departemen === 'hrga') {
+            return 'mtc/ttd/ttd_user_hrga.jpeg';
+        } else if ($jabatan === 'supervisor' && $departemen === 'expedisi') {
+            return 'mtc/ttd/ttd_user_expedisi.jpeg';
         }
 
 
