@@ -181,7 +181,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Hours Meter (Jam Operasional)<span class="text-danger">*</span></label>
-                            <input type="numeric" name="hours_meter" class="form-control" value="{{ old('hours_meter') }}" placeholder="12345">
+                            <input type="number" name="hours_meter" class="form-control" value="{{ old('hours_meter') }}" placeholder="12345">
                             <small class="form-label fst-italic">Catat sesuai kondisi aktual di unit</small>
                             @error('hours_meter')
                             <div class="text-danger small">{{ $message }}</div>
