@@ -225,7 +225,6 @@
 <script>
     const API_URL = "{{ route('warming-up-genset.json') }}";
     const SHOW_URL = "{{ url('utility/warming-up-genset/json') }}";
-    const APPROVER_URL = "{{ route('warming-up-genset.get-approver') }}";
     let cachedData = [];
 
     $(document).ready(function() {
@@ -497,7 +496,7 @@
             // Kita load setiap kali buka untuk memastikan data terbaru, 
             // tapi bisa juga di-cache jika data jarang berubah.
             $.ajax({
-                url: APPROVER_URL,
+                url: '/api/utility/users/approvers',
                 method: 'GET',
                 success: function(res) {
                     const staff = res.staff || [];

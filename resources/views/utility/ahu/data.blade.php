@@ -309,17 +309,29 @@
     function openSubmitMonthly(bulan, tahun) {
         $('#sm_bulan').val(bulan);
         $('#sm_tahun').val(tahun);
-        $.get("{{ route('warming-up-genset.get-approver') }}", function(res) {
-            let fOpts = '<option value="">-- Pilih Foreman --</option>';
-            let sOpts = '<option value="">-- Pilih Supervisor --</option>';
-            res.staff.forEach(u => {
-                if (u.username.toLowerCase().includes('foreman')) fOpts += `<option value="${u.id}">${u.username}</option>`;
-                if (u.username.toLowerCase().includes('supervisor')) sOpts += `<option value="${u.id}">${u.username}</option>`;
+        $.get('/api/utility/users/approvers', function(data) {
+            // Isi dropdown Foreman — dari data.staff (jabatan bukan operator, dept engineering)
+            const foremanList = data.staff ?? [];
+            let foremanOpts = '<option value="">— Pilih Foreman —</option>';
+            foremanList.forEach(function(u) {
+                foremanOpts += `<option value="${u.id}">${u.username}</option>`;
             });
-            $('#sm_foreman_id').html(fOpts);
-            $('#sm_supervisor_id').html(sOpts);
-            $('#modalSubmitMonthly').modal('show');
+            $('#sm_foreman_id').html(foremanOpts);
+
+            // Isi dropdown Supervisor — dari data.user (jabatan supervisor)
+            const supervisorList = data.user ?? [];
+            let supervisorOpts = '<option value="">— Pilih Supervisor —</option>';
+            supervisorList.forEach(function(u) {
+                supervisorOpts += `<option value="${u.id}">${u.username}</option>`;
+            });
+            $('#sm_supervisor_id').html(supervisorOpts);
+        }).fail(function() {
+            $('#sm_foreman_id').html('<option value="">Gagal memuat data</option>');
+            $('#sm_supervisor_id').html('<option value="">Gagal memuat data</option>');
+            toastr.error('Gagal memuat daftar approver');
         });
+
+        $('#modalSubmitMonthly').modal('show');
     }
 
     $('#formSubmitMonthly').submit(function(e) {
