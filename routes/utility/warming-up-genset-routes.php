@@ -14,7 +14,6 @@ Route::prefix('utility/warming-up-genset')->name('warming-up-genset.')->group(fu
     Route::post('/reject/{id}', [WarmingUpGenset::class, 'reject'])->name('reject'); // Reject laporan
     Route::post('/store', [WarmingUpGenset::class, 'store'])->name('store');
     Route::get('/export', [WarmingUpGenset::class, 'export'])->name('export');
-    Route::get('/users/approvers', [DashboardUtilityController::class, 'getApprovers'])->name('get-approver');
     Route::get('/approval', [WarmingUpGenset::class, 'approvalView'])->name('approval');
     Route::post('/approve-foreman/{id}', [WarmingUpGenset::class, 'approveForeman'])->name('approve-foreman');
     Route::post('/approve-supervisor/{id}', [WarmingUpGenset::class, 'approveSupervisor'])->name('approve-supervisor');
