@@ -6,20 +6,23 @@ $isUtility = request()->is('utility/form') || request()->is('utility/data');
 
 $isEsp = request()->is('utility/esp-operational-report*');
 $isWs = request()->is('utility/water-softener*');
+$isGenset = request()->is('utility/warming-up-genset*');
+$isCompressor = request()->is('utility/compressor*');
+$isAhu = request()->is('utility/ahu*');
 
-$isOperasional = $isEsp || $isWs;
+$isOperasional = $isEsp || $isWs || $isGenset || $isCompressor || $isAhu;
 @endphp
 
 @if (
 $jabatan === 'dept_head' ||
 $jabatan === 'supervisor' ||
 ($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering WWTP'])) ||
-($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering WWTP']))
-)
+($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering WWTP'])))
 
 {{-- ================= UTILITY ================= --}}
 <li class="nav-item">
-    <a class="nav-link menu-link {{ $isUtility ? '' : 'collapsed' }}" href="#sidebarUtilityMenu" data-bs-toggle="collapse">
+    <a class="nav-link menu-link {{ $isUtility ? '' : 'collapsed' }}" href="#sidebarUtilityMenu"
+        data-bs-toggle="collapse">
         <i class="mdi mdi-flash"></i>
         <span>Utility</span>
     </a>
@@ -28,14 +31,16 @@ $jabatan === 'supervisor' ||
         <ul class="nav nav-sm flex-column">
 
             <li class="nav-item">
-                <a class="nav-link {{ request()->is('utility/form') ? 'active' : '' }}" href="{{ url('utility/form') }}">
+                <a class="nav-link {{ request()->is('utility/form') ? 'active' : '' }}"
+                    href="{{ url('utility/form') }}">
                     <i class="mdi mdi-file-document-edit-outline"></i>
                     <span>Form Utility</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link {{ request()->is('utility/data') ? 'active' : '' }}" href="{{ url('utility/data') }}">
+                <a class="nav-link {{ request()->is('utility/data') ? 'active' : '' }}"
+                    href="{{ url('utility/data') }}">
                     <i class="mdi mdi-database-eye-outline"></i>
                     <span>Data Utility</span>
                 </a>
@@ -47,7 +52,8 @@ $jabatan === 'supervisor' ||
 
 {{-- ================= OPERASIONAL ================= --}}
 <li class="nav-item">
-    <a class="nav-link menu-link {{ $isOperasional ? '' : 'collapsed' }}" href="#sidebarOperasionalMenu" data-bs-toggle="collapse">
+    <a class="nav-link menu-link {{ $isOperasional ? '' : 'collapsed' }}" href="#sidebarOperasionalMenu"
+        data-bs-toggle="collapse">
         <i class="mdi mdi-file-chart"></i>
         <span>Operasional</span>
     </a>
@@ -57,7 +63,8 @@ $jabatan === 'supervisor' ||
 
             {{-- ===== ESP ===== --}}
             <li class="nav-item">
-                <a class="nav-link menu-link {{ $isEsp ? '' : 'collapsed' }}" href="#espMenu" data-bs-toggle="collapse">
+                <a class="nav-link menu-link {{ $isEsp ? '' : 'collapsed' }}" href="#espMenu"
+                    data-bs-toggle="collapse">
                     <span>ESP</span>
                 </a>
 
@@ -65,20 +72,23 @@ $jabatan === 'supervisor' ||
                     <ul class="nav nav-sm flex-column">
 
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('utility/esp-operational-report/form') ? 'active' : '' }}" href="{{ url('utility/esp-operational-report/') }}">
+                            <a class="nav-link {{ request()->is('utility/esp-operational-report/form') ? 'active' : '' }}"
+                                href="{{ url('utility/esp-operational-report/') }}">
                                 Form ESP
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('utility/esp-operational-report/data') ? 'active' : '' }}" href="{{ url('utility/esp-operational-report/data') }}">
+                            <a class="nav-link {{ request()->is('utility/esp-operational-report/data') ? 'active' : '' }}"
+                                href="{{ url('utility/esp-operational-report/data') }}">
                                 Data ESP
                             </a>
                         </li>
 
                         @if ($jabatan != 'operator')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('utility/esp-shift-report/approval') ? 'active' : '' }}" href="{{ url('utility/esp-shift-report/approval') }}">
+                            <a class="nav-link {{ request()->is('utility/esp-shift-report/approval') ? 'active' : '' }}"
+                                href="{{ url('utility/esp-shift-report/approval') }}">
                                 Approval ESP
                             </a>
                         </li>
@@ -90,7 +100,8 @@ $jabatan === 'supervisor' ||
 
             {{-- ===== WATER SOFTENER ===== --}}
             <li class="nav-item">
-                <a class="nav-link menu-link {{ $isWs ? '' : 'collapsed' }}" href="#wsMenu" data-bs-toggle="collapse">
+                <a class="nav-link menu-link {{ $isWs ? '' : 'collapsed' }}" href="#wsMenu"
+                    data-bs-toggle="collapse">
                     <span>WS (Water Softener)</span>
                 </a>
 
@@ -98,20 +109,23 @@ $jabatan === 'supervisor' ||
                     <ul class="nav nav-sm flex-column">
 
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('utility/water-softener') ? 'active' : '' }}" href="{{ url('utility/water-softener/') }}">
+                            <a class="nav-link {{ request()->is('utility/water-softener') ? 'active' : '' }}"
+                                href="{{ url('utility/water-softener/') }}">
                                 Form WS
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('utility/water-softener/rekap') ? 'active' : '' }}" href="{{ url('utility/water-softener/rekap') }}">
+                            <a class="nav-link {{ request()->is('utility/water-softener/rekap') ? 'active' : '' }}"
+                                href="{{ url('utility/water-softener/rekap') }}">
                                 Data WS
                             </a>
                         </li>
 
                         @if ($jabatan != 'operator')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('utility/water-softener/approval') ? 'active' : '' }}" href="{{ url('utility/water-softener/approval') }}">
+                            <a class="nav-link {{ request()->is('utility/water-softener/approval') ? 'active' : '' }}"
+                                href="{{ url('utility/water-softener/approval') }}">
                                 Approval WS
                             </a>
                         </li>
@@ -121,6 +135,117 @@ $jabatan === 'supervisor' ||
                 </div>
             </li>
 
+
+            {{-- Warming Up Genset --}}
+            <li class="nav-item">
+                <a class="nav-link menu-link {{ $isGenset ? '' : 'collapsed' }}" href="#gensetMenu"
+                    data-bs-toggle="collapse">
+                    <span>Warming Up Genset</span>
+                </a>
+
+                <div class="collapse menu-dropdown {{ $isGenset ? 'show' : '' }}" id="gensetMenu">
+                    <ul class="nav nav-sm flex-column">
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/warming-up-genset') ? 'active' : '' }}"
+                                href="{{ url('utility/warming-up-genset/') }}">
+                                Form Genset
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/warming-up-genset/data') ? 'active' : '' }}"
+                                href="{{ url('utility/warming-up-genset/data') }}">
+                                Data Genset
+                            </a>
+                        </li>
+
+                        @if ($jabatan != 'operator')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/warming-up-genset/approval') ? 'active' : '' }}"
+                                href="{{ url('utility/warming-up-genset/approval') }}">
+                                Approval Genset
+                            </a>
+                        </li>
+                        @endif
+
+                    </ul>
+                </div>
+            </li>
+
+            {{-- Compressor --}}
+            <li class="nav-item">
+                <a class="nav-link menu-link {{ $isCompressor ? '' : 'collapsed' }}" href="#compressorMenu"
+                    data-bs-toggle="collapse">
+                    <span>Compressor</span>
+                </a>
+
+                <div class="collapse menu-dropdown {{ $isCompressor ? 'show' : '' }}" id="compressorMenu">
+                    <ul class="nav nav-sm flex-column">
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/compressor') ? 'active' : '' }}"
+                                href="{{ url('utility/compressor/') }}">
+                                Form Compressor
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/compressor/data') ? 'active' : '' }}"
+                                href="{{ url('utility/compressor/data') }}">
+                                Data Compressor
+                            </a>
+                        </li>
+
+                        @if ($jabatan != 'operator')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/compressor/approval') ? 'active' : '' }}"
+                                href="{{ url('utility/compressor/approval') }}">
+                                Approval Compressor
+                            </a>
+                        </li>
+                        @endif
+
+                    </ul>
+                </div>
+            </li>
+
+            {{-- AHU --}}
+            <li class="nav-item">
+                <a class="nav-link menu-link {{ $isAhu ? '' : 'collapsed' }}" href="#ahuMenu"
+                    data-bs-toggle="collapse">
+                    <span>AHU</span>
+                </a>
+
+                <div class="collapse menu-dropdown {{ $isAhu ? 'show' : '' }}" id="ahuMenu">
+                    <ul class="nav nav-sm flex-column">
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/ahu') ? 'active' : '' }}"
+                                href="{{ url('utility/ahu/') }}">
+                                Form AHU
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/ahu/data') ? 'active' : '' }}"
+                                href="{{ url('utility/ahu/data') }}">
+                                Data AHU
+                            </a>
+                        </li>
+
+                        @if ($jabatan != 'operator')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/ahu/approval') ? 'active' : '' }}"
+                                href="{{ url('utility/ahu/approval') }}">
+                                Approval AHU
+                            </a>
+                        </li>
+                        @endif
+
+                    </ul>
+                </div>
+            </li>
         </ul>
     </div>
 </li>
