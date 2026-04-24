@@ -275,14 +275,14 @@
 
                     <div class="mb-3">
                         <label class="form-label">Pilih Foreman</label>
-                        <select name="foreman_id" id="sw_foreman_id" class="form-select" required>
+                        <select name="foreman_id" id="select_foreman" class="form-select" required>
                             <option value="">-- Pilih Foreman --</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Pilih Supervisor</label>
-                        <select name="supervisor_id" id="sw_supervisor_id" class="form-select" required>
+                        <select name="supervisor_id" id="select_supervisor" class="form-select" required>
                             <option value="">-- Pilih Supervisor --</option>
                         </select>
                     </div>
@@ -472,23 +472,26 @@
         $('#sw_tahun').val(tahun);
 
         // Load approvers
-        $.ajax({
-            url: "{{ route('warming-up-genset.get-approver') }}",
-            type: "GET",
-            success: function(res) {
-                let staff = res.staff;
-                $('#sw_foreman_id').empty().append('<option value="">-- Pilih Foreman --</option>');
-                $('#sw_supervisor_id').empty().append('<option value="">-- Pilih Supervisor --</option>');
+        $.get('/api/utility/users/approvers', function(data) {
+            // Isi dropdown Foreman — dari data.staff (jabatan bukan operator, dept engineering)
+            const foremanList = data.staff ?? [];
+            let foremanOpts = '<option value="">— Pilih Foreman —</option>';
+            foremanList.forEach(function(u) {
+                foremanOpts += `<option value="${u.id}">${u.username}</option>`;
+            });
+            $('#select_foreman').html(foremanOpts);
 
-                staff.forEach(item => {
-                    if (item.username.toLowerCase().includes('foreman')) {
-                        $('#sw_foreman_id').append(`<option value="${item.id}">${item.username}</option>`);
-                    }
-                    if (item.username.toLowerCase().includes('supervisor')) {
-                        $('#sw_supervisor_id').append(`<option value="${item.id}">${item.username}</option>`);
-                    }
-                });
-            }
+            // Isi dropdown Supervisor — dari data.user (jabatan supervisor)
+            const supervisorList = data.user ?? [];
+            let supervisorOpts = '<option value="">— Pilih Supervisor —</option>';
+            supervisorList.forEach(function(u) {
+                supervisorOpts += `<option value="${u.id}">${u.username}</option>`;
+            });
+            $('#select_supervisor').html(supervisorOpts);
+        }).fail(function() {
+            $('#select_foreman').html('<option value="">Gagal memuat data</option>');
+            $('#select_supervisor').html('<option value="">Gagal memuat data</option>');
+            toastr.error('Gagal memuat daftar approver');
         });
 
         $('#modalSubmitWeekly').modal('show');
