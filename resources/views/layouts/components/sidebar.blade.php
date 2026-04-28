@@ -34,7 +34,7 @@
 
             <ul class="navbar-nav" id="navbar-nav">
                 <!-- /////////////////////Dashboard/////////////// -->
-                @if (in_array($jabatan, ['dept_head', 'supervisor', 'foreman']) && $departement = 'Engineering' )
+                @if (in_array($jabatan, ['admin', 'dept_head', 'supervisor', 'foreman']) && $departement = 'Engineering' )
                 <li class="menu-title"><span data-key="t-dashboard">Dashboard</span></li>
 
                 @include('layouts.components.sidebar-scoring.dashboard-scoring')
