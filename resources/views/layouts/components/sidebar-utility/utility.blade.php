@@ -14,6 +14,7 @@ $isOperasional = $isEsp || $isWs || $isGenset || $isCompressor || $isAhu;
 @endphp
 
 @if (
+$jabatan === 'admin' ||
 $jabatan === 'dept_head' ||
 $jabatan === 'supervisor' ||
 ($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering WWTP'])) ||

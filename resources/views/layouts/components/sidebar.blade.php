@@ -34,7 +34,7 @@
 
             <ul class="navbar-nav" id="navbar-nav">
                 <!-- /////////////////////Dashboard/////////////// -->
-                @if (in_array($jabatan, ['admin', 'dept_head', 'supervisor', 'foreman']) && $departement = 'Engineering' )
+                @if ($departement == 'IT' || $departement == 'Engineering' )
                 <li class="menu-title"><span data-key="t-dashboard">Dashboard</span></li>
 
                 @include('layouts.components.sidebar-scoring.dashboard-scoring')
@@ -45,7 +45,7 @@
                 @endif
 
 
-                @if ($departement = 'Engineering')
+                @if ($departement == 'IT' || $departement == 'Engineering' )
 
 
                 <!-- /////////////////////menu/////////////// -->
@@ -61,7 +61,7 @@
 
 
                 <!-- /////////////////////Data Master/////////////// -->
-                @if (in_array($jabatan, ['dept_head', 'supervisor', 'foreman']))
+                @if (in_array($jabatan, ['admin','dept_head', 'supervisor', 'foreman']))
                 <li class="menu-title"><span data-key="t-menu">Data Master</span></li>
 
                 @include('layouts.components.sidebar-kalibrasi.data-master')
@@ -70,7 +70,7 @@
                 @endif
 
                 <!-- /////////////////////Manage User/////////////// -->
-                @if (in_array($jabatan, ['dept_head', 'foreman', 'supervisor']))
+                @if (in_array($jabatan, ['admin','dept_head', 'foreman', 'supervisor']))
                 <li class="nav-item">
                     <a href="{{ url('users/index') }}" class="nav-link menu-link  {{ request()->routeIs('users.*') ? 'active' : '' }}">
                         <i class="mdi mdi-folder-account"></i> <span data-key="t-tkbm">Manage User</span>
