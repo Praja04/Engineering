@@ -163,6 +163,7 @@
             if (data.length === 0) {
                 html = '<tr><td colspan="9" class="text-center py-5 text-muted">Tidak ada data ditemukan</td></tr>';
             } else {
+                const formatNum = (v) => v ? Number(v) : '-';
                 data.forEach((item, index) => {
                     const no = (pagination.current_page - 1) * pagination.per_page + index + 1;
                     html += `
@@ -171,9 +172,9 @@
                             <td>${formatDate(item.tanggal_laporan)}</td>
                             <td>${item.jam_pencatatan}</td>
                             <td>${item.operator?.username || '-'}</td>
-                            <td>${item.e_del || '-'}</td>
-                            <td>${item.arus_rata_rata || '-'}</td>
-                            <td>${item.tegangan_rata_rata || '-'}</td>
+                            <td>${formatNum(item.e_del)}</td>
+                            <td>${formatNum(item.arus_rata_rata)}</td>
+                            <td>${formatNum(item.tegangan_rata_rata)}</td>
                             <td>${getStatusBadge(item.status)}</td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-outline-info rounded-pill px-3 btn-detail" data-id="${item.id}">
@@ -271,11 +272,12 @@
         }
 
         function renderTechnicalItem(label, value, unit) {
+            const formatNum = (v) => v ? Number(v) : '-';
             return `
                 <div class="col-md-3 col-6">
                     <div class="p-2 border rounded bg-light">
                         <small class="text-muted d-block">${label}</small>
-                        <span class="fw-bold">${value || '-'}</span> <small>${unit}</small>
+                        <span class="fw-bold">${formatNum(value)}</span> <small>${unit}</small>
                     </div>
                 </div>
             `;

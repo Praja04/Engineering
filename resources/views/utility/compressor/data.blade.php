@@ -140,6 +140,7 @@
                                     <option value="08:00">08:00</option>
                                     <option value="12:00">12:00</option>
                                     <option value="16:00">16:00</option>
+                                    <option value="20:00">20:00</option>
                                     <option value="00:00">00:00 (24:00)</option>
                                     <option value="04:00">04:00</option>
                                 </select>
@@ -710,7 +711,7 @@
             if (pagination) {
                 $('#paginationInfo').html(
                     `Showing <b>${pagination.total > 0 ? (pagination.current_page - 1) * pagination.per_page + 1 : 0}</b> to <b>${Math.min(pagination.current_page * pagination.per_page, pagination.total)}</b> of <b>${pagination.total}</b> entries`
-                    );
+                );
             }
         }
 

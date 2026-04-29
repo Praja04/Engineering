@@ -39,10 +39,26 @@
                 <p class="mb-0 text-white-50 small">Engineering Utility · Persetujuan Laporan Harian</p>
             </div>
             <div class="card-body p-4">
+                <div id="bulkActionContainer" class="mb-3 d-none">
+                    <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
+                        <span class="me-auto fw-medium"><span id="selectedCount">0</span> item terpilih</span>
+                        <button class="btn btn-success btn-sm me-2 px-3" id="btnBulkApprove">
+                            <i class="ri-checkbox-circle-line me-1"></i> Approve Selected
+                        </button>
+                        <button class="btn btn-danger btn-sm px-3" id="btnBulkReject">
+                            <i class="ri-close-circle-line me-1"></i> Reject Selected
+                        </button>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
+                                <th style="width: 40px;">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
                                 <th>No</th>
                                 <th>Tanggal</th>
                                 <th>Jam</th>
@@ -113,6 +129,11 @@
                 data.forEach((item, index) => {
                     html += `
                         <tr>
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input check-item" type="checkbox" value="${item.id}">
+                                </div>
+                            </td>
                             <td>${index + 1}</td>
                             <td>${formatDate(item.tanggal_laporan)}</td>
                             <td>${item.jam_pencatatan}</td>
@@ -129,7 +150,92 @@
                 });
             }
             $('#tableBody').html(html);
+            updateBulkUI();
         }
+
+        function updateBulkUI() {
+            const checkedCount = $('.check-item:checked').length;
+            const totalCount = $('.check-item').length;
+
+            $('#selectedCount').text(checkedCount);
+            if (checkedCount > 0) {
+                $('#bulkActionContainer').removeClass('d-none');
+            } else {
+                $('#bulkActionContainer').addClass('d-none');
+            }
+
+            $('#selectAll').prop('checked', checkedCount === totalCount && totalCount > 0);
+        }
+
+        $(document).on('change', '#selectAll', function() {
+            $('.check-item').prop('checked', $(this).is(':checked'));
+            updateBulkUI();
+        });
+
+        $(document).on('change', '.check-item', function() {
+            updateBulkUI();
+        });
+
+        $('#btnBulkApprove').click(function() {
+            const ids = $('.check-item:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            Swal.fire({
+                title: 'Approve Massal?',
+                text: `Anda akan menyetujui ${ids.length} laporan sekaligus.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Approve Semua',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('#loadingOverlay').removeClass('d-none');
+                    $.post("{{ route('mdp-monitoring.bulk-approve') }}", {
+                        _token: "{{ csrf_token() }}",
+                        ids: ids
+                    }, function(res) {
+                        Swal.fire('Berhasil', res.message, 'success');
+                        loadData();
+                    }).fail(function(err) {
+                        Swal.fire('Gagal', err.responseJSON?.message || 'Terjadi kesalahan', 'error');
+                        $('#loadingOverlay').addClass('d-none');
+                    });
+                }
+            });
+        });
+
+        $('#btnBulkReject').click(function() {
+            const ids = $('.check-item:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            Swal.fire({
+                title: 'Tolak Massal',
+                text: `Anda akan menolak ${ids.length} laporan sekaligus.`,
+                input: 'textarea',
+                inputLabel: 'Alasan Penolakan',
+                inputPlaceholder: 'Tulis alasan...',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Tolak Semua',
+                confirmButtonColor: '#d33'
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    $('#loadingOverlay').removeClass('d-none');
+                    $.post("{{ route('mdp-monitoring.bulk-reject') }}", {
+                        _token: "{{ csrf_token() }}",
+                        ids: ids,
+                        reason: result.value
+                    }, function(res) {
+                        Swal.fire('Ditolak', res.message, 'info');
+                        loadData();
+                    }).fail(function(err) {
+                        Swal.fire('Gagal', err.responseJSON?.message || 'Terjadi kesalahan', 'error');
+                        $('#loadingOverlay').addClass('d-none');
+                    });
+                }
+            });
+        });
 
         $(document).on('click', '.btn-detail', function() {
             const id = $(this).data('id');

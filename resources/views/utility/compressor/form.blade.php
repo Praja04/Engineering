@@ -59,6 +59,7 @@
                                             <option value="08:00">08:00</option>
                                             <option value="12:00">12:00</option>
                                             <option value="16:00">16:00</option>
+                                            <option value="20:00">20:00</option>
                                             <option value="00:00">00:00 (24:00)</option>
                                             <option value="04:00">04:00</option>
                                         </select>
