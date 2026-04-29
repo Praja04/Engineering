@@ -22,7 +22,7 @@ class AccessByJabatan
         }
 
         // kalau jabatannya foreman, spv, dept_head → akses semua
-        if (in_array($user->jabatan, ['foreman', 'supervisor', 'dept_head'])) {
+        if (in_array($user->jabatan, ['admin', 'foreman', 'supervisor', 'dept_head'])) {
             return $next($request);
         }
 
