@@ -54,6 +54,11 @@ class CompressorController extends Controller
                 'running_hour_3' => 'nullable|numeric',
                 'running_hour_4' => 'nullable|numeric',
 
+                'loaded_hour_1' => 'nullable|numeric',
+                'loaded_hour_2' => 'nullable|numeric',
+                'loaded_hour_3' => 'nullable|numeric',
+                'loaded_hour_4' => 'nullable|numeric',
+
                 'motor_start_1' => 'nullable|numeric',
                 'motor_start_2' => 'nullable|numeric',
                 'motor_start_3' => 'nullable|numeric',
