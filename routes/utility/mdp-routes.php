@@ -13,5 +13,7 @@ Route::prefix('utility/mdp-monitoring')->name('mdp-monitoring.')->group(function
     Route::post('/approve-foreman/{id}', [MdpMonitoringController::class, 'approveForeman'])->name('approve-foreman');
     Route::post('/approve-supervisor/{id}', [MdpMonitoringController::class, 'approveSupervisor'])->name('approve-supervisor');
     Route::post('/reject/{id}', [MdpMonitoringController::class, 'reject'])->name('reject');
+    Route::post('/bulk-approve', [MdpMonitoringController::class, 'bulkApprove'])->name('bulk-approve');
+    Route::post('/bulk-reject', [MdpMonitoringController::class, 'bulkReject'])->name('bulk-reject');
     Route::get('/export', [MdpMonitoringController::class, 'export'])->name('export');
 });

@@ -17,5 +17,7 @@ Route::prefix('utility/warming-up-genset')->name('warming-up-genset.')->group(fu
     Route::get('/approval', [WarmingUpGenset::class, 'approvalView'])->name('approval');
     Route::post('/approve-foreman/{id}', [WarmingUpGenset::class, 'approveForeman'])->name('approve-foreman');
     Route::post('/approve-supervisor/{id}', [WarmingUpGenset::class, 'approveSupervisor'])->name('approve-supervisor');
+    Route::post('/bulk-approve', [WarmingUpGenset::class, 'bulkApprove'])->name('bulk-approve');
+    Route::post('/bulk-reject', [WarmingUpGenset::class, 'bulkReject'])->name('bulk-reject');
 });
 // });

@@ -241,6 +241,71 @@ class MdpMonitoringController extends Controller
         ]);
     }
 
+    public function bulkApprove(Request $request)
+    {
+        $ids = $request->ids;
+        if (empty($ids)) {
+            return response()->json(['message' => 'Tidak ada data yang dipilih'], 422);
+        }
+
+        $successCount = 0;
+        foreach ($ids as $id) {
+            $data = MdpMonitoringModel::find($id);
+            if (!$data) continue;
+
+            if ($data->foreman_id === auth()->id() && $data->status === 'submitted') {
+                $data->update([
+                    'approved_foreman_at' => now(),
+                    'approved_foreman_by' => auth()->id(),
+                    'status' => 'approved_foreman'
+                ]);
+                $successCount++;
+            } elseif ($data->supervisor_id === auth()->id() && $data->status === 'approved_foreman') {
+                $data->update([
+                    'approved_supervisor_at' => now(),
+                    'approved_supervisor_by' => auth()->id(),
+                    'status' => 'approved_supervisor'
+                ]);
+                $successCount++;
+            }
+        }
+
+        return response()->json([
+            'status' => 200,
+            'message' => $successCount . ' laporan berhasil disetujui secara massal.'
+        ]);
+    }
+
+    public function bulkReject(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'reason' => 'required|string|max:255'
+        ]);
+
+        $successCount = 0;
+        foreach ($request->ids as $id) {
+            $data = MdpMonitoringModel::find($id);
+            if (!$data) continue;
+
+            $isForeman = ($data->foreman_id === auth()->id() && $data->status === 'submitted');
+            $isSupervisor = ($data->supervisor_id === auth()->id() && $data->status === 'approved_foreman');
+
+            if ($isForeman || $isSupervisor) {
+                $data->update([
+                    'status' => 'rejected',
+                    'reject_reason' => $request->reason
+                ]);
+                $successCount++;
+            }
+        }
+
+        return response()->json([
+            'status' => 200,
+            'message' => $successCount . ' laporan berhasil ditolak secara massal.'
+        ]);
+    }
+
     public function export(Request $request)
     {
         $query = MdpMonitoringModel::with(['operator', 'foreman', 'supervisor'])

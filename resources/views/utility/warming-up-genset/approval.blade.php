@@ -32,10 +32,26 @@
             </div>
 
             <div class="card-body p-0">
+                <div id="bulkActionContainer" class="p-3 border-bottom bg-light d-none">
+                    <div class="d-flex align-items-center">
+                        <span class="me-auto fw-medium"><span id="selectedCount">0</span> item terpilih</span>
+                        <button class="btn btn-success btn-sm me-2 px-3" id="btnBulkApprove">
+                            <i class="ri-checkbox-circle-line me-1"></i> Approve Selected
+                        </button>
+                        <button class="btn btn-danger btn-sm px-3" id="btnBulkReject">
+                            <i class="ri-close-circle-line me-1"></i> Reject Selected
+                        </button>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table id="tblData" class="table table-hover align-middle mb-0 text-nowrap">
                         <thead class="table-light">
                             <tr>
+                                <th style="width: 40px;" class="ps-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
                                 <th class="text-center">No</th>
                                 <th>Tanggal</th>
                                 <th>Operator</th>
@@ -132,8 +148,9 @@
             let html = '';
 
             if (data.length === 0) {
-                html = '<tr><td colspan="8" class="text-center py-5 text-muted"><i class="ri-check-line fs-3 d-block mb-2 text-success"></i>Semua laporan sudah diproses.</td></tr>';
+                html = '<tr><td colspan="9" class="text-center py-5 text-muted"><i class="ri-check-line fs-3 d-block mb-2 text-success"></i>Semua laporan sudah diproses.</td></tr>';
                 $('#tableBody').html(html);
+                updateBulkUI();
                 return;
             }
 
@@ -143,6 +160,11 @@
 
                 html += `
                     <tr>
+                        <td class="ps-3">
+                            <div class="form-check">
+                                <input class="form-check-input check-item" type="checkbox" value="${item.id}">
+                            </div>
+                        </td>
                         <td class="text-center">${no}</td>
                         <td>${formatDate(item.tanggal_laporan)}</td>
                         <td>${item.operator?.username || '-'}</td>
@@ -168,7 +190,94 @@
             });
 
             $('#tableBody').html(html);
+            updateBulkUI();
         }
+
+        function updateBulkUI() {
+            const checkedCount = $('.check-item:checked').length;
+            const totalCount = $('.check-item').length;
+
+            $('#selectedCount').text(checkedCount);
+            if (checkedCount > 0) {
+                $('#bulkActionContainer').removeClass('d-none');
+            } else {
+                $('#bulkActionContainer').addClass('d-none');
+            }
+
+            $('#selectAll').prop('checked', checkedCount === totalCount && totalCount > 0);
+        }
+
+        $(document).on('change', '#selectAll', function() {
+            $('.check-item').prop('checked', $(this).is(':checked'));
+            updateBulkUI();
+        });
+
+        $(document).on('change', '.check-item', function() {
+            updateBulkUI();
+        });
+
+        $('#btnBulkApprove').click(function() {
+            const ids = $('.check-item:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            Swal.fire({
+                title: 'Approve Massal?',
+                text: `Anda akan menyetujui ${ids.length} laporan sekaligus.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Approve Semua',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showLoading(true);
+                    $.post("{{ route('warming-up-genset.bulk-approve') }}", {
+                        _token: "{{ csrf_token() }}",
+                        ids: ids
+                    }, function(res) {
+                        showLoading(false);
+                        Swal.fire('Berhasil', res.message, 'success');
+                        loadData(1);
+                    }).fail(function(err) {
+                        showLoading(false);
+                        Swal.fire('Gagal', err.responseJSON?.message || 'Terjadi kesalahan', 'error');
+                    });
+                }
+            });
+        });
+
+        $('#btnBulkReject').click(function() {
+            const ids = $('.check-item:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            Swal.fire({
+                title: 'Tolak Massal',
+                text: `Anda akan menolak ${ids.length} laporan sekaligus.`,
+                input: 'textarea',
+                inputLabel: 'Alasan Penolakan',
+                inputPlaceholder: 'Tulis alasan...',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Tolak Semua',
+                confirmButtonColor: '#d33'
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    showLoading(true);
+                    $.post("{{ route('warming-up-genset.bulk-reject') }}", {
+                        _token: "{{ csrf_token() }}",
+                        ids: ids,
+                        reason: result.value
+                    }, function(res) {
+                        showLoading(false);
+                        Swal.fire('Ditolak', res.message, 'info');
+                        loadData(1);
+                    }).fail(function(err) {
+                        showLoading(false);
+                        Swal.fire('Gagal', err.responseJSON?.message || 'Terjadi kesalahan', 'error');
+                    });
+                }
+            });
+        })
 
         function renderPagination(pagination) {
             if (pagination.last_page <= 1) {
