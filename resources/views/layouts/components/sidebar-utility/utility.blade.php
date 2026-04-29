@@ -9,8 +9,9 @@ $isWs = request()->is('utility/water-softener*');
 $isGenset = request()->is('utility/warming-up-genset*');
 $isCompressor = request()->is('utility/compressor*');
 $isAhu = request()->is('utility/ahu*');
+$isMdp = request()->is('utility/mdp-monitoring*');
 
-$isOperasional = $isEsp || $isWs || $isGenset || $isCompressor || $isAhu;
+$isOperasional = $isEsp || $isWs || $isGenset || $isCompressor || $isAhu || $isMdp;
 @endphp
 
 @if (
@@ -240,6 +241,43 @@ $jabatan === 'supervisor' ||
                             <a class="nav-link {{ request()->is('utility/ahu/approval') ? 'active' : '' }}"
                                 href="{{ url('utility/ahu/approval') }}">
                                 Approval AHU
+                            </a>
+                        </li>
+                        @endif
+
+                    </ul>
+                </div>
+            </li>
+
+            {{-- MDP Monitoring --}}
+            <li class="nav-item">
+                <a class="nav-link menu-link {{ $isMdp ? '' : 'collapsed' }}" href="#mdpMenu"
+                    data-bs-toggle="collapse">
+                    <span>MDP Monitoring</span>
+                </a>
+
+                <div class="collapse menu-dropdown {{ $isMdp ? 'show' : '' }}" id="mdpMenu">
+                    <ul class="nav nav-sm flex-column">
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/mdp-monitoring') ? 'active' : '' }}"
+                                href="{{ url('utility/mdp-monitoring/') }}">
+                                Form MDP
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/mdp-monitoring/data') ? 'active' : '' }}"
+                                href="{{ url('utility/mdp-monitoring/data') }}">
+                                Data MDP
+                            </a>
+                        </li>
+
+                        @if ($jabatan != 'operator')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/mdp-monitoring/approval') ? 'active' : '' }}"
+                                href="{{ url('utility/mdp-monitoring/approval') }}">
+                                Approval MDP
                             </a>
                         </li>
                         @endif
