@@ -35,6 +35,12 @@ class CompressorDetails extends Model
         'running_hour_3',
         'running_hour_4',
 
+        // laoded hour
+        'loaded_hour_1',
+        'loaded_hour_2',
+        'loaded_hour_3',
+        'loaded_hour_4',
+
         // motor start
         'motor_start_1',
         'motor_start_2',

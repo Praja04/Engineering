@@ -57,6 +57,12 @@ return new class extends Migration
             $table->decimal('running_hour_3', 10, 2)->nullable();
             $table->decimal('running_hour_4', 10, 2)->nullable();
 
+            // loaded hour
+            $table->decimal('loaded_hour_1', 10, 2)->nullable();
+            $table->decimal('loaded_hour_2', 10, 2)->nullable();
+            $table->decimal('loaded_hour_3', 10, 2)->nullable();
+            $table->decimal('loaded_hour_4', 10, 2)->nullable();
+
             // motor start
             $table->decimal('motor_start_1', 10, 2)->nullable();
             $table->decimal('motor_start_2', 10, 2)->nullable();
