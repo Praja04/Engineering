@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
     @include 'utility/water-softener-routes.php';
     @include 'utility/capacitor-bank-routes.php';
     @include 'utility/warming-up-genset-routes.php';
+    @include 'utility/mdp-routes.php';
     @include 'utility/compressor-routes.php';
     @include 'utility/ahu-routes.php';
     @include 'ejo/ejo-routes.php';
