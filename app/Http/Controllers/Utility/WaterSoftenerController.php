@@ -424,7 +424,7 @@ class WaterSoftenerController extends Controller
                 $drawOp->setName('Operator');
                 $drawOp->setPath($signaturePath);
                 $drawOp->setHeight(60);
-                $drawOp->setCoordinates('C29');
+                $drawOp->setCoordinates('C39');
                 $drawOp->setWorksheet($sheet);
             }
             // Foreman (G29)
@@ -433,7 +433,7 @@ class WaterSoftenerController extends Controller
                 $drawFm->setName('Foreman');
                 $drawFm->setPath($signaturePath);
                 $drawFm->setHeight(60);
-                $drawFm->setCoordinates('I29');
+                $drawFm->setCoordinates('I39');
                 $drawFm->setWorksheet($sheet);
             }
             // Supervisor (L29)
@@ -442,7 +442,7 @@ class WaterSoftenerController extends Controller
                 $drawSpv->setName('Supervisor');
                 $drawSpv->setPath($signaturePath);
                 $drawSpv->setHeight(60);
-                $drawSpv->setCoordinates('N29');
+                $drawSpv->setCoordinates('N39');
                 $drawSpv->setWorksheet($sheet);
             }
         }
