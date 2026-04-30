@@ -395,7 +395,7 @@ class MdpMonitoringController extends Controller
         }
 
         // Path Stiker TTD
-        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+        $signaturePath = public_path('storage/mtc/ttd/ttd_staff.jpeg');
         $hasSignature = file_exists($signaturePath);
 
         // Isi Data Teknis (Berdasarkan Tanggal: Baris 5-35)
