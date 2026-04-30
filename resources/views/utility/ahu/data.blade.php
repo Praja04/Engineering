@@ -371,24 +371,9 @@
     }
 
     $('#btnExport').click(function() {
-        $.get(EXPORT_URL, {
-            bulan: $('#filter_bulan').val()
-        }, function(res) {
-            if (res.data.length == 0) return Swal.fire('Info', 'Tidak ada data', 'info');
-            let csv = 'Tanggal,Jam,AHU,Ampere,Set Temp,Press In,Press Out,CT In,CT Out,Temp Out\n';
-            res.data.forEach(d => {
-                [1, 2, 3, 4].forEach(i => {
-                    csv += `"${d.tanggal}","${d.jam}","AHU ${i}","${d['ampere_'+i]}","${d['set_temp_'+i]}","${d['pressure_in_'+i]}","${d['pressure_out_'+i]}","${d['ct_in_'+i]}","${d['ct_out_'+i]}","${d['temp_out_'+i]}"\n`;
-                });
-            });
-            let blob = new Blob([csv], {
-                type: 'text/csv'
-            });
-            let link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = `ahu-rekap-${$('#filter_bulan').val()}.csv`;
-            link.click();
-        });
+        const bulan = $('#filter_bulan').val();
+        if (!bulan) return Swal.fire('Info', 'Pilih bulan terlebih dahulu', 'info');
+        window.open(`${EXPORT_URL}?bulan=${bulan}`, '_blank');
     });
 
     function editData(id) {

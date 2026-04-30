@@ -20,6 +20,7 @@ Route::prefix('utility/water-softener')
         // ── Data (JSON) ──────────────────────────────────────
         Route::get('/data',          [WaterSoftenerController::class, 'getData'])->name('data');
         Route::get('/approval-list', [WaterSoftenerController::class, 'getApprovalList'])->name('approval.list');
+        Route::get('/export',         [WaterSoftenerController::class, 'export'])->name('export');
 
         // ── Operator ─────────────────────────────────────────
         Route::post('/store',        [WaterSoftenerController::class, 'store'])->name('store');

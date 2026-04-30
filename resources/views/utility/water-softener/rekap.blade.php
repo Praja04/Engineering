@@ -1055,7 +1055,7 @@
                         toastr.error('Gagal memuat data.');
                         $('#tblBody').html(
                             '<tr><td colspan="12" class="text-center text-muted py-4">Gagal memuat data</td></tr>'
-                            );
+                        );
                     }
                 });
             }
@@ -1138,7 +1138,7 @@
                 if (!rows.length) {
                     $body.html(
                         '<tr><td colspan="12" class="text-center text-muted py-4">Tidak ada data bulan ini</td></tr>'
-                        );
+                    );
                     return;
                 }
 
@@ -1365,9 +1365,9 @@
                     },
                     error: function(xhr) {
                         toastr.error(xhr.responseJSON?.message ?? 'Gagal mengajukan.',
-                        'Error', {
-                            timeOut: 4000
-                        });
+                            'Error', {
+                                timeOut: 4000
+                            });
                     },
                     complete: function() {
                         $btn.prop('disabled', false).html(
@@ -1397,24 +1397,12 @@
 
 
             $('#btnExport').on('click', function() {
-                const el = document.querySelector('.table-card');
-                const bulanStr = $('#inputBulan').val().replace('-', '/');
-                html2pdf().set({
-                    margin: 8,
-                    filename: `WaterSoftener_${bulanStr}.pdf`,
-                    image: {
-                        type: 'jpeg',
-                        quality: 0.98
-                    },
-                    html2canvas: {
-                        scale: 2
-                    },
-                    jsPDF: {
-                        unit: 'mm',
-                        format: 'a4',
-                        orientation: 'landscape'
-                    }
-                }).from(el).save();
+                const bulan = $('#inputBulan').val();
+                if (!bulan) {
+                    toastr.warning('Pilih bulan terlebih dahulu.');
+                    return;
+                }
+                window.open("{{ route('water-softener.export') }}?bulan=" + bulan, '_blank');
             });
 
         });

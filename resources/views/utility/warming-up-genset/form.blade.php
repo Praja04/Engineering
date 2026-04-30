@@ -110,50 +110,50 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Engine Temperature</label>
+                                    <label class="form-label">Engine Temperature (C)</label>
                                     <input type="number" step="0.01" name="engine_temperature" class="form-control"
                                         placeholder="0.00" step="0.01" min="0">
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Engine Oil Pressure</label>
+                                    <label class="form-label">Engine Oil Pressure (Bar)</label>
                                     <input type="number" step="0.01" name="engine_oil_pressure" class="form-control"
                                         placeholder="0.00" step="0.01" min="0">
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Battery Voltage</label>
+                                    <label class="form-label">Battery Voltage (V)</label>
                                     <input type="number" step="0.01" name="battery_voltage" class="form-control"
                                         placeholder="0.00" step="0.01" min="0">
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Charge Alt Voltage</label>
+                                    <label class="form-label">Charge Alt Voltage (V)</label>
                                     <input type="number" step="0.01" name="charge_alt_voltage" class="form-control"
                                         placeholder="0.00" step="0.01" min="0">
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Running Hour</label>
+                                    <label class="form-label">Running Hour </label>
                                     <input type="number" step="0.01" name="running_hour" class="form-control"
                                         placeholder="0.00" step="0.01" min="0">
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Frequency</label>
+                                    <label class="form-label">Frequency (Hz)</label>
                                     <input type="number" step="0.01" name="frequency" class="form-control"
                                         placeholder="0.00" step="0.01" min="0">
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Status Oil 1</label>
-                                    <input type="number" step="0.01" name="status_oil_1" class="form-control"
+                                    <label class="form-label">Status Oil (%)</label>
+                                    <input type="number" step="0.01" name="status_oil" class="form-control"
                                         placeholder="0.00" step="0.01" min="0">
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Status Oil 2</label>
-                                    <input type="number" step="0.01" name="status_oil_2" class="form-control"
+                                    <label class="form-label">Status BBM (%)</label>
+                                    <input type="number" step="0.01" name="status_bbm" class="form-control"
                                         placeholder="0.00" step="0.01" min="0">
                                 </div>
 
@@ -216,6 +216,23 @@
 
         $('#formGenset').submit(function(e) {
             e.preventDefault();
+
+            let hasValue = false;
+            $(this).find('input[type="number"]').each(function() {
+                if ($(this).val().trim() !== '') {
+                    hasValue = true;
+                    return false;
+                }
+            });
+
+            if (!hasValue) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Peringatan',
+                    text: 'Minimal harus ada 1 nilai data teknis yang diisi sebelum submit.'
+                });
+                return;
+            }
 
             let btn = $(this).find('button[type="submit"]');
 

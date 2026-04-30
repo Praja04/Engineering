@@ -112,6 +112,48 @@
     </div>
 </div>
 
+<!-- Modal Export Excel -->
+<div class="modal fade" id="modalExport" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title text-white"><i class="ri-file-excel-2-line me-1"></i> Export Excel Genset</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formExport" action="{{ route('warming-up-genset.export') }}" method="GET" target="_blank">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Bulan</label>
+                            <select name="bulan" class="form-select">
+                                @for($m=1; $m<=12; $m++)
+                                    <option value="{{ $m }}" {{ $m == date('n') ? 'selected' : '' }}>
+                                    {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                    </option>
+                                    @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tahun</label>
+                            <input type="number" name="tahun" class="form-control" value="{{ date('Y') }}">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3 mb-0" style="font-size: 0.85rem;">
+                        <i class="ri-information-line me-1"></i> Data akan diekspor menggunakan template Excel bulanan (Start Row 6).
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" form="formExport" class="btn btn-success px-4">
+                    <i class="ri-download-cloud-2-line me-1"></i> Download Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- 📄 MODAL DETAIL --}}
 <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -197,12 +239,12 @@
                             <input type="number" step="0.01" name="running_hour" id="edit_running_hour" class="form-control">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Oil Status 1</label>
-                            <input type="number" step="0.01" name="status_oil_1" id="edit_status_oil_1" class="form-control">
+                            <label class="form-label small fw-bold">Oil</label>
+                            <input type="number" step="0.01" name="status_oil" id="edit_status_oil" class="form-control">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Oil Status 2</label>
-                            <input type="number" step="0.01" name="status_oil_2" id="edit_status_oil_2" class="form-control">
+                            <label class="form-label small fw-bold">BBM</label>
+                            <input type="number" step="0.01" name="status_bbm" id="edit_status_bbm" class="form-control">
                         </div>
                     </div>
                 </div>
@@ -213,11 +255,6 @@
             </form>
         </div>
     </div>
-</div>
-
-{{-- 🔄 LOADING --}}
-<div class="loading-overlay d-none" id="loadingOverlay">
-    <div class="spinner-border text-warning" role="status"></div>
 </div>
 @endsection
 
@@ -247,47 +284,7 @@
 
         // ── Export ──
         $('#btnExport').on('click', function() {
-            const params = new URLSearchParams({
-                bulan: $('#filterBulan').val(),
-            });
-
-            $.ajax({
-                url: API_URL.replace('/json', '/export') + '?' + params.toString(),
-                method: 'GET',
-                success: function(res) {
-                    if (res.data.length === 0) {
-                        Swal.fire('Tidak ada data', 'Tidak ada data untuk diekspor',
-                            'info');
-                        return;
-                    }
-
-                    // Buat CSV
-                    let csv =
-                        'Tanggal,Jam Pencatatan,Operator,Engine Speed,Engine Temp,Oil Pressure,Battery Voltage,Charge Alt Voltage,Running Hour,Frequency,Status Oil 1,Status Oil 2,Status\n';
-
-                    res.data.forEach(item => {
-                        csv +=
-                            `"${item.tanggal_laporan}","${item.jam_pencatatan}","${item.operator?.username || '-'}","${item.engine_speed || '-'}","${item.engine_temperature || '-'}","${item.engine_oil_pressure || '-'}","${item.battery_voltage || '-'}","${item.charge_alt_voltage || '-'}","${item.running_hour || '-'}","${item.frequency || '-'}","${item.status_oil_1 || '-'}","${item.status_oil_2 || '-'}","${item.status}"\n`;
-                    });
-
-                    // Download CSV
-                    const element = document.createElement('a');
-                    element.setAttribute('href', 'data:text/csv;charset=utf-8,' +
-                        encodeURIComponent(csv));
-                    element.setAttribute('download',
-                        `warming-up-genset-${new Date().toISOString().split('T')[0]}.csv`
-                    );
-                    element.style.display = 'none';
-                    document.body.appendChild(element);
-                    element.click();
-                    document.body.removeChild(element);
-
-                    Swal.fire('Berhasil', 'Data berhasil diekspor', 'success');
-                },
-                error: function(xhr) {
-                    Swal.fire('Error', 'Gagal mengekspor data', 'error');
-                }
-            });
+            $('#modalExport').modal('show');
         });
 
         // ── Load Data Function ──
@@ -354,6 +351,9 @@
                                 ${['submitted', 'rejected'].includes(item.status) ? `
                                 <button class="btn btn-sm btn-outline-warning btn-edit" data-id="${item.id}" title="Edit">
                                     <i class="ri-edit-line"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${item.id}" title="Hapus">
+                                    <i class="ri-delete-bin-line"></i>
                                 </button>` : ''}
                             </div>
                         </td>
@@ -483,8 +483,8 @@
             $('#edit_charge_alt_voltage').val(formatNum(data.charge_alt_voltage));
             $('#edit_frequency').val(formatNum(data.frequency));
             $('#edit_running_hour').val(formatNum(data.running_hour));
-            $('#edit_status_oil_1').val(formatNum(data.status_oil_1));
-            $('#edit_status_oil_2').val(formatNum(data.status_oil_2));
+            $('#edit_status_oil').val(formatNum(data.status_oil));
+            $('#edit_status_bbm').val(formatNum(data.status_bbm));
 
             loadApprovers(data.foreman_id, data.supervisor_id);
             $('#modalEdit').modal('show');
@@ -584,8 +584,8 @@
                             ${renderDetailItem('Charge Alt', data.charge_alt_voltage, 'V')}
                             ${renderDetailItem('Freq', data.frequency, 'Hz')}
                             ${renderDetailItem('RH', data.running_hour, 'Hours')}
-                            ${renderDetailItem('Oil Status 1', data.status_oil_1, '')}
-                            ${renderDetailItem('Oil Status 2', data.status_oil_2, '')}
+                            ${renderDetailItem('Oil', data.status_oil, '')}
+                            ${renderDetailItem('BBM', data.status_bbm, '')}
                         </div>
                     </div>
                 </div>
@@ -604,6 +604,42 @@
             </div>
         `;
         }
+        // ── Handle Delete ──
+        $(document).on('click', '.btn-delete', function() {
+            const id = $(this).data('id');
+            
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data ini akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showLoading(true);
+                    $.ajax({
+                        url: `${SHOW_URL}/${id}`,
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(res) {
+                            showLoading(false);
+                            Swal.fire('Terhapus!', res.message, 'success');
+                            loadData(1);
+                        },
+                        error: function(xhr) {
+                            showLoading(false);
+                            let msg = 'Gagal menghapus data';
+                            if (xhr.responseJSON?.message) msg = xhr.responseJSON.message;
+                            Swal.fire('Error', msg, 'error');
+                        }
+                    });
+                }
+            });
+        });
     });
 </script>
 @endsection

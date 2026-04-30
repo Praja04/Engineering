@@ -33,8 +33,8 @@ return new class extends Migration
             $table->decimal('charge_alt_voltage', 10, 2)->nullable();
             $table->decimal('running_hour', 10, 2)->nullable();
             $table->decimal('frequency', 10, 2)->nullable();
-            $table->decimal('status_oil_1', 10, 2)->nullable();
-            $table->decimal('status_oil_2', 10, 2)->nullable();
+            $table->decimal('status_oil', 10, 2)->nullable();
+            $table->decimal('status_bbm', 10, 2)->nullable();
 
             // Status workflow
             $table->enum('status', [
