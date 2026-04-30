@@ -9,6 +9,7 @@ use App\Models\Utility\MdpMonitoring as MdpMonitoringModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class MdpMonitoringController extends Controller
 {
@@ -58,12 +59,11 @@ class MdpMonitoringController extends Controller
             // Cek Duplikat
             if (MdpMonitoringModel::where('user_id', auth()->id())
                 ->where('tanggal_laporan', $validated['tanggal_laporan'])
-                ->where('jam_pencatatan', $validated['jam_pencatatan'])
                 ->exists()
             ) {
                 return response()->json([
                     'status' => 422,
-                    'message' => 'Laporan untuk tanggal dan jam ini sudah ada'
+                    'message' => 'Laporan untuk tanggal ini sudah ada'
                 ], 422);
             }
 
@@ -144,6 +144,11 @@ class MdpMonitoringController extends Controller
             'status' => 'approved_foreman'
         ]);
 
+        NotificationsModel::where('notifiable_type', MdpMonitoringModel::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->update(['is_read' => true]);
+
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
 
@@ -164,6 +169,11 @@ class MdpMonitoringController extends Controller
             'approved_supervisor_by' => auth()->id(),
             'status' => 'approved_supervisor'
         ]);
+
+        NotificationsModel::where('notifiable_type', MdpMonitoringModel::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->update(['is_read' => true]);
 
         return response()->json(['message' => 'Laporan disetujui Supervisor (Selesai)']);
     }
@@ -197,6 +207,51 @@ class MdpMonitoringController extends Controller
         }
 
         return response()->json(['status' => 200, 'data' => $data]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $data = MdpMonitoringModel::findOrFail($id);
+
+        // Hanya bisa edit jika status masih submitted (atau admin)
+        if ($data->status !== 'submitted' && !auth()->user()->hasRole(['superadmin', 'admin'])) {
+            return response()->json(['message' => 'Hanya laporan dengan status submitted yang bisa diubah'], 422);
+        }
+
+        $validated = $request->validate([
+            'e_del' => 'nullable|numeric',
+            'arus_rata_rata' => 'nullable|numeric',
+            'arus_i1' => 'nullable|numeric',
+            'arus_i2' => 'nullable|numeric',
+            'arus_i3' => 'nullable|numeric',
+            'tegangan_rata_rata' => 'nullable|numeric',
+            'tegangan_v1' => 'nullable|numeric',
+            'tegangan_v2' => 'nullable|numeric',
+            'tegangan_v3' => 'nullable|numeric',
+            'daya_total' => 'nullable|numeric',
+            'daya_p1' => 'nullable|numeric',
+            'daya_p2' => 'nullable|numeric',
+            'daya_p3' => 'nullable|numeric',
+            'temperatur_transformator' => 'nullable|numeric',
+            'level_oil' => 'nullable|string|in:ok,nok',
+        ]);
+
+        $data->update($validated);
+
+        return response()->json(['message' => 'Data MDP berhasil diperbarui']);
+    }
+
+    public function destroy($id)
+    {
+        $data = MdpMonitoringModel::findOrFail($id);
+
+        if ($data->status !== 'submitted' && !auth()->user()->hasRole(['superadmin', 'admin'])) {
+            return response()->json(['message' => 'Data yang sudah diapprove tidak dapat dihapus'], 422);
+        }
+
+        $data->delete();
+
+        return response()->json(['message' => 'Data MDP berhasil dihapus']);
     }
 
     public function getData(Request $request)
@@ -309,19 +364,97 @@ class MdpMonitoringController extends Controller
     public function export(Request $request)
     {
         $query = MdpMonitoringModel::with(['operator', 'foreman', 'supervisor'])
-            ->orderBy('tanggal_laporan', 'desc');
+            ->orderBy('tanggal_laporan', 'desc')
+            ->orderBy('jam_pencatatan', 'desc');
 
-        if ($request->filled('bulan')) {
-            $bulan = $request->bulan;
-            $query->whereYear('tanggal_laporan', substr($bulan, 0, 4))
-                ->whereMonth('tanggal_laporan', substr($bulan, 5, 2));
+        if ($request->filled('bulan') && $request->filled('tahun')) {
+            $query->whereYear('tanggal_laporan', $request->tahun)
+                ->whereMonth('tanggal_laporan', $request->bulan);
         }
 
         $data = $query->get();
 
-        return response()->json([
-            'status' => 200,
-            'data' => $data
-        ]);
+        if ($data->isEmpty()) {
+            return "<script>alert('Tidak ada data ditemukan untuk periode tersebut'); window.close();</script>";
+        }
+
+        $templatePath = public_path('assets/templates/operasional/mdp.xlsx');
+        if (!file_exists($templatePath)) {
+            return "<script>alert('Template MDP tidak ditemukan di: " . $templatePath . "'); window.close();</script>";
+        }
+
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Info
+        if ($request->filled('bulan')) {
+            $monthNum = (int) $request->bulan;
+            $monthName = Carbon::create()->month($monthNum)->translatedFormat('F');
+            $sheet->setCellValue('P1', strtoupper($monthName));
+            $sheet->setCellValue('P2', $request->tahun);
+        }
+
+        // Path Stiker TTD
+        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+        $hasSignature = file_exists($signaturePath);
+
+        // Isi Data Teknis (Berdasarkan Tanggal: Baris 5-35)
+        foreach ($data as $item) {
+            $day = Carbon::parse($item->tanggal_laporan)->day;
+            $currentRow = 5 + ($day - 1); // Tanggal 1 di baris 5, dst.
+
+            $sheet->setCellValue(
+                'B' . $currentRow,
+                Carbon::parse($item->jam_pencatatan)->format('H:i')
+            );
+            $sheet->setCellValue('C' . $currentRow, $item->e_del);
+            $sheet->setCellValue('D' . $currentRow, $item->arus_rata_rata);
+            $sheet->setCellValue('E' . $currentRow, $item->arus_i1);
+            $sheet->setCellValue('F' . $currentRow, $item->arus_i2);
+            $sheet->setCellValue('G' . $currentRow, $item->arus_i3);
+            $sheet->setCellValue('H' . $currentRow, $item->tegangan_rata_rata);
+            $sheet->setCellValue('I' . $currentRow, $item->tegangan_v1);
+            $sheet->setCellValue('J' . $currentRow, $item->tegangan_v2);
+            $sheet->setCellValue('K' . $currentRow, $item->tegangan_v3);
+            $sheet->setCellValue('L' . $currentRow, $item->daya_total);
+            $sheet->setCellValue('M' . $currentRow, $item->daya_p1);
+            $sheet->setCellValue('N' . $currentRow, $item->daya_p2);
+            $sheet->setCellValue('O' . $currentRow, $item->daya_p3);
+            $sheet->setCellValue('P' . $currentRow, $item->temperatur_transformator);
+            $sheet->setCellValue('Q' . $currentRow, $item->level_oil);
+
+            // Masukkan TTD ke dalam Loop (Kolom R & S)
+            if ($hasSignature) {
+                // TTD Operator (R)
+                if ($item->status != 'draft') {
+                    $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawOp->setName('Op');
+                    $drawOp->setPath($signaturePath);
+                    $drawOp->setHeight(20); // Ukuran lebih kecil
+                    $drawOp->setCoordinates('R' . $currentRow);
+                    $drawOp->setWorksheet($sheet);
+                }
+
+                // TTD Approval (S)
+                if (in_array($item->status, ['approved_foreman', 'approved_supervisor'])) {
+                    $drawApp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawApp->setName('App');
+                    $drawApp->setPath($signaturePath);
+                    $drawApp->setHeight(20); // Ukuran lebih kecil
+                    $drawApp->setCoordinates('S' . $currentRow);
+                    $drawApp->setWorksheet($sheet);
+                }
+            }
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'MDP_Monitoring_Report_' . now()->format('YmdHis') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
     }
 }

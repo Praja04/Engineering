@@ -4,19 +4,6 @@
 
 @section('styles')
 <style>
-    .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-    }
-
     .card-header-custom {
         background: linear-gradient(135deg, #1a1f36 0%, #2d3561 100%);
         color: white;
@@ -115,19 +102,146 @@
     </div>
 </div>
 
+<!-- Modal Export Excel -->
+<div class="modal fade" id="modalExport" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title text-white"><i class="ri-file-excel-2-line me-1"></i> Export Excel MDP</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formExport" action="{{ route('mdp-monitoring.export') }}" method="GET" target="_blank">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Bulan</label>
+                            <select name="bulan" class="form-select">
+                                @for($m=1; $m<=12; $m++)
+                                    <option value="{{ $m }}" {{ $m == date('n') ? 'selected' : '' }}>
+                                    {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                    </option>
+                                    @endfor
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tahun</label>
+                            <input type="number" name="tahun" class="form-control" value="{{ date('Y') }}">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3 mb-0" style="font-size: 0.85rem;">
+                        <i class="ri-information-line me-1"></i> Data akan diekspor menggunakan template Excel bulanan yang tersedia.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" form="formExport" class="btn btn-success px-4">
+                    <i class="ri-download-cloud-2-line me-1"></i> Download Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Modal Detail --}}
 <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header border-bottom p-3">
-                <h5 class="modal-title fw-bold">Detail Pemantauan MDP</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-bottom p-3 text-white bg-info">
+                <h5 class="modal-title fw-bold text-white">Detail Pemantauan MDP</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4" id="detailContent">
                 {{-- Content via AJAX --}}
             </div>
             <div class="modal-footer border-top p-3">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Edit --}}
+<div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white"><i class="ri-edit-line me-1"></i> Edit Data MDP</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEdit">
+                    <input type="hidden" id="edit_id">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">E_Del (kWh)</label>
+                            <input type="number" step="any" name="e_del" id="edit_e_del" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Arus Avg</label>
+                            <input type="number" step="any" name="arus_rata_rata" id="edit_arus_rata_rata" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Tegangan Avg</label>
+                            <input type="number" step="any" name="tegangan_rata_rata" id="edit_tegangan_rata_rata" class="form-control">
+                        </div>
+
+                        <div class="col-12">
+                            <hr class="my-2">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Arus I1</label>
+                            <input type="number" step="any" name="arus_i1" id="edit_arus_i1" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Arus I2</label>
+                            <input type="number" step="any" name="arus_i2" id="edit_arus_i2" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Arus I3</label>
+                            <input type="number" step="any" name="arus_i3" id="edit_arus_i3" class="form-control">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Tegangan V1</label>
+                            <input type="number" step="any" name="tegangan_v1" id="edit_tegangan_v1" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Tegangan V2</label>
+                            <input type="number" step="any" name="tegangan_v2" id="edit_tegangan_v2" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Tegangan V3</label>
+                            <input type="number" step="any" name="tegangan_v3" id="edit_tegangan_v3" class="form-control">
+                        </div>
+
+                        <div class="col-12">
+                            <hr class="my-2">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Daya Total (kW)</label>
+                            <input type="number" step="any" name="daya_total" id="edit_daya_total" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Temp Trafo (°C)</label>
+                            <input type="number" step="any" name="temperatur_transformator" id="edit_temperatur_transformator" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Level Oil</label>
+                            <select name="level_oil" id="edit_level_oil" class="form-select">
+                                <option value="ok">OK</option>
+                                <option value="nok">NOK</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="btnUpdate">Simpan Perubahan</button>
             </div>
         </div>
     </div>
@@ -144,7 +258,7 @@
         });
 
         function loadData(page) {
-            $('#loadingOverlay').removeClass('d-none');
+
             const params = {
                 bulan: $('#filterBulan').val(),
                 status: $('#filterStatus').val(),
@@ -154,7 +268,7 @@
             $.get("{{ route('mdp-monitoring.json') }}", params, function(res) {
                 renderTable(res.data, res.pagination);
                 renderPagination(res.pagination);
-                $('#loadingOverlay').addClass('d-none');
+
             });
         }
 
@@ -177,9 +291,23 @@
                             <td>${formatNum(item.tegangan_rata_rata)}</td>
                             <td>${getStatusBadge(item.status)}</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-info rounded-pill px-3 btn-detail" data-id="${item.id}">
-                                    <i class="ri-eye-line me-1"></i> Detail
-                                </button>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-info rounded-start-pill px-3 btn-detail" data-id="${item.id}" title="Detail">
+                                        <i class="ri-eye-line"></i>
+                                    </button>
+                                    ${item.status === 'submitted' ? `
+                                        <button class="btn btn-sm btn-outline-primary btn-edit" data-id="${item.id}" title="Edit">
+                                            <i class="ri-edit-line"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger rounded-end-pill btn-delete" data-id="${item.id}" title="Hapus">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    ` : `
+                                        <button class="btn btn-sm btn-outline-secondary rounded-end-pill px-3" disabled>
+                                            <i class="ri-lock-line"></i>
+                                        </button>
+                                    `}
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -221,7 +349,7 @@
         });
 
         function showDetail(id) {
-            $('#loadingOverlay').removeClass('d-none');
+
             $.get("{{ url('utility/mdp-monitoring/json') }}/" + id, function(res) {
                 const d = res.data;
                 const html = `
@@ -267,7 +395,7 @@
                 `;
                 $('#detailContent').html(html);
                 $('#modalDetail').modal('show');
-                $('#loadingOverlay').addClass('d-none');
+
             });
         }
 
@@ -293,6 +421,98 @@
             return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
         }
 
+        $(document).on('click', '.btn-edit', function() {
+            const id = $(this).data('id');
+
+            $.get("{{ url('utility/mdp-monitoring/json') }}/" + id, function(res) {
+                const d = res.data;
+                $('#edit_id').val(d.id);
+                $('#edit_e_del').val(d.e_del);
+                $('#edit_arus_rata_rata').val(d.arus_rata_rata);
+                $('#edit_arus_i1').val(d.arus_i1);
+                $('#edit_arus_i2').val(d.arus_i2);
+                $('#edit_arus_i3').val(d.arus_i3);
+                $('#edit_tegangan_rata_rata').val(d.tegangan_rata_rata);
+                $('#edit_tegangan_v1').val(d.tegangan_v1);
+                $('#edit_tegangan_v2').val(d.tegangan_v2);
+                $('#edit_tegangan_v3').val(d.tegangan_v3);
+                $('#edit_daya_total').val(d.daya_total);
+                $('#edit_temperatur_transformator').val(d.temperatur_transformator);
+                $('#edit_level_oil').val(d.level_oil);
+
+                $('#modalEdit').modal('show');
+
+            });
+        });
+
+        $('#btnUpdate').click(function() {
+            const id = $('#edit_id').val();
+            const formData = $('#formEdit').serialize();
+
+            Swal.fire({
+                title: 'Simpan Perubahan?',
+                text: "Data MDP akan diperbarui.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Simpan!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    $.ajax({
+                        url: "{{ url('utility/mdp-monitoring') }}/" + id,
+                        method: 'PUT',
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(res) {
+                            $('#modalEdit').modal('hide');
+                            Swal.fire('Berhasil', res.message, 'success');
+                            loadData(1);
+                        },
+                        error: function(xhr) {
+
+                            Swal.fire('Error', xhr.responseJSON.message || 'Gagal update data', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).on('click', '.btn-delete', function() {
+            const id = $(this).data('id');
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data ini akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                    $.ajax({
+                        url: "{{ url('utility/mdp-monitoring') }}/" + id,
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(res) {
+                            Swal.fire('Terhapus!', res.message, 'success');
+                            loadData(1);
+                        },
+                        error: function(xhr) {
+
+                            Swal.fire('Error', xhr.responseJSON.message || 'Gagal menghapus data', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
         function formatDate(dateString) {
             const options = {
                 year: 'numeric',
@@ -304,47 +524,7 @@
 
         // ── Export ──
         $('#btnExport').on('click', function() {
-            const params = new URLSearchParams({
-                bulan: $('#filterBulan').val(),
-            });
-
-            $.ajax({
-                url: "{{ route('mdp-monitoring.export') }}" + '?' + params.toString(),
-                method: 'GET',
-                success: function(res) {
-                    if (res.data.length === 0) {
-                        Swal.fire('Tidak ada data', 'Tidak ada data untuk diekspor',
-                            'info');
-                        return;
-                    }
-
-                    // Buat CSV
-                    let csv =
-                        'Tanggal,Jam Pencatatan,Operator,Engine Speed,Engine Temp,Oil Pressure,Battery Voltage,Charge Alt Voltage,Running Hour,Frequency,Status Oil 1,Status Oil 2,Status\n';
-
-                    res.data.forEach(item => {
-                        csv +=
-                            `"${item.tanggal_laporan}","${item.jam_pencatatan}","${item.operator?.username || '-'}","${item.engine_speed || '-'}","${item.engine_temperature || '-'}","${item.engine_oil_pressure || '-'}","${item.battery_voltage || '-'}","${item.charge_alt_voltage || '-'}","${item.running_hour || '-'}","${item.frequency || '-'}","${item.status_oil_1 || '-'}","${item.status_oil_2 || '-'}","${item.status}"\n`;
-                    });
-
-                    // Download CSV
-                    const element = document.createElement('a');
-                    element.setAttribute('href', 'data:text/csv;charset=utf-8,' +
-                        encodeURIComponent(csv));
-                    element.setAttribute('download',
-                        `warming-up-genset-${new Date().toISOString().split('T')[0]}.csv`
-                    );
-                    element.style.display = 'none';
-                    document.body.appendChild(element);
-                    element.click();
-                    document.body.removeChild(element);
-
-                    Swal.fire('Berhasil', 'Data berhasil diekspor', 'success');
-                },
-                error: function(xhr) {
-                    Swal.fire('Error', 'Gagal mengekspor data', 'error');
-                }
-            });
+            $('#modalExport').modal('show');
         });
     });
 </script>

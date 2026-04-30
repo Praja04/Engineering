@@ -252,16 +252,41 @@ class AhuController extends Controller
     public function approveForeman($id)
     {
         $data = Ahu::findOrFail($id);
-        if ($data->foreman_id !== auth()->id()) return response()->json(['message' => 'Forbidden'], 403);
-        $data->update(['approved_foreman_at' => now(), 'status' => 'approved_foreman']);
+
+        if ($data->foreman_id !== auth()->id()) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $data->update([
+            'approved_foreman_at' => now(),
+            'status' => 'approved_foreman'
+        ]);
+
+        NotificationsModel::where('notifiable_type', Ahu::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->update(['is_read' => true]);
+
         return response()->json(['message' => 'Disetujui Foreman']);
     }
 
     public function approveSupervisor($id)
     {
         $data = Ahu::findOrFail($id);
-        if ($data->supervisor_id !== auth()->id()) return response()->json(['message' => 'Forbidden'], 403);
-        $data->update(['approved_supervisor_at' => now(), 'status' => 'approved_supervisor']);
+        if ($data->supervisor_id !== auth()->id()) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $data->update([
+            'approved_supervisor_at' => now(),
+            'status' => 'approved_supervisor'
+        ]);
+
+        NotificationsModel::where('notifiable_type', Ahu::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->update(['is_read' => true]);
+
         return response()->json(['message' => 'Disetujui Supervisor']);
     }
 
@@ -289,15 +314,122 @@ class AhuController extends Controller
     public function export(Request $request)
     {
         $query = AhuDetails::with(['ahu.operator', 'ahu.foreman', 'ahu.supervisor'])
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('jam', 'desc');
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('jam', 'asc');
 
         if ($request->filled('bulan')) {
             $date = Carbon::parse($request->bulan);
             $query->whereYear('tanggal', $date->year)->whereMonth('tanggal', $date->month);
         }
 
-        return response()->json(['status' => 200, 'data' => $query->get()]);
+        $data = $query->get();
+
+        if ($data->isEmpty()) {
+            return "<script>alert('Tidak ada data ditemukan untuk periode tersebut'); window.close();</script>";
+        }
+
+        $templatePath = public_path('assets/templates/operasional/ahu.xlsx');
+        if (!file_exists($templatePath)) {
+            return "<script>alert('Template AHU tidak ditemukan'); window.close();</script>";
+        }
+
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Info
+        if ($request->filled('bulan')) {
+            $date = Carbon::parse($request->bulan);
+            $sheet->setCellValue('W1', strtoupper($date->translatedFormat('F')));
+            $sheet->setCellValue('W3', $date->year);
+        }
+
+        foreach ($data as $item) {
+            $day = Carbon::parse($item->tanggal)->day;
+            $currentRow = 7 + ($day - 1); // Start Row 7
+
+            // B: Jam
+            $sheet->setCellValue('B' . $currentRow, Carbon::parse($item->jam)->format('H:i'));
+
+            // AHU 1 (C-I)
+            $sheet->setCellValue('C' . $currentRow, $item->ampere_1);
+            $sheet->setCellValue('D' . $currentRow, $item->set_temp_1);
+            $sheet->setCellValue('E' . $currentRow, $item->pressure_in_1);
+            $sheet->setCellValue('F' . $currentRow, $item->pressure_out_1);
+            $sheet->setCellValue('G' . $currentRow, $item->ct_in_1);
+            $sheet->setCellValue('H' . $currentRow, $item->ct_out_1);
+            $sheet->setCellValue('I' . $currentRow, $item->temp_out_1);
+
+            // AHU 2 (J-P)
+            $sheet->setCellValue('J' . $currentRow, $item->ampere_2);
+            $sheet->setCellValue('K' . $currentRow, $item->set_temp_2);
+            $sheet->setCellValue('L' . $currentRow, $item->pressure_in_2);
+            $sheet->setCellValue('M' . $currentRow, $item->pressure_out_2);
+            $sheet->setCellValue('N' . $currentRow, $item->ct_in_2);
+            $sheet->setCellValue('O' . $currentRow, $item->ct_out_2);
+            $sheet->setCellValue('P' . $currentRow, $item->temp_out_2);
+
+            // AHU 3 (Q-W)
+            $sheet->setCellValue('Q' . $currentRow, $item->ampere_3);
+            $sheet->setCellValue('R' . $currentRow, $item->set_temp_3);
+            $sheet->setCellValue('S' . $currentRow, $item->pressure_in_3);
+            $sheet->setCellValue('T' . $currentRow, $item->pressure_out_3);
+            $sheet->setCellValue('U' . $currentRow, $item->ct_in_3);
+            $sheet->setCellValue('V' . $currentRow, $item->ct_out_3);
+            $sheet->setCellValue('W' . $currentRow, $item->temp_out_3);
+
+            // AHU 4 (X-AD)
+            $sheet->setCellValue('X' . $currentRow, $item->ampere_4);
+            $sheet->setCellValue('Y' . $currentRow, $item->set_temp_4);
+            $sheet->setCellValue('Z' . $currentRow, $item->pressure_in_4);
+            $sheet->setCellValue('AA' . $currentRow, $item->pressure_out_4);
+            $sheet->setCellValue('AB' . $currentRow, $item->ct_in_4);
+            $sheet->setCellValue('AC' . $currentRow, $item->ct_out_4);
+            $sheet->setCellValue('AD' . $currentRow, $item->temp_out_4);
+        }
+
+        // Signature Section
+        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+        $mainRecord = $data->first()->ahu;
+
+        if (file_exists($signaturePath) && $mainRecord) {
+            if ($mainRecord->status != 'draft') {
+                $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawOp->setName('Operator');
+                $drawOp->setPath($signaturePath);
+                $drawOp->setHeight(60);
+                $drawOp->setCoordinates('C40');
+                $drawOp->setWorksheet($sheet);
+                $sheet->setCellValue('A44', '(' . $mainRecord->operator ? $mainRecord->operator->username : '-' . ')');
+            }
+            if ($mainRecord->status == 'approved_foreman') {
+                $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawFm->setName('Foreman');
+                $drawFm->setPath($signaturePath);
+                $drawFm->setHeight(60);
+                $drawFm->setCoordinates('N40');
+                $drawFm->setWorksheet($sheet);
+                $sheet->setCellValue('A44', '(' . $mainRecord->foreman ? $mainRecord->foreman->username : '-' . ')');
+            }
+            if ($mainRecord->status == 'approved_supervisor') {
+                $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawSpv->setName('Supervisor');
+                $drawSpv->setPath($signaturePath);
+                $drawSpv->setHeight(60);
+                $drawSpv->setCoordinates('AA40');
+                $drawSpv->setWorksheet($sheet);
+                $sheet->setCellValue('AA44', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
+            }
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'AHU_Monthly_Report_' . now()->format('YmdHis') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
     }
 
     public function destroy($id)

@@ -35,7 +35,7 @@
 
             <ul class="navbar-nav" id="navbar-nav">
                 <!-- /////////////////////Dashboard/////////////// -->
-                @if ($departement = 'Engineering')
+                @if ($departement === 'engineering' || $departement === 'IT')
                     <li class="menu-title"><span data-key="t-dashboard">Dashboard</span></li>
 
                     @include('layouts.components.sidebar-scoring.dashboard-scoring')
@@ -46,8 +46,7 @@
                 @endif
 
 
-                @if ($departement = 'Engineering')
-
+                @if ($departement === 'engineering' || $departement === 'IT')
 
                     <!-- /////////////////////menu/////////////// -->
                     <li class="menu-title"><span data-key="t-menu">Engineering Menu</span></li>

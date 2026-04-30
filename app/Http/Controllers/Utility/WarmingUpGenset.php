@@ -9,6 +9,8 @@ use App\Models\Utility\WarmingUpGenset as WarmingUpGensetModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+
 
 class WarmingUpGenset extends Controller
 {
@@ -45,8 +47,8 @@ class WarmingUpGenset extends Controller
                 'charge_alt_voltage' => 'nullable|numeric',
                 'running_hour' => 'nullable|numeric',
                 'frequency' => 'nullable|numeric',
-                'status_oil_1' => 'nullable|numeric',
-                'status_oil_2' => 'nullable|numeric',
+                'status_oil' => 'nullable|numeric',
+                'status_bbm' => 'nullable|numeric',
             ]);
 
             // 2. CEK DUPLIKAT
@@ -152,6 +154,11 @@ class WarmingUpGenset extends Controller
             'status' => 'approved_foreman'
         ]);
 
+        NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->update(['is_read' => true]);
+
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
 
@@ -172,6 +179,11 @@ class WarmingUpGenset extends Controller
             'approved_supervisor_by' => auth()->id(),
             'status' => 'approved_supervisor'
         ]);
+
+        NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->update(['is_read' => true]);
 
         return response()->json(['message' => 'Laporan disetujui Supervisor (Selesai)']);
     }
@@ -271,6 +283,25 @@ class WarmingUpGenset extends Controller
         return response()->json([
             'status' => 200,
             'data' => $data
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $data = WarmingUpGensetModel::findOrFail($id);
+
+        if (!in_array($data->status, ['submitted', 'rejected']) && !auth()->user()->hasRole(['superadmin', 'admin'])) {
+            return response()->json([
+                'status' => 422,
+                'message' => 'Hanya laporan dengan status submitted/rejected yang bisa dihapus'
+            ], 422);
+        }
+
+        $data->delete();
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Laporan berhasil dihapus'
         ]);
     }
 
@@ -388,20 +419,84 @@ class WarmingUpGenset extends Controller
     public function export(Request $request)
     {
         $query = WarmingUpGensetModel::with(['operator', 'foreman', 'supervisor'])
-            ->orderBy('tanggal_laporan', 'desc');
+            ->orderBy('tanggal_laporan', 'asc');
 
-        // Filter berdasarkan bulan tahun (format: YYYY-MM)
-        if ($request->filled('bulan')) {
-            $bulan = $request->bulan;
-            $query->whereYear('tanggal_laporan', substr($bulan, 0, 4))
-                ->whereMonth('tanggal_laporan', substr($bulan, 5, 2));
+        if ($request->filled('bulan') && $request->filled('tahun')) {
+            $query->whereYear('tanggal_laporan', $request->tahun)
+                ->whereMonth('tanggal_laporan', $request->bulan);
         }
 
         $data = $query->get();
 
-        return response()->json([
-            'status' => 200,
-            'data' => $data
-        ]);
+        if ($data->isEmpty()) {
+            return "<script>alert('Tidak ada data ditemukan untuk periode tersebut'); window.close();</script>";
+        }
+
+        $templatePath = public_path('assets/templates/operasional/genset.xlsx');
+        if (!file_exists($templatePath)) {
+            return "<script>alert('Template Genset tidak ditemukan di: " . $templatePath . "'); window.close();</script>";
+        }
+
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Info
+        $sheet->setCellValue('J1', 'Tahun: ' . $request->tahun);
+
+        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+        $hasSignature = file_exists($signaturePath);
+
+        $currentRow = 6;
+        foreach ($data as $item) {
+            // A: Tanggal-Bulan (Contoh: 01-Apr)
+            $sheet->setCellValue('A' . $currentRow, Carbon::parse($item->tanggal_laporan)->translatedFormat('d-M'));
+            // B: Jam
+            $sheet->setCellValue('B' . $currentRow, Carbon::parse($item->jam_pencatatan)->format('H:i'));
+
+            // Data Teknis
+            $sheet->setCellValue('C' . $currentRow, $item->engine_speed);
+            $sheet->setCellValue('D' . $currentRow, $item->engine_temperature);
+            $sheet->setCellValue('E' . $currentRow, $item->engine_oil_pressure);
+            $sheet->setCellValue('F' . $currentRow, $item->battery_voltage);
+            $sheet->setCellValue('G' . $currentRow, $item->charge_alt_voltage);
+            $sheet->setCellValue('H' . $currentRow, $item->running_hour);
+            $sheet->setCellValue('I' . $currentRow, $item->frequency);
+            $sheet->setCellValue('J' . $currentRow, $item->status_oil);
+            $sheet->setCellValue('K' . $currentRow, $item->status_bbm);
+
+            // TTD per Baris (Pelaksana L, Staff M)
+            if ($hasSignature) {
+                // TTD Pelaksana (L)
+                if ($item->status != 'draft') {
+                    $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawOp->setName('Op');
+                    $drawOp->setPath($signaturePath);
+                    $drawOp->setHeight(20);
+                    $drawOp->setCoordinates('L' . $currentRow);
+                    $drawOp->setWorksheet($sheet);
+                }
+
+                // TTD Staff/Approval (M)
+                if (in_array($item->status, ['approved_foreman', 'approved_supervisor'])) {
+                    $drawApp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawApp->setName('App');
+                    $drawApp->setPath($signaturePath);
+                    $drawApp->setHeight(20);
+                    $drawApp->setCoordinates('M' . $currentRow);
+                    $drawApp->setWorksheet($sheet);
+                }
+            }
+            $currentRow++;
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'Genset_WarmingUp_Report_' . now()->format('YmdHis') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
     }
 }

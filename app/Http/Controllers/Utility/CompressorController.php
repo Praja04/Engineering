@@ -359,6 +359,11 @@ class CompressorController extends Controller
             'status' => 'approved_foreman'
         ]);
 
+        NotificationsModel::where('notifiable_type', Compressor::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->update(['is_read' => true]);
+
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
 
@@ -374,6 +379,11 @@ class CompressorController extends Controller
             'approved_supervisor_at' => now(),
             'status' => 'approved_supervisor'
         ]);
+
+        NotificationsModel::where('notifiable_type', Compressor::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->update(['is_read' => true]);
 
         return response()->json(['message' => 'Laporan disetujui Supervisor']);
     }
@@ -400,21 +410,166 @@ class CompressorController extends Controller
     public function export(Request $request)
     {
         $query = CompressorDetails::with(['compressor.operator', 'compressor.foreman', 'compressor.supervisor'])
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('jam', 'desc');
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('jam', 'asc');
 
-        if ($request->filled('bulan')) {
-            $date = Carbon::parse($request->bulan);
-            $query->whereYear('tanggal', $date->year)
-                ->whereMonth('tanggal', $date->month);
+        if ($request->filled('week') || $request->filled('bulan') || $request->filled('tahun')) {
+            $query->whereHas('compressor', function ($q) use ($request) {
+                if ($request->filled('week')) $q->where('week', $request->week);
+                if ($request->filled('bulan')) $q->where('bulan', $request->bulan);
+                if ($request->filled('tahun')) $q->where('tahun', $request->tahun);
+            });
         }
 
         $data = $query->get();
 
-        return response()->json([
-            'status' => 200,
-            'data' => $data
-        ]);
+        if ($data->isEmpty()) {
+            return "<script>alert('Tidak ada data ditemukan untuk periode tersebut'); window.close();</script>";
+        }
+
+        $templatePath = public_path('assets/templates/operasional/compressor.xlsx');
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Info
+        if ($request->filled('bulan')) {
+            $monthNum = (int)$request->bulan;
+            if ($monthNum >= 1 && $monthNum <= 12) {
+                $monthName = Carbon::create()->month($monthNum)->translatedFormat('F');
+                $sheet->setCellValue('Z1', 'BULAN : ' . strtoupper($monthName) . ' ' . $request->tahun);
+            }
+        }
+
+        // Mapping jam ke row offset (8, 12, 16, 20, 00, 04)
+        $jamMap = [
+            '08:00' => 0,
+            '08:00:00' => 0,
+            '12:00' => 1,
+            '12:00:00' => 1,
+            '16:00' => 2,
+            '16:00:00' => 2,
+            '20:00' => 3,
+            '20:00:00' => 3,
+            '00:00' => 4,
+            '00:00:00' => 4,
+            '04:00' => 5,
+            '04:00:00' => 5,
+        ];
+
+        // Baris awal tiap tanggal sesuai instruksi user
+        $dayStartRows = [7, 13, 19, 25, 31, 37, 43];
+
+        // Group data berdasarkan tanggal
+        $grouped = $data->groupBy('tanggal');
+        $dayCounter = 0;
+
+        foreach ($grouped as $tanggal => $details) {
+            if ($dayCounter >= 7) break; // Template terbatas untuk 7 hari
+
+            $startRow = $dayStartRows[$dayCounter];
+            $carbonDate = Carbon::parse($tanggal);
+
+            // Set Tanggal di kolom A (biasanya cell merge)
+            $sheet->setCellValue('A' . $startRow, $carbonDate->format('d/m/Y'));
+
+            foreach ($details as $item) {
+                $jamKey = substr($item->jam, 0, 5);
+                if (!isset($jamMap[$jamKey])) continue;
+
+                $currentRow = $startRow + $jamMap[$jamKey];
+
+                // Mapping Kolom (C ke AC)
+                $sheet->setCellValue('C' . $currentRow, $item->pressure_outlet_1);
+                $sheet->setCellValue('D' . $currentRow, $item->pressure_outlet_2);
+                $sheet->setCellValue('E' . $currentRow, $item->pressure_outlet_3);
+                $sheet->setCellValue('F' . $currentRow, $item->pressure_outlet_4);
+
+                $sheet->setCellValue('G' . $currentRow, $item->element_outlet_1);
+                $sheet->setCellValue('H' . $currentRow, $item->element_outlet_2);
+                $sheet->setCellValue('I' . $currentRow, $item->element_outlet_4);
+
+                $sheet->setCellValue('J' . $currentRow, $item->load_percent);
+
+                $sheet->setCellValue('K' . $currentRow, $item->running_hour_1);
+                $sheet->setCellValue('L' . $currentRow, $item->running_hour_2);
+                $sheet->setCellValue('M' . $currentRow, $item->running_hour_3);
+                $sheet->setCellValue('N' . $currentRow, $item->running_hour_4);
+
+                $sheet->setCellValue('O' . $currentRow, $item->loaded_hour_1);
+                $sheet->setCellValue('P' . $currentRow, $item->loaded_hour_2);
+                $sheet->setCellValue('Q' . $currentRow, $item->loaded_hour_3);
+                $sheet->setCellValue('R' . $currentRow, $item->loaded_hour_4);
+
+                $sheet->setCellValue('S' . $currentRow, $item->motor_start_1);
+                $sheet->setCellValue('T' . $currentRow, $item->motor_start_2);
+                $sheet->setCellValue('U' . $currentRow, $item->motor_start_3);
+                $sheet->setCellValue('V' . $currentRow, $item->motor_start_4);
+
+                $sheet->setCellValue('W' . $currentRow, $item->accumulated_volume);
+                $sheet->setCellValue('X' . $currentRow, $item->temperature_comp_ir);
+                $sheet->setCellValue('Y' . $currentRow, $item->pressure_in);
+                $sheet->setCellValue('Z' . $currentRow, $item->pressure_out);
+
+                $sheet->setCellValue('AA' . $currentRow, $item->suhu_dryer_tr15);
+                $sheet->setCellValue('AB' . $currentRow, $item->suhu_dryer_fx250);
+                $sheet->setCellValue('AC' . $currentRow, $item->suhu_dryer_ir);
+            }
+
+            $dayCounter++;
+        }
+
+        // TTD Approval Section
+        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+        $mainRecord = $data->first()->compressor;
+
+        if (file_exists($signaturePath)) {
+            // TTD Operator (A51) - Muncul jika sudah disubmit atau diapprove
+            if ($mainRecord->status != 'draft') {
+                $drawingOperator = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawingOperator->setName('Submitted Operator');
+                $drawingOperator->setPath($signaturePath);
+                $drawingOperator->setHeight(60);
+                $drawingOperator->setCoordinates('E51');
+                $drawingOperator->setWorksheet($sheet);
+            }
+
+            // Jika sudah di-approve Foreman atau Supervisor, pasang stiker di kolom Foreman (J51)
+            if (in_array($mainRecord->status, ['approved_foreman', 'approved_supervisor'])) {
+                $drawingForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawingForeman->setName('Approved Foreman');
+                $drawingForeman->setPath($signaturePath);
+                $drawingForeman->setHeight(60);
+                $drawingForeman->setCoordinates('N51');
+                $drawingForeman->setWorksheet($sheet);
+
+                $sheet->setCellValue('J55', $mainRecord->foreman ? $mainRecord->foreman->username : '-');
+            }
+
+            // Jika sudah di-approve Supervisor, pasang stiker di kolom Supervisor (T51)
+            if ($mainRecord->status == 'approved_supervisor') {
+                $drawingSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawingSupervisor->setName('Approved Supervisor');
+                $drawingSupervisor->setPath($signaturePath);
+                $drawingSupervisor->setHeight(60);
+                $drawingSupervisor->setCoordinates('X51');
+                $drawingSupervisor->setWorksheet($sheet);
+
+                $sheet->setCellValue('T55', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
+            }
+        }
+
+        // Nama Operator (A55)
+        $sheet->setCellValue('A55', $mainRecord->operator ? $mainRecord->operator->username : '-');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'Compressor_Report_' . now()->format('YmdHis') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
     }
 
     public function showWeeklyDetails($id)
@@ -429,6 +584,38 @@ class CompressorController extends Controller
             'status' => 200,
             'header' => $main,
             'details' => $details
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $data = CompressorDetails::findOrFail($id);
+
+        if ($data->status == 'approved_foreman' || $data->status == 'approved_supervisor') {
+            return response()->json([
+                'status' => 422,
+                'message' => 'Data sudah disetujui, tidak dapat dihapus'
+            ]);
+        }
+
+        $compressorId = $data->compressor_id;
+
+        // Hapus detail dulu
+        $data->delete();
+
+        // Cek apakah masih ada detail lain dengan compressor_id yang sama
+        $remainingDetails = CompressorDetails::where('compressor_id', $compressorId)->count();
+
+        if ($remainingDetails == 0) {
+            $main = Compressor::find($compressorId);
+            if ($main) {
+                $main->delete();
+            }
+        }
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data berhasil dihapus'
         ]);
     }
 }
