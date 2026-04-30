@@ -424,9 +424,8 @@ class WaterSoftenerController extends Controller
                 $drawOp->setName('Operator');
                 $drawOp->setPath($signaturePath);
                 $drawOp->setHeight(60);
-                $drawOp->setCoordinates('A29');
+                $drawOp->setCoordinates('C29');
                 $drawOp->setWorksheet($sheet);
-                $sheet->setCellValue('A33', '(' . ($approval->operator ? $approval->operator->username : '-') . ')');
             }
             // Foreman (G29)
             if (in_array($approval->status, ['waiting_supervisor', 'approved_supervisor'])) {
@@ -434,9 +433,8 @@ class WaterSoftenerController extends Controller
                 $drawFm->setName('Foreman');
                 $drawFm->setPath($signaturePath);
                 $drawFm->setHeight(60);
-                $drawFm->setCoordinates('G29');
+                $drawFm->setCoordinates('I29');
                 $drawFm->setWorksheet($sheet);
-                $sheet->setCellValue('G33', '(' . ($approval->foreman ? $approval->foreman->username : '-') . ')');
             }
             // Supervisor (L29)
             if ($approval->status == 'approved_supervisor') {
@@ -444,9 +442,8 @@ class WaterSoftenerController extends Controller
                 $drawSpv->setName('Supervisor');
                 $drawSpv->setPath($signaturePath);
                 $drawSpv->setHeight(60);
-                $drawSpv->setCoordinates('L29');
+                $drawSpv->setCoordinates('N29');
                 $drawSpv->setWorksheet($sheet);
-                $sheet->setCellValue('L33', '(' . ($approval->supervisor ? $approval->supervisor->username : '-') . ')');
             }
         }
 
