@@ -64,6 +64,10 @@ Route::middleware('auth')->group(function () {
     @include 'utility/esp-routes.php';
     @include 'utility/water-softener-routes.php';
     @include 'utility/capacitor-bank-routes.php';
+    @include 'utility/warming-up-genset-routes.php';
+    @include 'utility/mdp-routes.php';
+    @include 'utility/compressor-routes.php';
+    @include 'utility/ahu-routes.php';
     @include 'utility/boiler-routes.php';
     @include 'ejo/ejo-routes.php';
     @include 'project/project_routes.php';

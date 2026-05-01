@@ -4,6 +4,7 @@ $bagian = Auth::user()->bagian;
 @endphp
 
 @if (
+($jabatan === 'admin') ||
 ($jabatan === 'dept_head') ||
 ($jabatan === 'supervisor')||($jabatan === 'operator' && $bagian === 'Engineering WWTP') ||
 ($jabatan === 'foreman' && $bagian === 'Engineering WWTP')

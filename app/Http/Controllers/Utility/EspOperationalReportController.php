@@ -138,21 +138,25 @@ class EspOperationalReportController extends Controller
         $opRows = $queryOp->get()->keyBy(fn ($r) => Carbon::parse($r->jam_laporan)->format('H:i'));
 
         // ── Ambil data shift untuk tanggal yang sama ───────────────────
-        // Shift report hanya per tanggal (1 record/hari)
-        $shiftQuery = EspShiftReport::where('tanggal_laporan', $tanggal);
-        if ($grup) {
-            // Jika filter grup aktif, ambil shift berdasarkan grup operator jika ada field-nya
-            // Kalau tidak ada, tetap ambil record hari itu
-        }
-        $shift = $shiftQuery->with(['operator', 'foreman', 'supervisor'])->latest()->first();
+        $shift = EspShiftReport::where('tanggal_laporan', $tanggal)
+            ->with(['operator', 'foreman', 'supervisor'])
+            ->latest()
+            ->first();
 
         // ── Load template ──────────────────────────────────────────────
-        $templatePath = storage_path('app/templates/esp.xlsx');
+        $templatePath = public_path('assets/templates/operasional/esp.xlsx');
+        if (!file_exists($templatePath)) {
+            return "<script>alert('Template ESP tidak ditemukan'); window.close();</script>";
+        }
+
         $spreadsheet  = IOFactory::load($templatePath);
         $sheet        = $spreadsheet->getActiveSheet();
 
         // ── Isi tanggal & grup ─────────────────────────────────────────
-        $sheet->setCellValue('J1', $tanggal . ($grup ? ' | Grup ' . $grup : ''));
+        $sheet->setCellValue('J1', Carbon::parse($tanggal)->translatedFormat('d F Y'));
+        if ($grup) {
+            $sheet->setCellValue('J2', 'GRUP: ' . $grup);
+        }
 
         // ── Isi data operasional per jam (kolom B–F) ───────────────────
         foreach ($jamRow as $jam => $row) {
@@ -166,21 +170,9 @@ class EspOperationalReportController extends Controller
             $sheet->setCellValue('F' . $row, $record->suhu_thermal);
         }
 
-        // ── Isi data shift (kolom H–K) ─────────────────────────────────
-        // Mapping sesuai template esp.xlsx:
-        //   I5  = Total pemakaian air (HMI)
-        //   I7  = Total pemakaian steam
-        //   I8  = Total pemakaian batu bara
-        //   I9  = Efisiensi batu bara
-        //   I11 = Running Hour (Awal), J11 = Running Hour (Akhir)
-        //   I12 = Pengisian Air Feedtank (Awal), J12 = (Akhir)
-        //   I13 = Pengisian Batu bara
-        //   I18 = BWT SCF (Volume Chemical)
-        //   I19 = BWT SRTF (Volume Chemical)
-        //   K18 = Dosis
+        // ── Isi data shift ───────────────────────────────────────────
         if ($shift) {
             $sheet->setCellValue('J5',  $shift->pemakaian_air);
-            $sheet->setCellValue('J6',  $shift->pemakaian_air);
             $sheet->setCellValue('I7',  $shift->pemakaian_steam);
             $sheet->setCellValue('I8',  $shift->pemakaian_batubara);
             $sheet->setCellValue('I9',  $shift->efisiensi_batubara);
@@ -192,94 +184,53 @@ class EspOperationalReportController extends Controller
             $sheet->setCellValue('I18', $shift->chemical_scf);
             $sheet->setCellValue('I19', $shift->chemical_srtf);
             $sheet->setCellValue('K18', $shift->dosis);
+            $sheet->setCellValue('K19', $shift->dosis);
         }
 
-        // ── Insert TTD (jika shift sudah diapprove) ────────────────────
-        // Path gambar TTD:
-        //   Operator   : storage/operasional/ttd/ttd_teknisi.jpeg
-        //   Foreman    : storage/operasional/ttd/ttd_staff.jpeg
-        //   Supervisor : storage/operasional/ttd/ttd_user_eng.jpeg
-        //
-        // Area TTD di template (merged cells):
-        //   A32:C34  = Dibuat oleh (Operator)
-        //   D32:G34  = Diperiksa oleh (Foreman/Staff)
-        //   H32:K34  = Disetujui oleh (Supervisor)
-
-        $ttdBasePath = public_path('storage/operasional/ttd');
-
-        $ttdConfig = [
-            // [ status_required, image_file, anchor_col, anchor_row, width_px, height_px ]
-            'operator'   => [
-                'file'       => $ttdBasePath . '/ttd_teknisi.jpeg',
-                'anchor'     => 'A32',
-                'col_offset' => 1,   // offset in EMU from anchor col (small margin)
-                'row_offset' => 5,
-                'width'      => 100,
-                'height'     => 50,
-            ],
-            'foreman'    => [
-                'file'       => $ttdBasePath . '/ttd_staff.jpeg',
-                'anchor'     => 'D32',
-                'col_offset' => 1,
-                'row_offset' => 5,
-                'width'      => 100,
-                'height'     => 50,
-            ],
-            'supervisor' => [
-                'file'       => $ttdBasePath . '/ttd_user_eng.jpeg',
-                'anchor'     => 'H32',
-                'col_offset' => 1,
-                'row_offset' => 5,
-                'width'      => 100,
-                'height'     => 50,
-            ],
-        ];
-
-        // Tentukan TTD mana yang perlu dimasukkan berdasarkan status approval
-        $insertTtd = [];
-
-        if ($shift) {
-            // Operator selalu ada jika ada shift record (status minimal approved_operator)
-            $insertTtd[] = 'operator';
-
+        // ── TTD Approval Section ──────────────────────────────────────
+        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+        if ($shift && file_exists($signaturePath)) {
+            // Operator (A32)
+            if ($shift->status != 'draft') {
+                $drawOp = new Drawing();
+                $drawOp->setName('Operator');
+                $drawOp->setPath($signaturePath);
+                $drawOp->setHeight(60);
+                $drawOp->setCoordinates('A32');
+                $drawOp->setWorksheet($sheet);
+                $sheet->setCellValue('A35', '(' . ($shift->operator ? $shift->operator->username : '-') . ')');
+            }
+            // Foreman (D32)
             if (in_array($shift->status, ['approved_foreman', 'approved_supervisor'])) {
-                $insertTtd[] = 'foreman';
+                $drawFm = new Drawing();
+                $drawFm->setName('Foreman');
+                $drawFm->setPath($signaturePath);
+                $drawFm->setHeight(60);
+                $drawFm->setCoordinates('D32');
+                $drawFm->setWorksheet($sheet);
+                $sheet->setCellValue('D35', '(' . ($shift->foreman ? $shift->foreman->username : '-') . ')');
             }
-
-            if ($shift->status === 'approved_supervisor') {
-                $insertTtd[] = 'supervisor';
+            // Supervisor (H32)
+            if ($shift->status == 'approved_supervisor') {
+                $drawSpv = new Drawing();
+                $drawSpv->setName('Supervisor');
+                $drawSpv->setPath($signaturePath);
+                $drawSpv->setHeight(60);
+                $drawSpv->setCoordinates('H32');
+                $drawSpv->setWorksheet($sheet);
+                $sheet->setCellValue('H35', '(' . ($shift->supervisor ? $shift->supervisor->username : '-') . ')');
             }
         }
 
-        foreach ($insertTtd as $role) {
-            $cfg  = $ttdConfig[$role];
-            $file = $cfg['file'];
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'ESP_Report_' . $tanggal . '.xlsx';
 
-            if (!file_exists($file)) continue;
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
 
-            $drawing = new Drawing();
-            $drawing->setName('TTD ' . ucfirst($role));
-            $drawing->setDescription('Tanda tangan ' . $role);
-            $drawing->setPath($file);
-            $drawing->setCoordinates($cfg['anchor']);
-            $drawing->setOffsetX($cfg['col_offset']);
-            $drawing->setOffsetY($cfg['row_offset']);
-            $drawing->setWidth($cfg['width']);
-            $drawing->setHeight($cfg['height']);
-            $drawing->setWorksheet($sheet);
-        }
-
-        // ── Stream download ────────────────────────────────────────────
-        $filename = 'ESP_Operational_' . $tanggal . ($grup ? '_Grup' . $grup : '') . '.xlsx';
-
-        return new StreamedResponse(function () use ($spreadsheet) {
-            $writer = new Xlsx($spreadsheet);
-            $writer->save('php://output');
-        }, 200, [
-            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            'Cache-Control'       => 'max-age=0',
-        ]);
+        $writer->save('php://output');
+        exit;
     }
 
     
