@@ -953,7 +953,7 @@
 
         // Role & ID dari session auth
         const AUTH_JABATAN = "{{ auth()->user()->jabatan ?? '' }}";
-        const AUTH_ID = {{auth()-> id() }};
+        const AUTH_ID = '{{auth()-> id() }}';
 
         let currentBulan, currentTahun, approvalData;
 
