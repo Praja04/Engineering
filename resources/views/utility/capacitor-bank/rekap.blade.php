@@ -270,6 +270,35 @@
         border-radius: 10px;
     }
 
+    /* ── Approval Banner ── */
+    .approval-banner {
+        border-radius: 12px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        font-size: 0.86rem;
+    }
+
+    .approval-banner.draft {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+    }
+
+    .approval-banner.waiting_supervisor {
+        background: #fef9c3;
+        border: 1px solid #fde047;
+        color: #713f12;
+    }
+
+    .approval-banner.approved_supervisor {
+        background: #d1fae5;
+        border: 1px solid #6ee7b7;
+        color: #065f46;
+    }
+
     /* ── Buttons ── */
     .btn-export {
         background: #1e3a8a;
@@ -372,6 +401,9 @@
                     <a href="{{ route('capacitor-bank.index') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">
                         <i class="bx bx-edit me-1"></i>Input Harian
                     </a>
+                    <a href="{{ route('capacitor-bank.approval') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                        <i class="bx bx-check-shield me-1"></i>Approval
+                    </a>
                 </div>
             </div>
         </div>
@@ -389,11 +421,22 @@
                     </button>
                 </div>
                 <div class="col-auto ms-auto">
-                    <button class="btn btn-export" id="btnExport">
-                        <i class="bx bx-download me-1"></i>Export PDF
+                    <button id="btnExport" class="btn btn-export">
+                        <i class="bx bx-file me-1"></i>Export Excel
                     </button>
                 </div>
             </div>
+        </div>
+
+        {{-- ── Approval Banner ── --}}
+        <div id="approvalBanner" class="approval-banner" style="display:none;" data-aos="fade-up" data-aos-delay="80"></div>
+
+        {{-- ── Submit Bulan Button (Foreman) ── --}}
+        <div id="submitArea" class="mb-3" style="display:none;" data-aos="fade-up">
+            <button class="btn btn-submit-month" id="btnOpenSubmit">
+                <i class="bx bx-send me-1"></i>Ajukan ke Supervisor
+            </button>
+            <span class="text-muted ms-3" style="font-size:.82rem;" id="submitHint"></span>
         </div>
 
         {{-- ── Summary Cards ── --}}
@@ -476,7 +519,42 @@
 
     </div>
 </div>
-{{-- ── Modal Detail ── --}}
+{{-- ── Modal Submit Bulan ── --}}
+<div class="modal fade" id="modalSubmit" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;border:none;overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#dbeafe;border:none;padding:20px 24px;">
+                <h5 class="modal-title"><i class="bx bx-send me-2"></i>Ajukan Laporan ke Supervisor</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-3" style="font-size:.87rem;">
+                    Laporan akan dikunci dan dikirim ke Supervisor. Pastikan semua data sudah benar.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:.83rem;">
+                        Pilih Supervisor <span class="text-danger">*</span>
+                    </label>
+                    <select id="selectSupervisor" class="form-select">
+                        <option value="">— Pilih Supervisor —</option>
+                    </select>
+                </div>
+                <div class="alert alert-warning py-2 px-3" style="font-size:.82rem;">
+                    <i class="bx bx-info-circle me-1"></i>
+                    Setelah diajukan, data bulan ini tidak bisa diubah.
+                </div>
+            </div>
+            <div class="modal-footer" style="padding:16px 24px;">
+                <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-submit-month" id="btnSubmitConfirm">
+                    <i class="bx bx-send me-1"></i>Ajukan ke Supervisor
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <div class="modal fade" id="modalDetail" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -592,21 +670,16 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>
-    window.USER_ROLE = {
-        {
-            auth() - > user() - > role ?? 'operator'
-        }
-    };
-</script>
 <script>
     $(function() {
 
         const CSRF = $('meta[name="csrf-token"]').attr('content');
         const DATA = "{{ route('capacitor-bank.data') }}";
+        const SUBMIT = "{{ route('capacitor-bank.submit') }}";
+        const AUTH_JABATAN = "{{ auth()->user()->jabatan ?? '' }}";
+        const AUTH_ID = '{{auth()-> id()}}';
 
-        let currentBulan, currentTahun;
+        let currentBulan, currentTahun, approvalData;
 
         const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
@@ -646,8 +719,11 @@
                     tahun: currentTahun
                 },
                 success: function(res) {
-                    buildSummary(res.data);
-                    buildTable(res.data);
+                    approvalData = res.approval;
+                    buildSummary(res.data, res.approval);
+                    buildTable(res.data, res.approval);
+                    renderBanner(res.approval);
+                    renderSubmitArea(res.data, res.approval);
                     $('#badgeTgl').text(res.data.length + ' tanggal');
                 },
                 error: function() {
@@ -658,7 +734,7 @@
         }
 
         // ── Summary ───────────────────────────────────────────────────
-        function buildSummary(rows) {
+        function buildSummary(rows, approval) {
             const total = rows.length;
             const high = rows.filter(r => {
                 return (r.cap_a_i1 || 0) > 50 || (r.cap_a_i2 || 0) > 50 || (r.cap_a_i3 || 0) > 50 ||
@@ -667,16 +743,87 @@
             }).length;
             const hot = rows.filter(r => (r.suhu_ruang || 0) > 60).length;
 
+            const statusMap = {
+                'draft': {
+                    icon: 'bx-edit',
+                    text: 'Draft'
+                },
+                'waiting_supervisor': {
+                    icon: 'bx-time-five',
+                    text: 'Menunggu Supervisor'
+                },
+                'approved_supervisor': {
+                    icon: 'bx-check-double',
+                    text: 'Final Disetujui'
+                },
+            };
+            const st = approval ? approval.status : 'draft';
+            const stInfo = statusMap[st] || statusMap['draft'];
+
             $('#sumTotal').text(total);
             $('#sumHigh').text(high);
             $('#sumHot').text(hot);
-            $('#sumStatus').html('<i class="bx bx-check-circle me-1"></i>Normal');
-            $('#sumStatusSub').text(`${currentBulan}/${currentTahun}`);
+            $('#sumStatus').html(`<i class="bx ${stInfo.icon} me-1"></i>${stInfo.text}`);
+            $('#sumStatusSub').text(approval ? `${currentBulan}/${currentTahun}` : 'Belum ada laporan');
+            $('#badgeTgl').text(total + ' tanggal');
+        }
+
+        // ── Approval Banner ───────────────────────────────────────
+        function renderBanner(approval) {
+            const $b = $('#approvalBanner');
+            if (!approval) {
+                $b.hide();
+                return;
+            }
+
+            const map = {
+                'draft': {
+                    icon: 'bx-edit',
+                    msg: 'Draft — belum diajukan ke Supervisor.'
+                },
+                'waiting_supervisor': {
+                    icon: 'bx-time-five',
+                    msg: `Menunggu persetujuan Supervisor <strong>${approval.supervisor?.username ?? '-'}</strong>.`
+                },
+                'approved_supervisor': {
+                    icon: 'bx-check-double',
+                    msg: `<strong>Final disetujui</strong> oleh Supervisor <strong>${approval.supervisor?.username ?? '-'}</strong>. Laporan terkunci.`
+                },
+            };
+            const info = map[approval.status] || map['draft'];
+
+            $b.attr('class', 'approval-banner ' + approval.status)
+                .html(`<i class="bx ${info.icon} fs-4 flex-shrink-0"></i><span>${info.msg}</span>`)
+                .show();
+        }
+
+        // ── Submit Area (Foreman) ─────────────────────────────────
+        function renderSubmitArea(rows, approval) {
+            const $submitArea = $('#submitArea');
+            $submitArea.hide();
+
+            if (!approval) return;
+
+            // hanya foreman & status draft
+            if (approval.status === 'draft' && AUTH_JABATAN === 'foreman') {
+
+                const ready = rows.length > 0; // ✅ cukup ada data saja
+
+                $('#btnOpenSubmit').prop('disabled', !ready);
+
+                $('#submitHint').text(ready ?
+                    `${rows.length} data tersedia — siap diajukan.` :
+                    `Belum ada data untuk bulan ini.`
+                );
+
+                $submitArea.show();
+            }
         }
 
         // ── Table ─────────────────────────────────────────────────────
-        function buildTable(rows) {
+        function buildTable(rows, approval) {
             const $body = $('#tblBody').empty();
+            const canEdit = !approval || approval.status === 'draft';
 
             if (!rows.length) {
                 $body.html('<tr><td colspan="14" class="text-center text-muted py-4">Tidak ada data bulan ini</td></tr>');
@@ -689,57 +836,39 @@
                     return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
                 })() : '-';
 
-                // Badge untuk arus tinggi (>50A)
                 const i1a = currentBadge(r.cap_a_i1);
                 const i2a = currentBadge(r.cap_a_i2);
                 const i3a = currentBadge(r.cap_a_i3);
-
                 const i1b = currentBadge(r.cap_b_i1);
                 const i2b = currentBadge(r.cap_b_i2);
                 const i3b = currentBadge(r.cap_b_i3);
-
                 const i1c = currentBadge(r.cap_c_i1);
                 const i2c = currentBadge(r.cap_c_i2);
                 const i3c = currentBadge(r.cap_c_i3);
-
-                // Badge untuk suhu panas (>60°C)
                 const suhuBadge = tempBadge(r.suhu_ruang);
 
-                let updateBtn = '';
-
-                if (window.USER_ROLE !== 'operator') {
-                    updateBtn = `
-                            <button class="btn btn-sm btn-outline-warning rounded-pill px-2 py-0 btn-update-row"
-                                data-row='${JSON.stringify(r).replace(/'/g, "&#39;")}'>
-                                <i class="bx bx-edit"></i>
-                            </button>`;
-                }
+                const updateBtn = canEdit ? `
+                    <button class="btn btn-sm btn-outline-warning rounded-pill px-2 py-0 btn-update-row"
+                        data-row='${JSON.stringify(r).replace(/'/g, "&#39;")}'>
+                        <i class="bx bx-edit"></i>
+                    </button>` : '';
 
                 const detailBtn = `
-                        <button class="btn btn-sm btn-outline-info rounded-pill px-2 py-0 btn-detail-row"
-                            data-row='${JSON.stringify(r).replace(/'/g, "&#39;")}'>
-                            <i class="bx bx-info-circle"></i>
-                        </button>
-                    `;
-
-                const actionBtn = detailBtn + ' ' + updateBtn;
+                    <button class="btn btn-sm btn-outline-info rounded-pill px-2 py-0 btn-detail-row"
+                        data-row='${JSON.stringify(r).replace(/'/g, "&#39;")}'>
+                        <i class="bx bx-info-circle"></i>
+                    </button>`;
 
                 $body.append(`
                     <tr>
                         <td class="fw-semibold">${tgl}</td>
                         <td>${r.jam ?? '-'}</td>
                         <td>${r.arus_total ? r.arus_total + ' A' : '-'}</td>
-                        <td>${i1a}</td>
-                        <td>${i2a}</td>
-                        <td>${i3a}</td>
-                        <td>${i1b}</td>
-                        <td>${i2b}</td>
-                        <td>${i3b}</td>
-                        <td>${i1c}</td>
-                        <td>${i2c}</td>
-                        <td>${i3c}</td>
+                        <td>${i1a}</td><td>${i2a}</td><td>${i3a}</td>
+                        <td>${i1b}</td><td>${i2b}</td><td>${i3b}</td>
+                        <td>${i1c}</td><td>${i2c}</td><td>${i3c}</td>
                         <td>${suhuBadge}</td>
-                        <td class="text-center" style="white-space:nowrap;">${actionBtn}</td>
+                        <td class="text-center" style="white-space:nowrap;">${detailBtn} ${updateBtn}</td>
                     </tr>
                 `);
             });
@@ -773,26 +902,13 @@
 
         // ── Export PDF ────────────────────────────────────────────────
         $('#btnExport').on('click', function() {
-            const el = document.querySelector('.table-card');
-            const bulanStr = $('#inputBulan').val().replace('-', '/');
-            html2pdf().set({
-                margin: 8,
-                filename: `CapacitorBank_${bulanStr}.pdf`,
-                image: {
-                    type: 'jpeg',
-                    quality: 0.98
-                },
-                html2canvas: {
-                    scale: 2
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: 'a4',
-                    orientation: 'landscape'
-                }
-            }).from(el).save();
+            const val = $('#inputBulan').val();
+            if (!val) {
+                toastr.warning('Pilih bulan terlebih dahulu.');
+                return;
+            }
+            window.location.href = "{{ route('capacitor-bank.export') }}?bulan=" + val;
         });
-
 
         $(document).on('click', '.btn-detail-row', function() {
             const row = $(this).data('row');
@@ -878,6 +994,69 @@
                 }
             });
         });
+
+        // ── Modal Submit ──────────────────────────────────────────────
+        $('#btnOpenSubmit').on('click', function() {
+            loadSupervisorList();
+            new bootstrap.Modal($('#modalSubmit')[0]).show();
+        });
+
+        $('#btnSubmitConfirm').on('click', function() {
+            const supervisorId = $('#selectSupervisor').val();
+            if (!supervisorId) {
+                toastr.warning('Pilih supervisor terlebih dahulu.');
+                return;
+            }
+
+            const $btn = $(this).prop('disabled', true)
+                .html('<i class="bx bx-loader-alt bx-spin me-1"></i>Mengirim…');
+
+            $.ajax({
+                url: SUBMIT,
+                method: 'POST',
+                data: {
+                    _token: CSRF,
+                    bulan: currentBulan,
+                    tahun: currentTahun,
+                    supervisor_id: supervisorId
+                },
+                success: function(res) {
+                    toastr.success(res.message, 'Berhasil', {
+                        timeOut: 4000
+                    });
+                    bootstrap.Modal.getInstance($('#modalSubmit')[0]).hide();
+                    loadData();
+                },
+                error: function(xhr) {
+                    toastr.error(xhr.responseJSON?.message ?? 'Gagal mengajukan.', 'Error', {
+                        timeOut: 4000
+                    });
+                },
+                complete: function() {
+                    $btn.prop('disabled', false)
+                        .html('<i class="bx bx-send me-1"></i>Ajukan ke Supervisor');
+                }
+            });
+        });
+
+        function loadSupervisorList() {
+            $.ajax({
+                url: '/api/utility/users/approvers',
+                method: 'GET',
+                success: function(res) {
+                    let opt = '<option value="">— Pilih Supervisor —</option>';
+                    const list = res.user ?? res.supervisor ?? [];
+                    list.forEach(function(u) {
+                        opt += `<option value="${u.id}">${u.username ?? u.name}</option>`;
+                    });
+                    $('#selectSupervisor').html(opt);
+                },
+                error: function() {
+                    toastr.error('Gagal memuat daftar supervisor.');
+                }
+            });
+        }
+
         // ── Auto load saat halaman dimuat ────────────────────────────
         loadData();
     });
