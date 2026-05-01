@@ -352,16 +352,109 @@ class WaterSoftenerController extends Controller
     // HELPER
     // =========================================================
 
-    private function kirimNotifikasi(int $userId, string $title, string $message, int $approvalId): void
+    public function export(Request $request)
     {
-        NotificationsModel::create([
-            'user_id'         => $userId,
-            'title'           => $title,
-            'message'         => $message,
-            'url'             => url(route('water-softener.approval')),
-            'notifiable_type' => WaterSoftenerApproval::class,
-            'notifiable_id'   => $approvalId,
-            'is_read'         => 0,
-        ]);
+        if ($request->bulan && str_contains((string) $request->bulan, '-')) {
+            [$tahun, $bulan] = explode('-', $request->bulan);
+            $request->merge(['bulan' => (int) $bulan, 'tahun' => (int) $tahun]);
+        }
+
+        $query = WaterSoftener::whereMonth('tanggal', $request->bulan)
+            ->whereYear('tanggal', $request->tahun)
+            ->orderBy('tanggal', 'asc');
+
+        $data = $query->get();
+
+        if ($data->isEmpty()) {
+            return "<script>alert('Tidak ada data ditemukan untuk periode tersebut'); window.close();</script>";
+        }
+
+        $templatePath = public_path('assets/templates/operasional/water_softener.xlsx');
+        if (!file_exists($templatePath)) {
+            return "<script>alert('Template Water Softener tidak ditemukan'); window.close();</script>";
+        }
+
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Info (Misal di K1 & K2)
+        $monthName = Carbon::create()->month($request->bulan)->translatedFormat('F');
+        $sheet->setCellValue('N1', 'BULAN: ' . strtoupper($monthName) . ' ' . $request->tahun);
+
+        foreach ($data as $item) {
+            $day = Carbon::parse($item->tanggal)->day;
+            $currentRow = 7 + ($day - 1);
+
+            // WS 1 (B-E)
+            $sheet->setCellValue('B' . $currentRow, $item->ws1_jam ? Carbon::parse($item->ws1_jam)->format('H:i') : '');
+            $sheet->setCellValue('C' . $currentRow, $item->ws1_hardness_in);
+            $sheet->setCellValue('D' . $currentRow, $item->ws1_hardness_out);
+            $sheet->setCellValue('E' . $currentRow, $item->ws1_flow);
+
+            // WS 2 (F-I)
+            $sheet->setCellValue('F' . $currentRow, $item->ws2_jam ? Carbon::parse($item->ws2_jam)->format('H:i') : '');
+            $sheet->setCellValue('G' . $currentRow, $item->ws2_hardness_in);
+            $sheet->setCellValue('H' . $currentRow, $item->ws2_hardness_out);
+            $sheet->setCellValue('I' . $currentRow, $item->ws2_flow);
+
+            // Regen 1 (J-M)
+            $sheet->setCellValue('J' . $currentRow, $item->regen1_jam ? Carbon::parse($item->regen1_jam)->format('H:i') : '');
+            $sheet->setCellValue('K' . $currentRow, $item->regen1_air_pelarut);
+            $sheet->setCellValue('L' . $currentRow, $item->regen1_garam);
+            $sheet->setCellValue('M' . $currentRow, $item->regen1_nomer_ws);
+
+            // Regen 2 (N-Q)
+            $sheet->setCellValue('N' . $currentRow, $item->regen2_jam ? Carbon::parse($item->regen2_jam)->format('H:i') : '');
+            $sheet->setCellValue('O' . $currentRow, $item->regen2_air_pelarut);
+            $sheet->setCellValue('P' . $currentRow, $item->regen2_garam);
+            $sheet->setCellValue('Q' . $currentRow, $item->regen2_nomer_ws);
+        }
+
+        // Approval Section
+        $approval = WaterSoftenerApproval::where('bulan', $request->bulan)
+            ->where('tahun', $request->tahun)
+            ->with(['operator', 'foreman', 'supervisor'])
+            ->first();
+
+        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+        if ($approval && file_exists($signaturePath)) {
+            // Operator (A29)
+            if ($approval->status != 'draft') {
+                $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawOp->setName('Operator');
+                $drawOp->setPath($signaturePath);
+                $drawOp->setHeight(60);
+                $drawOp->setCoordinates('C39');
+                $drawOp->setWorksheet($sheet);
+            }
+            // Foreman (G29)
+            if (in_array($approval->status, ['waiting_supervisor', 'approved_supervisor'])) {
+                $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawFm->setName('Foreman');
+                $drawFm->setPath($signaturePath);
+                $drawFm->setHeight(60);
+                $drawFm->setCoordinates('I39');
+                $drawFm->setWorksheet($sheet);
+            }
+            // Supervisor (L29)
+            if ($approval->status == 'approved_supervisor') {
+                $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawSpv->setName('Supervisor');
+                $drawSpv->setPath($signaturePath);
+                $drawSpv->setHeight(60);
+                $drawSpv->setCoordinates('N39');
+                $drawSpv->setWorksheet($sheet);
+            }
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'WaterSoftener_Report_' . now()->format('YmdHis') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
     }
 }
