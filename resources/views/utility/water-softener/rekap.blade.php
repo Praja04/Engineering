@@ -969,9 +969,9 @@
             const DATA = "{{ route('water-softener.data') }}";
             const UPDATE = "{{ route('water-softener.update', '__TGL__') }}";
 
-            // Role & ID dari session auth
-            const AUTH_JABATAN = "{{ auth()->user()->jabatan ?? '' }}";
-            const AUTH_ID = {{ auth()->id() }};
+        // Role & ID dari session auth
+        const AUTH_JABATAN = "{{ auth()->user()->jabatan ?? '' }}";
+        const AUTH_ID = '{{auth()-> id() }}';
 
             let currentBulan, currentTahun, approvalData;
 
