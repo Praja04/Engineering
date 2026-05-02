@@ -17,7 +17,7 @@ class WwtpSludge extends Model
         'shift',
         'drain_lumpur',
         'running_hour_scp',
-        'hasil_lumpur'
-
+        'hasil_lumpur',
+        'sludge_content'
     ];
 }

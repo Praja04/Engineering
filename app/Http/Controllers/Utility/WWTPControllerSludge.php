@@ -11,7 +11,6 @@ use Carbon\Carbon;
 
 class WWTPControllerSludge extends Controller
 {
-    //
     public function form_sludge()
     {
         return view('utility.wwtp.form_sludge');
@@ -23,15 +22,33 @@ class WWTPControllerSludge extends Controller
     }
 
     /**
-     * Menampilkan semua data sludge WWTP (JSON)
+     * Menampilkan semua data sludge WWTP (JSON) — server-side pagination
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = WwtpSludge::orderBy('tanggal', 'desc')->get();
-        return response()->json([
-            'status' => 'success',
-            'data'   => $data
-        ]);
+        $perPage = $request->input('per_page', 10);
+        $page    = $request->input('page', 1);
+        $shift   = $request->input('shift');
+        $bulan   = $request->input('bulan');
+        $search  = $request->input('search');
+
+        $query = WwtpSludge::orderBy('tanggal', 'desc')->orderBy('shift', 'asc');
+
+        if ($shift) {
+            $query->where('shift', $shift);
+        }
+
+        if ($bulan) {
+            $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan]);
+        }
+
+        if ($search) {
+            $query->where('tanggal', 'like', "%{$search}%");
+        }
+
+        return response()->json(
+            $query->paginate($perPage, ['*'], 'page', $page)
+        );
     }
 
     /**
@@ -40,14 +57,14 @@ class WWTPControllerSludge extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'tanggal'        => 'required|date',
-            'shift'          => 'required|in:1,2,3',
-            'drain_lumpur'   => 'required|numeric|min:0',
-            'hasil_lumpur'   => 'required|numeric|min:0',
-            'running_hour_scp' => 'required|numeric|min:0',
-            'sludge_content' => 'nullable|numeric|min:0'
-
+            'tanggal'            => 'required|date',
+            'shift'              => 'required|in:1,2,3',
+            'drain_lumpur'       => 'required|numeric|min:0',
+            'hasil_lumpur'       => 'required|numeric|min:0',
+            'running_hour_scp'   => 'required|numeric|min:0',
+            'sludge_content'     => 'nullable|numeric|min:0',
         ]);
+
         $existing = WwtpSludge::where('tanggal', $request->tanggal)
             ->where('shift', $request->shift)
             ->first();
@@ -58,7 +75,6 @@ class WWTPControllerSludge extends Controller
             ], 409);
         }
 
-        // Cek jumlah shift pada tanggal tersebut (maksimal 3)
         $shiftCount = WwtpSludge::where('tanggal', $request->tanggal)->count();
 
         if ($shiftCount >= 3) {
@@ -66,18 +82,19 @@ class WWTPControllerSludge extends Controller
                 'message' => 'Tanggal ini sudah memiliki 3 shift. Tidak dapat menambah data lagi.'
             ], 409);
         }
-        WwtpSludge::create([
-            'tanggal'        => $request->tanggal,
-            'shift'          => $request->shift,
-            'drain_lumpur'   => $request->drain_lumpur,
-            'hasil_lumpur'   => $request->hasil_lumpur,
-            'running_hour_scp' => $request->running_hour_scp,
-            'sludge_content' => $request->sludge_content
 
+        WwtpSludge::create([
+            'tanggal'          => $request->tanggal,
+            'shift'            => $request->shift,
+            'drain_lumpur'     => $request->drain_lumpur,
+            'hasil_lumpur'     => $request->hasil_lumpur,
+            'running_hour_scp' => $request->running_hour_scp,
+            'sludge_content'   => $request->sludge_content,
         ]);
+
         return response()->json([
             'status'  => 'success',
-            'message' => 'Data sludge WWTP berhasil disimpan.'
+            'message' => 'Data sludge WWTP berhasil disimpan.',
         ]);
     }
 
@@ -88,7 +105,7 @@ class WWTPControllerSludge extends Controller
     }
 
     /**
-     * Update dat
+     * Update data sludge
      */
     public function update(Request $request, $id)
     {
@@ -96,25 +113,25 @@ class WWTPControllerSludge extends Controller
 
         $request->validate([
             'tanggal'          => 'required|date',
-            'shift'            => 'required', // ← fix: was shift1,shift2,shift3
+            'shift'            => 'required',
             'drain_lumpur'     => 'nullable|numeric|min:0',
-            'hasil_lumpur'     => 'nullable|numeric|min:0', // ← tambah ini
+            'hasil_lumpur'     => 'nullable|numeric|min:0',
             'running_hour_scp' => 'nullable|numeric|min:0',
-            'sludge_content'   => 'nullable|numeric|min:0'
+            'sludge_content'   => 'nullable|numeric|min:0',
         ]);
 
         $harian->update($request->only([
             'tanggal',
             'shift',
             'drain_lumpur',
-            'hasil_lumpur',      // ← tambah ini
+            'hasil_lumpur',
             'running_hour_scp',
-            'sludge_content'
+            'sludge_content',
         ]));
 
         return response()->json([
             'message' => 'Data harian berhasil diperbarui.',
-            'data'    => $harian
+            'data'    => $harian,
         ]);
     }
 
@@ -129,55 +146,44 @@ class WWTPControllerSludge extends Controller
         return response()->json(['message' => 'Data harian berhasil dihapus.']);
     }
 
-    // 
     /**
      * Get dashboard statistics
      */
     public function getStatistics()
     {
         try {
-            // Total shifts
             $totalShifts = WwtpSludge::count();
+            $totalDays   = WwtpSludge::distinct('tanggal')->count('tanggal');
 
-            // Total unique days
-            $totalDays = WwtpSludge::distinct('tanggal')->count('tanggal');
-
-            // Shifts this week
             $startOfWeek = Carbon::now()->startOfWeek();
-            $endOfWeek = Carbon::now()->endOfWeek();
+            $endOfWeek   = Carbon::now()->endOfWeek();
             $shiftsThisWeek = WwtpSludge::whereBetween('tanggal', [$startOfWeek, $endOfWeek])->count();
 
-            // Shifts today
             $shiftsToday = WwtpSludge::whereDate('tanggal', Carbon::today())->count();
 
-            // Last update
             $lastRecord = WwtpSludge::orderBy('tanggal', 'desc')
                 ->orderBy('shift', 'desc')
                 ->first();
 
-            // Monthly averages
             $startOfMonth = Carbon::now()->startOfMonth();
-            $endOfMonth = Carbon::now()->endOfMonth();
+            $endOfMonth   = Carbon::now()->endOfMonth();
 
             $monthlyStats = WwtpSludge::whereBetween('tanggal', [$startOfMonth, $endOfMonth])
                 ->selectRaw('AVG(drain_lumpur) as avg_drain, AVG(running_hour_scp) as avg_running_hour')
                 ->first();
 
             return response()->json([
-                'total_shifts' => $totalShifts,
-                'total_days' => $totalDays,
-                'shifts_this_week' => $shiftsThisWeek,
-                'shifts_today' => $shiftsToday,
-                'last_update' => $lastRecord ? $lastRecord->tanggal : null,
-                'last_shift' => $lastRecord ? $lastRecord->shift : null,
-                'monthly_drain_avg' => $monthlyStats ? round($monthlyStats->avg_drain, 2) : 0,
+                'total_shifts'             => $totalShifts,
+                'total_days'               => $totalDays,
+                'shifts_this_week'         => $shiftsThisWeek,
+                'shifts_today'             => $shiftsToday,
+                'last_update'              => $lastRecord ? $lastRecord->tanggal : null,
+                'last_shift'               => $lastRecord ? $lastRecord->shift : null,
+                'monthly_drain_avg'        => $monthlyStats ? round($monthlyStats->avg_drain, 2) : 0,
                 'monthly_running_hour_avg' => $monthlyStats ? round($monthlyStats->avg_running_hour, 2) : 0,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error fetching statistics',
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Error fetching statistics', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -188,7 +194,7 @@ class WWTPControllerSludge extends Controller
     {
         try {
             $startDate = $request->input('start_date', Carbon::now()->startOfMonth());
-            $endDate = $request->input('end_date', Carbon::now()->endOfMonth());
+            $endDate   = $request->input('end_date',   Carbon::now()->endOfMonth());
 
             $data = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])
                 ->select('tanggal')
@@ -199,10 +205,7 @@ class WWTPControllerSludge extends Controller
 
             return response()->json($data);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error fetching drain chart data',
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Error fetching drain chart data', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -213,7 +216,7 @@ class WWTPControllerSludge extends Controller
     {
         try {
             $startDate = $request->input('start_date', Carbon::now()->startOfMonth());
-            $endDate = $request->input('end_date', Carbon::now()->endOfMonth());
+            $endDate   = $request->input('end_date',   Carbon::now()->endOfMonth());
 
             $data = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])
                 ->select('tanggal')
@@ -224,19 +227,15 @@ class WWTPControllerSludge extends Controller
 
             return response()->json($data);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error fetching running hour chart data',
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Error fetching running hour chart data', 'message' => $e->getMessage()], 500);
         }
     }
-
 
     public function getHasilLumpurChart(Request $request)
     {
         try {
             $startDate = $request->input('start_date', Carbon::now()->startOfMonth());
-            $endDate = $request->input('end_date', Carbon::now()->endOfMonth());
+            $endDate   = $request->input('end_date',   Carbon::now()->endOfMonth());
 
             $data = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])
                 ->select('tanggal')
@@ -247,10 +246,7 @@ class WWTPControllerSludge extends Controller
 
             return response()->json($data);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error fetching hasil lumpur chart data',
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Error fetching hasil lumpur chart data', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -261,21 +257,18 @@ class WWTPControllerSludge extends Controller
     {
         try {
             $startDate = $request->input('start_date', Carbon::now()->startOfMonth());
-            $endDate = $request->input('end_date', Carbon::now()->endOfMonth());
+            $endDate   = $request->input('end_date',   Carbon::now()->endOfMonth());
 
             $data = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])
                 ->selectRaw('
-                SUM(drain_lumpur) as total_drain_lumpur,
-                SUM(running_hour_scp) as total_running_hour_scp,
-                SUM(hasil_lumpur) as total_hasil_lumpur')
+                    SUM(drain_lumpur) as total_drain_lumpur,
+                    SUM(running_hour_scp) as total_running_hour_scp,
+                    SUM(hasil_lumpur) as total_hasil_lumpur')
                 ->first();
 
             return response()->json($data);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error fetching shift breakdown data',
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Error fetching shift breakdown data', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -295,18 +288,14 @@ class WWTPControllerSludge extends Controller
                 ->orderBy('month', 'asc')
                 ->get()
                 ->map(function ($item) {
-                    // Format month to be more readable
-                    $date = Carbon::createFromFormat('Y-m', $item->month);
+                    $date        = Carbon::createFromFormat('Y-m', $item->month);
                     $item->month = $date->format('M Y');
                     return $item;
                 });
 
             return response()->json($data);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error fetching monthly comparison data',
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Error fetching monthly comparison data', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -325,7 +314,6 @@ class WWTPControllerSludge extends Controller
                 ->limit($limit)
                 ->get();
 
-            // Get detailed shifts for each date
             foreach ($records as $record) {
                 $record->shifts = WwtpSludge::where('tanggal', $record->tanggal)
                     ->orderBy('shift', 'asc')
@@ -334,25 +322,40 @@ class WWTPControllerSludge extends Controller
 
             return response()->json($records);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error fetching recent records',
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['error' => 'Error fetching recent records', 'message' => $e->getMessage()], 500);
         }
     }
 
+    // ─────────────────────────────────────────────
+    // Pengangkutan Sludge
+    // ─────────────────────────────────────────────
 
-
-    // Pengangkutan sludge
-    
-    public function index_pengangkutan()
+    /**
+     * Menampilkan semua data pengangkutan sludge (JSON) — server-side pagination
+     */
+    public function index_pengangkutan(Request $request)
     {
-        $data = WwtpPengangkutanSludge::orderBy('week_start', 'desc')->get();
+        $perPage = $request->input('per_page', 10);
+        $page    = $request->input('page', 1);
+        $bulan   = $request->input('bulan');
+        $search  = $request->input('search');
 
-        return response()->json([
-            'status' => 'success',
-            'data'   => $data
-        ]);
+        $query = WwtpPengangkutanSludge::orderBy('week_start', 'desc');
+
+        if ($bulan) {
+            $query->whereRaw("DATE_FORMAT(week_start, '%Y-%m') = ?", [$bulan]);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('week_start', 'like', "%{$search}%")
+                    ->orWhere('week_end', 'like', "%{$search}%");
+            });
+        }
+
+        return response()->json(
+            $query->paginate($perPage, ['*'], 'page', $page)
+        );
     }
 
     /**
@@ -361,82 +364,75 @@ class WWTPControllerSludge extends Controller
     public function store_pengangkutan(Request $request)
     {
         $request->validate([
-            'tanggal' => 'required|date',
+            'tanggal'             => 'required|date',
             'jumlah_pengangkutan' => 'required|numeric|min:0',
         ]);
 
-        $tanggal = Carbon::parse($request->tanggal);
-
+        $tanggal   = Carbon::parse($request->tanggal);
         $startWeek = $tanggal->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
         $endWeek   = $tanggal->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
 
-        // optional: cegah double input dalam 1 minggu
         $existing = WwtpPengangkutanSludge::where('week_start', $startWeek)->first();
         if ($existing) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Data untuk minggu ini sudah ada.'
+                'status'  => 'error',
+                'message' => 'Data untuk minggu ini sudah ada.',
             ], 409);
         }
 
         $data = WwtpPengangkutanSludge::create([
-            'week_start' => $startWeek,
-            'week_end'   => $endWeek,
+            'week_start'          => $startWeek,
+            'week_end'            => $endWeek,
             'jumlah_pengangkutan' => $request->jumlah_pengangkutan,
         ]);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Data berhasil disimpan.',
-            'data' => $data
+            'data'    => $data,
         ]);
     }
 
     /**
-     * Detail data
+     * Detail data pengangkutan
      */
     public function show_pengangkutan($id)
     {
         $data = WwtpPengangkutanSludge::findOrFail($id);
-
-        return response()->json([
-            'status' => 'success',
-            'data'   => $data
-        ]);
+        return response()->json(['status' => 'success', 'data' => $data]);
     }
 
     /**
-     * Update data
+     * Update data pengangkutan
      */
     public function update_pengangkutan(Request $request, $id)
     {
         $data = WwtpPengangkutanSludge::findOrFail($id);
 
         $request->validate([
-            'tanggal' => 'required|date',
+            'tanggal'             => 'required|date',
             'jumlah_pengangkutan' => 'required|numeric|min:0',
         ]);
 
-        $tanggal = Carbon::parse($request->tanggal);
-
+        $tanggal   = Carbon::parse($request->tanggal);
         $startWeek = $tanggal->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
         $endWeek   = $tanggal->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
 
         $data->update([
-            'week_start' => $startWeek,
-            'week_end'   => $endWeek,
+            'week_start'          => $startWeek,
+            'week_end'            => $endWeek,
             'jumlah_pengangkutan' => $request->jumlah_pengangkutan,
         ]);
 
         return response()->json([
-            'status' => 'success',
+            'status'  => 'success',
             'message' => 'Data berhasil diperbarui.',
-            'data' => $data
+            'data'    => $data,
         ]);
     }
 
     /**
-     * Hapus data
+     * Hapus data pengangkutan
      */
     public function destroy_pengangkutan($id)
     {
@@ -445,7 +441,7 @@ class WWTPControllerSludge extends Controller
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Data berhasil dihapus.'
+            'message' => 'Data berhasil dihapus.',
         ]);
     }
 }

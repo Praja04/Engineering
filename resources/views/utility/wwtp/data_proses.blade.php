@@ -130,6 +130,7 @@
 
                 <div class="card-body p-4">
                     <div class="tab-content" id="dataTabsContent">
+
                         <!-- Weekly Data Tab -->
                         <div class="tab-pane fade show active" id="weekly" role="tabpanel">
                             <div class="table-responsive">
@@ -153,6 +154,16 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+                            <!-- Weekly Pagination -->
+                            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                <div class="text-muted small" id="weeklyPaginationInfo">
+                                    <!-- e.g. Menampilkan 1 - 10 dari 45 data -->
+                                </div>
+                                <nav>
+                                    <ul class="pagination pagination-sm mb-0" id="weeklyPagination">
+                                    </ul>
+                                </nav>
                             </div>
                         </div>
 
@@ -178,7 +189,17 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <!-- Daily Pagination -->
+                            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                <div class="text-muted small" id="dailyPaginationInfo">
+                                </div>
+                                <nav>
+                                    <ul class="pagination pagination-sm mb-0" id="dailyPagination">
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -195,7 +216,6 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4" id="modalDetailContent">
-                        <!-- Content will be loaded dynamically -->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
@@ -207,8 +227,7 @@
             </div>
         </div>
 
-        <!-- update modal -->
-        <!-- Edit Modal -->
+        <!-- Edit Modal (Harian) -->
         <div class="modal fade" id="editModal" tabindex="-1">
             <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow">
@@ -221,19 +240,13 @@
                     <div class="modal-body p-4">
                         <form id="editHarianForm">
                             <input type="hidden" id="edit_id" name="id">
-
-                            <!-- Basic Information -->
                             <div class="row mb-4">
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_tanggal" class="form-label fw-semibold">
-                                        Tanggal <span class="text-danger">*</span>
-                                    </label>
+                                    <label for="edit_tanggal" class="form-label fw-semibold">Tanggal <span class="text-danger">*</span></label>
                                     <input type="date" class="form-control" id="edit_tanggal" name="tanggal" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_shift" class="form-label fw-semibold">
-                                        Shift <span class="text-danger">*</span>
-                                    </label>
+                                    <label for="edit_shift" class="form-label fw-semibold">Shift <span class="text-danger">*</span></label>
                                     <select class="form-select" id="edit_shift" name="shift" required>
                                         <option value="">-- Pilih Shift --</option>
                                         <option value="shift1">Shift 1 (06:00 - 14:00)</option>
@@ -242,12 +255,8 @@
                                     </select>
                                 </div>
                             </div>
-
-                            <!-- Debit & Running WWTP -->
                             <div class="mb-4">
-                                <h6 class="fw-bold mb-3 text-info">
-                                    <i class="mdi mdi-gauge me-2"></i>Data Debit & Running WWTP
-                                </h6>
+                                <h6 class="fw-bold mb-3 text-info"><i class="mdi mdi-gauge me-2"></i>Data Debit & Running WWTP</h6>
                                 <div class="row g-3">
                                     <div class="col-md-3">
                                         <label for="edit_debit1" class="form-label">Debit WWTP 1</label>
@@ -281,35 +290,25 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Influent Data -->
                             <div class="mb-4">
-                                <h6 class="fw-bold mb-3 text-primary">
-                                    <i class="mdi mdi-water-pump me-2"></i>Data Influent
-                                </h6>
+                                <h6 class="fw-bold mb-3 text-primary"><i class="mdi mdi-water-pump me-2"></i>Data Influent</h6>
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label for="edit_pit_sparta" class="form-label fw-semibold">
-                                            Pit Sparta <span class="text-danger">*</span>
-                                        </label>
+                                        <label for="edit_pit_sparta" class="form-label fw-semibold">Pit Sparta <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" step="0.01" class="form-control" id="edit_pit_sparta" name="pit_sparta" min="0" required>
                                             <span class="input-group-text">m³</span>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="edit_pit_garam" class="form-label fw-semibold">
-                                            Pit Garam <span class="text-danger">*</span>
-                                        </label>
+                                        <label for="edit_pit_garam" class="form-label fw-semibold">Pit Garam <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" step="0.01" class="form-control" id="edit_pit_garam" name="pit_garam" min="0" required>
                                             <span class="input-group-text">m³</span>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="edit_pit_domestik" class="form-label fw-semibold">
-                                            Pit Domestik <span class="text-danger">*</span>
-                                        </label>
+                                        <label for="edit_pit_domestik" class="form-label fw-semibold">Pit Domestik <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" step="0.01" class="form-control" id="edit_pit_domestik" name="pit_domestik" min="0" required>
                                             <span class="input-group-text">m³</span>
@@ -364,8 +363,6 @@
             </div>
         </div>
 
-
-        <!-- //modal upadate weekly -->
         <!-- Edit Weekly Modal -->
         <div class="modal fade" id="editWeeklyModal" tabindex="-1">
             <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -380,13 +377,9 @@
                         <form id="editWeeklyForm">
                             <input type="hidden" id="edit_weekly_id" name="id">
                             <input type="hidden" id="edit_weekly_kategori" name="kategori">
-
-                            <!-- Basic Information -->
                             <div class="row mb-4">
                                 <div class="col-md-6 mb-3">
-                                    <label for="edit_weekly_tanggal" class="form-label fw-semibold">
-                                        Tanggal <span class="text-danger">*</span>
-                                    </label>
+                                    <label for="edit_weekly_tanggal" class="form-label fw-semibold">Tanggal <span class="text-danger">*</span></label>
                                     <input type="date" class="form-control" id="edit_weekly_tanggal" name="tanggal" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
@@ -394,36 +387,26 @@
                                     <input type="text" class="form-control" id="edit_weekly_kategori_display" readonly>
                                 </div>
                             </div>
-
-                            <!-- Influent Form -->
                             <div id="edit_weekly_influent_form" style="display: none;">
                                 <div class="mb-4">
-                                    <h6 class="fw-bold mb-3 text-primary">
-                                        <i class="mdi mdi-water-pump me-2"></i>Data Influent Mingguan
-                                    </h6>
+                                    <h6 class="fw-bold mb-3 text-primary"><i class="mdi mdi-water-pump me-2"></i>Data Influent Mingguan</h6>
                                     <div class="row g-3">
                                         <div class="col-md-4">
-                                            <label for="edit_weekly_pit_sparta" class="form-label fw-semibold">
-                                                Pit Sparta <span class="text-danger">*</span>
-                                            </label>
+                                            <label for="edit_weekly_pit_sparta" class="form-label fw-semibold">Pit Sparta <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <input type="number" step="0.01" class="form-control" id="edit_weekly_pit_sparta" name="pit_sparta" min="0">
                                                 <span class="input-group-text">m³</span>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label for="edit_weekly_pit_garam" class="form-label fw-semibold">
-                                                Pit Garam <span class="text-danger">*</span>
-                                            </label>
+                                            <label for="edit_weekly_pit_garam" class="form-label fw-semibold">Pit Garam <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <input type="number" step="0.01" class="form-control" id="edit_weekly_pit_garam" name="pit_garam" min="0">
                                                 <span class="input-group-text">m³</span>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label for="edit_weekly_pit_domestik" class="form-label fw-semibold">
-                                                Pit Domestik <span class="text-danger">*</span>
-                                            </label>
+                                            <label for="edit_weekly_pit_domestik" class="form-label fw-semibold">Pit Domestik <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <input type="number" step="0.01" class="form-control" id="edit_weekly_pit_domestik" name="pit_domestik" min="0">
                                                 <span class="input-group-text">m³</span>
@@ -467,27 +450,19 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Effluent Form -->
                             <div id="edit_weekly_effluent_form" style="display: none;">
                                 <div class="mb-4">
-                                    <h6 class="fw-bold mb-3 text-success">
-                                        <i class="mdi mdi-water-check me-2"></i>Data Effluent Mingguan
-                                    </h6>
+                                    <h6 class="fw-bold mb-3 text-success"><i class="mdi mdi-water-check me-2"></i>Data Effluent Mingguan</h6>
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label for="edit_weekly_full_proses" class="form-label fw-semibold">
-                                                Full Proses <span class="text-danger">*</span>
-                                            </label>
+                                            <label for="edit_weekly_full_proses" class="form-label fw-semibold">Full Proses <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <input type="number" step="0.01" class="form-control" id="edit_weekly_full_proses" name="full_proses" min="0">
                                                 <span class="input-group-text">m³</span>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="edit_weekly_daf_pre" class="form-label fw-semibold">
-                                                DAF Pre <span class="text-danger">*</span>
-                                            </label>
+                                            <label for="edit_weekly_daf_pre" class="form-label fw-semibold">DAF Pre <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <input type="number" step="0.01" class="form-control" id="edit_weekly_daf_pre" name="daf_pre" min="0">
                                                 <span class="input-group-text">m³</span>
@@ -508,9 +483,9 @@
             </div>
         </div>
 
-
     </div>
 </div>
+
 <style>
     .stat-card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -547,109 +522,133 @@
         border-color: #0d6efd !important;
         background-color: rgba(13, 110, 253, 0.05);
     }
+
+    .pagination .page-link {
+        border-radius: 6px !important;
+        margin: 0 2px;
+        color: #667eea;
+        border-color: #dee2e6;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+    }
+
+    .pagination .page-link:hover {
+        background-color: #f0f0ff;
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #adb5bd;
+    }
 </style>
 
 <script>
     $(document).ready(function() {
-        let allData = [];
-        let currentRecordId = null;
-        let currentRecordType = 'weekly'; // Track whether we're deleting weekly or daily data
+
+        const PER_PAGE = 10;
         const userJabatan = "{{ Auth::user()->jabatan }}";
         const canEditDelete = userJabatan !== 'operator';
-        // Load data saat halaman pertama kali dimuat
-        loadData();
 
-        // Event listeners untuk filter
-        $('#filterKategori, #filterBulan, #searchData').on('change keyup', function() {
-            filterData();
-        });
+        /* ─────────────────────────────────────────────
+           STATE
+        ───────────────────────────────────────────── */
+        let weeklyState = {
+            currentPage: 1,
+            lastPage: 1,
+            total: 0,
+            kategori: '',
+            bulan: '',
+            search: '',
+            // keep full current-page rows for editWeekly lookup (no need to cache all)
+            rows: []
+        };
 
-        $('#btnReset').on('click', function() {
-            $('#filterKategori').val('');
-            $('#filterBulan').val('');
-            $('#searchData').val('');
-            filterData();
-        });
+        let dailyState = {
+            currentPage: 1,
+            lastPage: 1,
+            total: 0,
+            bulan: '',
+        };
 
-        // Delete button handler - Updated untuk handle kedua tipe data
-        $('#btnDelete').on('click', function() {
-            if (currentRecordId && confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-                if (currentRecordType === 'daily') {
-                    deleteHarian(currentRecordId);
-                } else {
-                    deleteRecord(currentRecordId);
-                }
-            }
-        });
+        /* ─────────────────────────────────────────────
+           STATS (separate lightweight call)
+        ───────────────────────────────────────────── */
+        function loadStatistics() {
+            $.ajax({
+                url: '/api/wwtp/dashboard/statistics',
+                method: 'GET',
+                success: function(res) {
+                    $('#totalRecords').text(res.total_records ?? 0);
+                    $('#influentRecords').text(res.total_influent ?? 0);
+                    $('#effluentRecords').text(res.total_effluent ?? 0);
+                    $('#weekRecords').text(res.this_week ?? 0);
+                },
+                error: function() {
+                    /* silent – stats are non-critical */ }
+            });
+        }
 
-        function loadData() {
+        /* ─────────────────────────────────────────────
+           WEEKLY — LOAD
+        ───────────────────────────────────────────── */
+        function loadWeekly(page) {
+            page = page || weeklyState.currentPage;
+
+            const params = {
+                page: page,
+                per_page: PER_PAGE,
+            };
+            if (weeklyState.kategori) params.kategori = weeklyState.kategori;
+            if (weeklyState.bulan) params.bulan = weeklyState.bulan;
+            if (weeklyState.search) params.search = weeklyState.search;
+
+            $('#weeklyTableBody').html(`
+            <tr>
+                <td colspan="5" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </td>
+            </tr>
+        `);
+            $('#weeklyPaginationInfo').text('');
+            $('#weeklyPagination').empty();
+
             $.ajax({
                 url: '/api/wwtp',
                 method: 'GET',
+                data: params,
                 success: function(response) {
-                    allData = response;
-                    updateStatistics();
-                    filterData();
+                    /* Laravel paginate() returns:
+                       { data:[], current_page, last_page, total, from, to } */
+                    weeklyState.currentPage = response.current_page;
+                    weeklyState.lastPage = response.last_page;
+                    weeklyState.total = response.total;
+                    weeklyState.rows = response.data;
+
+                    renderWeeklyTable(response.data);
+                    renderPaginationInfo('#weeklyPaginationInfo', response);
+                    renderPagination('#weeklyPagination', response, loadWeekly);
                 },
                 error: function(xhr) {
-                    console.error('Error loading data:', xhr);
-                    showError('Gagal memuat data');
+                    console.error('Error loading weekly data:', xhr);
+                    showError('Gagal memuat data mingguan');
                 }
             });
         }
 
-        function updateStatistics() {
-            const total = allData.length;
-            const influent = allData.filter(d => d.kategori === 'influent').length;
-            const effluent = allData.filter(d => d.kategori === 'effluent').length;
-
-            // Hitung data minggu ini
-            const now = new Date();
-            const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-            const weekData = allData.filter(d => {
-                const date = new Date(d.tanggal);
-                return date >= startOfWeek;
-            }).length;
-
-            $('#totalRecords').text(total);
-            $('#influentRecords').text(influent);
-            $('#effluentRecords').text(effluent);
-            $('#weekRecords').text(weekData);
-        }
-
-        function filterData() {
-            const kategori = $('#filterKategori').val();
-            const bulan = $('#filterBulan').val();
-            const search = $('#searchData').val().toLowerCase();
-
-            let filtered = allData.filter(item => {
-                // Filter kategori
-                if (kategori && item.kategori !== kategori) return false;
-
-                // Filter bulan
-                if (bulan) {
-                    const itemMonth = item.tanggal.substring(0, 7);
-                    if (itemMonth !== bulan) return false;
-                }
-
-                // Filter search
-                if (search) {
-                    const tanggal = item.tanggal.toLowerCase();
-                    const kat = item.kategori.toLowerCase();
-                    if (!tanggal.includes(search) && !kat.includes(search)) return false;
-                }
-
-                return true;
-            });
-
-            renderTable(filtered);
-        }
-
-        function renderTable(data) {
+        /* ─────────────────────────────────────────────
+           WEEKLY — RENDER TABLE
+        ───────────────────────────────────────────── */
+        function renderWeeklyTable(data) {
             const tbody = $('#weeklyTableBody');
             tbody.empty();
 
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
                 tbody.append(`
                 <tr>
                     <td colspan="5" class="text-center py-4 text-muted">
@@ -660,7 +659,7 @@
                 return;
             }
 
-            data.forEach(item => {
+            data.forEach(function(item) {
                 const badge = item.kategori === 'influent' ?
                     '<span class="badge bg-info">Influent</span>' :
                     '<span class="badge bg-success">Effluent</span>';
@@ -678,7 +677,6 @@
                         parseFloat(inf.pit_proses_wwtp2 || 0) +
                         parseFloat(inf.pit_outlet || 0) +
                         parseFloat(inf.pit_boiler || 0);
-
                     detailData = `Sparta: ${inf.pit_sparta}m³, Garam: ${inf.pit_garam}m³, Domestik: ${inf.pit_domestik}m³`;
                 } else if (item.kategori === 'effluent' && item.effluent) {
                     const eff = item.effluent;
@@ -693,46 +691,298 @@
                     <td><small class="text-muted">${detailData}</small></td>
                     <td class="text-end fw-bold">${totalVolume.toFixed(2)} m³</td>
                     <td class="text-center">
-                        <!-- Tombol Lihat Detail -->
-                        <button class="btn btn-sm btn-outline-primary me-1" 
+                        <button class="btn btn-sm btn-outline-primary me-1"
                                 onclick="showDetail(${item.id})"
-                                data-bs-toggle="tooltip" 
-                                data-bs-placement="top" 
-                                title="Lihat Detail">
+                                data-bs-toggle="tooltip" data-bs-placement="top" title="Lihat Detail">
                             <i class="mdi mdi-eye"></i>
                         </button>
                         ${canEditDelete ? `
-                        <!-- Tombol Edit - Tidak untuk Operator -->
-                        <button class="btn btn-sm btn-outline-warning me-1" 
+                        <button class="btn btn-sm btn-outline-warning me-1"
                                 onclick="editWeekly(${item.id})"
-                                data-bs-toggle="tooltip" 
-                                data-bs-placement="top" 
-                                title="Edit Data">
+                                data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Data">
                             <i class="mdi mdi-pencil"></i>
                         </button>
-                        <!-- Tombol Hapus - Tidak untuk Operator -->
-                        <button class="btn btn-sm btn-outline-danger" 
+                        <button class="btn btn-sm btn-outline-danger"
                                 onclick="confirmDelete(${item.id})"
-                                data-bs-toggle="tooltip" 
-                                data-bs-placement="top" 
-                                title="Hapus Data">
+                                data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus Data">
                             <i class="mdi mdi-trash-can"></i>
                         </button>
                         ` : ''}
                     </td>
-
                 </tr>
             `);
             });
         }
 
+        /* ─────────────────────────────────────────────
+           DAILY — LOAD
+        ───────────────────────────────────────────── */
+        function loadDataHarian(page) {
+            page = page || dailyState.currentPage;
+
+            const params = {
+                page: page,
+                per_page: PER_PAGE,
+            };
+            if (dailyState.bulan) params.bulan = dailyState.bulan;
+
+            $('#dailyTableBody').html(`
+            <tr>
+                <td colspan="5" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </td>
+            </tr>
+        `);
+            $('#dailyPaginationInfo').text('');
+            $('#dailyPagination').empty();
+
+            $.ajax({
+                url: '/api/wwtp/influent-harian',
+                method: 'GET',
+                data: params,
+                success: function(response) {
+                    dailyState.currentPage = response.current_page;
+                    dailyState.lastPage = response.last_page;
+                    dailyState.total = response.total;
+
+                    renderDailyTable(response.data);
+                    renderPaginationInfo('#dailyPaginationInfo', response);
+                    renderPagination('#dailyPagination', response, loadDataHarian);
+                },
+                error: function(xhr) {
+                    console.error('Error loading daily data:', xhr);
+                    showError('Gagal memuat data harian');
+                }
+            });
+        }
+
+        /* ─────────────────────────────────────────────
+           DAILY — RENDER TABLE
+        ───────────────────────────────────────────── */
+        function renderDailyTable(data) {
+            const tbody = $('#dailyTableBody');
+            tbody.empty();
+
+            if (!data || data.length === 0) {
+                tbody.append(`
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">
+                        <i class="fas fa-inbox me-2"></i>Tidak ada data harian
+                    </td>
+                </tr>
+            `);
+                return;
+            }
+
+            data.forEach(function(item) {
+                const shiftMap = {
+                    shift1: 'Shift 1',
+                    shift2: 'Shift 2',
+                    shift3: 'Shift 3'
+                };
+                const shiftLabel = shiftMap[item.shift] || item.shift;
+
+                const totalVolume = parseFloat(item.pit_sparta || 0) +
+                    parseFloat(item.pit_garam || 0) +
+                    parseFloat(item.pit_domestik || 0) +
+                    parseFloat(item.pit_produksi_step3 || 0) +
+                    parseFloat(item.pit_storage || 0) +
+                    parseFloat(item.pit_proses_wwtp2 || 0) +
+                    parseFloat(item.pit_outlet || 0) +
+                    parseFloat(item.pit_boiler || 0);
+
+                const detailData = `Sparta: ${item.pit_sparta}m³, Debit WWTP1: ${item.debit1 || '-'}m³/h, Debit WWTP2: ${item.debit2 || '-'}m³/h`;
+
+                tbody.append(`
+                <tr class="data-row">
+                    <td>${formatDate(item.tanggal)}</td>
+                    <td><span class="badge bg-secondary">${shiftLabel}</span></td>
+                    <td><small class="text-muted">${detailData}</small></td>
+                    <td class="text-end fw-bold">${totalVolume.toFixed(2)} m³</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary me-1"
+                                onclick="showDetailHarian(${item.id})"
+                                data-bs-toggle="tooltip" title="Lihat Detail">
+                            <i class="mdi mdi-eye"></i>
+                        </button>
+                        ${canEditDelete ? `
+                        <button class="btn btn-sm btn-outline-warning me-1"
+                                onclick="editHarian(${item.id})"
+                                data-bs-toggle="tooltip" title="Edit Data">
+                            <i class="mdi mdi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="confirmDeleteHarian(${item.id})"
+                                data-bs-toggle="tooltip" title="Hapus Data">
+                            <i class="mdi mdi-trash-can"></i>
+                        </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `);
+            });
+        }
+
+        /* ─────────────────────────────────────────────
+           PAGINATION HELPERS
+        ───────────────────────────────────────────── */
+        function renderPaginationInfo(selector, response) {
+            if (!response.total) {
+                $(selector).text('');
+                return;
+            }
+            $(selector).text(
+                `Menampilkan ${response.from ?? 0}–${response.to ?? 0} dari ${response.total} data`
+            );
+        }
+
+        function renderPagination(selector, response, loadFn) {
+            const ul = $(selector);
+            const currentPage = response.current_page;
+            const lastPage = response.last_page;
+
+            ul.empty();
+            if (lastPage <= 1) return;
+
+            // Prev
+            ul.append(`
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        `);
+
+            // Page numbers — show up to 5 pages around current
+            const range = pageRange(currentPage, lastPage);
+            range.forEach(function(p) {
+                if (p === '...') {
+                    ul.append(`<li class="page-item disabled"><span class="page-link">…</span></li>`);
+                } else {
+                    ul.append(`
+                    <li class="page-item ${p === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${p}">${p}</a>
+                    </li>
+                `);
+                }
+            });
+
+            // Next
+            ul.append(`
+            <li class="page-item ${currentPage === lastPage ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        `);
+
+            // Bind clicks
+            ul.find('a.page-link').on('click', function(e) {
+                e.preventDefault();
+                const p = parseInt($(this).data('page'));
+                if (!isNaN(p) && p >= 1 && p <= lastPage) {
+                    loadFn(p);
+                    $('html, body').animate({
+                        scrollTop: 0
+                    }, 200);
+                }
+            });
+        }
+
+        function pageRange(current, last) {
+            const delta = 2;
+            const range = [];
+            const result = [];
+            let l;
+
+            for (let i = Math.max(2, current - delta); i <= Math.min(last - 1, current + delta); i++) {
+                range.push(i);
+            }
+            if (current - delta > 2) range.unshift('...');
+            if (current + delta < last - 1) range.push('...');
+            range.unshift(1);
+            if (last > 1) range.push(last);
+
+            range.forEach(function(i) {
+                if (l) {
+                    if (i === '...' && l !== '...') result.push('...');
+                    else if (i !== '...') result.push(i);
+                } else {
+                    result.push(i);
+                }
+                l = i;
+            });
+            return result;
+        }
+
+        /* ─────────────────────────────────────────────
+           FILTER EVENTS
+        ───────────────────────────────────────────── */
+        // Debounce search to avoid hammering the server on every keystroke
+        let searchTimer;
+        $('#searchData').on('keyup', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function() {
+                weeklyState.search = $('#searchData').val();
+                weeklyState.currentPage = 1;
+                loadWeekly(1);
+            }, 400);
+        });
+
+        $('#filterKategori').on('change', function() {
+            weeklyState.kategori = $(this).val();
+            weeklyState.currentPage = 1;
+            loadWeekly(1);
+        });
+
+        $('#filterBulan').on('change', function() {
+            const bulan = $(this).val();
+            weeklyState.bulan = bulan;
+            weeklyState.currentPage = 1;
+            dailyState.bulan = bulan;
+            dailyState.currentPage = 1;
+            loadWeekly(1);
+            // reload daily too if tab is visible
+            if ($('#daily-tab').hasClass('active')) loadDataHarian(1);
+        });
+
+        $('#btnReset').on('click', function() {
+            $('#filterKategori').val('');
+            $('#filterBulan').val('');
+            $('#searchData').val('');
+            weeklyState.kategori = '';
+            weeklyState.bulan = '';
+            weeklyState.search = '';
+            weeklyState.currentPage = 1;
+            dailyState.bulan = '';
+            dailyState.currentPage = 1;
+            loadWeekly(1);
+            if ($('#daily-tab').hasClass('active')) loadDataHarian(1);
+        });
+
+        /* ─────────────────────────────────────────────
+           TAB SWITCH
+        ───────────────────────────────────────────── */
+        $('#daily-tab').on('click', function() {
+            if (dailyState.total === 0 && dailyState.currentPage === 1) {
+                loadDataHarian(1);
+            }
+        });
+
+        /* ─────────────────────────────────────────────
+           DETAIL — WEEKLY
+        ───────────────────────────────────────────── */
+        let currentRecordId = null;
+        let currentRecordType = 'weekly';
+
         window.showDetail = function(id) {
-            const record = allData.find(r => r.id === id);
+            const record = weeklyState.rows.find(r => r.id === id);
             if (!record) return;
 
             currentRecordId = id;
             currentRecordType = 'weekly';
-            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
 
             let content = `
             <div class="row g-3 mb-4">
@@ -745,8 +995,8 @@
                 <div class="col-md-6">
                     <div class="info-box p-3 bg-light rounded">
                         <p class="text-muted small mb-1">Kategori</p>
-                        ${record.kategori === 'influent' 
-                            ? '<span class="badge bg-info">Influent</span>' 
+                        ${record.kategori === 'influent'
+                            ? '<span class="badge bg-info">Influent</span>'
                             : '<span class="badge bg-success">Effluent</span>'}
                     </div>
                 </div>
@@ -790,10 +1040,9 @@
                     {
                         label: 'Pit Boiler',
                         value: inf.pit_boiler
-                    }
+                    },
                 ];
-
-                items.forEach(item => {
+                items.forEach(function(item) {
                     if (item.value !== null && item.value !== undefined) {
                         total += parseFloat(item.value);
                         content += `
@@ -811,7 +1060,6 @@
             } else if (record.kategori === 'effluent' && record.effluent) {
                 const eff = record.effluent;
                 total = parseFloat(eff.full_proses || 0) + parseFloat(eff.daf_pre || 0);
-
                 content += `
                 <div class="col-md-6">
                     <div class="detail-item p-3 border rounded">
@@ -843,128 +1091,12 @@
         `;
 
             $('#modalDetailContent').html(content);
-            modal.show();
-        }
+            new bootstrap.Modal(document.getElementById('detailModal')).show();
+        };
 
-        window.confirmDelete = function(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-                deleteRecord(id);
-            }
-        }
-
-        function deleteRecord(id) {
-            $.ajax({
-                url: `/api/wwtp/${id}`,
-                method: 'DELETE',
-                success: function(response) {
-                    $('#detailModal').modal('hide');
-                    showSuccess('Data berhasil dihapus');
-                    loadData();
-                },
-                error: function(xhr) {
-                    console.error('Error deleting record:', xhr);
-                    showError('Gagal menghapus data');
-                }
-            });
-        }
-
-        function formatDate(dateString) {
-            const options = {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            };
-            return new Date(dateString).toLocaleDateString('id-ID', options);
-        }
-
-        function showSuccess(message) {
-            alert(message);
-        }
-
-        function showError(message) {
-            alert(message);
-        }
-
-        // Load data harian
-        function loadDataHarian() {
-            $.ajax({
-                url: '/api/wwtp/influent-harian',
-                method: 'GET',
-                success: function(response) {
-                    renderDailyTable(response);
-                },
-                error: function(xhr) {
-                    console.error('Error loading daily data:', xhr);
-                    showError('Gagal memuat data harian');
-                }
-            });
-        }
-
-        // Render tabel harian
-        function renderDailyTable(data) {
-            const tbody = $('#dailyTableBody');
-            tbody.empty();
-
-            if (data.length === 0) {
-                tbody.append(`
-            <tr>
-                <td colspan="5" class="text-center py-4 text-muted">
-                    <i class="fas fa-inbox me-2"></i>Tidak ada data harian
-                </td>
-            </tr>
-        `);
-                return;
-            }
-
-            data.forEach(item => {
-                let shiftLabel = '';
-                switch (item.shift) {
-                    case 'shift1':
-                        shiftLabel = 'Shift 1';
-                        break;
-                    case 'shift2':
-                        shiftLabel = 'Shift 2';
-                        break;
-                    case 'shift3':
-                        shiftLabel = 'Shift 3';
-                        break;
-                }
-
-                const totalVolume = parseFloat(item.pit_sparta || 0) +
-                    parseFloat(item.pit_garam || 0) +
-                    parseFloat(item.pit_domestik || 0) +
-                    parseFloat(item.pit_produksi_step3 || 0) +
-                    parseFloat(item.pit_storage || 0) +
-                    parseFloat(item.pit_proses_wwtp2 || 0) +
-                    parseFloat(item.pit_outlet || 0) +
-                    parseFloat(item.pit_boiler || 0);
-
-                const detailData = `Sparta: ${item.pit_sparta}m³, Debit WWTP1: ${item.debit1 || '-'}m³/h, Debit WWTP2: ${item.debit2 || '-'}m³/h`;
-                tbody.append(`
-            <tr class="data-row">
-                <td>${formatDate(item.tanggal)}</td>
-                <td><span class="badge bg-secondary">${shiftLabel}</span></td>
-                <td><small class="text-muted">${detailData}</small></td>
-                <td class="text-end fw-bold">${totalVolume.toFixed(2)} m³</td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="showDetailHarian(${item.id})" data-bs-toggle="tooltip" title="Lihat Detail">
-                    <i class="mdi mdi-eye"></i>
-                    </button>
-                   ${canEditDelete ? `
-                        <button class="btn btn-sm btn-outline-warning me-1" onclick="editHarian(${item.id})" data-bs-toggle="tooltip" title="Edit Data">
-                            <i class="mdi mdi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteHarian(${item.id})" data-bs-toggle="tooltip" title="Hapus Data">
-                            <i class="mdi mdi-trash-can"></i>
-                        </button>
-                        ` : ''}
-                </td>
-            </tr>
-        `);
-            });
-        }
-
-        // Show detail harian
+        /* ─────────────────────────────────────────────
+           DETAIL — DAILY
+        ───────────────────────────────────────────── */
         window.showDetailHarian = function(id) {
             $.ajax({
                 url: `/api/wwtp/influent-harian/${id}`,
@@ -972,74 +1104,67 @@
                 success: function(record) {
                     currentRecordId = id;
                     currentRecordType = 'daily';
-                    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
 
-                    let shiftLabel = '';
-                    switch (record.shift) {
-                        case 'shift1':
-                            shiftLabel = 'Shift 1';
-                            break;
-                        case 'shift2':
-                            shiftLabel = 'Shift 2';
-                            break;
-                        case 'shift3':
-                            shiftLabel = 'Shift 3';
-                            break;
-                    }
+                    const shiftMap = {
+                        shift1: 'Shift 1',
+                        shift2: 'Shift 2',
+                        shift3: 'Shift 3'
+                    };
+                    const shiftLabel = shiftMap[record.shift] || record.shift;
 
                     let content = `
-                                <h6 class="fw-bold mb-3 text-info mt-4">
-                                <i class="fas fa-gauge me-2"></i>Data Debit & Running WWTP
-                            </h6>
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-3">
-                                    <div class="info-box p-3 bg-light rounded">
-                                        <p class="text-muted small mb-1">Debit WWTP 1</p>
-                                        <p class="fw-bold mb-0">${record.debit1 || '-'} m³/h</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="info-box p-3 bg-light rounded">
-                                        <p class="text-muted small mb-1">Running WWTP 1</p>
-                                        <p class="fw-bold mb-0">${record.running_wwtp1 || '-'}</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="info-box p-3 bg-light rounded">
-                                        <p class="text-muted small mb-1">Debit WWTP 2</p>
-                                        <p class="fw-bold mb-0">${record.debit2 || '-'} m³/h</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="info-box p-3 bg-light rounded">
-                                        <p class="text-muted small mb-1">Running WWTP 2</p>
-                                        <p class="fw-bold mb-0">${record.running_wwtp2 || '-'}</p>
-                                    </div>
-                                </div>
+                    <h6 class="fw-bold mb-3 text-info mt-4">
+                        <i class="fas fa-gauge me-2"></i>Data Debit & Running WWTP
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Debit WWTP 1</p>
+                                <p class="fw-bold mb-0">${record.debit1 || '-'} m³/h</p>
                             </div>
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-4">
-                                    <div class="info-box p-3 bg-light rounded">
-                                        <p class="text-muted small mb-1">Tanggal</p>
-                                        <p class="fw-bold mb-0">${formatDate(record.tanggal)}</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="info-box p-3 bg-light rounded">
-                                        <p class="text-muted small mb-1">Shift</p>
-                                        <span class="badge bg-secondary">${shiftLabel}</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="info-box p-3 bg-light rounded">
-                                        <p class="text-muted small mb-1">Tipe</p>
-                                        <span class="badge bg-info">Data Harian</span>
-                                    </div>
-                                </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Running WWTP 1</p>
+                                <p class="fw-bold mb-0">${record.running_wwtp1 || '-'}</p>
                             </div>
-                            <h6 class="fw-bold mb-3 text-primary">Volume Detail (m³)</h6>
-                            <div class="row g-3">
-                        `;
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Debit WWTP 2</p>
+                                <p class="fw-bold mb-0">${record.debit2 || '-'} m³/h</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Running WWTP 2</p>
+                                <p class="fw-bold mb-0">${record.running_wwtp2 || '-'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Tanggal</p>
+                                <p class="fw-bold mb-0">${formatDate(record.tanggal)}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Shift</p>
+                                <span class="badge bg-secondary">${shiftLabel}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Tipe</p>
+                                <span class="badge bg-info">Data Harian</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h6 class="fw-bold mb-3 text-primary">Volume Detail (m³)</h6>
+                    <div class="row g-3">
+                `;
 
                     const items = [{
                             label: 'Pit Sparta',
@@ -1072,78 +1197,102 @@
                         {
                             label: 'Pit Boiler',
                             value: record.pit_boiler
-                        }
+                        },
                     ];
 
                     let total = 0;
-                    items.forEach(item => {
+                    items.forEach(function(item) {
                         if (item.value !== null && item.value !== undefined) {
                             total += parseFloat(item.value);
                             content += `
-                        <div class="col-md-6">
-                            <div class="detail-item p-3 border rounded">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-muted">${item.label}</span>
-                                    <span class="fw-bold fs-5">${item.value}</span>
+                            <div class="col-md-6">
+                                <div class="detail-item p-3 border rounded">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">${item.label}</span>
+                                        <span class="fw-bold fs-5">${item.value}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
                         }
                     });
 
                     content += `
-                </div>
-                <div class="mt-4 p-3 bg-primary bg-opacity-10 rounded">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fw-semibold text-primary">Total Volume</span>
-                        <span class="fw-bold fs-4 text-primary">${total.toFixed(2)} m³</span>
                     </div>
-                </div>
-            `;
+                    <div class="mt-4 p-3 bg-primary bg-opacity-10 rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold text-primary">Total Volume</span>
+                            <span class="fw-bold fs-4 text-primary">${total.toFixed(2)} m³</span>
+                        </div>
+                    </div>
+                `;
 
                     $('#modalDetailContent').html(content);
-                    modal.show();
+                    new bootstrap.Modal(document.getElementById('detailModal')).show();
                 },
-                error: function(xhr) {
-                    console.error('Error loading detail:', xhr);
+                error: function() {
                     showError('Gagal memuat detail data');
+                }
+            });
+        };
+
+        /* ─────────────────────────────────────────────
+           DELETE
+        ───────────────────────────────────────────── */
+        $('#btnDelete').on('click', function() {
+            if (currentRecordId && confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                if (currentRecordType === 'daily') deleteHarian(currentRecordId);
+                else deleteRecord(currentRecordId);
+            }
+        });
+
+        window.confirmDelete = function(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) deleteRecord(id);
+        };
+
+        window.confirmDeleteHarian = function(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data harian ini?')) deleteHarian(id);
+        };
+
+        function deleteRecord(id) {
+            $.ajax({
+                url: `/api/wwtp/${id}`,
+                method: 'DELETE',
+                success: function() {
+                    $('#detailModal').modal('hide');
+                    showSuccess('Data berhasil dihapus');
+                    loadWeekly(weeklyState.currentPage);
+                    loadStatistics();
+                },
+                error: function() {
+                    showError('Gagal menghapus data');
                 }
             });
         }
 
-        //// Confirm delete harian
-        window.confirmDeleteHarian = function(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus data harian ini?')) {
-                deleteHarian(id);
-            }
-        }
-
-        // Delete harian
         function deleteHarian(id) {
             $.ajax({
                 url: `/api/wwtp/influent-harian/${id}`,
                 method: 'DELETE',
-                success: function(response) {
+                success: function() {
                     $('#detailModal').modal('hide');
                     showSuccess('Data harian berhasil dihapus');
-                    loadDataHarian();
+                    loadDataHarian(dailyState.currentPage);
                 },
-                error: function(xhr) {
-                    console.error('Error deleting daily data:', xhr);
+                error: function() {
                     showError('Gagal menghapus data harian');
                 }
             });
         }
 
-        //Updatedata harian
-        // Edit harian
+        /* ─────────────────────────────────────────────
+           EDIT — HARIAN
+        ───────────────────────────────────────────── */
         window.editHarian = function(id) {
             $.ajax({
                 url: `/api/wwtp/influent-harian/${id}`,
                 method: 'GET',
                 success: function(record) {
-                    // Fill form dengan data
                     $('#edit_id').val(record.id);
                     $('#edit_tanggal').val(record.tanggal);
                     $('#edit_shift').val(record.shift);
@@ -1159,19 +1308,14 @@
                     $('#edit_pit_proses_wwtp2').val(record.pit_proses_wwtp2);
                     $('#edit_pit_outlet').val(record.pit_outlet);
                     $('#edit_pit_boiler').val(record.pit_boiler);
-
-                    // Show modal
-                    const modal = new bootstrap.Modal(document.getElementById('editModal'));
-                    modal.show();
+                    new bootstrap.Modal(document.getElementById('editModal')).show();
                 },
-                error: function(xhr) {
-                    console.error('Error loading data:', xhr);
+                error: function() {
                     showError('Gagal memuat data untuk edit');
                 }
             });
-        }
+        };
 
-        // Save edit
         $('#btnSaveEdit').on('click', function() {
             const id = $('#edit_id').val();
             const formData = {
@@ -1188,56 +1332,45 @@
                 pit_storage: $('#edit_pit_storage').val() || null,
                 pit_proses_wwtp2: $('#edit_pit_proses_wwtp2').val() || null,
                 pit_outlet: $('#edit_pit_outlet').val() || null,
-                pit_boiler: $('#edit_pit_boiler').val() || null
+                pit_boiler: $('#edit_pit_boiler').val() || null,
             };
 
             $.ajax({
                 url: `/api/wwtp/influent-harian/${id}`,
                 method: 'PUT',
                 data: formData,
-                success: function(response) {
+                success: function() {
                     $('#editModal').modal('hide');
                     showSuccess('Data berhasil diperbarui');
-                    loadDataHarian();
+                    loadDataHarian(dailyState.currentPage);
                 },
                 error: function(xhr) {
                     const error = xhr.responseJSON;
                     let message = 'Terjadi kesalahan saat memperbarui data!';
-
-                    if (error && error.message) {
-                        message = error.message;
-                    } else if (error && error.errors) {
-                        message = Object.values(error.errors).flat().join('<br>');
-                    }
-
+                    if (error && error.message) message = error.message;
+                    else if (error && error.errors) message = Object.values(error.errors).flat().join('\n');
                     alert(message);
                 }
             });
         });
 
-
-
-        //edit mingguan
-        // Edit Weekly
+        /* ─────────────────────────────────────────────
+           EDIT — WEEKLY
+        ───────────────────────────────────────────── */
         window.editWeekly = function(id) {
-            const record = allData.find(r => r.id === id);
+            const record = weeklyState.rows.find(r => r.id === id);
             if (!record) return;
 
-            // Set basic data
             $('#edit_weekly_id').val(record.id);
             $('#edit_weekly_tanggal').val(record.tanggal);
             $('#edit_weekly_kategori').val(record.kategori);
+            $('#edit_weekly_kategori_display').val(
+                record.kategori === 'influent' ? 'Influent (Air Masuk)' : 'Effluent (Air Keluar)'
+            );
 
-            // Display kategori
-            const kategoriDisplay = record.kategori === 'influent' ? 'Influent (Air Masuk)' : 'Effluent (Air Keluar)';
-            $('#edit_weekly_kategori_display').val(kategoriDisplay);
-
-            // Show/hide forms based on kategori
             if (record.kategori === 'influent') {
                 $('#edit_weekly_influent_form').show();
                 $('#edit_weekly_effluent_form').hide();
-
-                // Fill influent data
                 if (record.influent) {
                     $('#edit_weekly_pit_sparta').val(record.influent.pit_sparta);
                     $('#edit_weekly_pit_garam').val(record.influent.pit_garam);
@@ -1251,24 +1384,18 @@
             } else {
                 $('#edit_weekly_influent_form').hide();
                 $('#edit_weekly_effluent_form').show();
-
-                // Fill effluent data
                 if (record.effluent) {
                     $('#edit_weekly_full_proses').val(record.effluent.full_proses);
                     $('#edit_weekly_daf_pre').val(record.effluent.daf_pre);
                 }
             }
 
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('editWeeklyModal'));
-            modal.show();
-        }
+            new bootstrap.Modal(document.getElementById('editWeeklyModal')).show();
+        };
 
-        // Save edit weekly
         $('#btnSaveEditWeekly').on('click', function() {
             const id = $('#edit_weekly_id').val();
             const kategori = $('#edit_weekly_kategori').val();
-
             const formData = {
                 tanggal: $('#edit_weekly_tanggal').val()
             };
@@ -1291,35 +1418,46 @@
                 url: `/api/wwtp/${id}`,
                 method: 'PUT',
                 data: formData,
-                success: function(response) {
+                success: function() {
                     $('#editWeeklyModal').modal('hide');
                     showSuccess('Data mingguan berhasil diperbarui');
-                    loadData(); // Reload data mingguan
+                    loadWeekly(weeklyState.currentPage);
                 },
                 error: function(xhr) {
                     const error = xhr.responseJSON;
                     let message = 'Terjadi kesalahan saat memperbarui data!';
-
-                    if (error && error.message) {
-                        message = error.message;
-                    } else if (error && error.errors) {
-                        message = Object.values(error.errors).flat().join('<br>');
-                    }
-
+                    if (error && error.message) message = error.message;
+                    else if (error && error.errors) message = Object.values(error.errors).flat().join('\n');
                     alert(message);
                 }
             });
         });
 
-        // Event listener untuk tab daily
-        $('#daily-tab').on('click', function() {
-            loadDataHarian();
-        });
-
-        // Load data harian jika tab daily sudah aktif saat page load
-        if ($('#daily-tab').hasClass('active')) {
-            loadDataHarian();
+        /* ─────────────────────────────────────────────
+           HELPERS
+        ───────────────────────────────────────────── */
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
         }
+
+        function showSuccess(message) {
+            alert(message);
+        }
+
+        function showError(message) {
+            alert(message);
+        }
+
+        /* ─────────────────────────────────────────────
+           INIT
+        ───────────────────────────────────────────── */
+        loadStatistics();
+        loadWeekly(1);
     });
 </script>
+
 @endsection

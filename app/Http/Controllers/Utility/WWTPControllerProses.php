@@ -35,14 +35,30 @@ class WWTPControllerProses extends Controller
     /**
      * Menampilkan semua record WWTP
      */
-
-    public function index()
+ 
+    public function index(Request $request)
     {
-        $data = WwtpRecord::with(['influent', 'effluent'])
-            ->orderBy('tanggal', 'desc')
-            ->get();
+        $query = WwtpRecord::with(['influent', 'effluent'])
+        ->orderBy('tanggal', 'desc');
 
-        return response()->json($data);
+        if ($request->kategori) {
+            $query->where('kategori', $request->kategori);
+        }
+
+        if ($request->bulan) {
+            $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$request->bulan]);
+        }
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('tanggal', 'like', "%{$request->search}%")
+                ->orWhere('kategori', 'like', "%{$request->search}%");
+            });
+        }
+
+        return response()->json(
+                $query->paginate($request->input('per_page', 10))
+            );
     }
 
     /**
@@ -321,15 +337,23 @@ class WWTPControllerProses extends Controller
     /**
      * Menampilkan semua data harian
      */
-    public function indexHarian()
+    public function indexHarian(Request $request)
     {
-        $data = WwtpInfluentHarian::orderBy('tanggal', 'desc')
-            ->orderBy('shift', 'asc')
-            ->get();
+        $perPage = $request->input('per_page', 10);
+        $page    = $request->input('page', 1);
+        $bulan   = $request->input('bulan');
+
+        $query = WwtpInfluentHarian::orderBy('tanggal', 'desc')
+        ->orderBy('shift', 'asc');
+
+        if ($bulan) {
+            $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan]);
+        }
+
+        $data = $query->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json($data);
     }
-
     /**
      * Menampilkan detail data harian
      */
