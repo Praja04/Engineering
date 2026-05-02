@@ -171,10 +171,29 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <!-- Performance Pagination -->
+                            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                <div class="text-muted small" id="performancePaginationInfo"></div>
+                                <nav>
+                                    <ul class="pagination pagination-sm mb-0" id="performancePagination"></ul>
+                                </nav>
+                            </div>
                         </div>
 
                         <!-- ===== Tab: PH Harian ===== -->
                         <div class="tab-pane fade" id="ph" role="tabpanel">
+                            <!-- Filter PH -->
+                            <div class="row g-3 mb-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted fw-semibold">Filter Bulan</label>
+                                    <input type="month" class="form-control" id="filterBulanPH">
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-outline-secondary w-100" id="btnResetPH">
+                                        <i class="fas fa-redo me-1"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle">
                                     <thead class="table-light">
@@ -196,11 +215,18 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <!-- PH Pagination -->
+                            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                <div class="text-muted small" id="phPaginationInfo"></div>
+                                <nav>
+                                    <ul class="pagination pagination-sm mb-0" id="phPagination"></ul>
+                                </nav>
+                            </div>
                         </div>
 
                         <!-- ===== Tab: Data Sample ===== -->
                         <div class="tab-pane fade" id="sample" role="tabpanel">
-                            <!-- Filter khusus sample -->
+                            <!-- Filter Sample -->
                             <div class="row g-3 mb-3 align-items-end">
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted fw-semibold">Filter Jenis Sampel</label>
@@ -249,6 +275,13 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <!-- Sample Pagination -->
+                            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                <div class="text-muted small" id="samplePaginationInfo"></div>
+                                <nav>
+                                    <ul class="pagination pagination-sm mb-0" id="samplePagination"></ul>
+                                </nav>
+                            </div>
                         </div>
 
                     </div>
@@ -259,8 +292,6 @@
         {{-- =========================================================== --}}
         {{-- MODALS: Performance --}}
         {{-- =========================================================== --}}
-
-        <!-- Detail Performance Modal -->
         <div class="modal fade" id="detailPerformanceModal" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
@@ -279,7 +310,6 @@
             </div>
         </div>
 
-        <!-- Edit Performance Modal -->
         <div class="modal fade" id="editPerformanceModal" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
@@ -338,8 +368,6 @@
         {{-- =========================================================== --}}
         {{-- MODALS: PH Harian --}}
         {{-- =========================================================== --}}
-
-        <!-- Detail PH Modal -->
         <div class="modal fade" id="detailPHModal" tabindex="-1">
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
@@ -358,7 +386,6 @@
             </div>
         </div>
 
-        <!-- Edit PH Modal -->
         <div class="modal fade" id="editPHModal" tabindex="-1">
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
@@ -412,8 +439,6 @@
         {{-- =========================================================== --}}
         {{-- MODALS: Sample --}}
         {{-- =========================================================== --}}
-
-        <!-- Detail Sample Modal -->
         <div class="modal fade" id="detailSampleModal" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
@@ -432,7 +457,6 @@
             </div>
         </div>
 
-        <!-- Edit Sample Modal -->
         <div class="modal fade" id="editSampleModal" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
@@ -457,30 +481,12 @@
                             </div>
                             <h6 class="fw-bold mb-3 text-warning">Parameter Pengujian</h6>
                             <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">TSS (mg/L) <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_tss" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">SV30 (mL/L) <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_sv30" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">pH <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" min="0" max="14" class="form-control" id="edit_sample_ph" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">MLSS (mg/L) <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_mlss" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">SVI (mL/g) <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_svl" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">DO (mg/L) <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" min="0" class="form-control" id="edit_sample_do" required>
-                                </div>
+                                <div class="col-md-4"><label class="form-label">TSS (mg/L) <span class="text-danger">*</span></label><input type="number" step="0.01" min="0" class="form-control" id="edit_sample_tss" required></div>
+                                <div class="col-md-4"><label class="form-label">SV30 (mL/L) <span class="text-danger">*</span></label><input type="number" step="0.01" min="0" class="form-control" id="edit_sample_sv30" required></div>
+                                <div class="col-md-4"><label class="form-label">pH <span class="text-danger">*</span></label><input type="number" step="0.01" min="0" max="14" class="form-control" id="edit_sample_ph" required></div>
+                                <div class="col-md-4"><label class="form-label">MLSS (mg/L) <span class="text-danger">*</span></label><input type="number" step="0.01" min="0" class="form-control" id="edit_sample_mlss" required></div>
+                                <div class="col-md-4"><label class="form-label">SVI (mL/g) <span class="text-danger">*</span></label><input type="number" step="0.01" min="0" class="form-control" id="edit_sample_svl" required></div>
+                                <div class="col-md-4"><label class="form-label">DO (mg/L) <span class="text-danger">*</span></label><input type="number" step="0.01" min="0" class="form-control" id="edit_sample_do" required></div>
                             </div>
                         </form>
                     </div>
@@ -499,16 +505,16 @@
 
 <style>
     .stat-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform .3s ease, box-shadow .3s ease;
     }
 
     .stat-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15) !important;
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
     }
 
     .data-row {
-        transition: background-color 0.2s ease;
+        transition: background-color .2s ease;
     }
 
     .data-row:hover {
@@ -526,7 +532,7 @@
     }
 
     .detail-item {
-        transition: all 0.2s ease;
+        transition: all .2s ease;
     }
 
     .detail-item:hover {
@@ -564,13 +570,35 @@
     }
 
     .param-badge .param-lbl {
-        font-size: 0.72rem;
+        font-size: .72rem;
         color: #6c757d;
         margin-top: 2px;
     }
 
     .param-badge .param-unit {
-        font-size: 0.7rem;
+        font-size: .7rem;
+        color: #adb5bd;
+    }
+
+    .pagination .page-link {
+        border-radius: 6px !important;
+        margin: 0 2px;
+        color: #667eea;
+        border-color: #dee2e6;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+    }
+
+    .pagination .page-link:hover {
+        background-color: #f0f0ff;
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .pagination .page-item.disabled .page-link {
         color: #adb5bd;
     }
 </style>
@@ -579,60 +607,91 @@
 <script>
     $(document).ready(function() {
 
-        let allPerformanceData = [];
-        let allPHData = [];
-        let allSampleData = [];
-        let allJenisSampel = [];
-        let currentRecordId = null;
-
+        const PER_PAGE = 10;
         const userJabatan = "{{ Auth::user()->jabatan }}";
         const canEditDelete = userJabatan !== 'operator';
 
-        // ================================================================
-        // INIT
-        // ================================================================
-        loadPerformanceData();
+        /* ─────────────────────────────────────────────
+           STATE — one object per tab
+        ───────────────────────────────────────────── */
+        const perfState = {
+            currentPage: 1,
+            lastPage: 1,
+            total: 0,
+            jenis: '',
+            bulan: '',
+            search: '',
+            rows: [] // current page rows (for edit lookup)
+        };
 
-        $('#ph-tab').on('click', function() {
-            loadPHData();
-        });
+        const phState = {
+            currentPage: 1,
+            lastPage: 1,
+            total: 0,
+            bulan: '',
+            rows: []
+        };
 
-        $('#sample-tab').on('click', function() {
-            loadSampleData();
-            if (allJenisSampel.length === 0) loadJenisSampelOptions();
-        });
+        const sampleState = {
+            currentPage: 1,
+            lastPage: 1,
+            total: 0,
+            bulan: '',
+            idSampel: '',
+            search: '',
+            rows: []
+        };
 
-        // ================================================================
-        // FILTER - Performance
-        // ================================================================
-        $('#filterJenis, #filterBulan, #searchData').on('change keyup', filterPerformanceData);
-        $('#btnReset').on('click', function() {
-            $('#filterJenis').val('');
-            $('#filterBulan').val('');
-            $('#searchData').val('');
-            filterPerformanceData();
-        });
+        let currentRecordId = null;
+        let allJenisSampel = [];
 
-        // FILTER - Sample
-        $('#filterJenisSample, #filterBulanSample, #searchSample').on('change keyup', filterSampleData);
-        $('#btnResetSample').on('click', function() {
-            $('#filterJenisSample').val('');
-            $('#filterBulanSample').val('');
-            $('#searchSample').val('');
-            filterSampleData();
-        });
+        /* ─────────────────────────────────────────────
+           STATISTICS (lightweight separate call)
+        ───────────────────────────────────────────── */
+        function loadStatistics() {
+            $.ajax({
+                url: '/api/wwtp-performance/dashboard/statistics',
+                method: 'GET',
+                success: function(res) {
+                    $('#totalPerformance').text(res.total_records ?? 0);
+                    $('#weekPerformance').text(res.total_records_this_week ?? 0);
+                }
+            });
+        }
 
-        // ================================================================
-        // PERFORMANCE - Load & Render
-        // ================================================================
-        function loadPerformanceData() {
+        /* ─────────────────────────────────────────────
+           PERFORMANCE MINGGUAN
+        ───────────────────────────────────────────── */
+        function loadPerformance(page) {
+            page = page || perfState.currentPage;
+
+            const params = {
+                page,
+                per_page: PER_PAGE
+            };
+            if (perfState.jenis) params.jenis = perfState.jenis;
+            if (perfState.bulan) params.bulan = perfState.bulan;
+            if (perfState.search) params.search = perfState.search;
+
+            showLoading('#performanceTableBody', 6);
+            clearPagination('#performancePaginationInfo', '#performancePagination');
+
             $.ajax({
                 url: '/api/wwtp-performance',
                 method: 'GET',
+                data: params,
                 success: function(response) {
-                    allPerformanceData = response.data || [];
-                    updateStatistics();
-                    filterPerformanceData();
+                    perfState.currentPage = response.current_page;
+                    perfState.lastPage = response.last_page;
+                    perfState.total = response.total;
+                    perfState.rows = response.data;
+
+                    renderPerformanceTable(response.data);
+                    renderPaginationInfo('#performancePaginationInfo', response);
+                    renderPagination('#performancePagination', response, loadPerformance);
+
+                    // update stat card
+                    $('#totalPerformance').text(response.total);
                 },
                 error: function() {
                     showError('Gagal memuat data performance');
@@ -640,77 +699,71 @@
             });
         }
 
-        function updateStatistics() {
-            const totalPerf = allPerformanceData.reduce((s, w) => s + (w.records?.length || 0), 0);
-            $('#totalPerformance').text(totalPerf);
-            const now = new Date();
-            const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 1));
-            startOfWeek.setHours(0, 0, 0, 0);
-            const weekData = allPerformanceData
-                .filter(w => new Date(w.week_start) >= startOfWeek)
-                .reduce((s, w) => s + (w.records?.length || 0), 0);
-            $('#weekPerformance').text(weekData);
-        }
-
-        function filterPerformanceData() {
-            const jenis = $('#filterJenis').val();
-            const bulan = $('#filterBulan').val();
-            const search = $('#searchData').val().toLowerCase();
-
-            let filtered = allPerformanceData.map(week => {
-                let recs = week.records || [];
-                if (jenis) recs = recs.filter(r => r.jenis === jenis);
-                if (bulan && week.week_start.substring(0, 7) !== bulan) recs = [];
-                if (search) {
-                    recs = recs.filter(r => {
-                        const weekStr = `${week.week_start} - ${week.week_end}`.toLowerCase();
-                        return weekStr.includes(search) || getJenisLabel(r.jenis).toLowerCase().includes(search);
-                    });
-                }
-                return {
-                    ...week,
-                    records: recs
-                };
-            }).filter(w => w.records.length > 0);
-
-            renderPerformanceTable(filtered);
-        }
-
         function renderPerformanceTable(data) {
             const tbody = $('#performanceTableBody');
             tbody.empty();
-            if (!data.length) {
+            if (!data || !data.length) {
                 tbody.append(`<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data performance</td></tr>`);
                 return;
             }
-            data.forEach(week => {
-                week.records.forEach(record => {
-                    const hasFoto = record.foto ?
-                        '<i class="fas fa-check-circle text-success"></i>' :
-                        '<i class="fas fa-times-circle text-muted"></i>';
-                    let btns = `<button class="btn btn-sm btn-outline-primary me-1" onclick="showPerformanceDetail(${record.id})" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
-                    if (canEditDelete) {
-                        btns += `
-                        <button class="btn btn-sm btn-outline-success me-1" onclick="showPerformanceEdit(${record.id})" title="Edit"><i class="mdi mdi-pencil"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="confirmDeletePerformance(${record.id})" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
-                    }
-                    tbody.append(`
-                    <tr class="data-row">
-                        <td>${formatWeekRange(week.week_start, week.week_end)}</td>
-                        <td>${getJenisBadge(record.jenis)}</td>
-                        <td class="text-center fw-bold">${record.tss}</td>
-                        <td class="text-center fw-bold">${record.cod}</td>
-                        <td class="text-center">${hasFoto}</td>
-                        <td class="text-center">${btns}</td>
-                    </tr>`);
-                });
+            data.forEach(function(record) {
+                /* record now has: id, jenis, tss, cod, foto, week: { week_start, week_end } */
+                const hasFoto = record.foto ?
+                    '<i class="fas fa-check-circle text-success"></i>' :
+                    '<i class="fas fa-times-circle text-muted"></i>';
+                let btns = `<button class="btn btn-sm btn-outline-primary me-1" onclick="showPerformanceDetail(${record.id})" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
+                if (canEditDelete) {
+                    btns += `
+                    <button class="btn btn-sm btn-outline-success me-1" onclick="showPerformanceEdit(${record.id})" title="Edit"><i class="mdi mdi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDeletePerformance(${record.id})" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
+                }
+                tbody.append(`
+                <tr class="data-row">
+                    <td>${record.week ? formatWeekRange(record.week.week_start, record.week.week_end) : '-'}</td>
+                    <td>${getJenisBadge(record.jenis)}</td>
+                    <td class="text-center fw-bold">${record.tss}</td>
+                    <td class="text-center fw-bold">${record.cod}</td>
+                    <td class="text-center">${hasFoto}</td>
+                    <td class="text-center">${btns}</td>
+                </tr>`);
             });
-            $('[data-bs-toggle="tooltip"]').tooltip();
         }
 
-        // ================================================================
-        // PERFORMANCE - Detail & Edit & Delete
-        // ================================================================
+        // Filters
+        let perfSearchTimer;
+        $('#searchData').on('keyup', function() {
+            clearTimeout(perfSearchTimer);
+            perfSearchTimer = setTimeout(function() {
+                perfState.search = $('#searchData').val();
+                perfState.currentPage = 1;
+                loadPerformance(1);
+            }, 400);
+        });
+
+        $('#filterJenis').on('change', function() {
+            perfState.jenis = $(this).val();
+            perfState.currentPage = 1;
+            loadPerformance(1);
+        });
+
+        $('#filterBulan').on('change', function() {
+            perfState.bulan = $(this).val();
+            perfState.currentPage = 1;
+            loadPerformance(1);
+        });
+
+        $('#btnReset').on('click', function() {
+            $('#filterJenis').val('');
+            $('#filterBulan').val('');
+            $('#searchData').val('');
+            perfState.jenis = '';
+            perfState.bulan = '';
+            perfState.search = '';
+            perfState.currentPage = 1;
+            loadPerformance(1);
+        });
+
+        // Detail
         window.showPerformanceDetail = function(id) {
             $.ajax({
                 url: `/api/wwtp-performance/${id}`,
@@ -740,6 +793,7 @@
             });
         };
 
+        // Edit
         window.showPerformanceEdit = function(id) {
             $.ajax({
                 url: `/api/wwtp-performance/${id}`,
@@ -763,8 +817,8 @@
         };
 
         $('#btnSavePerformance').on('click', function() {
-            const id = $('#edit_perf_id').val();
-            const btn = $(this),
+            const id = $('#edit_perf_id').val(),
+                btn = $(this),
                 orig = btn.html();
             btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
             const fd = new FormData();
@@ -781,7 +835,7 @@
                 success: function() {
                     $('#editPerformanceModal').modal('hide');
                     showSuccess('Data berhasil diperbarui');
-                    loadPerformanceData();
+                    loadPerformance(perfState.currentPage);
                 },
                 error: function(xhr) {
                     showErrorFromXhr(xhr);
@@ -794,14 +848,14 @@
 
         $('#btnDeletePerformance').on('click', function() {
             if (!currentRecordId) return;
-            confirmSwal('Hapus data performance ini?', () => {
+            confirmSwal('Hapus data performance ini?', function() {
                 $.ajax({
                     url: `/api/wwtp-performance/${currentRecordId}`,
                     method: 'DELETE',
                     success: function() {
                         $('#detailPerformanceModal').modal('hide');
                         showSuccess('Data dihapus');
-                        loadPerformanceData();
+                        loadPerformance(perfState.currentPage);
                     },
                     error: function() {
                         showError('Gagal menghapus');
@@ -811,13 +865,13 @@
         });
 
         window.confirmDeletePerformance = function(id) {
-            confirmSwal('Hapus data performance ini?', () => {
+            confirmSwal('Hapus data performance ini?', function() {
                 $.ajax({
                     url: `/api/wwtp-performance/${id}`,
                     method: 'DELETE',
                     success: function() {
                         showSuccess('Data dihapus');
-                        loadPerformanceData();
+                        loadPerformance(perfState.currentPage);
                     },
                     error: function() {
                         showError('Gagal menghapus');
@@ -826,19 +880,35 @@
             });
         };
 
-        // ================================================================
-        // PH HARIAN - Load & Render
-        // ================================================================
-        function loadPHData() {
+        /* ─────────────────────────────────────────────
+           PH HARIAN
+        ───────────────────────────────────────────── */
+        function loadPH(page) {
+            page = page || phState.currentPage;
+
+            const params = {
+                page,
+                per_page: PER_PAGE
+            };
+            if (phState.bulan) params.bulan = phState.bulan;
+
+            showLoading('#phTableBody', 6);
+            clearPagination('#phPaginationInfo', '#phPagination');
+
             $.ajax({
                 url: '/api/wwtp-performance/ph-harian',
                 method: 'GET',
+                data: params,
                 success: function(response) {
-                    allPHData = response || [];
-                    $('#totalPH').text(allPHData.length);
-                    const today = new Date().toISOString().split('T')[0];
-                    $('#todayPH').text(allPHData.filter(p => p.tanggal === today).length);
-                    renderPHTable(allPHData);
+                    phState.currentPage = response.current_page;
+                    phState.lastPage = response.last_page;
+                    phState.total = response.total;
+                    phState.rows = response.data;
+
+                    $('#totalPH').text(response.total);
+                    renderPHTable(response.data);
+                    renderPaginationInfo('#phPaginationInfo', response);
+                    renderPagination('#phPagination', response, loadPH);
                 },
                 error: function() {
                     showError('Gagal memuat data PH');
@@ -849,11 +919,11 @@
         function renderPHTable(data) {
             const tbody = $('#phTableBody');
             tbody.empty();
-            if (!data.length) {
+            if (!data || !data.length) {
                 tbody.append(`<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data PH harian</td></tr>`);
                 return;
             }
-            data.forEach(item => {
+            data.forEach(function(item) {
                 let btns = `<button class="btn btn-sm btn-outline-primary me-1" onclick="showPHDetail(${item.id})" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
                 if (canEditDelete) {
                     btns += `
@@ -872,6 +942,26 @@
             });
         }
 
+        // PH filters
+        $('#filterBulanPH').on('change', function() {
+            phState.bulan = $(this).val();
+            phState.currentPage = 1;
+            loadPH(1);
+        });
+
+        $('#btnResetPH').on('click', function() {
+            $('#filterBulanPH').val('');
+            phState.bulan = '';
+            phState.currentPage = 1;
+            loadPH(1);
+        });
+
+        // PH tab click
+        $('#ph-tab').on('click', function() {
+            if (phState.total === 0 && phState.currentPage === 1) loadPH(1);
+        });
+
+        // PH Detail
         window.showPHDetail = function(id) {
             $.ajax({
                 url: `/api/wwtp-performance/ph-harian/${id}`,
@@ -881,40 +971,45 @@
                     const phItems = [{
                             label: 'Equalisasi 1',
                             value: r.equalisasi_1
-                        }, {
+                        },
+                        {
                             label: 'Equalisasi 2',
                             value: r.equalisasi_2
                         },
                         {
                             label: 'Netralisasi',
                             value: r.netralisasi
-                        }, {
+                        },
+                        {
                             label: 'Sedimentasi 1',
                             value: r.sedimentasi_1
                         },
                         {
                             label: 'Sedimentasi 2',
                             value: r.sedimentasi_2
-                        }, {
+                        },
+                        {
                             label: 'Outlet Anaerob',
                             value: r.outlet_anaerob
                         },
                         {
                             label: 'Aerob',
                             value: r.aerob
-                        }, {
+                        },
+                        {
                             label: 'Lumpur Aktif',
                             value: r.lumpur_aktif
                         },
                         {
                             label: 'Clarifier 2',
                             value: r.clarifier_2
-                        }, {
+                        },
+                        {
                             label: 'Outlet',
                             value: r.outlet
                         }
                     ];
-                    let phGrid = phItems.filter(i => i.value !== null && i.value !== undefined).map(i =>
+                    const phGrid = phItems.filter(i => i.value !== null && i.value !== undefined).map(i =>
                         `<div class="col-md-6 col-lg-4"><div class="detail-item p-3 border rounded">
                         <small class="text-muted">${i.label}</small>
                         <p class="fw-bold fs-5 mb-0 text-info">${i.value} <small class="text-muted">pH</small></p>
@@ -935,6 +1030,7 @@
             });
         };
 
+        // PH Edit
         window.showPHEdit = function(id) {
             $.ajax({
                 url: `/api/wwtp-performance/ph-harian/${id}`,
@@ -987,7 +1083,7 @@
                 success: function() {
                     $('#editPHModal').modal('hide');
                     showSuccess('Data PH berhasil diperbarui');
-                    loadPHData();
+                    loadPH(phState.currentPage);
                 },
                 error: function(xhr) {
                     showErrorFromXhr(xhr);
@@ -1000,14 +1096,14 @@
 
         $('#btnDeletePH').on('click', function() {
             if (!currentRecordId) return;
-            confirmSwal('Hapus data PH ini?', () => {
+            confirmSwal('Hapus data PH ini?', function() {
                 $.ajax({
                     url: `/api/wwtp-performance/ph-harian/${currentRecordId}`,
                     method: 'DELETE',
                     success: function() {
                         $('#detailPHModal').modal('hide');
                         showSuccess('Data PH dihapus');
-                        loadPHData();
+                        loadPH(phState.currentPage);
                     },
                     error: function() {
                         showError('Gagal menghapus data PH');
@@ -1017,13 +1113,13 @@
         });
 
         window.confirmDeletePH = function(id) {
-            confirmSwal('Hapus data PH ini?', () => {
+            confirmSwal('Hapus data PH ini?', function() {
                 $.ajax({
                     url: `/api/wwtp-performance/ph-harian/${id}`,
                     method: 'DELETE',
                     success: function() {
                         showSuccess('Data PH dihapus');
-                        loadPHData();
+                        loadPH(phState.currentPage);
                     },
                     error: function() {
                         showError('Gagal menghapus data PH');
@@ -1032,9 +1128,9 @@
             });
         };
 
-        // ================================================================
-        // SAMPLE - Load Jenis & Data
-        // ================================================================
+        /* ─────────────────────────────────────────────
+           DATA SAMPLE
+        ───────────────────────────────────────────── */
         function loadJenisSampelOptions() {
             $.ajax({
                 url: '/api/wwtp-performance/jenis-sampel',
@@ -1045,23 +1141,42 @@
                     const editSel = $('#edit_sample_id_sampel');
                     filterSel.find('option:not(:first)').remove();
                     editSel.find('option:not(:first)').remove();
-                    allJenisSampel.forEach(j => {
+                    allJenisSampel.forEach(function(j) {
                         filterSel.append(`<option value="${j.id}">${j.nama_sampel}</option>`);
-                        editSel.append(`<option value="${j.id}" data-nama="${j.nama_sampel}">${j.nama_sampel}</option>`);
+                        editSel.append(`<option value="${j.id}">${j.nama_sampel}</option>`);
                     });
                 }
             });
         }
 
-        function loadSampleData() {
-            $('#sampleTableBody').html(`<tr><td colspan="9" class="text-center py-5"><div class="spinner-border text-warning" role="status"></div></td></tr>`);
+        function loadSample(page) {
+            page = page || sampleState.currentPage;
+
+            const params = {
+                page,
+                per_page: PER_PAGE
+            };
+            if (sampleState.bulan) params.bulan = sampleState.bulan;
+            if (sampleState.idSampel) params.id_sampel = sampleState.idSampel;
+            if (sampleState.search) params.search = sampleState.search;
+
+            showLoading('#sampleTableBody', 9);
+            clearPagination('#samplePaginationInfo', '#samplePagination');
+
             $.ajax({
                 url: '/api/wwtp-performance/sample',
                 method: 'GET',
+                data: params,
                 success: function(response) {
-                    allSampleData = response.data || response || [];
-                    $('#totalSample').text(allSampleData.length);
-                    filterSampleData();
+                    sampleState.currentPage = response.current_page;
+                    sampleState.lastPage = response.last_page;
+                    sampleState.total = response.total;
+                    sampleState.rows = response.data;
+
+                    $('#totalSample').text(response.total);
+                    renderSampleTable(response.data);
+                    renderPaginationInfo('#samplePaginationInfo', response);
+                    renderPagination('#samplePagination', response, loadSample);
                 },
                 error: function() {
                     showError('Gagal memuat data sample');
@@ -1069,30 +1184,14 @@
             });
         }
 
-        function filterSampleData() {
-            const jenis = $('#filterJenisSample').val();
-            const bulan = $('#filterBulanSample').val();
-            const search = $('#searchSample').val().toLowerCase();
-
-            let filtered = allSampleData.filter(s => {
-                const tgl = s.tanggal ? s.tanggal.substring(0, 7) : '';
-                const nama = (s.jenis_sampel || '').toLowerCase();
-                if (jenis && String(s.id_sampel) !== String(jenis)) return false;
-                if (bulan && tgl !== bulan) return false;
-                if (search && !nama.includes(search)) return false;
-                return true;
-            });
-            renderSampleTable(filtered);
-        }
-
         function renderSampleTable(data) {
             const tbody = $('#sampleTableBody');
             tbody.empty();
-            if (!data.length) {
+            if (!data || !data.length) {
                 tbody.append(`<tr><td colspan="9" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data sample</td></tr>`);
                 return;
             }
-            data.forEach(s => {
+            data.forEach(function(s) {
                 let btns = `<button class="btn btn-sm btn-outline-warning me-1" onclick="showSampleDetail(${s.id})" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
                 if (canEditDelete) {
                     btns += `
@@ -1103,20 +1202,58 @@
                 <tr class="data-row">
                     <td>${formatDate(s.tanggal)}</td>
                     <td><span class="badge bg-warning text-dark">${s.jenis_sampel || '-'}</span></td>
-                    <td class="text-center fw-bold">${s.tss ?? '-'}</td>
+                    <td class="text-center fw-bold">${s.tss  ?? '-'}</td>
                     <td class="text-center fw-bold">${s.sv30 ?? '-'}</td>
-                    <td class="text-center fw-bold">${s.ph ?? '-'}</td>
+                    <td class="text-center fw-bold">${s.ph   ?? '-'}</td>
                     <td class="text-center fw-bold">${s.mlss ?? '-'}</td>
-                    <td class="text-center fw-bold">${s.svl ?? '-'}</td>
-                    <td class="text-center fw-bold">${s.do ?? '-'}</td>
+                    <td class="text-center fw-bold">${s.svl  ?? '-'}</td>
+                    <td class="text-center fw-bold">${s.do   ?? '-'}</td>
                     <td class="text-center">${btns}</td>
                 </tr>`);
             });
         }
 
-        // ================================================================
-        // SAMPLE - Detail & Edit & Delete
-        // ================================================================
+        // Sample filters
+        let sampleSearchTimer;
+        $('#searchSample').on('keyup', function() {
+            clearTimeout(sampleSearchTimer);
+            sampleSearchTimer = setTimeout(function() {
+                sampleState.search = $('#searchSample').val();
+                sampleState.currentPage = 1;
+                loadSample(1);
+            }, 400);
+        });
+
+        $('#filterJenisSample').on('change', function() {
+            sampleState.idSampel = $(this).val();
+            sampleState.currentPage = 1;
+            loadSample(1);
+        });
+
+        $('#filterBulanSample').on('change', function() {
+            sampleState.bulan = $(this).val();
+            sampleState.currentPage = 1;
+            loadSample(1);
+        });
+
+        $('#btnResetSample').on('click', function() {
+            $('#filterJenisSample').val('');
+            $('#filterBulanSample').val('');
+            $('#searchSample').val('');
+            sampleState.idSampel = '';
+            sampleState.bulan = '';
+            sampleState.search = '';
+            sampleState.currentPage = 1;
+            loadSample(1);
+        });
+
+        // Sample tab click
+        $('#sample-tab').on('click', function() {
+            if (allJenisSampel.length === 0) loadJenisSampelOptions();
+            if (sampleState.total === 0 && sampleState.currentPage === 1) loadSample(1);
+        });
+
+        // Sample Detail
         window.showSampleDetail = function(id) {
             $.ajax({
                 url: `/api/wwtp-performance/sample/${id}`,
@@ -1124,13 +1261,7 @@
                 success: function(response) {
                     const s = response.data;
                     currentRecordId = id;
-
-                    // Ambil nama sampel dari relasi object
                     const namaSampel = s.jenis_sampel?.nama_sampel ?? s.jenis_sampel ?? '-';
-
-                    // Tanggal dari ISO string — ambil 10 karakter pertama saja
-                    const tanggalFormatted = formatDate(s.tanggal.substring(0, 10));
-
                     const params = [{
                             lbl: 'TSS',
                             val: s.tss,
@@ -1162,34 +1293,22 @@
                             unit: 'mg/L'
                         }
                     ];
-
-                    const paramGrid = params.map(p => `
-                <div class="col-md-4 col-6">
-                    <div class="param-badge w-100 text-center">
-                        <span class="param-val">${p.val ?? '-'}</span>
-                        <span class="param-unit">${p.unit}</span>
-                        <span class="param-lbl">${p.lbl}</span>
-                    </div>
-                </div>`).join('');
-
+                    const paramGrid = params.map(function(p) {
+                        return `<div class="col-md-4 col-6">
+                        <div class="param-badge w-100 text-center">
+                            <span class="param-val">${p.val ?? '-'}</span>
+                            <span class="param-unit">${p.unit}</span>
+                            <span class="param-lbl">${p.lbl}</span>
+                        </div>
+                    </div>`;
+                    }).join('');
                     $('#modalSampleContent').html(`
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <div class="info-box p-3 bg-light rounded">
-                            <p class="text-muted small mb-1">Tanggal</p>
-                            <p class="fw-bold mb-0">${tanggalFormatted}</p>
-                        </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Tanggal</p><p class="fw-bold mb-0">${formatDate(s.tanggal ? s.tanggal.substring(0,10) : '')}</p></div></div>
+                        <div class="col-md-6"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Jenis Sampel</p><span class="badge bg-warning text-dark fs-6">${namaSampel}</span></div></div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="info-box p-3 bg-light rounded">
-                            <p class="text-muted small mb-1">Jenis Sampel</p>
-                            <span class="badge bg-warning text-dark fs-6">${namaSampel}</span>
-                        </div>
-                    </div>
-                </div>
-                <h6 class="fw-bold mb-3 text-warning">Parameter Pengujian</h6>
-                <div class="row g-3">${paramGrid}</div>`);
-
+                    <h6 class="fw-bold mb-3 text-warning">Parameter Pengujian</h6>
+                    <div class="row g-3">${paramGrid}</div>`);
                     canEditDelete ? $('#btnDeleteSample').show() : $('#btnDeleteSample').hide();
                     new bootstrap.Modal(document.getElementById('detailSampleModal')).show();
                 },
@@ -1199,10 +1318,9 @@
             });
         };
 
+        // Sample Edit
         window.showSampleEdit = function(id) {
-            // Pastikan jenis sampel sudah dimuat
             if (allJenisSampel.length === 0) loadJenisSampelOptions();
-
             $.ajax({
                 url: `/api/wwtp-performance/sample/${id}`,
                 method: 'GET',
@@ -1242,12 +1360,12 @@
                     ph: $('#edit_sample_ph').val(),
                     mlss: $('#edit_sample_mlss').val(),
                     svl: $('#edit_sample_svl').val(),
-                    do: $('#edit_sample_do').val(),
+                    do: $('#edit_sample_do').val()
                 },
                 success: function() {
                     $('#editSampleModal').modal('hide');
                     showSuccess('Data sample berhasil diperbarui');
-                    loadSampleData();
+                    loadSample(sampleState.currentPage);
                 },
                 error: function(xhr) {
                     showErrorFromXhr(xhr);
@@ -1260,14 +1378,14 @@
 
         $('#btnDeleteSample').on('click', function() {
             if (!currentRecordId) return;
-            confirmSwal('Hapus data sample ini?', () => {
+            confirmSwal('Hapus data sample ini?', function() {
                 $.ajax({
                     url: `/api/wwtp-performance/sample/${currentRecordId}`,
                     method: 'DELETE',
                     success: function() {
                         $('#detailSampleModal').modal('hide');
                         showSuccess('Data sample dihapus');
-                        loadSampleData();
+                        loadSample(sampleState.currentPage);
                     },
                     error: function() {
                         showError('Gagal menghapus data sample');
@@ -1277,13 +1395,13 @@
         });
 
         window.confirmDeleteSample = function(id) {
-            confirmSwal('Hapus data sample ini?', () => {
+            confirmSwal('Hapus data sample ini?', function() {
                 $.ajax({
                     url: `/api/wwtp-performance/sample/${id}`,
                     method: 'DELETE',
                     success: function() {
                         showSuccess('Data sample dihapus');
-                        loadSampleData();
+                        loadSample(sampleState.currentPage);
                     },
                     error: function() {
                         showError('Gagal menghapus data sample');
@@ -1292,35 +1410,103 @@
             });
         };
 
-        // ================================================================
-        // HELPERS
-        // ================================================================
-        function getJenisLabel(jenis) {
-            return {
-                equal: 'Equalisasi',
-                outlet_anaerob: 'Outlet Anaerob',
-                aerob: 'Aerob',
-                daf: 'DAF',
-                outlet: 'Outlet'
-            } [jenis] || jenis;
+        /* ─────────────────────────────────────────────
+           SHARED PAGINATION UTILITIES
+        ───────────────────────────────────────────── */
+        function renderPaginationInfo(selector, response) {
+            if (!response.total) {
+                $(selector).text('');
+                return;
+            }
+            $(selector).text(`Menampilkan ${response.from ?? 0}–${response.to ?? 0} dari ${response.total} data`);
         }
 
+        function renderPagination(selector, response, loadFn) {
+            const ul = $(selector);
+            const currentPage = response.current_page;
+            const lastPage = response.last_page;
+            ul.empty();
+            if (lastPage <= 1) return;
+
+            ul.append(`<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage - 1}">&laquo;</a></li>`);
+
+            pageRange(currentPage, lastPage).forEach(function(p) {
+                if (p === '...') {
+                    ul.append(`<li class="page-item disabled"><span class="page-link">…</span></li>`);
+                } else {
+                    ul.append(`<li class="page-item ${p === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${p}">${p}</a></li>`);
+                }
+            });
+
+            ul.append(`<li class="page-item ${currentPage === lastPage ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage + 1}">&raquo;</a></li>`);
+
+            ul.find('a.page-link').on('click', function(e) {
+                e.preventDefault();
+                const p = parseInt($(this).data('page'));
+                if (!isNaN(p) && p >= 1 && p <= lastPage) {
+                    loadFn(p);
+                    $('html, body').animate({
+                        scrollTop: 0
+                    }, 200);
+                }
+            });
+        }
+
+        function pageRange(current, last) {
+            const delta = 2,
+                range = [],
+                result = [];
+            let l;
+            for (let i = Math.max(2, current - delta); i <= Math.min(last - 1, current + delta); i++) range.push(i);
+            if (current - delta > 2) range.unshift('...');
+            if (current + delta < last - 1) range.push('...');
+            range.unshift(1);
+            if (last > 1) range.push(last);
+            range.forEach(function(i) {
+                if (l) {
+                    if (i === '...' && l !== '...') result.push('...');
+                    else if (i !== '...') result.push(i);
+                } else result.push(i);
+                l = i;
+            });
+            return result;
+        }
+
+        function showLoading(tbodySelector, colspan) {
+            $(tbodySelector).html(`<tr><td colspan="${colspan}" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+        </td></tr>`);
+        }
+
+        function clearPagination(infoSelector, paginationSelector) {
+            $(infoSelector).text('');
+            $(paginationSelector).empty();
+        }
+
+        /* ─────────────────────────────────────────────
+           HELPERS
+        ───────────────────────────────────────────── */
         function getJenisBadge(jenis) {
-            return {
-                equal: '<span class="badge bg-primary badge-jenis">Equalisasi</span>',
-                outlet_anaerob: '<span class="badge bg-info badge-jenis">Outlet Anaerob</span>',
-                aerob: '<span class="badge bg-success badge-jenis">Aerob</span>',
-                daf: '<span class="badge bg-warning badge-jenis">DAF</span>',
-                outlet: '<span class="badge bg-secondary badge-jenis">Outlet</span>'
-            } [jenis] || `<span class="badge bg-secondary badge-jenis">${jenis}</span>`;
+            return ({
+                    equal: '<span class="badge bg-primary badge-jenis">Equalisasi</span>',
+                    outlet_anaerob: '<span class="badge bg-info badge-jenis">Outlet Anaerob</span>',
+                    aerob: '<span class="badge bg-success badge-jenis">Aerob</span>',
+                    daf: '<span class="badge bg-warning badge-jenis">DAF</span>',
+                    outlet: '<span class="badge bg-secondary badge-jenis">Outlet</span>'
+                } [jenis] ||
+                `<span class="badge bg-secondary badge-jenis">${jenis}</span>`);
         }
 
         function getShiftBadge(shift) {
-            return {
-                shift1: '<span class="badge bg-primary">Shift 1</span>',
-                shift2: '<span class="badge bg-success">Shift 2</span>',
-                shift3: '<span class="badge bg-info">Shift 3</span>'
-            } [shift] || `<span class="badge bg-secondary">${shift}</span>`;
+            return ({
+                    shift1: '<span class="badge bg-primary">Shift 1</span>',
+                    shift2: '<span class="badge bg-success">Shift 2</span>',
+                    shift3: '<span class="badge bg-info">Shift 3</span>'
+                } [shift] ||
+                `<span class="badge bg-secondary">${shift}</span>`);
         }
 
         function formatWeekRange(start, end) {
@@ -1329,7 +1515,7 @@
                 month: 'short',
                 year: 'numeric'
             };
-            return `${new Date(start).toLocaleDateString('id-ID', opt)} - ${new Date(end).toLocaleDateString('id-ID', opt)}`;
+            return `${new Date(start).toLocaleDateString('id-ID', opt)} – ${new Date(end).toLocaleDateString('id-ID', opt)}`;
         }
 
         function formatDate(dateString) {
@@ -1359,7 +1545,7 @@
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal'
-            }).then(r => {
+            }).then(function(r) {
                 if (r.isConfirmed) onConfirm();
             });
         }
@@ -1390,6 +1576,12 @@
             else if (err?.errors) msg = Object.values(err.errors).flat().join('\n');
             showError(msg);
         }
+
+        /* ─────────────────────────────────────────────
+           INIT
+        ───────────────────────────────────────────── */
+        loadStatistics();
+        loadPerformance(1);
     });
 </script>
 @endsection

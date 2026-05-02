@@ -32,16 +32,38 @@ class WWTPControllerPerformance extends Controller
     /**
      * Menampilkan semua data performance WWTP (JSON)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = WwtpPerformanceWeek::with('records')
-            ->orderBy('week_start', 'desc')
-            ->get();
+        $perPage = $request->input('per_page', 10);
+        $page    = $request->input('page', 1);
+        $jenis   = $request->input('jenis');
+        $bulan   = $request->input('bulan');
+        $search  = $request->input('search');
 
-        return response()->json([
-            'status' => 'success',
-            'data'   => $data
-        ]);
+        $query = WwtpPerformanceRecord::with('week')
+        ->orderBy('created_at', 'desc');
+
+        if ($jenis) {
+            $query->where('jenis', $jenis);
+        }
+
+        if ($bulan) {
+            $query->whereHas('week', function ($q) use ($bulan) {
+                $q->whereRaw("DATE_FORMAT(week_start, '%Y-%m') = ?", [$bulan]);
+            });
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('jenis', 'like', "%{$search}%")
+                ->orWhereHas('week', function ($wq) use ($search) {
+                    $wq->where('week_start', 'like', "%{$search}%")
+                    ->orWhere('week_end', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        return response()->json($query->paginate($perPage, ['*'], 'page', $page));
     }
 
     /**
@@ -172,13 +194,20 @@ class WWTPControllerPerformance extends Controller
 
 
     //////////////////PH harian/////////////////////
-    public function indexPHHarian()
+    public function indexPHHarian(Request $request)
     {
-        $data = WwtpPerformancePHharian::orderBy('tanggal', 'desc')
-            ->orderBy('shift', 'asc')
-            ->get();
+        $query = WwtpPerformancePHharian::orderBy('tanggal',
+            'desc'
+        )
+        ->orderBy('shift', 'asc');
 
-        return response()->json($data);
+        if ($request->bulan) {
+            $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$request->bulan]);
+        }
+
+        return response()->json(
+            $query->paginate($request->input('per_page', 10), ['*'], 'page', $request->input('page', 1))
+        );
     }
 
     /**
@@ -307,12 +336,29 @@ class WWTPControllerPerformance extends Controller
 
 
     ////////////// Sample            ////////////////////
-    public function indexSample()
+    public function indexSample(Request $request)
     {
-        $data = WwtpPerformanceSample::orderBy('tanggal', 'desc')
-        ->get();
+        $query = WwtpPerformanceSample::with('jenisSampel')
+            ->orderBy('tanggal', 'desc');
 
-        return response()->json($data);
+        if ($request->bulan) {
+            $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$request->bulan]);
+        }
+
+        if ($request->id_sampel) {
+            $query->where('id_sampel', $request->id_sampel);
+        }
+
+        if ($request->search) {
+            $query->where('jenis_sampel', 'like', "%{$request->search}%");
+        }
+
+        return response()->json(
+            $query->paginate($request->input('per_page', 10), ['*'],
+                'page',
+                $request->input('page', 1)
+            )
+        );
     }
     public function getJenisSampel()
     {
