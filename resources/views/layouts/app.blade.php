@@ -276,11 +276,13 @@
                         success: function(response) {
 
                             const notifList = $('#notifList');
+                            const template = $('#notifTemplate .notif-item');
                             const notifBadge = $('#notifBadge');
 
-                            notifList.html('');
+                            notifList.empty();
 
-                            if (!response || response.length === 0) {
+                            // Jika tidak ada notif
+                            if (response.length === 0) {
                                 notifList.html(
                                     '<p class="text-center text-muted py-3 mb-0">Tidak ada notifikasi</p>'
                                 );
@@ -294,38 +296,62 @@
                                 .text(unread.length || '')
                                 .toggle(unread.length > 0);
 
+                            // response.forEach(n => {
+                            //     const item = $(`
+                    //         <a href="${n.url}" 
+                    //             class="list-group-item list-group-item-action notif-item d-flex align-items-start
+                    //                 ${n.is_read ? 'bg-light text-muted' : 'bg-white'}"
+                    //             data-id="${n.id}">
+
+                    //             <div class="flex-grow-1">
+                    //                 <h6 class="mb-1 ${n.is_read ? '' : 'fw-semibold'}">
+                    //                     ${n.title}
+                    //                 </h6>
+
+                    //                 <p class="mb-1 small">
+                    //                     ${n.message}
+                    //                 </p>
+
+                    //                 <small class="text-muted d-block">
+                    //                     <i class="bx bx-time-five me-1"></i>${n.created_at}
+                    //                 </small>
+                    //             </div>
+
+                    //             <div class="ms-2">
+                    //                 ${
+                    //                     n.is_read
+                    //                     ? '<i class="bx bx-check-circle text-success fs-5"></i>'
+                    //                     : '<i class="bx bx-bell text-warning fs-5"></i>'
+                    //                 }
+                    //             </div>
+                    //         </a>
+                    //     `);
+
+                            //     notifList.append(item);
+                            // });
+
                             response.forEach(n => {
-                                const item = $(`
-                                    <a href="${n.url}" 
-                                        class="list-group-item list-group-item-action notif-item d-flex align-items-start
-                                            ${n.is_read ? 'bg-light text-muted' : 'bg-white'}"
-                                        data-id="${n.id}">
+                                const clone = template.clone();
 
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1 ${n.is_read ? '' : 'fw-semibold'}">
-                                                ${n.title}
-                                            </h6>
+                                clone.attr('data-id', n.id);
+                                clone.attr('data-url', n.url);
 
-                                            <p class="mb-1 small">
-                                                ${n.message}
-                                            </p>
+                                clone.find('.notif-title').text(n.title);
+                                clone.find('.notif-message').text(n.message);
+                                clone.find('.notif-time').text(n.created_at);
 
-                                            <small class="text-muted d-block">
-                                                <i class="bx bx-time-five me-1"></i>${n.created_at}
-                                            </small>
-                                        </div>
+                                const icon = clone.find('.notif-icon');
+                                if (n.is_read) {
+                                    icon.removeClass().addClass('bx bx-check-circle text-success');
+                                    clone.removeClass('bg-white fw-semibold').addClass(
+                                        'bg-light text-muted');
+                                } else {
+                                    icon.removeClass().addClass('bx bx-bell text-warning');
+                                    clone.removeClass('bg-light text-muted').addClass(
+                                        'bg-white fw-semibold');
+                                }
 
-                                        <div class="ms-2">
-                                            ${
-                                                n.is_read
-                                                ? '<i class="bx bx-check-circle text-success fs-5"></i>'
-                                                : '<i class="bx bx-bell text-warning fs-5"></i>'
-                                            }
-                                        </div>
-                                    </a>
-                                `);
-
-                                notifList.append(item);
+                                notifList.append(clone);
                             });
 
                             /* =========================
@@ -361,17 +387,20 @@
                 }
 
                 $('#notifList').on('click', '.notif-item', function(e) {
-                    e.preventDefault();
-                    const id = $(this).data('id');
-                    const url = $(this).attr('href');
+                    if ($(e.target).closest('.btn-delete-notif').length) return;
+
+                    // e.preventDefault();
                     const item = $(this);
+                    const id = item.data('id');
+                    const url = item.data('url');
 
                     // Kalau sudah read, langsung buka halaman
+                    if (!url) return;
+
                     if (item.hasClass('bg-light')) {
-                        window.location.href = url;
+                        openNotificationUrl(url);
                         return;
                     }
-
                     $.ajax({
                         url: `{{ url('api/notifications/read') }}/${id}`,
                         type: 'POST',
@@ -404,6 +433,34 @@
                         },
                         error: function() {
                             toastr.error('Gagal menandai notifikasi sebagai dibaca.');
+                        }
+                    });
+                });
+
+                function openNotificationUrl(url) {
+
+                    window.location.href = url;
+                }
+
+                $(document).on('click', '.btn-delete-notif', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const item = $(this).closest('.notif-item');
+                    const id = item.data('id');
+
+                    $.ajax({
+                        url: "{{ url('notif/delete') }}/" + id,
+                        type: "DELETE",
+                        headers: {
+                            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function() {
+                            item.remove();
+
+                            const count = $('.notif-item').length;
+                            if (count > 0) $('#notifBadge').text(count);
+                            else $('#notifBadge').hide();
                         }
                     });
                 });

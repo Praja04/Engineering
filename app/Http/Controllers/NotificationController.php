@@ -93,6 +93,19 @@ class NotificationController extends Controller
         ]);
     }
 
+    public function destroy($id)
+    {
+        $notif = NotificationsModel::find($id);
+
+        if (!$notif) {
+            return response()->json(['status' => 'error', 'message' => 'Notifikasi tidak ditemukan'], 404);
+        }
+
+        $notif->delete();
+
+        return response()->json(['status' => 'success', 'message' => 'Notifikasi berhasil dihapus']);
+    }
+
     public function destroyAll()
     {
         NotificationsModel::truncate();
