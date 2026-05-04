@@ -4,10 +4,12 @@ use App\Http\Controllers\Utility\WWTPControllerPerformance;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\WWTPControllerProses;
 use App\Http\Controllers\Utility\WWTPControllerSludge;
+use App\Http\Controllers\Utility\WWTPController;
 
 // WWTP Proses Routes
 Route::prefix('wwtp')->group(function () {
     // WWTP Daily Data Routes (Influent Harian) - HARUS DI ATAS /{id}
+    Route::get('/all/export', [WWTPController::class, 'export']);
     Route::get('/influent-harian', [WWTPControllerProses::class, 'indexHarian']);
     Route::post('/influent-harian', [WWTPControllerProses::class, 'storeinfluentHarian'])->name('wwtp.influent-harian.store');
     Route::get('/influent-harian/{id}', [WWTPControllerProses::class, 'showHarian']);

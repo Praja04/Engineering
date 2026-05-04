@@ -36,7 +36,7 @@ class CompressorController extends Controller
         try {
             $validated = $request->validate([
                 'tanggal' => 'required|date',
-                'jam' => 'required|in:08:00,12:00,16:00,00:00,04:00',
+                'jam' => 'required|in:08:00,12:00,16:00,20:00,00:00,04:00',
 
                 'pressure_outlet_1' => 'nullable|numeric',
                 'pressure_outlet_2' => 'nullable|numeric',
@@ -76,12 +76,12 @@ class CompressorController extends Controller
 
             // Cek Duplikat di Details
             if (CompressorDetails::where('tanggal', $validated['tanggal'])
-                ->where('jam', $validated['jam'])
+                // ->where('jam', $validated['jam'])
                 ->exists()
             ) {
                 return response()->json([
                     'status' => 422,
-                    'message' => 'Laporan untuk tanggal dan jam ini sudah ada'
+                    'message' => 'Laporan untuk tanggal  sudah ada'
                 ], 422);
             }
 

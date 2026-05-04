@@ -39,7 +39,7 @@ class CapacitorBankController extends Controller
     {
         $request->validate([
             'tanggal'     => 'required|date',
-            'jam'         => 'nullable',
+            'jam' => 'required',
             'arus_total'  => 'nullable|numeric|min:0',
             'cap_a_nomor' => 'nullable|integer',
             'cap_a_i1'    => 'nullable|numeric|min:0',

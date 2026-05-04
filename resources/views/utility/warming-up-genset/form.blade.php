@@ -134,7 +134,7 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Running Hour </label>
+                                    <label class="form-label">Running Hour (menit)</label>
                                     <input type="number" step="0.01" name="running_hour" class="form-control"
                                         placeholder="0.00" step="0.01" min="0">
                                 </div>
