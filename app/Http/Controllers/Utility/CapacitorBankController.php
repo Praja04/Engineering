@@ -168,7 +168,7 @@ class CapacitorBankController extends Controller
             ->whereYear('tanggal', $request->tahun)
             ->count();
 
-       
+
 
         if ($jumlahTerisi === 0) {
             return response()->json([
@@ -220,6 +220,11 @@ class CapacitorBankController extends Controller
             'status'                 => 'approved_supervisor',
             'supervisor_approved_at' => now(),
         ]);
+
+        NotificationsModel::where('notifiable_type', CapacitorBankApproval::class)
+            ->where('notifiable_id', $approval->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->delete();
 
         return response()->json([
             'message' => "Laporan bulan {$approval->bulan}/{$approval->tahun} telah disetujui (Final)."
@@ -321,7 +326,7 @@ class CapacitorBankController extends Controller
             ->whereYear('tanggal', $tahun)
             ->orderBy('tanggal')
             ->get()
-            ->keyBy(fn ($r) => (int) Carbon::parse($r->tanggal)->format('j'));
+            ->keyBy(fn($r) => (int) Carbon::parse($r->tanggal)->format('j'));
 
         $approval = CapacitorBankApproval::where('bulan', $bulan)
             ->where('tahun', $tahun)
@@ -339,9 +344,18 @@ class CapacitorBankController extends Controller
 
         // ── Isi header bulan & tahun ──────────────────────────
         $bulanNames = [
-            1  => 'Januari',  2  => 'Februari', 3  => 'Maret',    4  => 'April',
-            5  => 'Mei',      6  => 'Juni',      7  => 'Juli',     8  => 'Agustus',
-            9  => 'September', 10 => 'Oktober',  11 => 'November', 12 => 'Desember',
+            1  => 'Januari',
+            2  => 'Februari',
+            3  => 'Maret',
+            4  => 'April',
+            5  => 'Mei',
+            6  => 'Juni',
+            7  => 'Juli',
+            8  => 'Agustus',
+            9  => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
         ];
 
         $sheet->setCellValue('P1', 'Bulan : ' . $bulanNames[$bulan]);
@@ -441,7 +455,7 @@ class CapacitorBankController extends Controller
         $basePath = public_path('storage/operasional/ttd');
 
         // Helper ambil username dari relasi User
-        $getName = fn ($user) => $user?->username ?? '-';
+        $getName = fn($user) => $user?->username ?? '-';
 
         $signatories = [
             [
@@ -546,7 +560,7 @@ class CapacitorBankController extends Controller
                 ->getColor()->setARGB('FF666666');
         }
     }
- 
+
     // =========================================================
     // HELPER
     // =========================================================

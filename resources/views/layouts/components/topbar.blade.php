@@ -61,6 +61,9 @@
                             <div class="p-3">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <h6 class="m-0 fw-semibold text-white">Notifikasi</h6>
+                                    <button id="clearNotifBtn" class="btn btn-sm btn-soft-danger fw-bold">
+                                        Delete All
+                                    </button>
                                 </div>
                             </div>
                         </div>

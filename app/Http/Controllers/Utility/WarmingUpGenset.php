@@ -157,7 +157,7 @@ class WarmingUpGenset extends Controller
         NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
@@ -183,7 +183,7 @@ class WarmingUpGenset extends Controller
         NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Supervisor (Selesai)']);
     }
@@ -205,6 +205,11 @@ class WarmingUpGenset extends Controller
             'status' => 'rejected',
             'reject_reason' => $request->reason
         ]);
+
+        NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->delete();
 
         return response()->json(['message' => 'Laporan berhasil ditolak']);
     }

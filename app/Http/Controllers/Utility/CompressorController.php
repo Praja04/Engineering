@@ -362,7 +362,7 @@ class CompressorController extends Controller
         NotificationsModel::where('notifiable_type', Compressor::class)
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
@@ -383,7 +383,7 @@ class CompressorController extends Controller
         NotificationsModel::where('notifiable_type', Compressor::class)
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Supervisor']);
     }
@@ -397,6 +397,11 @@ class CompressorController extends Controller
             'status' => 'rejected',
             'reject_reason' => $request->reason
         ]);
+
+        NotificationsModel::where('notifiable_type', Compressor::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->delete();
 
         return response()->json(['message' => 'Laporan ditolak']);
     }
