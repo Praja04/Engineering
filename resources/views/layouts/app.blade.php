@@ -1,298 +1,301 @@
 <!DOCTYPE html>
-<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg"
+    data-sidebar-image="none" data-preloader="disable">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Engineering | @yield('title', 'Portal')</title>
-    <meta content="Themesbrand" name="author" />
+    <head>
+        <meta charset="UTF-8">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Engineering | @yield('title', 'Portal')</title>
+        <meta content="Themesbrand" name="author" />
 
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.documentElement.setAttribute('data-layout-mode', 'dark');
-            } else {
-                document.documentElement.setAttribute('data-layout-mode', 'light');
+        <script>
+            (function() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-layout-mode', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-layout-mode', 'light');
+                }
+            })();
+        </script>
+
+        {{-- app favicon --}}
+        <link rel="shortcut icon" href="{{ asset('assets/images/logo/kecap.png') }}">
+
+        {{-- SweetAlert2 CSS --}}
+        <link href="{{ asset('material/assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet"
+            type="text/css" />
+
+        <!-- Layout config Js -->
+        <script src="{{ asset('material/assets/js/layout.js') }}"></script>
+        <!-- Bootstrap Css -->
+        <link href="{{ asset('material/assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
+        <!-- Icons Css -->
+        <link href="{{ asset('material/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
+        <!-- App Css-->
+        <link href="{{ asset('material/assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
+        <!-- custom Css-->
+        <link href="{{ asset('material/assets/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
+        <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet" type="text/css" />
+        <link href="{{ asset('material/assets/libs/aos/aos.css') }}" rel="stylesheet" type="text/css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+        <!-- jQuery should be included before DataTables -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <link href="{{ asset('material/assets/css/datatables.min.css') }}" rel="stylesheet" type="text/css" />
+        <script src="{{ asset('material/assets/js/datatables.min.js') }}"></script>
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+            rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+        @yield('styles')
+
+        <style>
+            /* Fix Select2 in Bootstrap 5 Input Group */
+            .input-group>.select2-container--bootstrap-5 {
+                flex: 1 1 auto;
+                width: 1% !important;
             }
-        })();
-    </script>
 
-    {{-- app favicon --}}
-    <link rel="shortcut icon" href="{{ asset('assets/images/logo/kecap.png') }}">
+            /* Handle border-radius for Select2 inside input-group */
+            .input-group>.select2-container--bootstrap-5 .select2-selection {
+                border-top-right-radius: 0 !important;
+                border-bottom-right-radius: 0 !important;
+                height: 38px !important;
+                display: flex;
+                align-items: center;
+            }
 
-    {{-- SweetAlert2 CSS --}}
-    <link href="{{ asset('material/assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+            .select2-container--bootstrap-5 .select2-selection__rendered {
+                line-height: normal !important;
+                padding-left: 0.75rem !important;
+            }
 
-    <!-- Layout config Js -->
-    <script src="{{ asset('material/assets/js/layout.js') }}"></script>
-    <!-- Bootstrap Css -->
-    <link href="{{ asset('material/assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
-    <!-- Icons Css -->
-    <link href="{{ asset('material/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
-    <!-- App Css-->
-    <link href="{{ asset('material/assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
-    <!-- custom Css-->
-    <link href="{{ asset('material/assets/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('material/assets/libs/aos/aos.css') }}" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+            /* Adjust button to connect perfectly with Select2 */
+            .input-group>.btn {
+                height: 38px !important;
+                margin-left: -1px !important;
+                position: relative;
+                z-index: 2;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
 
-    <!-- jQuery should be included before DataTables -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="{{ asset('material/assets/css/datatables.min.css') }}" rel="stylesheet" type="text/css" />
-    <script src="{{ asset('material/assets/js/datatables.min.js') }}"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+            .input-group>.btn:hover {
+                z-index: 3;
+            }
+        </style>
+    </head>
 
-    @yield('styles')
+    <body class="dark">
+        {{-- Begin page --}}
+        <div class="layout-wrapper">
+            @include('layouts.components.topbar')
 
-    <style>
-        /* Fix Select2 in Bootstrap 5 Input Group */
-        .input-group>.select2-container--bootstrap-5 {
-            flex: 1 1 auto;
-            width: 1% !important;
-        }
+            @include('layouts.components.sidebar')
 
-        /* Handle border-radius for Select2 inside input-group */
-        .input-group>.select2-container--bootstrap-5 .select2-selection {
-            border-top-right-radius: 0 !important;
-            border-bottom-right-radius: 0 !important;
-            height: 38px !important;
-            display: flex;
-            align-items: center;
-        }
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="main-content">
+                @yield('content')
 
-        .select2-container--bootstrap-5 .select2-selection__rendered {
-            line-height: normal !important;
-            padding-left: 0.75rem !important;
-        }
+                {{-- Btn click to up --}}
+                <button onclick="topFunction()" class="btn btn-danger btn-icon" id="back-to-top">
+                    <i class="ri-arrow-up-line "></i>
+                </button>
 
-        /* Adjust button to connect perfectly with Select2 */
-        .input-group>.btn {
-            height: 38px !important;
-            margin-left: -1px !important;
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .input-group>.btn:hover {
-            z-index: 3;
-        }
-    </style>
-</head>
-
-<body class="dark">
-    {{-- Begin page --}}
-    <div class="layout-wrapper">
-        @include('layouts.components.topbar')
-
-        @include('layouts.components.sidebar')
-
-        <!-- ============================================================== -->
-        <!-- Start right Content here -->
-        <!-- ============================================================== -->
-        <div class="main-content">
-            @yield('content')
-
-            {{-- Btn click to up --}}
-            <button onclick="topFunction()" class="btn btn-danger btn-icon" id="back-to-top">
-                <i class="ri-arrow-up-line "></i>
-            </button>
-
-            @include('layouts.components.footer')
+                @include('layouts.components.footer')
+            </div>
         </div>
-    </div>
 
 
 
-    <!-- JAVASCRIPT -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-    <script src="{{ asset('material/assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ asset('material/assets/libs/simplebar/simplebar.min.js') }}"></script>
-    <script src="{{ asset('material/assets/libs/node-waves/waves.min.js') }}"></script>
-    <script src="{{ asset('material/assets/libs/feather-icons/feather.min.js') }}"></script>
-    <script src="{{ asset('material/assets/js/pages/plugins/lord-icon-2.1.0.js') }}"></script>
-    <script src="{{ asset('/material/assets/js/plugins.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+        <!-- JAVASCRIPT -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+        <script src="{{ asset('material/assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+        <script src="{{ asset('material/assets/libs/simplebar/simplebar.min.js') }}"></script>
+        <script src="{{ asset('material/assets/libs/node-waves/waves.min.js') }}"></script>
+        <script src="{{ asset('material/assets/libs/feather-icons/feather.min.js') }}"></script>
+        <script src="{{ asset('material/assets/js/pages/plugins/lord-icon-2.1.0.js') }}"></script>
+        <script src="{{ asset('/material/assets/js/plugins.js') }}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- Sweet Alerts js -->
-    <script src="{{ asset('material/assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+        <!-- Sweet Alerts js -->
+        <script src="{{ asset('material/assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 
-    <!-- Sweet alert init js-->
-    <script src="{{ asset('material/assets/js/pages/sweetalerts.init.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+        <!-- Sweet alert init js-->
+        <script src="{{ asset('material/assets/js/pages/sweetalerts.init.js') }}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
-    {{-- Chart --}}
-    <script src="{{ asset('material/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
-    {{-- <script src="{{ asset('material/assets/js/highcharts.js') }}"></script> --}}
+        {{-- Chart --}}
+        <script src="{{ asset('material/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+        {{-- <script src="{{ asset('material/assets/js/highcharts.js') }}"></script> --}}
 
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
 
-    <!-- App js -->
-    <script src="{{ asset('material/assets/libs/aos/aos.js') }}"></script>
-    <script src="{{ asset('material/assets/js/pages/animation-aos.init.js') }}"></script>
-    <script src="{{ asset('material/assets/js/app.js') }}"></script>
+        <!-- App js -->
+        <script src="{{ asset('material/assets/libs/aos/aos.js') }}"></script>
+        <script src="{{ asset('material/assets/js/pages/animation-aos.init.js') }}"></script>
+        <script src="{{ asset('material/assets/js/app.js') }}"></script>
 
-    <script>
-        $(document).ready(function() {
+        <script>
+            $(document).ready(function() {
 
-            // Initialize AOS
-            AOS.init({
-                duration: 1200,
-            });
-
-            // Logout button functionality
-            $('#logoutButton').on('click', function(e) {
-                // e.preventDefault();
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You will be logged out!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, logout!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Logging out...',
-                            text: 'Please wait while we process your request.',
-                            allowOutsideClick: false,
-                            didOpen: () => {
-                                Swal.showLoading(); // Menampilkan animasi loading
-                            }
-                        });
-
-                        $.ajax({
-                            url: "{{ route('logout') }}",
-                            type: "POST",
-                            data: {
-                                _token: "{{ csrf_token() }}"
-                            },
-                            success: function(response) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Logged out!',
-                                    text: 'You have been logged out successfully.',
-                                    showConfirmButton: false,
-                                    timer: 1000
-                                }).then(() => {
-                                    window.location.href =
-                                        "{{ url('/') }}";
-                                });
-                            },
-                            error: function(xhr, status, error) {
-                                Swal.fire(
-                                    'Error!',
-                                    'There was an error logging you out.',
-                                    'error'
-                                );
-                            }
-                        });
-                    }
+                // Initialize AOS
+                AOS.init({
+                    duration: 1200,
                 });
-            });
 
-            // light dark mode
-            if (!localStorage.getItem('theme')) {
-                localStorage.setItem('theme', 'light');
-            }
+                // Logout button functionality
+                $('#logoutButton').on('click', function(e) {
+                    // e.preventDefault();
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You will be logged out!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, logout!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: 'Logging out...',
+                                text: 'Please wait while we process your request.',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading(); // Menampilkan animasi loading
+                                }
+                            });
 
-            const savedTheme = localStorage.getItem('theme');
+                            $.ajax({
+                                url: "{{ route('logout') }}",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                success: function(response) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Logged out!',
+                                        text: 'You have been logged out successfully.',
+                                        showConfirmButton: false,
+                                        timer: 1000
+                                    }).then(() => {
+                                        window.location.href =
+                                            "{{ url('/') }}";
+                                    });
+                                },
+                                error: function(xhr, status, error) {
+                                    Swal.fire(
+                                        'Error!',
+                                        'There was an error logging you out.',
+                                        'error'
+                                    );
+                                }
+                            });
+                        }
+                    });
+                });
 
-            // Apply theme
-            applyTheme(savedTheme);
-            updateThemeIcon(savedTheme === 'dark');
+                // light dark mode
+                if (!localStorage.getItem('theme')) {
+                    localStorage.setItem('theme', 'light');
+                }
 
-            // Event listener untuk button toggle
-            $('#btn-darkmode').on('click', function() {
-                const currentTheme = localStorage.getItem('theme') || 'light';
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                const savedTheme = localStorage.getItem('theme');
 
                 // Apply theme
-                applyTheme(newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateThemeIcon(newTheme === 'dark');
+                applyTheme(savedTheme);
+                updateThemeIcon(savedTheme === 'dark');
 
-                // console.log('Theme changed to:', newTheme); // Debug
-            });
+                // Event listener untuk button toggle
+                $('#btn-darkmode').on('click', function() {
+                    const currentTheme = localStorage.getItem('theme') || 'light';
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-            function applyTheme(theme) {
-                $('html').attr('data-layout-mode', theme);
-                $('body').attr('data-layout-mode', theme);
-                // console.log('Theme applied:', theme); // Debug
-            }
+                    // Apply theme
+                    applyTheme(newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    updateThemeIcon(newTheme === 'dark');
 
-            function updateThemeIcon(isDark) {
-                const $icon = $('#btn-darkmode i');
-                if ($icon.length) {
-                    if (isDark) {
-                        $icon.attr('class', 'bx bx-sun fs-22');
-                    } else {
-                        $icon.attr('class', 'bx bx-moon fs-22');
-                    }
-                    // console.log('Icon updated, isDark:', isDark); // Debug
+                    // console.log('Theme changed to:', newTheme); // Debug
+                });
+
+                function applyTheme(theme) {
+                    $('html').attr('data-layout-mode', theme);
+                    $('body').attr('data-layout-mode', theme);
+                    // console.log('Theme applied:', theme); // Debug
                 }
-            }
 
-            let btn = $("#back-to-top");
-
-            // cek scroll untuk munculin tombol
-            $(window).scroll(function() {
-                if ($(window).scrollTop() > 200) {
-                    btn.fadeIn(); // muncul
-                } else {
-                    btn.fadeOut(); // sembunyi
-                }
-            });
-
-            // klik tombol -> scroll ke atas
-            btn.on("click", function() {
-                $("html, body").animate({
-                    scrollTop: 0
-                }, "smooth");
-            });
-
-            let seenNotifications = new Set();
-
-            function fetchNotifications() {
-                $.ajax({
-                    url: "{{ route('notifications') }}",
-                    method: "GET",
-                    dataType: "json",
-                    success: function(response) {
-
-                        const notifList = $('#notifList');
-                        const notifBadge = $('#notifBadge');
-
-                        notifList.html('');
-
-                        if (!response || response.length === 0) {
-                            notifList.html(
-                                '<p class="text-center text-muted py-3 mb-0">Tidak ada notifikasi</p>'
-                            );
-                            notifBadge.hide();
-                            return;
+                function updateThemeIcon(isDark) {
+                    const $icon = $('#btn-darkmode i');
+                    if ($icon.length) {
+                        if (isDark) {
+                            $icon.attr('class', 'bx bx-sun fs-22');
+                        } else {
+                            $icon.attr('class', 'bx bx-moon fs-22');
                         }
+                        // console.log('Icon updated, isDark:', isDark); // Debug
+                    }
+                }
 
-                        const unread = response.filter(n => !n.is_read);
+                let btn = $("#back-to-top");
 
-                        notifBadge
-                            .text(unread.length || '')
-                            .toggle(unread.length > 0);
+                // cek scroll untuk munculin tombol
+                $(window).scroll(function() {
+                    if ($(window).scrollTop() > 200) {
+                        btn.fadeIn(); // muncul
+                    } else {
+                        btn.fadeOut(); // sembunyi
+                    }
+                });
 
-                        response.forEach(n => {
-                            const item = $(`
+                // klik tombol -> scroll ke atas
+                btn.on("click", function() {
+                    $("html, body").animate({
+                        scrollTop: 0
+                    }, "smooth");
+                });
+
+                let seenNotifications = new Set();
+
+                function fetchNotifications() {
+                    $.ajax({
+                        url: "{{ route('notifications') }}",
+                        method: "GET",
+                        dataType: "json",
+                        success: function(response) {
+
+                            const notifList = $('#notifList');
+                            const notifBadge = $('#notifBadge');
+
+                            notifList.html('');
+
+                            if (!response || response.length === 0) {
+                                notifList.html(
+                                    '<p class="text-center text-muted py-3 mb-0">Tidak ada notifikasi</p>'
+                                );
+                                notifBadge.hide();
+                                return;
+                            }
+
+                            const unread = response.filter(n => !n.is_read);
+
+                            notifBadge
+                                .text(unread.length || '')
+                                .toggle(unread.length > 0);
+
+                            response.forEach(n => {
+                                const item = $(`
                                     <a href="${n.url}" 
                                         class="list-group-item list-group-item-action notif-item d-flex align-items-start
                                             ${n.is_read ? 'bg-light text-muted' : 'bg-white'}"
@@ -322,96 +325,132 @@
                                     </a>
                                 `);
 
-                            notifList.append(item);
-                        });
+                                notifList.append(item);
+                            });
 
-                        /* =========================
-                         * TOAST → 1 TERBARU SAJA
-                         * ========================= */
-                        if (unread.length > 0) {
+                            /* =========================
+                             * TOAST → 1 TERBARU SAJA
+                             * ========================= */
+                            if (unread.length > 0) {
 
-                            // 🔥 SORT BY TERBARU
-                            unread.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                                // 🔥 SORT BY TERBARU
+                                unread.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-                            const latest = unread[0];
+                                const latest = unread[0];
 
-                            if (!seenNotifications.has(latest.id)) {
-                                toastr.info(
-                                    `${latest.message}<br><small>${latest.created_at}</small>`,
-                                    latest.title, {
-                                        timeOut: 5000,
-                                        extendedTimeOut: 2000,
-                                        closeButton: true,
-                                        progressBar: true,
-                                        escapeHtml: false
-                                    }
-                                );
+                                if (!seenNotifications.has(latest.id)) {
+                                    toastr.info(
+                                        `${latest.message}<br><small>${latest.created_at}</small>`,
+                                        latest.title, {
+                                            timeOut: 5000,
+                                            extendedTimeOut: 2000,
+                                            closeButton: true,
+                                            progressBar: true,
+                                            escapeHtml: false
+                                        }
+                                    );
 
-                                seenNotifications.add(latest.id);
+                                    seenNotifications.add(latest.id);
+                                }
                             }
+                        },
+                        error: function() {
+                            console.error("Gagal memuat notifikasi");
                         }
-                    },
-                    error: function() {
-                        console.error("Gagal memuat notifikasi");
-                    }
-                });
-            }
-
-            $('#notifList').on('click', '.notif-item', function(e) {
-                e.preventDefault();
-                const id = $(this).data('id');
-                const url = $(this).attr('href');
-                const item = $(this);
-
-                // Kalau sudah read, langsung buka halaman
-                if (item.hasClass('bg-light')) {
-                    window.location.href = url;
-                    return;
+                    });
                 }
 
-                $.ajax({
-                    url: `{{ url('api/notifications/read') }}/${id}`,
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function() {
-                        // Animasi lembut biar halus
-                        item.fadeTo(200, 0.5, function() {
-                            item
-                                .removeClass('bg-white fw-semibold text-dark')
-                                .addClass('bg-light text-muted')
-                                .css('opacity', 1); // balikin opacity
+                $('#notifList').on('click', '.notif-item', function(e) {
+                    e.preventDefault();
+                    const id = $(this).data('id');
+                    const url = $(this).attr('href');
+                    const item = $(this);
 
-                            item.find('.bx-bell')
-                                .removeClass('bx-bell text-warning')
-                                .addClass('bx-check-circle text-success');
-                        });
-
-                        // Update badge counter
-                        const currentCount = parseInt($('#notifBadge').text()) || 0;
-                        const newCount = Math.max(currentCount - 1, 0);
-                        if (newCount === 0) $('#notifBadge').hide();
-                        else $('#notifBadge').text(newCount);
-
-                        // Delay sedikit supaya user sempat lihat perubahan status
-                        setTimeout(() => {
-                            window.location.href = url;
-                        }, 300);
-                    },
-                    error: function() {
-                        toastr.error('Gagal menandai notifikasi sebagai dibaca.');
+                    // Kalau sudah read, langsung buka halaman
+                    if (item.hasClass('bg-light')) {
+                        window.location.href = url;
+                        return;
                     }
+
+                    $.ajax({
+                        url: `{{ url('api/notifications/read') }}/${id}`,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function() {
+                            // Animasi lembut biar halus
+                            item.fadeTo(200, 0.5, function() {
+                                item
+                                    .removeClass('bg-white fw-semibold text-dark')
+                                    .addClass('bg-light text-muted')
+                                    .css('opacity', 1); // balikin opacity
+
+                                item.find('.bx-bell')
+                                    .removeClass('bx-bell text-warning')
+                                    .addClass('bx-check-circle text-success');
+                            });
+
+                            // Update badge counter
+                            const currentCount = parseInt($('#notifBadge').text()) || 0;
+                            const newCount = Math.max(currentCount - 1, 0);
+                            if (newCount === 0) $('#notifBadge').hide();
+                            else $('#notifBadge').text(newCount);
+
+                            // Delay sedikit supaya user sempat lihat perubahan status
+                            setTimeout(() => {
+                                window.location.href = url;
+                            }, 300);
+                        },
+                        error: function() {
+                            toastr.error('Gagal menandai notifikasi sebagai dibaca.');
+                        }
+                    });
                 });
+
+                $('#clearNotifBtn').on('click', function() {
+                    Swal.fire({
+                        title: "Hapus semua notifikasi?",
+                        text: "Tindakan ini tidak dapat dibatalkan!",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: "Ya, hapus",
+                        cancelButtonText: "Batal"
+                    }).then((result) => {
+                        if (!result.isConfirmed) return;
+
+                        $.ajax({
+                            url: "{{ url('notif/delete-all') }}",
+                            type: "DELETE",
+                            headers: {
+                                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function() {
+
+                                // Hapus semua item dari DOM
+                                $('#notifList').html(
+                                    '<p class="text-center text-muted py-3 mb-0">Tidak ada notifikasi baru</p>'
+                                );
+
+                                // Sembunyikan badge
+                                $('#notifBadge').hide();
+
+                                toastr.success('Semua notifikasi berhasil dihapus.');
+                            },
+                            error: function() {
+                                toastr.error('Gagal menghapus semua notifikasi.');
+                            }
+                        });
+                    });
+                });
+
+                // Jalankan pertama kali & interval
+                fetchNotifications();
+                setInterval(fetchNotifications, 60000);
             });
+        </script>
 
-            // Jalankan pertama kali & interval
-            fetchNotifications();
-            setInterval(fetchNotifications, 60000);
-        });
-    </script>
-
-    @yield('scripts')
-</body>
+        @yield('scripts')
+    </body>
 
 </html>

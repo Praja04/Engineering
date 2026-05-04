@@ -101,6 +101,11 @@ class EspShiftReportController extends Controller
             'status'              => 'approved_foreman'
         ]);
 
+        NotificationsModel::where('notifiable_type', EspShiftReport::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->delete();
+
         return response()->json([
             'message' => 'Disetujui Foreman'
         ]);
@@ -126,6 +131,11 @@ class EspShiftReportController extends Controller
             'supervisor_approved_at' => now(),
             'status'                 => 'approved_supervisor'
         ]);
+
+        NotificationsModel::where('notifiable_type', EspShiftReport::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->delete();
 
         return response()->json([
             'message' => 'Disetujui Supervisor (Final)'
@@ -208,11 +218,18 @@ class EspShiftReportController extends Controller
         $data = EspShiftReport::findOrFail($id);
 
         $data->update($request->only([
-            'pemakaian_air', 'pemakaian_steam', 'pemakaian_batubara',
-            'efisiensi_batubara', 'pengisian_batubara',
-            'running_hour_awal', 'running_hour_akhir',
-            'feed_tank_awal', 'feed_tank_akhir',
-            'chemical_scf', 'chemical_srtf', 'dosis',
+            'pemakaian_air',
+            'pemakaian_steam',
+            'pemakaian_batubara',
+            'efisiensi_batubara',
+            'pengisian_batubara',
+            'running_hour_awal',
+            'running_hour_akhir',
+            'feed_tank_awal',
+            'feed_tank_akhir',
+            'chemical_scf',
+            'chemical_srtf',
+            'dosis',
         ]));
 
         return response()->json(['message' => 'Data berhasil diperbarui', 'data' => $data]);

@@ -185,6 +185,13 @@ class KalibrasiCertificateController extends Controller
                 'action_by' => Auth::id(),
             ]);
 
+            $sertifikat = $approval->sertifikat;
+
+            NotificationsModel::where('notifiable_type', KalibrasiSertifikatModel::class)
+                ->where('notifiable_id', $sertifikat->id)
+                ->where('user_id', $userId) // opsional (biar spesifik)
+                ->delete();
+
             // Cek apakah semua sudah approved
             $stillPending = KalibrasiApprovalModel::where('sertifikat_id', $approval->sertifikat_id)
                 ->where('status', 'pending')
@@ -255,6 +262,13 @@ class KalibrasiCertificateController extends Controller
                 'action_at' => now(),
                 'action_by' => Auth::id(),
             ]);
+
+            $sertifikat = $approval->sertifikat;
+
+            NotificationsModel::where('notifiable_type', KalibrasiApprovalModel::class)
+                ->where('notifiable_id', $sertifikat->id)
+                ->where('user_id', Auth::id())
+                ->delete();
 
             // Kalau ada yang reject → sertifikat langsung rejected
             $approval->sertifikat->update([

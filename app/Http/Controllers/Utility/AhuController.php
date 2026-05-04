@@ -7,10 +7,11 @@ use App\Models\NotificationsModel;
 use App\Models\User;
 use App\Models\Utility\Ahu;
 use App\Models\Utility\AhuDetails;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class AhuController extends Controller
 {
@@ -264,8 +265,8 @@ class AhuController extends Controller
 
         NotificationsModel::where('notifiable_type', Ahu::class)
             ->where('notifiable_id', $data->id)
-            ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->where('user_id', Auth::id())
+            ->delete();
 
         return response()->json(['message' => 'Disetujui Foreman']);
     }
@@ -284,8 +285,8 @@ class AhuController extends Controller
 
         NotificationsModel::where('notifiable_type', Ahu::class)
             ->where('notifiable_id', $data->id)
-            ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->where('user_id', Auth::id())
+            ->delete();
 
         return response()->json(['message' => 'Disetujui Supervisor']);
     }
@@ -293,8 +294,19 @@ class AhuController extends Controller
     public function reject(Request $request, $id)
     {
         $request->validate(['reason' => 'required|string']);
+
         $data = Ahu::findOrFail($id);
-        $data->update(['status' => 'rejected', 'reject_reason' => $request->reason]);
+
+        $data->update([
+            'status' => 'rejected',
+            'reject_reason' => $request->reason
+        ]);
+
+        NotificationsModel::where('notifiable_type', Ahu::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', Auth::id())
+            ->delete();
+
         return response()->json(['message' => 'Ditolak']);
     }
 

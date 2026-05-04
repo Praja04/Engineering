@@ -254,6 +254,19 @@ class WaterSoftenerController extends Controller
         ]);
     }
 
+    private function kirimNotifikasi($userId, $title, $message, $approvalId)
+    {
+        NotificationsModel::create([
+            'user_id'         => $userId,
+            'title'           => $title,
+            'message'         => $message,
+            'url'             => url(route('water-softener.approval')),
+            'notifiable_type' => WaterSoftenerApproval::class,
+            'notifiable_id'   => $approvalId,
+            'is_read'         => 0,
+        ]);
+    }
+
     // =========================================================
     // APPROVAL — SUPERVISOR APPROVE (dari approval.blade)
     // =========================================================
@@ -282,6 +295,11 @@ class WaterSoftenerController extends Controller
             'status'                 => 'approved_supervisor',
             'supervisor_approved_at' => now(),
         ]);
+
+        NotificationsModel::where('notifiable_type', WaterSoftenerApproval::class)
+            ->where('notifiable_id', $approval->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->delete();
 
         return response()->json([
             'message' => "Laporan bulan {$approval->bulan}/{$approval->tahun} telah disetujui (Final)."

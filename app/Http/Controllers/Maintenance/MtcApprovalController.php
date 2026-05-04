@@ -172,38 +172,22 @@ class MtcApprovalController extends Controller
                 'action_by' => Auth::id(),
             ]);
 
+            NotificationsModel::where('user_id', Auth::id())
+                ->where('notifiable_type', MtcMainModel::class)
+                ->where('notifiable_id', $approval->mtc_main_id)
+                ->delete();
+
             // 🔍 cek apakah masih ada approval yang pending
             $remainingApproval = MtcApprovalModel::where('mtc_main_id', $approval->mtc_main_id)
                 ->where('status', 'pending')
                 ->exists();
 
             if ($remainingApproval) {
-
-                // ambil next approval berdasarkan level terkecil yang masih pending
-                $nextApproval = MtcApprovalModel::where('mtc_main_id', $approval->mtc_main_id)
-                    ->where('status', 'pending')
-                    ->orderBy('level', 'asc')
-                    ->first();
-
-                // kirim notif ke approver berikutnya (jika ada)
-                if ($nextApproval) {
-                    NotificationsModel::create([
-                        'user_id'         => $nextApproval->approver_id,
-                        'notifiable_type' => MtcMainModel::class,
-                        'notifiable_id'   => $approval->mtc_main_id,
-                        'title'           => 'Approval Maintenance',
-                        'message'         => 'Maintenance menunggu persetujuan Anda',
-                        'url'             => route('mtc.approval.index'),
-                        'is_read'         => false,
-                    ]);
-                }
-
                 // status masih waiting
                 MtcMainModel::where('id', $approval->mtc_main_id)
                     ->update(['status' => 'waiting']);
             } else {
-
-                // ✅ semua approval sudah selesai
+                //semua approval sudah selesai
                 MtcMainModel::where('id', $approval->mtc_main_id)
                     ->update(['status' => 'approved']);
             }
@@ -230,6 +214,11 @@ class MtcApprovalController extends Controller
 
             MtcMainModel::where('id', $approval->mtc_main_id)
                 ->update(['status' => 'rejected']);
+
+            NotificationsModel::where('user_id', Auth::id())
+                ->where('notifiable_type', MtcMainModel::class)
+                ->where('notifiable_id', $approval->mtc_main_id)
+                ->delete();
         });
 
         return response()->json([
