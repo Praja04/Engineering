@@ -76,8 +76,7 @@
                                     Pilih mesin - lokasi
                                 </option>
                                 @foreach ($mesin as $item)
-                                <option value="{{ $item->id }}" data-lokasi="{{ $item->lokasi }}"
-                                    data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}">
+                                <option value="{{ $item->id }}" data-lokasi="{{ $item->lokasi }}" data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}">
                                     {{ $item->nama_mesin }} - {{ $item->lokasi }}
                                 </option>
                                 @endforeach
@@ -91,13 +90,11 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Waktu Mulai<span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="waktu_mulai" id="waktu_mulai"
-                                placeholder="Pilih waktu" required>
+                            <input type="text" class="form-control" name="waktu_mulai" id="waktu_mulai" placeholder="Pilih waktu" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Waktu Selesai</label>
-                            <input type="text" class="form-control" name="waktu_selesai" id="waktu_selesai"
-                                placeholder="Pilih waktu">
+                            <input type="text" class="form-control" name="waktu_selesai" id="waktu_selesai" placeholder="Pilih waktu">
 
                         </div>
                         <div class="col-md-3">
@@ -114,8 +111,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Runnning Hour </label>
-                            <input type="number" class="form-control" name="running_hour"
-                                value="{{ old('running_hour') }}">
+                            <input type="number" step="0.01" class="form-control" name="running_hour" value="{{ old('running_hour') }}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Paket</label>
@@ -208,21 +204,16 @@
                                 </label>
 
                                 <div class="btn-group btn-group-sm w-100">
-                                    <input type="radio" class="btn-check status-radio"
-                                        name="{{ $field }}" value="1" id="{{ $field }}_ok">
-                                    <label class="btn btn-outline-success"
-                                        for="{{ $field }}_ok">OK</label>
+                                    <input type="radio" class="btn-check status-radio" name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                    <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
 
-                                    <input type="radio" class="btn-check status-radio"
-                                        name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                    <input type="radio" class="btn-check status-radio" name="{{ $field }}" value="0" id="{{ $field }}_ng">
                                     <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
                                         OK</label>
                                 </div>
 
                                 <div class="keterangan-wrapper d-none mt-2">
-                                    <input type="text" class="form-control form-control-sm"
-                                        name="keterangan_{{ $field }}"
-                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                    <input type="text" class="form-control form-control-sm" name="keterangan_{{ $field }}" placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
                                 </div>
 
                             </div>
@@ -237,31 +228,23 @@
                     <div class="row g-3 mb-3">
                         @foreach ($row as $field => $label)
                         <div class="col-md-6 col-12">
-                            <div class="card shadow-sm item-card p-3 item-row"
-                                data-field="{{ $field }}">
+                            <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
 
                                 <label class="form-label fw-semibold" data-label="{{ $field }}">
                                     {{ $label }}
                                 </label>
 
                                 <div class="btn-group btn-group-sm w-100">
-                                    <input type="radio" class="btn-check status-radio"
-                                        name="{{ $field }}" value="1"
-                                        id="{{ $field }}_ok">
-                                    <label class="btn btn-outline-success"
-                                        for="{{ $field }}_ok">OK</label>
+                                    <input type="radio" class="btn-check status-radio" name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                    <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
 
-                                    <input type="radio" class="btn-check status-radio"
-                                        name="{{ $field }}" value="0"
-                                        id="{{ $field }}_ng">
+                                    <input type="radio" class="btn-check status-radio" name="{{ $field }}" value="0" id="{{ $field }}_ng">
                                     <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
                                         OK</label>
                                 </div>
 
                                 <div class="keterangan-wrapper d-none mt-2">
-                                    <input type="text" class="form-control form-control-sm"
-                                        name="keterangan_{{ $field }}"
-                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                    <input type="text" class="form-control form-control-sm" name="keterangan_{{ $field }}" placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
                                 </div>
 
                             </div>
@@ -276,31 +259,23 @@
                     <div class="row g-3 mb-3">
                         @foreach ($row as $field => $label)
                         <div class="col-md-6 col-12">
-                            <div class="card shadow-sm item-card p-3 item-row"
-                                data-field="{{ $field }}">
+                            <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
 
                                 <label class="form-label fw-semibold" data-label="{{ $field }}">
                                     {{ $label }}
                                 </label>
 
                                 <div class="btn-group btn-group-sm w-100">
-                                    <input type="radio" class="btn-check status-radio"
-                                        name="{{ $field }}" value="1"
-                                        id="{{ $field }}_ok">
-                                    <label class="btn btn-outline-success"
-                                        for="{{ $field }}_ok">OK</label>
+                                    <input type="radio" class="btn-check status-radio" name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                    <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
 
-                                    <input type="radio" class="btn-check status-radio"
-                                        name="{{ $field }}" value="0"
-                                        id="{{ $field }}_ng">
+                                    <input type="radio" class="btn-check status-radio" name="{{ $field }}" value="0" id="{{ $field }}_ng">
                                     <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
                                         OK</label>
                                 </div>
 
                                 <div class="keterangan-wrapper d-none mt-2">
-                                    <input type="text" class="form-control form-control-sm"
-                                        name="keterangan_{{ $field }}"
-                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                    <input type="text" class="form-control form-control-sm" name="keterangan_{{ $field }}" placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
                                 </div>
 
                             </div>
@@ -316,31 +291,23 @@
                     <div class="row g-3 mb-3">
                         @foreach ($row as $field => $label)
                         <div class="col-md-6 col-12">
-                            <div class="card shadow-sm item-card p-3 item-row"
-                                data-field="{{ $field }}">
+                            <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
 
                                 <label class="form-label fw-semibold" data-label="{{ $field }}">
                                     {{ $label }}
                                 </label>
 
                                 <div class="btn-group btn-group-sm w-100">
-                                    <input type="radio" class="btn-check status-radio"
-                                        name="{{ $field }}" value="1"
-                                        id="{{ $field }}_ok">
-                                    <label class="btn btn-outline-success"
-                                        for="{{ $field }}_ok">OK</label>
+                                    <input type="radio" class="btn-check status-radio" name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                    <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
 
-                                    <input type="radio" class="btn-check status-radio"
-                                        name="{{ $field }}" value="0"
-                                        id="{{ $field }}_ng">
+                                    <input type="radio" class="btn-check status-radio" name="{{ $field }}" value="0" id="{{ $field }}_ng">
                                     <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
                                         OK</label>
                                 </div>
 
                                 <div class="keterangan-wrapper d-none mt-2">
-                                    <input type="text" class="form-control form-control-sm"
-                                        name="keterangan_{{ $field }}"
-                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                    <input type="text" class="form-control form-control-sm" name="keterangan_{{ $field }}" placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
                                 </div>
 
                             </div>
@@ -377,16 +344,13 @@
                                 <tbody>
                                     <tr>
                                         <td>
-                                            <input type="number" name="materials[0][mid]"
-                                                class="form-control form-control-sm" required>
+                                            <input type="number" name="materials[0][mid]" class="form-control form-control-sm" required>
                                         </td>
                                         <td>
-                                            <input type="text" name="materials[0][desc]"
-                                                class="form-control form-control-sm">
+                                            <input type="text" name="materials[0][desc]" class="form-control form-control-sm">
                                         </td>
                                         <td>
-                                            <input type="number" name="materials[0][qty]"
-                                                class="form-control form-control-sm" min="1" required>
+                                            <input type="number" name="materials[0][qty]" class="form-control form-control-sm" min="1" required>
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-danger removeRow">
@@ -426,8 +390,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center">
-                <img src="{{ asset('storage/mtc/ttd/ttd_teknisi.jpeg') }}"
-                    style="max-width: 100%; border: 1px solid #ccc;">
+                <img src="{{ asset('storage/mtc/ttd/ttd_teknisi.jpeg') }}" style="max-width: 100%; border: 1px solid #ccc;">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnSaveTtd">
