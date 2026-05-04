@@ -67,6 +67,28 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- TEMPLATE (disembunyikan) -->
+                        <div id="notifTemplate" class="d-none">
+                            <div class="list-group-item list-group-item-action notif-item d-flex align-items-start"
+                                data-id="" role="button">
+
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 notif-title"></h6>
+                                    <p class="mb-1 small notif-message"></p>
+                                    <small class="text-muted notif-time"></small>
+                                </div>
+
+                                <div class="ms-2 d-flex flex-column align-items-center">
+                                    <i class="notif-icon fs-5"></i>
+                                    <button class="btn btn-sm btn-soft-danger mt-2 btn-delete-notif">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+
                         <div class="tab-content position-relative" id="notificationItemsTabContent">
                             <div id="notifList" class="list-group list-group-flush"
                                 style="max-height: 300px; overflow-y:auto;">
