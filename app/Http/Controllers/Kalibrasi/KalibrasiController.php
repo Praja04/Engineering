@@ -555,7 +555,7 @@ class KalibrasiController extends Controller
     public function getDataSticker(Request $request)
     {
         $query = KalibrasiSertifikatModel::with(['kalibrasi.alat', 'kalibrasi.user'])
-            ->where('status', 'approved');
+            ->where('status', '!=', 'rejected');
 
         // Filter kode alat
         if ($request->kode_alat) {
