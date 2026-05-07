@@ -1110,16 +1110,16 @@
                                     <label class="form-label-c">Frekuensi</label>
                                     <div class="frekuensi-check-group">
                                         <label class="frek-check-item">
-                                            <input type="checkbox" name="frekuensi[]" value="harian"> Harian
+                                            <input type="checkbox" name="frekuensi[]" value="hari"> Harian
                                         </label>
                                         <label class="frek-check-item">
-                                            <input type="checkbox" name="frekuensi[]" value="mingguan"> Mingguan
+                                            <input type="checkbox" name="frekuensi[]" value="minggu"> Mingguan
                                         </label>
                                         <label class="frek-check-item">
-                                            <input type="checkbox" name="frekuensi[]" value="bulanan"> Bulanan
+                                            <input type="checkbox" name="frekuensi[]" value="bulan"> Bulanan
                                         </label>
                                         <label class="frek-check-item">
-                                            <input type="checkbox" name="frekuensi[]" value="tahunan"> Tahunan
+                                            <input type="checkbox" name="frekuensi[]" value="tahun"> Tahunan
                                         </label>
                                     </div>
                                 </div>
@@ -1420,7 +1420,9 @@
                 // set frekuensi checkboxes
                 $('input[name="frekuensi[]"]').prop('checked', false);
                 const list = d.frekuensi_list ?? [];
-                list.forEach(f => $(`input[name="frekuensi[]"][value="${f}"]`).prop('checked', true));
+                list.forEach(f => {
+                    $(`input[name="frekuensi[]"][value="${f.satuan}"]`).prop('checked', true);
+                });
 
                 $('#modalMesin').modal('show');
             });
