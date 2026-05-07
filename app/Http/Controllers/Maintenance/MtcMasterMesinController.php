@@ -214,8 +214,18 @@ class MtcMasterMesinController extends Controller
 
         $seen = [];
         foreach ($list as $item) {
-            $interval = max(1, (int) ($item['interval'] ?? 1));
-            $satuan   = strtolower(trim($item['satuan'] ?? ''));
+            $interval = 1;
+            $satuan   = '';
+
+            if (is_string($item)) {
+                $parsed = $this->parseFrekuensiString($item);
+                if (!$parsed) continue;
+                $interval = $parsed['interval'];
+                $satuan   = $parsed['satuan'];
+            } else {
+                $interval = max(1, (int) ($item['interval'] ?? 1));
+                $satuan   = strtolower(trim($item['satuan'] ?? ''));
+            }
 
             if (!in_array($satuan, self::VALID_SATUAN, true)) continue;
 
