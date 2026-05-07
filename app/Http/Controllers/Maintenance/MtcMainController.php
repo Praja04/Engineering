@@ -1137,7 +1137,7 @@ class MtcMainController extends Controller
         return $this->downloadExcel($spreadsheet, 'battery');
     }
 
-    private function exportSipil()
+    private function exportSipil($id)
     {
         $path = public_path('assets/templates/maintenance/sipil.xlsx');
 
@@ -1149,6 +1149,7 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Sipil')
+            ->where('id', $id)
             ->with('sipil', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
