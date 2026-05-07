@@ -16,4 +16,5 @@ Route::prefix('utility/mdp-monitoring')->name('mdp-monitoring.')->group(function
     Route::post('/bulk-approve', [MdpMonitoringController::class, 'bulkApprove'])->name('bulk-approve');
     Route::post('/bulk-reject', [MdpMonitoringController::class, 'bulkReject'])->name('bulk-reject');
     Route::get('/export', [MdpMonitoringController::class, 'export'])->name('export');
+    Route::put('/update/{id}', [MdpMonitoringController::class, 'update'])->name('update');
 });

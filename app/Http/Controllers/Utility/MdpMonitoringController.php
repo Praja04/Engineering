@@ -205,7 +205,7 @@ class MdpMonitoringController extends Controller
 
     public function show($id)
     {
-        $data = MdpMonitoringModel::with(['operator', 'foreman', 'supervisor'])->find($id);
+        $data = MdpMonitoringModel::with(['operator:id,username', 'foreman:id,username', 'supervisor:id,username'])->find($id);
 
         if (!$data) {
             return response()->json(['status' => 404, 'message' => 'Data tidak ditemukan'], 404);
