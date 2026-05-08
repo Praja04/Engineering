@@ -417,7 +417,7 @@
                     let standarInputs = '';
                     let alatInputs = '';
 
-                    for (let j = 0; j < 5; j++) {
+                    for (let j = 0; j < 10; j++) {
                         standarInputs += `
                             <input type="number" step="0.01"
                                 name="data[${i}][penunjuk_standar][]"
