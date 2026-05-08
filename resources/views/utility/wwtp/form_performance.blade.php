@@ -693,7 +693,7 @@
                                                         <div class="card-body">
                                                             <label for="sample_mlss" class="form-label fw-semibold">
                                                                 <i class="mdi mdi-bacteria me-1"></i>
-                                                                MLSS <span class="text-danger">*</span>
+                                                                MLSS
                                                             </label>
                                                             <div class="input-group">
                                                                 <input type="number" step="0.01" class="form-control"
@@ -713,7 +713,7 @@
                                                         <div class="card-body">
                                                             <label for="sample_svl" class="form-label fw-semibold">
                                                                 <i class="mdi mdi-water-percent me-1"></i>
-                                                                SVI <span class="text-danger">*</span>
+                                                                SVI
                                                             </label>
                                                             <div class="input-group">
                                                                 <input type="number" step="0.01" class="form-control"
@@ -733,7 +733,7 @@
                                                         <div class="card-body">
                                                             <label for="sample_do" class="form-label fw-semibold">
                                                                 <i class="mdi mdi-air-filter me-1"></i>
-                                                                DO <span class="text-danger">*</span>
+                                                                DO
                                                             </label>
                                                             <div class="input-group">
                                                                 <input type="number" step="0.01" class="form-control"
