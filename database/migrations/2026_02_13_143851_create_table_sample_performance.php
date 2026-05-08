@@ -19,9 +19,9 @@ return new class extends Migration
             $table->decimal('tss', 10, 2)->default(0);
             $table->decimal('sv30', 10, 2)->default(0);
             $table->decimal('ph', 10, 2)->default(0);
-            $table->decimal('mlss', 10, 2)->default(0);
-            $table->decimal('svl', 10, 2)->default(0);
-            $table->decimal('do', 10, 2)->default(0);
+            $table->decimal('mlss', 10, 2)->default(0)->nullable();
+            $table->decimal('svl', 10, 2)->default(0)->nullable();
+            $table->decimal('do', 10, 2)->default(0)->nullable();
             $table->timestamps();
         });
     }
