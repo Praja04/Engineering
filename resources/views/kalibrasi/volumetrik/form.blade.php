@@ -436,7 +436,6 @@
                             <td class="text-center">
                                 <input type="number"
                                     name="data[${i}][titik_kalibrasi]"
-                                    value="${i + 1}"
                                     class="input-mini text-center">
                             </td>
 
