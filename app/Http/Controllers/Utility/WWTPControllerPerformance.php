@@ -41,7 +41,7 @@ class WWTPControllerPerformance extends Controller
         $search  = $request->input('search');
 
         $query = WwtpPerformanceRecord::with('week')
-        ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc');
 
         if ($jenis) {
             $query->where('jenis', $jenis);
@@ -56,10 +56,10 @@ class WWTPControllerPerformance extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('jenis', 'like', "%{$search}%")
-                ->orWhereHas('week', function ($wq) use ($search) {
-                    $wq->where('week_start', 'like', "%{$search}%")
-                    ->orWhere('week_end', 'like', "%{$search}%");
-                });
+                    ->orWhereHas('week', function ($wq) use ($search) {
+                        $wq->where('week_start', 'like', "%{$search}%")
+                            ->orWhere('week_end', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -196,10 +196,11 @@ class WWTPControllerPerformance extends Controller
     //////////////////PH harian/////////////////////
     public function indexPHHarian(Request $request)
     {
-        $query = WwtpPerformancePHharian::orderBy('tanggal',
+        $query = WwtpPerformancePHharian::orderBy(
+            'tanggal',
             'desc'
         )
-        ->orderBy('shift', 'asc');
+            ->orderBy('shift', 'asc');
 
         if ($request->bulan) {
             $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$request->bulan]);
@@ -354,7 +355,9 @@ class WWTPControllerPerformance extends Controller
         }
 
         return response()->json(
-            $query->paginate($request->input('per_page', 10), ['*'],
+            $query->paginate(
+                $request->input('per_page', 10),
+                ['*'],
                 'page',
                 $request->input('page', 1)
             )
@@ -379,9 +382,9 @@ class WWTPControllerPerformance extends Controller
             'tss'       => 'required|numeric|min:0',
             'sv30'      => 'required|numeric|min:0',
             'ph'        => 'required|numeric|min:0|max:14',
-            'mlss'      => 'required|numeric|min:0',
-            'svl'       => 'required|numeric|min:0',
-            'do'        => 'required|numeric|min:0',
+            'mlss'      => 'nullable|numeric|min:0',
+            'svl'       => 'nullable|numeric|min:0',
+            'do'        => 'nullable|numeric|min:0',
         ]);
 
         $jenisSampel = WwtpJenisSample::findOrFail($request->id_sampel);
@@ -765,7 +768,7 @@ class WWTPControllerPerformance extends Controller
         $endDate   = $request->query('end_date',   Carbon::now()->endOfMonth()->toDateString());
 
         $records = WwtpPerformanceSample::with('jenisSampel')
-        ->whereBetween('tanggal', [$startDate, $endDate])
+            ->whereBetween('tanggal', [$startDate, $endDate])
             ->orderBy('tanggal', 'asc')
             ->get()
             ->groupBy('tanggal')
@@ -811,7 +814,7 @@ class WWTPControllerPerformance extends Controller
             $endMonth   = $date->copy()->endOfMonth();
 
             $monthlyRecords = WwtpPerformanceSample::with('jenisSampel')
-            ->whereBetween('tanggal', [$startMonth, $endMonth])
+                ->whereBetween('tanggal', [$startMonth, $endMonth])
                 ->get();
 
             $perJenis = $monthlyRecords->groupBy('id_sampel')->map(function ($group) {
@@ -859,7 +862,7 @@ class WWTPControllerPerformance extends Controller
 
         // Rata-rata parameter bulan ini per jenis sampel
         $monthlySummary = WwtpPerformanceSample::with('jenisSampel')
-        ->whereBetween('tanggal', [$startMonth, $endMonth])
+            ->whereBetween('tanggal', [$startMonth, $endMonth])
             ->get()
             ->groupBy('id_sampel')
             ->map(function ($group) {
@@ -892,9 +895,9 @@ class WWTPControllerPerformance extends Controller
     public function getRecentRecordsSample($limit = 10)
     {
         $data = WwtpPerformanceSample::with('jenisSampel')
-        ->orderBy('tanggal', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->limit($limit)
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
             ->get();
 
         return response()->json([
@@ -950,5 +953,4 @@ class WWTPControllerPerformance extends Controller
             'data'   => $records,
         ]);
     }
- 
 }
