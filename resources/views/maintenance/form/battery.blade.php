@@ -63,7 +63,6 @@
                             <label>No Seri</label>
                             <input type="text" name="no_seri" class="form-control">
                         </div>
-
                     </div>
 
                     <hr>
@@ -76,6 +75,10 @@
                     <div id="batteryContainer"></div>
 
                     <div class="row g-3 mb-3 mt-4">
+                        <div class="col-md-12">
+                            <label>Grounding</label>
+                            <input type="number" name="grounding" class="form-control" step="0.01" min="0" placeholder="Masukkan nilai grounding">
+                        </div>
                         <div class="col-md-12">
                             <label>Catatan</label>
                             <textarea class="form-control" name="catatan" id="catatan" rows="3"></textarea>
@@ -181,14 +184,13 @@
             intercell: 'Intercell',
             kondisi_skun: 'Kondisi Skun',
             kondisi_unit: 'Kondisi Unit',
-            grounding: 'Grounding',
         };
 
         function renderCellCard(isDefault = false) {
             let fieldsHtml = '';
 
             // Definisikan field yang pakai numeric input (bukan radio)
-            const numericFields = ['voltase', 'grounding'];
+            const numericFields = ['voltase'];
 
             Object.entries(batteryFields).forEach(([field, label]) => {
                 const name = `details[${cellIndex}][${field}]`;
@@ -279,7 +281,7 @@
             renderCellCard(true);
         }
 
-        loadFormFromLocal();
+        // loadFormFromLocal();
 
         // ADD CELL
         $('#btnAddCell').click(function() {

@@ -64,7 +64,6 @@ class MtcBatteryController extends Controller
                     'mtc_battery_id'    => $battery->id,
                     'cell'              => $detail['cell'],
                     'voltase'           => $detail['voltase']         ?? null,
-                    'grounding'         => $detail['grounding']       ?? null,
                     'level_air_aki'     => isset($detail['level_air_aki']) ? (bool) $detail['level_air_aki'] : false,
                     'intercell'         => isset($detail['intercell'])     ? (bool) $detail['intercell']     : false,
                     'kondisi_skun'      => isset($detail['kondisi_skun'])  ? (bool) $detail['kondisi_skun']  : false,
@@ -221,7 +220,6 @@ class MtcBatteryController extends Controller
 
                 $payload = [
                     'voltase'       => $detail['voltase']   ?? null,
-                    'grounding'     => $detail['grounding'] ?? null,
                     'level_air_aki' => isset($detail['level_air_aki']) ? (bool)$detail['level_air_aki'] : false,
                     'intercell'     => isset($detail['intercell'])     ? (bool)$detail['intercell']     : false,
                     'kondisi_skun'  => isset($detail['kondisi_skun'])  ? (bool)$detail['kondisi_skun']  : false,
