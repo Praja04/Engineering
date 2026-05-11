@@ -390,7 +390,8 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <select name="materials[0][mid]" class="form-control form-control-sm mid-select2" required></select>
+                                                <select name="materials[0][mid]"
+                                                    class="form-control form-control-sm mid-select2"></select>
                                             </td>
                                             <td>
                                                 <input type="text" name="materials[0][desc]"
@@ -398,7 +399,7 @@
                                             </td>
                                             <td>
                                                 <input type="number" name="materials[0][qty]"
-                                                    class="form-control form-control-sm" min="1" required>
+                                                    class="form-control form-control-sm" min="1">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger removeRow">
@@ -682,13 +683,13 @@
                 let row = `
                     <tr>
                         <td>
-                            <select name="materials[${index}][mid]" class="form-control form-control-sm mid-select2" required></select>
+                            <select name="materials[${index}][mid]" class="form-control form-control-sm mid-select2"></select>
                         </td>
                         <td>
                             <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
                         </td>
                         <td>
-                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1" required>
+                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
