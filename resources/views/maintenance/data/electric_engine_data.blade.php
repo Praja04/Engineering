@@ -913,6 +913,53 @@
                 };
             }
 
+            function initMidSelect2Edit(element) {
+                $(element).select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Cari MID / Nama Barang...',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#modalEdit'),
+                    ajax: {
+                        url: 'http://10.11.10.130:8087/api/wsp/barang',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term
+                            };
+                        },
+                        processResults: function(response) {
+                            return {
+                                results: response.data.map(function(item) {
+                                    return {
+                                        id: item.mid_barang,
+                                        text: item.mid_barang + ' - ' + item.nama_barang,
+                                        nama_barang: item.nama_barang
+                                    };
+                                })
+                            };
+                        },
+                        cache: true
+                    },
+                    templateResult: function(data) {
+                        if (!data.id) return data.text;
+                        return $(`
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold" style="font-size: 12.5px;">${data.id}</span>
+                                <small class="text-muted" style="font-size: 11px;">${data.nama_barang}</small>
+                            </div>
+                        `);
+                    },
+                    templateSelection: function(data) {
+                        return data.id || data.text;
+                    }
+                }).on('select2:select', function(e) {
+                    const data = e.params.data;
+                    $(this).closest('tr').find('.material-deskripsi').val(data.nama_barang);
+                });
+            }
+
             function renderEditMaterials(materials) {
                 const tbody = $('#materialTableEdit tbody');
                 tbody.empty();
@@ -926,11 +973,17 @@
                     const row = $(materialRowTemplate(index));
 
                     row.find('.material-id').val(item.id);
-                    row.find('.material-mid').val(item.mid);
                     row.find('.material-deskripsi').val(item.deskripsi);
                     row.find('.material-qty').val(item.qty);
 
+                    // Add existing MID as option
+                    if (item.mid) {
+                        const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi : ''), item.mid, true, true);
+                        row.find('.material-mid').append(newOption).trigger('change');
+                    }
+
                     tbody.append(row);
+                    initMidSelect2Edit(row.find('.material-mid'));
                 });
             }
 
@@ -940,9 +993,7 @@
                         <input type="hidden" name="materials[${index}][id]" class="material-id">
 
                         <td>
-                            <input type="number"
-                                name="materials[${index}][mid]"
-                                class="form-control form-control-sm material-mid">
+                            <select name="materials[${index}][mid]" class="form-control form-control-sm material-mid"></select>
                         </td>
 
                         <td>
@@ -974,7 +1025,9 @@
 
             function addMaterialRowEdit() {
                 const index = $('#materialTableEdit tbody tr').length;
-                $('#materialTableEdit tbody').append(materialRowTemplate(index));
+                const $row = $(materialRowTemplate(index));
+                $('#materialTableEdit tbody').append($row);
+                initMidSelect2Edit($row.find('.material-mid'));
             }
 
             $(document).on('click', '.btnRemoveMaterial', function() {
