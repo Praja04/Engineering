@@ -25,7 +25,6 @@ class MtcBatteryRequest extends FormRequest
             'details'              => 'required|array|min:12',
             'details.*.cell'       => 'required|integer|min:1|distinct',  // distinct biar cell tidak duplikat
             'details.*.voltase'    => 'nullable|numeric|min:0',
-            'details.*.grounding'  => 'nullable|numeric|min:0',
             'details.*.level_air_aki'   => 'nullable|boolean',
             'details.*.intercell'       => 'nullable|boolean',
             'details.*.kondisi_skun'    => 'nullable|boolean',

@@ -27,6 +27,7 @@ class MtcBatteryMainRequest extends FormRequest
             'no_unit'        => 'nullable|string|max:100',
             'kondisi_plug_battery' => 'nullable|string|max:100',
             'total_voltase'     => ['nullable', 'numeric', 'min:0'],
+            'grounding'         => ['nullable', 'numeric', 'min:0'],
             'catatan'        => 'nullable|string|max:100',
         ];
     }

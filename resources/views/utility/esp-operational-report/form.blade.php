@@ -98,7 +98,7 @@
                             </div>
                             <div class="border-top pt-2 d-flex justify-content-between align-items-center">
                                 <span class="text-muted fs-13"><i class="ri-time-line me-1"></i>Akhir shift (sebelum
-                                    06:00)</span>
+                                    07:00)</span>
                                 <span class="text-danger fw-semibold fs-13">Pilih <i class="ri-arrow-right-line"></i></span>
                             </div>
                         </div>
