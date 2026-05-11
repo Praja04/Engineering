@@ -81,9 +81,9 @@ class MtcRefrigerasiController extends Controller
             foreach ($materials->materials ?? [] as $item) {
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id' => $main->id,
-                    'mid'         => $item['mid'],
+                    'mid'         => $item['mid'] ?? null,
                     'deskripsi'   => $item['desc'] ?? null,
-                    'qty'         => $item['qty'],
+                    'qty'         => $item['qty'] ?? 0,
                     'created_by'  => $userId,
                 ]);
             }
@@ -229,17 +229,17 @@ class MtcRefrigerasiController extends Controller
                     $incomingIds[] = $item['id'];
 
                     MtcKebutuhanMaterialModel::where('id', $item['id'])->update([
-                        'mid'        => $item['mid'],
+                        'mid'        => $item['mid'] ?? null,
                         'deskripsi'  => $item['deskripsi'] ?? null,
-                        'qty'        => $item['qty'],
+                        'qty'        => $item['qty'] ?? 0,
                         'updated_by' => $userId,
                     ]);
                 } else {
                     $new = MtcKebutuhanMaterialModel::create([
                         'mtc_main_id' => $main->id,
-                        'mid'         => $item['mid'],
+                        'mid'         => $item['mid'] ?? null,
                         'deskripsi'   => $item['deskripsi'] ?? null,
-                        'qty'         => $item['qty'],
+                        'qty'         => $item['qty'] ?? 0,
                         'created_by'  => $userId,
                     ]);
 
