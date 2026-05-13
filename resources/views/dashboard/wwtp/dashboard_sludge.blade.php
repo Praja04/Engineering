@@ -316,7 +316,9 @@
                         <h4 class="card-title mb-0 flex-grow-1">Pengangkutan Sludge (Per Minggu)</h4>
                         <div class="flex-shrink-0">
                             <div class="d-flex gap-2">
-                                <input type="month" class="form-control form-control-sm" id="bulanPengangkutan" style="width: 150px;">
+                                <input type="date" class="form-control form-control-sm" id="tanggalMulaiPengangkutan" style="width: 150px;">
+                                <span class="align-self-center">s/d</span>
+                                <input type="date" class="form-control form-control-sm" id="tanggalAkhirPengangkutan" style="width: 150px;">
                                 <button class="btn btn-sm btn-primary" onclick="perbaruiGrafikPengangkutan()">
                                     <i class="bx bx-search-alt"></i>
                                 </button>
@@ -416,12 +418,9 @@
         document.getElementById('tanggalMulaiSludgeContent').value = formatTanggal(awalBulan);
         document.getElementById('tanggalAkhirSludgeContent').value = formatTanggal(akhirBulan);
 
-        const formatBulan = (date) => {
-            const tahun = date.getFullYear();
-            const bulan = String(date.getMonth() + 1).padStart(2, '0');
-            return `${tahun}-${bulan}`;
-        };
-        document.getElementById('bulanPengangkutan').value = formatBulan(hari);
+        const duaBulanLalu = new Date(hari.getFullYear(), hari.getMonth() - 2, 1);
+        document.getElementById('tanggalMulaiPengangkutan').value = formatTanggal(duaBulanLalu);
+        document.getElementById('tanggalAkhirPengangkutan').value = formatTanggal(akhirBulan);
     }
     // =============================
     // PIE CHART FILTER
@@ -741,8 +740,9 @@
 
     async function perbaruiGrafikPengangkutan() {
         try {
-            const bulan = document.getElementById('bulanPengangkutan').value;
-            const url = bulan ? `/api/wwtp-sludge/dashboard/pengangkutan-chart?bulan=${bulan}` : `/api/wwtp-sludge/dashboard/pengangkutan-chart`;
+            const startDate = document.getElementById('tanggalMulaiPengangkutan').value;
+            const endDate = document.getElementById('tanggalAkhirPengangkutan').value;
+            const url = (startDate && endDate) ? `/api/wwtp-sludge/dashboard/pengangkutan-chart?start_date=${startDate}&end_date=${endDate}` : `/api/wwtp-sludge/dashboard/pengangkutan-chart`;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 

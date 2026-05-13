@@ -473,13 +473,17 @@ class WWTPControllerSludge extends Controller
     public function getPengangkutanChart(Request $request)
     {
         try {
-            $bulan = $request->input('bulan');
+            $startDate = $request->input('start_date');
+            $endDate   = $request->input('end_date');
+
             $query = WwtpPengangkutanSludge::orderBy('week_start', 'asc');
 
-            if ($bulan) {
-                $query->whereRaw("DATE_FORMAT(week_start, '%Y-%m') = ?", [$bulan]);
+            if ($startDate && $endDate) {
+                $query->whereBetween('week_start', [$startDate, $endDate]);
             } else {
-                $query->limit(10);
+                // Default 2 bulan terakhir
+                $twoMonthsAgo = Carbon::now()->subMonths(2)->startOfMonth()->toDateString();
+                $query->where('week_start', '>=', $twoMonthsAgo);
             }
 
             $data = $query->get();
