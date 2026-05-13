@@ -127,6 +127,8 @@ Route::prefix('wwtp-sludge')->group(function () {
         Route::get('drain-chart', [WWTPControllerSludge::class, 'getDrainChart']);
         Route::get('running-hour-chart', [WWTPControllerSludge::class, 'getRunningHourChart']);
         Route::get('hasil-lumpur-chart', [WWTPControllerSludge::class, 'getHasilLumpurChart']);
+        Route::get('sludge-content-chart', [WWTPControllerSludge::class, 'getSludgeContentChart']);
+        Route::get('pengangkutan-chart', [WWTPControllerSludge::class, 'getPengangkutanChart']);
         Route::get('shift-breakdown', [WWTPControllerSludge::class, 'getShiftBreakdown']);
 
         // Monthly comparison
