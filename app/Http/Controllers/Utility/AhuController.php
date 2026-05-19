@@ -369,33 +369,38 @@ class AhuController extends Controller
             $sheet->setCellValue('F' . $currentRow, $item->pressure_out_1);
             $sheet->setCellValue('G' . $currentRow, $item->ct_in_1);
             $sheet->setCellValue('H' . $currentRow, $item->ct_out_1);
-            $sheet->setCellValue('I' . $currentRow, $item->temp_out_1);
+
+
 
             // AHU 2 (J-P)
-            $sheet->setCellValue('J' . $currentRow, $item->ampere_2);
-            $sheet->setCellValue('K' . $currentRow, $item->set_temp_2);
-            $sheet->setCellValue('L' . $currentRow, $item->pressure_in_2);
-            $sheet->setCellValue('M' . $currentRow, $item->pressure_out_2);
-            $sheet->setCellValue('N' . $currentRow, $item->ct_in_2);
-            $sheet->setCellValue('O' . $currentRow, $item->ct_out_2);
-            $sheet->setCellValue('P' . $currentRow, $item->temp_out_2);
+            $sheet->setCellValue('I' . $currentRow, $item->ampere_2);
+            $sheet->setCellValue('J' . $currentRow, $item->set_temp_2);
+            $sheet->setCellValue('K' . $currentRow, $item->pressure_in_2);
+            $sheet->setCellValue('L' . $currentRow, $item->pressure_out_2);
+            $sheet->setCellValue('M' . $currentRow, $item->ct_in_2);
+            $sheet->setCellValue('N' . $currentRow, $item->ct_out_2);
+
 
             // AHU 3 (Q-W)
-            $sheet->setCellValue('Q' . $currentRow, $item->ampere_3);
-            $sheet->setCellValue('R' . $currentRow, $item->set_temp_3);
-            $sheet->setCellValue('S' . $currentRow, $item->pressure_in_3);
-            $sheet->setCellValue('T' . $currentRow, $item->pressure_out_3);
-            $sheet->setCellValue('U' . $currentRow, $item->ct_in_3);
-            $sheet->setCellValue('V' . $currentRow, $item->ct_out_3);
-            $sheet->setCellValue('W' . $currentRow, $item->temp_out_3);
+            $sheet->setCellValue('O' . $currentRow, $item->ampere_3);
+            $sheet->setCellValue('P' . $currentRow, $item->set_temp_3);
+            $sheet->setCellValue('Q' . $currentRow, $item->pressure_in_3);
+            $sheet->setCellValue('R' . $currentRow, $item->pressure_out_3);
+            $sheet->setCellValue('S' . $currentRow, $item->ct_in_3);
+            $sheet->setCellValue('T' . $currentRow, $item->ct_out_3);
+
 
             // AHU 4 (X-AD)
-            $sheet->setCellValue('X' . $currentRow, $item->ampere_4);
-            $sheet->setCellValue('Y' . $currentRow, $item->set_temp_4);
-            $sheet->setCellValue('Z' . $currentRow, $item->pressure_in_4);
-            $sheet->setCellValue('AA' . $currentRow, $item->pressure_out_4);
-            $sheet->setCellValue('AB' . $currentRow, $item->ct_in_4);
-            $sheet->setCellValue('AC' . $currentRow, $item->ct_out_4);
+            $sheet->setCellValue('U' . $currentRow, $item->ampere_4);
+            $sheet->setCellValue('V' . $currentRow, $item->set_temp_4);
+            $sheet->setCellValue('W' . $currentRow, $item->pressure_in_4);
+            $sheet->setCellValue('X' . $currentRow, $item->pressure_out_4);
+            $sheet->setCellValue('Y' . $currentRow, $item->ct_in_4);
+            $sheet->setCellValue('Z' . $currentRow, $item->ct_out_4);
+
+            $sheet->setCellValue('AA' . $currentRow, $item->temp_out_1);
+            $sheet->setCellValue('AB' . $currentRow, $item->temp_out_2);
+            $sheet->setCellValue('AC' . $currentRow, $item->temp_out_3);
             $sheet->setCellValue('AD' . $currentRow, $item->temp_out_4);
         }
 
