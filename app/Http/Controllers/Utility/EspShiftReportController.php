@@ -39,11 +39,11 @@ class EspShiftReportController extends Controller
         ]);
 
         // 🚨 Validasi waktu hanya untuk operator
-        if (auth()->user()->jabatan === 'operator' && Carbon::now()->format('H:i') >= '06:00') {
-            return response()->json([
-                'message' => 'Laporan hanya bisa diinput sebelum jam 06:00'
-            ], 422);
-        }
+        // if (auth()->user()->jabatan === 'operator' && Carbon::now()->format('H:i') >= '08:00') {
+        //     return response()->json([
+        //         'message' => 'Laporan hanya bisa diinput sebelum jam 08:00'
+        //     ], 422);
+        // }
 
         // 🔥 Simpan (auto approve operator)
         $data = EspShiftReport::updateOrCreate(
