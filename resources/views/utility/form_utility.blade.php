@@ -280,32 +280,46 @@
                 });
             });
 
-            $.get("{{ url('utility/air-area') }}", function(data) {
+            function loadAirAreas() {
                 const $container = $('#area-input-container');
-                $container.empty();
+                $container.html(
+                    '<div class="text-center p-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>'
+                );
 
-                data.forEach(function(area) {
-                    const html = `
-            <div class="card mb-3 shadow-sm" style="background-color:#f4f6f9; border-left: 5px solid #007bff;">
-                <div class="card-header fw-bold text-white" style="background-color:#007bff;">
-                    ${area.nama_area}
-                </div>
-                <div class="card-body">
-                    <input type="hidden" name="areas[]" value="${area.nama_area}">
-                    <div class="mb-2">
-                        <label class="form-label">Awal (m³)</label>
-                        <input type="number" name="awal[${area.nama_area}]" class="form-control" step="any" required style="background-color:#ffffff;">
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">Akhir (m³)</label>
-                        <input type="number" name="akhir[${area.nama_area}]" class="form-control" step="any" required style="background-color:#ffffff;">
-                    </div>
-                </div>
-            </div>
-        `;
-                    $container.append(html);
+                $.get("/utility/air-area", function(data) {
+                    $container.empty();
+
+                    console.log(data);
+
+                    data.forEach(function(area) {
+                        const pemakaianAwal = area.pemakaian_awal !== null && area
+                            .pemakaian_awal !== undefined ? area.pemakaian_awal : '';
+                        const html = `
+                            <div class="card mb-3 shadow-sm" style="background-color:#f4f6f9; border-left: 5px solid #007bff;">
+                                <div class="card-header fw-bold text-white" style="background-color:#007bff;">
+                                    ${area.nama_area}
+                                </div>
+                                <div class="card-body">
+                                    <input type="hidden" name="areas[]" value="${area.nama_area}">
+                                    <div class="mb-2">
+                                        <label class="form-label">Awal (m³)</label>
+                                        <input type="number" name="awal[${area.nama_area}]" value="${pemakaianAwal}" class="form-control" step="any" required style="background-color:#ffffff;">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Akhir (m³)</label>
+                                        <input type="number" name="akhir[${area.nama_area}]" class="form-control" step="any" required style="background-color:#ffffff;">
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        $container.append(html);
+                    });
+                }).fail(function() {
+                    $container.html(
+                        '<div class="text-danger p-3">Gagal memuat data area pemakaian air. Silakan klik ulang tab Pemakaian Air.</div>'
+                    );
                 });
-            });
+            }
 
             const today = new Date().toISOString().split('T')[0];
             $('#waktu_listrik').val(today);
@@ -335,6 +349,7 @@
                         $('#form-listrik').show();
                     } else if (unit === 'Air') {
                         $('#form-air').show();
+                        loadAirAreas();
                     } else if (unit === 'Chemical') {
                         $('#form-chemical').show();
                     }
@@ -470,8 +485,9 @@
 
                 $('input[name="areas[]"]').each(function() {
                     const area = $(this).val();
-                    const awal = $(`input[name="awal[${area}]"]`).val();
-                    const akhir = $(`input[name="akhir[${area}]"]`).val();
+                    const $cardBody = $(this).closest('.card-body');
+                    const awal = $cardBody.find('input[name^="awal["]').val();
+                    const akhir = $cardBody.find('input[name^="akhir["]').val();
 
                     // Pastikan nilai tidak kosong
                     if (awal !== '' && akhir !== '') {
@@ -490,7 +506,7 @@
                 };
 
                 $.ajax({
-                    url: "{{ url('utility/data/air/store') }}",
+                    url: "/utility/data/air/store",
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(finalData),

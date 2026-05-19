@@ -39,8 +39,9 @@ class AirController extends Controller
 
                     if ($index !== null) {
                         $awal = $request->input("data.$index.pemakaian_liter_awal");
+                        $areaName = $request->input("data.$index.area") ?? "ke-$index";
                         if ($value < $awal) {
-                            $fail("Pemakaian akhir harus lebih besar atau sama dengan awal untuk area ke-$index.");
+                            $fail("Pemakaian akhir harus lebih besar atau sama dengan awal untuk area $areaName.");
                         }
                     }
                 }
@@ -194,6 +195,31 @@ class AirController extends Controller
     public function getAirAreas()
     {
         $areas = AirArea::orderBy('nama_area')->get();
+
+        if ($areas->isEmpty()) {
+            $defaultAreas = PemakaianAirModel::distinct()->pluck('jenis_pemakaian')->filter()->toArray();
+            if (empty($defaultAreas)) {
+                $defaultAreas = [
+                    'Sumur 1', 'Sumur 2', 'Sumur 4', 'Sumur 5', 
+                    'CT RO', 'CT WS', 'Green Belt', 
+                    'Outlet Fresh Water 1', 'Outlet Fresh Water 2', 
+                    'Outlet Storage RO Reject', 'Outlet Storage WS', 'PDAM'
+                ];
+            }
+            foreach ($defaultAreas as $name) {
+                AirArea::firstOrCreate(['nama_area' => $name]);
+            }
+            $areas = AirArea::orderBy('nama_area')->get();
+        }
+
+        foreach ($areas as $area) {
+            $latest = PemakaianAirModel::where('jenis_pemakaian', $area->nama_area)
+                ->orderBy('tanggal', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $area->pemakaian_awal = $latest ? $latest->pemakaian_akhir : 0;
+        }
 
         return response()->json($areas);
     }
