@@ -70,7 +70,7 @@
                         </thead>
                         <tbody id="tableBody">
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
+                                <td colspan="8" class="text-center py-5 text-muted">
                                     <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
                                     Memuat data...
                                 </td>
@@ -95,11 +95,8 @@
             <div class="modal-body p-4" id="detailContent">
                 {{-- Content via AJAX --}}
             </div>
-            <div class="modal-footer border-top p-3 d-flex justify-content-between">
+            <div class="modal-footer border-top p-3">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Tutup</button>
-                <div id="actionButtons">
-                    {{-- Buttons generated via JS --}}
-                </div>
             </div>
         </div>
     </div>
@@ -124,7 +121,7 @@
         function renderTable(data) {
             let html = '';
             if (data.length === 0) {
-                html = '<tr><td colspan="7" class="text-center py-5 text-muted"><i class="ri-check-line text-success fs-3 d-block mb-2"></i>Semua laporan sudah diproses.</td></tr>';
+                html = '<tr><td colspan="8" class="text-center py-5 text-muted"><i class="ri-check-line text-success fs-3 d-block mb-2"></i>Semua laporan sudah diproses.</td></tr>';
             } else {
                 data.forEach((item, index) => {
                     html += `
@@ -141,8 +138,14 @@
                             <td>${item.e_del || '-'}</td>
                             <td>${getStatusBadge(item.status)}</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-primary rounded-pill px-3 btn-detail" data-id="${item.id}">
+                                <button class="btn btn-sm btn-primary rounded-pill px-3 btn-detail me-1" data-id="${item.id}">
                                     <i class="ri-eye-line me-1"></i> Periksa
+                                </button>
+                                <button class="btn btn-sm btn-success rounded-pill px-3 btn-approve me-1" data-id="${item.id}" data-status="${item.status}">
+                                    <i class="ri-check-line me-1"></i> Approve
+                                </button>
+                                <button class="btn btn-sm btn-danger rounded-pill px-3 btn-reject" data-id="${item.id}">
+                                    <i class="ri-close-line me-1"></i> Reject
                                 </button>
                             </td>
                         </tr>
@@ -268,13 +271,6 @@
                     </div>
                 `;
                 $('#detailContent').html(html);
-
-                // Set Action Buttons
-                let btns = `
-                    <button class="btn btn-danger px-4 me-2 btn-reject" data-id="${d.id}">Reject</button>
-                    <button class="btn btn-success px-4 btn-approve" data-id="${d.id}" data-status="${d.status}">Approve</button>
-                `;
-                $('#actionButtons').html(btns);
 
                 $('#modalDetail').modal('show');
                 $('#loadingOverlay').addClass('d-none');
