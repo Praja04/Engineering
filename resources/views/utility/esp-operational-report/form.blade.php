@@ -494,9 +494,9 @@
                 // Cek apakah jam sudah >= 06:00 (lewat batas input)
                 const hh = new Date().getHours();
                 if (hh >= 8) {
-                    $('#alert-waktu-shift').removeClass('d-none');
-                    $('#btn-submit-shift').prop('disabled', true)
-                        .html('<i class="ri-lock-line me-1"></i>Waktu Input Sudah Tutup');
+                    // $('#alert-waktu-shift').removeClass('d-none');
+                    // $('#btn-submit-shift').prop('disabled', true)
+                    //     .html('<i class="ri-lock-line me-1"></i>Waktu Input Sudah Tutup');
                 }
             } else {
                 // Non-operator: default ke hari ini

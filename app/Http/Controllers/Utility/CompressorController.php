@@ -76,12 +76,12 @@ class CompressorController extends Controller
 
             // Cek Duplikat di Details
             if (CompressorDetails::where('tanggal', $validated['tanggal'])
-                // ->where('jam', $validated['jam'])
+                ->where('jam', $validated['jam'])
                 ->exists()
             ) {
                 return response()->json([
                     'status' => 422,
-                    'message' => 'Laporan untuk tanggal  sudah ada'
+                    'message' => 'Laporan untuk tanggal ' .  $validated['tanggal'] . ' dan jam ' . $validated['jam'] . ' sudah ada'
                 ], 422);
             }
 
