@@ -22,10 +22,11 @@
         .table td {
             vertical-align: middle;
         }
-/* 
-        #detailModal .modal-dialog {
-            max-width: 90%;
-        } */
+
+        /*
+                #detailModal .modal-dialog {
+                    max-width: 90%;
+                } */
 
         /* BORDER MERAH SAAT NG */
         .check-wrapper.ng-active {
@@ -219,7 +220,8 @@
                             </div>
                             <div class="col-md-3">
                                 <label>Grounding</label>
-                                <input type="number" name="grounding" id="editGrounding" class="form-control" step="0.01" min="0">
+                                <input type="number" name="grounding" id="editGrounding" class="form-control"
+                                    step="0.01" min="0">
                             </div>
                         </div>
 
@@ -354,7 +356,7 @@
                         render: function(data) {
                             return `
                                     <button class="btn btn-sm btn-primary btnDetail" data-id="${data.id}" title="Detail"><i class="mdi mdi-eye"></i></button>
-                                    <button class="btn btn-sm btn-info btnEdit" data-id="${data.id}" title="Edit"><i class="mdi mdi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-info btnEdit" data-id="${data.id}" title="${data.status === 'rejected' ? 'Silakan isi form kembali' : 'Edit'}" ${data.status === 'rejected' ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>
                                     <button class="btn btn-sm btn-danger btnDelete" data-id="${data.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>
                                     <button class="btn btn-sm btn-warning btn-print" data-id="${data.id}" title="Download"><i class="mdi mdi-download"></i></button>
                                 `;
@@ -535,7 +537,8 @@
 
                         let groundingTd = '';
                         if (index === 0) {
-                            groundingTd = `<td rowspan="${totalCells}" class="align-middle text-center fw-bold bg-light" style="font-size: 1.1rem;">${groundingValue}</td>`;
+                            groundingTd =
+                                `<td rowspan="${totalCells}" class="align-middle text-center fw-bold bg-light" style="font-size: 1.1rem;">${groundingValue}</td>`;
                         }
 
                         detailHtml += `

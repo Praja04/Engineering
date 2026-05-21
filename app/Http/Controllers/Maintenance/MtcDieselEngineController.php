@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Maintenance;
 
-use Illuminate\Http\Request;
-use App\Models\NotificationsModel;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Maintenance\MtcMainModel;
-use App\Models\Maintenance\MtcApprovalModel;
-use App\Models\Maintenance\MtcMasterMesinModel;
-use App\Models\Maintenance\MtcDieselEngineModel;
-use App\Http\Requests\Maintenance\MtcMainRequest;
-use App\Models\Maintenance\MtcKebutuhanMaterialModel;
 use App\Http\Requests\Maintenance\MtcDieselEngineRequest;
 use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
+use App\Http\Requests\Maintenance\MtcMainRequest;
+use App\Models\Maintenance\MtcApprovalModel;
+use App\Models\Maintenance\MtcDieselEngineModel;
+use App\Models\Maintenance\MtcKebutuhanMaterialModel;
+use App\Models\Maintenance\MtcMainModel;
+use App\Models\Maintenance\MtcMasterMesinModel;
+use App\Models\NotificationsModel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MtcDieselEngineController extends Controller
 {
@@ -48,8 +48,8 @@ class MtcDieselEngineController extends Controller
             // Simpan Main
             $main = MtcMainModel::create([
                 ...$mainRequest->validated(),
-                'jenis_mtc'  => 'Diesel Engine',
-                'status'     => 'pending',
+                'jenis_mtc' => 'Diesel Engine',
+                'status' => 'pending',
                 'created_by' => $userId,
             ]);
 
@@ -61,41 +61,41 @@ class MtcDieselEngineController extends Controller
             foreach ($materials->materials ?? [] as $item) {
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id' => $main->id,
-                    'mid'        => $item['mid'] ?? null,
-                    'deskripsi'  => $item['desc'] ?? null,
-                    'qty'        => $item['qty'] ?? 0,
+                    'mid' => $item['mid'] ?? null,
+                    'deskripsi' => $item['desc'] ?? null,
+                    'qty' => $item['qty'] ?? 0,
                     'created_by' => $userId,
                 ]);
             }
 
             $ttdPaths = [
                 'teknisi' => 'mtc/ttd/ttd_teknisi.jpeg',  // TTD operator/teknisi
-                'staff'   => 'mtc/ttd/ttd_staff.jpeg',     // TTD supervisor
-                'user'    => 'mtc/ttd/ttd_user.jpeg',      // TTD user MT/MTC
+                'staff' => 'mtc/ttd/ttd_staff.jpeg',     // TTD supervisor
+                'user' => 'mtc/ttd/ttd_user.jpeg',      // TTD user MT/MTC
             ];
-
 
             $approvalFlows = [
                 [
                     'level' => 1,
-                    'role'  => 'teknisi',
+                    'role' => 'teknisi',
                     'approver_id' => $userId,
-                    'auto'  => true,
+                    'auto' => true,
                 ],
                 [
                     'level' => 2,
-                    'role'  => 'staff',
+                    'role' => 'staff',
                     'approver_id' => $mainRequest->staff_id,
-                    'auto'  => false,
+                    'auto' => false,
                 ],
                 [
                     'level' => 3,
-                    'role'  => 'user',
+                    'role' => 'user',
                     'approver_id' => $mainRequest->user_id,
-                    'auto'  => false,
+                    'auto' => false,
                 ],
             ];
 
+            $notificationSent = false;
             foreach ($approvalFlows as $flow) {
 
                 $isAutoApproved = $flow['auto'];
@@ -103,34 +103,36 @@ class MtcDieselEngineController extends Controller
 
                 MtcApprovalModel::create([
                     'mtc_main_id' => $main->id,
-                    'level'       => $flow['level'],
-                    'role'        => $flow['role'],
+                    'level' => $flow['level'],
+                    'role' => $flow['role'],
                     'approver_id' => $flow['approver_id'],
-                    'status'      => $isAutoApproved ? 'approved' : 'pending',
-                    'ttd'         => $isAutoApproved ? $ttdPath : null,
-                    'action_at'   => $isAutoApproved ? now() : null,
-                    'action_by'   => $isAutoApproved ? $userId : null,
+                    'status' => $isAutoApproved ? 'approved' : 'pending',
+                    'ttd' => $isAutoApproved ? $ttdPath : null,
+                    'action_at' => $isAutoApproved ? now() : null,
+                    'action_by' => $isAutoApproved ? $userId : null,
                 ]);
 
-                if (!$isAutoApproved) {
+                if (! $isAutoApproved && ! $notificationSent) {
                     NotificationsModel::create([
-                        'user_id'         => $flow['approver_id'],
+                        'user_id' => $flow['approver_id'],
                         'notifiable_type' => MtcMainModel::class,
-                        'notifiable_id'   => $main->id,
-                        'title'           => 'Approval Maintenance',
-                        'message'         => 'Maintenance Diesel Engine menunggu persetujuan Anda',
-                        'url'             => route('mtc.approval.index'),
-                        'is_read'         => false,
+                        'notifiable_id' => $main->id,
+                        'title' => 'Approval Maintenance',
+                        'message' => 'Maintenance Diesel Engine tanggal '.date('d F Y', strtotime($main->tanggal)).' menunggu persetujuan Anda',
+                        'url' => route('mtc.approval.index'),
+                        'is_read' => false,
                     ]);
+                    $notificationSent = true;
                 }
             }
         });
 
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Data Mtc Diesel Engine berhasil disimpan',
         ], 201);
     }
+
     public function getData(Request $request)
     {
         $query = MtcMainModel::query()
@@ -138,7 +140,7 @@ class MtcDieselEngineController extends Controller
             ->with([
                 'createdBy:id,username',
                 'dieselEngine.mesin:id,nama_mesin,lokasi',
-                'kebutuhanMaterial'
+                'kebutuhanMaterial',
             ]);
 
         // 🔍 filter tanggal
@@ -154,7 +156,7 @@ class MtcDieselEngineController extends Controller
         // 🔍 filter nama mesin
         if ($request->filled('nama_mesin')) {
             $query->whereHas('dieselEngine.mesin', function ($q) use ($request) {
-                $q->where('nama_mesin', 'like', '%' . $request->nama_mesin . '%');
+                $q->where('nama_mesin', 'like', '%'.$request->nama_mesin.'%');
             });
         }
 
@@ -169,10 +171,10 @@ class MtcDieselEngineController extends Controller
             ->get();
 
         return response()->json([
-            "draw" => intval($request->draw),
-            "recordsTotal" => $total,
-            "recordsFiltered" => $total,
-            "data" => $data
+            'draw' => intval($request->draw),
+            'recordsTotal' => $total,
+            'recordsFiltered' => $total,
+            'data' => $data,
         ]);
     }
 
@@ -195,7 +197,7 @@ class MtcDieselEngineController extends Controller
             ]);
 
             $inspection->update([
-                ...$detailRequest->validated()
+                ...$detailRequest->validated(),
             ]);
 
             $existingIds = $main->kebutuhanMaterial()->pluck('id')->toArray();
@@ -203,25 +205,25 @@ class MtcDieselEngineController extends Controller
 
             foreach ($materials['materials'] as $item) {
 
-                if (!empty($item['id'])) {
+                if (! empty($item['id'])) {
 
                     $incomingIds[] = $item['id'];
 
                     MtcKebutuhanMaterialModel::where('id', $item['id'])
                         ->update([
-                            'mid'        => $item['mid'] ?? null,
-                            'deskripsi'  => $item['deskripsi'] ?? null,
-                            'qty'        => $item['qty'] ?? 0,
+                            'mid' => $item['mid'] ?? null,
+                            'deskripsi' => $item['deskripsi'] ?? null,
+                            'qty' => $item['qty'] ?? 0,
                             'updated_by' => $userId,
                         ]);
                 } else {
 
                     $new = MtcKebutuhanMaterialModel::create([
-                        'mtc_main_id'       => $main->id,
-                        'mid'               => $item['mid'] ?? null,
-                        'deskripsi'         => $item['deskripsi'] ?? null,
-                        'qty'               => $item['qty'] ?? 0,
-                        'created_by'        => $userId,
+                        'mtc_main_id' => $main->id,
+                        'mid' => $item['mid'] ?? null,
+                        'deskripsi' => $item['deskripsi'] ?? null,
+                        'qty' => $item['qty'] ?? 0,
+                        'created_by' => $userId,
                     ]);
 
                     $incomingIds[] = $new->id;
