@@ -75,11 +75,11 @@ class WaterSoftenerController extends Controller
             ->where('tahun', $tanggal->year)
             ->first();
 
-        if ($approval && in_array($approval->status, ['waiting_supervisor', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan bulan ini sudah diajukan/disetujui, tidak dapat diubah.'
-            ], 422);
-        }
+        // if ($approval && in_array($approval->status, ['waiting_supervisor', 'approved_supervisor'])) {
+        //     return response()->json([
+        //         'message' => 'Laporan bulan ini sudah diajukan/disetujui, tidak dapat diubah.'
+        //     ], 422);
+        // }
 
         // Satu tanggal hanya bisa diinput sekali
         $existing = WaterSoftener::where('tanggal', $request->tanggal)->first();
@@ -239,6 +239,7 @@ class WaterSoftenerController extends Controller
             'supervisor_id' => $request->supervisor_id,
             'status'        => 'waiting_supervisor',
             'submitted_at'  => now(),
+            'foreman_approved_at'  => now(),
         ]);
 
         // Kirim notifikasi ke supervisor
