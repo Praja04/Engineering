@@ -34,6 +34,7 @@ return new class extends Migration
                 'waiting_foreman',     // Bulan penuh, siap di-approve foreman
                 'approved_foreman',    // Foreman sudah approve, notif ke supervisor
                 'approved_supervisor', // Final
+                'waiting_supervisor', // Final
             ])->default('draft');
 
             $table->timestamp('submitted_at')->nullable();         // Saat bulan penuh & submit

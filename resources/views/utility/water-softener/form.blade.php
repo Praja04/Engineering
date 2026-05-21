@@ -628,7 +628,7 @@
         // ── Submit Form ───────────────────────────────────────────
         $('#formWS').on('submit', function(e) {
             e.preventDefault();
-            if (isBlocked) return;
+            // if (isBlocked) return;
 
             const tgl = $('#tanggal').val();
             if (!tgl) {
@@ -798,18 +798,18 @@
                 success: function(res) {
                     const approval = res.approval;
                     isBlocked = approval && approval.status === 'approved_supervisor';
-                    if (isBlocked) {
-                        $('#blockedNotice').toggleClass('show', isBlocked);
-                        $('#btnSave').prop('disabled', isBlocked);
-                    }
+                    // if (isBlocked) {
+                    //     $('#blockedNotice').toggleClass('show', isBlocked);
+                    //     $('#btnSave').prop('disabled', isBlocked);
+                    // }
                     const row = res.data.find(r => r.tanggal && r.tanggal.substring(0, 10) === tgl);
                     resetForm();
                     if (row) {
                         setStatus('success', `<i class="bx bx-check-circle me-1"></i>
-        Data tanggal <strong>${formatTgl(tgl)}</strong> sudah ada.`);
+                            Data tanggal <strong>${formatTgl(tgl)}</strong> sudah ada.`);
                     } else {
                         setStatus('info', `<i class="bx bx-plus-circle me-1"></i>
-        Belum ada data untuk tanggal <strong>${formatTgl(tgl)}</strong>.`);
+                            Belum ada data untuk tanggal <strong>${formatTgl(tgl)}</strong>.`);
                     }
 
                     buildTable(res.data);
