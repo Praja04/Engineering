@@ -176,8 +176,12 @@
                             showConfirmButton: false
                         }).then(() => location.reload());
                     },
-                    error: function() {
-                        Swal.fire('Error', 'Gagal reject data', 'error');
+                    error: function(xhr) {
+                        let message = 'Gagal reject data';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        Swal.fire('Error', message, 'error');
                     }
                 });
             });
@@ -243,8 +247,12 @@
                         showConfirmButton: false
                     }).then(() => location.reload());
                 },
-                error: function() {
-                    Swal.fire('Error', 'Gagal approve data', 'error');
+                error: function(xhr) {
+                    let message = 'Gagal approve data';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Error', message, 'error');
                 }
             });
         });

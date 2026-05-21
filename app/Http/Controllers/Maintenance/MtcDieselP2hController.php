@@ -100,6 +100,7 @@ class MtcDieselP2hController extends Controller
                 ],
             ];
 
+            $notificationSent = false;
             foreach ($approvalFlows as $flow) {
 
                 $isAutoApproved = $flow['auto'];
@@ -116,16 +117,17 @@ class MtcDieselP2hController extends Controller
                     'action_by'   => $isAutoApproved ? $userId : null,
                 ]);
 
-                if (!$isAutoApproved) {
+                if (!$isAutoApproved && !$notificationSent) {
                     NotificationsModel::create([
                         'user_id'         => $flow['approver_id'],
                         'notifiable_type' => MtcMainModel::class,
                         'notifiable_id'   => $main->id,
                         'title'           => 'Approval Maintenance',
-                        'message'         => 'Maintenance Diesel P2H menunggu persetujuan Anda',
+                        'message'         => 'Maintenance Diesel P2H tanggal ' . date('d F Y', strtotime($main->tanggal)) . ' menunggu persetujuan Anda',
                         'url'             => route('mtc.approval.index'),
                         'is_read'         => false,
                     ]);
+                    $notificationSent = true;
                 }
             }
         });
