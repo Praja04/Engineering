@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\WWTPControllerProses;
 use App\Http\Controllers\Utility\WWTPControllerPerformance;
 use App\Http\Controllers\Utility\WWTPControllerSludge;
+use App\Http\Controllers\Utility\WWTPControllerAnalisa;
 use App\Http\Controllers\Utility\WWTPController;
 
 Route::middleware('auth')->group(function () {
@@ -15,5 +16,7 @@ Route::middleware('auth')->group(function () {
   Route::get('wwtp/data_performance', [WWTPControllerPerformance::class, 'data_performance'])->name('wwtp.data_performance');
   Route::get('/wwtp/form_sludge', [WWTPControllerSludge::class, 'form_sludge'])->name('wwtp.form_sludge');
   Route::get('/wwtp/data_sludge', [WWTPControllerSludge::class, 'data_sludge'])->name('wwtp.data_sludge');
+  Route::get('/wwtp/form_analisa', [WWTPControllerAnalisa::class, 'form_analisa'])->name('wwtp.form_analisa');
+  Route::get('/wwtp/data_analisa', [WWTPControllerAnalisa::class, 'data_analisa'])->name('wwtp.data_analisa');
   Route::get('/wwtp/export', [WWTPController::class, 'export'])->name('wwtp.export');
 });
