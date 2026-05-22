@@ -117,6 +117,7 @@
                                     <option>C</option>
                                     <option>D</option>
                                     <option>Korektif</option>
+                                    <option>Checkpoint</option>
                                 </select>
                             </div>
                             <div class="col-md-3 d-none" id="tanggal_selesai_wrapper">
