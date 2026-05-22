@@ -4,6 +4,7 @@ use App\Http\Controllers\Utility\WWTPControllerPerformance;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\WWTPControllerProses;
 use App\Http\Controllers\Utility\WWTPControllerSludge;
+use App\Http\Controllers\Utility\WWTPControllerAnalisa;
 use App\Http\Controllers\Utility\WWTPController;
 
 // WWTP Proses Routes
@@ -152,4 +153,13 @@ Route::prefix('wwtp-sludge')->group(function () {
     Route::post('/{id}', [WWTPControllerSludge::class, 'update']);
     Route::get('/', [WWTPControllerSludge::class, 'index']);
     Route::get('/{id}', [WWTPControllerSludge::class, 'show']);
+});
+
+// WWTP Analisa Routes
+Route::prefix('wwtp-analisa')->group(function () {
+    Route::post('/', [WWTPControllerAnalisa::class, 'store']);
+    Route::delete('/{id}', [WWTPControllerAnalisa::class, 'destroy']);
+    Route::post('/{id}', [WWTPControllerAnalisa::class, 'update']);
+    Route::get('/', [WWTPControllerAnalisa::class, 'index']);
+    Route::get('/{id}', [WWTPControllerAnalisa::class, 'show']);
 });
