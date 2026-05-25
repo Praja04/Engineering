@@ -301,14 +301,8 @@
                                     {{-- Tanggal laporan: readonly untuk operator, date picker untuk non-operator --}}
                                     <div class="mb-3">
                                         <label class="form-label fw-medium">Tanggal Laporan</label>
-                                        @if (auth()->user()->jabatan === 'operator')
-                                            <input type="date" class="form-control" name="tanggal_laporan"
-                                                id="input-tanggal-shift" readonly
-                                                style="background:#f8f9fa; cursor:not-allowed;">
-                                        @else
-                                            <input type="date" class="form-control" name="tanggal_laporan"
-                                                id="input-tanggal-shift">
-                                        @endif
+                                        <input type="date" class="form-control" name="tanggal_laporan"
+                                            id="input-tanggal-shift">
                                     </div>
 
                                     {{-- Alert jika operator & di luar waktu input --}}
