@@ -49,23 +49,23 @@ class WwtpPointAndParameterSeeder extends Seeder
         // 2. Seed wwtp_parameters
         $parameters = [
             [
-                'parameter_name' => 'COD',
+                'parameter_name' => 'COD (Chemical Oxygen Demand)',
                 'unit' => 'mg/L'
             ],
             [
-                'parameter_name' => 'TSS',
+                'parameter_name' => 'TSS (Total Suspended Solids)',
                 'unit' => 'mg/L'
             ],
             [
-                'parameter_name' => 'pH',
+                'parameter_name' => 'pH (Power of Hydrogen)',
                 'unit' => 'pH'
             ],
             [
-                'parameter_name' => 'EC',
+                'parameter_name' => 'EC (Electrical Conductivity)',
                 'unit' => '%'
             ],
             [
-                'parameter_name' => 'DO',
+                'parameter_name' => 'DO (Dissolved Oxygen)',
                 'unit' => 'mg/L'
             ]
         ];
