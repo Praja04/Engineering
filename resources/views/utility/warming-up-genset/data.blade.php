@@ -125,7 +125,7 @@
                 <div class="modal-body">
                     <form id="formExport" action="{{ route('warming-up-genset.export') }}" method="GET" target="_blank">
                         <div class="row g-2">
-                            <div class="col-md-6">
+                            {{-- <div class="col-md-6">
                                 <label class="form-label fw-bold">Bulan</label>
                                 <select name="bulan" class="form-select">
                                     @for ($m = 1; $m <= 12; $m++)
@@ -134,7 +134,7 @@
                                         </option>
                                     @endfor
                                 </select>
-                            </div>
+                            </div> --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Tahun</label>
                                 <input type="number" name="tahun" class="form-control" value="{{ date('Y') }}">
@@ -365,12 +365,12 @@
                                     <i class="ri-eye-line"></i>
                                 </button>
                                 ${['submitted', 'rejected'].includes(item.status) ? `
-                                    <button class="btn btn-sm btn-outline-warning btn-edit" data-id="${item.id}" title="Edit">
-                                        <i class="ri-edit-line"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${item.id}" title="Hapus">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </button>` : ''}
+                                        <button class="btn btn-sm btn-outline-warning btn-edit" data-id="${item.id}" title="Edit">
+                                            <i class="ri-edit-line"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${item.id}" title="Hapus">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>` : ''}
                             </div>
                         </td>
                     </tr>
@@ -406,7 +406,7 @@
                 if (pagination) {
                     $('#paginationInfo').html(
                         `Showing <b>${pagination.total > 0 ? (pagination.current_page - 1) * pagination.per_page + 1 : 0}</b> to <b>${Math.min(pagination.current_page * pagination.per_page, pagination.total)}</b> of <b>${pagination.total}</b> entries`
-                        );
+                    );
                 }
             }
 
