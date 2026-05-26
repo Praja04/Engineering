@@ -21,15 +21,6 @@
             background-color: rgba(41, 156, 219, .08);
         }
 
-        .detail-item {
-            transition: all .2s ease;
-        }
-
-        .detail-item:hover {
-            border-color: #299cdb !important;
-            background-color: rgba(41, 156, 219, .05);
-        }
-
         .pagination .page-link {
             border-radius: 6px !important;
             margin: 0 2px;
@@ -51,6 +42,11 @@
 
         .pagination .page-item.disabled .page-link {
             color: #adb5bd;
+        }
+
+        .detail-table td,
+        .detail-table th {
+            vertical-align: middle;
         }
     </style>
 @endsection
@@ -123,9 +119,8 @@
                                         <i class="mdi mdi-flask-empty-outline fs-3"></i>
                                     </div>
                                     <div>
-                                        <p class="text-muted mb-1 small">Parameter Diuji</p>
-                                        <h5 class="fw-bold mb-0">5 Parameter</h5>
-                                        <small class="text-muted">COD, TSS, pH, EC, DO</small>
+                                        <p class="text-muted mb-1 small">Parameter Tersedia</p>
+                                        <h5 class="fw-bold mb-0">{{ $parameters->count() }} Parameter</h5>
                                     </div>
                                 </div>
                             </div>
@@ -161,17 +156,16 @@
                                     <tr>
                                         <th class="fw-semibold">No</th>
                                         <th class="fw-semibold">Tanggal</th>
-                                        <th class="fw-semibold text-center">COD (mg/L)</th>
-                                        <th class="fw-semibold text-center">TSS (mg/L)</th>
-                                        <th class="fw-semibold text-center">pH</th>
-                                        <th class="fw-semibold text-center">EC (µS/cm)</th>
-                                        <th class="fw-semibold text-center">DO (mg/L)</th>
+                                        <th class="fw-semibold">Shift</th>
+                                        <th class="fw-semibold">Area</th>
+                                        <th class="fw-semibold">Parameter Uji</th>
+                                        <th class="fw-semibold">Dibuat Oleh</th>
                                         <th class="fw-semibold text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="analisaTableBody">
                                     <tr>
-                                        <td colspan="8" class="text-center py-5">
+                                        <td colspan="7" class="text-center py-5">
                                             <div class="spinner-border text-info" role="status">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
@@ -192,85 +186,23 @@
                 </div>
             </div>
 
-            {{-- =========================================================== --}}
             {{-- MODAL: Detail Analisa --}}
-            {{-- =========================================================== --}}
             <div class="modal fade" id="detailAnalisaModal" tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content border-0 shadow">
-                        <div class="modal-header">
-                            <h5 class="modal-title">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title text-info">
                                 <i class="mdi mdi-flask-outline me-2"></i>Detail Data Analisa WWTP
                             </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body p-4" id="modalAnalisaContent"></div>
-                        <div class="modal-footer">
+                        <div class="modal-body p-4" id="modalAnalisaContent">
+                            <!-- Detail content loaded via AJAX -->
+                        </div>
+                        <div class="modal-footer bg-light">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
                             <button type="button" class="btn btn-danger" id="btnDelete" style="display:none;">
                                 <i class="mdi mdi-trash-can me-2"></i>Hapus Data
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- =========================================================== --}}
-            {{-- MODAL: Edit Analisa --}}
-            {{-- =========================================================== --}}
-            <div class="modal fade" id="editAnalisaModal" tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content border-0 shadow">
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                <i class="mdi mdi-pencil me-2"></i>Edit Data Analisa WWTP
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body p-4">
-                            <form id="editAnalisaForm">
-                                <input type="hidden" id="edit_id">
-                                <div class="row mb-3">
-                                    <div class="col-md-12">
-                                        <label class="form-label fw-semibold">Tanggal <span
-                                                class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="edit_tanggal" required>
-                                    </div>
-                                </div>
-                                <div class="row g-3">
-                                    <!-- COD -->
-                                    <div class="col-md-4">
-                                        <label class="form-label fw-semibold">COD (mg/L)</label>
-                                        <input type="number" step="0.01" class="form-control" id="edit_cod">
-                                    </div>
-                                    <!-- TSS -->
-                                    <div class="col-md-4">
-                                        <label class="form-label fw-semibold">TSS (mg/L)</label>
-                                        <input type="number" step="0.01" class="form-control" id="edit_tss">
-                                    </div>
-                                    <!-- pH -->
-                                    <div class="col-md-4">
-                                        <label class="form-label fw-semibold">pH</label>
-                                        <input type="number" step="0.01" class="form-control" id="edit_ph"
-                                            min="0" max="14">
-                                    </div>
-                                    <!-- EC -->
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">EC (µS/cm)</label>
-                                        <input type="number" step="0.01" class="form-control" id="edit_ec">
-                                    </div>
-                                    <!-- DO -->
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">DO (mg/L)</label>
-                                        <input type="number" step="0.01" class="form-control" id="edit_do">
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                            <button type="button" class="btn btn-primary" id="btnSaveEdit">
-                                <i class="mdi mdi-content-save me-2"></i>Simpan Perubahan
                             </button>
                         </div>
                     </div>
@@ -286,7 +218,7 @@
     <script>
         $(document).ready(function() {
             const PER_PAGE = 10;
-            const userJabatan = "{{ Auth::user()->jabatan }}";
+            const userJabatan = "{{ Auth::user()->jabatan ?? '' }}";
             const canEditDelete = userJabatan !== 'operator';
 
             const state = {
@@ -299,10 +231,13 @@
 
             let currentId = null;
 
+            // Use the parameter definitions from PHP
+            const parametersList = @json($parameters);
+            const standards = @json($standards ?? []);
+
             // Init Load
             loadData(1);
 
-            // Load data function
             function loadData(page) {
                 page = page || state.currentPage;
 
@@ -313,7 +248,7 @@
                 if (state.bulan) params.bulan = state.bulan;
                 if (state.search) params.search = state.search;
 
-                showLoading('#analisaTableBody', 8);
+                showLoading('#analisaTableBody', 7);
                 clearPagination('#analisaPaginationInfo', '#analisaPagination');
 
                 $.ajax({
@@ -336,13 +271,12 @@
                 });
             }
 
-            // Render Table Body
             function renderTable(data, from) {
                 const tbody = $('#analisaTableBody');
                 tbody.empty();
 
                 if (!data || !data.length) {
-                    tbody.append(`<tr><td colspan="8" class="text-center py-4 text-muted">
+                    tbody.append(`<tr><td colspan="7" class="text-center py-4 text-muted">
                     <i class="mdi mdi-inbox me-2"></i>Tidak ada data analisa</td></tr>`);
                     return;
                 }
@@ -351,37 +285,40 @@
                     const no = (from || 1) + idx;
                     let btns = `<button class="btn btn-sm btn-outline-info me-1"
                                 onclick="showDetail(${item.id})" title="Lihat Detail">
-                                <i class="mdi mdi-eye"></i></button>`;
+                                <i class="mdi mdi-eye"></i> Detail</button>`;
                     if (canEditDelete) {
                         btns += `
-                            <button class="btn btn-sm btn-outline-success me-1"
-                                onclick="showEdit(${item.id})" title="Edit">
-                            <i class="mdi mdi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger"
                                 onclick="confirmDelete(${item.id})" title="Hapus">
-                            <i class="mdi mdi-trash-can"></i></button>`;
+                            <i class="mdi mdi-trash-can"></i> Hapus</button>`;
                     }
 
-                    const num = (number) => {
-                        if (number == null) return '-';
+                    // Get list of filled parameter names
+                    let paramNames = new Set();
+                    if (item.details && item.details.length > 0) {
+                        item.details.forEach(d => {
+                            if (d.parameter) paramNames.add(d.parameter.parameter_name);
+                        });
+                    }
 
-                        const parsed = parseFloat(number);
-
-                        // Jika desimal semuanya 0, hilangkan
-                        return parsed % 1 === 0 ?
-                            parsed.toFixed(0) :
-                            parsed.toString();
-                    };
+                    let paramBadges = '';
+                    if (paramNames.size > 0) {
+                        paramNames.forEach(name => {
+                            paramBadges +=
+                                `<span class="badge bg-soft-info text-info me-1">${name}</span>`;
+                        });
+                    } else {
+                        paramBadges = `<span class="text-muted small">-</span>`;
+                    }
 
                     tbody.append(`
                         <tr class="data-row">
                             <td>${no}</td>
-                            <td>${formatDate(item.tanggal)}</td>
-                            <td class="text-center fw-bold">${num(item.cod)}</td>
-                            <td class="text-center fw-bold">${num(item.tss)}</td>
-                            <td class="text-center fw-bold text-info">${num(item.ph)}</td>
-                            <td class="text-center fw-bold">${num(item.ec)}</td>
-                            <td class="text-center fw-bold">${num(item.do)}</td>
+                            <td><span class="badge bg-light text-dark border"><i class="mdi mdi-calendar me-1"></i>${formatDate(item.analisa_date)}</span></td>
+                            <td>${item.shift ? 'Shift ' + item.shift : '-'}</td>
+                            <td>${item.area || '-'}</td>
+                            <td>${paramBadges}</td>
+                            <td>${item.creator ? item.creator.username : '-'}</td>
                             <td class="text-center">${btns}</td>
                         </tr>`);
                 });
@@ -413,139 +350,152 @@
                 loadData(1);
             });
 
-            // Detail Modal
             window.showDetail = function(id) {
+                $('#modalAnalisaContent').html(`
+                     <div class="text-center py-5">
+                         <div class="spinner-border text-info" role="status">
+                             <span class="visually-hidden">Loading...</span>
+                         </div>
+                     </div>
+                 `);
+                new bootstrap.Modal(document.getElementById('detailAnalisaModal')).show();
+
                 $.ajax({
                     url: `/api/wwtp-analisa/${id}`,
                     method: 'GET',
                     success: function(record) {
-
-                        const num = (number) => {
-                            if (number == null) return '-';
-
-                            const parsed = parseFloat(number);
-
-                            // Jika desimal semuanya 0, hilangkan
-                            return parsed % 1 === 0 ?
-                                parsed.toFixed(0) :
-                                parsed.toString();
-                        };
-
                         currentId = id;
-                        $('#modalAnalisaContent').html(`
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-6">
-                                    <div class="info-box p-3 bg-light rounded">
-                                        <p class="text-muted small mb-1">Tanggal Analisa</p>
-                                        <p class="fw-bold mb-0 fs-5">${formatDate(record.tanggal)}</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-box p-3 bg-light rounded">
-                                        <p class="text-muted small mb-1">Waktu Input</p>
-                                        <p class="fw-bold mb-0">${formatDateTime(record.created_at)}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h6 class="fw-bold mb-3 text-info">Hasil Pengukuran Parameter</h6>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="detail-item p-4 border rounded bg-light text-center">
-                                        <span class="text-muted small">COD</span>
-                                        <p class="fw-bold fs-3 mb-0 text-info">${num(record.cod)} <small class="text-muted fs-6">mg/L</small></p>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="detail-item p-4 border rounded bg-light text-center">
-                                        <span class="text-muted small">TSS</span>
-                                        <p class="fw-bold fs-3 mb-0 text-info">${num(record.tss)} <small class="text-muted fs-6">mg/L</small></p>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="detail-item p-4 border rounded bg-light text-center">
-                                        <span class="text-muted small">pH</span>
-                                        <p class="fw-bold fs-3 mb-0 text-info">${num(record.ph)}</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="detail-item p-4 border rounded bg-light text-center">
-                                        <span class="text-muted small">EC</span>
-                                        <p class="fw-bold fs-3 mb-0 text-info">${num(record.ec)} <small class="text-muted fs-6">µS/cm</small></p>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="detail-item p-4 border rounded bg-light text-center">
-                                        <span class="text-muted small">DO</span>
-                                        <p class="fw-bold fs-3 mb-0 text-info">${num(record.do)} <small class="text-muted fs-6">mg/L</small></p>
-                                    </div>
-                                </div>
-                            </div>`);
+
+                        let headerHtml = `
+                             <div class="row g-3 mb-4">
+                                 <div class="col-md-3">
+                                     <div class="info-box p-3 bg-light rounded border border-info h-100">
+                                         <p class="text-muted small mb-1">Tanggal Analisa</p>
+                                         <p class="fw-bold mb-0 fs-6">${formatDate(record.analisa_date)}</p>
+                                     </div>
+                                 </div>
+                                 <div class="col-md-3">
+                                     <div class="info-box p-3 bg-light rounded border border-info h-100">
+                                         <p class="text-muted small mb-1">Shift</p>
+                                         <p class="fw-bold mb-0 fs-6">${record.shift ? 'Shift ' + record.shift : '-'}</p>
+                                     </div>
+                                 </div>
+                                 <div class="col-md-3">
+                                     <div class="info-box p-3 bg-light rounded border border-info h-100">
+                                         <p class="text-muted small mb-1">Area</p>
+                                         <p class="fw-bold mb-0 fs-6">${record.area || '-'}</p>
+                                     </div>
+                                 </div>
+                                 <div class="col-md-3">
+                                     <div class="info-box p-3 bg-light rounded border border-info h-100">
+                                         <p class="text-muted small mb-1">Dibuat Oleh</p>
+                                         <p class="fw-bold mb-0 fs-6">${record.creator ? record.creator.name : '-'}</p>
+                                     </div>
+                                 </div>
+                             </div>
+                             <h6 class="fw-bold mb-3 text-info border-bottom pb-2">Matrix Pengukuran Point</h6>
+                         `;
+
+                        // Reorganize data into matrix: pointName -> { pointId, params: { paramId -> value } }
+                        // Also keep track of active parameter IDs that have data in this record
+                        let matrixData = {};
+                        let activeParamIds = new Set();
+                        if (record.details && record.details.length > 0) {
+                            record.details.forEach(d => {
+                                let pointName = d.point ? d.point.point_name :
+                                    'Unknown Point';
+                                let pointId = d.point_id;
+                                let paramId = d.parameter_id;
+
+                                if (!matrixData[pointName]) {
+                                    matrixData[pointName] = {
+                                        pointId: pointId,
+                                        params: {}
+                                    };
+                                }
+                                matrixData[pointName].params[paramId] = d.hasil_analisa;
+                                activeParamIds.add(paramId);
+                            });
+                        }
+
+                        // Only display columns for parameters that actually have data
+                        const activeParamsList = parametersList.filter(p => activeParamIds.has(p
+                            .id));
+
+                        // Generate Table Headers based on active parameters only
+                        let thHtml = '';
+                        activeParamsList.forEach(p => {
+                            thHtml +=
+                                `<th class="text-center">${p.parameter_name} <br><small class="text-muted">(${p.unit})</small></th>`;
+                        });
+
+                        let trHtml = '';
+                        // Loop each point that has data
+                        for (const [pointName, pointInfo] of Object.entries(matrixData)) {
+                            let tdHtml = '';
+                            const pointId = pointInfo.pointId;
+
+                            activeParamsList.forEach(p => {
+                                const val = pointInfo.params[p.id];
+                                if (val !== undefined && val !== null) {
+                                    const key = pointId + '_' + p.id;
+                                    const stdVal = standards[key];
+                                    let stdDisplay = '';
+                                    if (stdVal !== undefined && stdVal !== null) {
+                                        const parsedStd = parseFloat(stdVal);
+                                        const displayStd = parsedStd % 1 === 0 ? parsedStd
+                                            .toFixed(0) : parsedStd.toString();
+                                        stdDisplay =
+                                            `<div class="text-muted mt-1 small" style="font-size: 0.72rem; font-weight: normal;">(Std: ${displayStd})</div>`;
+                                    }
+                                    tdHtml +=
+                                        `<td class="text-center align-middle"><div class="fw-semibold text-info fs-6">${num(val)}</div>${stdDisplay}</td>`;
+                                } else {
+                                    tdHtml +=
+                                        `<td class="text-center align-middle text-muted">-</td>`;
+                                }
+                            });
+
+                            trHtml += `
+                                 <tr>
+                                     <td class="fw-bold bg-light align-middle">${pointName}</td>
+                                     ${tdHtml}
+                                 </tr>
+                             `;
+                        }
+
+                        if (Object.keys(matrixData).length === 0) {
+                            trHtml =
+                                `<tr><td colspan="${activeParamsList.length + 1}" class="text-center py-4 text-muted">Tidak ada data hasil pengukuran</td></tr>`;
+                        }
+
+                        let pointsHtml = `
+                             <div class="table-responsive mt-3">
+                                 <table class="table table-bordered table-hover detail-table">
+                                     <thead class="table-light">
+                                        <tr>
+                                            <th>Point Pengukuran</th>
+                                            ${thHtml}
+                                        </tr>
+                                     </thead>
+                                     <tbody>
+                                         ${trHtml}
+                                     </tbody>
+                                 </table>
+                             </div>
+                         `;
+
+                        $('#modalAnalisaContent').html(headerHtml + pointsHtml);
                         canEditDelete ? $('#btnDelete').show() : $('#btnDelete').hide();
-                        new bootstrap.Modal(document.getElementById('detailAnalisaModal')).show();
                     },
                     error: function() {
-                        showError('Gagal memuat detail data analisa');
+                        $('#modalAnalisaContent').html(
+                            '<div class="alert alert-danger">Gagal memuat detail data analisa</div>'
+                            );
                     }
                 });
             };
 
-            // Edit Modal
-            window.showEdit = function(id) {
-                $.ajax({
-                    url: `/api/wwtp-analisa/${id}`,
-                    method: 'GET',
-                    success: function(record) {
-                        currentId = id;
-                        $('#edit_id').val(record.id);
-                        $('#edit_tanggal').val(record.tanggal);
-                        $('#edit_cod').val(record.cod);
-                        $('#edit_tss').val(record.tss);
-                        $('#edit_ph').val(record.ph);
-                        $('#edit_ec').val(record.ec);
-                        $('#edit_do').val(record.do);
-                        new bootstrap.Modal(document.getElementById('editAnalisaModal')).show();
-                    },
-                    error: function() {
-                        showError('Gagal memuat data untuk diedit');
-                    }
-                });
-            };
-
-            // Submit Edit
-            $('#btnSaveEdit').on('click', function() {
-                const id = $('#edit_id').val();
-                const btn = $(this);
-                const orig = btn.html();
-                btn.prop('disabled', true).html(
-                    '<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
-
-                $.ajax({
-                    url: `/api/wwtp-analisa/${id}`,
-                    method: 'POST',
-                    data: {
-                        _token: $('input[name="_token"]').val(),
-                        tanggal: $('#edit_tanggal').val(),
-                        cod: $('#edit_cod').val(),
-                        tss: $('#edit_tss').val(),
-                        ph: $('#edit_ph').val(),
-                        ec: $('#edit_ec').val(),
-                        do: $('#edit_do').val(),
-                    },
-                    success: function() {
-                        $('#editAnalisaModal').modal('hide');
-                        showSuccess('Data analisa berhasil diperbarui');
-                        loadData(state.currentPage);
-                    },
-                    error: function(xhr) {
-                        showErrorFromXhr(xhr);
-                    },
-                    complete: function() {
-                        btn.prop('disabled', false).html(orig);
-                    }
-                });
-            });
-
-            // Delete from Detail
             $('#btnDelete').on('click', function() {
                 if (!currentId) return;
                 confirmSwal('Hapus data analisa ini?', function() {
@@ -567,7 +517,6 @@
                 });
             });
 
-            // Delete directly
             window.confirmDelete = function(id) {
                 confirmSwal('Hapus data analisa ini?', function() {
                     $.ajax({
@@ -587,7 +536,6 @@
                 });
             };
 
-            // Shared pagination utilities
             function renderPaginationInfo(selector, response) {
                 if (!response.total) {
                     $(selector).text('');
@@ -665,24 +613,18 @@
                 $(paginationSelector).empty();
             }
 
-            // Helpers
+            const num = (number) => {
+                if (number == null || number === '') return '-';
+                const parsed = parseFloat(number);
+                return parsed % 1 === 0 ? parsed.toFixed(0) : parsed.toString();
+            };
+
             function formatDate(dateString) {
                 if (!dateString) return '-';
                 return new Date(dateString).toLocaleDateString('id-ID', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
-                });
-            }
-
-            function formatDateTime(dateString) {
-                if (!dateString) return '-';
-                return new Date(dateString).toLocaleDateString('id-ID', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
                 });
             }
 
@@ -718,14 +660,6 @@
                     text: msg,
                     confirmButtonColor: '#d33'
                 });
-            }
-
-            function showErrorFromXhr(xhr) {
-                const err = xhr.responseJSON;
-                let msg = 'Terjadi kesalahan saat menyimpan data!';
-                if (err?.message) msg = err.message;
-                else if (err?.errors) msg = Object.values(err.errors).flat().join('\n');
-                showError(msg);
             }
         });
     </script>

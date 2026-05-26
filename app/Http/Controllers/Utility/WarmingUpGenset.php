@@ -430,9 +430,8 @@ class WarmingUpGenset extends Controller
         $query = WarmingUpGensetModel::with(['operator', 'foreman', 'supervisor'])
             ->orderBy('tanggal_laporan', 'asc');
 
-        if ($request->filled('bulan') && $request->filled('tahun')) {
-            $query->whereYear('tanggal_laporan', $request->tahun)
-                ->whereMonth('tanggal_laporan', $request->bulan);
+        if ($request->filled('tahun')) {
+            $query->whereYear('tanggal_laporan', $request->tahun);
         }
 
         $data = $query->get();

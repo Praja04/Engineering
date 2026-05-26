@@ -157,6 +157,7 @@ Route::prefix('wwtp-sludge')->group(function () {
 
 // WWTP Analisa Routes
 Route::prefix('wwtp-analisa')->group(function () {
+    Route::get('/check-filled', [WWTPControllerAnalisa::class, 'checkFilledParameters']);
     Route::post('/', [WWTPControllerAnalisa::class, 'store']);
     Route::delete('/{id}', [WWTPControllerAnalisa::class, 'destroy']);
     Route::post('/{id}', [WWTPControllerAnalisa::class, 'update']);
