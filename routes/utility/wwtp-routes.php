@@ -18,6 +18,7 @@ Route::middleware('auth')->group(function () {
   Route::get('/wwtp/data_sludge', [WWTPControllerSludge::class, 'data_sludge'])->name('wwtp.data_sludge');
   Route::get('/wwtp/form_analisa', [WWTPControllerAnalisa::class, 'form_analisa'])->name('wwtp.form_analisa');
   Route::get('/wwtp/data_analisa', [WWTPControllerAnalisa::class, 'data_analisa'])->name('wwtp.data_analisa');
+  Route::get('/wwtp/manage_standar_analisa', [WWTPControllerAnalisa::class, 'manage_standar'])->name('wwtp.manage_standar_analisa')->middleware('access');
   Route::get('/wwtp/export', [WWTPController::class, 'export'])->name('wwtp.export');
 
   Route::prefix('wwtp-analisa')->group(function () {

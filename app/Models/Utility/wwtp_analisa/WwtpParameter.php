@@ -12,4 +12,9 @@ class WwtpParameter extends Model
         'parameter_name',
         'unit'
     ];
+
+    public function standards()
+    {
+        return $this->hasMany(WwtpStandard::class, 'parameter_id');
+    }
 }

@@ -4,29 +4,15 @@
 
 @section('styles')
     <style>
-        .card.border-info {
-            border-color: #299cdb !important;
+        .analisa-shell {
+            max-width: 1180px;
+            margin: 0 auto;
         }
 
         .form-control:focus,
         .form-select:focus {
             box-shadow: 0 0 0 0.15rem rgba(41, 156, 219, 0.25);
             border-color: #299cdb;
-        }
-
-        .input-group-text {
-            background-color: #f8f9fa;
-            color: #495057;
-        }
-
-        .btn-info {
-            background-color: #299cdb;
-            border-color: #299cdb;
-        }
-
-        .btn-info:hover {
-            background-color: #2284ba;
-            border-color: #2284ba;
         }
 
         .avatar-lg {
@@ -42,21 +28,129 @@
             height: 100%;
         }
 
-        .bg-soft-success {
-            background-color: rgba(10, 179, 156, 0.1) !important;
+        .entry-panel {
+            border: 1px solid #eef2f7;
+            border-radius: 8px;
+            /* background: #fff; */
         }
 
-        .alert-info {
-            background-color: rgba(41, 156, 219, 0.1);
-            border-left: 4px solid #299cdb;
+        .entry-panel-header {
+            border-bottom: 1px solid #eef2f7;
+            /* background: #f8fafc; */
+            border-radius: 8px 8px 0 0;
+        }
+
+        .section-label {
+            color: #667085;
+            font-size: .76rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .parameter-summary {
+            border: 1px solid #e6f2fb;
+            border-radius: 8px;
+        }
+
+        .metric-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            border-radius: 999px;
+            padding: .35rem .7rem;
+            font-size: .78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .metric-chip.info {
+            background: rgba(41, 156, 219, .12);
+            color: #2078aa;
+        }
+
+        .metric-chip.neutral {
+            background: #f2f4f7;
+            color: #475467;
+        }
+
+        .metric-chip.success {
+            background: rgba(10, 179, 156, .12);
+            color: #087d6f;
+        }
+
+        .table-input {
+            margin-bottom: 0;
+        }
+
+        .table-input thead th {
+            background: #f8fafc;
+            color: #475467;
+            font-size: .76rem;
+            font-weight: 700;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e9ecef;
+            white-space: nowrap;
         }
 
         .table-input td {
             vertical-align: middle;
+            border-color: #eef2f7;
         }
 
         .table-input input[type="number"] {
-            min-width: 120px;
+            min-width: 170px;
+            max-width: 220px;
+            margin-left: auto;
+        }
+
+        .point-index {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: #f2f4f7;
+            color: #475467;
+            font-weight: 700;
+        }
+
+        .empty-state {
+            min-height: 220px;
+            border: 1px dashed #cfe4f4;
+            border-radius: 8px;
+            background: #f8fbfd;
+        }
+
+        .empty-state-icon {
+            width: 56px;
+            height: 56px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(41, 156, 219, .12);
+            color: #299cdb;
+        }
+
+        .form-actions {
+            position: sticky;
+            bottom: 0;
+            z-index: 3;
+            backdrop-filter: blur(6px);
+            border-top: 1px solid #eef2f7;
+        }
+
+        @media (max-width: 767.98px) {
+            .page-title-box {
+                gap: 1rem;
+            }
+
+            .table-input input[type="number"] {
+                min-width: 150px;
+            }
         }
     </style>
 @endsection
@@ -66,57 +160,105 @@
         <div class="container-fluid">
 
             <!-- Page Heading -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <div>
-                            <h4 class="mb-1">Tambah Data Analisa WWTP</h4>
-                            <p class="text-muted mb-0">Input hasil analisa parameter air limbah per parameter</p>
-                        </div>
-                        <div>
-                            <a href="{{ url('/wwtp/data_analisa') }}" class="btn btn-outline-secondary">
-                                <i class="mdi mdi-arrow-left me-1"></i> Kembali ke Data
-                            </a>
+            <div class="analisa-shell">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                            <div>
+                                <h4 class="mb-1">Tambah Data Analisa WWTP</h4>
+                                <p class="text-muted mb-0">Input hasil analisa air limbah berdasarkan parameter dan point
+                                    pengukuran.</p>
+                            </div>
+                            <div>
+                                <a href="{{ url('/wwtp/data_analisa') }}" class="btn btn-outline-secondary">
+                                    <i class="mdi mdi-arrow-left me-1"></i> Kembali ke Data
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body p-4">
-                            <form id="analisaForm">
-                                @csrf
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-0">
+                                <form id="analisaForm">
+                                    @csrf
 
-                                <!-- Header Data section -->
-                                <div class="mb-4">
-                                    <div class="row g-3">
-                                        <!-- Date Selection -->
-                                        <div class="col-md-6 mb-3">
-                                            <label for="analisa_date" class="form-label fw-semibold">
-                                                Tanggal Analisa <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="date" class="form-control" id="analisa_date" name="analisa_date"
-                                                required>
-                                        </div>
+                                    <div class="p-4 pb-3">
+                                        <div class="entry-panel">
+                                            <div class="entry-panel-header px-4 py-3">
+                                                <div
+                                                    class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                    <div>
+                                                        <div class="section-label mb-1">Header Analisa</div>
+                                                        <h5 class="mb-0">Tanggal dan Parameter</h5>
+                                                    </div>
+                                                    <span class="metric-chip neutral" id="pointCountChip">
+                                                        <i class="mdi mdi-map-marker-radius-outline"></i>
+                                                        {{ $points->count() }} point
+                                                    </span>
+                                                </div>
+                                            </div>
 
-                                        <div class="col-md-6 mb-3">
-                                            <label for="parameter_id" class="form-label fw-semibold">
-                                                Parameter <span class="text-danger">*</span>
-                                            </label>
-                                            <select class="form-select" id="parameter_id" name="parameter_id" required>
-                                                <option value="">-- Pilih Parameter --</option>
-                                                @foreach ($parameters as $param)
-                                                    <option value="{{ $param->id }}">{{ $param->parameter_name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                            <div class="p-4">
+                                                <div class="row g-3 align-items-end">
+                                                    <div class="col-lg-6">
+                                                        <label for="analisa_date" class="form-label fw-semibold">
+                                                            Tanggal Analisa <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">
+                                                                <i class="mdi mdi-calendar-month-outline"></i>
+                                                            </span>
+                                                            <input type="date" class="form-control" id="analisa_date"
+                                                                name="analisa_date" required>
+                                                        </div>
+                                                    </div>
 
-                                        </div>
+                                                    <div class="col-lg-6">
+                                                        <label for="parameter_id" class="form-label fw-semibold">
+                                                            Parameter <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">
+                                                                <i class="mdi mdi-flask-empty-outline"></i>
+                                                            </span>
+                                                            <select class="form-select" id="parameter_id"
+                                                                name="parameter_id" required>
+                                                                <option value="">-- Pilih Parameter --</option>
+                                                                @foreach ($parameters as $param)
+                                                                    <option value="{{ $param->id }}">
+                                                                        {{ $param->parameter_name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                        <!-- Shift Selection -->
-                                        {{-- <div class="col-md-4 mb-3">
+                                                <div class="parameter-summary mt-4 px-3 py-3" id="parameterSummary"
+                                                    style="display: none;">
+                                                    <div
+                                                        class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                        <div>
+                                                            <div class="section-label mb-1">Parameter Dipilih</div>
+                                                            <div class="fw-bold fs-5" id="selectedParameterName">-</div>
+                                                        </div>
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            <span class="metric-chip info" id="selectedParameterUnit">
+                                                                <i class="mdi mdi-ruler-square"></i> -
+                                                            </span>
+                                                            <span class="metric-chip success" id="filledPointChip">
+                                                                <i class="mdi mdi-table-check"></i> Siap input
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Shift Selection -->
+                                            {{-- <div class="col-md-4 mb-3">
                                             <label for="shift" class="form-label fw-semibold">
                                                 Shift <span class="text-danger">*</span>
                                             </label>
@@ -128,59 +270,78 @@
                                             </select>
                                         </div> --}}
 
-                                        <!-- Area -->
-                                        {{-- <div class="col-md-4 mb-3">
+                                            <!-- Area -->
+                                            {{-- <div class="col-md-4 mb-3">
                                             <label for="area" class="form-label fw-semibold">
                                                 Area
                                             </label>
                                             <input type="text" class="form-control" id="area" name="area" placeholder="Masukkan Area (Opsional, e.g. WWTP 1)">
                                         </div> --}}
-                                    </div>
-                                </div>
-
-                                <!-- Points & Standard Values section -->
-                                <div class="mb-4">
-                                    <h5 class="mb-3 text-info border-bottom pb-2">
-                                        <i class="mdi mdi-table-large me-2"></i>Hasil Analisa per Point Pengukuran
-                                    </h5>
-
-                                    <!-- Dynamic points input table -->
-                                    <div id="points-container" class="table-responsive" style="display: none;">
-                                        <table class="table table-bordered table-hover table-input align-middle">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th style="width: 30%;">Point Pengukuran</th>
-                                                    <th style="width: 25%;" class="text-center">Standard</th>
-                                                    <th style="width: 20%;" class="text-center">Satuan</th>
-                                                    <th style="width: 25%;" class="text-center">Hasil Analisa</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="points-tbody">
-                                                <!-- Populated via Javascript -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <!-- Placeholder if no parameter is selected -->
-                                    <div id="no-param-alert" class="alert alert-info border-0" role="alert">
-                                        <div class="d-flex align-items-center">
-                                            <i class="mdi mdi-information-outline fs-4 me-2 text-info"></i>
-                                            <span>Silakan pilih parameter terlebih dahulu untuk mengisi hasil
-                                                analisa.</span>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Submit Buttons -->
-                                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                    <button type="reset" class="btn btn-outline-danger">
-                                        <i class="mdi mdi-refresh me-1"></i> Reset Form
-                                    </button>
-                                    <button type="submit" class="btn btn-info text-white" id="btnSubmitAnalisa">
-                                        <i class="mdi mdi-content-save me-1"></i> Simpan Data Analisa
-                                    </button>
-                                </div>
-                            </form>
+                                    <!-- Points & Standard Values section -->
+                                    <div class="px-4 pb-4">
+                                        <div class="entry-panel">
+                                            <div class="entry-panel-header px-4 py-3">
+                                                <div
+                                                    class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                    <div>
+                                                        <div class="section-label mb-1">Hasil Analisa</div>
+                                                        <h5 class="mb-0">Point Pengukuran</h5>
+                                                    </div>
+                                                    <a href="{{ url('/wwtp/manage_standar_analisa') }}"
+                                                        class="btn btn-soft-info btn-sm">
+                                                        <i class="mdi mdi-database-cog-outline me-1"></i> Master Data
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <!-- Dynamic points input table -->
+                                            <div id="points-container" class="table-responsive" style="display: none;">
+                                                <table class="table table-hover table-input align-middle">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="text-center">No</th>
+                                                            <th>Point Pengukuran</th>
+                                                            <th class="text-center">Standar</th>
+                                                            <th class="text-center">Satuan</th>
+                                                            <th class="text-end">Hasil Analisa</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="points-tbody">
+                                                        <!-- Populated via Javascript -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- Placeholder if no parameter is selected -->
+                                            <div id="no-param-alert"
+                                                class="empty-state d-flex align-items-center justify-content-center text-center m-4"
+                                                role="alert">
+                                                <div>
+                                                    <div class="empty-state-icon mb-3">
+                                                        <i class="mdi mdi-flask-plus-outline fs-2"></i>
+                                                    </div>
+                                                    <h5 class="mb-1">Pilih parameter</h5>
+                                                    <p class="text-muted mb-0">Daftar point pengukuran akan tampil setelah
+                                                        parameter dipilih.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Buttons -->
+                                    <div class="form-actions d-flex justify-content-end gap-2 p-4">
+                                        <button type="reset" class="btn btn-outline-danger">
+                                            <i class="mdi mdi-refresh me-1"></i> Reset Form
+                                        </button>
+                                        <button type="submit" class="btn btn-info text-white" id="btnSubmitAnalisa">
+                                            <i class="mdi mdi-content-save me-1"></i> Simpan Data Analisa
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -200,7 +361,8 @@
                         </div>
                     </div>
                     <h4 class="mb-3">Data Berhasil Disimpan!</h4>
-                    <p class="text-muted mb-4" id="successMessage">Data analisa WWTP telah berhasil disimpan ke sistem.</p>
+                    <p class="text-muted mb-4" id="successMessage">Data analisa WWTP telah berhasil disimpan ke sistem.
+                    </p>
                     <div class="d-flex gap-2 justify-content-center">
                         <button type="button" class="btn btn-outline-info" data-bs-dismiss="modal">
                             Tambah Data Lagi
@@ -246,22 +408,31 @@
                 const parameterId = $('#parameter_id').val();
                 const tbody = $('#points-tbody');
 
+                console.log(parameterId);
+
                 tbody.empty();
 
-                if (!parameterId) {
+                if (parameterId === '' || parameterId === null) {
                     $('#points-container').hide();
-                    $('#no-param-alert').show();
+                    $('#no-param-alert').removeClass('d-none');
+                    $('#parameterSummary').hide();
                     return;
                 }
 
-                $('#no-param-alert').hide();
+                $('#no-param-alert').addClass('d-none');
                 $('#points-container').show();
+                $('#parameterSummary').show();
 
                 const param = parameterMap[parameterId];
                 const unit = param ? param.unit : '';
                 const unitDisplay = unit ? '' + unit : '-';
+                const parameterName = param ? param.parameter_name : '-';
 
-                points.forEach(function(point) {
+                $('#selectedParameterName').text(parameterName);
+                $('#selectedParameterUnit').html(`<i class="mdi mdi-ruler-square"></i> ${escapeHtml(unitDisplay)}`);
+                $('#filledPointChip').html(`<i class="mdi mdi-table-check"></i> ${points.length} point siap input`);
+
+                points.forEach(function(point, index) {
                     const key = point.id + '_' + parameterId;
                     const stdVal = standards[key];
                     let stdDisplay = '';
@@ -271,21 +442,29 @@
                         const displayStd = parsedStd % 1 === 0 ? parsedStd.toFixed(0) : parsedStd
                             .toString();
                         stdDisplay =
-                            `<span class="badge bg-soft-info text-info fs-6 px-3 py-2">${displayStd}${unitDisplay}</span>`;
+                            `<span class="metric-chip info">${displayStd} ${escapeHtml(unitDisplay)}</span>`;
                     } else {
-                        stdDisplay = `<span class="text-muted small">-</span>`;
+                        stdDisplay = `<span class="metric-chip neutral">Belum diset</span>`;
                     }
 
                     const row = `
                         <tr>
-                            <td class="fw-semibold text-dark">${point.point_name}</td>
-                            <td class="text-center">${stdDisplay}</td>
-                            <td class="text-center">${unitDisplay}</td>
+                            <td class="text-center"><span class="point-index">${index + 1}</span></td>
                             <td>
-                                <input type="number" step="0.01" class="form-control" 
-                                    name="hasil_analisa[${point.id}][${parameterId}]" 
-                                    placeholder="Masukkan hasil" 
-                                    min="0" style="width: 250px;margin:0 auto">
+                                <div class="fw-semibold text-dark">${escapeHtml(point.point_name)}</div>
+                            </td>
+                            <td class="text-center">${stdDisplay}</td>
+                            <td class="text-center">
+                                <span class="metric-chip neutral">${escapeHtml(unitDisplay)}</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="input-group">
+                                    <input type="number" step="0.01" class="form-control"
+                                        name="hasil_analisa[${point.id}][${parameterId}]"
+                                        placeholder="0.00"
+                                        min="0">
+                                    <span class="input-group-text">${escapeHtml(unitDisplay)}</span>
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -422,6 +601,15 @@
                     rebuildPointsTable();
                 }, 10);
             });
+
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
         });
     </script>
 @endsection
