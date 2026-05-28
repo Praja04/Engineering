@@ -31,7 +31,7 @@ class WWTPControllerAnalisa extends Controller
     {
         $parameters = WwtpParameter::all();
         $standardsData = \App\Models\Utility\wwtp_analisa\WwtpStandard::all();
-        
+
         $standards = [];
         foreach ($standardsData as $std) {
             $standards[$std->point_id . '_' . $std->parameter_id] = $std->standard_value;
@@ -105,10 +105,10 @@ class WWTPControllerAnalisa extends Controller
             $analisa = WwtpAnalisa::firstOrCreate(
                 [
                     'analisa_date' => $request->analisa_date,
-                    'shift'        => $request->shift,
+                    'shift'        => $request->shift ?? null,
                 ],
                 [
-                    'area'         => $request->area,
+                    'area'         => $request->area ?? null,
                     'created_by'   => Auth::id() ?? 1, // Default to 1 if not logged in
                 ]
             );
