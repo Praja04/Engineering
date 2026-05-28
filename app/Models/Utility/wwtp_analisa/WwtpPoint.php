@@ -11,4 +11,9 @@ class WwtpPoint extends Model
     protected $fillable = [
         'point_name'
     ];
+
+    public function standards()
+    {
+        return $this->hasMany(WwtpStandard::class, 'point_id');
+    }
 }

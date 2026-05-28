@@ -116,15 +116,15 @@
 
                 <!-- Analisa WWTP -->
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('wwtp/analisa') || request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') ? '' : 'collapsed' }}"
+                    <a class="nav-link {{ request()->is('wwtp/analisa') || request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') || request()->is('wwtp/manage_standar_analisa') ? '' : 'collapsed' }}"
                         href="#sidebarAnalisaWWTP" data-bs-toggle="collapse" role="button"
-                        aria-expanded="{{ request()->is('wwtp/analisa') || request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') ? 'true' : 'false' }}"
+                        aria-expanded="{{ request()->is('wwtp/analisa') || request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') || request()->is('wwtp/manage_standar_analisa') ? 'true' : 'false' }}"
                         aria-controls="sidebarAnalisaWWTP">
                         <i class="mdi mdi-flask-outline"></i>
                         <span data-key="t-widgets">Analisa WWTP</span>
                     </a>
 
-                    <div class="collapse menu-dropdown {{ request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') ? 'show' : '' }}"
+                    <div class="collapse menu-dropdown {{ request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') || request()->is('wwtp/manage_standar_analisa') ? 'show' : '' }}"
                         id="sidebarAnalisaWWTP">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
@@ -141,6 +141,15 @@
                                     <span data-key="t-widgets">Data</span>
                                 </a>
                             </li>
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('wwtp/manage_standar_analisa') ? 'active' : '' }}"
+                                        href="{{ url('wwtp/manage_standar_analisa') }}">
+                                        <i class="mdi mdi-database-cog-outline"></i>
+                                        <span data-key="t-widgets">Master Data</span>
+                                    </a>
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </li>

@@ -389,7 +389,7 @@
                                  <div class="col-md-3">
                                      <div class="info-box p-3 bg-light rounded border border-info h-100">
                                          <p class="text-muted small mb-1">Dibuat Oleh</p>
-                                         <p class="fw-bold mb-0 fs-6">${record.creator ? record.creator.name : '-'}</p>
+                                         <p class="fw-bold mb-0 fs-6">${record.creator ? record.creator.username : '-'}</p>
                                      </div>
                                  </div>
                              </div>
@@ -491,7 +491,7 @@
                     error: function() {
                         $('#modalAnalisaContent').html(
                             '<div class="alert alert-danger">Gagal memuat detail data analisa</div>'
-                            );
+                        );
                     }
                 });
             };
