@@ -377,7 +377,7 @@
                 const formData = $(this).serialize();
 
                 $.ajax({
-                    url: "{{ url('api/wwtp-analisa') }}",
+                    url: "{{ route('wwtp-analisa.store') }}",
                     method: 'POST',
                     data: formData,
                     success: function(response) {
