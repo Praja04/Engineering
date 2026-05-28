@@ -109,7 +109,7 @@ class WWTPControllerAnalisa extends Controller
                 ],
                 [
                     // 'area'         => $request->area ?? null,
-                    'created_by'   => Auth::id() ?? 1, // Default to 1 if not logged in
+                    'created_by'   => Auth::id(), // Default to 1 if not logged in
                 ]
             );
 
