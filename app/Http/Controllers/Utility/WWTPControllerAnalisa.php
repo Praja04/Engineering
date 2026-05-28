@@ -105,10 +105,10 @@ class WWTPControllerAnalisa extends Controller
             $analisa = WwtpAnalisa::firstOrCreate(
                 [
                     'analisa_date' => $request->analisa_date,
-                    'shift'        => $request->shift ?? null,
+                    // 'shift'        => $request->shift ?? null,
                 ],
                 [
-                    'area'         => $request->area ?? null,
+                    // 'area'         => $request->area ?? null,
                     'created_by'   => Auth::id() ?? 1, // Default to 1 if not logged in
                 ]
             );
