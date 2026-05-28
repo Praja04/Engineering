@@ -19,4 +19,8 @@ Route::middleware('auth')->group(function () {
   Route::get('/wwtp/form_analisa', [WWTPControllerAnalisa::class, 'form_analisa'])->name('wwtp.form_analisa');
   Route::get('/wwtp/data_analisa', [WWTPControllerAnalisa::class, 'data_analisa'])->name('wwtp.data_analisa');
   Route::get('/wwtp/export', [WWTPController::class, 'export'])->name('wwtp.export');
+
+  Route::prefix('wwtp-analisa')->group(function () {
+    Route::post('/', [WWTPControllerAnalisa::class, 'store'])->name('wwtp-analisa.store');
+  });
 });
