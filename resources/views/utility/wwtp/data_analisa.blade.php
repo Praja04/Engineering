@@ -48,6 +48,24 @@
         .detail-table th {
             vertical-align: middle;
         }
+
+        .parameter-detail-card {
+            border: 1px solid #e6f2fb;
+            border-radius: 8px;
+            height: 100%;
+        }
+
+        .parameter-detail-card .card-header {
+            border-bottom: 1px solid #e6f2fb;
+        }
+
+        .parameter-actions {
+            border-top: 1px solid #eef2f7;
+        }
+
+        .parameter-result-input {
+            min-width: 110px;
+        }
     </style>
 @endsection
 
@@ -156,8 +174,6 @@
                                     <tr>
                                         <th class="fw-semibold">No</th>
                                         <th class="fw-semibold">Tanggal</th>
-                                        <th class="fw-semibold">Shift</th>
-                                        <th class="fw-semibold">Area</th>
                                         <th class="fw-semibold">Parameter Uji</th>
                                         <th class="fw-semibold">Dibuat Oleh</th>
                                         <th class="fw-semibold text-center">Aksi</th>
@@ -165,7 +181,7 @@
                                 </thead>
                                 <tbody id="analisaTableBody">
                                     <tr>
-                                        <td colspan="7" class="text-center py-5">
+                                        <td colspan="5" class="text-center py-5">
                                             <div class="spinner-border text-info" role="status">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
@@ -220,6 +236,7 @@
             const PER_PAGE = 10;
             const userJabatan = "{{ Auth::user()->jabatan ?? '' }}";
             const canEditDelete = userJabatan !== 'operator';
+            const csrfToken = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val();
 
             const state = {
                 currentPage: 1,
@@ -230,6 +247,12 @@
             };
 
             let currentId = null;
+            const detailModalEl = document.getElementById('detailAnalisaModal');
+            const detailModal = bootstrap.Modal.getOrCreateInstance(detailModalEl);
+
+            detailModalEl.addEventListener('hidden.bs.modal', function() {
+                cleanupModalOverlay();
+            });
 
             // Use the parameter definitions from PHP
             const parametersList = @json($parameters);
@@ -248,7 +271,7 @@
                 if (state.bulan) params.bulan = state.bulan;
                 if (state.search) params.search = state.search;
 
-                showLoading('#analisaTableBody', 7);
+                showLoading('#analisaTableBody', 5);
                 clearPagination('#analisaPaginationInfo', '#analisaPagination');
 
                 $.ajax({
@@ -276,7 +299,7 @@
                 tbody.empty();
 
                 if (!data || !data.length) {
-                    tbody.append(`<tr><td colspan="7" class="text-center py-4 text-muted">
+                    tbody.append(`<tr><td colspan="5" class="text-center py-4 text-muted">
                     <i class="mdi mdi-inbox me-2"></i>Tidak ada data analisa</td></tr>`);
                     return;
                 }
@@ -286,6 +309,11 @@
                     let btns = `<button class="btn btn-sm btn-outline-info me-1"
                                 onclick="showDetail(${item.id})" title="Lihat Detail">
                                 <i class="mdi mdi-eye"></i> Detail</button>`;
+                    btns += `
+                        <button class="btn btn-sm btn-outline-warning me-1"
+                            onclick="downloadPdf(${item.id})" title="Download PDF">
+                        <i class="mdi mdi-file-pdf-box"></i> PDF</button>`;
+
                     if (canEditDelete) {
                         btns += `
                             <button class="btn btn-sm btn-outline-danger"
@@ -315,8 +343,6 @@
                         <tr class="data-row">
                             <td>${no}</td>
                             <td><span class="badge bg-light text-dark border"><i class="mdi mdi-calendar me-1"></i>${formatDate(item.analisa_date)}</span></td>
-                            <td>${item.shift ? 'Shift ' + item.shift : '-'}</td>
-                            <td>${item.area || '-'}</td>
                             <td>${paramBadges}</td>
                             <td>${item.creator ? item.creator.username : '-'}</td>
                             <td class="text-center">${btns}</td>
@@ -350,7 +376,7 @@
                 loadData(1);
             });
 
-            window.showDetail = function(id) {
+            window.showDetail = function(id, shouldShowModal = true) {
                 $('#modalAnalisaContent').html(`
                      <div class="text-center py-5">
                          <div class="spinner-border text-info" role="status">
@@ -358,7 +384,9 @@
                          </div>
                      </div>
                  `);
-                new bootstrap.Modal(document.getElementById('detailAnalisaModal')).show();
+                if (shouldShowModal) {
+                    detailModal.show();
+                }
 
                 $.ajax({
                     url: `/api/wwtp-analisa/${id}`,
@@ -376,123 +404,207 @@
                                  </div>
                                  <div class="col-md-3">
                                      <div class="info-box p-3 bg-light rounded border border-info h-100">
-                                         <p class="text-muted small mb-1">Shift</p>
-                                         <p class="fw-bold mb-0 fs-6">${record.shift ? 'Shift ' + record.shift : '-'}</p>
-                                     </div>
-                                 </div>
-                                 <div class="col-md-3">
-                                     <div class="info-box p-3 bg-light rounded border border-info h-100">
-                                         <p class="text-muted small mb-1">Area</p>
-                                         <p class="fw-bold mb-0 fs-6">${record.area || '-'}</p>
-                                     </div>
-                                 </div>
-                                 <div class="col-md-3">
-                                     <div class="info-box p-3 bg-light rounded border border-info h-100">
                                          <p class="text-muted small mb-1">Dibuat Oleh</p>
                                          <p class="fw-bold mb-0 fs-6">${record.creator ? record.creator.username : '-'}</p>
                                      </div>
                                  </div>
                              </div>
-                             <h6 class="fw-bold mb-3 text-info border-bottom pb-2">Matrix Pengukuran Point</h6>
+                             <h6 class="fw-bold mb-3 text-info border-bottom pb-2">Detail Parameter Pengukuran</h6>
                          `;
 
-                        // Reorganize data into matrix: pointName -> { pointId, params: { paramId -> value } }
-                        // Also keep track of active parameter IDs that have data in this record
-                        let matrixData = {};
-                        let activeParamIds = new Set();
+                        // Reorganize data into parameter cards.
+                        let parameterData = {};
                         if (record.details && record.details.length > 0) {
                             record.details.forEach(d => {
-                                let pointName = d.point ? d.point.point_name :
-                                    'Unknown Point';
-                                let pointId = d.point_id;
-                                let paramId = d.parameter_id;
+                                const paramId = d.parameter_id;
+                                const param = d.parameter || parametersList.find(p => p
+                                    .id ===
+                                    paramId) || {};
 
-                                if (!matrixData[pointName]) {
-                                    matrixData[pointName] = {
-                                        pointId: pointId,
-                                        params: {}
+                                if (!parameterData[paramId]) {
+                                    parameterData[paramId] = {
+                                        id: paramId,
+                                        name: param.parameter_name ||
+                                            'Unknown Parameter',
+                                        unit: param.unit || '',
+                                        points: []
                                     };
                                 }
-                                matrixData[pointName].params[paramId] = d.hasil_analisa;
-                                activeParamIds.add(paramId);
+
+                                parameterData[paramId].points.push({
+                                    pointId: d.point_id,
+                                    pointName: d.point ? d.point.point_name :
+                                        'Unknown Point',
+                                    value: d.hasil_analisa
+                                });
                             });
                         }
 
-                        // Only display columns for parameters that actually have data
-                        const activeParamsList = parametersList.filter(p => activeParamIds.has(p
-                            .id));
-
-                        // Generate Table Headers based on active parameters only
-                        let thHtml = '';
-                        activeParamsList.forEach(p => {
-                            thHtml +=
-                                `<th class="text-center">${p.parameter_name} <br><small class="text-muted">(${p.unit})</small></th>`;
+                        const parameterOrder = parametersList.map(p => p.id);
+                        const activeParamsList = Object.values(parameterData).sort((a, b) => {
+                            return parameterOrder.indexOf(a.id) - parameterOrder.indexOf(b
+                                .id);
                         });
 
-                        let trHtml = '';
-                        // Loop each point that has data
-                        for (const [pointName, pointInfo] of Object.entries(matrixData)) {
-                            let tdHtml = '';
-                            const pointId = pointInfo.pointId;
-
-                            activeParamsList.forEach(p => {
-                                const val = pointInfo.params[p.id];
-                                if (val !== undefined && val !== null) {
-                                    const key = pointId + '_' + p.id;
-                                    const stdVal = standards[key];
-                                    let stdDisplay = '';
-                                    if (stdVal !== undefined && stdVal !== null) {
-                                        const parsedStd = parseFloat(stdVal);
-                                        const displayStd = parsedStd % 1 === 0 ? parsedStd
-                                            .toFixed(0) : parsedStd.toString();
-                                        stdDisplay =
-                                            `<div class="text-muted mt-1 small" style="font-size: 0.72rem; font-weight: normal;">(Std: ${displayStd})</div>`;
-                                    }
-                                    tdHtml +=
-                                        `<td class="text-center align-middle"><div class="fw-semibold text-info fs-6">${num(val)}</div>${stdDisplay}</td>`;
-                                } else {
-                                    tdHtml +=
-                                        `<td class="text-center align-middle text-muted">-</td>`;
-                                }
+                        let pointsHtml = '<div class="row g-3 mt-1">';
+                        activeParamsList.forEach(param => {
+                            let rowsHtml = '';
+                            param.points.forEach(point => {
+                                const unit = param.unit ?
+                                    ` ${escapeHtml(param.unit)}` : '';
+                                const key = point.pointId + '_' + param.id;
+                                rowsHtml += `
+                                    <tr>
+                                        <td class="fw-semibold">${escapeHtml(point.pointName)}</td>
+                                        <td class="text-center">${standardDisplay(standards[key], param.unit)}</td>
+                                        <td class="text-center">
+                                            <span class="fw-semibold text-info result-display">${num(point.value)}${unit}</span>
+                                            <div class="input-group input-group-sm result-input d-none">
+                                                <input type="number" step="0.01" class="form-control parameter-result-input"
+                                                    data-point-id="${point.pointId}" value="${escapeHtml(point.value)}">
+                                                ${param.unit ? `<span class="input-group-text">${escapeHtml(param.unit)}</span>` : ''}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
                             });
 
-                            trHtml += `
-                                 <tr>
-                                     <td class="fw-bold bg-light align-middle">${pointName}</td>
-                                     ${tdHtml}
-                                 </tr>
-                             `;
-                        }
+                            const actionHtml = canEditDelete ? `
+                                <div class="parameter-actions p-3 d-flex justify-content-end gap-2">
+                                    <div class="view-actions">
+                                        <button type="button" class="btn btn-sm btn-outline-warning"
+                                            onclick="editParameter(${record.id}, ${param.id})">
+                                            <i class="mdi mdi-pencil me-1"></i>Edit
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDeleteParameter(${record.id}, ${param.id})">
+                                            <i class="mdi mdi-trash-can me-1"></i>Hapus
+                                        </button>
+                                    </div>
+                                    <div class="edit-actions d-none">
+                                        <button type="button" class="btn btn-sm btn-info text-white"
+                                            onclick="saveParameter(${record.id}, ${param.id})">
+                                            <i class="mdi mdi-content-save me-1"></i>Simpan
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="cancelEditParameter(${param.id})">Batal</button>
+                                    </div>
+                                </div>
+                            ` : '';
 
-                        if (Object.keys(matrixData).length === 0) {
-                            trHtml =
-                                `<tr><td colspan="${activeParamsList.length + 1}" class="text-center py-4 text-muted">Tidak ada data hasil pengukuran</td></tr>`;
-                        }
+                            pointsHtml += `
+                                <div class="col-lg-6">
+                                    <div class="parameter-detail-card" id="parameter-card-${param.id}">
+                                        <div class="card-header bg-light p-3">
+                                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                                <div>
+                                                    <h6 class="fw-bold text-info mb-1">${escapeHtml(param.name)}</h6>
+                                                    <small class="text-muted">Point pengukuran dan hasil analisa</small>
+                                                </div>
+                                                <span class="badge bg-soft-info text-info">${escapeHtml(param.unit || '-')}</span>
+                                            </div>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover detail-table mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Point Pengukuran</th>
+                                                        <th class="text-center">Standar Value</th>
+                                                        <th class="text-center">Hasil Analisa</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>${rowsHtml}</tbody>
+                                            </table>
+                                        </div>
+                                        ${actionHtml}
+                                    </div>
+                                </div>
+                            `;
+                        });
 
-                        let pointsHtml = `
-                             <div class="table-responsive mt-3">
-                                 <table class="table table-bordered table-hover detail-table">
-                                     <thead class="table-light">
-                                        <tr>
-                                            <th>Point Pengukuran</th>
-                                            ${thHtml}
-                                        </tr>
-                                     </thead>
-                                     <tbody>
-                                         ${trHtml}
-                                     </tbody>
-                                 </table>
-                             </div>
-                         `;
+                        if (!activeParamsList.length) {
+                            pointsHtml +=
+                                '<div class="col-12 text-center py-4 text-muted">Tidak ada data hasil pengukuran</div>';
+                        }
+                        pointsHtml += '</div>';
 
                         $('#modalAnalisaContent').html(headerHtml + pointsHtml);
-                        canEditDelete ? $('#btnDelete').show() : $('#btnDelete').hide();
+                        $('#btnDelete').hide();
                     },
                     error: function() {
                         $('#modalAnalisaContent').html(
                             '<div class="alert alert-danger">Gagal memuat detail data analisa</div>'
                         );
                     }
+                });
+            };
+
+            window.editParameter = function(analisaId, parameterId) {
+                const card = $(`#parameter-card-${parameterId}`);
+                card.find('.result-display').addClass('d-none');
+                card.find('.result-input').removeClass('d-none');
+                card.find('.view-actions').addClass('d-none');
+                card.find('.edit-actions').removeClass('d-none');
+            };
+
+            window.cancelEditParameter = function(parameterId) {
+                const card = $(`#parameter-card-${parameterId}`);
+                card.find('.result-display').removeClass('d-none');
+                card.find('.result-input').addClass('d-none');
+                card.find('.view-actions').removeClass('d-none');
+                card.find('.edit-actions').addClass('d-none');
+            };
+
+            window.saveParameter = function(analisaId, parameterId) {
+                const card = $(`#parameter-card-${parameterId}`);
+                const data = {
+                    _token: csrfToken
+                };
+
+                card.find('.parameter-result-input').each(function() {
+                    const pointId = $(this).data('point-id');
+                    data[`hasil_analisa[${pointId}]`] = $(this).val();
+                });
+
+                $.ajax({
+                    url: `/api/wwtp-analisa/${analisaId}/parameters/${parameterId}`,
+                    method: 'POST',
+                    data,
+                    success: function() {
+                        showSuccess('Data parameter berhasil diperbarui');
+                        showDetail(analisaId, false);
+                        loadData(state.currentPage);
+                    },
+                    error: function(xhr) {
+                        const error = xhr.responseJSON;
+                        showError(error && error.message ? error.message :
+                            'Gagal memperbarui data parameter');
+                    }
+                });
+            };
+
+            window.confirmDeleteParameter = function(analisaId, parameterId) {
+                const parameterName = $(`#parameter-card-${parameterId} h6`).text() || 'parameter ini';
+                confirmSwal(`Hapus data ${parameterName}?`, function() {
+                    $.ajax({
+                        url: `/api/wwtp-analisa/${analisaId}/parameters/${parameterId}`,
+                        method: 'DELETE',
+                        data: {
+                            _token: csrfToken
+                        },
+                        success: function() {
+                            showSuccess('Data parameter berhasil dihapus');
+                            if ($('.parameter-detail-card').length <= 1) {
+                                detailModal.hide();
+                            } else {
+                                showDetail(analisaId, false);
+                            }
+                            loadData(state.currentPage);
+                        },
+                        error: function() {
+                            showError('Gagal menghapus data parameter');
+                        }
+                    });
                 });
             };
 
@@ -503,10 +615,10 @@
                         url: `/api/wwtp-analisa/${currentId}`,
                         method: 'DELETE',
                         data: {
-                            _token: $('input[name="_token"]').val()
+                            _token: csrfToken
                         },
                         success: function() {
-                            $('#detailAnalisaModal').modal('hide');
+                            detailModal.hide();
                             showSuccess('Data analisa berhasil dihapus');
                             loadData(state.currentPage);
                         },
@@ -523,7 +635,7 @@
                         url: `/api/wwtp-analisa/${id}`,
                         method: 'DELETE',
                         data: {
-                            _token: $('input[name="_token"]').val()
+                            _token: csrfToken
                         },
                         success: function() {
                             showSuccess('Data analisa berhasil dihapus');
@@ -534,6 +646,10 @@
                         }
                     });
                 });
+            };
+
+            window.downloadPdf = function(id) {
+                window.open(`/wwtp/data_analisa/${id}/pdf`, '_blank');
             };
 
             function renderPaginationInfo(selector, response) {
@@ -625,6 +741,34 @@
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
+                });
+            }
+
+            function standardDisplay(value, unit) {
+                if (value === undefined || value === null || value === '') {
+                    return '<span class="text-muted">-</span>';
+                }
+
+                const unitText = unit ? ` ${escapeHtml(unit)}` : '';
+                return `<span class="fw-semibold">${num(value)}${unitText}</span>`;
+            }
+
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function cleanupModalOverlay() {
+                if ($('.modal.show').length) return;
+
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css({
+                    overflow: '',
+                    paddingRight: ''
                 });
             }
 
