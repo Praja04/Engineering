@@ -12,6 +12,7 @@ use App\Models\Utility\wwtp_analisa\WwtpStandard;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class WWTPControllerAnalisa extends Controller
 {
@@ -40,6 +41,57 @@ class WWTPControllerAnalisa extends Controller
         }
 
         return view('utility.wwtp.data_analisa', compact('parameters', 'standards'));
+    }
+
+    public function downloadPdf($id)
+    {
+        $analisa = WwtpAnalisa::with(['creator', 'details.point', 'details.parameter'])->findOrFail($id);
+
+        $parameters = WwtpParameter::all();
+        $standardsData = WwtpStandard::all();
+
+        $standards = [];
+        foreach ($standardsData as $std) {
+            $standards[$std->point_id . '_' . $std->parameter_id] = $std->standard_value;
+        }
+
+        // Reorganize details by parameter for easier looping in PDF
+        $parameterData = [];
+        foreach ($analisa->details as $detail) {
+            $paramId = $detail->parameter_id;
+            if (!isset($parameterData[$paramId])) {
+                $parameterData[$paramId] = [
+                    'id' => $paramId,
+                    'name' => $detail->parameter->parameter_name ?? 'Unknown Parameter',
+                    'unit' => $detail->parameter->unit ?? '',
+                    'points' => []
+                ];
+            }
+            $parameterData[$paramId]['points'][] = [
+                'point_id' => $detail->point_id,
+                'point_name' => $detail->point->point_name ?? 'Unknown Point',
+                'value' => $detail->hasil_analisa
+            ];
+        }
+
+        // Sort parameters by their order in parameter table
+        $parameterOrder = $parameters->pluck('id')->toArray();
+        uksort($parameterData, function($a, $b) use ($parameterOrder) {
+            return array_search($a, $parameterOrder) <=> array_search($b, $parameterOrder);
+        });
+
+        // Set A4 paper format
+        $pdf = Pdf::loadView('utility.wwtp.pdf_analisa', compact('analisa', 'parameterData', 'standards'))
+            ->setPaper('A4', 'portrait')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'Helvetica',
+            ]);
+
+        $filename = 'laporan-analisa-wwtp-' . $analisa->analisa_date . '.pdf';
+
+        return $pdf->stream($filename);
     }
 
     public function manage_standar()
@@ -414,6 +466,75 @@ class WWTPControllerAnalisa extends Controller
     {
         $analisa = WwtpAnalisa::with(['creator', 'details.point', 'details.parameter'])->findOrFail($id);
         return response()->json($analisa);
+    }
+
+    public function updateParameterResults(Request $request, $id, $parameterId)
+    {
+        $analisa = WwtpAnalisa::findOrFail($id);
+        WwtpParameter::findOrFail($parameterId);
+
+        $request->validate([
+            'hasil_analisa' => 'required|array',
+            'hasil_analisa.*' => 'nullable|numeric'
+        ]);
+
+        $hasValue = collect($request->hasil_analisa)->contains(fn ($hasil) => $hasil !== null && $hasil !== '');
+        if (!$hasValue) {
+            return response()->json([
+                'message' => 'Minimal satu hasil analisa harus diisi.',
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            WwtpAnalisaDetail::where('analisa_id', $analisa->id)
+                ->where('parameter_id', $parameterId)
+                ->delete();
+
+            foreach ($request->hasil_analisa as $pointId => $hasil) {
+                if ($hasil !== null && $hasil !== '') {
+                    WwtpAnalisaDetail::create([
+                        'analisa_id'    => $analisa->id,
+                        'point_id'      => $pointId,
+                        'parameter_id'  => $parameterId,
+                        'hasil_analisa' => $hasil,
+                        'keterangan'    => null
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Data parameter analisa WWTP berhasil diperbarui.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroyParameterResults($id, $parameterId)
+    {
+        $analisa = WwtpAnalisa::findOrFail($id);
+        WwtpParameter::findOrFail($parameterId);
+
+        WwtpAnalisaDetail::where('analisa_id', $analisa->id)
+            ->where('parameter_id', $parameterId)
+            ->delete();
+
+        if (!$analisa->details()->exists()) {
+            $analisa->delete();
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Data parameter analisa WWTP berhasil dihapus.',
+        ]);
     }
 
     /**

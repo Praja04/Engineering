@@ -174,6 +174,8 @@ Route::prefix('wwtp-analisa')->group(function () {
     Route::put('/standards/{id}', [WWTPControllerAnalisa::class, 'updateStandar']);
     Route::delete('/standards/{id}', [WWTPControllerAnalisa::class, 'destroyStandar']);
     Route::post('/', [WWTPControllerAnalisa::class, 'store']);
+    Route::post('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'updateParameterResults']);
+    Route::delete('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'destroyParameterResults']);
     Route::delete('/{id}', [WWTPControllerAnalisa::class, 'destroy']);
     Route::post('/{id}', [WWTPControllerAnalisa::class, 'update']);
     Route::get('/', [WWTPControllerAnalisa::class, 'index']);
