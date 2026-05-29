@@ -59,6 +59,7 @@ class MtcSipilController extends Controller
                     'mid' => $item['mid'] ?? null,
                     'deskripsi' => $item['desc'] ?? null,
                     'qty' => $item['qty'] ?? 0,
+                    'uom' => $item['uom'] ?? null,
                     'created_by' => $userId,
                 ]);
             }
@@ -113,7 +114,7 @@ class MtcSipilController extends Controller
                         'notifiable_type' => MtcMainModel::class,
                         'notifiable_id' => $main->id,
                         'title' => 'Approval Maintenance',
-                        'message' => 'Maintenance Sipil tanggal '.date('d F Y', strtotime($main->tanggal)).' menunggu persetujuan Anda',
+                        'message' => 'Maintenance Sipil tanggal ' . date('d F Y', strtotime($main->tanggal)) . ' menunggu persetujuan Anda',
                         'url' => route('mtc.approval.index'),
                         'is_read' => false,
                     ]);
@@ -146,12 +147,12 @@ class MtcSipilController extends Controller
 
         // 🔍 filter area
         if ($request->filled('area')) {
-            $query->where('area', 'like', '%'.$request->area.'%');
+            $query->where('area', 'like', '%' . $request->area . '%');
         }
 
         // 🔍 filter departemen
         if ($request->filled('departemen')) {
-            $query->where('departemen', 'like', '%'.$request->departemen.'%');
+            $query->where('departemen', 'like', '%' . $request->departemen . '%');
         }
 
         // 🔥 total setelah filter
