@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('mid')->nullable();
             $table->string('deskripsi')->nullable();
             $table->integer('qty')->nullable();
+            $table->string('uom')->nullable();
             $table->foreignId('created_by')->constrained('users')->onDelete('restrict');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('restrict');
             $table->timestamps();
