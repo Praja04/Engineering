@@ -146,37 +146,37 @@ class MtcMainController extends Controller
 
         $fieldRowMap = [
             // Motor
-            'electrical_motor' => 6,
-            'putaran_motor' => 7,
-            'fibrasi_suara_motor' => 8,
-            'bearing_motor' => 9,
-            'pelumasan_motor' => 10,
-            'kebersihan_unit_body_motor' => 11,
+            'electrical_motor' => 8,
+            'putaran_motor' => 9,
+            'fibrasi_suara_motor' => 10,
+            'bearing_motor' => 11,
+            'pelumasan_motor' => 12,
+            'kebersihan_unit_body_motor' => 13,
 
             // Pompa
-            'putaran_pompa' => 14,
-            'shaft_karet_coupling_pompa' => 15,
-            'fan_belt_pompa' => 16,
-            'pressure_pompa' => 17,
-            'mechanical_seal_pompa' => 18,
-            'gasket_pompa' => 19,
-            'impeler' => 20,
-            'kebersihan_unit_body_pompa' => 21,
+            'putaran_pompa' => 16,
+            'shaft_karet_coupling_pompa' => 17,
+            'fan_belt_pompa' => 18,
+            'pressure_pompa' => 19,
+            'mechanical_seal_pompa' => 20,
+            'gasket_pompa' => 21,
+            'impeler' => 22,
+            'kebersihan_unit_body_pompa' => 23,
 
             // Aksesoris
-            'valve_aksesoris' => 24,
-            'cek_valve_aksesoris' => 25,
-            'flow_meter_aksesoris' => 26,
-            'strainer_aksesoris' => 27,
-            'alat_ukur_aksesoris' => 28,
-            'kelengkapan_baut_mur_aksesoris' => 29,
+            'valve_aksesoris' => 26,
+            'cek_valve_aksesoris' => 27,
+            'flow_meter_aksesoris' => 28,
+            'strainer_aksesoris' => 29,
+            'alat_ukur_aksesoris' => 30,
+            'kelengkapan_baut_mur_aksesoris' => 31,
 
             // Gearbox
-            'tambah_ganti_oli_gearbox' => 31,
-            'unit_area_gearbox' => 32,
-            'oil_seal_gearbox' => 33,
-            'filter_udara_gearbox' => 34,
-            'bearing_gearbox' => 35,
+            'tambah_ganti_oli_gearbox' => 33,
+            'unit_area_gearbox' => 34,
+            'oil_seal_gearbox' => 35,
+            'filter_udara_gearbox' => 36,
+            'bearing_gearbox' => 37,
         ];
 
         foreach ($data as $main) {
@@ -187,9 +187,13 @@ class MtcMainController extends Controller
             // ================= HEADER =================
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('F3', ':' . $inspection->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('F4', ':' . $main->paket ?? '-');
-            $sheet->setCellValue('A39', 'Tindakan Korektif : ' . ($main->korektif ?? ''));
+            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('C6', $main->departemen ?? '-');
+            $sheet->setCellValue('F3', ': ' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F4', ': ' . $inspection->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('F5', ': ' . $inspection->mesin->lokasi ?? '-');
+            $sheet->setCellValue('F6', ': ' . $main->paket ?? '-');
+            $sheet->setCellValue('A41', 'Tindakan Korektif : ' . ($main->korektif ?? ''));
 
             // ================= PARSE KETERANGAN =================
             $keteranganMap = [];
@@ -228,7 +232,7 @@ class MtcMainController extends Controller
                 $sheet->setCellValue('E' . $row, $ket);
             }
 
-            $materialRow = 41;
+            $materialRow = 43;
 
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
@@ -246,13 +250,14 @@ class MtcMainController extends Controller
                     if ($item->status !== 'approved') continue;
                     switch (strtolower($item->role)) {
                         case 'teknisi':
-                            $this->insertApprovalSticker($sheet, 'G51');
-                            break;
-                        case 'staff':
+                            $sheet->setCellValue('D53', 'Dibuat: ' . $item->approver?->username ?? '-');
                             $this->insertApprovalSticker($sheet, 'G53');
                             break;
-                        case 'user':
+                        case 'staff':
                             $this->insertApprovalSticker($sheet, 'G55');
+                            break;
+                        case 'user':
+                            $this->insertApprovalSticker($sheet, 'G57');
                             break;
                     }
                 }
@@ -283,63 +288,63 @@ class MtcMainController extends Controller
 
         $fieldRowMap = [
             // Cooling Tower
-            'cleaning_saringan_cooling_tower' => 6,
-            'cleaning_unit_cooling_tower' => 7,
-            'cleaning_bak_cooling_tower' => 8,
+            'cleaning_saringan_cooling_tower' => 8,
+            'cleaning_unit_cooling_tower' => 9,
+            'cleaning_bak_cooling_tower' => 10,
 
             // RO
-            'check_sensor_tank_farm_ro_produk' => 10,
-            'cleaning_flow_rate_mmf_1' => 11,
-            'cleaning_flow_rate_mmf_2' => 12,
-            'cleaning_flow_rate_ro_produk' => 13,
-            'cleaning_flow_rate_ro_reject' => 14,
-            'penggantian_micron_filter_cip' => 15,
-            'penggantian_micron_filter_makeup_water' => 16,
-            'cleaning_cip_tank' => 17,
-            'cip_membrane_reverse_osmosis' => 18,
-            'check_fungsi_valve' => 19,
-            'cleaning_unit_ro_mesin' => 20,
+            'check_sensor_tank_farm_ro_produk' => 12,
+            'cleaning_flow_rate_mmf_1' => 13,
+            'cleaning_flow_rate_mmf_2' => 14,
+            'cleaning_flow_rate_ro_produk' => 15,
+            'cleaning_flow_rate_ro_reject' => 16,
+            'penggantian_micron_filter_cip' => 17,
+            'penggantian_micron_filter_makeup_water' => 18,
+            'cleaning_cip_tank' => 19,
+            'cip_membrane_reverse_osmosis' => 20,
+            'check_fungsi_valve' => 21,
+            'cleaning_unit_ro_mesin' => 22,
 
             // Compressor
-            'sirkulasi_phe_aq55vsd' => 22,
-            'penggantian_air_ro_aq55vsd' => 23,
-            'cleaning_compressor_aq55vsd' => 24,
-            'cleaning_jalur_cooling_aq55vsd' => 25,
-            'cleaning_dryer_fd185' => 26,
-            'cleaning_compressor_ga37' => 27,
-            'cleaning_dryer_fd120' => 28,
-            'lubrikasi_motor_compressor_aq55vsd' => 29,
-            'cleaning_compressor_sm55' => 30,
+            'sirkulasi_phe_aq55vsd' => 24,
+            'penggantian_air_ro_aq55vsd' => 25,
+            'cleaning_compressor_aq55vsd' => 26,
+            'cleaning_jalur_cooling_aq55vsd' => 27,
+            'cleaning_dryer_fd185' => 28,
+            'cleaning_compressor_ga37' => 29,
+            'cleaning_dryer_fd120' => 30,
+            'lubrikasi_motor_compressor_aq55vsd' => 31,
+            'cleaning_compressor_sm55' => 32,
 
             // Tank Farm
-            'cleaning_sensor_level_tank_farm' => 31,
-            'cleaning_sensor_level_fresh_water_menara' => 32,
-            'cleaning_sensor_level_ro_reject_menara' => 33,
-            'cleaning_sensor_level_intermediate' => 34,
+            'cleaning_sensor_level_tank_farm' => 33,
+            'cleaning_sensor_level_fresh_water_menara' => 34,
+            'cleaning_sensor_level_ro_reject_menara' => 35,
+            'cleaning_sensor_level_intermediate' => 36,
 
             // Boiler
-            'check_safety_valve' => 36,
-            'cleaning_level_gauge' => 37,
-            'cleaning_level_transmitter' => 38,
-            'check_pressure_transmitter' => 39,
-            'check_temperature_transmitter' => 40,
-            'cleaning_sensor_o2_co2' => 41,
-            'check_chaingrate' => 42,
-            'check_ruang_bakar' => 43,
-            'check_back_chamber' => 44,
-            'check_guillotine' => 45,
-            'check_wet_ash_conveyor' => 46,
-            'check_bottom_ash_conveyor' => 47,
-            'check_conveyor_batu_bara' => 48,
-            'check_feeder' => 49,
-            'cleaning_bak_wet_ash_conveyor' => 50,
-            'check_feed_tank' => 51,
+            'check_safety_valve' => 38,
+            'cleaning_level_gauge' => 39,
+            'cleaning_level_transmitter' => 40,
+            'check_pressure_transmitter' => 41,
+            'check_temperature_transmitter' => 42,
+            'cleaning_sensor_o2_co2' => 43,
+            'check_chaingrate' => 44,
+            'check_ruang_bakar' => 45,
+            'check_back_chamber' => 46,
+            'check_guillotine' => 47,
+            'check_wet_ash_conveyor' => 48,
+            'check_bottom_ash_conveyor' => 49,
+            'check_conveyor_batu_bara' => 50,
+            'check_feeder' => 51,
+            'cleaning_bak_wet_ash_conveyor' => 52,
+            'check_feed_tank' => 53,
 
             // WWTP
-            'check_line_limbah' => 53,
-            'check_line_chemical' => 54,
-            'check_tangki_kotak' => 55,
-            'check_tangki_bulat' => 56,
+            'check_line_limbah' => 55,
+            'check_line_chemical' => 56,
+            'check_tangki_kotak' => 57,
+            'check_tangki_bulat' => 58,
         ];
 
         foreach ($data as $main) {
@@ -349,9 +354,13 @@ class MtcMainController extends Controller
             // header (sekali isi aja, bukan per row)
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('C6', $main->departemen ?? '-');
             $sheet->setCellValue('F3', ': ' . $main->utility->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('F4', ':' . $main->paket ?? '-');
-            $sheet->setCellValue('A65', 'Tindakan Korektif : ' . $main->korektif);
+            $sheet->setCellValue('F4', ': ' . $main->utility->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('F5', ': ' . $main->utility->mesin->lokasi ?? '-');
+            $sheet->setCellValue('F6', ': ' . $main->paket ?? '-');
+            $sheet->setCellValue('A67', 'Tindakan Korektif : ' . $main->korektif);
 
             // ================= PARSE KETERANGAN =================
             $keteranganMap = [];
@@ -390,7 +399,7 @@ class MtcMainController extends Controller
             }
 
             // KEBUTUHAN MATERIAL
-            $materialRow = 67;
+            $materialRow = 69;
 
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
@@ -413,15 +422,16 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $this->insertApprovalSticker($sheet, 'G71');
-                            break;
-
-                        case 'staff':
+                            $sheet->setCellValue('D73', 'Dibuat: ' . $item->approver?->username ?? '-');
                             $this->insertApprovalSticker($sheet, 'G73');
                             break;
 
-                        case 'user':
+                        case 'staff':
                             $this->insertApprovalSticker($sheet, 'G75');
+                            break;
+
+                        case 'user':
+                            $this->insertApprovalSticker($sheet, 'G77');
                             break;
                     }
                 }
@@ -452,41 +462,41 @@ class MtcMainController extends Controller
 
         $fieldRowMap = [
             // Panel
-            'check_kunci' => 6,
-            'check_koneksi_kabel' => 7,
-            'check_wiring_panel' => 8,
-            'check_lampu_indikator' => 9,
-            'check_name_plate' => 10,
-            'check_unit_electrical' => 11,
-            'check_grounding' => 12,
-            'check_kebersihan' => 13,
-            'check_bus_bar' => 14,
-            'check_nilai_grounding' => 15,
+            'check_kunci' => 8,
+            'check_koneksi_kabel' => 9,
+            'check_wiring_panel' => 10,
+            'check_lampu_indikator' => 11,
+            'check_name_plate' => 12,
+            'check_unit_electrical' => 13,
+            'check_grounding' => 14,
+            'check_kebersihan' => 15,
+            'check_bus_bar' => 16,
+            'check_nilai_grounding' => 17,
 
             // Penerangan
-            'check_kondisi_lampu' => 17,
-            'check_cover_lampu' => 18,
-            'check_wiring_penerangan' => 19,
-            'check_saklar' => 20,
-            'check_penyangga_penerangan' => 21,
+            'check_kondisi_lampu' => 19,
+            'check_cover_lampu' => 20,
+            'check_wiring_penerangan' => 21,
+            'check_saklar' => 22,
+            'check_penyangga_penerangan' => 23,
 
             // Sistem Distribusi
-            'check_stecker' => 24,
-            'check_stop_kontak' => 25,
-            'check_terminal_listrik' => 26,
-            'check_pengabelan_distribusi' => 27,
-            'check_support_pelindung_distribusi' => 28,
+            'check_stecker' => 26,
+            'check_stop_kontak' => 27,
+            'check_terminal_listrik' => 28,
+            'check_pengabelan_distribusi' => 29,
+            'check_support_pelindung_distribusi' => 30,
 
             // Capacitor Bank
-            'check_kondisi_fisik_capacitor' => 31,
-            'check_nilai_farad' => 32,
-            'check_nilai_ampere' => 33,
-            'check_kebersihan_capacitor' => 34,
+            'check_kondisi_fisik_capacitor' => 33,
+            'check_nilai_farad' => 34,
+            'check_nilai_ampere' => 35,
+            'check_kebersihan_capacitor' => 36,
 
             // Trafo
-            'check_kebocoran_oli_sisi_bawah' => 37,
-            'check_kebocoran_oli_sisi_atas' => 38,
-            'check_level_oli' => 39,
+            'check_kebocoran_oli_sisi_bawah' => 39,
+            'check_kebocoran_oli_sisi_atas' => 40,
+            'check_level_oli' => 41,
         ];
 
         foreach ($data as $main) {
@@ -496,9 +506,13 @@ class MtcMainController extends Controller
             // header (sekali isi aja, bukan per row)
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('F3', $main->electrical->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('F4', ': ' . $main->paket ?? '-');
-            $sheet->setCellValue('A47', 'Tindakan Korektif : ' . $main->korektif);
+            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('C6', $main->departemen ?? '-');
+            $sheet->setCellValue('F3', ': ' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F4', ': ' . $inspection->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('F5', ': ' . $inspection->mesin->lokasi ?? '-');
+            $sheet->setCellValue('F6', ': ' . $main->paket ?? '-');
+            $sheet->setCellValue('A49', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
 
@@ -535,7 +549,7 @@ class MtcMainController extends Controller
             }
 
             // KEBUTUHAN MATERIAL
-            $materialRow = 49;
+            $materialRow = 51;
 
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
@@ -558,15 +572,16 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $this->insertApprovalSticker($sheet, 'G55');
-                            break;
-
-                        case 'staff':
+                            $sheet->setCellValue('D57', 'Dibuat: ' . $item->approver?->username ?? '-');
                             $this->insertApprovalSticker($sheet, 'G57');
                             break;
 
-                        case 'user':
+                        case 'staff':
                             $this->insertApprovalSticker($sheet, 'G59');
+                            break;
+
+                        case 'user':
+                            $this->insertApprovalSticker($sheet, 'G61');
                             break;
                     }
                 }
@@ -597,30 +612,30 @@ class MtcMainController extends Controller
 
         $fieldRowMap = [
             // Unit Indoor
-            'check_filter_udara' => 6,
-            'check_cover_filter_udara' => 7,
-            'check_electrical_indoor' => 8,
-            'check_suhu_evaporator' => 9,
-            'check_indikator_display' => 10,
-            'check_motor_blower' => 11,
-            'check_fan_belt_blower' => 12,
-            'check_pergerakan_motor_swing' => 13,
-            'check_kontroler_indoor' => 14,
-            'check_saluran_drain_kondensasi' => 15,
-            'sirkulasi_evaporator' => 16,
+            'check_filter_udara' => 8,
+            'check_cover_filter_udara' => 9,
+            'check_electrical_indoor' => 10,
+            'check_suhu_evaporator' => 11,
+            'check_indikator_display' => 12,
+            'check_motor_blower' => 13,
+            'check_fan_belt_blower' => 14,
+            'check_pergerakan_motor_swing' => 15,
+            'check_kontroler_indoor' => 16,
+            'check_saluran_drain_kondensasi' => 17,
+            'sirkulasi_evaporator' => 18,
 
             // Unit Outdoor
-            'check_kondisi_kondensor' => 19,
-            'check_electrical_outdoor' => 20,
-            'check_motor_fan' => 21,
-            'check_tekanan_freon' => 22,
-            'pelumasan_motor_fan' => 23,
-            'kebersihan_unit_body_outdoor' => 24,
+            'check_kondisi_kondensor' => 21,
+            'check_electrical_outdoor' => 22,
+            'check_motor_fan' => 23,
+            'check_tekanan_freon' => 24,
+            'pelumasan_motor_fan' => 25,
+            'kebersihan_unit_body_outdoor' => 26,
 
             // Jalur Distribusi
-            'check_jalur_freon' => 27,
-            'check_jalur_distribusi_udara' => 28,
-            'check_jalur_return_udara' => 29,
+            'check_jalur_freon' => 29,
+            'check_jalur_distribusi_udara' => 30,
+            'check_jalur_return_udara' => 31,
         ];
 
         foreach ($data as $main) {
@@ -630,9 +645,13 @@ class MtcMainController extends Controller
             // header (sekali isi aja, bukan per row)
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('F3', ': ' . $main->refrigerasi->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('F4', ': ' . $main->paket ?? '-');
-            $sheet->setCellValue('A33', 'Tindakan Korektif : ' . $main->korektif);
+            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('C6', $main->departemen ?? '-');
+            $sheet->setCellValue('F3', ': ' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F4', ': ' . $inspection->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('F5', ': ' . $inspection->mesin->lokasi ?? '-');
+            $sheet->setCellValue('F6', ': ' . $main->paket ?? '-');
+            $sheet->setCellValue('A35', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
 
@@ -669,7 +688,7 @@ class MtcMainController extends Controller
             }
 
             // KEBUTUHAN MATERIAL
-            $materialRow = 35;
+            $materialRow = 37;
 
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
@@ -692,15 +711,16 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $this->insertApprovalSticker($sheet, 'G45');
-                            break;
-
-                        case 'staff':
+                            $sheet->setCellValue('D47', 'Dibuat: ' . $item->approver?->username ?? '-');
                             $this->insertApprovalSticker($sheet, 'G47');
                             break;
 
-                        case 'user':
+                        case 'staff':
                             $this->insertApprovalSticker($sheet, 'G49');
+                            break;
+
+                        case 'user':
+                            $this->insertApprovalSticker($sheet, 'G51');
                             break;
                     }
                 }
@@ -731,57 +751,58 @@ class MtcMainController extends Controller
 
         $fieldRowMap = [
             // Forklift Electrical - General
-            'check_buzzer_back' => 6,
-            'check_klakson' => 7,
-            'check_pilot_lamp' => 8,
-            'check_lampu_sorot' => 9,
-            'check_lampu_kombinasi_kanan_belakang' => 10,
-            'check_lampu_kombinasi_kiri_belakang' => 11,
-            'check_kaca_sepion' => 12,
+            'check_general' => 9,
+            'check_buzzer_back' => 10,
+            'check_klakson' => 11,
+            'check_pilot_lamp' => 12,
+            'check_lampu_sorot' => 13,
+            'check_lampu_kombinasi_kanan_belakang' => 14,
+            'check_lampu_kombinasi_kiri_belakang' => 15,
+            'check_kaca_sepion' => 16,
 
             // Battery, Charger & Electrical System
-            'check_battery' => 16,
-            'check_skun_battery' => 17,
-            'check_terminal_charger_battery' => 18,
-            'check_kunci_kontak' => 19,
-            'check_main_contactor' => 20,
-            'check_microswitch' => 21,
-            'check_eps_controller' => 22,
-            'check_steering_motor' => 23,
-            'check_fan' => 24,
-            'check_fuse' => 25,
-            'check_display_control' => 26,
-            'check_wiring_terminal' => 27,
-            'check_carbon_brush' => 28,
+            'check_battery' => 19,
+            'check_skun_battery' => 20,
+            'check_terminal_charger_battery' => 21,
+            'check_kunci_kontak' => 22,
+            'check_main_contactor' => 23,
+            'check_microswitch' => 24,
+            'check_eps_controller' => 25,
+            'check_steering_motor' => 26,
+            'check_fan' => 27,
+            'check_fuse' => 28,
+            'check_display_control' => 29,
+            'check_wiring_terminal' => 30,
+            'check_carbon_brush' => 31,
 
             // Drive, Steering, Mast, Hydraulic & Braking System
-            'check_steering_wheel' => 30,
-            'check_baut_roda' => 31,
-            'check_drive_caster_load_wheel' => 32,
-            'check_lift_chain' => 33,
-            'check_lift_bracket' => 34,
-            'check_hydraulic_hose' => 35,
-            'check_motor_hydraulic_pump' => 36,
-            'check_fork' => 37,
-            'check_lift_rollers' => 38,
-            'check_mast_rollers' => 39,
-            'check_lift_cylinders' => 40,
-            'check_tilt_cylinders' => 41,
-            'check_control_valve' => 42,
-            'check_hydraulic_tank' => 43,
-            'check_overhead_guard' => 44,
-            'check_all_bolt_nut' => 45,
-            'check_power_steering' => 46,
-            'check_brake_cam_adjust_bolt' => 47,
-            'check_axle' => 48,
-            'check_greasing_point' => 49,
-            'check_air_spring' => 50,
+            'check_steering_wheel' => 33,
+            'check_baut_roda' => 34,
+            'check_drive_caster_load_wheel' => 35,
+            'check_lift_chain' => 36,
+            'check_lift_bracket' => 37,
+            'check_hydraulic_hose' => 38,
+            'check_motor_hydraulic_pump' => 39,
+            'check_fork' => 40,
+            'check_lift_rollers' => 41,
+            'check_mast_rollers' => 42,
+            'check_lift_cylinders' => 43,
+            'check_tilt_cylinders' => 44,
+            'check_control_valve' => 45,
+            'check_hydraulic_tank' => 46,
+            'check_overhead_guard' => 47,
+            'check_all_bolt_nut' => 48,
+            'check_power_steering' => 49,
+            'check_brake_cam_adjust_bolt' => 51,
+            'check_axle' => 51,
+            'check_greasing_point' => 52,
+            'check_air_spring' => 53,
 
             // Oil
-            'ganti_gear_oil' => 53,
-            'ganti_hydraulic_oil' => 54,
-            'ganti_return_filter' => 55,
-            'ganti_brake_oil' => 56,
+            'ganti_gear_oil' => 56,
+            'ganti_hydraulic_oil' => 57,
+            'ganti_return_filter' => 58,
+            'ganti_brake_oil' => 59,
         ];
 
         foreach ($data as $main) {
@@ -789,10 +810,187 @@ class MtcMainController extends Controller
             if (!$inspection) continue;
 
             // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('B4', ':' . $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('G3', $main->electricEngine->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('G4', $main->running_hour ?? '-');
+            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('C6', $main->departemen ?? '-');
+            $sheet->setCellValue('C7', $main->paket ?? '-');
+            $sheet->setCellValue('G3', ': ' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('G4', ': ' . $inspection->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('G5', ': ' . $inspection->mesin->lokasi ?? '-');
+            $sheet->setCellValue('G6', ': ' . $main->running_hour ?? '-');
+            $sheet->setCellValue('A65', 'Tindakan Korektif : ' . $main->korektif);
+
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
+
+            foreach ($fieldRowMap as $field => $row) {
+
+                $value = $inspection->{$field};
+
+                if ($value === true) {
+                    $kondisi = '✓';
+                } elseif ($value === false) {
+                    $kondisi = '✗';
+                } else {
+                    $kondisi = '';
+                }
+
+                $sheet->setCellValue('E' . $row, $kondisi);
+                $ket = $keteranganMap[$field] ?? '';
+                $sheet->setCellValue('F' . $row, $ket);
+            }
+
+            // KEBUTUHAN MATERIAL
+            $materialRow = 67;
+
+            if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
+                foreach ($main->kebutuhanMaterial as $item) {
+
+                    $sheet->setCellValue('E' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
+
+                    $materialRow++;
+                }
+            }
+
+            // Sticker Approval
+            if ($main->approvals && $main->approvals->count()) {
+
+                foreach ($main->approvals as $item) {
+
+                    // hanya kalau approved
+                    if ($item->status !== 'approved') continue;
+
+                    switch (strtolower($item->role)) {
+
+                        case 'teknisi':
+                            $sheet->setCellValue('D72', 'Dibuat: ' . $item->approver?->username ?? '-');
+                            $this->insertApprovalSticker($sheet, 'H72');
+                            break;
+
+                        case 'staff':
+                            $this->insertApprovalSticker($sheet, 'H74');
+                            break;
+
+                        case 'user':
+                            $this->insertApprovalSticker($sheet, 'H76');
+                            break;
+                    }
+                }
+            }
+
+            break;
+        }
+
+        return $this->downloadExcel($spreadsheet, 'electric_engine');
+    }
+
+    private function exportDieselEngine($id)
+    {
+        $path = public_path('assets/templates/maintenance/diesel_engine.xlsx');
+
+        if (!file_exists($path)) {
+            return response()->json(['message' => 'Template not found'], 404);
+        }
+
+        $spreadsheet = IOFactory::load($path);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $data = MtcMainModel::where('jenis_mtc', 'Diesel Engine')
+            ->where('id', $id)
+            ->with('dieselEngine', 'kebutuhanMaterial', 'approvals')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
+        $fieldRowMap = [
+            // ENGINE
+            'check_kondisi_level_oli_mesin' => 9,
+            'check_kondisi_radiator_hose' => 10,
+            'check_kondisi_level_air_radiator' => 11,
+            'check_water_pump' => 12,
+            'check_injection_pump_injector_piping' => 13,
+            'check_turbocharger_manifold' => 14,
+            'check_fan_v_belt' => 15,
+            'check_automatic_tensioner_belt' => 16,
+            'check_engine_mounting' => 17,
+            'check_air_filter_condition' => 18,
+            'check_clearence_valve_drain_valve' => 19,
+            'check_engine_oil_filter' => 20,
+            'check_air_radiator' => 21,
+            'check_minyak_kopling' => 22,
+            'check_fuel_filter' => 23,
+
+            // ELECTRIC
+            'check_kondisi_aki_level_air_aki' => 25,
+            'check_fungsi_starting_motor' => 26,
+            'check_fungsi_alternator' => 27,
+            'check_sensor_sensor_gauge' => 28,
+            'check_fuse_control_switch' => 29,
+            'check_control_display' => 30,
+            'check_indicator_wiring' => 31,
+
+            // TRANSMISI / BRAKE / DRIVE SHAFT
+            'check_kondisi_level_oli_transmisi' => 33,
+            'check_fungsi_transmisi' => 34,
+            'check_filter_oli_transmisi' => 35,
+            'check_fungsi_rem' => 36,
+            'check_oli_tidak_ada_yang_bocor' => 37,
+            'check_kondisi_drive_shaft' => 38,
+
+            // HYDRAULIC
+            'check_kondisi_level_hydraulic_oil' => 40,
+            'check_kondisi_hydraulic_oil_filter' => 41,
+            'check_fungsi_hydraulic_system' => 42,
+            'check_fungsi_steering_system' => 43,
+            'check_kondisi_hydraulic_cylinder' => 44,
+            'check_kondisi_steering_cylinder' => 45,
+            'check_kondisi_axle_oil' => 46,
+            'check_kondisi_baut_roda_hydraulic' => 47,
+            'check_kondisi_bucket_pin_bucket' => 48,
+            'check_kondisi_dump_pin_bushing' => 49,
+
+            // GENERAL
+            'check_klakson' => 51,
+            'check_buzzer_back' => 52,
+            'check_kondisi_basket_fresh_body' => 53,
+            'check_kaca_sepion' => 54,
+            'check_kondisi_roda_ban' => 55,
+            'check_baut_roda_general' => 56,
+            'check_lampu_depan_kanan' => 57,
+            'check_lampu_depan_kiri' => 58,
+            'check_baut_bearing_molen' => 59,
+            'check_baut_hanger_as_roda' => 60,
+        ];
+
+        foreach ($data as $main) {
+            $inspection = $main->dieselEngine;
+            if (!$inspection) continue;
+
+            // header (sekali isi aja, bukan per row)
+            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('C6', $main->departemen ?? '-');
+            $sheet->setCellValue('C7', $main->paket ?? '-');
+            $sheet->setCellValue('G3', ': ' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('G4', ': ' . $inspection->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('G5', ': ' . $inspection->mesin->lokasi ?? '-');
+            $sheet->setCellValue('G6', ': ' . $main->running_hour ?? '-');
             $sheet->setCellValue('A62', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
@@ -853,181 +1051,16 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $this->insertApprovalSticker($sheet, 'H69');
+                            $sheet->setCellValue('D74', 'Dibuat: ' . $item->approver?->username ?? '-');
+                            $this->insertApprovalSticker($sheet, 'H74');
                             break;
 
                         case 'staff':
-                            $this->insertApprovalSticker($sheet, 'H71');
+                            $this->insertApprovalSticker($sheet, 'H76');
                             break;
 
                         case 'user':
-                            $this->insertApprovalSticker($sheet, 'H73');
-                            break;
-                    }
-                }
-            }
-
-            break;
-        }
-
-        return $this->downloadExcel($spreadsheet, 'electric_engine');
-    }
-
-    private function exportDieselEngine($id)
-    {
-        $path = public_path('assets/templates/maintenance/diesel_engine.xlsx');
-
-        if (!file_exists($path)) {
-            return response()->json(['message' => 'Template not found'], 404);
-        }
-
-        $spreadsheet = IOFactory::load($path);
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $data = MtcMainModel::where('jenis_mtc', 'Diesel Engine')
-            ->where('id', $id)
-            ->with('dieselEngine', 'kebutuhanMaterial', 'approvals')
-            ->orderBy('tanggal', 'desc')
-            ->get();
-
-        $fieldRowMap = [
-            // ENGINE
-            'check_kondisi_level_oli_mesin' => 6,
-            'check_kondisi_radiator_hose' => 7,
-            'check_kondisi_level_air_radiator' => 8,
-            'check_water_pump' => 9,
-            'check_injection_pump_injector_piping' => 10,
-            'check_turbocharger_manifold' => 11,
-            'check_fan_v_belt' => 12,
-            'check_automatic_tensioner_belt' => 13,
-            'check_engine_mounting' => 14,
-            'check_air_filter_condition' => 15,
-            'check_clearence_valve_drain_valve' => 16,
-            'check_engine_oil_filter' => 17,
-            'check_air_radiator' => 18,
-            'check_minyak_kopling' => 19,
-            'check_fuel_filter' => 20,
-
-            // ELECTRIC
-            'check_kondisi_aki_level_air_aki' => 22,
-            'check_fungsi_starting_motor' => 23,
-            'check_fungsi_alternator' => 24,
-            'check_sensor_sensor_gauge' => 25,
-            'check_fuse_control_switch' => 26,
-            'check_control_display' => 27,
-            'check_indicator_wiring' => 28,
-
-            // TRANSMISI / BRAKE / DRIVE SHAFT
-            'check_kondisi_level_oli_transmisi' => 30,
-            'check_fungsi_transmisi' => 31,
-            'check_filter_oli_transmisi' => 32,
-            'check_fungsi_rem' => 33,
-            'check_oli_tidak_ada_yang_bocor' => 34,
-            'check_kondisi_drive_shaft' => 35,
-
-            // HYDRAULIC
-            'check_kondisi_level_hydraulic_oil' => 37,
-            'check_kondisi_hydraulic_oil_filter' => 38,
-            'check_fungsi_hydraulic_system' => 39,
-            'check_fungsi_steering_system' => 40,
-            'check_kondisi_hydraulic_cylinder' => 41,
-            'check_kondisi_steering_cylinder' => 42,
-            'check_kondisi_axle_oil' => 43,
-            'check_kondisi_baut_roda_hydraulic' => 44,
-            'check_kondisi_bucket_pin_bucket' => 45,
-            'check_kondisi_dump_pin_bushing' => 46,
-
-            // GENERAL
-            'check_klakson' => 48,
-            'check_buzzer_back' => 49,
-            'check_kondisi_basket_fresh_body' => 50,
-            'check_kaca_sepion' => 51,
-            'check_kondisi_roda_ban' => 52,
-            'check_baut_roda_general' => 53,
-            'check_lampu_depan_kanan' => 54,
-            'check_lampu_depan_kiri' => 55,
-            'check_baut_bearing_molen' => 56,
-            'check_baut_hanger_as_roda' => 57,
-        ];
-
-        foreach ($data as $main) {
-            $inspection = $main->dieselEngine;
-            if (!$inspection) continue;
-
-            // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('B4', ':' . $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('G3', $main->dieselEngine->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('G4', $main->running_hour ?? '-');
-            $sheet->setCellValue('A59', 'Tindakan Korektif : ' . $main->korektif);
-
-            $keteranganMap = [];
-
-            if (!empty($main->keterangan)) {
-                $items = explode('|', $main->keterangan);
-
-                foreach ($items as $item) {
-                    $parts = explode(':', $item, 2);
-
-                    if (count($parts) == 2) {
-                        $key = trim($parts[0]);
-                        $val = trim($parts[1]);
-
-                        $keteranganMap[$key] = $val;
-                    }
-                }
-            }
-
-            foreach ($fieldRowMap as $field => $row) {
-
-                $value = $inspection->{$field};
-
-                if ($value === true) {
-                    $kondisi = '✓';
-                } elseif ($value === false) {
-                    $kondisi = '✗';
-                } else {
-                    $kondisi = '';
-                }
-
-                $sheet->setCellValue('E' . $row, $kondisi);
-                $ket = $keteranganMap[$field] ?? '';
-                $sheet->setCellValue('F' . $row, $ket);
-            }
-
-            // KEBUTUHAN MATERIAL
-            $materialRow = 61;
-
-            if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
-                foreach ($main->kebutuhanMaterial as $item) {
-
-                    $sheet->setCellValue('E' . $materialRow, $item->deskripsi ?? '');
-                    $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
-
-                    $materialRow++;
-                }
-            }
-
-            // Sticker Approval
-            if ($main->approvals && $main->approvals->count()) {
-
-                foreach ($main->approvals as $item) {
-
-                    // hanya kalau approved
-                    if ($item->status !== 'approved') continue;
-
-                    switch (strtolower($item->role)) {
-
-                        case 'teknisi':
-                            $this->insertApprovalSticker($sheet, 'H71');
-                            break;
-
-                        case 'staff':
-                            $this->insertApprovalSticker($sheet, 'H73');
-                            break;
-
-                        case 'user':
-                            $this->insertApprovalSticker($sheet, 'H75');
+                            $this->insertApprovalSticker($sheet, 'H78');
                             break;
                     }
                 }
@@ -1137,7 +1170,7 @@ class MtcMainController extends Controller
         return $this->downloadExcel($spreadsheet, 'battery');
     }
 
-    private function exportSipil()
+    private function exportSipil($id)
     {
         $path = public_path('assets/templates/maintenance/sipil.xlsx');
 
@@ -1149,18 +1182,19 @@ class MtcMainController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         $data = MtcMainModel::where('jenis_mtc', 'Sipil')
+            ->where('id', $id)
             ->with('sipil', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
         $fieldRowMap = [
-            'plumbing' => 7,
-            'plafon' => 8,
-            'lantai' => 9,
-            'dinding' => 10,
-            'jendela' => 11,
-            'pintu' => 12,
-            'rooling_fast_door' => 13,
+            'plumbing' => 8,
+            'plafon' => 9,
+            'lantai' => 10,
+            'dinding' => 11,
+            'jendela' => 12,
+            'pintu' => 13,
+            'rooling_fast_door' => 14,
         ];
 
         foreach ($data as $main) {
@@ -1170,9 +1204,12 @@ class MtcMainController extends Controller
             // header (sekali isi aja, bukan per row)
             $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
             $sheet->setCellValue('G3', ': ' . $main->area ?? '-');
-            $sheet->setCellValue('A15', 'Rekomendasi : ' . $main->rekomendasi);
-            $sheet->setCellValue('A16', 'Tindakan Korektif : ' . $main->korektif);
+            $sheet->setCellValue('G4', ': ' . $main->lokasi ?? '-');
+            $sheet->setCellValue('G5', ': ' . $main->departemen ?? '-');
+            $sheet->setCellValue('A16', 'Rekomendasi : ' . $main->rekomendasi);
+            $sheet->setCellValue('A17', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
 
@@ -1210,7 +1247,7 @@ class MtcMainController extends Controller
             }
 
             // KEBUTUHAN MATERIAL
-            $materialRow = 18;
+            $materialRow = 19;
 
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
@@ -1235,15 +1272,16 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $this->insertApprovalSticker($sheet, 'H33');
+                            $sheet->setCellValue('E34', 'Dibuat: ' . $item->approver?->username ?? '-');
+                            $this->insertApprovalSticker($sheet, 'H34');
                             break;
 
                         case 'staff':
-                            $this->insertApprovalSticker($sheet, 'H35');
+                            $this->insertApprovalSticker($sheet, 'H36');
                             break;
 
                         case 'user':
-                            $this->insertApprovalSticker($sheet, 'H37');
+                            $this->insertApprovalSticker($sheet, 'H38');
                             break;
                     }
                 }

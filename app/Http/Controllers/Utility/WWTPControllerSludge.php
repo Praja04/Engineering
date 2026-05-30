@@ -444,4 +444,53 @@ class WWTPControllerSludge extends Controller
             'message' => 'Data berhasil dihapus.',
         ]);
     }
+
+    /**
+     * Get sludge content chart data (aggregated by date)
+     */
+    public function getSludgeContentChart(Request $request)
+    {
+        try {
+            $startDate = $request->input('start_date', Carbon::now()->startOfMonth());
+            $endDate   = $request->input('end_date',   Carbon::now()->endOfMonth());
+
+            $data = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])
+                ->select('tanggal')
+                ->selectRaw('AVG(sludge_content) as avg_sludge_content')
+                ->groupBy('tanggal')
+                ->orderBy('tanggal', 'asc')
+                ->get();
+
+            return response()->json($data);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error fetching sludge content chart data', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get pengangkutan sludge chart data
+     */
+    public function getPengangkutanChart(Request $request)
+    {
+        try {
+            $startDate = $request->input('start_date');
+            $endDate   = $request->input('end_date');
+
+            $query = WwtpPengangkutanSludge::orderBy('week_start', 'asc');
+
+            if ($startDate && $endDate) {
+                $query->whereBetween('week_start', [$startDate, $endDate]);
+            } else {
+                // Default 2 bulan terakhir
+                $twoMonthsAgo = Carbon::now()->subMonths(2)->startOfMonth()->toDateString();
+                $query->where('week_start', '>=', $twoMonthsAgo);
+            }
+
+            $data = $query->get();
+
+            return response()->json($data);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error fetching pengangkutan chart data', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

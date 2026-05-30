@@ -23,9 +23,10 @@
             vertical-align: middle;
         }
 
-        #detailModal .modal-dialog {
-            max-width: 90%;
-        }
+        /*
+                #detailModal .modal-dialog {
+                    max-width: 90%;
+                } */
 
         /* BORDER MERAH SAAT NG */
         .check-wrapper.ng-active {
@@ -128,7 +129,7 @@
 
     <!-- Modal Detail Inspeksi -->
     <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="detailModalLabel">Detail Inspeksi Battery</span>
@@ -137,15 +138,16 @@
                 </div>
                 <div class="modal-body">
                     <div class="row mb-3">
-                        <div class="col-md-4"><strong>Tanggal:</strong> <span id="modalTanggal"></span></div>
-                        <div class="col-md-4"><strong>Waktu Mulai:</strong> <span id="modalWaktuMulai"></span></div>
-                        <div class="col-md-4"><strong>Waktu Selesai:</strong> <span id="modalWaktuSelesai"></span></div>
-                        <div class="col-md-4"><strong>Dibuat oleh:</strong> <span id="modalUser"></span></div>
+                        <div class="col-md-3"><strong>Tanggal:</strong> <span id="modalTanggal"></span></div>
+                        <div class="col-md-3"><strong>Waktu Mulai:</strong> <span id="modalWaktuMulai"></span></div>
+                        <div class="col-md-3"><strong>Waktu Selesai:</strong> <span id="modalWaktuSelesai"></span></div>
+                        <div class="col-md-3"><strong>Dibuat oleh:</strong> <span id="modalUser"></span></div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-4"><strong>Battery Type:</strong> <span id="modalType"></span></div>
-                        <div class="col-md-4"><strong>No Unit:</strong> <span id="modalUnit"></span></div>
-                        <div class="col-md-4"><strong>No Seri:</strong> <span id="modalSeri"></span></div>
+                        <div class="col-md-3"><strong>Battery Type:</strong> <span id="modalType"></span></div>
+                        <div class="col-md-3"><strong>No Unit:</strong> <span id="modalUnit"></span></div>
+                        <div class="col-md-3"><strong>No Seri:</strong> <span id="modalSeri"></span></div>
+                        <div class="col-md-3"><strong>Grounding:</strong> <span id="modalGrounding"></span></div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-12"><strong>Catatan:</strong> <span id="modalCatatan"></span></div>
@@ -215,6 +217,11 @@
                             <div class="col-md-3">
                                 <label>No Unit</label>
                                 <input type="text" name="no_unit" id="editNoUnit" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Grounding</label>
+                                <input type="number" name="grounding" id="editGrounding" class="form-control"
+                                    step="0.01" min="0">
                             </div>
                         </div>
 
@@ -287,8 +294,7 @@
                         d.unit = $('#filterUnit').val() || null;
                     },
                     dataSrc: function(json) {
-                        if (json.status && json.data) return json.data;
-                        return [];
+                        return json.data || [];
                     }
                 },
                 columns: [{
@@ -350,7 +356,7 @@
                         render: function(data) {
                             return `
                                     <button class="btn btn-sm btn-primary btnDetail" data-id="${data.id}" title="Detail"><i class="mdi mdi-eye"></i></button>
-                                    <button class="btn btn-sm btn-info btnEdit" data-id="${data.id}" title="Edit"><i class="mdi mdi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-info btnEdit" data-id="${data.id}" title="${data.status === 'rejected' ? 'Silakan isi form kembali' : 'Edit'}" ${data.status === 'rejected' ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>
                                     <button class="btn btn-sm btn-danger btnDelete" data-id="${data.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>
                                     <button class="btn btn-sm btn-warning btn-print" data-id="${data.id}" title="Download"><i class="mdi mdi-download"></i></button>
                                 `;
@@ -486,6 +492,7 @@
                 // Keterangan ada di level utama (bukan di battery)
                 $('#modalKeterangan').text(rowData.keterangan || '-');
                 $('#modalCatatan').text(battery.catatan || '-');
+                $('#modalGrounding').text(battery.grounding || '-');
 
                 // User yang create
                 $('#modalUser').text(rowData.created_by?.username || 'Unknown');
@@ -496,8 +503,10 @@
                 if (battery.details && Array.isArray(battery.details) && battery.details.length > 0) {
                     // Sort berdasarkan nomor cell (aman kalau urutannya dari DB sudah benar, tapi sort tetap lebih aman)
                     const sortedDetails = [...battery.details].sort((a, b) => a.cell - b.cell);
+                    const totalCells = sortedDetails.length;
+                    const groundingValue = battery.grounding || '-';
 
-                    sortedDetails.forEach(detail => {
+                    sortedDetails.forEach((detail, index) => {
                         // Helper untuk menentukan status OK / Tidak OK + class
                         const getStatus = (val) => {
                             // API mengirim true/false untuk beberapa field, string voltase/grounding
@@ -525,7 +534,12 @@
                         const intercellStatus = getStatus(detail.intercell);
                         const skunStatus = getStatus(detail.kondisi_skun);
                         const unitStatus = getStatus(detail.kondisi_unit);
-                        const groundingStatus = getStatus(detail.grounding);
+
+                        let groundingTd = '';
+                        if (index === 0) {
+                            groundingTd =
+                                `<td rowspan="${totalCells}" class="align-middle text-center fw-bold bg-light" style="font-size: 1.1rem;">${groundingValue}</td>`;
+                        }
 
                         detailHtml += `
                             <tr>
@@ -535,7 +549,7 @@
                                 <td class="${intercellStatus.class}">${intercellStatus.text}</td>
                                 <td class="${skunStatus.class}">${skunStatus.text}</td>
                                 <td class="${unitStatus.class}">${unitStatus.text}</td>
-                                <td class="${groundingStatus.class}">${groundingStatus.text}</td>
+                                ${groundingTd}
                             </tr>
                         `;
                     });
@@ -598,6 +612,7 @@
                 $('#editNoUnit').val(battery.no_unit || '');
                 $('#editNoSeri').val(battery.no_seri || '');
                 $('#editCatatan').val(battery.catatan || '');
+                $('#editGrounding').val(battery.grounding || '');
 
                 const keteranganMap = parseKeteranganPairs(rowData.keterangan || '');
 
@@ -618,16 +633,10 @@
                                             <input type="hidden" name="details[${index}][id]" value="${detail.id || ''}">
                                             <input type="hidden" name="details[${index}][cell]" value="${detail.cell}">
 
-                                            <div class="col-6">
+                                            <div class="col-12">
                                                 <label>Voltase</label>
                                                 <input type="number" step="0.01" class="form-control"
                                                     name="details[${index}][voltase]" value="${detail.voltase ?? ''}">
-                                            </div>
-
-                                            <div class="col-6">
-                                                <label>Grounding</label>
-                                                <input type="number" step="0.01" class="form-control"
-                                                    name="details[${index}][grounding]" value="${detail.grounding ?? ''}">
                                             </div>
 
                                             ${buildCheckField(index, 'level_air_aki', 'Level Air Aki', detail.level_air_aki)}
@@ -739,16 +748,10 @@
                                     <input type="hidden" name="details[${index}][cell]" value="${newCell}">
                                     <input type="hidden" name="details[${index}][is_new]" value="1">
 
-                                    <div class="col-6">
+                                    <div class="col-12">
                                         <label>Voltase</label>
                                         <input type="number" step="0.01" class="form-control"
                                             name="details[${index}][voltase]">
-                                    </div>
-
-                                    <div class="col-6">
-                                        <label>Grounding</label>
-                                        <input type="number" step="0.01" class="form-control"
-                                            name="details[${index}][grounding]">
                                     </div>
 
                                     ${buildCheckField(index, 'level_air_aki', 'Level Air Aki')}

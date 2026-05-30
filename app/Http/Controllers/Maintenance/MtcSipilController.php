@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers\Maintenance;
 
-use Illuminate\Http\Request;
-use App\Models\NotificationsModel;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Maintenance\MtcMainModel;
-use App\Models\Maintenance\MtcApprovalModel;
+use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
 use App\Http\Requests\Maintenance\MtcMainRequest;
 use App\Http\Requests\Maintenance\MtcSipilRequest;
-use App\Models\Maintenance\MtcSipilInspectionModel;
+use App\Models\Maintenance\MtcApprovalModel;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
-use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
+use App\Models\Maintenance\MtcMainModel;
 use App\Models\Maintenance\MtcMasterMesinModel;
+use App\Models\Maintenance\MtcSipilInspectionModel;
+use App\Models\NotificationsModel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MtcSipilController extends Controller
 {
     public function index()
     {
         $area = MtcMasterMesinModel::where('jenis_mtc', 'Sipil')
-        ->orderBy('id')->get();
+            ->orderBy('id')->get();
+
         return view('maintenance.form.sipil')->with(compact('area'));
     }
 
@@ -42,8 +43,8 @@ class MtcSipilController extends Controller
             // Simpan Main
             $main = MtcMainModel::create([
                 ...$mainRequest->validated(),
-                'jenis_mtc'  => 'Sipil',
-                'status'     => 'pending',
+                'jenis_mtc' => 'Sipil',
+                'status' => 'pending',
                 'created_by' => $userId,
             ]);
 
@@ -55,41 +56,42 @@ class MtcSipilController extends Controller
             foreach ($materials->materials ?? [] as $item) {
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id' => $main->id,
-                    'mid'        => $item['mid'],
-                    'deskripsi'  => $item['desc'] ?? null,
-                    'qty'        => $item['qty'],
+                    'mid' => $item['mid'] ?? null,
+                    'deskripsi' => $item['desc'] ?? null,
+                    'qty' => $item['qty'] ?? 0,
+                    'uom' => $item['uom'] ?? null,
                     'created_by' => $userId,
                 ]);
             }
 
             $ttdPaths = [
                 'teknisi' => 'mtc/ttd/ttd_teknisi.jpeg',  // TTD operator/teknisi
-                'staff'   => 'mtc/ttd/ttd_staff.jpeg',     // TTD supervisor
-                'user'    => 'mtc/ttd/ttd_user.jpeg',      // TTD user MT/MTC
+                'staff' => 'mtc/ttd/ttd_staff.jpeg',     // TTD supervisor
+                'user' => 'mtc/ttd/ttd_user.jpeg',      // TTD user MT/MTC
             ];
-
 
             $approvalFlows = [
                 [
                     'level' => 1,
-                    'role'  => 'teknisi',
+                    'role' => 'teknisi',
                     'approver_id' => $userId,
-                    'auto'  => true,
+                    'auto' => true,
                 ],
                 [
                     'level' => 2,
-                    'role'  => 'staff',
+                    'role' => 'staff',
                     'approver_id' => $mainRequest->staff_id,
-                    'auto'  => false,
+                    'auto' => false,
                 ],
                 [
                     'level' => 3,
-                    'role'  => 'user',
+                    'role' => 'user',
                     'approver_id' => $mainRequest->user_id,
-                    'auto'  => false,
+                    'auto' => false,
                 ],
             ];
 
+            $notificationSent = false;
             foreach ($approvalFlows as $flow) {
 
                 $isAutoApproved = $flow['auto'];
@@ -97,31 +99,33 @@ class MtcSipilController extends Controller
 
                 MtcApprovalModel::create([
                     'mtc_main_id' => $main->id,
-                    'level'       => $flow['level'],
-                    'role'        => $flow['role'],
+                    'level' => $flow['level'],
+                    'role' => $flow['role'],
                     'approver_id' => $flow['approver_id'],
-                    'status'      => $isAutoApproved ? 'approved' : 'pending',
-                    'ttd'         => $isAutoApproved ? $ttdPath : null,
-                    'action_at'   => $isAutoApproved ? now() : null,
-                    'action_by'   => $isAutoApproved ? $userId : null,
+                    'status' => $isAutoApproved ? 'approved' : 'pending',
+                    'ttd' => $isAutoApproved ? $ttdPath : null,
+                    'action_at' => $isAutoApproved ? now() : null,
+                    'action_by' => $isAutoApproved ? $userId : null,
                 ]);
 
-                if (!$isAutoApproved) {
+                if (! $isAutoApproved && ! $notificationSent) {
                     NotificationsModel::create([
-                        'user_id'         => $flow['approver_id'],
+                        'user_id' => $flow['approver_id'],
                         'notifiable_type' => MtcMainModel::class,
-                        'notifiable_id'   => $main->id,
-                        'title'           => 'Approval Maintenance',
-                        'message'         => 'Maintenance Sipil menunggu persetujuan Anda',
-                        'url'             => route('mtc.approval.index'),
-                        'is_read'         => false,
+                        'notifiable_id' => $main->id,
+                        'title' => 'Approval Maintenance',
+                        'message' => 'Maintenance Sipil tanggal ' . date('d F Y', strtotime($main->tanggal)) . ' menunggu persetujuan Anda',
+                        'url' => route('mtc.approval.index'),
+                        'is_read' => false,
                     ]);
+
+                    $notificationSent = true;
                 }
             }
         });
 
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Data inspeksi sipil berhasil disimpan',
         ], 201);
     }
@@ -133,7 +137,7 @@ class MtcSipilController extends Controller
             ->with([
                 'createdBy:id,username',
                 'Sipil',
-                'kebutuhanMaterial'
+                'kebutuhanMaterial',
             ]);
 
         // 🔍 filter tanggal
@@ -162,10 +166,10 @@ class MtcSipilController extends Controller
             ->get();
 
         return response()->json([
-            "draw" => intval($request->draw),
-            "recordsTotal" => $total,
-            "recordsFiltered" => $total,
-            "data" => $data
+            'draw' => intval($request->draw),
+            'recordsTotal' => $total,
+            'recordsFiltered' => $total,
+            'data' => $data,
         ]);
     }
 
@@ -188,7 +192,7 @@ class MtcSipilController extends Controller
             ]);
 
             $inspection->update([
-                ...$detailRequest->validated()
+                ...$detailRequest->validated(),
             ]);
 
             $existingIds = $main->kebutuhanMaterial()->pluck('id')->toArray();
@@ -196,25 +200,25 @@ class MtcSipilController extends Controller
 
             foreach ($materials['materials'] as $item) {
 
-                if (!empty($item['id'])) {
+                if (! empty($item['id'])) {
 
                     $incomingIds[] = $item['id'];
 
                     MtcKebutuhanMaterialModel::where('id', $item['id'])
                         ->update([
-                            'mid'        => $item['mid'],
-                            'deskripsi'  => $item['deskripsi'] ?? null,
-                            'qty'        => $item['qty'],
+                            'mid' => $item['mid'] ?? null,
+                            'deskripsi' => $item['deskripsi'] ?? null,
+                            'qty' => $item['qty'] ?? 0,
                             'updated_by' => $userId,
                         ]);
                 } else {
 
                     $new = MtcKebutuhanMaterialModel::create([
-                        'mtc_main_id'       => $main->id,
-                        'mid'               => $item['mid'],
-                        'deskripsi'         => $item['deskripsi'] ?? null,
-                        'qty'               => $item['qty'],
-                        'created_by'        => $userId,
+                        'mtc_main_id' => $main->id,
+                        'mid' => $item['mid'] ?? null,
+                        'deskripsi' => $item['deskripsi'] ?? null,
+                        'qty' => $item['qty'] ?? 0,
+                        'created_by' => $userId,
                     ]);
 
                     $incomingIds[] = $new->id;
@@ -229,7 +233,7 @@ class MtcSipilController extends Controller
         });
 
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Data inspeksi sipil berhasil diupdate',
         ]);
     }

@@ -75,11 +75,11 @@ class WaterSoftenerController extends Controller
             ->where('tahun', $tanggal->year)
             ->first();
 
-        if ($approval && in_array($approval->status, ['waiting_supervisor', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan bulan ini sudah diajukan/disetujui, tidak dapat diubah.'
-            ], 422);
-        }
+        // if ($approval && in_array($approval->status, ['waiting_supervisor', 'approved_supervisor'])) {
+        //     return response()->json([
+        //         'message' => 'Laporan bulan ini sudah diajukan/disetujui, tidak dapat diubah.'
+        //     ], 422);
+        // }
 
         // Satu tanggal hanya bisa diinput sekali
         $existing = WaterSoftener::where('tanggal', $request->tanggal)->first();
@@ -239,6 +239,7 @@ class WaterSoftenerController extends Controller
             'supervisor_id' => $request->supervisor_id,
             'status'        => 'waiting_supervisor',
             'submitted_at'  => now(),
+            'foreman_approved_at'  => now(),
         ]);
 
         // Kirim notifikasi ke supervisor
@@ -251,6 +252,19 @@ class WaterSoftenerController extends Controller
 
         return response()->json([
             'message' => "Laporan bulan {$bulan}/{$tahun} berhasil diajukan ke Supervisor."
+        ]);
+    }
+
+    private function kirimNotifikasi($userId, $title, $message, $approvalId)
+    {
+        NotificationsModel::create([
+            'user_id'         => $userId,
+            'title'           => $title,
+            'message'         => $message,
+            'url'             => url(route('water-softener.approval')),
+            'notifiable_type' => WaterSoftenerApproval::class,
+            'notifiable_id'   => $approvalId,
+            'is_read'         => 0,
         ]);
     }
 
@@ -282,6 +296,11 @@ class WaterSoftenerController extends Controller
             'status'                 => 'approved_supervisor',
             'supervisor_approved_at' => now(),
         ]);
+
+        NotificationsModel::where('notifiable_type', WaterSoftenerApproval::class)
+            ->where('notifiable_id', $approval->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->delete();
 
         return response()->json([
             'message' => "Laporan bulan {$approval->bulan}/{$approval->tahun} telah disetujui (Final)."

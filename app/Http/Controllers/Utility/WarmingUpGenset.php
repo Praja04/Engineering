@@ -157,7 +157,7 @@ class WarmingUpGenset extends Controller
         NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
@@ -183,7 +183,7 @@ class WarmingUpGenset extends Controller
         NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Supervisor (Selesai)']);
     }
@@ -205,6 +205,11 @@ class WarmingUpGenset extends Controller
             'status' => 'rejected',
             'reject_reason' => $request->reason
         ]);
+
+        NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->delete();
 
         return response()->json(['message' => 'Laporan berhasil ditolak']);
     }
@@ -324,11 +329,15 @@ class WarmingUpGenset extends Controller
         }
 
         // Filter berdasarkan bulan tahun (format: YYYY-MM)
-        if ($request->filled('bulan')) {
-            $bulan = $request->bulan; // format: 2025-04
-            $query->whereYear('tanggal_laporan', substr($bulan, 0, 4))
-                ->whereMonth('tanggal_laporan', substr($bulan, 5, 2));
+        if ($request->filled('tahun')) {
+            $tahun = $request->tahun; // format: 2025-04
+            $query->whereYear('tanggal_laporan', $tahun);
         }
+
+        // if ($request->filled('bulan')) {
+        //     $bulan = $request->bulan; // format: 2025-04
+        //     $query->whereMonth('tanggal_laporan', $bulan);
+        // }
 
         // Filter berdasarkan status
         if ($request->filled('status')) {
@@ -421,9 +430,8 @@ class WarmingUpGenset extends Controller
         $query = WarmingUpGensetModel::with(['operator', 'foreman', 'supervisor'])
             ->orderBy('tanggal_laporan', 'asc');
 
-        if ($request->filled('bulan') && $request->filled('tahun')) {
-            $query->whereYear('tanggal_laporan', $request->tahun)
-                ->whereMonth('tanggal_laporan', $request->bulan);
+        if ($request->filled('tahun')) {
+            $query->whereYear('tanggal_laporan', $request->tahun);
         }
 
         $data = $query->get();

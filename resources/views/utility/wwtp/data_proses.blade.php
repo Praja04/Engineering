@@ -82,6 +82,18 @@
                 </div>
             </div>
 
+            <!-- Action Buttons -->
+            <div class="row mb-4">
+                <div class="col-12 d-flex gap-2">
+                    <a href="{{ url('/wwtp/form_proses') }}" class="btn btn-primary btn-lg px-4 shadow-sm">
+                        <i class="fas fa-plus-circle me-2"></i>Tambah Data Proses
+                    </a>
+                    <button type="button" class="btn btn-success btn-lg px-4 shadow-sm" id="btnExport">
+                        <i class="fas fa-file-excel me-2"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+
             <!-- Filter Section -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
@@ -483,6 +495,35 @@
             </div>
         </div>
 
+        {{-- MODAL: Export Excel --}}
+        <div class="modal fade" id="exportExcelModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-file-excel me-2"></i>Export Report WWTP
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info border-0 shadow-sm mb-4">
+                            <i class="fas fa-info-circle me-2"></i>Laporan mencakup data <strong>Proses, Performance, Sludge,</strong> dan <strong>Chemical</strong> pada tanggal yang dipilih.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Pilih Tanggal Laporan</label>
+                            <input type="date" class="form-control form-control-lg" id="export_tanggal" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}">
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-success px-4" id="btnProcessExport">
+                            <i class="fas fa-download me-2"></i>Download Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -552,6 +593,23 @@
         const PER_PAGE = 10;
         const userJabatan = "{{ Auth::user()->jabatan }}";
         const canEditDelete = userJabatan !== 'operator';
+
+        /* ─────────────────────────────────────────────
+           EXPORT EXCEL
+        ───────────────────────────────────────────── */
+        $('#btnExport').on('click', function() {
+            $('#exportExcelModal').modal('show');
+        });
+
+        $('#btnProcessExport').on('click', function() {
+            const tanggal = $('#export_tanggal').val();
+            if (!tanggal) {
+                Swal.fire('Peringatan', 'Silakan pilih tanggal terlebih dahulu', 'warning');
+                return;
+            }
+            window.open(`{{ route('wwtp.export') }}?tanggal=${tanggal}`, '_blank');
+            $('#exportExcelModal').modal('hide');
+        });
 
         /* ─────────────────────────────────────────────
            STATE

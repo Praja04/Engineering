@@ -31,7 +31,7 @@ class AccessByJabatan
             if (in_array($user->bagian, $allowedBagians)) {
                 return $next($request);
             } else {
-                abort(403, 'Unauthorized bagian');
+                abort(403, 'Unauthorized Jabatan');
             }
         }
 

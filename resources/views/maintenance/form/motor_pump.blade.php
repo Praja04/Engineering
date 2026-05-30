@@ -139,6 +139,7 @@
                                     <option>C</option>
                                     <option>D</option>
                                     <option>Korektif</option>
+                                    <option>Checkpoint</option>
                                 </select>
                             </div>
                             <div class="col-md-3 d-none" id="tanggal_selesai_wrapper">
@@ -367,8 +368,8 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <input type="number" name="materials[0][mid]"
-                                                    class="form-control form-control-sm" required>
+                                                <select name="materials[0][mid]"
+                                                    class="form-control form-control-sm mid-select2"></select>
                                             </td>
                                             <td>
                                                 <input type="text" name="materials[0][desc]"
@@ -376,7 +377,7 @@
                                             </td>
                                             <td>
                                                 <input type="number" name="materials[0][qty]"
-                                                    class="form-control form-control-sm" min="1" required>
+                                                    class="form-control form-control-sm" min="1">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger removeRow">
@@ -572,18 +573,67 @@
                 return details.join(" | ");
             }
 
+            function initMidSelect2(element) {
+                $(element).select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Cari MID / Nama Barang...',
+                    allowClear: true,
+                    width: '100%',
+                    ajax: {
+                        url: 'http://10.11.10.130:8087/api/wsp/barang',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                q: params.term
+                            };
+                        },
+                        processResults: function(response) {
+                            return {
+                                results: response.data.map(function(item) {
+                                    return {
+                                        id: item.mid_barang,
+                                        text: item.mid_barang + ' - ' + item.nama_barang,
+                                        nama_barang: item.nama_barang
+                                    };
+                                })
+                            };
+                        },
+                        cache: true
+                    },
+                    templateResult: function(data) {
+                        if (!data.id) return data.text;
+                        return $(`
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold" style="font-size: 12.5px;">${data.id}</span>
+                                <small class="text-muted" style="font-size: 11px;">${data.nama_barang}</small>
+                            </div>
+                        `);
+                    },
+                    templateSelection: function(data) {
+                        return data.id || data.text;
+                    }
+                }).on('select2:select', function(e) {
+                    const data = e.params.data;
+                    $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
+                });
+            }
+
+            // Initialize existing rows
+            initMidSelect2('.mid-select2');
+
             // Kebutuhan Material
             $('#addRow').on('click', function() {
                 let row = `
                     <tr>
                         <td>
-                            <input type="number" name="materials[${index}][mid]" class="form-control form-control-sm" required>
+                            <select name="materials[${index}][mid]" class="form-control form-control-sm mid-select2"></select>
                         </td>
                         <td>
                             <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
                         </td>
                         <td>
-                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1" required>
+                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
@@ -591,10 +641,10 @@
                     </tr>
                 `;
 
-                $('#materialTable tbody').append(row);
+                const $row = $(row);
+                $('#materialTable tbody').append($row);
+                initMidSelect2($row.find('.mid-select2'));
                 index++;
-
-
             });
 
             $(document).on('click', '.removeRow', function() {

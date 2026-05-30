@@ -417,7 +417,7 @@
                     let standarInputs = '';
                     let alatInputs = '';
 
-                    for (let j = 0; j < 5; j++) {
+                    for (let j = 0; j < 10; j++) {
                         standarInputs += `
                             <input type="number" step="0.01"
                                 name="data[${i}][penunjuk_standar][]"
@@ -436,7 +436,6 @@
                             <td class="text-center">
                                 <input type="number"
                                     name="data[${i}][titik_kalibrasi]"
-                                    value="${i + 1}"
                                     class="input-mini text-center">
                             </td>
 
@@ -504,7 +503,7 @@
                 let standarInputs = '';
                 let alatInputs = '';
 
-                for (let j = 0; j < 5; j++) {
+                for (let j = 0; j < 10; j++) {
                     standarInputs += `
                         <input type="number" step="0.01"
                             name="data[${rowIndex}][penunjuk_standar][]"
@@ -525,7 +524,6 @@
                         <td class="text-center">
                             <input type="number"
                                 name="data[${rowIndex}][titik_kalibrasi]"
-                                value="${rowIndex + 1}"
                                 class="input-mini text-center">
                         </td>
 

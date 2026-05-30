@@ -13,6 +13,7 @@ class MtcKebutuhanMaterialModel extends Model
         'mid',
         'deskripsi',
         'qty',
+        'uom',
         'created_by',
         'updated_by',
     ];

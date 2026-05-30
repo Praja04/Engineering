@@ -19,7 +19,6 @@ class MtcBatteryModel extends Model
         'intercell',
         'kondisi_skun',
         'kondisi_unit',
-        'grounding',
         'cell',
     ];
 

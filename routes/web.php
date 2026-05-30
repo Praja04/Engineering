@@ -46,6 +46,9 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
+    Route::post('/notif/refresh', [NotificationController::class, 'refresh'])->name('notif.refresh');
+    Route::delete('/notif/delete/{id}', [NotificationController::class, 'destroy'])->name('notif.delete');
+    Route::delete('/notif/delete-all', [NotificationController::class, 'destroyAll'])->name('notif.delete-all');
 
 
     // Kalibrasi Routes

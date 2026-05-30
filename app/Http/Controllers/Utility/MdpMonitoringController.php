@@ -134,8 +134,12 @@ class MdpMonitoringController extends Controller
             return response()->json(['message' => 'Anda tidak berwenang'], 403);
         }
 
+        if ($data->status === 'approved_foreman' || $data->status === 'approved_supervisor') {
+            return response()->json(['message' => 'Laporan ini sudah disetujui.'], 422);
+        }
+
         if ($data->status !== 'submitted') {
-            return response()->json(['message' => 'Laporan ini tidak dalam status menunggu approval Foreman'], 422);
+            return response()->json(['message' => 'Laporan ini tidak dalam status menunggu approval Foreman.'], 422);
         }
 
         $data->update([
@@ -146,8 +150,8 @@ class MdpMonitoringController extends Controller
 
         NotificationsModel::where('notifiable_type', MdpMonitoringModel::class)
             ->where('notifiable_id', $data->id)
-            ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->where('user_id', auth()->id())
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
@@ -160,8 +164,16 @@ class MdpMonitoringController extends Controller
             return response()->json(['message' => 'Anda tidak berwenang'], 403);
         }
 
-        if ($data->status !== 'approved_foreman') {
+        if ($data->status === 'approved_supervisor') {
+            return response()->json(['message' => 'Laporan ini sudah disetujui Supervisor.'], 422);
+        }
+
+        if ($data->status === 'submitted') {
             return response()->json(['message' => 'Laporan harus disetujui Foreman terlebih dahulu'], 422);
+        }
+
+        if ($data->status !== 'approved_foreman') {
+            return response()->json(['message' => 'Laporan ini tidak dalam status menunggu approval Supervisor.'], 422);
         }
 
         $data->update([
@@ -172,8 +184,8 @@ class MdpMonitoringController extends Controller
 
         NotificationsModel::where('notifiable_type', MdpMonitoringModel::class)
             ->where('notifiable_id', $data->id)
-            ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->where('user_id', auth()->id())
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Supervisor (Selesai)']);
     }
@@ -183,11 +195,32 @@ class MdpMonitoringController extends Controller
         $request->validate(['reason' => 'required|string|max:255']);
         $data = MdpMonitoringModel::findOrFail($id);
 
-        $isForeman = ($data->foreman_id === auth()->id() && $data->status === 'submitted');
-        $isSupervisor = ($data->supervisor_id === auth()->id() && $data->status === 'approved_foreman');
+        if ($data->status === 'rejected') {
+            return response()->json(['message' => 'Laporan ini sudah ditolak sebelumnya.'], 422);
+        }
+        if ($data->status === 'approved_supervisor') {
+            return response()->json(['message' => 'Laporan ini sudah disetujui Supervisor dan tidak dapat ditolak.'], 422);
+        }
+
+        $isForeman = ($data->foreman_id === auth()->id());
+        $isSupervisor = ($data->supervisor_id === auth()->id());
 
         if (!$isForeman && !$isSupervisor) {
-            return response()->json(['message' => 'Anda tidak berwenang menolak laporan ini pada tahap ini'], 403);
+            return response()->json(['message' => 'Anda tidak berwenang atas laporan ini.'], 403);
+        }
+
+        if ($isForeman && $data->status !== 'submitted') {
+            if ($data->status === 'approved_foreman') {
+                return response()->json(['message' => 'Laporan sudah disetujui oleh Anda (Foreman) dan tidak dapat ditolak.'], 422);
+            }
+            return response()->json(['message' => 'Laporan tidak berada di tahap approval Foreman.'], 422);
+        }
+
+        if ($isSupervisor && $data->status !== 'approved_foreman') {
+            if ($data->status === 'submitted') {
+                return response()->json(['message' => 'Laporan harus disetujui Foreman terlebih dahulu.'], 422);
+            }
+            return response()->json(['message' => 'Laporan tidak berada di tahap approval Supervisor.'], 422);
         }
 
         $data->update([
@@ -195,12 +228,17 @@ class MdpMonitoringController extends Controller
             'reject_reason' => $request->reason
         ]);
 
+        NotificationsModel::where('notifiable_type', MdpMonitoringModel::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id())
+            ->delete();
+
         return response()->json(['message' => 'Laporan berhasil ditolak']);
     }
 
     public function show($id)
     {
-        $data = MdpMonitoringModel::with(['operator', 'foreman', 'supervisor'])->find($id);
+        $data = MdpMonitoringModel::with(['operator:id,username', 'foreman:id,username', 'supervisor:id,username'])->find($id);
 
         if (!$data) {
             return response()->json(['status' => 404, 'message' => 'Data tidak ditemukan'], 404);
@@ -308,19 +346,28 @@ class MdpMonitoringController extends Controller
             $data = MdpMonitoringModel::find($id);
             if (!$data) continue;
 
+            $updated = false;
             if ($data->foreman_id === auth()->id() && $data->status === 'submitted') {
                 $data->update([
                     'approved_foreman_at' => now(),
                     'approved_foreman_by' => auth()->id(),
                     'status' => 'approved_foreman'
                 ]);
-                $successCount++;
+                $updated = true;
             } elseif ($data->supervisor_id === auth()->id() && $data->status === 'approved_foreman') {
                 $data->update([
                     'approved_supervisor_at' => now(),
                     'approved_supervisor_by' => auth()->id(),
                     'status' => 'approved_supervisor'
                 ]);
+                $updated = true;
+            }
+
+            if ($updated) {
+                NotificationsModel::where('notifiable_type', MdpMonitoringModel::class)
+                    ->where('notifiable_id', $data->id)
+                    ->where('user_id', auth()->id())
+                    ->delete();
                 $successCount++;
             }
         }
@@ -351,6 +398,12 @@ class MdpMonitoringController extends Controller
                     'status' => 'rejected',
                     'reject_reason' => $request->reason
                 ]);
+
+                NotificationsModel::where('notifiable_type', MdpMonitoringModel::class)
+                    ->where('notifiable_id', $data->id)
+                    ->where('user_id', auth()->id())
+                    ->delete();
+
                 $successCount++;
             }
         }

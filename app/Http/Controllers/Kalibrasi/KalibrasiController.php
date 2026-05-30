@@ -555,7 +555,7 @@ class KalibrasiController extends Controller
     public function getDataSticker(Request $request)
     {
         $query = KalibrasiSertifikatModel::with(['kalibrasi.alat', 'kalibrasi.user'])
-            ->where('status', 'approved');
+            ->where('status', '!=', 'rejected');
 
         // Filter kode alat
         if ($request->kode_alat) {
@@ -584,10 +584,15 @@ class KalibrasiController extends Controller
 
         $kalibrasi = $data->kalibrasi;
 
-        // 10 cm x 5 cm dalam point
-        $width  = 283.46;  // 10 cm
-        $height = 113.38;  //  cm
+        // 🔥 ambil relasi berdasarkan jenis
+        $relations = $kalibrasi->getRelasiByJenis();
 
+        // 🔥 load relasi tambahan secara dynamic
+        if (!empty($relations)) {
+            $kalibrasi->load($relations);
+        }
+
+        // ukuran 10cm x 5cm
         $customPaper = [0, 0, 283.46, 113.38];
 
         $pdf = Pdf::loadView('kalibrasi.sticker.sticker_pdf', compact('kalibrasi'))

@@ -284,6 +284,54 @@
             </div>
         </div>
 
+        <!-- Grafik Sludge Content -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header align-items-center d-flex">
+                        <h4 class="card-title mb-0 flex-grow-1">Tren Sludge Content</h4>
+                        <div class="flex-shrink-0">
+                            <div class="d-flex gap-2">
+                                <input type="date" class="form-control form-control-sm" id="tanggalMulaiSludgeContent" style="width: 150px;">
+                                <span class="align-self-center">s/d</span>
+                                <input type="date" class="form-control form-control-sm" id="tanggalAkhirSludgeContent" style="width: 150px;">
+                                <button class="btn btn-sm btn-primary" onclick="perbaruiGrafikSludgeContent()">
+                                    <i class="bx bx-search-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="grafikSludgeContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafik Pengangkutan Sludge -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-header align-items-center d-flex">
+                        <h4 class="card-title mb-0 flex-grow-1">Pengangkutan Sludge (Per Minggu)</h4>
+                        <div class="flex-shrink-0">
+                            <div class="d-flex gap-2">
+                                <input type="date" class="form-control form-control-sm" id="tanggalMulaiPengangkutan" style="width: 150px;">
+                                <span class="align-self-center">s/d</span>
+                                <input type="date" class="form-control form-control-sm" id="tanggalAkhirPengangkutan" style="width: 150px;">
+                                <button class="btn btn-sm btn-primary" onclick="perbaruiGrafikPengangkutan()">
+                                    <i class="bx bx-search-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="grafikPengangkutan"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -323,7 +371,7 @@
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     // Instansi grafik
-    let grafikDrainLumpur, grafikJamOperasi, grafikDistribusi, grafikPerbandinganBulanan, grafikHasilLumpur;
+    let grafikDrainLumpur, grafikJamOperasi, grafikDistribusi, grafikPerbandinganBulanan, grafikHasilLumpur, grafikSludgeContent, grafikPengangkutan;
 
     // Muat semua data saat halaman dibuka
     document.addEventListener('DOMContentLoaded', function() {
@@ -343,6 +391,8 @@
             perbaruiDistribusi();
             muatPerbandinganBulanan();
             perbaruiGrafikHasilLumpur();
+            perbaruiGrafikSludgeContent();
+            perbaruiGrafikPengangkutan();
         }, 100);
     });
 
@@ -365,6 +415,12 @@
         document.getElementById('tanggalAkhirJamOperasi').value = formatTanggal(akhirBulan);
         document.getElementById('tanggalMulaiHasilLumpur').value = formatTanggal(awalBulan);
         document.getElementById('tanggalAkhirHasilLumpur').value = formatTanggal(akhirBulan);
+        document.getElementById('tanggalMulaiSludgeContent').value = formatTanggal(awalBulan);
+        document.getElementById('tanggalAkhirSludgeContent').value = formatTanggal(akhirBulan);
+
+        const duaBulanLalu = new Date(hari.getFullYear(), hari.getMonth() - 2, 1);
+        document.getElementById('tanggalMulaiPengangkutan').value = formatTanggal(duaBulanLalu);
+        document.getElementById('tanggalAkhirPengangkutan').value = formatTanggal(akhirBulan);
     }
     // =============================
     // PIE CHART FILTER
@@ -626,6 +682,96 @@
 
         } catch (error) {
             console.error('Gagal memperbarui grafik hasil lumpur:', error);
+        }
+    }
+
+    // =============================
+    // PERBARUI GRAFIK SLUDGE CONTENT
+    // =============================
+
+    async function perbaruiGrafikSludgeContent() {
+        try {
+            const tanggalMulai = document.getElementById('tanggalMulaiSludgeContent').value;
+            const tanggalAkhir = document.getElementById('tanggalAkhirSludgeContent').value;
+
+            if (!tanggalMulai || !tanggalAkhir) {
+                console.warn('Tanggal belum diisi');
+                return;
+            }
+
+            const response = await fetch(`/api/wwtp-sludge/dashboard/sludge-content-chart?start_date=${tanggalMulai}&end_date=${tanggalAkhir}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+            console.log('Data grafik sludge content:', data);
+
+            if (!data || data.length === 0) {
+                grafikSludgeContent.updateSeries([{
+                    name: 'Sludge Content',
+                    data: []
+                }]);
+                return;
+            }
+
+            const kategori = data.map(d => new Date(d.tanggal).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short'
+            }));
+            const nilai = data.map(d => parseFloat(d.avg_sludge_content) || 0);
+
+            grafikSludgeContent.updateOptions({
+                xaxis: {
+                    categories: kategori
+                }
+            });
+            grafikSludgeContent.updateSeries([{
+                name: 'Sludge Content (%)',
+                data: nilai
+            }]);
+
+        } catch (error) {
+            console.error('Gagal memperbarui grafik sludge content:', error);
+        }
+    }
+
+    // =============================
+    // PERBARUI GRAFIK PENGANGKUTAN
+    // =============================
+
+    async function perbaruiGrafikPengangkutan() {
+        try {
+            const startDate = document.getElementById('tanggalMulaiPengangkutan').value;
+            const endDate = document.getElementById('tanggalAkhirPengangkutan').value;
+            const url = (startDate && endDate) ? `/api/wwtp-sludge/dashboard/pengangkutan-chart?start_date=${startDate}&end_date=${endDate}` : `/api/wwtp-sludge/dashboard/pengangkutan-chart`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const data = await response.json();
+            console.log('Data grafik pengangkutan:', data);
+
+            if (!data || data.length === 0) {
+                grafikPengangkutan.updateSeries([{
+                    name: 'Pengangkutan',
+                    data: []
+                }]);
+                return;
+            }
+
+            const kategori = data.map(d => `${d.week_start} - ${d.week_end}`);
+            const nilai = data.map(d => parseFloat(d.jumlah_pengangkutan) || 0);
+
+            grafikPengangkutan.updateOptions({
+                xaxis: {
+                    categories: kategori
+                }
+            });
+            grafikPengangkutan.updateSeries([{
+                name: 'Pengangkutan (Ton)',
+                data: nilai
+            }]);
+
+        } catch (error) {
+            console.error('Gagal memperbarui grafik pengangkutan:', error);
         }
     }
 
@@ -1050,6 +1196,98 @@
             }
         });
         grafikPerbandinganBulanan.render();
+
+        // Grafik Sludge Content
+        grafikSludgeContent = new ApexCharts(document.querySelector("#grafikSludgeContent"), {
+            ...opsiGrafikArea,
+            colors: ['#feb019'],
+            series: [{
+                name: 'Sludge Content (%)',
+                data: []
+            }],
+            dataLabels: {
+                enabled: true,
+                formatter: (val) => val ? val.toFixed(0) + '%' : '0%',
+                style: {
+                    fontSize: '12px',
+                    colors: ['#000']
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Persentase (%)'
+                },
+                labels: {
+                    formatter: (v) => v ? v.toFixed(0) + '%' : '0%'
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: (v) => v ? v.toFixed(0) + '%' : '0%'
+                }
+            }
+        });
+        grafikSludgeContent.render();
+
+        // Grafik Pengangkutan (Bar)
+        grafikPengangkutan = new ApexCharts(document.querySelector("#grafikPengangkutan"), {
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: {
+                    show: true
+                },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800
+                }
+            },
+            colors: ['#775dd0'],
+            series: [{
+                name: 'Pengangkutan',
+                data: []
+            }],
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '45%',
+                    endingShape: 'rounded'
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: (nilai) => {
+                    return nilai ? nilai.toFixed(0) + ' Ton' : '0 Ton';
+                },
+                style: {
+                    fontSize: '12px',
+                    colors: ['#000']
+                }
+            },
+            xaxis: {
+                categories: [],
+                labels: {
+                    rotate: -45
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Jumlah'
+                }
+            },
+            grid: {
+                borderColor: '#f1f1f1'
+            },
+            tooltip: {
+                y: {
+                    formatter: (nilai) => {
+                        return nilai ? nilai.toFixed(0) + ' Ton' : '0 Ton';
+                    }
+                }
+            }
+        });
+        grafikPengangkutan.render();
 
         console.log('Semua grafik berhasil diinisialisasi');
     }

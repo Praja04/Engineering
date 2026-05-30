@@ -18,6 +18,7 @@ class MtcBatteryMainModel extends Model
         'no_unit',
         'kondisi_plug_battery',
         'total_voltase',
+        'grounding',
         'catatan'
     ];
 

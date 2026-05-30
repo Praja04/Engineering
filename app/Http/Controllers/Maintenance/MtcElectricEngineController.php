@@ -59,9 +59,9 @@ class MtcElectricEngineController extends Controller
             foreach ($materials->materials ?? [] as $item) {
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id'   => $main->id,
-                    'mid'           => $item['mid'],
+                    'mid'           => $item['mid'] ?? null,
                     'deskripsi'     => $item['desc'] ?? null,
-                    'qty'           => $item['qty'],
+                    'qty'           => $item['qty'] ?? 0,
                     'created_by'    => $userId,
                 ]);
             }
@@ -94,6 +94,7 @@ class MtcElectricEngineController extends Controller
                 ],
             ];
 
+            $notificationSent = false;
             foreach ($approvalFlows as $flow) {
 
                 $isAutoApproved = $flow['auto'];
@@ -110,16 +111,17 @@ class MtcElectricEngineController extends Controller
                     'action_by'   => $isAutoApproved ? $userId : null,
                 ]);
 
-                if (!$isAutoApproved) {
+                if (!$isAutoApproved && !$notificationSent) {
                     NotificationsModel::create([
                         'user_id'         => $flow['approver_id'],
                         'notifiable_type' => MtcMainModel::class,
                         'notifiable_id'   => $main->id,
                         'title'           => 'Approval Maintenance',
-                        'message'         => 'Maintenance Electric Engine menunggu persetujuan Anda',
+                        'message'         => 'Maintenance Electric Engine tanggal ' . date('d F Y', strtotime($main->tanggal)) . ' menunggu persetujuan Anda',
                         'url'             => route('mtc.approval.index'),
                         'is_read'         => false,
                     ]);
+                    $notificationSent = true;
                 }
             }
         });
@@ -208,18 +210,18 @@ class MtcElectricEngineController extends Controller
 
                     MtcKebutuhanMaterialModel::where('id', $item['id'])
                         ->update([
-                            'mid'        => $item['mid'],
+                            'mid'        => $item['mid'] ?? null,
                             'deskripsi'  => $item['deskripsi'] ?? null,
-                            'qty'        => $item['qty'],
+                            'qty'        => $item['qty'] ?? 0,
                             'updated_by' => $userId,
                         ]);
                 } else {
 
                     $new = MtcKebutuhanMaterialModel::create([
                         'mtc_main_id'       => $main->id,
-                        'mid'               => $item['mid'],
+                        'mid'               => $item['mid'] ?? null,
                         'deskripsi'         => $item['deskripsi'] ?? null,
-                        'qty'               => $item['qty'],
+                        'qty'               => $item['qty'] ?? 0,
                         'created_by'        => $userId,
                     ]);
 

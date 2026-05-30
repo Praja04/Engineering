@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Maintenance;
+
 use Illuminate\Http\Request;
 use App\Models\NotificationsModel;
 use Illuminate\Support\Facades\DB;
@@ -58,9 +59,9 @@ class MtcMotorPumpController extends Controller
             foreach ($materials->materials ?? [] as $item) {
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id'   => $main->id,
-                    'mid'           => $item['mid'],
+                    'mid'           => $item['mid'] ?? null,
                     'deskripsi'     => $item['desc'] ?? null,
-                    'qty'           => $item['qty'],
+                    'qty'           => $item['qty'] ?? 0,
                     'created_by'    => $userId,
                 ]);
             }
@@ -92,6 +93,7 @@ class MtcMotorPumpController extends Controller
                 ],
             ];
 
+            $notificationSent = false;
             foreach ($approvalFlows as $flow) {
 
                 $isAutoApproved = $flow['auto'];
@@ -108,16 +110,18 @@ class MtcMotorPumpController extends Controller
                     'action_by'   => $isAutoApproved ? $userId : null,
                 ]);
 
-                if (!$isAutoApproved) {
+                if (!$isAutoApproved && !$notificationSent) {
                     NotificationsModel::create([
                         'user_id'         => $flow['approver_id'],
                         'notifiable_type' => MtcMainModel::class,
                         'notifiable_id'   => $main->id,
                         'title'           => 'Approval Maintenance',
-                        'message'         => 'Maintenance Motor Pump menunggu persetujuan Anda',
+                        'message'         => 'Maintenance Motor Pump tanggal ' . date('d F Y', strtotime($main->tanggal)) . ' menunggu persetujuan Anda',
                         'url'             => route('mtc.approval.index'),
                         'is_read'         => false,
                     ]);
+
+                    $notificationSent = true;
                 }
             }
         });
@@ -206,18 +210,18 @@ class MtcMotorPumpController extends Controller
 
                     MtcKebutuhanMaterialModel::where('id', $item['id'])
                         ->update([
-                            'mid'        => $item['mid'],
+                            'mid'        => $item['mid'] ?? null,
                             'deskripsi'  => $item['deskripsi'] ?? null,
-                            'qty'        => $item['qty'],
+                            'qty'        => $item['qty'] ?? 0,
                             'updated_by' => $userId,
                         ]);
                 } else {
 
                     $new = MtcKebutuhanMaterialModel::create([
                         'mtc_main_id'       => $main->id,
-                        'mid'               => $item['mid'],
+                        'mid'               => $item['mid'] ?? null,
                         'deskripsi'         => $item['deskripsi'] ?? null,
-                        'qty'               => $item['qty'],
+                        'qty'               => $item['qty'] ?? 0,
                         'created_by'        => $userId,
                     ]);
 

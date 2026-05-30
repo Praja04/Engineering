@@ -98,7 +98,7 @@
                             </div>
                             <div class="border-top pt-2 d-flex justify-content-between align-items-center">
                                 <span class="text-muted fs-13"><i class="ri-time-line me-1"></i>Akhir shift (sebelum
-                                    06:00)</span>
+                                    07:00)</span>
                                 <span class="text-danger fw-semibold fs-13">Pilih <i class="ri-arrow-right-line"></i></span>
                             </div>
                         </div>
@@ -301,14 +301,8 @@
                                     {{-- Tanggal laporan: readonly untuk operator, date picker untuk non-operator --}}
                                     <div class="mb-3">
                                         <label class="form-label fw-medium">Tanggal Laporan</label>
-                                        @if (auth()->user()->jabatan === 'operator')
-                                            <input type="date" class="form-control" name="tanggal_laporan"
-                                                id="input-tanggal-shift" readonly
-                                                style="background:#f8f9fa; cursor:not-allowed;">
-                                        @else
-                                            <input type="date" class="form-control" name="tanggal_laporan"
-                                                id="input-tanggal-shift">
-                                        @endif
+                                        <input type="date" class="form-control" name="tanggal_laporan"
+                                            id="input-tanggal-shift">
                                     </div>
 
                                     {{-- Alert jika operator & di luar waktu input --}}
@@ -494,9 +488,9 @@
                 // Cek apakah jam sudah >= 06:00 (lewat batas input)
                 const hh = new Date().getHours();
                 if (hh >= 8) {
-                    $('#alert-waktu-shift').removeClass('d-none');
-                    $('#btn-submit-shift').prop('disabled', true)
-                        .html('<i class="ri-lock-line me-1"></i>Waktu Input Sudah Tutup');
+                    // $('#alert-waktu-shift').removeClass('d-none');
+                    // $('#btn-submit-shift').prop('disabled', true)
+                    //     .html('<i class="ri-lock-line me-1"></i>Waktu Input Sudah Tutup');
                 }
             } else {
                 // Non-operator: default ke hari ini

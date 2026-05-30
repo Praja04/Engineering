@@ -76,12 +76,12 @@ class CompressorController extends Controller
 
             // Cek Duplikat di Details
             if (CompressorDetails::where('tanggal', $validated['tanggal'])
-                // ->where('jam', $validated['jam'])
+                ->where('jam', $validated['jam'])
                 ->exists()
             ) {
                 return response()->json([
                     'status' => 422,
-                    'message' => 'Laporan untuk tanggal  sudah ada'
+                    'message' => 'Laporan untuk tanggal ' .  $validated['tanggal'] . ' dan jam ' . $validated['jam'] . ' sudah ada'
                 ], 422);
             }
 
@@ -362,7 +362,7 @@ class CompressorController extends Controller
         NotificationsModel::where('notifiable_type', Compressor::class)
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
@@ -383,7 +383,7 @@ class CompressorController extends Controller
         NotificationsModel::where('notifiable_type', Compressor::class)
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
-            ->update(['is_read' => true]);
+            ->delete();
 
         return response()->json(['message' => 'Laporan disetujui Supervisor']);
     }
@@ -397,6 +397,11 @@ class CompressorController extends Controller
             'status' => 'rejected',
             'reject_reason' => $request->reason
         ]);
+
+        NotificationsModel::where('notifiable_type', Compressor::class)
+            ->where('notifiable_id', $data->id)
+            ->where('user_id', auth()->id()) // opsional (biar spesifik)
+            ->delete();
 
         return response()->json(['message' => 'Laporan ditolak']);
     }
