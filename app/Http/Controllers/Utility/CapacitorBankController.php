@@ -58,16 +58,16 @@ class CapacitorBankController extends Controller
 
         $tanggal = Carbon::createFromFormat('Y-m-d', $request->tanggal);
 
-        // 🚫 blokir jika sudah diajukan atau final disetujui
-        $approval = CapacitorBankApproval::where('bulan', $tanggal->month)
-            ->where('tahun', $tanggal->year)
-            ->first();
+        // // 🚫 blokir jika sudah diajukan atau final disetujui
+        // $approval = CapacitorBankApproval::where('bulan', $tanggal->month)
+        //     ->where('tahun', $tanggal->year)
+        //     ->first();
 
-        if ($approval && in_array($approval->status, ['waiting_supervisor', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan bulan ini sudah diajukan/disetujui, tidak dapat diubah.'
-            ], 422);
-        }
+        // if ($approval && in_array($approval->status, ['waiting_supervisor', 'approved_supervisor'])) {
+        //     return response()->json([
+        //         'message' => 'Laporan bulan ini sudah diajukan/disetujui, tidak dapat diubah.'
+        //     ], 422);
+        // }
 
         // 🚫 tidak boleh double tanggal
         $existing = CapacitorBank::where('tanggal', $request->tanggal)->first();
