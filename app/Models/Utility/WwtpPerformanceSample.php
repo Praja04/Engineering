@@ -22,7 +22,7 @@ class WwtpPerformanceSample extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        // 'tanggal' => 'date',
         'tss'     => 'decimal:2',
         'sv30'    => 'decimal:2',
         'ph'      => 'decimal:2',
