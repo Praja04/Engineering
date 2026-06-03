@@ -401,9 +401,12 @@
                         </div>
 
                         {{-- BUTTON --}}
-                        <div class="text-end mt-4">
-                            <button type="button" id="btn-reset" class="btn btn-outline-danger me-2">
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" id="btn-reset" class="btn btn-outline-danger">
                                 Reset
+                            </button>
+                            <button type="button" id="btn-input-battery" class="btn btn-outline-warning">
+                                <i class="mdi mdi-battery-charging me-1"></i> Input Battery
                             </button>
                             <button type="submit" id="btn-submit" class="btn btn-primary">
                                 Simpan
@@ -489,7 +492,9 @@
                 time_24hr: true,
                 minuteIncrement: 1,
             });
+
             let index = 0;
+
             $('select[name="paket"]').on('change', function() {
                 const val = $(this).val();
 
@@ -707,11 +712,9 @@
             let pendingFormData = null;
             let selectedStaff = null;
             let selectedUser = null;
+            let redirectToBattery = false;
 
-            $('#form-mtc-electric-engine').on('submit', function(e) {
-                e.preventDefault();
-                pendingFormData = new FormData(this);
-
+            function openApproverModal() {
                 $('#modalApprover').modal('show');
 
                 $.get('/api/mtc/users/approvers', function(res) {
@@ -742,6 +745,26 @@
                         selectedUser = null;
                     });
                 });
+            }
+
+            $('#form-mtc-electric-engine').on('submit', function(e) {
+                e.preventDefault();
+                redirectToBattery = false;
+                pendingFormData = new FormData(this);
+                openApproverModal();
+            });
+
+            $('#btn-input-battery').on('click', function() {
+                const form = $('#form-mtc-electric-engine')[0];
+
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                redirectToBattery = true;
+                pendingFormData = new FormData(form);
+                openApproverModal();
             });
 
             $(document).on('change', '#staffDropdown', function() {
@@ -805,7 +828,11 @@
                             timer: 2000,
                             showConfirmButton: false
                         }).then(() => {
-                            resetFormMotorPump();
+                            if (redirectToBattery) {
+                                window.location.href = "{{ route('mtc.battery.index') }}";
+                            } else {
+                                resetFormMotorPump();
+                            }
                         });
                     },
                     error: function(xhr) {
