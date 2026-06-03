@@ -284,6 +284,7 @@
                                             <td>
                                                 <input type="number" name="materials[0][qty]"
                                                     class="form-control form-control-sm" min="1">
+                                                <input type="hidden" name="materials[0][uom]" value="">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger removeRow">
@@ -448,7 +449,8 @@
                                     return {
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
-                                        nama_barang: item.nama_barang
+                                        nama_barang: item.nama_barang,
+                                        uom: item.uom
                                     };
                                 })
                             };
@@ -470,6 +472,11 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
+                    $(this).closest('tr').find('input[name*="[uom]"]').val(data.uom);
+                }).on('select2:clear select2:unselect', function(e) {
+                    $(this).closest('tr').find('input[name*="[desc]"]').val('');
+                    $(this).closest('tr').find('input[name*="[qty]"]').val('');
+                    $(this).closest('tr').find('input[name*="[uom]"]').val('');
                 });
             }
 
@@ -487,6 +494,7 @@
                         </td>
                         <td>
                             <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1">
+                            <input type="hidden" name="materials[${index}][uom]" value="">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
