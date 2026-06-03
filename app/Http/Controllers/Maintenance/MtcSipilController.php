@@ -209,6 +209,7 @@ class MtcSipilController extends Controller
                             'mid' => $item['mid'] ?? null,
                             'deskripsi' => $item['deskripsi'] ?? null,
                             'qty' => $item['qty'] ?? 0,
+                            'uom' => $item['uom'] ?? null,
                             'updated_by' => $userId,
                         ]);
                 } else {
@@ -218,6 +219,7 @@ class MtcSipilController extends Controller
                         'mid' => $item['mid'] ?? null,
                         'deskripsi' => $item['deskripsi'] ?? null,
                         'qty' => $item['qty'] ?? 0,
+                        'uom' => $item['uom'] ?? null,
                         'created_by' => $userId,
                     ]);
 

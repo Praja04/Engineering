@@ -623,6 +623,9 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
+                }).on('select2:clear select2:unselect', function(e) {
+                    $(this).closest('tr').find('input[name*="[desc]"]').val('');
+                    $(this).closest('tr').find('input[name*="[qty]"]').val('');
                 });
             }
 

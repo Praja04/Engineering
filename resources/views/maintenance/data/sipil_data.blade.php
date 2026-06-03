@@ -809,7 +809,8 @@
                                     return {
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
-                                        nama_barang: item.nama_barang
+                                        nama_barang: item.nama_barang,
+                                        uom: item.uom
                                     };
                                 })
                             };
@@ -831,6 +832,11 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('.material-deskripsi').val(data.nama_barang);
+                    $(this).closest('tr').find('.material-uom').val(data.uom);
+                }).on('select2:clear select2:unselect', function(e) {
+                    $(this).closest('tr').find('.material-deskripsi').val('');
+                    $(this).closest('tr').find('.material-qty').val('');
+                    $(this).closest('tr').find('.material-uom').val('');
                 });
             }
 
@@ -849,6 +855,7 @@
                     row.find('.material-id').val(item.id);
                     row.find('.material-deskripsi').val(item.deskripsi);
                     row.find('.material-qty').val(item.qty);
+                    row.find('.material-uom').val(item.uom);
 
                     // Add existing MID as option
                     if (item.mid) {
@@ -881,6 +888,9 @@
                                 name="materials[${index}][qty]"
                                 class="form-control form-control-sm material-qty"
                                 min="1">
+                            <input type="hidden"
+                                name="materials[${index}][uom]"
+                                class="material-uom">
                         </td>
 
                         <td class="text-center">
