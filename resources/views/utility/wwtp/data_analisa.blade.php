@@ -345,7 +345,7 @@
                             <td><span class="badge bg-light text-dark border"><i class="mdi mdi-calendar me-1"></i>${formatDate(item.analisa_date)}</span></td>
                             <td>${paramBadges}</td>
                             <td>${item.creator ? item.creator.username : '-'}</td>
-                            <td class="text-center">${btns}</td>
+                            <td class="text-center text-nowrap">${btns}</td>
                         </tr>`);
                 });
             }
