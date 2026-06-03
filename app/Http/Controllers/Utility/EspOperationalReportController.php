@@ -96,6 +96,10 @@ class EspOperationalReportController extends Controller
 
         $query = EspOperationalReport::whereIn('tanggal_laporan', [$tanggal, $tanggalBerikut]);
 
+        if ($request->filled('grup')) {
+            $query->where('grup', $request->grup);
+        }
+
         $rows = $query->get()->keyBy(fn ($r) => Carbon::parse($r->jam_laporan)->format('H:i'));
 
         $result = [];

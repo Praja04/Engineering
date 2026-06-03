@@ -8,6 +8,7 @@ use App\Models\Utility\EspShiftReport;
 use App\Models\User;
 use App\Models\NotificationsModel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class EspShiftReportController extends Controller
 {
@@ -72,7 +73,7 @@ class EspShiftReportController extends Controller
         );
 
         // 🔔 Kirim notifikasi hanya ke foreman & supervisor yang dipilih
-        $this->sendNotification($data);
+        $this->sendNotification($data, $data->foreman_id);
 
         return response()->json([
             'message' => 'Laporan berhasil disubmit & menunggu approval',
@@ -105,6 +106,12 @@ class EspShiftReportController extends Controller
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
             ->delete();
+
+        try {
+            $this->sendNotification($data, $data->supervisor_id);
+        } catch (\Exception $e) {
+            Log::error('Notif ESP Supervisor gagal: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Disetujui Foreman'
@@ -146,26 +153,19 @@ class EspShiftReportController extends Controller
      * 🔔 NOTIFICATION HELPER
      * Kirim notifikasi hanya ke foreman & supervisor yang dipilih
      */
-    private function sendNotification($data)
+    private function sendNotification($data, $userId)
     {
         $approvalUrl = url(route('esp-shift-report.approval', [], false));
 
-        $recipients = User::whereIn('id', array_filter([
-            $data->foreman_id,
-            $data->supervisor_id,
-        ]))->get();
-
-        foreach ($recipients as $user) {
-            NotificationsModel::create([
-                'user_id'          => $user->id,
-                'title'            => 'Approval ESP Shift',
-                'message'          => 'Laporan ESP Shift tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
-                'url'              => $approvalUrl,
-                'notifiable_type'  => EspShiftReport::class,
-                'notifiable_id'    => $data->id,
-                'is_read'          => 0,
-            ]);
-        }
+        NotificationsModel::create([
+            'user_id'          => $userId,
+            'title'            => 'Approval ESP Shift',
+            'message'          => 'Laporan ESP Shift tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
+            'url'              => $approvalUrl,
+            'notifiable_type'  => EspShiftReport::class,
+            'notifiable_id'    => $data->id,
+            'is_read'          => 0,
+        ]);
     }
 
     /**
