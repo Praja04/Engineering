@@ -179,7 +179,7 @@ class AhuController extends Controller
             'operator_id' => auth()->id(),
         ]);
 
-        $this->sendNotification($main);
+        $this->sendNotification($main, $main->foreman_id);
 
         return response()->json(['message' => 'Laporan bulanan berhasil disubmit untuk approval']);
     }
@@ -267,6 +267,12 @@ class AhuController extends Controller
             ->where('notifiable_id', $data->id)
             ->where('user_id', Auth::id())
             ->delete();
+
+        try {
+            $this->sendNotification($data, $data->supervisor_id);
+        } catch (\Exception $e) {
+            Log::error('Notif AHU Supervisor gagal: ' . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Disetujui Foreman']);
     }
@@ -456,16 +462,12 @@ class AhuController extends Controller
         return response()->json(['status' => 200, 'message' => 'Data dihapus']);
     }
 
-    private function sendNotification($main)
+    private function sendNotification($main, $userId)
     {
         $approvalUrl = url(route('ahu.approval', [], false));
-        $recipients = User::whereIn('id', array_filter([$main->foreman_id, $main->supervisor_id]))->get();
-
-        foreach ($recipients as $user) {
-            NotificationsModel::updateOrCreate(
-                ['user_id' => $user->id, 'notifiable_type' => Ahu::class, 'notifiable_id' => $main->id, 'is_read' => 0],
-                ['title' => 'Approval Bulanan AHU', 'message' => "Laporan AHU Bulan {$main->bulan} {$main->tahun} menunggu persetujuan", 'url' => $approvalUrl]
-            );
-        }
+        NotificationsModel::updateOrCreate(
+            ['user_id' => $userId, 'notifiable_type' => Ahu::class, 'notifiable_id' => $main->id, 'is_read' => 0],
+            ['title' => 'Approval Bulanan AHU', 'message' => "Laporan AHU Bulan {$main->bulan} {$main->tahun} menunggu persetujuan", 'url' => $approvalUrl]
+        );
     }
 }

@@ -135,7 +135,7 @@
                                     @endfor
                                 </select>
                             </div> --}}
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label fw-bold">Tahun</label>
                                 <input type="number" name="tahun" class="form-control" value="{{ date('Y') }}">
                             </div>
@@ -365,12 +365,12 @@
                                     <i class="ri-eye-line"></i>
                                 </button>
                                 ${['submitted', 'rejected'].includes(item.status) ? `
-                                        <button class="btn btn-sm btn-outline-warning btn-edit" data-id="${item.id}" title="Edit">
-                                            <i class="ri-edit-line"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${item.id}" title="Hapus">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>` : ''}
+                                            <button class="btn btn-sm btn-outline-warning btn-edit" data-id="${item.id}" title="Edit">
+                                                <i class="ri-edit-line"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${item.id}" title="Hapus">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>` : ''}
                             </div>
                         </td>
                     </tr>

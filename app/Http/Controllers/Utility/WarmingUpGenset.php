@@ -84,7 +84,7 @@ class WarmingUpGenset extends Controller
             ]);
 
             try {
-                $this->sendNotification($report);
+                $this->sendNotification($report, $report->foreman_id);
             } catch (\Exception $e) {
                 Log::error('Notif gagal: ' . $e->getMessage());
             }
@@ -114,26 +114,19 @@ class WarmingUpGenset extends Controller
         }
     }
 
-    private function sendNotification($data)
+    private function sendNotification($data, $userId)
     {
         $approvalUrl = url(route('warming-up-genset.approval', [], false));
 
-        $recipients = User::whereIn('id', array_filter([
-            $data->foreman_id,
-            $data->supervisor_id,
-        ]))->get();
-
-        foreach ($recipients as $user) {
-            NotificationsModel::create([
-                'user_id'          => $user->id,
-                'title'            => 'Approval Warming Up Genset',
-                'message'          => 'Laporan warming up genset tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
-                'url'              => $approvalUrl,
-                'notifiable_type'  => WarmingUpGensetModel::class,
-                'notifiable_id'    => $data->id,
-                'is_read'          => 0,
-            ]);
-        }
+        NotificationsModel::create([
+            'user_id'          => $userId,
+            'title'            => 'Approval Warming Up Genset',
+            'message'          => 'Laporan warming up genset tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
+            'url'              => $approvalUrl,
+            'notifiable_type'  => WarmingUpGensetModel::class,
+            'notifiable_id'    => $data->id,
+            'is_read'          => 0,
+        ]);
     }
 
     public function approveForeman($id)
@@ -158,6 +151,12 @@ class WarmingUpGenset extends Controller
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
             ->delete();
+
+        try {
+            $this->sendNotification($data, $data->supervisor_id);
+        } catch (\Exception $e) {
+            Log::error('Notif supervisor gagal: ' . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
@@ -455,6 +454,12 @@ class WarmingUpGenset extends Controller
         $hasSignature = file_exists($signaturePath);
 
         $currentRow = 6;
+
+        // Flag approval
+        $allApprovedUser = true; // langsung dianggap approved
+        $allApprovedForeman = true;
+        $allApprovedSupervisor = true;
+
         foreach ($data as $item) {
             // A: Tanggal-Bulan (Contoh: 01-Apr)
             $sheet->setCellValue('A' . $currentRow, Carbon::parse($item->tanggal_laporan)->translatedFormat('d-M'));
@@ -472,33 +477,63 @@ class WarmingUpGenset extends Controller
             $sheet->setCellValue('J' . $currentRow, $item->status_oil);
             $sheet->setCellValue('K' . $currentRow, $item->status_bbm);
 
-            // TTD per Baris (Pelaksana L, Staff M)
-            if ($hasSignature) {
-                // TTD Pelaksana (L)
-                if ($item->status != 'draft') {
-                    $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                    $drawOp->setName('Op');
-                    $drawOp->setPath($signaturePath);
-                    $drawOp->setHeight(20);
-                    $drawOp->setCoordinates('L' . $currentRow);
-                    $drawOp->setWorksheet($sheet);
-                }
-
-                // TTD Staff/Approval (M)
-                if (in_array($item->status, ['approved_foreman', 'approved_supervisor'])) {
-                    $drawApp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                    $drawApp->setName('App');
-                    $drawApp->setPath($signaturePath);
-                    $drawApp->setHeight(20);
-                    $drawApp->setCoordinates('M' . $currentRow);
-                    $drawApp->setWorksheet($sheet);
-                }
+            // Cek approval foreman
+            if (!in_array($item->status, ['approved_foreman', 'approved_supervisor'])) {
+                $allApprovedForeman = false;
             }
+
+            // Cek approval supervisor
+            if ($item->status !== 'approved_supervisor') {
+                $allApprovedSupervisor = false;
+            }
+
             $currentRow++;
         }
 
+        // TTD DI BAWAH (ROW 39)
+        if ($hasSignature) {
+            $offsetX = 60;
+            $offsetY = 10;
+
+            // User/Pelaksana (A39)
+            if ($allApprovedUser) {
+                $drawUser = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawUser->setName('User');
+                $drawUser->setPath($signaturePath);
+                $drawUser->setHeight(70);
+                $drawUser->setCoordinates('A39');
+                $drawUser->setOffsetX(110);
+                $drawUser->setOffsetY(10);
+                $drawUser->setWorksheet($sheet);
+            }
+
+            // Foreman (E39)
+            if ($allApprovedForeman) {
+                $drawForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawForeman->setName('Foreman');
+                $drawForeman->setPath($signaturePath);
+                $drawForeman->setHeight(70);
+                $drawForeman->setCoordinates('E39');
+                $drawForeman->setOffsetX($offsetX);
+                $drawForeman->setOffsetY($offsetY);
+                $drawForeman->setWorksheet($sheet);
+            }
+
+            // Supervisor (I39)
+            if ($allApprovedSupervisor) {
+                $drawSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawSupervisor->setName('Supervisor');
+                $drawSupervisor->setPath($signaturePath);
+                $drawSupervisor->setHeight(70);
+                $drawSupervisor->setCoordinates('I39');
+                $drawSupervisor->setOffsetX($offsetX);
+                $drawSupervisor->setOffsetY($offsetY);
+                $drawSupervisor->setWorksheet($sheet);
+            }
+        }
+
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $filename = 'Genset_WarmingUp_Report_' . now()->format('YmdHis') . '.xlsx';
+        $filename = 'Genset_WarmingUp_Report_' . now()->format('Y') . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');

@@ -74,7 +74,7 @@ class MdpMonitoringController extends Controller
             ]);
 
             try {
-                $this->sendNotification($report);
+                $this->sendNotification($report, $report->foreman_id);
             } catch (\Exception $e) {
                 Log::error('Notif MDP gagal: ' . $e->getMessage());
             }
@@ -104,26 +104,19 @@ class MdpMonitoringController extends Controller
         }
     }
 
-    private function sendNotification($data)
+    private function sendNotification($data, $userId)
     {
         $approvalUrl = url(route('mdp-monitoring.approval', [], false));
 
-        $recipients = User::whereIn('id', array_filter([
-            $data->foreman_id,
-            $data->supervisor_id,
-        ]))->get();
-
-        foreach ($recipients as $user) {
-            NotificationsModel::create([
-                'user_id'          => $user->id,
-                'title'            => 'Approval Pemantauan MDP',
-                'message'          => 'Laporan pemantauan MDP tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
-                'url'              => $approvalUrl,
-                'notifiable_type'  => MdpMonitoringModel::class,
-                'notifiable_id'    => $data->id,
-                'is_read'          => 0,
-            ]);
-        }
+        NotificationsModel::create([
+            'user_id'          => $userId,
+            'title'            => 'Approval Pemantauan MDP',
+            'message'          => 'Laporan pemantauan MDP tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
+            'url'              => $approvalUrl,
+            'notifiable_type'  => MdpMonitoringModel::class,
+            'notifiable_id'    => $data->id,
+            'is_read'          => 0,
+        ]);
     }
 
     public function approveForeman($id)
@@ -152,6 +145,12 @@ class MdpMonitoringController extends Controller
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id())
             ->delete();
+
+        try {
+            $this->sendNotification($data, $data->supervisor_id);
+        } catch (\Exception $e) {
+            Log::error('Notif MDP Supervisor gagal: ' . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
