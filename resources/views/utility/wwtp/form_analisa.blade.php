@@ -472,6 +472,10 @@
                 });
             }
 
+            $(document).on('wheel', 'input[type=number]', function(e) {
+                $(this).blur();
+            });
+
             // Function to fetch and disable already filled parameters
             function checkFilledParameters() {
                 const date = $('#analisa_date').val();
