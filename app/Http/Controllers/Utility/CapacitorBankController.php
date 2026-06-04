@@ -452,7 +452,7 @@ class CapacitorBankController extends Controller
         $nameRow  = 44;
         $tsRow    = 45;
 
-        $basePath = public_path('storage/operasional/ttd');
+        $basePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
 
         // Helper ambil username dari relasi User
         $getName = fn($user) => $user?->username ?? '-';
@@ -462,7 +462,7 @@ class CapacitorBankController extends Controller
                 'colStart'  => 'A',
                 'colEnd'    => 'F',
                 'label'     => 'Operator / Pelaksana',
-                'ttdFile'   => $basePath . '/ttd_teknisi.jpeg',
+                'ttdFile'   => $basePath,
                 'name'      => $getName($approval->operator),
                 'timestamp' => $approval->submitted_at?->format('d/m/Y H:i') ?? '-',
             ],
@@ -470,7 +470,7 @@ class CapacitorBankController extends Controller
                 'colStart'  => 'G',
                 'colEnd'    => 'L',
                 'label'     => 'Foreman',
-                'ttdFile'   => $basePath . '/ttd_staff.jpeg',
+                'ttdFile'   => $basePath,
                 'name'      => $getName($approval->foreman),
                 'timestamp' => $approval->foreman_approved_at?->format('d/m/Y H:i') ?? '-',
             ],
@@ -478,7 +478,7 @@ class CapacitorBankController extends Controller
                 'colStart'  => 'M',
                 'colEnd'    => 'R',
                 'label'     => 'Supervisor',
-                'ttdFile'   => $basePath . '/ttd_user_eng.jpeg',
+                'ttdFile'   => $basePath,
                 'name'      => $getName($approval->supervisor),
                 'timestamp' => $approval->supervisor_approved_at?->format('d/m/Y H:i') ?? '-',
             ],
