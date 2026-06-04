@@ -491,44 +491,60 @@ class WarmingUpGenset extends Controller
         }
 
         // TTD DI BAWAH (ROW 39)
-        if ($hasSignature) {
+        $firstRecord = $data->first();
+        if ($firstRecord) {
+            $hasSticker = file_exists($signaturePath);
             $offsetX = 60;
             $offsetY = 10;
 
-            // User/Pelaksana (A39)
+            // User/Pelaksana (A43 = Username, A44 = Time)
             if ($allApprovedUser) {
-                $drawUser = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawUser->setName('User');
-                $drawUser->setPath($signaturePath);
-                $drawUser->setHeight(70);
-                $drawUser->setCoordinates('A39');
-                $drawUser->setOffsetX(110);
-                $drawUser->setOffsetY(10);
-                $drawUser->setWorksheet($sheet);
+                if ($hasSticker) {
+                    $drawUser = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawUser->setName('User');
+                    $drawUser->setPath($signaturePath);
+                    $drawUser->setHeight(70);
+                    $drawUser->setCoordinates('A39');
+                    $drawUser->setOffsetX(110);
+                    $drawUser->setOffsetY(10);
+                    $drawUser->setWorksheet($sheet);
+                }
+                $sheet->setCellValue('A43', $firstRecord->operator ? $firstRecord->operator->username : '-');
+                $sheet->setCellValue('A44', $firstRecord->created_at ? Carbon::parse($firstRecord->created_at)->format('d/m/Y H:i') : '-');
             }
 
-            // Foreman (E39)
+            // Foreman (E43 = Username, E44 = Time)
             if ($allApprovedForeman) {
-                $drawForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawForeman->setName('Foreman');
-                $drawForeman->setPath($signaturePath);
-                $drawForeman->setHeight(70);
-                $drawForeman->setCoordinates('E39');
-                $drawForeman->setOffsetX($offsetX);
-                $drawForeman->setOffsetY($offsetY);
-                $drawForeman->setWorksheet($sheet);
+                if ($hasSticker) {
+                    $drawForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawForeman->setName('Foreman');
+                    $drawForeman->setPath($signaturePath);
+                    $drawForeman->setHeight(70);
+                    $drawForeman->setCoordinates('D39');
+                    $drawForeman->setOffsetX($offsetX);
+                    $drawForeman->setOffsetY($offsetY);
+                    $drawForeman->setWorksheet($sheet);
+                }
+                $foremanUser = $firstRecord->approvedForeman;
+                $sheet->setCellValue('D43', $foremanUser ? $foremanUser->username : '-');
+                $sheet->setCellValue('D44', $firstRecord->approved_foreman_at ? Carbon::parse($firstRecord->approved_foreman_at)->format('d/m/Y H:i') : '-');
             }
 
-            // Supervisor (I39)
+            // Supervisor (I43 = Username, I44 = Time)
             if ($allApprovedSupervisor) {
-                $drawSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawSupervisor->setName('Supervisor');
-                $drawSupervisor->setPath($signaturePath);
-                $drawSupervisor->setHeight(70);
-                $drawSupervisor->setCoordinates('I39');
-                $drawSupervisor->setOffsetX($offsetX);
-                $drawSupervisor->setOffsetY($offsetY);
-                $drawSupervisor->setWorksheet($sheet);
+                if ($hasSticker) {
+                    $drawSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawSupervisor->setName('Supervisor');
+                    $drawSupervisor->setPath($signaturePath);
+                    $drawSupervisor->setHeight(70);
+                    $drawSupervisor->setCoordinates('H39');
+                    $drawSupervisor->setOffsetX($offsetX);
+                    $drawSupervisor->setOffsetY($offsetY);
+                    $drawSupervisor->setWorksheet($sheet);
+                }
+                $supervisorUser = $firstRecord->approvedSupervisor;
+                $sheet->setCellValue('H43', $supervisorUser ? $supervisorUser->username : '-');
+                $sheet->setCellValue('H44', $firstRecord->approved_supervisor_at ? Carbon::parse($firstRecord->approved_supervisor_at)->format('d/m/Y H:i') : '-');
             }
         }
 
