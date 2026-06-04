@@ -12,6 +12,7 @@ Route::prefix('wwtp')->group(function () {
     // WWTP Daily Data Routes (Influent Harian) - HARUS DI ATAS /{id}
     Route::get('/all/export', [WWTPController::class, 'export']);
     Route::get('/influent-harian', [WWTPControllerProses::class, 'indexHarian']);
+    Route::get('/influent-harian/previous-data', [WWTPControllerProses::class, 'getPreviousData']);
     Route::post('/influent-harian', [WWTPControllerProses::class, 'storeinfluentHarian'])->name('wwtp.influent-harian.store');
     Route::get('/influent-harian/{id}', [WWTPControllerProses::class, 'showHarian']);
     Route::put('/influent-harian/{id}', [WWTPControllerProses::class, 'updateHarian']);

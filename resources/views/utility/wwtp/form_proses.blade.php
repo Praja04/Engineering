@@ -216,122 +216,316 @@
                                         <div class="row g-3">
                                             <!-- Required Fields -->
                                             <div class="col-md-4">
-                                                <div class="card border border-primary">
-                                                    <div class="card-body">
-                                                        <label for="daily_pit_sparta" class="form-label fw-semibold">
-                                                            <i class="mdi mdi-water text-primary me-1"></i>Pit Sparta <span class="text-danger">*</span>
-                                                        </label>
-                                                        <div class="input-group">
-                                                            <input type="number" step="0.01" class="form-control" id="daily_pit_sparta" name="pit_sparta" min="0" placeholder="0.00" required>
-                                                            <span class="input-group-text bg-light">m³</span>
+                                                <div class="card border border-primary shadow-sm h-100">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <div class="avatar-xs me-2">
+                                                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                                    <i class="mdi mdi-water fs-5"></i>
+                                                                </div>
+                                                            </div>
+                                                            <h6 class="mb-0 fw-semibold text-primary">Pit Sparta <span class="text-danger">*</span></h6>
                                                         </div>
-                                                        <small class="form-text text-muted">Volume air dari Sparta</small>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-muted mb-1">Data Awal</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control bg-light"
+                                                                    id="daily_pit_sparta_awal"
+                                                                    name="pit_sparta_awal" readonly
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light text-muted">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small text-muted mb-1 text-dark">Data Sekarang</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control border-primary" id="daily_pit_sparta"
+                                                                    name="pit_sparta" min="0"
+                                                                    placeholder="0.00" required>
+                                                                <span class="input-group-text bg-primary text-white border-primary">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <small class="form-text text-muted mt-2 d-block">
+                                                            <i class="mdi mdi-information-outline me-1"></i>Volume air dari Sparta
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div class="col-md-4">
-                                                <div class="card border border-primary">
-                                                    <div class="card-body">
-                                                        <label for="daily_pit_garam" class="form-label fw-semibold">
-                                                            <i class="mdi mdi-water text-primary me-1"></i>Pit Garam <span class="text-danger">*</span>
-                                                        </label>
-                                                        <div class="input-group">
-                                                            <input type="number" step="0.01" class="form-control" id="daily_pit_garam" name="pit_garam" min="0" placeholder="0.00" required>
-                                                            <span class="input-group-text bg-light">m³</span>
+                                                <div class="card border border-primary shadow-sm h-100">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <div class="avatar-xs me-2">
+                                                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                                    <i class="mdi mdi-water fs-5"></i>
+                                                                </div>
+                                                            </div>
+                                                            <h6 class="mb-0 fw-semibold text-primary">Pit Garam <span class="text-danger">*</span></h6>
                                                         </div>
-                                                        <small class="form-text text-muted">Volume air dari Garam</small>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-muted mb-1">Data Awal</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control bg-light"
+                                                                    id="daily_pit_garam_awal"
+                                                                    name="pit_garam_awal" readonly
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light text-muted">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small text-muted mb-1 text-dark">Data Sekarang</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control border-primary" id="daily_pit_garam"
+                                                                    name="pit_garam" min="0"
+                                                                    placeholder="0.00" required>
+                                                                <span class="input-group-text bg-primary text-white border-primary">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <small class="form-text text-muted mt-2 d-block">
+                                                            <i class="mdi mdi-information-outline me-1"></i>Volume air dari Garam
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div class="col-md-4">
-                                                <div class="card border border-primary">
-                                                    <div class="card-body">
-                                                        <label for="daily_pit_domestik" class="form-label fw-semibold">
-                                                            <i class="mdi mdi-water text-primary me-1"></i>Pit Domestik <span class="text-danger">*</span>
-                                                        </label>
-                                                        <div class="input-group">
-                                                            <input type="number" step="0.01" class="form-control" id="daily_pit_domestik" name="pit_domestik" min="0" placeholder="0.00" required>
-                                                            <span class="input-group-text bg-light">m³</span>
+                                                <div class="card border border-primary shadow-sm h-100">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <div class="avatar-xs me-2">
+                                                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                                    <i class="mdi mdi-water fs-5"></i>
+                                                                </div>
+                                                            </div>
+                                                            <h6 class="mb-0 fw-semibold text-primary">Pit Domestik <span class="text-danger">*</span></h6>
                                                         </div>
-                                                        <small class="form-text text-muted">Volume air domestik</small>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-muted mb-1">Data Awal</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control bg-light"
+                                                                    id="daily_pit_domestik_awal"
+                                                                    name="pit_domestik_awal" readonly
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light text-muted">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small text-muted mb-1 text-dark">Data Sekarang</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control border-primary" id="daily_pit_domestik"
+                                                                    name="pit_domestik" min="0"
+                                                                    placeholder="0.00" required>
+                                                                <span class="input-group-text bg-primary text-white border-primary">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <small class="form-text text-muted mt-2 d-block">
+                                                            <i class="mdi mdi-information-outline me-1"></i>Volume air domestik
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- Optional Fields -->
-                                            <div class="col-md-3">
-                                                <div class="card border">
-                                                    <div class="card-body">
-                                                        <label for="daily_pit_produksi_step3" class="form-label">
-                                                            <i class="mdi mdi-factory me-1"></i>Pit Produksi Step 3
-                                                        </label>
-                                                        <div class="input-group">
-                                                            <input type="number" step="0.01" class="form-control" id="daily_pit_produksi_step3" name="pit_produksi_step3" min="0" placeholder="0.00">
-                                                            <span class="input-group-text bg-light">m³</span>
+                                            <div class="col-md-4">
+                                                <div class="card border border-secondary-subtle shadow-sm h-100">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <div class="avatar-xs me-2">
+                                                                <div class="avatar-title bg-light text-secondary rounded-circle">
+                                                                    <i class="mdi mdi-factory fs-5"></i>
+                                                                </div>
+                                                            </div>
+                                                            <h6 class="mb-0 fw-semibold text-dark">Pit Produksi Step 3</h6>
                                                         </div>
-                                                        <small class="form-text text-muted">Step 3 ke Equal 1</small>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-muted mb-1">Data Awal</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control bg-light"
+                                                                    id="daily_pit_produksi_step3_awal"
+                                                                    name="pit_produksi_step3_awal" readonly
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light text-muted">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small text-muted mb-1 text-dark">Data Sekarang</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control"
+                                                                    id="daily_pit_produksi_step3"
+                                                                    name="pit_produksi_step3" min="0"
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <small class="form-text text-muted mt-2 d-block">
+                                                            <i class="mdi mdi-information-outline me-1"></i>Step 3 ke Equal 1
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-3">
-                                                <div class="card border">
-                                                    <div class="card-body">
-                                                        <label for="daily_pit_storage" class="form-label">
-                                                            <i class="mdi mdi-archive me-1"></i>Pit Storage
-                                                        </label>
-                                                        <div class="input-group">
-                                                            <input type="number" step="0.01" class="form-control" id="daily_pit_storage" name="pit_storage" min="0" placeholder="0.00">
-                                                            <span class="input-group-text bg-light">m³</span>
+                                            <div class="col-md-4">
+                                                <div class="card border border-secondary-subtle shadow-sm h-100">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <div class="avatar-xs me-2">
+                                                                <div class="avatar-title bg-light text-secondary rounded-circle">
+                                                                    <i class="mdi mdi-archive fs-5"></i>
+                                                                </div>
+                                                            </div>
+                                                            <h6 class="mb-0 fw-semibold text-dark">Pit Storage</h6>
                                                         </div>
-                                                        <small class="form-text text-muted">Volume storage</small>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-muted mb-1">Data Awal</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control bg-light"
+                                                                    id="daily_pit_storage_awal"
+                                                                    name="pit_storage_awal" readonly
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light text-muted">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small text-muted mb-1 text-dark">Data Sekarang</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control" id="daily_pit_storage"
+                                                                    name="pit_storage" min="0"
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <small class="form-text text-muted mt-2 d-block">
+                                                            <i class="mdi mdi-information-outline me-1"></i>Volume storage
+                                                         </small>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-3">
-                                                <div class="card border">
-                                                    <div class="card-body">
-                                                        <label for="daily_pit_proses_wwtp2" class="form-label">
-                                                            <i class="mdi mdi-water-treatment me-1"></i>Pit Proses WWTP 2
-                                                        </label>
-                                                        <div class="input-group">
-                                                            <input type="number" step="0.01" class="form-control" id="daily_pit_proses_wwtp2" name="pit_proses_wwtp2" min="0" placeholder="0.00">
-                                                            <span class="input-group-text bg-light">m³</span>
+                                            <div class="col-md-4">
+                                                <div class="card border border-secondary-subtle shadow-sm h-100">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <div class="avatar-xs me-2">
+                                                                <div class="avatar-title bg-light text-secondary rounded-circle">
+                                                                    <i class="mdi mdi-water-treatment fs-5"></i>
+                                                                </div>
+                                                            </div>
+                                                            <h6 class="mb-0 fw-semibold text-dark">Pit Proses WWTP 2</h6>
                                                         </div>
-                                                        <small class="form-text text-muted">Proses WWTP 2</small>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-muted mb-1">Data Awal</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control bg-light"
+                                                                    id="daily_pit_proses_wwtp2_awal"
+                                                                    name="pit_proses_wwtp2_awal" readonly
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light text-muted">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small text-muted mb-1 text-dark">Data Sekarang</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control"
+                                                                    id="daily_pit_proses_wwtp2"
+                                                                    name="pit_proses_wwtp2" min="0"
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <small class="form-text text-muted mt-2 d-block">
+                                                            <i class="mdi mdi-information-outline me-1"></i>Proses WWTP 2
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-3">
-                                                <div class="card border">
-                                                    <div class="card-body">
-                                                        <label for="daily_pit_outlet" class="form-label">
-                                                            <i class="mdi mdi-pipe me-1"></i>Pit Outlet
-                                                        </label>
-                                                        <div class="input-group">
-                                                            <input type="number" step="0.01" class="form-control" id="daily_pit_outlet" name="pit_outlet" min="0" placeholder="0.00">
-                                                            <span class="input-group-text bg-light">m³</span>
+                                            <div class="col-md-4">
+                                                <div class="card border border-secondary-subtle shadow-sm h-100">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <div class="avatar-xs me-2">
+                                                                <div class="avatar-title bg-light text-secondary rounded-circle">
+                                                                    <i class="mdi mdi-pipe fs-5"></i>
+                                                                </div>
+                                                            </div>
+                                                            <h6 class="mb-0 fw-semibold text-dark">Pit Outlet</h6>
                                                         </div>
-                                                        <small class="form-text text-muted">Outlet volume</small>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-muted mb-1">Data Awal</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control bg-light"
+                                                                    id="daily_pit_outlet_awal"
+                                                                    name="pit_outlet_awal" readonly
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light text-muted">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small text-muted mb-1 text-dark">Data Sekarang</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control" id="daily_pit_outlet"
+                                                                    name="pit_outlet" min="0"
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <small class="form-text text-muted mt-2 d-block">
+                                                            <i class="mdi mdi-information-outline me-1"></i>Outlet volume
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-3">
-                                                <div class="card border">
-                                                    <div class="card-body">
-                                                        <label for="daily_pit_boiler" class="form-label">
-                                                            <i class="mdi mdi-boiler me-1"></i>Pit Boiler
-                                                        </label>
-                                                        <div class="input-group">
-                                                            <input type="number" step="0.01" class="form-control" id="daily_pit_boiler" name="pit_boiler" min="0" placeholder="0.00">
-                                                            <span class="input-group-text bg-light">m³</span>
+                                            <div class="col-md-4">
+                                                <div class="card border border-secondary-subtle shadow-sm h-100">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center mb-3">
+                                                            <div class="avatar-xs me-2">
+                                                                <div class="avatar-title bg-light text-secondary rounded-circle">
+                                                                    <i class="mdi mdi-boiler fs-5"></i>
+                                                                </div>
+                                                            </div>
+                                                            <h6 class="mb-0 fw-semibold text-dark">Pit Boiler</h6>
                                                         </div>
-                                                        <small class="form-text text-muted">Boiler volume</small>
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-muted mb-1">Data Awal</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control bg-light"
+                                                                    id="daily_pit_boiler_awal"
+                                                                    name="pit_boiler_awal" readonly
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light text-muted">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label small text-muted mb-1 text-dark">Data Sekarang</label>
+                                                            <div class="input-group">
+                                                                <input type="number" step="0.01"
+                                                                    class="form-control" id="daily_pit_boiler"
+                                                                    name="pit_boiler" min="0"
+                                                                    placeholder="0.00">
+                                                                <span class="input-group-text bg-light">m³</span>
+                                                            </div>
+                                                        </div>
+                                                        <small class="form-text text-muted mt-2 d-block">
+                                                             <i class="mdi mdi-information-outline me-1"></i>Boiler volume
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -869,6 +1063,7 @@
                     // Reset form
                     $('#dailyWwtpForm')[0].reset();
                     $('#daily_tanggal').val(today);
+                    fetchPreviousData();
 
                     // Reload recent data if function exists
                     if (typeof loadRecentData === 'function') {
@@ -969,6 +1164,46 @@
                 }
             });
         });
+
+        function fetchPreviousData() {
+            const tanggal = $('#daily_tanggal').val();
+            const shift = $('#daily_shift').val();
+
+            if (!tanggal || !shift) {
+                // Clear the _awal fields if date/shift not selected
+                $('[id$="_awal"]').val('0.00');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ url('api/wwtp/influent-harian/previous-data') }}",
+                method: 'GET',
+                data: {
+                    tanggal: tanggal,
+                    shift: shift
+                },
+                success: function(response) {
+                    $('#daily_pit_sparta_awal').val(response.pit_sparta_awal);
+                    $('#daily_pit_garam_awal').val(response.pit_garam_awal);
+                    $('#daily_pit_domestik_awal').val(response.daily_pit_domestik_awal || response.pit_domestik_awal);
+                    $('#daily_pit_produksi_step3_awal').val(response.pit_produksi_step3_awal);
+                    $('#daily_pit_storage_awal').val(response.pit_storage_awal);
+                    $('#daily_pit_proses_wwtp2_awal').val(response.pit_proses_wwtp2_awal);
+                    $('#daily_pit_outlet_awal').val(response.pit_outlet_awal);
+                    $('#daily_pit_boiler_awal').val(response.pit_boiler_awal);
+                },
+                error: function(xhr) {
+                    console.error('Gagal mengambil data awal:', xhr);
+                }
+            });
+        }
+
+        $(document).on('wheel', 'input[type=number]', function(e) {
+            $(this).blur();
+        });
+
+        // Trigger on date or shift change
+        $('#daily_tanggal, #daily_shift').on('change', fetchPreviousData);
 
     });
 </script>
