@@ -527,44 +527,51 @@ class CompressorController extends Controller
         $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
         $mainRecord = $data->first()->compressor;
 
-        if (file_exists($signaturePath)) {
-            // TTD Operator (A51) - Muncul jika sudah disubmit atau diapprove
+        if ($mainRecord) {
+            $hasSticker = file_exists($signaturePath);
+
+            // Operator (A54 = Username, A55 = Submitted Time)
             if ($mainRecord->status != 'draft') {
-                $drawingOperator = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawingOperator->setName('Submitted Operator');
-                $drawingOperator->setPath($signaturePath);
-                $drawingOperator->setHeight(60);
-                $drawingOperator->setCoordinates('E51');
-                $drawingOperator->setWorksheet($sheet);
+                if ($hasSticker) {
+                    $drawingOperator = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawingOperator->setName('Submitted Operator');
+                    $drawingOperator->setPath($signaturePath);
+                    $drawingOperator->setHeight(60);
+                    $drawingOperator->setCoordinates('A51');
+                    $drawingOperator->setWorksheet($sheet);
+                }
+                $sheet->setCellValue('A54', $mainRecord->operator ? $mainRecord->operator->username : '-');
+                $sheet->setCellValue('A55', $mainRecord->submitted_at ? Carbon::parse($mainRecord->submitted_at)->format('d/m/Y H:i') : '-');
             }
 
-            // Jika sudah di-approve Foreman atau Supervisor, pasang stiker di kolom Foreman (J51)
+            // Foreman (J54 = Username, J55 = Approved Time)
             if (in_array($mainRecord->status, ['approved_foreman', 'approved_supervisor'])) {
-                $drawingForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawingForeman->setName('Approved Foreman');
-                $drawingForeman->setPath($signaturePath);
-                $drawingForeman->setHeight(60);
-                $drawingForeman->setCoordinates('N51');
-                $drawingForeman->setWorksheet($sheet);
-
-                $sheet->setCellValue('J55', $mainRecord->foreman ? $mainRecord->foreman->username : '-');
+                if ($hasSticker) {
+                    $drawingForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawingForeman->setName('Approved Foreman');
+                    $drawingForeman->setPath($signaturePath);
+                    $drawingForeman->setHeight(60);
+                    $drawingForeman->setCoordinates('J51');
+                    $drawingForeman->setWorksheet($sheet);
+                }
+                $sheet->setCellValue('J54', $mainRecord->foreman ? $mainRecord->foreman->username : '-');
+                $sheet->setCellValue('J55', $mainRecord->approved_foreman_at ? Carbon::parse($mainRecord->approved_foreman_at)->format('d/m/Y H:i') : '-');
             }
 
-            // Jika sudah di-approve Supervisor, pasang stiker di kolom Supervisor (T51)
+            // Supervisor (T54 = Username, T55 = Approved Time)
             if ($mainRecord->status == 'approved_supervisor') {
-                $drawingSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawingSupervisor->setName('Approved Supervisor');
-                $drawingSupervisor->setPath($signaturePath);
-                $drawingSupervisor->setHeight(60);
-                $drawingSupervisor->setCoordinates('X51');
-                $drawingSupervisor->setWorksheet($sheet);
-
-                $sheet->setCellValue('T55', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
+                if ($hasSticker) {
+                    $drawingSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawingSupervisor->setName('Approved Supervisor');
+                    $drawingSupervisor->setPath($signaturePath);
+                    $drawingSupervisor->setHeight(60);
+                    $drawingSupervisor->setCoordinates('T51');
+                    $drawingSupervisor->setWorksheet($sheet);
+                }
+                $sheet->setCellValue('T54', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
+                $sheet->setCellValue('T55', $mainRecord->approved_supervisor_at ? Carbon::parse($mainRecord->approved_supervisor_at)->format('d/m/Y H:i') : '-');
             }
         }
-
-        // Nama Operator (A55)
-        $sheet->setCellValue('A55', $mainRecord->operator ? $mainRecord->operator->username : '-');
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $filename = 'Compressor_Report_' . now()->format('YmdHis') . '.xlsx';

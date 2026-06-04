@@ -112,10 +112,14 @@ class WaterSoftenerController extends Controller
         ]);
 
         // Buat record approval bulan ini jika belum ada
-        WaterSoftenerApproval::firstOrCreate(
+        $approval = WaterSoftenerApproval::firstOrCreate(
             ['bulan' => $tanggal->month, 'tahun' => $tanggal->year],
             ['status' => 'draft']
         );
+
+        if ($approval && !$approval->operator_id) {
+            $approval->update(['operator_id' => auth()->id()]);
+        }
 
         return response()->json([
             'message' => 'Data tanggal ' . $tanggal->format('d/m/Y') . ' berhasil disimpan.',
@@ -158,6 +162,10 @@ class WaterSoftenerController extends Controller
             return response()->json([
                 'message' => 'Laporan bulan ini sudah diajukan/disetujui, tidak dapat diubah.'
             ], 422);
+        }
+
+        if ($approval && !$approval->operator_id) {
+            $approval->update(['operator_id' => auth()->id()]);
         }
 
         $data = WaterSoftener::where('tanggal', $tanggal)->first();
@@ -435,34 +443,50 @@ class WaterSoftenerController extends Controller
             ->with(['operator', 'foreman', 'supervisor'])
             ->first();
 
-        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
-        if ($approval && file_exists($signaturePath)) {
-            // Operator (A29)
+        if ($approval) {
+            $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+            $hasSticker = file_exists($signaturePath);
+
+            // Operator (A42 = Username, A43 = Approved/Submitted Time)
             if ($approval->status != 'draft') {
-                $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawOp->setName('Operator');
-                $drawOp->setPath($signaturePath);
-                $drawOp->setHeight(60);
-                $drawOp->setCoordinates('C39');
-                $drawOp->setWorksheet($sheet);
+                if ($hasSticker) {
+                    $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawOp->setName('Operator');
+                    $drawOp->setPath($signaturePath);
+                    $drawOp->setHeight(60);
+                    $drawOp->setCoordinates('C39');
+                    $drawOp->setWorksheet($sheet);
+                }
+                $sheet->setCellValue('A42', $approval->operator ? $approval->operator->username : '-');
+                $sheet->setCellValue('A43', $approval->submitted_at ? Carbon::parse($approval->submitted_at)->format('d/m/Y H:i') : '-');
             }
-            // Foreman (G29)
+
+            // Foreman (G42 = Username, G43 = Approved/Submitted Time)
             if (in_array($approval->status, ['waiting_supervisor', 'approved_supervisor'])) {
-                $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawFm->setName('Foreman');
-                $drawFm->setPath($signaturePath);
-                $drawFm->setHeight(60);
-                $drawFm->setCoordinates('I39');
-                $drawFm->setWorksheet($sheet);
+                if ($hasSticker) {
+                    $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawFm->setName('Foreman');
+                    $drawFm->setPath($signaturePath);
+                    $drawFm->setHeight(60);
+                    $drawFm->setCoordinates('I39');
+                    $drawFm->setWorksheet($sheet);
+                }
+                $sheet->setCellValue('G42', $approval->foreman ? $approval->foreman->username : '-');
+                $sheet->setCellValue('G43', $approval->foreman_approved_at ? Carbon::parse($approval->foreman_approved_at)->format('d/m/Y H:i') : '-');
             }
-            // Supervisor (L29)
+
+            // Supervisor (L42 = Username, L43 = Approved/Submitted Time)
             if ($approval->status == 'approved_supervisor') {
-                $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                $drawSpv->setName('Supervisor');
-                $drawSpv->setPath($signaturePath);
-                $drawSpv->setHeight(60);
-                $drawSpv->setCoordinates('N39');
-                $drawSpv->setWorksheet($sheet);
+                if ($hasSticker) {
+                    $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawSpv->setName('Supervisor');
+                    $drawSpv->setPath($signaturePath);
+                    $drawSpv->setHeight(60);
+                    $drawSpv->setCoordinates('N39');
+                    $drawSpv->setWorksheet($sheet);
+                }
+                $sheet->setCellValue('L42', $approval->supervisor ? $approval->supervisor->username : '-');
+                $sheet->setCellValue('L43', $approval->supervisor_approved_at ? Carbon::parse($approval->supervisor_approved_at)->format('d/m/Y H:i') : '-');
             }
         }
 
