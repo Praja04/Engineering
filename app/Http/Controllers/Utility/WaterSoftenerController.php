@@ -108,7 +108,6 @@ class WaterSoftenerController extends Controller
             'regen2_air_pelarut' => $request->regen2_air_pelarut,
             'regen2_garam'       => $request->regen2_garam,
             'regen2_nomer_ws'    => $request->regen2_nomer_ws,
-            'operator_id'        => auth()->id(),
         ]);
 
         // Buat record approval bulan ini jika belum ada
@@ -117,9 +116,12 @@ class WaterSoftenerController extends Controller
             ['status' => 'draft']
         );
 
-        if ($approval && !$approval->operator_id) {
-            $approval->update(['operator_id' => auth()->id()]);
-        }
+        $approval->update([
+            'operator_id' => auth()->id()
+        ]);
+        // if ($approval && !$approval->operator_id) {
+        //     $approval->update(['operator_id' => auth()->id()]);
+        // }
 
         return response()->json([
             'message' => 'Data tanggal ' . $tanggal->format('d/m/Y') . ' berhasil disimpan.',
