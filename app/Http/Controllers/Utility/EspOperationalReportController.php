@@ -91,7 +91,7 @@ class EspOperationalReportController extends Controller
     public function getData(Request $request)
     {
         $tanggal        = $request->get('tanggal', Carbon::today()->format('Y-m-d'));
-       
+
         $tanggalBerikut = Carbon::parse($tanggal)->addDay()->format('Y-m-d');
 
         $query = EspOperationalReport::whereIn('tanggal_laporan', [$tanggal, $tanggalBerikut]);
@@ -100,7 +100,7 @@ class EspOperationalReportController extends Controller
             $query->where('grup', $request->grup);
         }
 
-        $rows = $query->get()->keyBy(fn ($r) => Carbon::parse($r->jam_laporan)->format('H:i'));
+        $rows = $query->get()->keyBy(fn($r) => Carbon::parse($r->jam_laporan)->format('H:i'));
 
         $result = [];
         foreach ($this->shiftHours() as $jam) {
@@ -128,18 +128,36 @@ class EspOperationalReportController extends Controller
 
         // ── Peta jam => baris Excel (kolom B–F, data operasional) ─────
         $jamRow = [
-            '06:00' => 6,  '07:00' => 7,  '08:00' => 8,  '09:00' => 9,
-            '10:00' => 10, '11:00' => 11, '12:00' => 12, '13:00' => 13,
-            '14:00' => 14, '15:00' => 15, '16:00' => 16, '17:00' => 17,
-            '18:00' => 18, '19:00' => 19, '20:00' => 20, '21:00' => 21,
-            '22:00' => 22, '23:00' => 23, '00:00' => 24, '01:00' => 25,
-            '02:00' => 26, '03:00' => 27, '04:00' => 28, '05:00' => 29,
+            '06:00' => 6,
+            '07:00' => 7,
+            '08:00' => 8,
+            '09:00' => 9,
+            '10:00' => 10,
+            '11:00' => 11,
+            '12:00' => 12,
+            '13:00' => 13,
+            '14:00' => 14,
+            '15:00' => 15,
+            '16:00' => 16,
+            '17:00' => 17,
+            '18:00' => 18,
+            '19:00' => 19,
+            '20:00' => 20,
+            '21:00' => 21,
+            '22:00' => 22,
+            '23:00' => 23,
+            '00:00' => 24,
+            '01:00' => 25,
+            '02:00' => 26,
+            '03:00' => 27,
+            '04:00' => 28,
+            '05:00' => 29,
         ];
 
         // ── Ambil data operasional ─────────────────────────────────────
         $queryOp = EspOperationalReport::whereIn('tanggal_laporan', [$tanggal, $tanggalBerikut]);
         if ($grup) $queryOp->where('grup', $grup);
-        $opRows = $queryOp->get()->keyBy(fn ($r) => Carbon::parse($r->jam_laporan)->format('H:i'));
+        $opRows = $queryOp->get()->keyBy(fn($r) => Carbon::parse($r->jam_laporan)->format('H:i'));
 
         // ── Ambil data shift untuk tanggal yang sama ───────────────────
         $shift = EspShiftReport::where('tanggal_laporan', $tanggal)
@@ -200,9 +218,11 @@ class EspOperationalReportController extends Controller
                 $drawOp->setName('Operator');
                 $drawOp->setPath($signaturePath);
                 $drawOp->setHeight(60);
-                $drawOp->setCoordinates('A32');
+                $drawOp->setCoordinates('B32');
                 $drawOp->setWorksheet($sheet);
-                $sheet->setCellValue('A35', '(' . ($shift->operator ? $shift->operator->username : '-') . ')');
+                $drawOp->setOffsetX(50);
+                $sheet->setCellValue('A35', ($shift->operator ? $shift->operator->username : '-'));
+                $sheet->setCellValue('A36', ($shift->created_at ? $shift->created_at : '-'));
             }
             // Foreman (D32)
             if (in_array($shift->status, ['approved_foreman', 'approved_supervisor'])) {
@@ -210,9 +230,10 @@ class EspOperationalReportController extends Controller
                 $drawFm->setName('Foreman');
                 $drawFm->setPath($signaturePath);
                 $drawFm->setHeight(60);
-                $drawFm->setCoordinates('D32');
+                $drawFm->setCoordinates('E32');
                 $drawFm->setWorksheet($sheet);
-                $sheet->setCellValue('D35', '(' . ($shift->foreman ? $shift->foreman->username : '-') . ')');
+                $sheet->setCellValue('D35', ($shift->foreman ? $shift->foreman->username : '-'));
+                $sheet->setCellValue('D36', ($shift->foreman_approved_at ? $shift->foreman_approved_at : '-'));
             }
             // Supervisor (H32)
             if ($shift->status == 'approved_supervisor') {
@@ -220,9 +241,10 @@ class EspOperationalReportController extends Controller
                 $drawSpv->setName('Supervisor');
                 $drawSpv->setPath($signaturePath);
                 $drawSpv->setHeight(60);
-                $drawSpv->setCoordinates('H32');
+                $drawSpv->setCoordinates('I32');
                 $drawSpv->setWorksheet($sheet);
                 $sheet->setCellValue('H35', '(' . ($shift->supervisor ? $shift->supervisor->username : '-') . ')');
+                $sheet->setCellValue('H36', ($shift->supervisor_approved_at ? $shift->supervisor_approved_at : '-'));
             }
         }
 
@@ -236,6 +258,4 @@ class EspOperationalReportController extends Controller
         $writer->save('php://output');
         exit;
     }
-
-    
 }
