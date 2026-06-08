@@ -422,7 +422,8 @@ class AhuController extends Controller
                 $drawOp->setHeight(60);
                 $drawOp->setCoordinates('C40');
                 $drawOp->setWorksheet($sheet);
-                $sheet->setCellValue('A44', '(' . $mainRecord->operator ? $mainRecord->operator->username : '-' . ')');
+                $sheet->setCellValue('B44', $mainRecord->operator ? $mainRecord->operator->username : '-');
+                $sheet->setCellValue('B45', $mainRecord->submitted_at ?? '-');
             }
             if ($mainRecord->status == 'approved_foreman') {
                 $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
@@ -431,7 +432,8 @@ class AhuController extends Controller
                 $drawFm->setHeight(60);
                 $drawFm->setCoordinates('N40');
                 $drawFm->setWorksheet($sheet);
-                $sheet->setCellValue('A44', '(' . $mainRecord->foreman ? $mainRecord->foreman->username : '-' . ')');
+                $sheet->setCellValue('M44', $mainRecord->foreman ? $mainRecord->foreman->username : '-');
+                $sheet->setCellValue('M45', $mainRecord->approved_foreman_at ?? '-');
             }
             if ($mainRecord->status == 'approved_supervisor') {
                 $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
@@ -440,7 +442,8 @@ class AhuController extends Controller
                 $drawSpv->setHeight(60);
                 $drawSpv->setCoordinates('AA40');
                 $drawSpv->setWorksheet($sheet);
-                $sheet->setCellValue('AA44', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
+                $sheet->setCellValue('Z44', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
+                $sheet->setCellValue('Z45', $mainRecord->approved_supervisor_at ?? '-');
             }
         }
 

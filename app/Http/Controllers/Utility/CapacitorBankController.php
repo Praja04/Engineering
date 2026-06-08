@@ -428,6 +428,27 @@ class CapacitorBankController extends Controller
             $this->insertSignatureSection($sheet, $approval);
         }
 
+        // ── Pindahkan kode form dari O38 ke O46 ───────────────
+        $formCode = $sheet->getCell('O38')->getValue();
+        if ($formCode) {
+            $sheet->setCellValue('O46', $formCode);
+            $sheet->setCellValue('O38', null);
+            $sheet->unmergeCells('O38:R38');
+            $sheet->mergeCells('O46:R46');
+            $sheet->getStyle('O46:R46')->applyFromArray([
+                'font' => [
+                    'name' => 'Calibri',
+                    'size' => 10,
+                    'bold' => true,
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_RIGHT,
+                    'vertical'   => Alignment::VERTICAL_TOP,
+                ],
+            ]);
+        }
+
+
         // ── Stream ke browser ─────────────────────────────────
         $filename = "CapacitorBank_{$bulanNames[$bulan]}_{$tahun}.xlsx";
         $writer   = new Xlsx($spreadsheet);
