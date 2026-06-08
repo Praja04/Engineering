@@ -119,7 +119,7 @@ class MtcMainController extends Controller
         $drawing = new Drawing();
         $drawing->setName('Approved');
         $drawing->setDescription('Approved Sticker');
-        $drawing->setPath(public_path('assets/images/ttd/utility_approved_sticker.png'));
+        $drawing->setPath(public_path('storage/mtc/ttd/utility_approved_sticker.png'));
         $drawing->setHeight(20);
         $drawing->setCoordinates($cell);
         $drawing->setOffsetX(20);
