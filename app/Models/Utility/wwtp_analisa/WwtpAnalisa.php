@@ -17,7 +17,20 @@ class WwtpAnalisa extends Model
         'analisa_date',
         'shift',
         'area',
-        'created_by'
+        'created_by',
+        'pelaksana_id',
+        'foreman_id',
+        'supervisor_id',
+        'status',
+        'approved_foreman_at',
+        'approved_supervisor_at',
+        'reject_reason'
+    ];
+
+    protected $casts = [
+        'analisa_date'           => 'date',
+        'approved_foreman_at'    => 'datetime',
+        'approved_supervisor_at' => 'datetime',
     ];
 
     public function details()
@@ -28,5 +41,20 @@ class WwtpAnalisa extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function pelaksana()
+    {
+        return $this->belongsTo(User::class, 'pelaksana_id');
+    }
+
+    public function foreman()
+    {
+        return $this->belongsTo(User::class, 'foreman_id');
+    }
+
+    public function supervisor()
+    {
+        return $this->belongsTo(User::class, 'supervisor_id');
     }
 }

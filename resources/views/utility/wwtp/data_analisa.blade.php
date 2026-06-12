@@ -176,12 +176,13 @@
                                         <th class="fw-semibold">Tanggal</th>
                                         <th class="fw-semibold">Parameter Uji</th>
                                         <th class="fw-semibold">Dibuat Oleh</th>
+                                        <th class="fw-semibold">Status Approval</th>
                                         <th class="fw-semibold text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="analisaTableBody">
                                     <tr>
-                                        <td colspan="5" class="text-center py-5">
+                                        <td colspan="6" class="text-center py-5">
                                             <div class="spinner-border text-info" role="status">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
@@ -271,7 +272,7 @@
                 if (state.bulan) params.bulan = state.bulan;
                 if (state.search) params.search = state.search;
 
-                showLoading('#analisaTableBody', 5);
+                showLoading('#analisaTableBody', 6);
                 clearPagination('#analisaPaginationInfo', '#analisaPagination');
 
                 $.ajax({
@@ -299,7 +300,7 @@
                 tbody.empty();
 
                 if (!data || !data.length) {
-                    tbody.append(`<tr><td colspan="5" class="text-center py-4 text-muted">
+                    tbody.append(`<tr><td colspan="6" class="text-center py-4 text-muted">
                     <i class="mdi mdi-inbox me-2"></i>Tidak ada data analisa</td></tr>`);
                     return;
                 }
@@ -339,12 +340,26 @@
                         paramBadges = `<span class="text-muted small">-</span>`;
                     }
 
+                    let statusBadge = '';
+                    const status = item.status || 'submitted';
+                    if (status === 'submitted') {
+                        statusBadge = '<span class="badge bg-warning text-dark"><i class="mdi mdi-clock-outline me-1"></i>Menunggu Foreman</span>';
+                    } else if (status === 'approved_foreman') {
+                        statusBadge = '<span class="badge bg-info"><i class="mdi mdi-account-clock-outline me-1"></i>Menunggu Spv</span>';
+                    } else if (status === 'approved_supervisor') {
+                        statusBadge = '<span class="badge bg-success"><i class="mdi mdi-check-circle-outline me-1"></i>Selesai</span>';
+                    } else if (status === 'rejected') {
+                        const reason = item.reject_reason ? ` title="Alasan: ${escapeHtml(item.reject_reason)}"` : '';
+                        statusBadge = `<span class="badge bg-danger"${reason}><i class="mdi mdi-close-circle-outline me-1"></i>Ditolak</span>`;
+                    }
+
                     tbody.append(`
                         <tr class="data-row">
                             <td>${no}</td>
                             <td><span class="badge bg-light text-dark border"><i class="mdi mdi-calendar me-1"></i>${formatDate(item.analisa_date)}</span></td>
                             <td>${paramBadges}</td>
                             <td>${item.creator ? item.creator.username : '-'}</td>
+                            <td>${statusBadge}</td>
                             <td class="text-center text-nowrap">${btns}</td>
                         </tr>`);
                 });
@@ -394,6 +409,29 @@
                     success: function(record) {
                         currentId = id;
 
+                        let statusBadge = '';
+                        const status = record.status || 'submitted';
+                        if (status === 'submitted') {
+                            statusBadge = '<span class="badge bg-warning text-dark"><i class="mdi mdi-clock-outline me-1"></i>Menunggu Foreman</span>';
+                        } else if (status === 'approved_foreman') {
+                            statusBadge = '<span class="badge bg-info"><i class="mdi mdi-account-clock-outline me-1"></i>Menunggu Spv</span>';
+                        } else if (status === 'approved_supervisor') {
+                            statusBadge = '<span class="badge bg-success"><i class="mdi mdi-check-circle-outline me-1"></i>Selesai</span>';
+                        } else if (status === 'rejected') {
+                            statusBadge = '<span class="badge bg-danger"><i class="mdi mdi-close-circle-outline me-1"></i>Ditolak</span>';
+                        }
+
+                        let rejectReasonHtml = '';
+                        if (status === 'rejected' && record.reject_reason) {
+                            rejectReasonHtml = `
+                                <div class="col-12 mt-2">
+                                    <div class="alert alert-danger mb-0 py-2">
+                                        <i class="mdi mdi-alert-circle-outline me-1"></i><strong>Alasan Penolakan:</strong> ${escapeHtml(record.reject_reason)}
+                                    </div>
+                                </div>
+                            `;
+                        }
+
                         let headerHtml = `
                              <div class="row g-3 mb-4">
                                  <div class="col-md-3">
@@ -402,12 +440,31 @@
                                          <p class="fw-bold mb-0 fs-6">${formatDate(record.analisa_date)}</p>
                                      </div>
                                  </div>
-                                 <div class="col-md-3">
+                                 <div class="col-md-2">
                                      <div class="info-box p-3 bg-light rounded border border-info h-100">
-                                         <p class="text-muted small mb-1">Dibuat Oleh</p>
-                                         <p class="fw-bold mb-0 fs-6">${record.creator ? record.creator.username : '-'}</p>
+                                         <p class="text-muted small mb-1">Pelaksana</p>
+                                         <p class="fw-bold mb-0 fs-6">${record.pelaksana ? record.pelaksana.username : '-'}</p>
                                      </div>
                                  </div>
+                                 <div class="col-md-2">
+                                     <div class="info-box p-3 bg-light rounded border border-info h-100">
+                                         <p class="text-muted small mb-1">Foreman</p>
+                                         <p class="fw-bold mb-0 fs-6">${record.foreman ? record.foreman.username : '-'}</p>
+                                     </div>
+                                 </div>
+                                 <div class="col-md-2">
+                                     <div class="info-box p-3 bg-light rounded border border-info h-100">
+                                         <p class="text-muted small mb-1">Supervisor</p>
+                                         <p class="fw-bold mb-0 fs-6">${record.supervisor ? record.supervisor.username : '-'}</p>
+                                     </div>
+                                 </div>
+                                 <div class="col-md-3">
+                                     <div class="info-box p-3 bg-light rounded border border-info h-100">
+                                         <p class="text-muted small mb-1">Status Approval</p>
+                                         <p class="mb-0 fs-6">${statusBadge}</p>
+                                     </div>
+                                 </div>
+                                 ${rejectReasonHtml}
                              </div>
                              <h6 class="fw-bold mb-3 text-info border-bottom pb-2">Detail Parameter Pengukuran</h6>
                          `;
@@ -469,7 +526,7 @@
                                 `;
                             });
 
-                            const actionHtml = canEditDelete ? `
+                            const actionHtml = (canEditDelete && record.status !== 'approved_supervisor') ? `
                                 <div class="parameter-actions p-3 d-flex justify-content-end gap-2">
                                     <div class="view-actions">
                                         <button type="button" class="btn btn-sm btn-outline-warning"
@@ -529,7 +586,12 @@
                         pointsHtml += '</div>';
 
                         $('#modalAnalisaContent').html(headerHtml + pointsHtml);
-                        $('#btnDelete').hide();
+                        
+                        if (canEditDelete && record.status !== 'approved_supervisor') {
+                            $('#btnDelete').show();
+                        } else {
+                            $('#btnDelete').hide();
+                        }
                     },
                     error: function() {
                         $('#modalAnalisaContent').html(

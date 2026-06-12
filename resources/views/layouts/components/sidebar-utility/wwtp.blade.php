@@ -116,15 +116,15 @@
 
                 <!-- Analisa WWTP -->
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('wwtp/analisa') || request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') || request()->is('wwtp/manage_standar_analisa') ? '' : 'collapsed' }}"
+                    <a class="nav-link {{ request()->is('wwtp/analisa') || request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') || request()->is('wwtp/manage_standar_analisa') || request()->is('wwtp/analisa/approval') ? '' : 'collapsed' }}"
                         href="#sidebarAnalisaWWTP" data-bs-toggle="collapse" role="button"
-                        aria-expanded="{{ request()->is('wwtp/analisa') || request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') || request()->is('wwtp/manage_standar_analisa') ? 'true' : 'false' }}"
+                        aria-expanded="{{ request()->is('wwtp/analisa') || request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') || request()->is('wwtp/manage_standar_analisa') || request()->is('wwtp/analisa/approval') ? 'true' : 'false' }}"
                         aria-controls="sidebarAnalisaWWTP">
                         <i class="mdi mdi-flask-outline"></i>
                         <span data-key="t-widgets">Analisa WWTP</span>
                     </a>
 
-                    <div class="collapse menu-dropdown {{ request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') || request()->is('wwtp/manage_standar_analisa') ? 'show' : '' }}"
+                    <div class="collapse menu-dropdown {{ request()->is('wwtp/form_analisa') || request()->is('wwtp/data_analisa') || request()->is('wwtp/manage_standar_analisa') || request()->is('wwtp/analisa/approval') ? 'show' : '' }}"
                         id="sidebarAnalisaWWTP">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
@@ -142,6 +142,13 @@
                                 </a>
                             </li>
                             @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('wwtp/analisa/approval') ? 'active' : '' }}"
+                                        href="{{ url('wwtp/analisa/approval') }}">
+                                        <i class="mdi mdi-checkbox-marked-circle-outline"></i>
+                                        <span data-key="t-widgets">Approval</span>
+                                    </a>
+                                </li>
                                 <li class="nav-item">
                                     <a class="nav-link {{ request()->is('wwtp/manage_standar_analisa') ? 'active' : '' }}"
                                         href="{{ url('wwtp/manage_standar_analisa') }}">

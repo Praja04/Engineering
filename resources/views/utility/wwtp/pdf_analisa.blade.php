@@ -191,6 +191,41 @@
             .page-number:after {
                 content: counter(page);
             }
+
+            /* Signatures Table */
+            .signature-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 40px;
+                page-break-inside: avoid;
+            }
+
+            .signature-table td {
+                width: 33.33%;
+                text-align: center;
+                vertical-align: bottom;
+                padding: 10px;
+                border: none;
+                font-size: 9pt;
+            }
+
+            .signature-title {
+                font-weight: bold;
+                margin-bottom: 55px;
+                color: #2c3e50;
+            }
+
+            .signature-name {
+                font-weight: bold;
+                text-decoration: underline;
+                color: #1a202c;
+                margin-bottom: 2px;
+            }
+
+            .signature-date {
+                font-size: 7.5pt;
+                color: #718096;
+            }
         </style>
     </head>
 
@@ -235,7 +270,19 @@
                 <td class="meta-label">Dibuat Oleh</td>
                 <td class="meta-value">: {{ $analisa->creator->username ?? '-' }}</td>
                 <td class="meta-label">Status Dokumen</td>
-                <td class="meta-value">: <span style="color: #10b981; font-weight: bold;">Terverifikasi</span></td>
+                <td class="meta-value">: 
+                    @if ($analisa->status === 'submitted')
+                        <span style="color: #d97706; font-weight: bold;">Menunggu Foreman</span>
+                    @elseif ($analisa->status === 'approved_foreman')
+                        <span style="color: #2563eb; font-weight: bold;">Menunggu Supervisor</span>
+                    @elseif ($analisa->status === 'approved_supervisor')
+                        <span style="color: #16a34a; font-weight: bold;">Terverifikasi</span>
+                    @elseif ($analisa->status === 'rejected')
+                        <span style="color: #dc2626; font-weight: bold;">Ditolak</span>
+                    @else
+                        <span style="color: #64748b; font-weight: bold;">{{ ucfirst($analisa->status ?? 'submitted') }}</span>
+                    @endif
+                </td>
             </tr>
         </table>
 
@@ -314,6 +361,52 @@
                 </table>
             </div>
         @endforeach
+
+        <!-- Signatures Section -->
+        <table class="signature-table">
+            <tr>
+                <td>
+                    <div class="signature-title">Pelaksana / Operator</div>
+                    <div style="height: 55px;">
+                        @if ($analisa->status !== 'rejected')
+                            <span style="color: #4a5568; font-size: 8.5pt; font-weight: bold;">PREPARED</span>
+                            <br>
+                            <span style="color: #718096; font-size: 7.5pt;">Digital Signed</span>
+                        @endif
+                    </div>
+                    <div class="signature-name">{{ $analisa->pelaksana ? $analisa->pelaksana->username : ($analisa->creator->username ?? '-') }}</div>
+                    <div class="signature-date">Tanggal: {{ $analisa->created_at ? $analisa->created_at->format('d-m-Y') : '-' }}</div>
+                </td>
+                <td>
+                    <div class="signature-title">Diperiksa Oleh (Foreman)</div>
+                    <div style="height: 55px;">
+                        @if ($analisa->approved_foreman_at)
+                            <span style="color: #2b6cb0; font-weight: bold; font-size: 9pt;">APPROVED</span>
+                            <br>
+                            <span style="color: #718096; font-size: 7.5pt;">{{ $analisa->approved_foreman_at->format('d-m-Y H:i') }}</span>
+                        @else
+                            <span style="color: #cbd5e0; font-style: italic; font-size: 8.5pt;">Belum Disetujui</span>
+                        @endif
+                    </div>
+                    <div class="signature-name">{{ $analisa->foreman ? $analisa->foreman->username : '-' }}</div>
+                    <div class="signature-date">&nbsp;</div>
+                </td>
+                <td>
+                    <div class="signature-title">Disetujui Oleh (Supervisor)</div>
+                    <div style="height: 55px;">
+                        @if ($analisa->approved_supervisor_at)
+                            <span style="color: #2f855a; font-weight: bold; font-size: 9pt;">APPROVED</span>
+                            <br>
+                            <span style="color: #718096; font-size: 7.5pt;">{{ $analisa->approved_supervisor_at->format('d-m-Y H:i') }}</span>
+                        @else
+                            <span style="color: #cbd5e0; font-style: italic; font-size: 8.5pt;">Belum Disetujui</span>
+                        @endif
+                    </div>
+                    <div class="signature-name">{{ $analisa->supervisor ? $analisa->supervisor->username : '-' }}</div>
+                    <div class="signature-date">&nbsp;</div>
+                </td>
+            </tr>
+        </table>
 
         <!-- Footer -->
         <div class="footer">
