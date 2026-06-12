@@ -156,29 +156,4 @@ Route::prefix('wwtp-sludge')->group(function () {
     Route::get('/{id}', [WWTPControllerSludge::class, 'show']);
 });
 
-// WWTP Analisa Routes
-Route::prefix('wwtp-analisa')->group(function () {
-    Route::get('/check-filled', [WWTPControllerAnalisa::class, 'checkFilledParameters']);
-    Route::get('/parameters', [WWTPControllerAnalisa::class, 'indexParameter']);
-    Route::post('/parameters', [WWTPControllerAnalisa::class, 'storeParameter']);
-    Route::get('/parameters/{id}', [WWTPControllerAnalisa::class, 'showParameter']);
-    Route::put('/parameters/{id}', [WWTPControllerAnalisa::class, 'updateParameter']);
-    Route::delete('/parameters/{id}', [WWTPControllerAnalisa::class, 'destroyParameter']);
-    Route::get('/points', [WWTPControllerAnalisa::class, 'indexPoint']);
-    Route::post('/points', [WWTPControllerAnalisa::class, 'storePoint']);
-    Route::get('/points/{id}', [WWTPControllerAnalisa::class, 'showPoint']);
-    Route::put('/points/{id}', [WWTPControllerAnalisa::class, 'updatePoint']);
-    Route::delete('/points/{id}', [WWTPControllerAnalisa::class, 'destroyPoint']);
-    Route::get('/standards', [WWTPControllerAnalisa::class, 'indexStandar']);
-    Route::post('/standards', [WWTPControllerAnalisa::class, 'storeStandar']);
-    Route::get('/standards/{id}', [WWTPControllerAnalisa::class, 'showStandar']);
-    Route::put('/standards/{id}', [WWTPControllerAnalisa::class, 'updateStandar']);
-    Route::delete('/standards/{id}', [WWTPControllerAnalisa::class, 'destroyStandar']);
-    Route::post('/', [WWTPControllerAnalisa::class, 'store']);
-    Route::post('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'updateParameterResults']);
-    Route::delete('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'destroyParameterResults']);
-    Route::delete('/{id}', [WWTPControllerAnalisa::class, 'destroy']);
-    Route::post('/{id}', [WWTPControllerAnalisa::class, 'update']);
-    Route::get('/', [WWTPControllerAnalisa::class, 'index']);
-    Route::get('/{id}', [WWTPControllerAnalisa::class, 'show']);
-});
+

@@ -237,6 +237,52 @@
                                                     </div>
                                                 </div>
 
+                                                <!-- Approval Dropdowns (Visible for first-time input on selected date) -->
+                                                <div class="row g-3 mt-3 align-items-end" id="approvalFieldsRow">
+                                                    <div class="col-lg-6">
+                                                        <label for="foreman_id" class="form-label fw-semibold">
+                                                            Foreman <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">
+                                                                <i class="mdi mdi-account-tie-outline"></i>
+                                                            </span>
+                                                            <select class="form-select" id="foreman_id" name="foreman_id" required>
+                                                                <option value="">-- Pilih Foreman --</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-6">
+                                                        <label for="supervisor_id" class="form-label fw-semibold">
+                                                            Supervisor <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">
+                                                                <i class="mdi mdi-account-supervisor-outline"></i>
+                                                            </span>
+                                                            <select class="form-select" id="supervisor_id" name="supervisor_id" required>
+                                                                <option value="">-- Pilih Supervisor --</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Info Badge for existing header -->
+                                                <div class="row g-3 mt-3" id="approvalInfoRow" style="display: none;">
+                                                    <div class="col-12">
+                                                        <div class="alert alert-soft-info d-flex align-items-center mb-0" role="alert">
+                                                            <i class="mdi mdi-information-outline fs-4 me-2"></i>
+                                                            <div>
+                                                                Header analisa tanggal ini sudah ada. 
+                                                                Pelaksana: <span id="infoPelaksana" class="fw-bold text-dark"></span> | 
+                                                                Foreman: <span id="infoForeman" class="fw-bold text-dark"></span> | 
+                                                                Supervisor: <span id="infoSupervisor" class="fw-bold text-dark"></span> | 
+                                                                Status: <span id="infoStatusBadge" class="badge"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div class="parameter-summary mt-4 px-3 py-3" id="parameterSummary"
                                                     style="display: none;">
                                                     <div
@@ -389,6 +435,36 @@
             const standards = @json($standards);
             const parameters = @json($parameters);
 
+            // Load Approvers List
+            loadApprovers();
+
+            function loadApprovers() {
+                $.ajax({
+                    url: "{{ url('/api/wwtp-analisa/users/approvers') }}",
+                    method: 'GET',
+                    success: function(response) {
+                        const foreman = response.foreman || [];
+                        const supervisor = response.supervisor || [];
+
+                        let foremanOpts = '<option value="">-- Pilih Foreman --</option>';
+                        let supervisorOpts = '<option value="">-- Pilih Supervisor --</option>';
+
+                        foreman.forEach(u => {
+                            foremanOpts += `<option value="${u.id}">${escapeHtml(u.username)}</option>`;
+                        });
+                        supervisor.forEach(u => {
+                            supervisorOpts += `<option value="${u.id}">${escapeHtml(u.username)}</option>`;
+                        });
+
+                        $('#foreman_id').html(foremanOpts);
+                        $('#supervisor_id').html(supervisorOpts);
+                    },
+                    error: function() {
+                        console.error('Gagal mengambil daftar foreman & supervisor.');
+                    }
+                });
+            }
+
             // Construct maps for parameters for easy lookup
             const parameterMap = {};
             parameters.forEach(function(p) {
@@ -479,7 +555,6 @@
             // Function to fetch and disable already filled parameters
             function checkFilledParameters() {
                 const date = $('#analisa_date').val();
-                // const shift = $('#shift').val();
 
                 // If any of the required check parameters is missing, enable all parameters
                 if (!date) {
@@ -490,6 +565,9 @@
                             opt.text(opt.data('original-text') || opt.text());
                         }
                     });
+                    $('#approvalFieldsRow').show();
+                    $('#foreman_id, #supervisor_id').prop('required', true);
+                    $('#approvalInfoRow').hide();
                     return;
                 }
 
@@ -498,10 +576,48 @@
                     url: "{{ url('api/wwtp-analisa/check-filled') }}",
                     method: 'GET',
                     data: {
-                        analisa_date: date,
-                        //shift: shift
+                        analisa_date: date
                     },
-                    success: function(filledIds) {
+                    success: function(response) {
+                        const filledIds = response.filled_parameter_ids || [];
+                        const hasHeader = response.has_header || false;
+                        const header = response.header || null;
+
+                        if (hasHeader && header) {
+                            // Hide inputs, show info block
+                            $('#approvalFieldsRow').hide();
+                            $('#foreman_id, #supervisor_id').prop('required', false);
+                            $('#approvalInfoRow').show();
+                            
+                            $('#infoPelaksana').text(header.pelaksana ? header.pelaksana.username : '-');
+                            $('#infoForeman').text(header.foreman ? header.foreman.username : '-');
+                            $('#infoSupervisor').text(header.supervisor ? header.supervisor.username : '-');
+                            
+                            // Status badge
+                            const status = header.status;
+                            let badgeClass = 'bg-warning';
+                            let statusText = 'Menunggu Approval';
+                            if (status === 'approved_foreman') {
+                                badgeClass = 'bg-info';
+                                statusText = 'Approved Foreman';
+                            } else if (status === 'approved_supervisor') {
+                                badgeClass = 'bg-success';
+                                statusText = 'Approved Supervisor';
+                            } else if (status === 'rejected') {
+                                badgeClass = 'bg-danger';
+                                statusText = 'Ditolak';
+                                if (header.reject_reason) {
+                                    statusText += ` (Alasan: ${header.reject_reason})`;
+                                }
+                            }
+                            $('#infoStatusBadge').removeClass().addClass('badge ' + badgeClass).text(statusText);
+                        } else {
+                            // Show inputs, hide info block
+                            $('#approvalFieldsRow').show();
+                            $('#foreman_id, #supervisor_id').prop('required', true);
+                            $('#approvalInfoRow').hide();
+                        }
+
                         const selectedVal = $('#parameter_id').val();
                         let currentSelectedIsDisabled = false;
 

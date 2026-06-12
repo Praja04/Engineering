@@ -45,7 +45,7 @@ class WWTPControllerAnalisa extends Controller
 
     public function downloadPdf($id)
     {
-        $analisa = WwtpAnalisa::with(['creator', 'details.point', 'details.parameter'])->findOrFail($id);
+        $analisa = WwtpAnalisa::with(['creator', 'pelaksana', 'foreman', 'supervisor', 'details.point', 'details.parameter'])->findOrFail($id);
 
         $parameters = WwtpParameter::all();
         $standardsData = WwtpStandard::all();
@@ -76,7 +76,7 @@ class WWTPControllerAnalisa extends Controller
 
         // Sort parameters by their order in parameter table
         $parameterOrder = $parameters->pluck('id')->toArray();
-        uksort($parameterData, function($a, $b) use ($parameterOrder) {
+        uksort($parameterData, function ($a, $b) use ($parameterOrder) {
             return array_search($a, $parameterOrder) <=> array_search($b, $parameterOrder);
         });
 
@@ -293,7 +293,7 @@ class WWTPControllerAnalisa extends Controller
             'point_id' => [
                 'required',
                 'exists:wwtp_point,id',
-                Rule::unique('wwtp_standards')->where(fn ($query) => $query->where('parameter_id', $request->parameter_id)),
+                Rule::unique('wwtp_standards')->where(fn($query) => $query->where('parameter_id', $request->parameter_id)),
             ],
             'parameter_id' => 'required|exists:wwtp_parameters,id',
             'standard_value' => 'nullable|numeric|min:0',
@@ -320,7 +320,7 @@ class WWTPControllerAnalisa extends Controller
             'point_id' => [
                 'required',
                 'exists:wwtp_point,id',
-                Rule::unique('wwtp_standards')->ignore($standard->id)->where(fn ($query) => $query->where('parameter_id', $request->parameter_id)),
+                Rule::unique('wwtp_standards')->ignore($standard->id)->where(fn($query) => $query->where('parameter_id', $request->parameter_id)),
             ],
             'parameter_id' => 'required|exists:wwtp_parameters,id',
             'standard_value' => 'nullable|numeric|min:0',
@@ -359,7 +359,7 @@ class WWTPControllerAnalisa extends Controller
         $bulan   = $request->input('bulan'); // Format YYYY-MM
         $search  = $request->input('search');
 
-        $query = WwtpAnalisa::with(['creator', 'details.parameter', 'details.point'])->orderBy('analisa_date', 'desc')->orderBy('shift', 'asc');
+        $query = WwtpAnalisa::with(['creator', 'pelaksana', 'foreman', 'supervisor', 'details.parameter', 'details.point'])->orderBy('analisa_date', 'desc')->orderBy('shift', 'asc');
 
         if ($bulan) {
             $query->whereRaw("DATE_FORMAT(analisa_date, '%Y-%m') = ?", [$bulan]);
@@ -381,17 +381,25 @@ class WWTPControllerAnalisa extends Controller
         ]);
 
         $analisa = WwtpAnalisa::where('analisa_date', $request->analisa_date)
+            ->with(['pelaksana', 'foreman', 'supervisor'])
             ->first();
 
         if (!$analisa) {
-            return response()->json([]);
+            return response()->json([
+                'filled_parameter_ids' => [],
+                'has_header' => false,
+            ]);
         }
 
         $filledParameterIds = WwtpAnalisaDetail::where('analisa_id', $analisa->id)
             ->distinct()
             ->pluck('parameter_id');
 
-        return response()->json($filledParameterIds);
+        return response()->json([
+            'filled_parameter_ids' => $filledParameterIds,
+            'has_header' => true,
+            'header' => $analisa
+        ]);
     }
 
     /**
@@ -410,20 +418,89 @@ class WWTPControllerAnalisa extends Controller
         try {
             DB::beginTransaction();
 
-            // Find or create the header record for this date and shift
-            $analisa = WwtpAnalisa::firstOrCreate(
-                [
-                    'analisa_date' => $request->analisa_date,
-                    // 'shift'        => $request->shift ?? null,
-                ],
-                [
-                    // 'area'         => $request->area ?? null,
-                    'created_by'   => Auth::id(), // Default to 1 if not logged in
-                ]
-            );
+            // Find existing header
+            $analisa = WwtpAnalisa::where('analisa_date', $request->analisa_date)->first();
 
-            // If it already exists, update area if provided
-            if (!$analisa->wasRecentlyCreated && $request->filled('area')) {
+            if (!$analisa) {
+                // First time input in that day, validate and require approvals
+                $request->validate([
+                    'foreman_id'   => 'required|exists:users,id',
+                    'supervisor_id' => 'required|exists:users,id',
+                ]);
+
+                $analisa = WwtpAnalisa::create([
+                    'analisa_date' => $request->analisa_date,
+                    'pelaksana_id' => Auth::id(),
+                    'foreman_id'   => $request->foreman_id,
+                    'supervisor_id' => $request->supervisor_id,
+                    'created_by'   => Auth::id(),
+                    'status'       => 'submitted',
+                ]);
+
+                // Kirim notifikasi pertama kali ke Foreman
+                \App\Models\NotificationsModel::create([
+                    'user_id'         => $request->foreman_id,
+                    'title'           => 'Approval Analisa WWTP',
+                    'message'         => 'Data analisa WWTP tanggal ' . $request->analisa_date . ' menunggu persetujuan Anda.',
+                    'url'             => url('/wwtp/analisa/approval'),
+                    'notifiable_type' => WwtpAnalisa::class,
+                    'notifiable_id'   => $analisa->id,
+                    'is_read'         => 0,
+                ]);
+            } else {
+                // Header exists. Let's check if Supervisor approved and they are trying to modify already filled parameters
+                if ($analisa->status === 'approved_supervisor') {
+                    $submittingParamIds = [];
+                    foreach ($request->hasil_analisa as $point_id => $parameters) {
+                        foreach ($parameters as $parameter_id => $hasil) {
+                            if ($hasil !== null && $hasil !== '') {
+                                $submittingParamIds[] = $parameter_id;
+                            }
+                        }
+                    }
+                    $submittingParamIds = array_unique($submittingParamIds);
+
+                    $alreadyFilledIds = WwtpAnalisaDetail::where('analisa_id', $analisa->id)
+                        ->distinct()
+                        ->pluck('parameter_id')
+                        ->toArray();
+
+                    $intersect = array_intersect($submittingParamIds, $alreadyFilledIds);
+                    if (!empty($intersect)) {
+                        return response()->json([
+                            'message' => 'Data analisa untuk parameter ini sudah disetujui oleh Supervisor dan tidak dapat diubah.'
+                        ], 422);
+                    }
+                }
+
+                // If status is rejected, reset it to submitted and re-notify foreman
+                if ($analisa->status === 'rejected') {
+                    $analisa->update([
+                        'status' => 'submitted',
+                        'reject_reason' => null
+                    ]);
+
+                    // Send notification to Foreman again
+                    if ($analisa->foreman_id) {
+                        \App\Models\NotificationsModel::updateOrCreate(
+                            [
+                                'user_id'         => $analisa->foreman_id,
+                                'notifiable_type' => WwtpAnalisa::class,
+                                'notifiable_id'   => $analisa->id,
+                            ],
+                            [
+                                'title'           => 'Approval Analisa WWTP',
+                                'message'         => 'Data analisa WWTP tanggal ' . $analisa->analisa_date . ' telah diperbarui dan menunggu persetujuan Anda.',
+                                'url'             => url('/wwtp/analisa/approval'),
+                                'is_read'         => 0,
+                            ]
+                        );
+                    }
+                }
+            }
+
+            // Update area if provided
+            if ($request->filled('area')) {
                 $analisa->update(['area' => $request->area]);
             }
 
@@ -464,7 +541,7 @@ class WWTPControllerAnalisa extends Controller
      */
     public function show($id)
     {
-        $analisa = WwtpAnalisa::with(['creator', 'details.point', 'details.parameter'])->findOrFail($id);
+        $analisa = WwtpAnalisa::with(['creator', 'pelaksana', 'foreman', 'supervisor', 'details.point', 'details.parameter'])->findOrFail($id);
         return response()->json($analisa);
     }
 
@@ -473,12 +550,18 @@ class WWTPControllerAnalisa extends Controller
         $analisa = WwtpAnalisa::findOrFail($id);
         WwtpParameter::findOrFail($parameterId);
 
+        if ($analisa->status === 'approved_supervisor') {
+            return response()->json([
+                'message' => 'Laporan analisa ini sudah disetujui oleh Supervisor dan tidak dapat diubah.'
+            ], 422);
+        }
+
         $request->validate([
             'hasil_analisa' => 'required|array',
             'hasil_analisa.*' => 'nullable|numeric'
         ]);
 
-        $hasValue = collect($request->hasil_analisa)->contains(fn ($hasil) => $hasil !== null && $hasil !== '');
+        $hasValue = collect($request->hasil_analisa)->contains(fn($hasil) => $hasil !== null && $hasil !== '');
         if (!$hasValue) {
             return response()->json([
                 'message' => 'Minimal satu hasil analisa harus diisi.',
@@ -523,6 +606,12 @@ class WWTPControllerAnalisa extends Controller
         $analisa = WwtpAnalisa::findOrFail($id);
         WwtpParameter::findOrFail($parameterId);
 
+        if ($analisa->status === 'approved_supervisor') {
+            return response()->json([
+                'message' => 'Laporan analisa ini sudah disetujui oleh Supervisor dan tidak dapat dihapus.'
+            ], 422);
+        }
+
         WwtpAnalisaDetail::where('analisa_id', $analisa->id)
             ->where('parameter_id', $parameterId)
             ->delete();
@@ -543,6 +632,12 @@ class WWTPControllerAnalisa extends Controller
     public function update(Request $request, $id)
     {
         $analisa = WwtpAnalisa::findOrFail($id);
+
+        if ($analisa->status === 'approved_supervisor') {
+            return response()->json([
+                'message' => 'Laporan analisa ini sudah disetujui oleh Supervisor dan tidak dapat diubah.'
+            ], 422);
+        }
 
         $request->validate([
             'analisa_date' => 'required|date',
@@ -609,11 +704,210 @@ class WWTPControllerAnalisa extends Controller
     public function destroy($id)
     {
         $analisa = WwtpAnalisa::findOrFail($id);
+
+        if ($analisa->status === 'approved_supervisor') {
+            return response()->json([
+                'message' => 'Laporan analisa ini sudah disetujui oleh Supervisor dan tidak dapat dihapus.'
+            ], 422);
+        }
+
         $analisa->delete(); // Cascades to details
 
         return response()->json([
             'status'  => 'success',
             'message' => 'Data analisa WWTP berhasil dihapus.',
+        ]);
+    }
+
+    /**
+     * Get users for WWTP Analisa approval dropdowns
+     */
+    public function getUsersForApproval()
+    {
+        $pelaksana = \App\Models\User::where('departemen', 'engineering')
+            ->where('jabatan', 'operator')
+            ->get(['id', 'username']);
+
+        $foreman = \App\Models\User::where('departemen', 'engineering')
+            ->where('jabatan', 'foreman')
+            ->get(['id', 'username']);
+
+        $supervisor = \App\Models\User::where('departemen', 'engineering')
+            ->where('jabatan', 'supervisor')
+            ->get(['id', 'username']);
+
+        return response()->json([
+            'pelaksana' => $pelaksana,
+            'foreman'   => $foreman,
+            'supervisor' => $supervisor
+        ]);
+    }
+
+    /**
+     * Render the approval view page
+     */
+    public function approvalView()
+    {
+        return view('utility.wwtp.approval');
+    }
+
+    /**
+     * Get list of approvals (pending and history)
+     */
+    public function getApprovalList(Request $request)
+    {
+        $tab = $request->input('tab', 'pending');
+        $user = Auth::user();
+        $jabatan = $user->jabatan;
+        $userId = $user->id;
+
+        $query = WwtpAnalisa::with(['creator', 'pelaksana', 'foreman', 'supervisor', 'details.parameter', 'details.point']);
+
+        if ($tab === 'pending') {
+            if ($jabatan === 'foreman') {
+                $query->where('foreman_id', $userId)
+                    ->where('status', 'submitted');
+            } elseif ($jabatan === 'supervisor') {
+                $query->where('supervisor_id', $userId)
+                    ->where('status', 'approved_foreman');
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        } else {
+            if ($jabatan === 'foreman') {
+                $query->where('foreman_id', $userId)
+                    ->whereIn('status', ['approved_foreman', 'approved_supervisor', 'rejected']);
+            } elseif ($jabatan === 'supervisor') {
+                $query->where('supervisor_id', $userId)
+                    ->whereIn('status', ['approved_supervisor', 'rejected']);
+            } else {
+                $query->where('created_by', $userId);
+            }
+        }
+
+        $data = $query->orderBy('analisa_date', 'desc')->get();
+        return response()->json($data);
+    }
+
+    /**
+     * Approve a daily WWTP analysis sheet
+     */
+    public function approve(Request $request, $id)
+    {
+        $analisa = WwtpAnalisa::findOrFail($id);
+        $user = Auth::user();
+        $jabatan = $user->jabatan;
+        $userId = $user->id;
+
+        if ($jabatan === 'foreman') {
+            if ((int)$analisa->foreman_id !== $userId) {
+                return response()->json(['message' => 'Anda tidak berwenang menyetujui laporan ini.'], 403);
+            }
+            if ($analisa->status !== 'submitted') {
+                return response()->json(['message' => 'Status laporan tidak valid untuk disetujui Foreman.'], 422);
+            }
+
+            $analisa->update([
+                'status' => 'approved_foreman',
+                'approved_foreman_at' => now(),
+                'reject_reason' => null
+            ]);
+
+            \App\Models\NotificationsModel::where('notifiable_type', WwtpAnalisa::class)
+                ->where('notifiable_id', $analisa->id)
+                ->where('user_id', $userId)
+                ->delete();
+
+            if ($analisa->supervisor_id) {
+                \App\Models\NotificationsModel::create([
+                    'user_id' => $analisa->supervisor_id,
+                    'title' => 'Approval Analisa WWTP',
+                    'message' => 'Data analisa WWTP tanggal ' . $analisa->analisa_date . ' telah disetujui Foreman dan menunggu persetujuan Anda.',
+                    'url' => url('/wwtp/analisa/approval'),
+                    'notifiable_type' => WwtpAnalisa::class,
+                    'notifiable_id' => $analisa->id,
+                    'is_read' => 0,
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data analisa berhasil disetujui oleh Foreman.'
+            ]);
+        } elseif ($jabatan === 'supervisor') {
+            if ((int)$analisa->supervisor_id !== $userId) {
+                return response()->json(['message' => 'Anda tidak berwenang menyetujui laporan ini.'], 403);
+            }
+            if ($analisa->status !== 'approved_foreman') {
+                return response()->json(['message' => 'Laporan harus disetujui oleh Foreman terlebih dahulu.'], 422);
+            }
+
+            $analisa->update([
+                'status' => 'approved_supervisor',
+                'approved_supervisor_at' => now(),
+                'reject_reason' => null
+            ]);
+
+            \App\Models\NotificationsModel::where('notifiable_type', WwtpAnalisa::class)
+                ->where('notifiable_id', $analisa->id)
+                ->where('user_id', $userId)
+                ->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data analisa berhasil disetujui oleh Supervisor (Selesai).'
+            ]);
+        }
+
+        return response()->json(['message' => 'Role Anda tidak memiliki otoritas approval.'], 403);
+    }
+
+    /**
+     * Reject a daily WWTP analysis sheet
+     */
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:255'
+        ]);
+
+        $analisa = WwtpAnalisa::findOrFail($id);
+        $user = Auth::user();
+        $jabatan = $user->jabatan;
+        $userId = $user->id;
+
+        $isForeman = ($jabatan === 'foreman' && (int)$analisa->foreman_id === $userId && $analisa->status === 'submitted');
+        $isSupervisor = ($jabatan === 'supervisor' && (int)$analisa->supervisor_id === $userId && $analisa->status === 'approved_foreman');
+
+        if (!$isForeman && !$isSupervisor) {
+            return response()->json(['message' => 'Anda tidak memiliki wewenang untuk menolak laporan ini pada tahap ini.'], 403);
+        }
+
+        $analisa->update([
+            'status' => 'rejected',
+            'reject_reason' => $request->reason
+        ]);
+
+        \App\Models\NotificationsModel::where('notifiable_type', WwtpAnalisa::class)
+            ->where('notifiable_id', $analisa->id)
+            ->where('user_id', $userId)
+            ->delete();
+
+        if ($analisa->created_by) {
+            \App\Models\NotificationsModel::create([
+                'user_id' => $analisa->created_by,
+                'title' => 'Laporan Analisa WWTP Ditolak',
+                'message' => 'Data analisa WWTP tanggal ' . $analisa->analisa_date . ' ditolak. Alasan: ' . $request->reason,
+                'url' => url('/wwtp/data_analisa'),
+                'notifiable_type' => WwtpAnalisa::class,
+                'notifiable_id' => $analisa->id,
+                'is_read' => 0,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Laporan analisa berhasil ditolak.'
         ]);
     }
 }
