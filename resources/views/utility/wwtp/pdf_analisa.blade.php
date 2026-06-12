@@ -211,7 +211,7 @@
 
             .signature-title {
                 font-weight: bold;
-                margin-bottom: 55px;
+                margin-bottom: 10px;
                 color: #2c3e50;
             }
 
@@ -237,6 +237,14 @@
                 $type = pathinfo($path, PATHINFO_EXTENSION);
                 $data = file_get_contents($path);
                 $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            }
+
+            $stickerPath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+            $stickerBase64 = null;
+            if (file_exists($stickerPath)) {
+                $stickerType = pathinfo($stickerPath, PATHINFO_EXTENSION);
+                $stickerData = file_get_contents($stickerPath);
+                $stickerBase64 = 'data:image/' . $stickerType . ';base64,' . base64_encode($stickerData);
             }
         @endphp
 
@@ -369,9 +377,13 @@
                     <div class="signature-title">Pelaksana / Operator</div>
                     <div style="height: 55px;">
                         @if ($analisa->status !== 'rejected')
-                            <span style="color: #4a5568; font-size: 8.5pt; font-weight: bold;">PREPARED</span>
-                            <br>
-                            <span style="color: #718096; font-size: 7.5pt;">Digital Signed</span>
+                            @if ($stickerBase64)
+                                <img src="{{ $stickerBase64 }}" alt="Signed" style="height: 50px; width: auto; object-fit: contain;">
+                            @else
+                                <span style="color: #4a5568; font-size: 8.5pt; font-weight: bold;">PREPARED</span>
+                                <br>
+                                <span style="color: #718096; font-size: 7.5pt;">Digital Signed</span>
+                            @endif
                         @endif
                     </div>
                     <div class="signature-name">{{ $analisa->pelaksana ? $analisa->pelaksana->username : ($analisa->creator->username ?? '-') }}</div>
@@ -381,29 +393,37 @@
                     <div class="signature-title">Diperiksa Oleh (Foreman)</div>
                     <div style="height: 55px;">
                         @if ($analisa->approved_foreman_at)
-                            <span style="color: #2b6cb0; font-weight: bold; font-size: 9pt;">APPROVED</span>
-                            <br>
-                            <span style="color: #718096; font-size: 7.5pt;">{{ $analisa->approved_foreman_at->format('d-m-Y H:i') }}</span>
+                            @if ($stickerBase64)
+                                <img src="{{ $stickerBase64 }}" alt="Approved" style="height: 50px; width: auto; object-fit: contain;">
+                            @else
+                                <span style="color: #2b6cb0; font-weight: bold; font-size: 9pt;">APPROVED</span>
+                                <br>
+                                <span style="color: #718096; font-size: 7.5pt;">{{ $analisa->approved_foreman_at->format('d-m-Y H:i') }}</span>
+                            @endif
                         @else
-                            <span style="color: #cbd5e0; font-style: italic; font-size: 8.5pt;">Belum Disetujui</span>
+                            <span style="color: #cbd5e0; font-style: italic; font-size: 8.5pt; line-height: 55px;">Belum Disetujui</span>
                         @endif
                     </div>
                     <div class="signature-name">{{ $analisa->foreman ? $analisa->foreman->username : '-' }}</div>
-                    <div class="signature-date">&nbsp;</div>
+                    <div class="signature-date">Tanggal: {{ $analisa->approved_foreman_at ? $analisa->approved_foreman_at->format('d-m-Y') : '-' }}</div>
                 </td>
                 <td>
                     <div class="signature-title">Disetujui Oleh (Supervisor)</div>
                     <div style="height: 55px;">
                         @if ($analisa->approved_supervisor_at)
-                            <span style="color: #2f855a; font-weight: bold; font-size: 9pt;">APPROVED</span>
-                            <br>
-                            <span style="color: #718096; font-size: 7.5pt;">{{ $analisa->approved_supervisor_at->format('d-m-Y H:i') }}</span>
+                            @if ($stickerBase64)
+                                <img src="{{ $stickerBase64 }}" alt="Approved" style="height: 50px; width: auto; object-fit: contain;">
+                            @else
+                                <span style="color: #2f855a; font-weight: bold; font-size: 9pt;">APPROVED</span>
+                                <br>
+                                <span style="color: #718096; font-size: 7.5pt;">{{ $analisa->approved_supervisor_at->format('d-m-Y H:i') }}</span>
+                            @endif
                         @else
-                            <span style="color: #cbd5e0; font-style: italic; font-size: 8.5pt;">Belum Disetujui</span>
+                            <span style="color: #cbd5e0; font-style: italic; font-size: 8.5pt; line-height: 55px;">Belum Disetujui</span>
                         @endif
                     </div>
                     <div class="signature-name">{{ $analisa->supervisor ? $analisa->supervisor->username : '-' }}</div>
-                    <div class="signature-date">&nbsp;</div>
+                    <div class="signature-date">Tanggal: {{ $analisa->approved_supervisor_at ? $analisa->approved_supervisor_at->format('d-m-Y') : '-' }}</div>
                 </td>
             </tr>
         </table>
