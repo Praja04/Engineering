@@ -111,8 +111,18 @@
                                 </a>
                             </li>
                         </ul>
-                    </div>
                 </li>
+
+                <!-- Approval WWTP -->
+                @if ($jabatan != 'operator')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('wwtp/approval') ? 'active' : '' }}"
+                            href="{{ url('wwtp/approval') }}">
+                            <i class="mdi mdi-checkbox-marked-circle-outline"></i>
+                            <span data-key="t-widgets">Daily Approval</span>
+                        </a>
+                    </li>
+                @endif
 
                 <!-- Analisa WWTP -->
                 <li class="nav-item">

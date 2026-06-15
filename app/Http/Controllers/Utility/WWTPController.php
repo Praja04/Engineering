@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
-use App\Models\Utility\WwtpSludge;
+use App\Models\Utility\PemakaianChemicalModel;
+use App\Models\Utility\WwtpDailyApproval;
 use App\Models\Utility\WwtpInfluentHarian;
 use App\Models\Utility\WwtpPerformancePHharian;
 use App\Models\Utility\WwtpPerformanceSample;
-use App\Models\Utility\PemakaianChemicalModel;
+use App\Models\Utility\WwtpSludge;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class WWTPController extends Controller
@@ -499,6 +501,64 @@ class WWTPController extends Controller
             $setCell('N' . $row, $s?->mlss   ?? '');
             $setCell('O' . $row, $s?->svl   ?? '');
             $setCell('P' . $row, $s?->do   ?? '');
+        }
+
+        // TTD
+        $approval = WwtpDailyApproval::where('tanggal', $tanggal)
+            ->with(['operator', 'foreman', 'supervisor'])
+            ->first();
+
+        if ($approval) {
+            $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+            $hasSticker = file_exists($signaturePath);
+
+            // Operator (B)
+            if (in_array($approval->status, ['submitted', 'approved_foreman', 'approved_supervisor'])) {
+                if ($hasSticker) {
+                    $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawOp->setName('Operator');
+                    $drawOp->setPath($signaturePath);
+                    $drawOp->setHeight(50);
+                    $drawOp->setCoordinates('B46');
+                    $drawOp->setOffsetX(150);
+                    $drawOp->setOffsetY(5);
+                    $drawOp->setWorksheet($sheet);
+                }
+                $setCell('B49', $approval->operator ? $approval->operator->username : '-');
+                $setCell('B50', $approval->submitted_at ? $approval->submitted_at->format('d/m/Y H:i') : '-');
+            }
+
+            // Foreman (E)
+            if (in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+                if ($hasSticker) {
+                    $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawFm->setName('Foreman');
+                    $drawFm->setPath($signaturePath);
+                    $drawFm->setHeight(50);
+                    // $drawFm->setOffsetX(150);
+                    $drawFm->setOffsetY(5);
+                    $drawFm->setCoordinates('G46');
+                    $drawFm->setWorksheet($sheet);
+                }
+                $setCell('E49', $approval->foreman ? $approval->foreman->username : '-');
+                $setCell('E50', $approval->foreman_approved_at ? $approval->foreman_approved_at->format('d/m/Y H:i') : '-');
+            }
+
+            // Supervisor (J)
+            if ($approval->status === 'approved_supervisor') {
+                if ($hasSticker) {
+                    $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawSpv->setName('Supervisor');
+                    $drawSpv->setPath($signaturePath);
+                    $drawSpv->setHeight(50);
+                    // $drawSpv->setOffsetX(150);
+                    $drawSpv->setOffsetY(5);
+                    $drawSpv->setCoordinates('L46');
+                    $drawSpv->setWorksheet($sheet);
+                }
+                $setCell('J49', $approval->supervisor ? $approval->supervisor->username : '-');
+                $setCell('J50', $approval->supervisor_approved_at ? $approval->supervisor_approved_at->format('d/m/Y H:i') : '-');
+            }
         }
 
         // ── Stream download ───────────────────────────────────────────────────

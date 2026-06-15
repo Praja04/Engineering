@@ -342,6 +342,28 @@
                                             </div>
                                         </div>
 
+                                        <div class="row mb-4" id="daily_approval_row" style="display: none;">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="daily_foreman_id" class="form-label fw-semibold">
+                                                    Pilih Foreman <span class="text-danger">*</span>
+                                                </label>
+                                                <select class="form-select" id="daily_foreman_id" name="foreman_id">
+                                                    <option value="">-- Pilih Foreman --</option>
+                                                </select>
+                                                <div class="form-text">Foreman yang akan memverifikasi laporan ini</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="daily_supervisor_id" class="form-label fw-semibold">
+                                                    Pilih Supervisor <span class="text-danger">*</span>
+                                                </label>
+                                                <select class="form-select" id="daily_supervisor_id"
+                                                    name="supervisor_id">
+                                                    <option value="">-- Pilih Supervisor --</option>
+                                                </select>
+                                                <div class="form-text">Supervisor yang akan menyetujui laporan ini</div>
+                                            </div>
+                                        </div>
+
                                         <div class="mb-4">
                                             <div class="d-flex align-items-center mb-4">
                                                 <div class="flex-grow-1">
@@ -971,6 +993,68 @@
             $('#weekly_tanggal').val(today);
             $('#sample_tanggal').val(today);
 
+            function checkDailyApproval() {
+                const tanggal = $('#daily_tanggal').val();
+                if (!tanggal) {
+                    $('#daily_approval_row').hide();
+                    $('#daily_foreman_id, #daily_supervisor_id').val('').prop('required', false);
+                    $('#submitDailyForm').prop('disabled', false);
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ url('wwtp-approval/check') }}",
+                    method: 'GET',
+                    data: {
+                        tanggal: tanggal
+                    },
+                    success: function(response) {
+                        if (response.approval_exists) {
+                            $('#daily_approval_row').hide();
+                            $('#daily_foreman_id, #daily_supervisor_id').val('').prop('required',
+                                false);
+
+                            // if (response.approval.status === 'approved_foreman' || response.approval
+                            //     .status === 'approved_supervisor') {
+                            //     Swal.fire({
+                            //         icon: 'warning',
+                            //         title: 'Peringatan',
+                            //         text: 'Laporan harian untuk tanggal ini sudah disetujui dan terkunci.',
+                            //         confirmButtonColor: '#3085d6'
+                            //     });
+                            //     $('#submitDailyForm').prop('disabled', true);
+                            // } else {
+                            //     $('#submitDailyForm').prop('disabled', false);
+                            // }
+                        } else {
+                            $('#submitDailyForm').prop('disabled', false);
+                            $('#daily_approval_row').show();
+                            $('#daily_foreman_id, #daily_supervisor_id').prop('required', true);
+
+                            const foremanSelect = $('#daily_foreman_id');
+                            foremanSelect.html('<option value="">-- Pilih Foreman --</option>');
+                            response.foremen.forEach(function(u) {
+                                foremanSelect.append(
+                                    `<option value="${u.id}">${u.username}</option>`);
+                            });
+
+                            const supervisorSelect = $('#daily_supervisor_id');
+                            supervisorSelect.html('<option value="">-- Pilih Supervisor --</option>');
+                            response.supervisors.forEach(function(u) {
+                                supervisorSelect.append(
+                                    `<option value="${u.id}">${u.username}</option>`);
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Gagal mengecek status approval harian:', xhr);
+                    }
+                });
+            }
+
+            $('#daily_tanggal').on('change', checkDailyApproval);
+            checkDailyApproval();
+
             // =========================================
             // Card selector logic
             // =========================================
@@ -1044,9 +1128,10 @@
                     '<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
 
                 $.ajax({
-                    url: "{{ url('api/wwtp-performance/ph-harian') }}",
+                    url: "{{ url('wwtp/performance/ph-harian') }}",
                     method: 'POST',
                     data: {
+                        _token: "{{ csrf_token() }}",
                         tanggal: $('#daily_tanggal').val(),
                         shift: $('#daily_shift').val(),
                         equalisasi_1: $('#daily_equalisasi_1').val() || null,
@@ -1059,6 +1144,8 @@
                         lumpur_aktif: $('#daily_lumpur_aktif').val() || null,
                         clarifier_2: $('#daily_clarifier_2').val() || null,
                         outlet: $('#daily_outlet').val() || null,
+                        foreman_id: $('#daily_foreman_id').val() || null,
+                        supervisor_id: $('#daily_supervisor_id').val() || null,
                     },
                     success: function(response) {
                         $('#successMessage').html(response.message ||
@@ -1066,6 +1153,7 @@
                         $('#successModal').modal('show');
                         $('#dailyPHForm')[0].reset();
                         $('#daily_tanggal').val(today);
+                        checkDailyApproval();
                     },
                     error: function(xhr) {
                         showErrorSwal(xhr);
