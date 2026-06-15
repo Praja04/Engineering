@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Utility\WwtpSludge;
+use App\Models\NotificationsModel;
+use App\Models\Utility\WwtpDailyApproval;
 use App\Models\Utility\WwtpPengangkutanSludge;
-use Illuminate\Support\Facades\DB;
+use App\Models\Utility\WwtpSludge;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class WWTPControllerSludge extends Controller
 {
@@ -56,9 +59,18 @@ class WWTPControllerSludge extends Controller
      */
     public function store(Request $request)
     {
+        $approval = WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
+
+        if (!$approval) {
+            $request->validate([
+                'foreman_id' => 'required|exists:users,id',
+                'supervisor_id' => 'required|exists:users,id',
+            ]);
+        }
+
         $request->validate([
             'tanggal'            => 'required|date',
-            'shift'              => 'required|in:1,2,3',
+            'shift'              => 'required|in:shift1,shift2,shift3',
             'drain_lumpur'       => 'required|numeric|min:0',
             'hasil_lumpur'       => 'required|numeric|min:0',
             'running_hour_scp'   => 'required|numeric|min:0',
@@ -83,7 +95,7 @@ class WWTPControllerSludge extends Controller
             ], 409);
         }
 
-        WwtpSludge::create([
+        $sludge = WwtpSludge::create([
             'tanggal'          => $request->tanggal,
             'shift'            => $request->shift,
             'drain_lumpur'     => $request->drain_lumpur,
@@ -91,6 +103,55 @@ class WWTPControllerSludge extends Controller
             'running_hour_scp' => $request->running_hour_scp,
             'sludge_content'   => $request->sludge_content,
         ]);
+
+        // Create or update daily approval
+        if (!$approval) {
+            $approval = WwtpDailyApproval::create([
+                'tanggal' => $request->tanggal,
+                'operator_id' => Auth::id(),
+                'foreman_id' => $request->foreman_id,
+                'supervisor_id' => $request->supervisor_id,
+                'status' => 'submitted',
+                'submitted_at' => now(),
+            ]);
+
+            // Notify foreman
+            NotificationsModel::create([
+                'user_id' => $request->foreman_id,
+                'title' => 'Approval Harian WWTP',
+                'message' => 'Data harian WWTP tanggal ' . Carbon::parse($request->tanggal)->format('d/m/Y') . ' telah diajukan dan menunggu persetujuan Anda.',
+                'url' => url('/wwtp/approval'),
+                'notifiable_type' => WwtpDailyApproval::class,
+                'notifiable_id' => $approval->id,
+                'is_read' => 0,
+            ]);
+        } else {
+            if ($approval->status === 'rejected') {
+                $approval->update([
+                    'status' => 'submitted',
+                    'reject_reason' => null,
+                    'operator_id' => Auth::id(),
+                    'submitted_at' => now(),
+                ]);
+
+                // Re-notify foreman
+                if ($approval->foreman_id) {
+                    NotificationsModel::updateOrCreate(
+                        [
+                            'user_id' => $approval->foreman_id,
+                            'notifiable_type' => WwtpDailyApproval::class,
+                            'notifiable_id' => $approval->id,
+                        ],
+                        [
+                            'title' => 'Approval Harian WWTP',
+                            'message' => 'Data harian WWTP tanggal ' . Carbon::parse($request->tanggal)->format('d/m/Y') . ' telah diperbarui dan menunggu persetujuan Anda.',
+                            'url' => url('/wwtp/approval'),
+                            'is_read' => 0,
+                        ]
+                    );
+                }
+            }
+        }
 
         return response()->json([
             'status'  => 'success',
@@ -120,6 +181,21 @@ class WWTPControllerSludge extends Controller
             'sludge_content'   => 'nullable|numeric|min:0',
         ]);
 
+        // Check daily approval for both new and old date
+        $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
+        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+            return response()->json([
+                'message' => 'Laporan harian untuk tanggal ini sudah disetujui, tidak dapat mengubah data.'
+            ], 422);
+        }
+
+        $oldApproval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $harian->tanggal)->first();
+        if ($oldApproval && in_array($oldApproval->status, ['approved_foreman', 'approved_supervisor'])) {
+            return response()->json([
+                'message' => 'Laporan harian untuk tanggal awal sudah disetujui, tidak dapat mengubah data.'
+            ], 422);
+        }
+
         $harian->update($request->only([
             'tanggal',
             'shift',
@@ -128,6 +204,32 @@ class WWTPControllerSludge extends Controller
             'running_hour_scp',
             'sludge_content',
         ]));
+
+        // If daily approval exists and is rejected, reset it to submitted
+        if ($approval && $approval->status === 'rejected') {
+            $approval->update([
+                'status' => 'submitted',
+                'reject_reason' => null,
+                'operator_id' => \Illuminate\Support\Facades\Auth::id(),
+                'submitted_at' => now(),
+            ]);
+
+            if ($approval->foreman_id) {
+                \App\Models\NotificationsModel::updateOrCreate(
+                    [
+                        'user_id' => $approval->foreman_id,
+                        'notifiable_type' => \App\Models\Utility\WwtpDailyApproval::class,
+                        'notifiable_id' => $approval->id,
+                    ],
+                    [
+                        'title' => 'Approval Harian WWTP',
+                        'message' => 'Data harian WWTP tanggal ' . Carbon::parse($request->tanggal)->format('d/m/Y') . ' telah diperbarui dan menunggu persetujuan Anda.',
+                        'url' => url('/wwtp/approval'),
+                        'is_read' => 0,
+                    ]
+                );
+            }
+        }
 
         return response()->json([
             'message' => 'Data harian berhasil diperbarui.',
@@ -141,6 +243,13 @@ class WWTPControllerSludge extends Controller
     public function destroy($id)
     {
         $harian = WwtpSludge::findOrFail($id);
+        $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $harian->tanggal)->first();
+        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+            return response()->json([
+                'message' => 'Laporan harian untuk tanggal ini sudah disetujui, tidak dapat dihapus.'
+            ], 422);
+        }
+
         $harian->delete();
 
         return response()->json(['message' => 'Data harian berhasil dihapus.']);

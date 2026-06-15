@@ -16,8 +16,8 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class AirController extends Controller
 {
- 
-  
+
+
 
     // Api crud operator
 
@@ -47,6 +47,8 @@ class AirController extends Controller
                 }
             ],
             'notes' => 'nullable|string|max:255',
+            'foreman_id' => 'nullable|exists:users,id',
+            'supervisor_id' => 'nullable|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -57,7 +59,14 @@ class AirController extends Controller
         }
 
         $tanggal = $request->input('tanggal');
-        // $createdBy = Session::get('username') ?? 'system';
+        $bulan = date('Y-m', strtotime($tanggal));
+        $approval = \App\Models\Utility\UtilityMonthlyApproval::where('bulan', $bulan)->where('tipe', 'air')->first();
+        // if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+        //     return response()->json([
+        //         'message' => 'Laporan Air untuk bulan ini (' . $bulan . ') sudah disetujui, sehingga data tidak dapat ditambahkan.'
+        //     ], 422);
+        // }
+
         $createdBy = Auth::check() ? Auth::user()->username : 'system';
 
         $notes = $request->input('notes');
@@ -89,6 +98,15 @@ class AirController extends Controller
 
             $inserted[] = $area;
         }
+
+        // Ensure monthly approval is created/submitted and foreman notified
+        \App\Models\Utility\UtilityMonthlyApproval::checkAndNotify(
+            $bulan,
+            'air',
+            auth()->id(),
+            $request->input('foreman_id'),
+            $request->input('supervisor_id')
+        );
 
         return response()->json([
             'message' => 'Data pemakaian air berhasil diproses.',
@@ -161,8 +179,17 @@ class AirController extends Controller
 
     public function getPemakaianAirData(Request $request)
     {
+        $query = PemakaianAirModel::orderBy('tanggal', 'desc');
 
-        $data = PemakaianAirModel::orderBy('tanggal', 'desc')->get();
+        if ($request->filled('bulan')) {
+            $bulan = $request->input('bulan');
+            $year = date('Y', strtotime($bulan . '-01'));
+            $month = date('m', strtotime($bulan . '-01'));
+            $query->whereYear('tanggal', $year)
+                ->whereMonth('tanggal', $month);
+        }
+
+        $data = $query->get();
 
         // Kelompokkan berdasarkan tanggal
         $grouped = $data->groupBy(function ($item) {
@@ -200,10 +227,18 @@ class AirController extends Controller
             $defaultAreas = PemakaianAirModel::distinct()->pluck('jenis_pemakaian')->filter()->toArray();
             if (empty($defaultAreas)) {
                 $defaultAreas = [
-                    'Sumur 1', 'Sumur 2', 'Sumur 4', 'Sumur 5', 
-                    'CT RO', 'CT WS', 'Green Belt', 
-                    'Outlet Fresh Water 1', 'Outlet Fresh Water 2', 
-                    'Outlet Storage RO Reject', 'Outlet Storage WS', 'PDAM'
+                    'Sumur 1',
+                    'Sumur 2',
+                    'Sumur 4',
+                    'Sumur 5',
+                    'CT RO',
+                    'CT WS',
+                    'Green Belt',
+                    'Outlet Fresh Water 1',
+                    'Outlet Fresh Water 2',
+                    'Outlet Storage RO Reject',
+                    'Outlet Storage WS',
+                    'PDAM'
                 ];
             }
             foreach ($defaultAreas as $name) {
@@ -234,6 +269,8 @@ class AirController extends Controller
 
         $startDate = Carbon::create($month, 1);
         $endDate = $startDate->copy()->endOfMonth();
+        $year = $startDate->year;
+        $months = $startDate->month;
 
         // Kategori sesuai template Excel
         $kategori = [
@@ -249,12 +286,17 @@ class AirController extends Controller
             'CT RO',
             'CT WS',
             'Green Belt',
+            'Air Proses',
         ];
 
         // Load template
-        $templatePath = storage_path('app/templates/laporan_air_utility.xlsx');
+        $templatePath = public_path('assets/templates/utility/laporan_air_utility.xlsx');
         $spreadsheet = IOFactory::load($templatePath);
         $sheet = $spreadsheet->getActiveSheet();
+
+        // Tanggal
+        $sheet->setCellValue("AK1", $months);
+        $sheet->setCellValue("AK2", $year);
 
         foreach ($kategori as $index => $jenis) {
             $data = PemakaianAirModel::where('jenis_pemakaian', $jenis)
@@ -280,6 +322,49 @@ class AirController extends Controller
                     $sheet->setCellValue("{$colSelisih}{$row}", $entry->pemakaian_akhir - $entry->pemakaian_awal);
                 }
                 $row++;
+            }
+        }
+
+        $approval = \App\Models\Utility\UtilityMonthlyApproval::where('bulan', $month)->where('tipe', 'air')->first();
+
+        // Draw signatures if approved/submitted
+        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+        if (file_exists($signaturePath) && $approval) {
+            if (in_array($approval->status, ['submitted', 'approved_foreman', 'approved_supervisor'])) {
+                // Operator (AL6)
+                $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawOp->setName('Operator');
+                $drawOp->setPath($signaturePath);
+                $drawOp->setHeight(70);
+                $drawOp->setCoordinates('AO9');
+                $drawOp->setOffsetX('40');
+                $drawOp->setWorksheet($sheet);
+                $sheet->setCellValue('AO14', ($approval->operator ? $approval->operator->username : '-'));
+                $sheet->setCellValue('AO15', ($approval->submitted_at));
+            }
+            if (in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+                // Foreman (AL17)
+                $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawFm->setName('Foreman');
+                $drawFm->setPath($signaturePath);
+                $drawFm->setHeight(70);
+                $drawFm->setCoordinates('AO20');
+                $drawFm->setOffsetX('40');
+                $drawFm->setWorksheet($sheet);
+                $sheet->setCellValue('AO25', ($approval->foreman ? $approval->foreman->username : '-'));
+                $sheet->setCellValue('AO26', ($approval->foreman_approved_at));
+            }
+            if ($approval->status === 'approved_supervisor') {
+                // Supervisor (AL28)
+                $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawSpv->setName('Supervisor');
+                $drawSpv->setPath($signaturePath);
+                $drawSpv->setHeight(70);
+                $drawSpv->setCoordinates('AO31');
+                $drawSpv->setOffsetX('40');
+                $drawSpv->setWorksheet($sheet);
+                $sheet->setCellValue('AO35', ($approval->supervisor ? $approval->supervisor->username : '-'));
+                $sheet->setCellValue('AO36', ($approval->supervisor_approved_at));
             }
         }
 
@@ -324,7 +409,7 @@ class AirController extends Controller
         foreach ($data as $jenis => $records) {
             $result[] = [
                 'name' => $jenis,
-                'data' => $records->map(fn ($r) => [
+                'data' => $records->map(fn($r) => [
                     'x' => $r->tanggal,
                     'y' => round($r->total_pemakaian, 2)
                 ])->values()
@@ -333,7 +418,7 @@ class AirController extends Controller
 
         return response()->json($result);
     }
- 
+
     public function getTopJenisPemakaianAir(Request $request)
     {
         $start = $request->query('start_date');
@@ -429,6 +514,14 @@ class AirController extends Controller
             'notes' => 'nullable|string'
         ]);
 
+        $bulan = date('Y-m', strtotime($request->tanggal));
+        $approval = \App\Models\Utility\UtilityMonthlyApproval::where('bulan', $bulan)->where('tipe', 'air')->first();
+        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+            return response()->json([
+                'message' => 'Laporan Air untuk bulan ini (' . $bulan . ') sudah disetujui, sehingga data tidak dapat diubah.'
+            ], 422);
+        }
+
         $air = PemakaianAirModel::where('id', $request->id)
             ->first();
 
@@ -444,8 +537,15 @@ class AirController extends Controller
             'notes' => $request->notes,
         ]);
 
+        // Check and transition status back to submitted if rejected
+        \App\Models\Utility\UtilityMonthlyApproval::checkAndNotify(
+            $bulan,
+            'air',
+            auth()->id(),
+            $approval->foreman_id ?? null,
+            $approval->supervisor_id ?? null
+        );
+
         return response()->json(['message' => 'Data Air berhasil diperbarui.']);
     }
-
-
 }

@@ -36,7 +36,7 @@
              CARD PILIHAN (tampil default)
         ══════════════════════════════════════ --}}
             <div id="section-pilihan" class="row g-4 mt-1">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card border-0 shadow-sm h-100 esp-pick-card" id="btn-pick-operational"
                         style="cursor:pointer; transition:.2s;">
                         <div class="card-body p-4 d-flex flex-column">
@@ -71,7 +71,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card border-0 shadow-sm h-100 esp-pick-card" id="btn-pick-shift"
                         style="cursor:pointer; transition:.2s;">
                         <div class="card-body p-4 d-flex flex-column">
@@ -100,6 +100,36 @@
                                 <span class="text-muted fs-13"><i class="ri-time-line me-1"></i>Akhir shift (sebelum
                                     07:00)</span>
                                 <span class="text-danger fw-semibold fs-13">Pilih <i class="ri-arrow-right-line"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 esp-pick-card" id="btn-pick-coal-handover"
+                        style="cursor:pointer; transition:.2s;">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center me-3"
+                                    style="background:linear-gradient(135deg,#f6d365,#fda085);
+                                       width:56px;height:56px;min-width:56px;">
+                                    <i class="ri-truck-line text-white fs-24"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0 fw-semibold">Serah Terima</h5>
+                                    <small class="text-muted">Batu Bara Gudang</small>
+                                </div>
+                            </div>
+                            <p class="text-muted fs-14 mb-3 flex-grow-1">
+                                Pencatatan serah terima batu bara dari gudang (penyuplai) ke engineering (penerima).
+                            </p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-warning-subtle text-warning">Penyuplai (Warehouse)</span>
+                                <span class="badge bg-warning-subtle text-warning">Penerima (ENG)</span>
+                            </div>
+                            <div class="border-top pt-2 d-flex justify-content-between align-items-center">
+                                <span class="text-muted fs-13"><i class="ri-time-line me-1"></i>Harian</span>
+                                <span class="text-warning fw-semibold fs-13">Pilih <i class="ri-arrow-right-line"></i></span>
                             </div>
                         </div>
                     </div>
@@ -444,6 +474,89 @@
                 </div>
             </div>
 
+            {{-- ══════════════════════════════════════
+             FORM SERAH TERIMA COAL REPORT
+        ══════════════════════════════════════ --}}
+            <div id="section-coal-handover" style="display:none;">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <button class="btn btn-sm btn-outline-secondary btn-back">
+                            <i class="ri-arrow-left-line me-1"></i>Kembali
+                        </button>
+                    </div>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-transparent border-bottom">
+                                <h5 class="mb-0 fw-semibold">
+                                    <i class="ri-truck-line me-2 text-warning"></i>
+                                    Input Serah Terima Batu Bara Gudang
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="form-coal-handover">
+                                    @csrf
+
+                                    {{-- Tanggal laporan --}}
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium">Tanggal Laporan <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="tanggal_laporan"
+                                            id="input-tanggal-coal" required>
+                                    </div>
+
+                                    <div class="row g-4">
+                                        {{-- PENYUPLAI (WAREHOUSE) --}}
+                                        <div class="col-md-6">
+                                            <div class="border rounded-3 p-3 bg-light animate__animated animate__fadeInLeft">
+                                                <h6 class="fw-semibold text-primary mb-3">
+                                                    <i class="ri-user-shared-line me-1"></i>1. Penyuplai (Warehouse)
+                                                </h6>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-medium">Qty (Ton) <span class="text-danger">*</span></label>
+                                                    <input type="number" step="0.01" class="form-control"
+                                                        name="penyuplai_qty" placeholder="0.00" required>
+                                                </div>
+                                                <div class="mb-0">
+                                                    <label class="form-label fw-medium">NIK / Nama <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control"
+                                                        name="penyuplai_nik_nama" placeholder="Masukkan NIK/Nama" required>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- PENERIMA (ENG) --}}
+                                        <div class="col-md-6">
+                                            <div class="border rounded-3 p-3 bg-light animate__animated animate__fadeInRight">
+                                                <h6 class="fw-semibold text-success mb-3">
+                                                    <i class="ri-user-received-line me-1"></i>2. Penerima (ENG)
+                                                </h6>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-medium">Qty (Ton) <span class="text-danger">*</span></label>
+                                                    <input type="number" step="0.01" class="form-control"
+                                                        name="penerima_qty" placeholder="0.00" required>
+                                                </div>
+                                                <div class="mb-0">
+                                                    <label class="form-label fw-medium">NIK / Nama <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control"
+                                                        name="penerima_nik_nama" placeholder="Masukkan NIK/Nama" required>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12 mt-3">
+                                            <button type="submit" class="btn btn-warning w-100 text-dark fw-medium" id="btn-submit-coal">
+                                                <i class="ri-save-line me-1"></i>Simpan Serah Terima
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 @endsection
@@ -529,6 +642,7 @@
                 $('#section-pilihan').hide();
                 $('#section-operational').hide();
                 $('#section-shift').hide();
+                $('#section-coal-handover').hide();
                 $(target).show();
             }
 
@@ -676,6 +790,58 @@
                     complete: function() {
                         $btn.prop('disabled', false).html(
                             '<i class="ri-send-plane-line me-1"></i>Submit Laporan');
+                    }
+                });
+            });
+
+            // ── COAL HANDOVER TOGGLE ──────────────────────────────────────────
+            $('#btn-pick-coal-handover').on('click', function() {
+                showSection('#section-coal-handover');
+                if (!$('#input-tanggal-coal').val()) {
+                    const now = new Date();
+                    const iso = now.toISOString().slice(0, 10);
+                    $('#input-tanggal-coal').val(iso);
+                }
+            });
+
+            // ── SUBMIT COAL HANDOVER ──────────────────────────────────────────
+            $('#form-coal-handover').on('submit', function(e) {
+                e.preventDefault();
+                const $btn = $('#btn-submit-coal');
+                $btn.prop('disabled', true).html('<i class="ri-loader-4-line me-1"></i>Menyimpan...');
+
+                $.ajax({
+                    url: '{{ route('esp-coal-handover.store') }}',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function(res) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Data Tersimpan',
+                            text: res.message ?? 'Serah terima batu bara berhasil disimpan.',
+                            confirmButtonText: 'OK'
+                        });
+                        $('#form-coal-handover')[0].reset();
+                        // Reset date
+                        const now = new Date();
+                        const iso = now.toISOString().slice(0, 10);
+                        $('#input-tanggal-coal').val(iso);
+                    },
+                    error: function(xhr) {
+                        const msg = xhr.responseJSON?.message ?? 'Terjadi kesalahan';
+                        const errors = xhr.responseJSON?.errors;
+                        if (errors) {
+                            const errMsg = Object.values(errors).flat().join('<br>');
+                            toastr.error(errMsg, 'Validasi gagal', {
+                                escapeHtml: false
+                            });
+                        } else {
+                            toastr.error(msg);
+                        }
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(
+                            '<i class="ri-save-line me-1"></i>Simpan Serah Terima');
                     }
                 });
             });

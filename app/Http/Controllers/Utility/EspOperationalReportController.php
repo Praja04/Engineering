@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Utility\EspCoalHandover;
 use App\Models\Utility\EspOperationalReport;
 use App\Models\Utility\EspShiftReport;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EspOperationalReportController extends Controller
@@ -165,6 +166,11 @@ class EspOperationalReportController extends Controller
             ->latest()
             ->first();
 
+        $coalHandover = EspCoalHandover::where('tanggal_laporan', $tanggal)
+            ->with(['operator'])
+            ->latest()
+            ->first();
+
         // ── Load template ──────────────────────────────────────────────
         $templatePath = public_path('assets/templates/operasional/esp.xlsx');
         if (!file_exists($templatePath)) {
@@ -174,8 +180,16 @@ class EspOperationalReportController extends Controller
         $spreadsheet  = IOFactory::load($templatePath);
         $sheet        = $spreadsheet->getActiveSheet();
 
+        // ── Restore stripped m³ equation symbols as plain text ────────────────
+        $sheet->setCellValue('K5', 'm³');
+        $sheet->setCellValue('K6', 'm³');
+        $sheet->setCellValue('K12', 'm³');
+        $sheet->getStyle('K5')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('K6')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('K12')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
         // ── Isi tanggal & grup ─────────────────────────────────────────
-        $sheet->setCellValue('J1', Carbon::parse($tanggal)->translatedFormat('d F Y'));
+        $sheet->setCellValue('J1', 'TANGGAL: ' . Carbon::parse($tanggal)->translatedFormat('d F Y'));
         if ($grup) {
             $sheet->setCellValue('J2', 'GRUP: ' . $grup);
         }
@@ -193,7 +207,7 @@ class EspOperationalReportController extends Controller
         }
 
         // ── Isi data shift ───────────────────────────────────────────
-        if ($shift) {
+        if ($shift || $coalHandover) {
             $sheet->setCellValue('J5',  $shift->pemakaian_air);
             $sheet->setCellValue('I7',  $shift->pemakaian_steam);
             $sheet->setCellValue('I8',  $shift->pemakaian_batubara);
@@ -207,6 +221,11 @@ class EspOperationalReportController extends Controller
             $sheet->setCellValue('I19', $shift->chemical_srtf);
             $sheet->setCellValue('K18', $shift->dosis);
             $sheet->setCellValue('K19', $shift->dosis);
+
+            $sheet->setCellValue('I22', $coalHandover->penyuplai_qty);
+            $sheet->setCellValue('K22', $coalHandover->penyuplai_nik_nama);
+            $sheet->setCellValue('I23', $coalHandover->penerima_qty);
+            $sheet->setCellValue('K23', $coalHandover->penerima_nik_nama);
         }
 
         // ── TTD Approval Section ──────────────────────────────────────
@@ -217,10 +236,11 @@ class EspOperationalReportController extends Controller
                 $drawOp = new Drawing();
                 $drawOp->setName('Operator');
                 $drawOp->setPath($signaturePath);
-                $drawOp->setHeight(60);
+                $drawOp->setHeight(100);
                 $drawOp->setCoordinates('B32');
                 $drawOp->setWorksheet($sheet);
                 $drawOp->setOffsetX(50);
+                $drawOp->setOffsetY(20);
                 $sheet->setCellValue('A35', ($shift->operator ? $shift->operator->username : '-'));
                 $sheet->setCellValue('A36', ($shift->created_at ? $shift->created_at : '-'));
             }
@@ -229,9 +249,10 @@ class EspOperationalReportController extends Controller
                 $drawFm = new Drawing();
                 $drawFm->setName('Foreman');
                 $drawFm->setPath($signaturePath);
-                $drawFm->setHeight(60);
+                $drawFm->setHeight(100);
                 $drawFm->setCoordinates('E32');
                 $drawFm->setWorksheet($sheet);
+                $drawFm->setOffsetY(20);
                 $sheet->setCellValue('D35', ($shift->foreman ? $shift->foreman->username : '-'));
                 $sheet->setCellValue('D36', ($shift->foreman_approved_at ? $shift->foreman_approved_at : '-'));
             }
@@ -240,8 +261,9 @@ class EspOperationalReportController extends Controller
                 $drawSpv = new Drawing();
                 $drawSpv->setName('Supervisor');
                 $drawSpv->setPath($signaturePath);
-                $drawSpv->setHeight(60);
+                $drawSpv->setHeight(100);
                 $drawSpv->setCoordinates('I32');
+                $drawSpv->setOffsetY(20);
                 $drawSpv->setWorksheet($sheet);
                 $sheet->setCellValue('H35', '(' . ($shift->supervisor ? $shift->supervisor->username : '-') . ')');
                 $sheet->setCellValue('H36', ($shift->supervisor_approved_at ? $shift->supervisor_approved_at : '-'));

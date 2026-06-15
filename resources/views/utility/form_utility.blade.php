@@ -109,6 +109,24 @@
                                         <label for="cos" class="form-label">Cos</label>
                                         <input type="number" name="cos" class="form-control" step="0.01">
                                     </div>
+                                    <div class="approver-selectors mb-3" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label fw-semibold">Pilih Foreman untuk Approval
+                                                    Bulanan</label>
+                                                <select name="foreman_id" class="form-select select-foreman">
+                                                    <option value="">-- Pilih Foreman --</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label fw-semibold">Pilih Supervisor untuk Approval
+                                                    Bulanan</label>
+                                                <select name="supervisor_id" class="form-select select-supervisor">
+                                                    <option value="">-- Pilih Supervisor --</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <button type="submit" class="btn btn-success">Simpan Listrik</button>
                                     <button type="button" id="clearDraftListrik" class="btn btn-danger">
                                         Hapus Draft
@@ -134,6 +152,24 @@
                                     <div class="mb-3">
                                         <label for="notes" class="form-label">Catatan</label>
                                         <textarea name="notes" class="form-control"></textarea>
+                                    </div>
+                                    <div class="approver-selectors mb-3" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label fw-semibold">Pilih Foreman untuk Approval
+                                                    Bulanan</label>
+                                                <select name="foreman_id" class="form-select select-foreman">
+                                                    <option value="">-- Pilih Foreman --</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label fw-semibold">Pilih Supervisor untuk Approval
+                                                    Bulanan</label>
+                                                <select name="supervisor_id" class="form-select select-supervisor">
+                                                    <option value="">-- Pilih Supervisor --</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                     <button type="submit" class="btn btn-primary">Simpan Air</button>
                                 </form>
@@ -171,6 +207,24 @@
                                         <label for="keterangan" class="form-label">Keterangan</label>
                                         <textarea name="keterangan" class="form-control"></textarea>
                                     </div>
+                                    <div class="approver-selectors mb-3" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label fw-semibold">Pilih Foreman untuk Approval
+                                                    Bulanan</label>
+                                                <select name="foreman_id" class="form-select select-foreman">
+                                                    <option value="">-- Pilih Foreman --</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label fw-semibold">Pilih Supervisor untuk Approval
+                                                    Bulanan</label>
+                                                <select name="supervisor_id" class="form-select select-supervisor">
+                                                    <option value="">-- Pilih Supervisor --</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <button type="submit" class="btn btn-secondary">Simpan Chemical</button>
                                 </form>
                             </div>
@@ -191,6 +245,64 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
+
+        let approversLoaded = false;
+
+        function loadApproversOptions(callback) {
+            if (approversLoaded) {
+                if (callback) callback();
+                return;
+            }
+            $.get('/api/utility/users/approvers', function(data) {
+                const foremanList = data.staff ?? [];
+                let foremanOpts = '<option value="">-- Pilih Foreman --</option>';
+                foremanList.forEach(function(u) {
+                    foremanOpts += `<option value="${u.id}">${u.username}</option>`;
+                });
+                $('.select-foreman').html(foremanOpts);
+
+                const supervisorList = data.supervisor ?? [];
+                let supervisorOpts = '<option value="">-- Pilih Supervisor --</option>';
+                supervisorList.forEach(function(u) {
+                    supervisorOpts += `<option value="${u.id}">${u.username}</option>`;
+                });
+                $('.select-supervisor').html(supervisorOpts);
+                approversLoaded = true;
+                if (callback) callback();
+            }).fail(function() {
+                $('.select-foreman, .select-supervisor').html('<option value="">Gagal memuat data</option>');
+            });
+        }
+
+        function checkUtilityLock(dateValue, formId, submitBtnSelector, tipe) {
+            if (!dateValue || !tipe) return;
+            const bulan = dateValue.substring(0, 7); // YYYY-MM
+            $.get("{{ url('utility/approval/check') }}", {
+                bulan: bulan,
+                tipe: tipe
+            }, function(res) {
+                const form = $(formId);
+                form.find('.approval-lock-warning').remove();
+                // if (res.locked) {
+                //     form.find(submitBtnSelector).prop('disabled', true);
+                //     const warningHtml = `<div class="alert alert-danger approval-lock-warning mt-3">
+            //         <i class="ri-error-warning-line me-1"></i>
+            //         Laporan untuk bulan ini (${bulan}) sedang dalam proses approval atau sudah disetujui. Pengisian dikunci.
+            //     </div>`;
+                //     form.find(submitBtnSelector).before(warningHtml);
+                //     form.find('.approver-selectors').hide().find('select').prop('required', false);
+                // } else {
+                form.find(submitBtnSelector).prop('disabled', false);
+                if (res.status === 'none') {
+                    loadApproversOptions(function() {
+                        form.find('.approver-selectors').show().find('select').prop('required', true);
+                    });
+                } else {
+                    form.find('.approver-selectors').hide().find('select').prop('required', false);
+                }
+                // }
+            });
+        }
 
         function setTanggalChemical() {
             const now = new Date();
@@ -224,6 +336,7 @@
 
             const tanggalFormatted = tanggal.toISOString().split('T')[0];
             $('#tanggal_chemical').val(tanggalFormatted);
+            checkUtilityLock(tanggalFormatted, '#chemical-form', 'button[type="submit"]', 'chemical');
         }
 
         // Trigger saat shift dipilih
@@ -235,6 +348,10 @@
                 $('#tanggal_chemical').val('');
                 document.getElementById('tanggal_chemical').setAttribute('readonly', true);
             }
+        });
+
+        $('#tanggal_chemical').on('change', function() {
+            checkUtilityLock($(this).val(), '#chemical-form', 'button[type="submit"]', 'chemical');
         });
 
         $(document).ready(function() {
@@ -323,13 +440,23 @@
 
             const today = new Date().toISOString().split('T')[0];
             $('#waktu_listrik').val(today);
+            checkUtilityLock(today, '#form-pemakaian-listrik', 'button[type="submit"]', 'listrik');
+
+            $('#waktu_listrik').on('change', function() {
+                checkUtilityLock($(this).val(), '#form-pemakaian-listrik', 'button[type="submit"]',
+                    'listrik');
+            });
+
             //buat tanggal air dikurang 1 hari
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            $('#tanggal_air').val(yesterday.toISOString().split('T')[0]);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            $('#tanggal_air').val(yesterdayStr);
+            checkUtilityLock(yesterdayStr, '#form-pemakaian-air', 'button[type="submit"]', 'air');
 
-
-
+            $('#tanggal_air').on('change', function() {
+                checkUtilityLock($(this).val(), '#form-pemakaian-air', 'button[type="submit"]', 'air');
+            });
 
             setTanggalChemical();
 
@@ -502,7 +629,9 @@
                 const finalData = {
                     tanggal: tanggal,
                     notes: notes,
-                    data: payload
+                    data: payload,
+                    foreman_id: $('#form-pemakaian-air .select-foreman').val() || null,
+                    supervisor_id: $('#form-pemakaian-air .select-supervisor').val() || null
                 };
 
                 $.ajax({
