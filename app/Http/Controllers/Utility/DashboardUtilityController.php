@@ -11,21 +11,27 @@ class DashboardUtilityController extends Controller
     public function getApprovers()
     {
         $staff = User::where('departemen', 'engineering')
-            ->where('jabatan', '!=', 'operator')
-            ->where('jabatan', '!=', 'dept_head')
+            ->where('jabatan', 'foreman')
             ->where(function ($q) {
                 $q->where('bagian', 'Engineering WWTP')
                     ->orWhere('bagian', 'Engineering');
             })
             ->get(['id', 'username']);
 
+        $spv = User::where('jabatan', 'supervisor')
+            ->where(function ($q) {
+                $q->where('departemen', 'engineering');
+            })
+            ->get(['id', 'username']);
+
         $user = User::where('jabatan', 'supervisor')
-        ->Where('departemen', 'engineering')
+            ->Where('departemen', 'engineering')
             ->get(['id', 'username', 'departemen']);
 
         return response()->json([
             'staff' => $staff,
-            'user'  => $user
+            'supervisor' => $spv,
+            'user'  => $user,
         ]);
     }
 
