@@ -91,8 +91,13 @@ class AhuController extends Controller
                 [
                     'operator_id' => auth()->id(),
                     'status' => 'draft',
+                    'submitted_at' => now(),
                 ]
             );
+
+            if (empty($main->operator_id)) {
+                $main->update(['operator_id' => auth()->id()]);
+            }
 
             $validated['ahu_id'] = $main->id;
             $validated['created_by'] = auth()->id();
@@ -161,7 +166,6 @@ class AhuController extends Controller
         $validated = $request->validate([
             'bulan' => 'required|integer',
             'tahun' => 'required|integer',
-            'foreman_id' => 'required|exists:users,id',
             'supervisor_id' => 'required|exists:users,id',
         ]);
 
@@ -173,14 +177,14 @@ class AhuController extends Controller
         if (!$main) return response()->json(['message' => 'Data untuk bulan ini belum tersedia'], 404);
 
         $main->update([
-            'foreman_id' => $validated['foreman_id'],
+            'foreman_id' => auth()->id(),
             'supervisor_id' => $validated['supervisor_id'],
-            'status' => 'submitted',
+            'status' => 'approved_foreman',
             'submitted_at' => now(),
-            'operator_id' => auth()->id(),
+            'approved_foreman_at' => now(),
         ]);
 
-        $this->sendNotification($main, $main->foreman_id);
+        $this->sendNotification($main, $main->supervisor_id);
 
         return response()->json(['message' => 'Laporan bulanan berhasil disubmit untuk approval']);
     }
@@ -216,6 +220,10 @@ class AhuController extends Controller
 
     public function getCollectedData()
     {
+        if (auth()->user()->jabatan !== 'foreman') {
+            return response()->json(['status' => 200, 'results' => []]);
+        }
+
         $mainDrafts = Ahu::whereIn('status', ['draft', 'rejected'])
             ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'desc')
@@ -426,7 +434,7 @@ class AhuController extends Controller
                 $sheet->setCellValue('B44', $mainRecord->operator ? $mainRecord->operator->username : '-');
                 $sheet->setCellValue('B45', $mainRecord->submitted_at ?? '-');
             }
-            if ($mainRecord->status == 'approved_foreman') {
+            if ($mainRecord->status == 'approved_foreman' || $mainRecord->status == 'approved_supervisor') {
                 $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                 $drawFm->setName('Foreman');
                 $drawFm->setPath($signaturePath);
