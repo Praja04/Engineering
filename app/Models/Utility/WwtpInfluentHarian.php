@@ -41,7 +41,7 @@ class WwtpInfluentHarian extends Model
      * Recalculate _awal fields chronologically starting from a certain date
      * to keep data integrity intact when edits/inserts/deletions happen.
      */
-    public static function recalculateAwalFieldsFrom($tanggal)
+    public static function recalculateAwalFieldsFrom($tanggal, $excludeId = null)
     {
         // Get all records starting from $tanggal
         $records = self::where('tanggal', '>=', $tanggal)
@@ -55,6 +55,9 @@ class WwtpInfluentHarian extends Model
             ->get();
 
         foreach ($records as $record) {
+            if ($excludeId !== null && $record->id == $excludeId) {
+                continue;
+            }
             $dirty = false;
             
             // Find preceding record using the new logic
@@ -102,18 +105,12 @@ class WwtpInfluentHarian extends Model
 
             foreach ($fields as $field) {
                 $awalField = $field . '_awal';
-                $expectedVal = 0;
                 if ($preceding) {
-                    // jika di kolom utama nya ada (tidak nol), ambil kolom utama, jika tidak ada, ambil kolom _awal
-                    $expectedVal = (float) $preceding->$field ?: (float) $preceding->$awalField ?: 0;
-                } else {
-                    // Jika data awal benar-benar kosong (tidak ada preceding record), set data awal = data sekarang (kolom utama) dari record itu sendiri
-                    $expectedVal = (float) $record->$field;
-                }
-                
-                if ($record->$awalField != $expectedVal) {
-                    $record->$awalField = $expectedVal;
-                    $dirty = true;
+                    $expectedVal = $preceding->$field !== null ? (float) $preceding->$field : ($preceding->$awalField !== null ? (float) $preceding->$awalField : 0);
+                    if ($record->$awalField != $expectedVal) {
+                        $record->$awalField = $expectedVal;
+                        $dirty = true;
+                    }
                 }
             }
 

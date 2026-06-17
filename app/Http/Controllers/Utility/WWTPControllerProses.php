@@ -221,19 +221,60 @@ class WWTPControllerProses extends Controller
         }
 
         return response()->json([
-            'pit_sparta_awal'         => $previous ? ((float) $previous->pit_sparta ?: (float) $previous->pit_sparta_awal ?: 0) : 0,
-            'pit_garam_awal'          => $previous ? ((float) $previous->pit_garam ?: (float) $previous->pit_garam_awal ?: 0) : 0,
-            'pit_domestik_awal'       => $previous ? ((float) $previous->pit_domestik ?: (float) $previous->pit_domestik_awal ?: 0) : 0,
-            'pit_produksi_step3_awal' => $previous ? ((float) $previous->pit_produksi_step3 ?: (float) $previous->pit_produksi_step3_awal ?: 0) : 0,
-            'pit_storage_awal'        => $previous ? ((float) $previous->pit_storage ?: (float) $previous->pit_storage_awal ?: 0) : 0,
-            'pit_proses_wwtp2_awal'   => $previous ? ((float) $previous->pit_proses_wwtp2 ?: (float) $previous->pit_proses_wwtp2_awal ?: 0) : 0,
-            'pit_outlet_awal'         => $previous ? ((float) $previous->pit_outlet ?: (float) $previous->pit_outlet_awal ?: 0) : 0,
-            'pit_boiler_awal'         => $previous ? ((float) $previous->pit_boiler ?: (float) $previous->pit_boiler_awal ?: 0) : 0,
+            'pit_sparta_awal'         => $previous ? ($previous->pit_sparta !== null ? (float) $previous->pit_sparta : ($previous->pit_sparta_awal !== null ? (float) $previous->pit_sparta_awal : 0)) : 0,
+            'pit_garam_awal'          => $previous ? ($previous->pit_garam !== null ? (float) $previous->pit_garam : ($previous->pit_garam_awal !== null ? (float) $previous->pit_garam_awal : 0)) : 0,
+            'pit_domestik_awal'       => $previous ? ($previous->pit_domestik !== null ? (float) $previous->pit_domestik : ($previous->pit_domestik_awal !== null ? (float) $previous->pit_domestik_awal : 0)) : 0,
+            'pit_produksi_step3_awal' => $previous ? ($previous->pit_produksi_step3 !== null ? (float) $previous->pit_produksi_step3 : ($previous->pit_produksi_step3_awal !== null ? (float) $previous->pit_produksi_step3_awal : 0)) : 0,
+            'pit_storage_awal'        => $previous ? ($previous->pit_storage !== null ? (float) $previous->pit_storage : ($previous->pit_storage_awal !== null ? (float) $previous->pit_storage_awal : 0)) : 0,
+            'pit_proses_wwtp2_awal'   => $previous ? ($previous->pit_proses_wwtp2 !== null ? (float) $previous->pit_proses_wwtp2 : ($previous->pit_proses_wwtp2_awal !== null ? (float) $previous->pit_proses_wwtp2_awal : 0)) : 0,
+            'pit_outlet_awal'         => $previous ? ($previous->pit_outlet !== null ? (float) $previous->pit_outlet : ($previous->pit_outlet_awal !== null ? (float) $previous->pit_outlet_awal : 0)) : 0,
+            'pit_boiler_awal'         => $previous ? ($previous->pit_boiler !== null ? (float) $previous->pit_boiler : ($previous->pit_boiler_awal !== null ? (float) $previous->pit_boiler_awal : 0)) : 0,
         ]);
+    }
+
+    public function getFilledShifts(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+        ]);
+
+        $shifts = WwtpInfluentHarian::where('tanggal', $request->tanggal)
+            ->pluck('shift')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'filled_shifts' => $shifts
+        ]);
+    }
+
+    private function checkDailyApprovalPermission($tanggal, $action)
+    {
+        $user = Auth::user();
+        $jabatan = $user ? $user->jabatan : null;
+
+        $approval = WwtpDailyApproval::where('tanggal', $tanggal)->first();
+        if ($approval) {
+            if ($approval->status === 'approved_supervisor') {
+                if (!in_array($jabatan, ['supervisor', 'admin', 'dept_head'])) {
+                    return 'Laporan harian untuk tanggal ini sudah disetujui Supervisor. Hanya Supervisor yang dapat ' . $action . ' data.';
+                }
+            } elseif ($approval->status === 'approved_foreman') {
+                if (!in_array($jabatan, ['foreman', 'supervisor', 'admin', 'dept_head'])) {
+                    return 'Laporan harian untuk tanggal ini sudah disetujui Foreman. Operator tidak dapat ' . $action . ' data.';
+                }
+            }
+        }
+        return null;
     }
 
     public function storeinfluentHarian(Request $request)
     {
+        $err = $this->checkDailyApprovalPermission($request->tanggal, 'menambah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
+        }
+
         $approval = WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
 
         if (!$approval) {
@@ -322,28 +363,28 @@ class WWTPControllerProses extends Controller
             'tanggal' => $request->tanggal,
             'shift'   => $request->shift,
             'pit_sparta'     => $request->pit_sparta,
-            'pit_sparta_awal' => $preceding ? ((float) $preceding->pit_sparta ?: (float) $preceding->pit_sparta_awal ?: 0) : (float) $request->pit_sparta,
+            'pit_sparta_awal' => $request->has('pit_sparta_awal') && $request->pit_sparta_awal !== null ? (float) $request->pit_sparta_awal : ($preceding ? ($preceding->pit_sparta !== null ? (float) $preceding->pit_sparta : ($preceding->pit_sparta_awal !== null ? (float) $preceding->pit_sparta_awal : 0)) : (float) $request->pit_sparta),
             'pit_garam'      => $request->pit_garam,
-            'pit_garam_awal' => $preceding ? ((float) $preceding->pit_garam ?: (float) $preceding->pit_garam_awal ?: 0) : (float) $request->pit_garam,
+            'pit_garam_awal' => $request->has('pit_garam_awal') && $request->pit_garam_awal !== null ? (float) $request->pit_garam_awal : ($preceding ? ($preceding->pit_garam !== null ? (float) $preceding->pit_garam : ($preceding->pit_garam_awal !== null ? (float) $preceding->pit_garam_awal : 0)) : (float) $request->pit_garam),
             'pit_domestik'   => $request->pit_domestik,
-            'pit_domestik_awal' => $preceding ? ((float) $preceding->pit_domestik ?: (float) $preceding->pit_domestik_awal ?: 0) : (float) $request->pit_domestik,
+            'pit_domestik_awal' => $request->has('pit_domestik_awal') && $request->pit_domestik_awal !== null ? (float) $request->pit_domestik_awal : ($preceding ? ($preceding->pit_domestik !== null ? (float) $preceding->pit_domestik : ($preceding->pit_domestik_awal !== null ? (float) $preceding->pit_domestik_awal : 0)) : (float) $request->pit_domestik),
             'pit_produksi_step3' => $request->pit_produksi_step3,
-            'pit_produksi_step3_awal' => $preceding ? ((float) $preceding->pit_produksi_step3 ?: (float) $preceding->pit_produksi_step3_awal ?: 0) : (float) ($request->pit_produksi_step3 ?? 0),
+            'pit_produksi_step3_awal' => $request->has('pit_produksi_step3_awal') && $request->pit_produksi_step3_awal !== null ? (float) $request->pit_produksi_step3_awal : ($preceding ? ($preceding->pit_produksi_step3 !== null ? (float) $preceding->pit_produksi_step3 : ($preceding->pit_produksi_step3_awal !== null ? (float) $preceding->pit_produksi_step3_awal : 0)) : (float) ($request->pit_produksi_step3 ?? 0)),
             'pit_storage' => $request->pit_storage,
-            'pit_storage_awal' => $preceding ? ((float) $preceding->pit_storage ?: (float) $preceding->pit_storage_awal ?: 0) : (float) ($request->pit_storage ?? 0),
+            'pit_storage_awal' => $request->has('pit_storage_awal') && $request->pit_storage_awal !== null ? (float) $request->pit_storage_awal : ($preceding ? ($preceding->pit_storage !== null ? (float) $preceding->pit_storage : ($preceding->pit_storage_awal !== null ? (float) $preceding->pit_storage_awal : 0)) : (float) ($request->pit_storage ?? 0)),
             'pit_proses_wwtp2' => $request->pit_proses_wwtp2,
-            'pit_proses_wwtp2_awal' => $preceding ? ((float) $preceding->pit_proses_wwtp2 ?: (float) $preceding->pit_proses_wwtp2_awal ?: 0) : (float) ($request->pit_proses_wwtp2 ?? 0),
+            'pit_proses_wwtp2_awal' => $request->has('pit_proses_wwtp2_awal') && $request->pit_proses_wwtp2_awal !== null ? (float) $request->pit_proses_wwtp2_awal : ($preceding ? ($preceding->pit_proses_wwtp2 !== null ? (float) $preceding->pit_proses_wwtp2 : ($preceding->pit_proses_wwtp2_awal !== null ? (float) $preceding->pit_proses_wwtp2_awal : 0)) : (float) ($request->pit_proses_wwtp2 ?? 0)),
             'pit_outlet' => $request->pit_outlet,
-            'pit_outlet_awal' => $preceding ? ((float) $preceding->pit_outlet ?: (float) $preceding->pit_outlet_awal ?: 0) : (float) ($request->pit_outlet ?? 0),
+            'pit_outlet_awal' => $request->has('pit_outlet_awal') && $request->pit_outlet_awal !== null ? (float) $request->pit_outlet_awal : ($preceding ? ($preceding->pit_outlet !== null ? (float) $preceding->pit_outlet : ($preceding->pit_outlet_awal !== null ? (float) $preceding->pit_outlet_awal : 0)) : (float) ($request->pit_outlet ?? 0)),
             'pit_boiler' => $request->pit_boiler,
-            'pit_boiler_awal' => $preceding ? ((float) $preceding->pit_boiler ?: (float) $preceding->pit_boiler_awal ?: 0) : (float) ($request->pit_boiler ?? 0),
+            'pit_boiler_awal' => $request->has('pit_boiler_awal') && $request->pit_boiler_awal !== null ? (float) $request->pit_boiler_awal : ($preceding ? ($preceding->pit_boiler !== null ? (float) $preceding->pit_boiler : ($preceding->pit_boiler_awal !== null ? (float) $preceding->pit_boiler_awal : 0)) : (float) ($request->pit_boiler ?? 0)),
             'debit1' => $request->debit1,
             'running_wwtp1' => $request->running_wwtp1,
             'debit2' => $request->debit2,
             'running_wwtp2' => $request->running_wwtp2,
         ]);
 
-        WwtpInfluentHarian::recalculateAwalFieldsFrom($harian->tanggal);
+        WwtpInfluentHarian::recalculateAwalFieldsFrom($harian->tanggal, $harian->id);
 
         // Create or update daily approval
         $approval = WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
@@ -514,10 +555,22 @@ class WWTPControllerProses extends Controller
             ->orderBy('shift', 'asc');
 
         if ($bulan) {
-            $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan]);
+            $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$request->bulan]);
         }
 
         $data = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $dates = $data->pluck('tanggal')->unique()->toArray();
+        $approvals = WwtpDailyApproval::whereIn('tanggal', $dates)->get()->keyBy(function($item) {
+            return \Carbon\Carbon::parse($item->tanggal)->toDateString();
+        });
+
+        $data->getCollection()->transform(function ($item) use ($approvals) {
+            $dateKey = \Carbon\Carbon::parse($item->tanggal)->toDateString();
+            $approval = $approvals->get($dateKey);
+            $item->approval_status = $approval ? $approval->status : null;
+            return $item;
+        });
 
         return response()->json($data);
     }
@@ -527,6 +580,8 @@ class WWTPControllerProses extends Controller
     public function showHarian($id)
     {
         $data = WwtpInfluentHarian::findOrFail($id);
+        $approval = WwtpDailyApproval::where('tanggal', $data->tanggal)->first();
+        $data->approval_status = $approval ? $approval->status : null;
         return response()->json($data);
     }
 
@@ -536,6 +591,16 @@ class WWTPControllerProses extends Controller
     public function updateHarian(Request $request, $id)
     {
         $harian = WwtpInfluentHarian::findOrFail($id);
+
+        $err = $this->checkDailyApprovalPermission($request->tanggal, 'mengubah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
+        }
+
+        $err = $this->checkDailyApprovalPermission($harian->tanggal, 'mengubah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
+        }
 
         $request->validate([
             'tanggal'  => 'required|date',
@@ -554,20 +619,7 @@ class WWTPControllerProses extends Controller
             'running_wwtp2' => 'nullable|string',
         ]);
 
-        // Check daily approval for both new and old date
         $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
-        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan harian untuk tanggal ini sudah disetujui, tidak dapat mengubah data.'
-            ], 422);
-        }
-
-        $oldApproval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $harian->tanggal)->first();
-        if ($oldApproval && in_array($oldApproval->status, ['approved_foreman', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan harian untuk tanggal awal sudah disetujui, tidak dapat mengubah data.'
-            ], 422);
-        }
 
         $oldDate = $harian->tanggal;
 
@@ -623,14 +675,18 @@ class WWTPControllerProses extends Controller
         ];
         foreach ($fields as $field) {
             $awalField = $field . '_awal';
-            $data[$awalField] = $preceding ? ((float) $preceding->$field ?: (float) $preceding->$awalField ?: 0) : (float) ($request->$field ?? 0);
+            if ($request->has($awalField) && $request->$awalField !== null) {
+                $data[$awalField] = (float) $request->$awalField;
+            } else {
+                $data[$awalField] = $preceding ? ($preceding->$field !== null ? (float) $preceding->$field : ($preceding->$awalField !== null ? (float) $preceding->$awalField : 0)) : 0;
+            }
         }
 
         $harian->update($data);
 
         $newDate = $harian->tanggal;
         $startDate = $oldDate < $newDate ? $oldDate : $newDate;
-        WwtpInfluentHarian::recalculateAwalFieldsFrom($startDate);
+        WwtpInfluentHarian::recalculateAwalFieldsFrom($startDate, $harian->id);
 
         // If daily approval exists and is rejected, reset it to submitted
         if ($approval && $approval->status === 'rejected') {
@@ -670,11 +726,10 @@ class WWTPControllerProses extends Controller
     public function destroyHarian($id)
     {
         $harian = WwtpInfluentHarian::findOrFail($id);
-        $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $harian->tanggal)->first();
-        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan harian untuk tanggal ini sudah disetujui, tidak dapat dihapus.'
-            ], 422);
+
+        $err = $this->checkDailyApprovalPermission($harian->tanggal, 'menghapus');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
         }
 
         $oldDate = $harian->tanggal;

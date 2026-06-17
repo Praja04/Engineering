@@ -49,16 +49,53 @@ class WWTPControllerSludge extends Controller
             $query->where('tanggal', 'like', "%{$search}%");
         }
 
-        return response()->json(
-            $query->paginate($perPage, ['*'], 'page', $page)
-        );
+        $data = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $dates = $data->pluck('tanggal')->unique()->toArray();
+        $approvals = WwtpDailyApproval::whereIn('tanggal', $dates)->get()->keyBy(function ($item) {
+            return \Carbon\Carbon::parse($item->tanggal)->toDateString();
+        });
+
+        $data->getCollection()->transform(function ($item) use ($approvals) {
+            $dateKey = \Carbon\Carbon::parse($item->tanggal)->toDateString();
+            $approval = $approvals->get($dateKey);
+            $item->approval_status = $approval ? $approval->status : null;
+            return $item;
+        });
+
+        return response()->json($data);
     }
 
     /**
      * Simpan data sludge WWTP
      */
+    private function checkDailyApprovalPermission($tanggal, $action)
+    {
+        $user = Auth::user();
+        $jabatan = $user ? $user->jabatan : null;
+
+        $approval = WwtpDailyApproval::where('tanggal', $tanggal)->first();
+        if ($approval) {
+            if ($approval->status === 'approved_supervisor') {
+                if (!in_array($jabatan, ['supervisor', 'admin', 'dept_head'])) {
+                    return 'Laporan harian untuk tanggal ini sudah disetujui Supervisor. Hanya Supervisor yang dapat ' . $action . ' data.';
+                }
+            } elseif ($approval->status === 'approved_foreman') {
+                if (!in_array($jabatan, ['foreman', 'supervisor', 'admin', 'dept_head'])) {
+                    return 'Laporan harian untuk tanggal ini sudah disetujui Foreman. Operator tidak dapat ' . $action . ' data.';
+                }
+            }
+        }
+        return null;
+    }
+
     public function store(Request $request)
     {
+        $err = $this->checkDailyApprovalPermission($request->tanggal, 'menambah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
+        }
+
         $approval = WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
 
         if (!$approval) {
@@ -162,6 +199,8 @@ class WWTPControllerSludge extends Controller
     public function show($id)
     {
         $data = WwtpSludge::findOrFail($id);
+        $approval = WwtpDailyApproval::where('tanggal', $data->tanggal)->first();
+        $data->approval_status = $approval ? $approval->status : null;
         return response()->json($data);
     }
 
@@ -181,19 +220,14 @@ class WWTPControllerSludge extends Controller
             'sludge_content'   => 'nullable|numeric|min:0',
         ]);
 
-        // Check daily approval for both new and old date
-        $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
-        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan harian untuk tanggal ini sudah disetujui, tidak dapat mengubah data.'
-            ], 422);
+        $err = $this->checkDailyApprovalPermission($request->tanggal, 'mengubah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
         }
 
-        $oldApproval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $harian->tanggal)->first();
-        if ($oldApproval && in_array($oldApproval->status, ['approved_foreman', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan harian untuk tanggal awal sudah disetujui, tidak dapat mengubah data.'
-            ], 422);
+        $err = $this->checkDailyApprovalPermission($harian->tanggal, 'mengubah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
         }
 
         $harian->update($request->only([
@@ -243,16 +277,31 @@ class WWTPControllerSludge extends Controller
     public function destroy($id)
     {
         $harian = WwtpSludge::findOrFail($id);
-        $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $harian->tanggal)->first();
-        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan harian untuk tanggal ini sudah disetujui, tidak dapat dihapus.'
-            ], 422);
+
+        $err = $this->checkDailyApprovalPermission($harian->tanggal, 'menghapus');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
         }
 
         $harian->delete();
 
         return response()->json(['message' => 'Data harian berhasil dihapus.']);
+    }
+
+    public function getFilledShifts(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+        ]);
+
+        $shifts = WwtpSludge::where('tanggal', $request->tanggal)
+            ->pluck('shift')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'filled_shifts' => $shifts
+        ]);
     }
 
     /**
