@@ -110,11 +110,17 @@ class CompressorController extends Controller
                     'tgl_akhir' => $tgl_akhir,
                     'operator_id' => auth()->id(),
                     'status' => 'draft',
+                    'submitted_at' => now(),
                 ]
             );
 
+            if (empty($main->operator_id)) {
+                $main->update(['operator_id' => auth()->id()]);
+            }
+
             // Create Detail record
             $validated['compressor_id'] = $main->id;
+            $validated['created_by'] = auth()->id();
             $detail = CompressorDetails::create($validated);
 
             DB::commit();
@@ -191,7 +197,6 @@ class CompressorController extends Controller
             'week' => 'required|integer',
             'bulan' => 'required|integer',
             'tahun' => 'required|integer',
-            'foreman_id' => 'required|exists:users,id',
             'supervisor_id' => 'required|exists:users,id',
         ]);
 
@@ -210,11 +215,11 @@ class CompressorController extends Controller
         }
 
         $main->update([
-            'foreman_id' => $validated['foreman_id'],
+            'foreman_id' => auth()->id(),
             'supervisor_id' => $validated['supervisor_id'],
-            'status' => 'submitted',
+            'status' => 'approved_foreman',
             'submitted_at' => now(),
-            'operator_id' => auth()->id(),
+            'approved_foreman_at' => now(),
         ]);
 
         try {
@@ -230,12 +235,17 @@ class CompressorController extends Controller
     {
         $approvalUrl = url(route('compressor.approval', [], false));
 
-        $recipients = User::whereIn('id', array_filter([
-            $main->foreman_id,
-            $main->supervisor_id,
-        ]))->get();
+        $recipients = [];
+        if ($main->status === 'submitted' && $main->foreman_id) {
+            $recipients[] = $main->foreman_id;
+        }
+        if ($main->status === 'approved_foreman' && $main->supervisor_id) {
+            $recipients[] = $main->supervisor_id;
+        }
 
-        foreach ($recipients as $user) {
+        $users = User::whereIn('id', array_filter($recipients))->get();
+
+        foreach ($users as $user) {
             NotificationsModel::updateOrCreate(
                 [
                     'user_id' => $user->id,
@@ -406,6 +416,84 @@ class CompressorController extends Controller
         return response()->json(['message' => 'Laporan ditolak']);
     }
 
+    public function bulkApprove(Request $request)
+    {
+        $ids = $request->ids;
+        if (empty($ids)) {
+            return response()->json(['message' => 'Tidak ada data yang dipilih'], 422);
+        }
+
+        $successCount = 0;
+        foreach ($ids as $id) {
+            $data = Compressor::find($id);
+            if (!$data) continue;
+
+            $updated = false;
+            if ($data->foreman_id === auth()->id() && $data->status === 'submitted') {
+                $data->update([
+                    'approved_foreman_at' => now(),
+                    'status' => 'approved_foreman'
+                ]);
+                $updated = true;
+            } elseif ($data->supervisor_id === auth()->id() && $data->status === 'approved_foreman') {
+                $data->update([
+                    'approved_supervisor_at' => now(),
+                    'status' => 'approved_supervisor'
+                ]);
+                $updated = true;
+            }
+
+            if ($updated) {
+                NotificationsModel::where('notifiable_type', Compressor::class)
+                    ->where('notifiable_id', $data->id)
+                    ->where('user_id', auth()->id())
+                    ->delete();
+                $successCount++;
+            }
+        }
+
+        return response()->json([
+            'status' => 200,
+            'message' => $successCount . ' laporan berhasil disetujui secara massal.'
+        ]);
+    }
+
+    public function bulkReject(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'reason' => 'required|string|max:255'
+        ]);
+
+        $successCount = 0;
+        foreach ($request->ids as $id) {
+            $data = Compressor::find($id);
+            if (!$data) continue;
+
+            $isForeman = ($data->foreman_id === auth()->id() && $data->status === 'submitted');
+            $isSupervisor = ($data->supervisor_id === auth()->id() && $data->status === 'approved_foreman');
+
+            if ($isForeman || $isSupervisor) {
+                $data->update([
+                    'status' => 'rejected',
+                    'reject_reason' => $request->reason
+                ]);
+
+                NotificationsModel::where('notifiable_type', Compressor::class)
+                    ->where('notifiable_id', $data->id)
+                    ->where('user_id', auth()->id())
+                    ->delete();
+
+                $successCount++;
+            }
+        }
+
+        return response()->json([
+            'status' => 200,
+            'message' => $successCount . ' laporan berhasil ditolak secara massal.'
+        ]);
+    }
+
     public function show($id)
     {
         $data = CompressorDetails::find($id);
@@ -420,7 +508,7 @@ class CompressorController extends Controller
 
         if ($request->filled('week') || $request->filled('bulan') || $request->filled('tahun')) {
             $query->whereHas('compressor', function ($q) use ($request) {
-                if ($request->filled('week')) $q->where('week', $request->week);
+                if ($request->filled('week') && $request->week !== 'all') $q->where('week', $request->week);
                 if ($request->filled('bulan')) $q->where('bulan', $request->bulan);
                 if ($request->filled('tahun')) $q->where('tahun', $request->tahun);
             });
@@ -434,16 +522,6 @@ class CompressorController extends Controller
 
         $templatePath = public_path('assets/templates/operasional/compressor.xlsx');
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Header Info
-        if ($request->filled('bulan')) {
-            $monthNum = (int)$request->bulan;
-            if ($monthNum >= 1 && $monthNum <= 12) {
-                $monthName = Carbon::create()->month($monthNum)->translatedFormat('F');
-                $sheet->setCellValue('Z1', 'BULAN : ' . strtoupper($monthName) . ' ' . $request->tahun);
-            }
-        }
 
         // Mapping jam ke row offset (8, 12, 16, 20, 00, 04)
         $jamMap = [
@@ -464,115 +542,156 @@ class CompressorController extends Controller
         // Baris awal tiap tanggal sesuai instruksi user
         $dayStartRows = [7, 13, 19, 25, 31, 37, 43];
 
-        // Group data berdasarkan tanggal
-        $grouped = $data->groupBy('tanggal');
-        $dayCounter = 0;
+        $tempFiles = [];
+        $weeksData = $data->groupBy(function ($item) {
+            return $item->compressor->week;
+        })->sortKeys();
 
-        foreach ($grouped as $tanggal => $details) {
-            if ($dayCounter >= 7) break; // Template terbatas untuk 7 hari
-
-            $startRow = $dayStartRows[$dayCounter];
-            $carbonDate = Carbon::parse($tanggal);
-
-            // Set Tanggal di kolom A (biasanya cell merge)
-            $sheet->setCellValue('A' . $startRow, $carbonDate->format('d/m/Y'));
-
-            foreach ($details as $item) {
-                $jamKey = substr($item->jam, 0, 5);
-                if (!isset($jamMap[$jamKey])) continue;
-
-                $currentRow = $startRow + $jamMap[$jamKey];
-
-                // Mapping Kolom (C ke AC)
-                $sheet->setCellValue('C' . $currentRow, $item->pressure_outlet_1);
-                $sheet->setCellValue('D' . $currentRow, $item->pressure_outlet_2);
-                $sheet->setCellValue('E' . $currentRow, $item->pressure_outlet_3);
-                $sheet->setCellValue('F' . $currentRow, $item->pressure_outlet_4);
-
-                $sheet->setCellValue('G' . $currentRow, $item->element_outlet_1);
-                $sheet->setCellValue('H' . $currentRow, $item->element_outlet_2);
-                $sheet->setCellValue('I' . $currentRow, $item->element_outlet_4);
-
-                $sheet->setCellValue('J' . $currentRow, $item->load_percent);
-
-                $sheet->setCellValue('K' . $currentRow, $item->running_hour_1);
-                $sheet->setCellValue('L' . $currentRow, $item->running_hour_2);
-                $sheet->setCellValue('M' . $currentRow, $item->running_hour_3);
-                $sheet->setCellValue('N' . $currentRow, $item->running_hour_4);
-
-                $sheet->setCellValue('O' . $currentRow, $item->loaded_hour_1);
-                $sheet->setCellValue('P' . $currentRow, $item->loaded_hour_2);
-                $sheet->setCellValue('Q' . $currentRow, $item->loaded_hour_3);
-                $sheet->setCellValue('R' . $currentRow, $item->loaded_hour_4);
-
-                $sheet->setCellValue('S' . $currentRow, $item->motor_start_1);
-                $sheet->setCellValue('T' . $currentRow, $item->motor_start_2);
-                $sheet->setCellValue('U' . $currentRow, $item->motor_start_3);
-                $sheet->setCellValue('V' . $currentRow, $item->motor_start_4);
-
-                $sheet->setCellValue('W' . $currentRow, $item->accumulated_volume);
-                $sheet->setCellValue('X' . $currentRow, $item->temperature_comp_ir);
-                $sheet->setCellValue('Y' . $currentRow, $item->pressure_in);
-                $sheet->setCellValue('Z' . $currentRow, $item->pressure_out);
-
-                $sheet->setCellValue('AA' . $currentRow, $item->suhu_dryer_tr15);
-                $sheet->setCellValue('AB' . $currentRow, $item->suhu_dryer_fx250);
-                $sheet->setCellValue('AC' . $currentRow, $item->suhu_dryer_ir);
+        $isFirst = true;
+        foreach ($weeksData as $weekNum => $weekRecords) {
+            if ($isFirst) {
+                $sheet = $spreadsheet->getActiveSheet();
+                $sheet->setTitle('Minggu ' . $weekNum);
+                $isFirst = false;
+            } else {
+                $tempSpreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
+                $tempSheet = $tempSpreadsheet->getActiveSheet();
+                $tempSheet->setTitle('Minggu ' . $weekNum);
+                $sheet = $spreadsheet->addExternalSheet($tempSheet);
             }
 
-            $dayCounter++;
+            // Header Info
+            if ($request->filled('bulan')) {
+                $monthNum = (int)$request->bulan;
+                if ($monthNum >= 1 && $monthNum <= 12) {
+                    $monthName = Carbon::create()->month($monthNum)->translatedFormat('F');
+                    $sheet->setCellValue('Z1', 'BULAN : ' . strtoupper($monthName) . ' ' . $request->tahun);
+                }
+            }
+
+            // Group data berdasarkan tanggal
+            $grouped = $weekRecords->groupBy('tanggal');
+            $dayCounter = 0;
+
+            foreach ($grouped as $tanggal => $details) {
+                if ($dayCounter >= 7) break; // Template terbatas untuk 7 hari
+
+                $startRow = $dayStartRows[$dayCounter];
+                $carbonDate = Carbon::parse($tanggal);
+
+                // Set Tanggal di kolom A (biasanya cell merge)
+                $sheet->setCellValue('A' . $startRow, $carbonDate->format('d/m/Y'));
+
+                foreach ($details as $item) {
+                    $jamKey = substr($item->jam, 0, 5);
+                    if (!isset($jamMap[$jamKey])) continue;
+
+                    $currentRow = $startRow + $jamMap[$jamKey];
+
+                    // Mapping Kolom (C ke AC)
+                    $sheet->setCellValue('C' . $currentRow, $item->pressure_outlet_1);
+                    $sheet->setCellValue('D' . $currentRow, $item->pressure_outlet_2);
+                    $sheet->setCellValue('E' . $currentRow, $item->pressure_outlet_3);
+                    $sheet->setCellValue('F' . $currentRow, $item->pressure_outlet_4);
+
+                    $sheet->setCellValue('G' . $currentRow, $item->element_outlet_1);
+                    $sheet->setCellValue('H' . $currentRow, $item->element_outlet_2);
+                    $sheet->setCellValue('I' . $currentRow, $item->element_outlet_4);
+
+                    $sheet->setCellValue('J' . $currentRow, $item->load_percent);
+
+                    $sheet->setCellValue('K' . $currentRow, $item->running_hour_1);
+                    $sheet->setCellValue('L' . $currentRow, $item->running_hour_2);
+                    $sheet->setCellValue('M' . $currentRow, $item->running_hour_3);
+                    $sheet->setCellValue('N' . $currentRow, $item->running_hour_4);
+
+                    $sheet->setCellValue('O' . $currentRow, $item->loaded_hour_1);
+                    $sheet->setCellValue('P' . $currentRow, $item->loaded_hour_2);
+                    $sheet->setCellValue('Q' . $currentRow, $item->loaded_hour_3);
+                    $sheet->setCellValue('R' . $currentRow, $item->loaded_hour_4);
+
+                    $sheet->setCellValue('S' . $currentRow, $item->motor_start_1);
+                    $sheet->setCellValue('T' . $currentRow, $item->motor_start_2);
+                    $sheet->setCellValue('U' . $currentRow, $item->motor_start_3);
+                    $sheet->setCellValue('V' . $currentRow, $item->motor_start_4);
+
+                    $sheet->setCellValue('W' . $currentRow, $item->accumulated_volume);
+                    $sheet->setCellValue('X' . $currentRow, $item->temperature_comp_ir);
+                    $sheet->setCellValue('Y' . $currentRow, $item->pressure_in);
+                    $sheet->setCellValue('Z' . $currentRow, $item->pressure_out);
+
+                    $sheet->setCellValue('AA' . $currentRow, $item->suhu_dryer_tr15);
+                    $sheet->setCellValue('AB' . $currentRow, $item->suhu_dryer_fx250);
+                    $sheet->setCellValue('AC' . $currentRow, $item->suhu_dryer_ir);
+                }
+
+                $dayCounter++;
+            }
+
+            // TTD Approval Section
+            $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+            $mainRecord = $weekRecords->first()->compressor;
+
+            if ($mainRecord) {
+                $hasSticker = file_exists($signaturePath);
+
+                // Operator (A54 = Username, A55 = Submitted Time)
+                if (in_array($mainRecord->status, ['draft', 'submitted', 'approved_foreman', 'approved_supervisor'])) {
+                    if ($hasSticker) {
+                        $tempPathOp = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'sig_op_' . $weekNum . '_' . uniqid() . '.png';
+                        copy($signaturePath, $tempPathOp);
+                        $tempFiles[] = $tempPathOp;
+
+                        $drawingOperator = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                        $drawingOperator->setName('Submitted Operator ' . $weekNum);
+                        $drawingOperator->setPath($tempPathOp);
+                        $drawingOperator->setHeight(60);
+                        $drawingOperator->setCoordinates('E51');
+                        $drawingOperator->setWorksheet($sheet);
+                    }
+                    $sheet->setCellValue('A54', $mainRecord->operator ? $mainRecord->operator->username : '-');
+                    $sheet->setCellValue('A55', $mainRecord->submitted_at ? Carbon::parse($mainRecord->submitted_at)->format('d/m/Y H:i') : '-');
+                }
+
+                // Foreman (J54 = Username, J55 = Approved Time)
+                if (in_array($mainRecord->status, ['approved_foreman', 'approved_supervisor'])) {
+                    if ($hasSticker) {
+                        $tempPathFm = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'sig_fm_' . $weekNum . '_' . uniqid() . '.png';
+                        copy($signaturePath, $tempPathFm);
+                        $tempFiles[] = $tempPathFm;
+
+                        $drawingForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                        $drawingForeman->setName('Approved Foreman ' . $weekNum);
+                        $drawingForeman->setPath($tempPathFm);
+                        $drawingForeman->setHeight(60);
+                        $drawingForeman->setCoordinates('N51');
+                        $drawingForeman->setWorksheet($sheet);
+                    }
+                    $sheet->setCellValue('J54', $mainRecord->foreman ? $mainRecord->foreman->username : '-');
+                    $sheet->setCellValue('J55', $mainRecord->approved_foreman_at ? Carbon::parse($mainRecord->approved_foreman_at)->format('d/m/Y H:i') : '-');
+                }
+
+                // Supervisor (T54 = Username, T55 = Approved Time)
+                if ($mainRecord->status == 'approved_supervisor') {
+                    if ($hasSticker) {
+                        $tempPathSpv = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'sig_spv_' . $weekNum . '_' . uniqid() . '.png';
+                        copy($signaturePath, $tempPathSpv);
+                        $tempFiles[] = $tempPathSpv;
+
+                        $drawingSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                        $drawingSupervisor->setName('Approved Supervisor ' . $weekNum);
+                        $drawingSupervisor->setPath($tempPathSpv);
+                        $drawingSupervisor->setHeight(60);
+                        $drawingSupervisor->setCoordinates('X51');
+                        $drawingSupervisor->setWorksheet($sheet);
+                    }
+                    $sheet->setCellValue('T54', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
+                    $sheet->setCellValue('T55', $mainRecord->approved_supervisor_at ? Carbon::parse($mainRecord->approved_supervisor_at)->format('d/m/Y H:i') : '-');
+                }
+            }
         }
 
-        // TTD Approval Section
-        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
-        $mainRecord = $data->first()->compressor;
-
-        if ($mainRecord) {
-            $hasSticker = file_exists($signaturePath);
-
-            // Operator (A54 = Username, A55 = Submitted Time)
-            if ($mainRecord->status != 'draft') {
-                if ($hasSticker) {
-                    $drawingOperator = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                    $drawingOperator->setName('Submitted Operator');
-                    $drawingOperator->setPath($signaturePath);
-                    $drawingOperator->setHeight(60);
-                    $drawingOperator->setCoordinates('A51');
-                    $drawingOperator->setWorksheet($sheet);
-                }
-                $sheet->setCellValue('A54', $mainRecord->operator ? $mainRecord->operator->username : '-');
-                $sheet->setCellValue('A55', $mainRecord->submitted_at ? Carbon::parse($mainRecord->submitted_at)->format('d/m/Y H:i') : '-');
-            }
-
-            // Foreman (J54 = Username, J55 = Approved Time)
-            if (in_array($mainRecord->status, ['approved_foreman', 'approved_supervisor'])) {
-                if ($hasSticker) {
-                    $drawingForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                    $drawingForeman->setName('Approved Foreman');
-                    $drawingForeman->setPath($signaturePath);
-                    $drawingForeman->setHeight(60);
-                    $drawingForeman->setCoordinates('J51');
-                    $drawingForeman->setWorksheet($sheet);
-                }
-                $sheet->setCellValue('J54', $mainRecord->foreman ? $mainRecord->foreman->username : '-');
-                $sheet->setCellValue('J55', $mainRecord->approved_foreman_at ? Carbon::parse($mainRecord->approved_foreman_at)->format('d/m/Y H:i') : '-');
-            }
-
-            // Supervisor (T54 = Username, T55 = Approved Time)
-            if ($mainRecord->status == 'approved_supervisor') {
-                if ($hasSticker) {
-                    $drawingSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                    $drawingSupervisor->setName('Approved Supervisor');
-                    $drawingSupervisor->setPath($signaturePath);
-                    $drawingSupervisor->setHeight(60);
-                    $drawingSupervisor->setCoordinates('T51');
-                    $drawingSupervisor->setWorksheet($sheet);
-                }
-                $sheet->setCellValue('T54', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
-                $sheet->setCellValue('T55', $mainRecord->approved_supervisor_at ? Carbon::parse($mainRecord->approved_supervisor_at)->format('d/m/Y H:i') : '-');
-            }
-        }
-
+        $spreadsheet->setActiveSheetIndex(0);
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $filename = 'Compressor_Report_' . now()->format('YmdHis') . '.xlsx';
 
@@ -581,6 +700,13 @@ class CompressorController extends Controller
         header('Cache-Control: max-age=0');
 
         $writer->save('php://output');
+
+        foreach ($tempFiles as $file) {
+            if (file_exists($file)) {
+                @unlink($file);
+            }
+        }
+
         exit;
     }
 
