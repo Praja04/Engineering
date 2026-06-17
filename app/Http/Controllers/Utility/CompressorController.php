@@ -496,7 +496,7 @@ class CompressorController extends Controller
 
     public function show($id)
     {
-        $data = CompressorDetails::find($id);
+        $data = CompressorDetails::with('createdBy')->find($id);
         return response()->json(['status' => 200, 'data' => $data]);
     }
 
