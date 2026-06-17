@@ -381,13 +381,6 @@
                     <input type="hidden" name="tahun" id="sw_tahun">
 
                     <div class="mb-3">
-                        <label class="form-label">Pilih Foreman</label>
-                        <select name="foreman_id" id="select_foreman" class="form-select" required>
-                            <option value="">-- Pilih Foreman --</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
                         <label class="form-label">Pilih Supervisor</label>
                         <select name="supervisor_id" id="select_supervisor" class="form-select" required>
                             <option value="">-- Pilih Supervisor --</option>
@@ -395,7 +388,7 @@
                     </div>
 
                     <p class="text-muted small">
-                        * Dengan menekan kirim, data pada minggu ini akan dikunci dan dikirim ke Foreman & Supervisor.
+                        * Dengan menekan kirim, data pada minggu ini akan dikunci dan dikirim ke Supervisor.
                     </p>
                 </form>
             </div>
@@ -627,14 +620,6 @@
 
         // Load approvers
         $.get('/api/utility/users/approvers', function(data) {
-            // Isi dropdown Foreman — dari data.staff (jabatan bukan operator, dept engineering)
-            const foremanList = data.staff ?? [];
-            let foremanOpts = '<option value="">— Pilih Foreman —</option>';
-            foremanList.forEach(function(u) {
-                foremanOpts += `<option value="${u.id}">${u.username}</option>`;
-            });
-            $('#select_foreman').html(foremanOpts);
-
             // Isi dropdown Supervisor — dari data.user (jabatan supervisor)
             const supervisorList = data.user ?? [];
             let supervisorOpts = '<option value="">— Pilih Supervisor —</option>';
@@ -643,7 +628,6 @@
             });
             $('#select_supervisor').html(supervisorOpts);
         }).fail(function() {
-            $('#select_foreman').html('<option value="">Gagal memuat data</option>');
             $('#select_supervisor').html('<option value="">Gagal memuat data</option>');
             toastr.error('Gagal memuat daftar approver');
         });
@@ -654,8 +638,8 @@
     function processSubmitWeekly() {
         let data = $('#formSubmitWeekly').serialize();
 
-        if (!$('#select_foreman').val() || !$('#select_supervisor').val()) {
-            Swal.fire('Peringatan', 'Harap pilih Foreman dan Supervisor', 'warning');
+        if (!$('#select_supervisor').val()) {
+            Swal.fire('Peringatan', 'Harap pilih Supervisor', 'warning');
             return;
         }
 

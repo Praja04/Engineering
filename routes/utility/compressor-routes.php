@@ -24,4 +24,6 @@ Route::prefix('utility/compressor')->as('compressor.')->group(function () {
     Route::post('/approve-foreman/{id}', [CompressorController::class, 'approveForeman'])->name('approve-foreman');
     Route::post('/approve-supervisor/{id}', [CompressorController::class, 'approveSupervisor'])->name('approve-supervisor');
     Route::post('/reject/{id}', [CompressorController::class, 'reject'])->name('reject');
+    Route::post('/bulk-approve', [CompressorController::class, 'bulkApprove'])->name('bulk-approve');
+    Route::post('/bulk-reject', [CompressorController::class, 'bulkReject'])->name('bulk-reject');
 });
