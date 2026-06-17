@@ -378,7 +378,28 @@
                     });
                 };
 
-                let html = '<div class="row g-3">';
+                let createdAtFormatted = d.created_at ? moment(d.created_at).format('DD/MM/YYYY HH:mm') : '-';
+                let html = `
+                    <div class="card shadow-sm border-0 mb-3 bg-light bg-opacity-50">
+                        <div class="card-body p-3">
+                            <div class="row g-3">
+                                <div class="col-sm-4 col-12">
+                                    <small class="text-muted d-block mb-1">Tanggal & Jam</small>
+                                    <span class="fw-bold">${moment(d.tanggal).format('DD MMMM YYYY')} / ${d.jam.substring(0, 5)}</span>
+                                </div>
+                                <div class="col-sm-4 col-12">
+                                    <small class="text-muted d-block mb-1">Dibuat Oleh</small>
+                                    <span class="fw-bold"><i class="ri-user-3-line me-1 text-primary"></i> ${d.creator_name || '-'}</span>
+                                </div>
+                                <div class="col-sm-4 col-12">
+                                    <small class="text-muted d-block mb-1">Waktu Input</small>
+                                    <span class="fw-bold"><i class="ri-time-line me-1 text-secondary"></i> ${createdAtFormatted}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                `;
 
                 [1, 2, 3, 4].forEach(i => {
                     html += `
