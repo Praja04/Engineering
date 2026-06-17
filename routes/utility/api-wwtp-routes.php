@@ -14,6 +14,7 @@ Route::prefix('wwtp')->group(function () {
     Route::get('/all/export', [WWTPController::class, 'export']);
     Route::get('/influent-harian', [WWTPControllerProses::class, 'indexHarian']);
     Route::get('/influent-harian/previous-data', [WWTPControllerProses::class, 'getPreviousData']);
+    Route::get('/influent-harian/filled-shifts', [WWTPControllerProses::class, 'getFilledShifts']);
     Route::get('/influent-harian/{id}', [WWTPControllerProses::class, 'showHarian']);
     Route::put('/influent-harian/{id}', [WWTPControllerProses::class, 'updateHarian']);
     Route::delete('/influent-harian/{id}', [WWTPControllerProses::class, 'destroyHarian']);
@@ -52,6 +53,7 @@ Route::prefix('wwtp-performance')->group(function () {
     Route::get('/photo-gallery', [WWTPControllerPerformance::class, 'getPhotoGallery'])
         ->name('wwtp.performance.photo-gallery');
     Route::get('/ph-harian', [WWTPControllerPerformance::class, 'indexPHHarian']);
+    Route::get('/ph-harian/filled-shifts', [WWTPControllerPerformance::class, 'getFilledShifts']);
     Route::get('/ph-harian/{id}', [WWTPControllerPerformance::class, 'showPHHarian']);
     Route::put('/ph-harian/{id}', [WWTPControllerPerformance::class, 'updatePHHarian']);
     Route::delete('/ph-harian/{id}', [WWTPControllerPerformance::class, 'destroyPHHarian']);
@@ -147,6 +149,7 @@ Route::prefix('wwtp-sludge')->group(function () {
         Route::get('/{id}', [WWTPControllerSludge::class, 'show_pengangkutan']);
     });
 
+    Route::get('/filled-shifts', [WWTPControllerSludge::class, 'getFilledShifts']);
     Route::post('/', [WWTPControllerSludge::class, 'store']);
     Route::delete('/{id}', [WWTPControllerSludge::class, 'destroy']);
     Route::post('/{id}', [WWTPControllerSludge::class, 'update']);

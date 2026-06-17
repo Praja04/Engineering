@@ -209,16 +209,53 @@ class WWTPControllerPerformance extends Controller
             $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$request->bulan]);
         }
 
-        return response()->json(
-            $query->paginate($request->input('per_page', 10), ['*'], 'page', $request->input('page', 1))
-        );
+        $data = $query->paginate($request->input('per_page', 10), ['*'], 'page', $request->input('page', 1));
+
+        $dates = $data->pluck('tanggal')->unique()->toArray();
+        $approvals = WwtpDailyApproval::whereIn('tanggal', $dates)->get()->keyBy(function($item) {
+            return \Carbon\Carbon::parse($item->tanggal)->toDateString();
+        });
+
+        $data->getCollection()->transform(function ($item) use ($approvals) {
+            $dateKey = \Carbon\Carbon::parse($item->tanggal)->toDateString();
+            $approval = $approvals->get($dateKey);
+            $item->approval_status = $approval ? $approval->status : null;
+            return $item;
+        });
+
+        return response()->json($data);
     }
 
     /**
      * Simpan data PH harian
      */
+    private function checkDailyApprovalPermission($tanggal, $action)
+    {
+        $user = Auth::user();
+        $jabatan = $user ? $user->jabatan : null;
+
+        $approval = WwtpDailyApproval::where('tanggal', $tanggal)->first();
+        if ($approval) {
+            if ($approval->status === 'approved_supervisor') {
+                if (!in_array($jabatan, ['supervisor', 'admin', 'dept_head'])) {
+                    return 'Laporan harian untuk tanggal ini sudah disetujui Supervisor. Hanya Supervisor yang dapat ' . $action . ' data.';
+                }
+            } elseif ($approval->status === 'approved_foreman') {
+                if (!in_array($jabatan, ['foreman', 'supervisor', 'admin', 'dept_head'])) {
+                    return 'Laporan harian untuk tanggal ini sudah disetujui Foreman. Operator tidak dapat ' . $action . ' data.';
+                }
+            }
+        }
+        return null;
+    }
+
     public function storePHHarian(Request $request)
     {
+        $err = $this->checkDailyApprovalPermission($request->tanggal, 'menambah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
+        }
+
         $approval = WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
 
         if (!$approval) {
@@ -340,6 +377,8 @@ class WWTPControllerPerformance extends Controller
     public function showPHHarian($id)
     {
         $data = WwtpPerformancePHharian::findOrFail($id);
+        $approval = WwtpDailyApproval::where('tanggal', $data->tanggal)->first();
+        $data->approval_status = $approval ? $approval->status : null;
         return response()->json($data);
     }
 
@@ -365,19 +404,14 @@ class WWTPControllerPerformance extends Controller
             'outlet'         => 'nullable|numeric',
         ]);
 
-        // Check daily approval for both new and old date
-        $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
-        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan harian untuk tanggal ini sudah disetujui, tidak dapat mengubah data.'
-            ], 422);
+        $err = $this->checkDailyApprovalPermission($request->tanggal, 'mengubah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
         }
 
-        $oldApproval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $phHarian->tanggal)->first();
-        if ($oldApproval && in_array($oldApproval->status, ['approved_foreman', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan harian untuk tanggal awal sudah disetujui, tidak dapat mengubah data.'
-            ], 422);
+        $err = $this->checkDailyApprovalPermission($phHarian->tanggal, 'mengubah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
         }
 
         // Cek apakah shift pada tanggal tersebut sudah ada (kecuali data yang sedang diupdate)
@@ -432,16 +466,31 @@ class WWTPControllerPerformance extends Controller
     public function destroyPHHarian($id)
     {
         $phHarian = WwtpPerformancePHharian::findOrFail($id);
-        $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $phHarian->tanggal)->first();
-        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
-            return response()->json([
-                'message' => 'Laporan harian untuk tanggal ini sudah disetujui, tidak dapat dihapus.'
-            ], 422);
+        
+        $err = $this->checkDailyApprovalPermission($phHarian->tanggal, 'menghapus');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
         }
 
         $phHarian->delete();
 
         return response()->json(['message' => 'Data PH harian berhasil dihapus.']);
+    }
+
+    public function getFilledShifts(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+        ]);
+
+        $shifts = WwtpPerformancePHharian::where('tanggal', $request->tanggal)
+            ->pluck('shift')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'filled_shifts' => $shifts
+        ]);
     }
 
 
@@ -472,9 +521,20 @@ class WWTPControllerPerformance extends Controller
             )
         );
     }
-    public function getJenisSampel()
+    public function getJenisSampel(Request $request)
     {
+        $tanggal = $request->query('tanggal');
         $data = WwtpJenisSample::orderBy('nama_sampel', 'asc')->get();
+
+        if ($tanggal) {
+            $filledSampleIds = WwtpPerformanceSample::where('tanggal', $tanggal)
+                ->pluck('id_sampel')
+                ->toArray();
+
+            foreach ($data as $item) {
+                $item->is_filled = in_array($item->id, $filledSampleIds);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -497,6 +557,18 @@ class WWTPControllerPerformance extends Controller
         ]);
 
         $jenisSampel = WwtpJenisSample::findOrFail($request->id_sampel);
+
+        // Cek apakah jenis sampel sudah diisi pada tanggal tersebut
+        $existing = WwtpPerformanceSample::where('tanggal', $validated['tanggal'])
+            ->where('id_sampel', $validated['id_sampel'])
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Jenis sampel ini sudah diinput untuk tanggal tersebut.'
+            ], 409);
+        }
 
         $sample = WwtpPerformanceSample::create([
             'tanggal'      => $validated['tanggal'],
@@ -539,6 +611,19 @@ class WWTPControllerPerformance extends Controller
         ]);
 
         $jenisSampel = WwtpJenisSample::findOrFail($request->id_sampel);
+
+        // Cek apakah jenis sampel sudah diisi pada tanggal tersebut (kecuali record ini sendiri)
+        $existing = WwtpPerformanceSample::where('tanggal', $validated['tanggal'])
+            ->where('id_sampel', $validated['id_sampel'])
+            ->where('id', '!=', $wwtpPerformanceSample->id)
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Jenis sampel ini sudah diinput untuk tanggal tersebut.'
+            ], 409);
+        }
 
         $wwtpPerformanceSample->update([
             'tanggal'      => $validated['tanggal'],

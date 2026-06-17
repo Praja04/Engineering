@@ -432,9 +432,9 @@
                         <tr>
                             <td>${moment(a.tanggal).format('DD/MM/YYYY')}</td>
                             <td><span class="badge bg-primary-subtle text-primary">${a.jenis_pemakaian}</span></td>
-                            <td>${a.pemakaian_awal}</td>
-                            <td>${a.pemakaian_akhir}</td>
-                            <td><span class="badge bg-success">${total.toFixed(2)}</span></td>
+                            <td>${a.pemakaian_awal !== null ? parseFloat(a.pemakaian_awal) : '-'}</td>
+                            <td>${a.pemakaian_akhir !== null ? parseFloat(a.pemakaian_akhir) : '-'}</td>
+                            <td><span class="badge bg-success">${parseFloat(total.toFixed(2))}</span></td>
                             <td>${a.notes || '-'}</td>
                             <td>${a.created_by || '-'}</td>
                         </tr>
@@ -490,39 +490,92 @@
         }
 
         window.approveRecord = function(id, currentStatus) {
-            let stepText = currentStatus === 'submitted' ?
-                'Laporan akan disetujui sebagai Foreman dan diteruskan ke Supervisor.' :
-                'Laporan akan selesai disetujui sepenuhnya oleh Supervisor.';
+            if (currentStatus === 'submitted' && userJabatan === 'foreman') {
+                Swal.fire({
+                    title: 'Memuat...',
+                    text: 'Mengambil daftar Supervisor',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
-            Swal.fire({
-                title: 'Setujui Laporan Bulanan?',
-                text: stepText,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Setujui',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
+                $.get('/api/utility/users/approvers', function(data) {
+                    const supervisorList = data.supervisor ?? [];
+                    if (supervisorList.length === 0) {
+                        Swal.fire('Error', 'Daftar Supervisor tidak ditemukan.', 'error');
+                        return;
+                    }
+
+                    let selectHtml = `<select id="swal_supervisor_id" class="form-select mb-3" required>
+                        <option value="">-- Pilih Supervisor --</option>`;
+                    supervisorList.forEach(u => {
+                        selectHtml += `<option value="${u.id}">${u.username}</option>`;
+                    });
+                    selectHtml += `</select>`;
+
                     Swal.fire({
-                        title: 'Memproses...',
-                        didOpen: () => {
-                            Swal.showLoading()
-                        },
-                        allowOutsideClick: false
+                        title: 'Setujui Laporan Bulanan (Foreman)',
+                        html: `<p class="text-muted">Pilih Supervisor untuk meneruskan laporan ini:</p>${selectHtml}`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Approve & Kirim',
+                        cancelButtonText: 'Batal',
+                        preConfirm: () => {
+                            const supervisorId = $('#swal_supervisor_id').val();
+                            if (!supervisorId) {
+                                Swal.showValidationMessage('Anda harus memilih Supervisor!');
+                            }
+                            return { supervisor_id: supervisorId };
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            submitApproval(id, result.value.supervisor_id);
+                        }
                     });
+                }).fail(function() {
+                    Swal.fire('Error', 'Gagal memuat daftar Supervisor', 'error');
+                });
+            } else {
+                Swal.fire({
+                    title: 'Setujui Laporan Bulanan?',
+                    text: 'Laporan akan selesai disetujui sepenuhnya oleh Supervisor.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Setujui',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        submitApproval(id);
+                    }
+                });
+            }
+        }
 
-                    $.post(`{{ url('utility/approval') }}/${id}/approve`, {
-                        _token: "{{ csrf_token() }}"
-                    }, function(res) {
-                        Swal.fire('Berhasil!', res.message, 'success');
-                        loadApprovals('pending');
-                        loadApprovals('history');
-                    }).fail(function(xhr) {
-                        Swal.fire('Gagal', xhr.responseJSON?.message || 'Terjadi kesalahan.', 'error');
-                    });
-                }
+        function submitApproval(id, supervisorId = null) {
+            Swal.fire({
+                title: 'Memproses...',
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+                allowOutsideClick: false
+            });
+
+            let postData = {
+                _token: "{{ csrf_token() }}"
+            };
+            if (supervisorId) {
+                postData.supervisor_id = supervisorId;
+            }
+
+            $.post(`{{ url('utility/approval') }}/${id}/approve`, postData, function(res) {
+                Swal.fire('Berhasil!', res.message, 'success');
+                loadApprovals('pending');
+                loadApprovals('history');
+            }).fail(function(xhr) {
+                Swal.fire('Gagal', xhr.responseJSON?.message || 'Terjadi kesalahan.', 'error');
             });
         }
 

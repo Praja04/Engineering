@@ -492,17 +492,18 @@
 
             function renderTable(headers, rows, rowHeader) {
                 return `
-            <div class="table-responsive" style="overflow-x: auto;">
-                <table class="table table-bordered table-striped table-hover" style="min-width: 800px;">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="bg-primary text-white">${rowHeader}</th>
-                            ${headers.map(h => `<th class="bg-primary text-white">${h}</th>`).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>${rows.join('')}</tbody>
-                </table>
-            </div>`;
+                    <div class="table-responsive" style="overflow-x: auto;">
+                        <table class="table table-bordered table-striped table-hover" style="min-width: 800px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="bg-primary text-white">${rowHeader}</th>
+                                    ${headers.map(h => `<th class="bg-primary text-white">${h}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>${rows.join('')}</tbody>
+                        </table>
+                    </div>
+                `;
             }
 
             function buildListrikTable(entry) {
@@ -513,24 +514,24 @@
                 <th>Operator</th>
                 ${headers.map(p => {
                     const operatorName = entry.operator?.[p] ?? '-';
-                    const editButton = (userJabatan !== 'operator' && !isMonthLocked) ? `
-                                    <button class="btn btn-sm btn-warning btn-edit-panel mt-1" 
-                                            data-panel="${p}" 
-                                            data-entry='${JSON.stringify(entry)}'>
-                                        <i class="ri-edit-line"></i> Edit
-                                    </button>` : '';
+                    const editButton = (userJabatan === 'super admin' && !isMonthLocked) ? `
+                                                <button class="btn btn-sm btn-warning btn-edit-panel mt-1" 
+                                                        data-panel="${p}" 
+                                                        data-entry='${JSON.stringify(entry)}'>
+                                                    <i class="ri-edit-line"></i> Edit
+                                                </button>` : '';
                     return `<td>${operatorName}${editButton}</td>`;
-                }).join('')}
-            </tr>`;
+                                }).join('')}
+                            </tr>`;
 
                 const usageRow = `<tr class="table-info">
                 <th>Usage (MWh)</th>
-                ${headers.map(p => {
-                    const usage = entry.usage?.[p];
-                    const displayValue = usage !== null && usage !== undefined ? parseFloat(usage).toFixed(3) : '-';
-                    return `<td><strong>${displayValue}</strong></td>`;
-                }).join('')}
-            </tr>`;
+                    ${headers.map(p => {
+                        const usage = entry.usage?.[p];
+                        const displayValue = usage !== null && usage !== undefined ? parseFloat(usage).toFixed(3) : '-';
+                        return `<td><strong>${displayValue}</strong></td>`;
+                    }).join('')}
+                </tr>`;
 
                 const paramRows = parameters.map(param => {
                     const cells = headers.map(p => {
@@ -547,17 +548,26 @@
                 const headers = entry.data.map(d => d.jenis_pemakaian);
                 const rows = [{
                         label: 'Pemakaian Awal',
-                        cells: entry.data.map(d => `<strong>${d.pemakaian_awal}</strong> m³`)
+                        cells: entry.data.map(d => {
+                            const val = (d.pemakaian_awal !== null && d.pemakaian_awal !== undefined) ? parseFloat(d.pemakaian_awal) : '-';
+                            return `<strong>${val}</strong> m³`;
+                        })
                     },
                     {
                         label: 'Pemakaian Akhir',
-                        cells: entry.data.map(d => `<strong>${d.pemakaian_akhir}</strong> m³`)
+                        cells: entry.data.map(d => {
+                            const val = (d.pemakaian_akhir !== null && d.pemakaian_akhir !== undefined) ? parseFloat(d.pemakaian_akhir) : '-';
+                            return `<strong>${val}</strong> m³`;
+                        })
                     },
                     {
                         label: 'Total Pemakaian',
                         cells: entry.data.map(d => {
+                            if (d.pemakaian_akhir === null || d.pemakaian_akhir === undefined || d.pemakaian_awal === null || d.pemakaian_awal === undefined) {
+                                return '-';
+                            }
                             const total = parseFloat(d.pemakaian_akhir) - parseFloat(d.pemakaian_awal);
-                            return `<span class="badge bg-success">${total.toFixed(2)} m³</span>`;
+                            return `<span class="badge bg-success">${parseFloat(total.toFixed(2))} m³</span>`;
                         })
                     },
                     {
@@ -674,6 +684,9 @@
                 const data = $(this).data('entry');
                 const tanggal = $(this).data('tanggal');
 
+                const pemakaianAwalVal = (data.pemakaian_awal !== null && data.pemakaian_awal !== undefined) ? parseFloat(data.pemakaian_awal) : '';
+                const pemakaianAkhirVal = (data.pemakaian_akhir !== null && data.pemakaian_akhir !== undefined) ? parseFloat(data.pemakaian_akhir) : '';
+
                 const formHtml = `
                 <input type="hidden" name="id" value="${data.id ?? ''}">
                 <div class="mb-3">
@@ -686,11 +699,11 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Pemakaian Awal (m³)</label>
-                    <input type="number" step="0.01" class="form-control" name="pemakaian_awal" value="${data.pemakaian_awal}">
+                    <input type="number" step="0.01" class="form-control" name="pemakaian_awal" value="${pemakaianAwalVal}">
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Pemakaian Akhir (m³)</label>
-                    <input type="number" step="0.01" class="form-control" name="pemakaian_akhir" value="${data.pemakaian_akhir}">
+                    <input type="number" step="0.01" class="form-control" name="pemakaian_akhir" value="${pemakaianAkhirVal}">
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Catatan</label>

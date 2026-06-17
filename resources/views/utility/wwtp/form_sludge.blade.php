@@ -433,8 +433,59 @@
                 });
             }
 
+            function checkFilledShifts() {
+                const tanggal = $('#tanggal').val();
+                if (!tanggal) {
+                    $('#shift option').prop('disabled', false);
+                    return;
+                }
+
+                $.ajax({
+                    url: "/api/wwtp-sludge/filled-shifts",
+                    method: 'GET',
+                    data: {
+                        tanggal: tanggal
+                    },
+                    success: function(response) {
+                        if (response.success && response.filled_shifts) {
+                            const currentSelected = $('#shift').val();
+
+                            // Reset semua option
+                            $('#shift option').each(function() {
+                                const originalText = $(this).data('original-text') || $(this)
+                                    .text();
+
+                                $(this)
+                                    .data('original-text', originalText)
+                                    .text(originalText)
+                                    .prop('disabled', false);
+                            });
+
+                            // Disable options present in response.filled_shifts
+                            response.filled_shifts.forEach(function(shift) {
+                                const option = $(`#shift option[value="${shift}"]`);
+
+                                option
+                                    .prop('disabled', true)
+                                    .text(`${option.data('original-text')} (Sudah Terisi)`);
+                            });
+
+                            // If currently selected shift is now disabled, reset it
+                            if (response.filled_shifts.includes(currentSelected)) {
+                                $('#shift').val('');
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Gagal mengambil data shift terisi:', xhr);
+                    }
+                });
+            }
+
             $('#tanggal').on('change', checkDailyApproval);
+            $('#tanggal').on('change', checkFilledShifts);
             checkDailyApproval();
+            checkFilledShifts();
 
             // ==============================
             // MODE SWITCHER
@@ -488,6 +539,7 @@
                         $('#sludgeForm')[0].reset();
                         $('#tanggal').val(today);
                         checkDailyApproval();
+                        checkFilledShifts();
                     },
                     error: function(xhr) {
                         const error = xhr.responseJSON;
@@ -516,6 +568,7 @@
             $('#sludgeForm').on('reset', function() {
                 setTimeout(function() {
                     $('#tanggal').val(today);
+                    checkFilledShifts();
                 }, 10);
             });
 

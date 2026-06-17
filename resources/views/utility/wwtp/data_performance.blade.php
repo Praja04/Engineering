@@ -699,6 +699,16 @@
             const userJabatan = "{{ Auth::user()->jabatan }}";
             const canEditDelete = userJabatan !== 'operator';
 
+            function canEditDeleteDaily(approvalStatus) {
+                if (approvalStatus === 'approved_supervisor') {
+                    return ['supervisor', 'admin', 'dept_head'].includes(userJabatan);
+                }
+                if (approvalStatus === 'approved_foreman') {
+                    return ['foreman', 'supervisor', 'admin', 'dept_head'].includes(userJabatan);
+                }
+                return true;
+            }
+
             /* ─────────────────────────────────────────────
                EXPORT EXCEL
             ───────────────────────────────────────────── */
@@ -1045,7 +1055,7 @@
                 data.forEach(function(item) {
                     let btns =
                         `<button class="btn btn-sm btn-outline-primary me-1" onclick="showPHDetail(${item.id})" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
-                    if (canEditDelete) {
+                    if (canEditDeleteDaily(item.approval_status)) {
                         btns +=
                             `
                     <button class="btn btn-sm btn-outline-success me-1" onclick="showPHEdit(${item.id})" title="Edit"><i class="mdi mdi-pencil"></i></button>
@@ -1143,7 +1153,11 @@
                     </div>
                     <h6 class="fw-bold mb-3 text-info">Nilai PH per Lokasi</h6>
                     <div class="row g-3">${phGrid}</div>`);
-                        canEditDelete ? $('#btnDeletePH').show() : $('#btnDeletePH').hide();
+                        if (canEditDeleteDaily(r.approval_status)) {
+                            $('#btnDeletePH').show();
+                        } else {
+                            $('#btnDeletePH').hide();
+                        }
                         new bootstrap.Modal(document.getElementById('detailPHModal')).show();
                     },
                     error: function() {

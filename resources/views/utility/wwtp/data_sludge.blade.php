@@ -122,9 +122,9 @@
                                     <label class="form-label small text-muted fw-semibold">Filter Shift</label>
                                     <select class="form-select" id="filterShift">
                                         <option value="">Semua Shift</option>
-                                        <option value="1">Shift 1 (06:00 - 14:00)</option>
-                                        <option value="2">Shift 2 (14:00 - 22:00)</option>
-                                        <option value="3">Shift 3 (22:00 - 06:00)</option>
+                                        <option value="shift1">Shift 1 (06:00 - 14:00)</option>
+                                        <option value="shift2">Shift 2 (14:00 - 22:00)</option>
+                                        <option value="shift3">Shift 3 (22:00 - 06:00)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -277,9 +277,9 @@
                                     <label class="form-label fw-semibold">Shift <span class="text-danger">*</span></label>
                                     <select class="form-select" id="edit_shift" required>
                                         <option value="">-- Pilih Shift --</option>
-                                        <option value="1">Shift 1 (06:00 - 14:00)</option>
-                                        <option value="2">Shift 2 (14:00 - 22:00)</option>
-                                        <option value="3">Shift 3 (22:00 - 06:00)</option>
+                                        <option value="shift1">Shift 1 (06:00 - 14:00)</option>
+                                        <option value="shift2">Shift 2 (14:00 - 22:00)</option>
+                                        <option value="shift3">Shift 3 (22:00 - 06:00)</option>
                                     </select>
                                 </div>
                             </div>
@@ -474,6 +474,16 @@
         const userJabatan = "{{ Auth::user()->jabatan }}";
         const canEditDelete = userJabatan !== 'operator';
 
+        function canEditDeleteDaily(approvalStatus) {
+            if (approvalStatus === 'approved_supervisor') {
+                return ['supervisor', 'admin', 'dept_head'].includes(userJabatan);
+            }
+            if (approvalStatus === 'approved_foreman') {
+                return ['foreman', 'supervisor', 'admin', 'dept_head'].includes(userJabatan);
+            }
+            return true;
+        }
+
         /* ─────────────────────────────────────────────
            STATE
         ───────────────────────────────────────────── */
@@ -588,7 +598,7 @@
                 let btns = `<button class="btn btn-sm btn-outline-primary me-1"
                                 onclick="showSludgeDetail(${item.id})" title="Lihat Detail">
                                 <i class="mdi mdi-eye"></i></button>`;
-                if (canEditDelete) {
+                if (canEditDeleteDaily(item.approval_status)) {
                     btns += `
                     <button class="btn btn-sm btn-outline-success me-1"
                             onclick="showSludgeEdit(${item.id})" title="Edit">
@@ -701,7 +711,11 @@
                             </div>
                         </div>
                     </div>`);
-                    canEditDelete ? $('#btnDelete').show() : $('#btnDelete').hide();
+                    if (canEditDeleteDaily(record.approval_status)) {
+                        $('#btnDelete').show();
+                    } else {
+                        $('#btnDelete').hide();
+                    }
                     new bootstrap.Modal(document.getElementById('detailSludgeModal')).show();
                 },
                 error: function() {
@@ -1097,6 +1111,9 @@
         ───────────────────────────────────────────── */
         function getShiftBadge(shift) {
             const map = {
+                'shift1': '<span class="badge bg-primary badge-shift">Shift 1</span>',
+                'shift2': '<span class="badge bg-success badge-shift">Shift 2</span>',
+                'shift3': '<span class="badge bg-info badge-shift">Shift 3</span>',
                 '1': '<span class="badge bg-primary badge-shift">Shift 1</span>',
                 '2': '<span class="badge bg-success badge-shift">Shift 2</span>',
                 '3': '<span class="badge bg-info badge-shift">Shift 3</span>',

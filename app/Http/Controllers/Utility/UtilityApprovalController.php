@@ -102,7 +102,7 @@ class UtilityApprovalController extends Controller
             'bulan' => 'required|string', // Format: YYYY-MM
             'tipe' => 'required|string|in:listrik,air,chemical',
             'foreman_id' => 'required|exists:users,id',
-            'supervisor_id' => 'required|exists:users,id',
+            'supervisor_id' => 'nullable|exists:users,id',
         ]);
 
         $main = UtilityMonthlyApproval::where('bulan', $validated['bulan'])
@@ -115,7 +115,7 @@ class UtilityApprovalController extends Controller
 
         $main->update([
             'foreman_id' => $validated['foreman_id'],
-            'supervisor_id' => $validated['supervisor_id'],
+            'supervisor_id' => $validated['supervisor_id'] ?? null,
             'status' => 'submitted',
             'submitted_at' => now(),
             'operator_id' => Auth::id(),
@@ -234,9 +234,14 @@ class UtilityApprovalController extends Controller
                 return response()->json(['message' => 'Status laporan tidak valid untuk disetujui Foreman.'], 422);
             }
 
+            $validated = $request->validate([
+                'supervisor_id' => 'required|exists:users,id'
+            ]);
+
             $approval->update([
                 'status' => 'approved_foreman',
                 'foreman_approved_at' => now(),
+                'supervisor_id' => $validated['supervisor_id'],
                 'reject_reason' => null
             ]);
 

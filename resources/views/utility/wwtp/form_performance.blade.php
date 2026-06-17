@@ -1052,8 +1052,59 @@
                 });
             }
 
+            function checkFilledShifts() {
+                const tanggal = $('#daily_tanggal').val();
+                if (!tanggal) {
+                    $('#daily_shift option').prop('disabled', false);
+                    return;
+                }
+
+                $.ajax({
+                    url: "/api/wwtp-performance/ph-harian/filled-shifts",
+                    method: 'GET',
+                    data: {
+                        tanggal: tanggal
+                    },
+                    success: function(response) {
+                        if (response.success && response.filled_shifts) {
+                            const currentSelected = $('#daily_shift').val();
+
+                            // Reset semua option
+                            $('#daily_shift option').each(function() {
+                                const originalText = $(this).data('original-text') || $(this)
+                                    .text();
+
+                                $(this)
+                                    .data('original-text', originalText)
+                                    .text(originalText)
+                                    .prop('disabled', false);
+                            });
+
+                            // Disable options present in response.filled_shifts
+                            response.filled_shifts.forEach(function(shift) {
+                                const option = $(`#daily_shift option[value="${shift}"]`);
+
+                                option
+                                    .prop('disabled', true)
+                                    .text(`${option.data('original-text')} (Sudah Terisi)`);
+                            });
+
+                            // If currently selected shift is now disabled, reset it
+                            if (response.filled_shifts.includes(currentSelected)) {
+                                $('#daily_shift').val('');
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Gagal mengambil data shift terisi:', xhr);
+                    }
+                });
+            }
+
             $('#daily_tanggal').on('change', checkDailyApproval);
+            $('#daily_tanggal').on('change', checkFilledShifts);
             checkDailyApproval();
+            checkFilledShifts();
 
             // =========================================
             // Card selector logic
@@ -1154,6 +1205,7 @@
                         $('#dailyPHForm')[0].reset();
                         $('#daily_tanggal').val(today);
                         checkDailyApproval();
+                        checkFilledShifts();
                     },
                     error: function(xhr) {
                         showErrorSwal(xhr);
@@ -1164,61 +1216,108 @@
                 });
             });
 
+            // Reset handler daily PH form
+            $('#dailyPHForm').on('reset', function() {
+                setTimeout(function() {
+                    $('#daily_tanggal').val(today);
+                    checkFilledShifts();
+                }, 10);
+            });
+
             // =========================================
             // LOAD: Jenis Sampel
             // =========================================
-            function loadJenisSampel() {
-                $('#sampleLoadingState').removeClass('d-none');
-                $('#sampleErrorState').addClass('d-none');
-                $('#samplePerformanceForm').addClass('d-none');
+            function loadJenisSampel(quiet = false) {
+                const tanggal = $('#sample_tanggal').val();
+
+                if (!quiet) {
+                    $('#sampleLoadingState').removeClass('d-none');
+                    $('#sampleErrorState').addClass('d-none');
+                    $('#samplePerformanceForm').addClass('d-none');
+                } else {
+                    $('#sample_id_sampel').prop('disabled', true);
+                }
 
                 $.ajax({
                     url: "{{ url('api/wwtp-performance/jenis-sampel') }}",
                     method: 'GET',
+                    data: {
+                        tanggal: tanggal
+                    },
                     success: function(response) {
                         const select = $('#sample_id_sampel');
+                        const currentValue = select.val();
                         select.find('option:not(:first)').remove(); // clear existing options
 
                         if (response.success && response.data.length > 0) {
                             response.data.forEach(function(item) {
+                                const isFilled = !!item.is_filled;
+                                const optionText = item.nama_sampel + (isFilled ?
+                                    ' (Sudah diisi)' : '');
                                 select.append(
                                     $('<option>', {
                                         value: item.id,
-                                        text: item.nama_sampel,
-                                        'data-nama': item.nama_sampel
+                                        text: optionText,
+                                        'data-nama': item.nama_sampel,
+                                        disabled: isFilled
                                     })
                                 );
                             });
-                            $('#sampleLoadingState').addClass('d-none');
-                            $('#samplePerformanceForm').removeClass('d-none');
+
+                            // Restore value if it's still available and not disabled
+                            if (currentValue) {
+                                const newOption = select.find(`option[value="${currentValue}"]`);
+                                if (newOption.length && !newOption.prop('disabled')) {
+                                    select.val(currentValue);
+                                } else {
+                                    select.val('');
+                                    $('#selectedSampleInfo').addClass('d-none');
+                                }
+                            }
+
+                            if (!quiet) {
+                                $('#sampleLoadingState').addClass('d-none');
+                                $('#samplePerformanceForm').removeClass('d-none');
+                            }
                         } else {
-                            // No data
-                            $('#sampleLoadingState').addClass('d-none');
-                            $('#sampleErrorState')
-                                .removeClass('d-none')
-                                .html(
-                                    '<i class="mdi mdi-alert-circle me-2"></i>Belum ada jenis sampel yang tersedia. Tambahkan terlebih dahulu melalui manajemen master data.'
-                                );
+                            if (!quiet) {
+                                $('#sampleLoadingState').addClass('d-none');
+                                $('#sampleErrorState')
+                                    .removeClass('d-none')
+                                    .html(
+                                        '<i class="mdi mdi-alert-circle me-2"></i>Belum ada jenis sampel yang tersedia. Tambahkan terlebih dahulu melalui manajemen master data.'
+                                    );
+                            }
                         }
                     },
                     error: function() {
-                        $('#sampleLoadingState').addClass('d-none');
-                        $('#sampleErrorState').removeClass('d-none').html(
-                            '<i class="mdi mdi-alert-circle me-2"></i>Gagal memuat daftar jenis sampel. ' +
-                            '<a href="javascript:void(0)" id="retrySampleLoad" class="alert-link">Coba lagi</a>'
-                        );
-                        // Re-bind retry karena HTML di-replace
-                        $(document).on('click', '#retrySampleLoad', loadJenisSampel);
+                        if (!quiet) {
+                            $('#sampleLoadingState').addClass('d-none');
+                            $('#sampleErrorState').removeClass('d-none').html(
+                                '<i class="mdi mdi-alert-circle me-2"></i>Gagal memuat daftar jenis sampel. ' +
+                                '<a href="javascript:void(0)" id="retrySampleLoad" class="alert-link">Coba lagi</a>'
+                            );
+                            $(document).on('click', '#retrySampleLoad', function() {
+                                loadJenisSampel(false);
+                            });
+                        }
+                    },
+                    complete: function() {
+                        if (quiet) {
+                            $('#sample_id_sampel').prop('disabled', false);
+                        }
                     }
                 });
             }
 
             // Load saat tab sample diklik
             $('[data-bs-target="#sampleForm"]').on('click', function() {
-                // Hanya load jika belum ada option (belum pernah di-load)
-                if ($('#sample_id_sampel option').length <= 1) {
-                    loadJenisSampel();
-                }
+                loadJenisSampel(false);
+            });
+
+            // Listen to date changes
+            $('#sample_tanggal').on('change', function() {
+                loadJenisSampel(true);
             });
 
             // Tampilkan info jenis sampel yang dipilih
@@ -1237,6 +1336,7 @@
                 setTimeout(function() {
                     $('#sample_tanggal').val(today);
                     $('#selectedSampleInfo').addClass('d-none');
+                    loadJenisSampel(true);
                 }, 10);
             });
 
@@ -1270,6 +1370,7 @@
                         $('#samplePerformanceForm')[0].reset();
                         $('#sample_tanggal').val(today);
                         $('#selectedSampleInfo').addClass('d-none');
+                        loadJenisSampel(true);
                     },
                     error: function(xhr) {
                         showErrorSwal(xhr);

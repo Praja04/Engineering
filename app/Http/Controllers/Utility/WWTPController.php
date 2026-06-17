@@ -417,9 +417,22 @@ class WWTPController extends Controller
         ];
 
         foreach ($influentFields as $field => $row) {
-            $setCell('D' . $row, $s1in?->{$field} ?? '');
-            $setCell('F' . $row, $s2in?->{$field} ?? '');
-            $setCell('H' . $row, $s3in?->{$field} ?? '');
+            $val1 = '';
+            if ($s1in && $s1in->{$field} !== null) {
+                $val1 = max(0, (float)$s1in->{$field} - (float)($s1in->{$field . '_awal'} ?? 0));
+            }
+            $val2 = '';
+            if ($s2in && $s2in->{$field} !== null) {
+                $val2 = max(0, (float)$s2in->{$field} - (float)($s2in->{$field . '_awal'} ?? 0));
+            }
+            $val3 = '';
+            if ($s3in && $s3in->{$field} !== null) {
+                $val3 = max(0, (float)$s3in->{$field} - (float)($s3in->{$field . '_awal'} ?? 0));
+            }
+
+            $setCell('D' . $row, $val1);
+            $setCell('F' . $row, $val2);
+            $setCell('H' . $row, $val3);
         }
 
         // ── Sludge per Shift ──────────────────────────────────────────────────

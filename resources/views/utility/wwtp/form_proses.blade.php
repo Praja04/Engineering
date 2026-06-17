@@ -267,9 +267,8 @@
                                                                     Awal</label>
                                                                 <div class="input-group">
                                                                     <input type="number" step="0.01"
-                                                                        class="form-control bg-light"
-                                                                        id="daily_pit_sparta_awal" name="pit_sparta_awal"
-                                                                        readonly placeholder="0.00">
+                                                                        class="form-control" id="daily_pit_sparta_awal"
+                                                                        name="pit_sparta_awal" placeholder="0.00">
                                                                     <span
                                                                         class="input-group-text bg-light text-muted">m³</span>
                                                                 </div>
@@ -313,9 +312,8 @@
                                                                     Awal</label>
                                                                 <div class="input-group">
                                                                     <input type="number" step="0.01"
-                                                                        class="form-control bg-light"
-                                                                        id="daily_pit_garam_awal" name="pit_garam_awal"
-                                                                        readonly placeholder="0.00">
+                                                                        class="form-control" id="daily_pit_garam_awal"
+                                                                        name="pit_garam_awal" placeholder="0.00">
                                                                     <span
                                                                         class="input-group-text bg-light text-muted">m³</span>
                                                                 </div>
@@ -360,10 +358,8 @@
                                                                     Awal</label>
                                                                 <div class="input-group">
                                                                     <input type="number" step="0.01"
-                                                                        class="form-control bg-light"
-                                                                        id="daily_pit_domestik_awal"
-                                                                        name="pit_domestik_awal" readonly
-                                                                        placeholder="0.00">
+                                                                        class="form-control" id="daily_pit_domestik_awal"
+                                                                        name="pit_domestik_awal" placeholder="0.00">
                                                                     <span
                                                                         class="input-group-text bg-light text-muted">m³</span>
                                                                 </div>
@@ -408,10 +404,9 @@
                                                                     Awal</label>
                                                                 <div class="input-group">
                                                                     <input type="number" step="0.01"
-                                                                        class="form-control bg-light"
+                                                                        class="form-control"
                                                                         id="daily_pit_produksi_step3_awal"
-                                                                        name="pit_produksi_step3_awal" readonly
-                                                                        placeholder="0.00">
+                                                                        name="pit_produksi_step3_awal" placeholder="0.00">
                                                                     <span
                                                                         class="input-group-text bg-light text-muted">m³</span>
                                                                 </div>
@@ -453,10 +448,8 @@
                                                                     Awal</label>
                                                                 <div class="input-group">
                                                                     <input type="number" step="0.01"
-                                                                        class="form-control bg-light"
-                                                                        id="daily_pit_storage_awal"
-                                                                        name="pit_storage_awal" readonly
-                                                                        placeholder="0.00">
+                                                                        class="form-control" id="daily_pit_storage_awal"
+                                                                        name="pit_storage_awal" placeholder="0.00">
                                                                     <span
                                                                         class="input-group-text bg-light text-muted">m³</span>
                                                                 </div>
@@ -499,10 +492,9 @@
                                                                     Awal</label>
                                                                 <div class="input-group">
                                                                     <input type="number" step="0.01"
-                                                                        class="form-control bg-light"
+                                                                        class="form-control"
                                                                         id="daily_pit_proses_wwtp2_awal"
-                                                                        name="pit_proses_wwtp2_awal" readonly
-                                                                        placeholder="0.00">
+                                                                        name="pit_proses_wwtp2_awal" placeholder="0.00">
                                                                     <span
                                                                         class="input-group-text bg-light text-muted">m³</span>
                                                                 </div>
@@ -544,9 +536,8 @@
                                                                     Awal</label>
                                                                 <div class="input-group">
                                                                     <input type="number" step="0.01"
-                                                                        class="form-control bg-light"
-                                                                        id="daily_pit_outlet_awal" name="pit_outlet_awal"
-                                                                        readonly placeholder="0.00">
+                                                                        class="form-control" id="daily_pit_outlet_awal"
+                                                                        name="pit_outlet_awal" placeholder="0.00">
                                                                     <span
                                                                         class="input-group-text bg-light text-muted">m³</span>
                                                                 </div>
@@ -588,9 +579,8 @@
                                                                     Awal</label>
                                                                 <div class="input-group">
                                                                     <input type="number" step="0.01"
-                                                                        class="form-control bg-light"
-                                                                        id="daily_pit_boiler_awal" name="pit_boiler_awal"
-                                                                        readonly placeholder="0.00">
+                                                                        class="form-control" id="daily_pit_boiler_awal"
+                                                                        name="pit_boiler_awal" placeholder="0.00">
                                                                     <span
                                                                         class="input-group-text bg-light text-muted">m³</span>
                                                                 </div>
@@ -1175,13 +1165,21 @@
                     tanggal: $('#daily_tanggal').val(),
                     shift: $('#daily_shift').val(),
                     pit_sparta: $('#daily_pit_sparta').val(),
+                    pit_sparta_awal: $('#daily_pit_sparta_awal').val() !== "" ? $('#daily_pit_sparta_awal').val() : null,
                     pit_garam: $('#daily_pit_garam').val(),
+                    pit_garam_awal: $('#daily_pit_garam_awal').val() !== "" ? $('#daily_pit_garam_awal').val() : null,
                     pit_domestik: $('#daily_pit_domestik').val(),
+                    pit_domestik_awal: $('#daily_pit_domestik_awal').val() !== "" ? $('#daily_pit_domestik_awal').val() : null,
                     pit_produksi_step3: $('#daily_pit_produksi_step3').val() || null,
+                    pit_produksi_step3_awal: $('#daily_pit_produksi_step3_awal').val() !== "" ? $('#daily_pit_produksi_step3_awal').val() : null,
                     pit_storage: $('#daily_pit_storage').val() || null,
+                    pit_storage_awal: $('#daily_pit_storage_awal').val() !== "" ? $('#daily_pit_storage_awal').val() : null,
                     pit_proses_wwtp2: $('#daily_pit_proses_wwtp2').val() || null,
+                    pit_proses_wwtp2_awal: $('#daily_pit_proses_wwtp2_awal').val() !== "" ? $('#daily_pit_proses_wwtp2_awal').val() : null,
                     pit_outlet: $('#daily_pit_outlet').val() || null,
+                    pit_outlet_awal: $('#daily_pit_outlet_awal').val() !== "" ? $('#daily_pit_outlet_awal').val() : null,
                     pit_boiler: $('#daily_pit_boiler').val() || null,
+                    pit_boiler_awal: $('#daily_pit_boiler_awal').val() !== "" ? $('#daily_pit_boiler_awal').val() : null,
                     debit1: $('#daily_debit1').val() || null,
                     running_wwtp1: $('#daily_running_wwtp1').val() || null,
                     debit2: $('#daily_debit2').val() || null,
@@ -1248,13 +1246,18 @@
 
                 if (formData.kategori === 'influent') {
                     formData.pit_sparta = $('#weekly_pit_sparta').val();
+                    formData.pit_sparta_akhir = $('#weekly_pit_sparta_akhir').val();
                     formData.pit_garam = $('#weekly_pit_garam').val();
+                    formData.pit_garam_akhir = $('#weekly_pit_garam_akhir').val();
                     formData.pit_domestik = $('#weekly_pit_domestik').val();
+                    formData.pit_domestik_akhir = $('#weekly_pit_domestik_akhir').val();
                     formData.pit_produksi_step3 = $('#weekly_pit_produksi_step3').val() || null;
+                    formData.pit_produksi_step3_akhir = $('#weekly_pit_produksi_step3_akhir').val() || null;
                     formData.pit_storage = $('#weekly_pit_storage').val() || null;
                     formData.pit_proses_wwtp2 = $('#weekly_pit_proses_wwtp2').val() || null;
                     formData.pit_outlet = $('#weekly_pit_outlet').val() || null;
                     formData.pit_boiler = $('#weekly_pit_boiler').val() || null;
+                    formData.pit_boiler_awal = $('#weekly_pit_boiler_awal').val() || null;
                 } else if (formData.kategori === 'effluent') {
                     formData.full_proses = $('#weekly_full_proses').val();
                     formData.daf_pre = $('#weekly_daf_pre').val();
@@ -1401,6 +1404,56 @@
                 });
             }
 
+            function checkFilledShifts() {
+                const tanggal = $('#daily_tanggal').val();
+                if (!tanggal) {
+                    $('#daily_shift option').prop('disabled', false);
+                    return;
+                }
+
+                $.ajax({
+                    url: "/api/wwtp/influent-harian/filled-shifts",
+                    method: 'GET',
+                    data: {
+                        tanggal: tanggal
+                    },
+                    success: function(response) {
+                        if (response.success && response.filled_shifts) {
+                            const currentSelected = $('#daily_shift').val();
+
+                            // Reset semua option
+                            $('#daily_shift option').each(function() {
+                                const originalText = $(this).data('original-text') || $(this)
+                                    .text();
+
+                                $(this)
+                                    .data('original-text', originalText)
+                                    .text(originalText)
+                                    .prop('disabled', false);
+                            });
+
+                            // Disable options present in response.filled_shifts
+                            response.filled_shifts.forEach(function(shift) {
+                                const option = $(`#daily_shift option[value="${shift}"]`);
+
+                                option
+                                    .prop('disabled', true)
+                                    .text(`${option.data('original-text')} (Sudah Terisi)`);
+                            });
+
+                            // If currently selected shift is now disabled, reset it
+                            if (response.filled_shifts.includes(currentSelected)) {
+                                $('#daily_shift').val('');
+                                $('[id$="_awal"]').val('0.00'); // clear _awal fields
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Gagal mengambil data shift terisi:', xhr);
+                    }
+                });
+            }
+
             $(document).on('wheel', 'input[type=number]', function(e) {
                 $(this).blur();
             });
@@ -1408,9 +1461,11 @@
             // Trigger on date or shift change
             $('#daily_tanggal, #daily_shift').on('change', fetchPreviousData);
             $('#daily_tanggal').on('change', checkDailyApproval);
+            $('#daily_tanggal').on('change', checkFilledShifts);
 
             // Run check on load
             checkDailyApproval();
+            checkFilledShifts();
 
         });
     </script>

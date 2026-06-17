@@ -111,18 +111,11 @@
                                     </div>
                                     <div class="approver-selectors mb-3" style="display: none;">
                                         <div class="row">
-                                            <div class="col-md-6 mb-2">
+                                            <div class="col-md-12 mb-2">
                                                 <label class="form-label fw-semibold">Pilih Foreman untuk Approval
                                                     Bulanan</label>
                                                 <select name="foreman_id" class="form-select select-foreman">
                                                     <option value="">-- Pilih Foreman --</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6 mb-2">
-                                                <label class="form-label fw-semibold">Pilih Supervisor untuk Approval
-                                                    Bulanan</label>
-                                                <select name="supervisor_id" class="form-select select-supervisor">
-                                                    <option value="">-- Pilih Supervisor --</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -155,18 +148,11 @@
                                     </div>
                                     <div class="approver-selectors mb-3" style="display: none;">
                                         <div class="row">
-                                            <div class="col-md-6 mb-2">
+                                            <div class="col-md-12 mb-2">
                                                 <label class="form-label fw-semibold">Pilih Foreman untuk Approval
                                                     Bulanan</label>
                                                 <select name="foreman_id" class="form-select select-foreman">
                                                     <option value="">-- Pilih Foreman --</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6 mb-2">
-                                                <label class="form-label fw-semibold">Pilih Supervisor untuk Approval
-                                                    Bulanan</label>
-                                                <select name="supervisor_id" class="form-select select-supervisor">
-                                                    <option value="">-- Pilih Supervisor --</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -209,18 +195,11 @@
                                     </div>
                                     <div class="approver-selectors mb-3" style="display: none;">
                                         <div class="row">
-                                            <div class="col-md-6 mb-2">
+                                            <div class="col-md-12 mb-2">
                                                 <label class="form-label fw-semibold">Pilih Foreman untuk Approval
                                                     Bulanan</label>
                                                 <select name="foreman_id" class="form-select select-foreman">
                                                     <option value="">-- Pilih Foreman --</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6 mb-2">
-                                                <label class="form-label fw-semibold">Pilih Supervisor untuk Approval
-                                                    Bulanan</label>
-                                                <select name="supervisor_id" class="form-select select-supervisor">
-                                                    <option value="">-- Pilih Supervisor --</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -260,17 +239,10 @@
                     foremanOpts += `<option value="${u.id}">${u.username}</option>`;
                 });
                 $('.select-foreman').html(foremanOpts);
-
-                const supervisorList = data.supervisor ?? [];
-                let supervisorOpts = '<option value="">-- Pilih Supervisor --</option>';
-                supervisorList.forEach(function(u) {
-                    supervisorOpts += `<option value="${u.id}">${u.username}</option>`;
-                });
-                $('.select-supervisor').html(supervisorOpts);
                 approversLoaded = true;
                 if (callback) callback();
             }).fail(function() {
-                $('.select-foreman, .select-supervisor').html('<option value="">Gagal memuat data</option>');
+                $('.select-foreman').html('<option value="">Gagal memuat data</option>');
             });
         }
 
@@ -406,11 +378,14 @@
                 $.get("/utility/air-area", function(data) {
                     $container.empty();
 
-                    console.log(data);
+                    // console.log(data);
 
                     data.forEach(function(area) {
-                        const pemakaianAwal = area.pemakaian_awal !== null && area
-                            .pemakaian_awal !== undefined ? area.pemakaian_awal : '';
+                        let pemakaianAwal = '';
+                        if (area.pemakaian_awal !== null && area.pemakaian_awal !== undefined) {
+                            const parsedVal = parseFloat(area.pemakaian_awal);
+                            pemakaianAwal = parsedVal === 0 ? '' : parsedVal;
+                        }
                         const html = `
                             <div class="card mb-3 shadow-sm" style="background-color:#f4f6f9; border-left: 5px solid #007bff;">
                                 <div class="card-header fw-bold text-white" style="background-color:#007bff;">
@@ -630,8 +605,7 @@
                     tanggal: tanggal,
                     notes: notes,
                     data: payload,
-                    foreman_id: $('#form-pemakaian-air .select-foreman').val() || null,
-                    supervisor_id: $('#form-pemakaian-air .select-supervisor').val() || null
+                    foreman_id: $('#form-pemakaian-air .select-foreman').val() || null
                 };
 
                 $.ajax({

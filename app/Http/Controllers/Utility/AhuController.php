@@ -191,7 +191,7 @@ class AhuController extends Controller
 
     public function getData(Request $request)
     {
-        $query = AhuDetails::with('ahu', 'createdBy')->orderBy('tanggal', 'desc')->orderBy('jam', 'desc');
+        $query = AhuDetails::with('ahu', 'createdBy:id,username')->orderBy('tanggal', 'desc')->orderBy('jam', 'desc');
 
         if ($request->filled('bulan')) {
             $date = Carbon::parse($request->bulan);
@@ -327,7 +327,10 @@ class AhuController extends Controller
 
     public function show($id)
     {
-        $data = AhuDetails::find($id);
+        $data = AhuDetails::with('createdBy')->find($id);
+        if ($data) {
+            $data->creator_name = $data->createdBy ? $data->createdBy->username : '-';
+        }
         return response()->json(['status' => 200, 'data' => $data]);
     }
 
