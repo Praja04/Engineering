@@ -58,7 +58,9 @@
                 </div>
             </div>
 
-            <div id="collectedMonthlyContainer"></div>
+            @if (auth()->user()->jabatan === 'foreman')
+                <div id="collectedMonthlyContainer"></div>
+            @endif
 
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -122,10 +124,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Foreman</label>
-                        <select name="foreman_id" id="sm_foreman_id" class="form-select" required></select>
-                    </div>
                     <div class="mb-3">
                         <label class="form-label">Supervisor</label>
                         <select name="supervisor_id" id="sm_supervisor_id" class="form-select" required></select>
@@ -320,6 +318,9 @@
         }
 
         function loadCollected() {
+            if ("{{ auth()->user()->jabatan }}" !== "foreman") {
+                return;
+            }
             $.get("{{ route('ahu.get-collected') }}", function(res) {
                 let container = $('#collectedMonthlyContainer').empty();
                 res.results.forEach(m => {
@@ -341,14 +342,6 @@
             $('#sm_bulan').val(bulan);
             $('#sm_tahun').val(tahun);
             $.get('/api/utility/users/approvers', function(data) {
-                // Isi dropdown Foreman — dari data.staff (jabatan bukan operator, dept engineering)
-                const foremanList = data.staff ?? [];
-                let foremanOpts = '<option value="">— Pilih Foreman —</option>';
-                foremanList.forEach(function(u) {
-                    foremanOpts += `<option value="${u.id}">${u.username}</option>`;
-                });
-                $('#sm_foreman_id').html(foremanOpts);
-
                 // Isi dropdown Supervisor — dari data.user (jabatan supervisor)
                 const supervisorList = data.user ?? [];
                 let supervisorOpts = '<option value="">— Pilih Supervisor —</option>';
@@ -357,7 +350,6 @@
                 });
                 $('#sm_supervisor_id').html(supervisorOpts);
             }).fail(function() {
-                $('#sm_foreman_id').html('<option value="">Gagal memuat data</option>');
                 $('#sm_supervisor_id').html('<option value="">Gagal memuat data</option>');
                 toastr.error('Gagal memuat daftar approver');
             });
