@@ -2,6 +2,8 @@
 
 namespace App\Models\Utility;
 
+use App\Models\User;
+use App\Models\Utility\Ahu;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -62,10 +64,16 @@ class AhuDetails extends Model
         'temp_out_2',
         'temp_out_3',
         'temp_out_4',
+        'created_by',
     ];
 
     public function ahu()
     {
         return $this->belongsTo(Ahu::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

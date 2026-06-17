@@ -95,6 +95,7 @@ class AhuController extends Controller
             );
 
             $validated['ahu_id'] = $main->id;
+            $validated['created_by'] = auth()->id();
             $detail = AhuDetails::create($validated);
 
             DB::commit();
@@ -186,7 +187,7 @@ class AhuController extends Controller
 
     public function getData(Request $request)
     {
-        $query = AhuDetails::with('ahu')->orderBy('tanggal', 'desc')->orderBy('jam', 'desc');
+        $query = AhuDetails::with('ahu', 'createdBy')->orderBy('tanggal', 'desc')->orderBy('jam', 'desc');
 
         if ($request->filled('bulan')) {
             $date = Carbon::parse($request->bulan);
