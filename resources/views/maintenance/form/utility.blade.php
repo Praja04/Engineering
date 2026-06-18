@@ -561,11 +561,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">User MT/MTC</label>
-                        <select class="form-select" id="userDept">
-                            <option value="">Pilih Departemen</option>
-                        </select>
-                        <select class="form-select mt-2 d-none" id="userDropdown">
-                            <option value="">-- username --</option>
+                        <select class="form-select" id="userDropdown">
+                            <option value="">Pilih user</option>
                         </select>
                     </div>
                 </div>
@@ -829,29 +826,12 @@
                             `<option value="${u.id}">${u.username}</option>`);
                     });
 
-                    // User → pilih departemen dulu
-                    const depts = [...new Set(res.user.map(u => u.departemen))];
-                    const $userDept = $('#userDept');
-                    $userDept.empty().append('<option value="">Pilih Departemen</option>');
-                    depts.forEach(d => $userDept.append(`<option value="${d}">${d}</option>`));
-
-                    // Saat dept dipilih → tampil & auto-set user
-                    $('#userDept').off('change').on('change', function() {
-                        const dept = $(this).val();
-                        const filtered = res.user.filter(u => u.departemen === dept);
-                        const $userDropdown = $('#userDropdown');
-
-                        $userDropdown.empty().append(
-                            '<option value="">Pilih user</option>');
-                        filtered.forEach(u => {
-                            $userDropdown.append(
-                                `<option value="${u.id}">${u.username}</option>`
-                            );
-                        });
-                        $userDropdown.removeClass('d-none');
-
-                        // Reset selectedUser saat ganti dept
-                        selectedUser = null;
+                    const $userDropdown = $('#userDropdown');
+                    $userDropdown.empty().append('<option value="">Pilih user</option>');
+                    res.user.forEach(u => {
+                        $userDropdown.append(
+                            `<option value="${u.id}">${u.username}</option>`
+                        );
                     });
                 });
 

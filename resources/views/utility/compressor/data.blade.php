@@ -659,8 +659,9 @@
             const formatNum = (v) => v ? Number(v) : '-';
             let html = `
                     <div class="row g-3">
-                        <div class="col-6"><strong>Tanggal:</strong> ${data.tanggal}</div>
-                        <div class="col-6"><strong>Jam:</strong> ${data.jam}</div>
+                        <div class="col-4"><strong>Tanggal:</strong> ${data.tanggal}</div>
+                        <div class="col-4"><strong>Jam:</strong> ${data.jam}</div>
+                        <div class="col-4"><strong>Created By:</strong> ${data.created_by?.username || '-'}</div>
                         <div class="col-12"><hr></div>
                         <div class="col-6"><strong>Pressure Outlet 1:</strong> ${formatNum(data.pressure_outlet_1)} Bar</div>
                         <div class="col-6"><strong>Pressure Outlet 2:</strong> ${formatNum(data.pressure_outlet_2)} Bar</div>

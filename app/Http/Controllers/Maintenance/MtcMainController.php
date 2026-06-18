@@ -43,14 +43,19 @@ class MtcMainController extends Controller
     public function getApprovers()
     {
         $staff = User::where('departemen', 'engineering')
-            ->where('jabatan', '!=', 'operator')
+            ->whereIn('jabatan', ['foreman', 'supervisor'])
             ->where(function ($q) {
                 $q->where('bagian', 'Engineering Maintenance & Improvement')
                     ->orWhere('bagian', 'Engineering');
             })
             ->get(['id', 'username']);
 
-        $user = User::where('jabatan', 'supervisor')
+        $user = User::where('departemen', 'engineering')
+            ->where('jabatan', 'supervisor')
+            ->where(function ($q) {
+                $q->where('bagian', 'Engineering Maintenance & Improvement')
+                    ->orWhere('bagian', 'Engineering');
+            })
             ->get(['id', 'username', 'departemen']);
 
         return response()->json([

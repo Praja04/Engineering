@@ -387,7 +387,7 @@
 </div>
 
 {{-- Modal Pilih Approver --}}
-<<div class="modal fade" id="modalApprover" tabindex="-1">
+<div class="modal fade" id="modalApprover" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -402,10 +402,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">User MT/MTC</label>
-                    <select class="form-select" id="userDept">
-                        <option value="">Pilih Departemen</option>
-                    </select>
-                    <select class="form-select mt-2 d-none" id="userDropdown">
+                    <select class="form-select" id="userDropdown">
                         <option value="">Pilih user</option>
                     </select>
                 </div>
@@ -523,37 +520,6 @@
             $('#form-mtc-diesel-p2h').on('submit', function(e) {
                 e.preventDefault();
                 pendingFormData = new FormData(this);
-
-                $('#modalApprover').modal('show');
-
-                // Load staff & user maintenance dari API
-                $.get('/api/mtc/users/approvers', function(res) {
-                    const $staffDropdown = $('#staffDropdown');
-                    const $userDropdown = $('#userDropdown');
-
-                    $staffDropdown.empty().append(`<option value="">Pilih staff</option>`);
-                    res.staff.forEach(user => {
-                        $staffDropdown.append(
-                            `<option value="${user.id}">${user.username}</option>`);
-                    });
-
-                    $userDropdown.empty().append(`<option value="">Pilih user</option>`);
-                    res.user.forEach(user => {
-                        $userDropdown.append(
-                            `<option value="${user.id}">${user.username}</option>`);
-                    });
-                });
-            });
-
-
-
-
-
-
-
-            $('#form-mtc-diesel-p2h').on('submit', function(e) {
-                e.preventDefault();
-                pendingFormData = new FormData(this);
                 $('#modalApprover').modal('show');
 
                 $.get('/api/mtc/users/approvers', function(res) {
@@ -563,21 +529,10 @@
                         $staffDropdown.append(`<option value="${u.id}">${u.username}</option>`);
                     });
 
-                    const depts = [...new Set(res.user.map(u => u.departemen))];
-                    const $userDept = $('#userDept');
-                    $userDept.empty().append('<option value="">Pilih Departemen</option>');
-                    depts.forEach(d => $userDept.append(`<option value="${d}">${d}</option>`));
-
-                    $('#userDept').off('change').on('change', function() {
-                        const dept = $(this).val();
-                        const filtered = res.user.filter(u => u.departemen === dept);
-                        const $userDropdown = $('#userDropdown');
-                        $userDropdown.empty().append('<option value="">Pilih user</option>');
-                        filtered.forEach(u => {
-                            $userDropdown.append(`<option value="${u.id}">${u.username}</option>`);
-                        });
-                        $userDropdown.removeClass('d-none');
-                        selectedUser = null;
+                    const $userDropdown = $('#userDropdown');
+                    $userDropdown.empty().append('<option value="">Pilih user</option>');
+                    res.user.forEach(u => {
+                        $userDropdown.append(`<option value="${u.id}">${u.username}</option>`);
                     });
                 });
             });
