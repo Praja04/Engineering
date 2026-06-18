@@ -112,6 +112,7 @@
     <script>
         $(document).ready(function() {
             const formBoiler = $('#formBoiler');
+            let currentPage = 1;
 
             // Submit form
             formBoiler.on('submit', function(e) {
@@ -157,7 +158,7 @@
 
                             formBoiler.trigger('reset');
                             $('#modalBoiler').modal('hide');
-                            loadData('', '', 1);
+                            loadData($('#startDate').val(), $('#endDate').val(), isUpdate ? currentPage : 1);
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -186,6 +187,7 @@
             loadData();
 
             function loadData(startDate = '', endDate = '', page = 1) {
+                currentPage = page;
                 $.get("{{ url('api/boiler/get-data') }}", {
                     start_date: startDate,
                     end_date: endDate,
@@ -280,7 +282,7 @@
                 e.preventDefault();
                 const page = $(this).data('page');
                 if (page) {
-                    loadData($('#start_date').val(), $('#end_date').val(),
+                    loadData($('#startDate').val(), $('#endDate').val(),
                         page);
                 }
             });
@@ -355,7 +357,7 @@
                                         timer: 1000,
                                         showConfirmButton: false
                                     });
-                                    loadData('', '', 1);
+                                    loadData($('#startDate').val(), $('#endDate').val(), currentPage);
                                 } else {
                                     Swal.fire({
                                         icon: 'error',

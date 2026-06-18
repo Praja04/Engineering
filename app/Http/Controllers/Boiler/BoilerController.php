@@ -60,18 +60,13 @@ class BoilerController extends Controller
     {
         $query = BoilerModel::query();
 
-        // Filter dinamis tanggal (tetap sama seperti sebelumnya)
-        if ($request->start_date && $request->end_date) {
+        // Filter dinamis tanggal
+        if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('date', [$request->start_date, $request->end_date]);
-        } elseif ($request->start_date) {
+        } elseif ($request->filled('start_date')) {
             $query->whereDate('date', '>=', $request->start_date);
-        } elseif ($request->end_date) {
+        } elseif ($request->filled('end_date')) {
             $query->whereDate('date', '<=', $request->end_date);
-        } else {
-            $end   = Carbon::today()->format('Y-m-d');
-            $start = Carbon::today()->subDays(29)->format('Y-m-d'); // total 30 hari termasuk hari ini
-
-            $query->whereBetween('date', [$start, $end]);
         }
 
         $query->orderBy('date', 'desc');
