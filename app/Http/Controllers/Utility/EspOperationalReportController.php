@@ -199,33 +199,33 @@ class EspOperationalReportController extends Controller
             $record = $opRows->get($jam);
             if (!$record) continue;
 
-            $sheet->setCellValue('B' . $row, $record->arus_primer);
-            $sheet->setCellValue('C' . $row, $record->arus_sekunder);
-            $sheet->setCellValue('D' . $row, $record->tegangan_primer);
-            $sheet->setCellValue('E' . $row, $record->tegangan_sekunder);
-            $sheet->setCellValue('F' . $row, $record->suhu_thermal);
+            $sheet->setCellValue('B' . $row, $record->arus_primer ?? '-');
+            $sheet->setCellValue('C' . $row, $record->arus_sekunder ?? '-');
+            $sheet->setCellValue('D' . $row, $record->tegangan_primer ?? '-');
+            $sheet->setCellValue('E' . $row, $record->tegangan_sekunder ?? '-');
+            $sheet->setCellValue('F' . $row, $record->suhu_thermal ?? '-');
         }
 
         // ── Isi data shift ───────────────────────────────────────────
         if ($shift || $coalHandover) {
-            $sheet->setCellValue('J5',  $shift->pemakaian_air);
-            $sheet->setCellValue('I7',  $shift->pemakaian_steam);
-            $sheet->setCellValue('I8',  $shift->pemakaian_batubara);
-            $sheet->setCellValue('I9',  $shift->efisiensi_batubara);
-            $sheet->setCellValue('I11', $shift->running_hour_awal);
-            $sheet->setCellValue('J11', $shift->running_hour_akhir);
-            $sheet->setCellValue('I12', $shift->feed_tank_awal);
-            $sheet->setCellValue('J12', $shift->feed_tank_akhir);
-            $sheet->setCellValue('I13', $shift->pengisian_batubara);
-            $sheet->setCellValue('I18', $shift->chemical_scf);
-            $sheet->setCellValue('I19', $shift->chemical_srtf);
-            $sheet->setCellValue('K18', $shift->dosis);
-            $sheet->setCellValue('K19', $shift->dosis);
+            $sheet->setCellValue('J5',  $shift->pemakaian_air ?? '-');
+            $sheet->setCellValue('I7',  $shift->pemakaian_steam ?? '-');
+            $sheet->setCellValue('I8',  $shift->pemakaian_batubara ?? '-');
+            $sheet->setCellValue('I9',  $shift->efisiensi_batubara ?? '-');
+            $sheet->setCellValue('I11', $shift->running_hour_awal ?? '-');
+            $sheet->setCellValue('J11', $shift->running_hour_akhir ?? '-');
+            $sheet->setCellValue('I12', $shift->feed_tank_awal ?? '-');
+            $sheet->setCellValue('J12', $shift->feed_tank_akhir ?? '-');
+            $sheet->setCellValue('I13', $shift->pengisian_batubara ?? '-');
+            $sheet->setCellValue('I18', $shift->chemical_scf ?? '-');
+            $sheet->setCellValue('I19', $shift->chemical_srtf ?? '-');
+            $sheet->setCellValue('K18', $shift->dosis ?? '-');
+            $sheet->setCellValue('K19', $shift->dosis ?? '-');
 
-            $sheet->setCellValue('I22', $coalHandover->penyuplai_qty);
-            $sheet->setCellValue('K22', $coalHandover->penyuplai_nik_nama);
-            $sheet->setCellValue('I23', $coalHandover->penerima_qty);
-            $sheet->setCellValue('K23', $coalHandover->penerima_nik_nama);
+            $sheet->setCellValue('I22', $coalHandover->penyuplai_qty ?? '-');
+            $sheet->setCellValue('K22', $coalHandover->penyuplai_nik_nama ?? '-');
+            $sheet->setCellValue('I23', $coalHandover->penerima_qty ?? '-');
+            $sheet->setCellValue('K23', $coalHandover->penerima_nik_nama ?? '-');
         }
 
         // ── TTD Approval Section ──────────────────────────────────────
