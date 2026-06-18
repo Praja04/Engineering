@@ -270,7 +270,7 @@
             const tbody = tab === 'pending' ? $('#tbodyPending') : $('#tbodyHistory');
             tbody.html(
                 '<tr><td colspan="7" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading...</td></tr>'
-                );
+            );
 
             $.get("{{ url('utility/approval/list') }}", {
                 tab: tab
@@ -280,7 +280,7 @@
                 if (res.length === 0) {
                     tbody.html(
                         '<tr><td colspan="7" class="text-center py-3 text-muted">Tidak ada data approval ditemukan.</td></tr>'
-                        );
+                    );
                     return;
                 }
 
@@ -288,15 +288,15 @@
                     let badge = '';
                     if (item.status === 'submitted') {
                         badge =
-                            '<span class="badge bg-warning-subtle text-warning fs-12">Menunggu Foreman</span>';
+                            '<span class="badge badge-soft-warning text-warning fs-12">Waiting Foreman</span>';
                     } else if (item.status === 'approved_foreman') {
                         badge =
-                            '<span class="badge bg-info-subtle text-info fs-12">Menunggu Supervisor</span>';
+                            '<span class="badge badge-soft-info text-info fs-12">Waiting Supervisor</span>';
                     } else if (item.status === 'approved_supervisor') {
                         badge =
-                            '<span class="badge bg-success-subtle text-success fs-12">Disetujui SPV</span>';
+                            '<span class="badge badge-soft-success text-success fs-12">Approved SPV</span>';
                     } else if (item.status === 'rejected') {
-                        badge = '<span class="badge bg-danger-subtle text-danger fs-12">Ditolak</span>';
+                        badge = '<span class="badge badge-soft-danger text-danger fs-12">Rejected</span>';
                     }
 
                     let actions = '';
@@ -357,13 +357,13 @@
             // Clear previous values
             $('#tbodyReviewListrik').html(
                 '<tr><td colspan="9" class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div> Loading...</td></tr>'
-                );
+            );
             $('#tbodyReviewAir').html(
                 '<tr><td colspan="7" class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div> Loading...</td></tr>'
-                );
+            );
             $('#tbodyReviewChemical').html(
                 '<tr><td colspan="8" class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div> Loading...</td></tr>'
-                );
+            );
             $('#modalReviewFooter').empty();
 
             $.get("{{ url('utility/approval/show') }}/" + id, function(res) {
@@ -526,7 +526,9 @@
                             if (!supervisorId) {
                                 Swal.showValidationMessage('Anda harus memilih Supervisor!');
                             }
-                            return { supervisor_id: supervisorId };
+                            return {
+                                supervisor_id: supervisorId
+                            };
                         }
                     }).then((result) => {
                         if (result.isConfirmed) {
