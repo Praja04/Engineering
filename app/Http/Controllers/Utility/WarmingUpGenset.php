@@ -77,23 +77,46 @@ class WarmingUpGenset extends Controller
                 ], 422);
             }
 
+            $isForemanSubmitter = auth()->user() && auth()->user()->jabatan === 'foreman';
+            $isSameAsForeman = auth()->id() == $validated['foreman_id'];
+
+            if ($isForemanSubmitter || $isSameAsForeman) {
+                $status = 'approved_foreman';
+                $approvedForemanBy = $validated['foreman_id'];
+                $approvedForemanAt = now();
+            } else {
+                $status = 'submitted';
+                $approvedForemanBy = null;
+                $approvedForemanAt = null;
+            }
+
             $report = WarmingUpGensetModel::create([
                 ...$validated,
                 'user_id' => auth()->id() ?? 1,
-                'status' => 'submitted',
+                'status' => $status,
+                'approved_foreman_by' => $approvedForemanBy,
+                'approved_foreman_at' => $approvedForemanAt,
             ]);
 
             try {
-                $this->sendNotification($report, $report->foreman_id);
+                if ($report->status === 'approved_foreman') {
+                    $this->sendNotification($report, $report->supervisor_id);
+                } else {
+                    $this->sendNotification($report, $report->foreman_id);
+                }
             } catch (\Exception $e) {
                 Log::error('Notif gagal: ' . $e->getMessage());
             }
 
             DB::commit();
 
+            $msg = $report->status === 'approved_foreman'
+                ? 'Laporan berhasil disubmit & menunggu approval Supervisor.'
+                : 'Laporan berhasil disubmit & menunggu approval Foreman.';
+
             return response()->json([
                 'status' => 200,
-                'message' => 'Laporan berhasil disubmit & menunggu approval.',
+                'message' => $msg,
                 'data' => $report
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -247,11 +270,41 @@ class WarmingUpGenset extends Controller
                 'charge_alt_voltage' => 'nullable|numeric',
                 'running_hour' => 'nullable|numeric',
                 'frequency' => 'nullable|numeric',
-                'status_oil_1' => 'nullable|numeric',
-                'status_oil_2' => 'nullable|numeric',
+                'status_oil' => 'nullable|numeric',
+                'status_bbm' => 'nullable|numeric',
             ]);
 
+            $isForemanSubmitter = auth()->user() && auth()->user()->jabatan === 'foreman';
+            $isSameAsForeman = auth()->id() == $validated['foreman_id'];
+
+            if ($isForemanSubmitter || $isSameAsForeman) {
+                $validated['status'] = 'approved_foreman';
+                $validated['approved_foreman_by'] = $validated['foreman_id'];
+                $validated['approved_foreman_at'] = now();
+            } else {
+                $validated['status'] = 'submitted';
+                $validated['approved_foreman_by'] = null;
+                $validated['approved_foreman_at'] = null;
+            }
+            $validated['reject_reason'] = null;
+
             $report->update($validated);
+            $report->refresh();
+
+            // Clear old notifications for this report
+            NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
+                ->where('notifiable_id', $report->id)
+                ->delete();
+
+            try {
+                if ($report->status === 'approved_foreman') {
+                    $this->sendNotification($report, $report->supervisor_id);
+                } else {
+                    $this->sendNotification($report, $report->foreman_id);
+                }
+            } catch (\Exception $e) {
+                Log::error('Notif gagal: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'status' => 200,
