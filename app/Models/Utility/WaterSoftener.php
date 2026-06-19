@@ -2,8 +2,10 @@
 
 namespace App\Models\Utility;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
+use App\Models\Utility\WaterSoftener;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class WaterSoftener extends Model
 {
@@ -37,6 +39,9 @@ class WaterSoftener extends Model
         'regen2_air_pelarut',
         'regen2_garam',
         'regen2_nomer_ws',
+
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -88,7 +93,7 @@ class WaterSoftener extends Model
     public function scopeByBulan($query, int $bulan, int $tahun)
     {
         return $query->whereMonth('tanggal', $bulan)
-                     ->whereYear('tanggal', $tahun);
+            ->whereYear('tanggal', $tahun);
     }
 
     /**
@@ -98,7 +103,7 @@ class WaterSoftener extends Model
     {
         return $query->where(function ($q) {
             $q->where('ws1_hardness_out', '>', 10)
-              ->orWhere('ws2_hardness_out', '>', 10);
+                ->orWhere('ws2_hardness_out', '>', 10);
         });
     }
 
@@ -108,6 +113,17 @@ class WaterSoftener extends Model
     public function scopeHasRegen($query)
     {
         return $query->whereNotNull('regen1_jam')
-                     ->orWhereNotNull('regen2_jam');
+            ->orWhereNotNull('regen2_jam');
+    }
+
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

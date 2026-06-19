@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\NotificationsModel;
 use App\Models\Utility\CapacitorBank;
 use App\Models\Utility\CapacitorBankApproval;
-use App\Models\NotificationsModel;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -77,21 +78,35 @@ class CapacitorBankController extends Controller
             ], 422);
         }
 
-        $data = CapacitorBank::create($request->all());
+        DB::beginTransaction();
+        try {
+            $data = CapacitorBank::create([
+                ...$request->all(),
+                'created_by' => auth()->id(),
+            ]);
 
-        // Pastikan record approval ada (foreman_id diisi saat foreman submit)
-        CapacitorBankApproval::firstOrCreate(
-            ['bulan' => $tanggal->month, 'tahun' => $tanggal->year],
-            [
-                'status'      => 'draft',
-                'operator_id' => auth()->id(),
-                'submitted_at' => now(),
-            ]
-        );
-        return response()->json([
-            'message' => 'Data berhasil disimpan.',
-            'data'    => $data
-        ]);
+            // Pastikan record approval ada (foreman_id diisi saat foreman submit)
+            CapacitorBankApproval::firstOrCreate(
+                ['bulan' => $tanggal->month, 'tahun' => $tanggal->year],
+                [
+                    'status'      => 'draft',
+                    'operator_id' => auth()->id(),
+                    'submitted_at' => now(),
+                ]
+            );
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Data berhasil disimpan.',
+                'data'    => $data
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Gagal menyimpan data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -134,7 +149,10 @@ class CapacitorBankController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
-        $data->update($request->all());
+        $data->update([
+            ...$request->all(),
+            'updated_by' => auth()->id(),
+        ]);
 
         return response()->json([
             'message' => 'Data berhasil diupdate.',

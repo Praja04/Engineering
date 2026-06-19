@@ -119,6 +119,8 @@ class CompressorController extends Controller
             }
 
             // Create Detail record
+
+
             $validated['compressor_id'] = $main->id;
             $validated['created_by'] = auth()->id();
             $detail = CompressorDetails::create($validated);
@@ -143,9 +145,9 @@ class CompressorController extends Controller
 
     public function update(Request $request, $id)
     {
-        $detail = CompressorDetails::findOrFail($id);
-
+        DB::beginTransaction();
         try {
+            $detail = CompressorDetails::findOrFail($id);
             $validated = $request->validate([
                 'tanggal' => 'required|date',
                 'jam' => 'required|in:08:00,12:00,16:00,00:00,04:00',
@@ -174,7 +176,12 @@ class CompressorController extends Controller
                 'suhu_dryer_ir' => 'nullable|numeric',
             ]);
 
-            $detail->update($validated);
+            $detail->update([
+                ...$validated,
+                'updated_by' => auth()->id(),
+            ]);
+
+            DB::commit();
 
             return response()->json([
                 'status' => 200,
@@ -182,6 +189,7 @@ class CompressorController extends Controller
                 'data' => $detail
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Update Compressor Error: ' . $e->getMessage());
             return response()->json([
                 'status' => 500,
@@ -693,7 +701,20 @@ class CompressorController extends Controller
 
         $spreadsheet->setActiveSheetIndex(0);
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $filename = 'Compressor_Report_' . now()->format('YmdHis') . '.xlsx';
+        $filenameParts = ['Compressor_Report'];
+        if ($request->filled('tahun')) {
+            $filenameParts[] = $request->input('tahun');
+        }
+        if ($request->filled('bulan')) {
+            $filenameParts[] = '' . $request->input('bulan');
+        }
+        if ($request->filled('week') && $request->input('week') !== '') {
+            $filenameParts[] = 'Minggu_' . $request->input('week');
+        }
+        if (count($filenameParts) === 1) {
+            $filenameParts[] = now()->format('Y_m_d');
+        }
+        $filename = implode('_', $filenameParts) . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');

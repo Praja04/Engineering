@@ -248,34 +248,51 @@ class MdpMonitoringController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = MdpMonitoringModel::findOrFail($id);
+        DB::beginTransaction();
+        try {
+            $data = MdpMonitoringModel::findOrFail($id);
 
-        // Hanya bisa edit jika status masih submitted (atau admin)
-        if ($data->status !== 'submitted' && !auth()->user()->hasRole(['superadmin', 'admin'])) {
-            return response()->json(['message' => 'Hanya laporan dengan status submitted yang bisa diubah'], 422);
+            // Hanya bisa edit jika status masih submitted (atau admin)
+            if ($data->status !== 'submitted' && !auth()->user()->hasRole(['superadmin', 'admin'])) {
+                return response()->json(['message' => 'Hanya laporan dengan status submitted yang bisa diubah'], 422);
+            }
+
+            $validated = $request->validate([
+                'e_del' => 'nullable|numeric',
+                'arus_rata_rata' => 'nullable|numeric',
+                'arus_i1' => 'nullable|numeric',
+                'arus_i2' => 'nullable|numeric',
+                'arus_i3' => 'nullable|numeric',
+                'tegangan_rata_rata' => 'nullable|numeric',
+                'tegangan_v1' => 'nullable|numeric',
+                'tegangan_v2' => 'nullable|numeric',
+                'tegangan_v3' => 'nullable|numeric',
+                'daya_total' => 'nullable|numeric',
+                'daya_p1' => 'nullable|numeric',
+                'daya_p2' => 'nullable|numeric',
+                'daya_p3' => 'nullable|numeric',
+                'temperatur_transformator' => 'nullable|numeric',
+                'level_oil' => 'nullable|string|in:ok,nok',
+            ]);
+
+            $data->update([
+                ...$validated,
+                'updated_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Data MDP berhasil diperbarui'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 500,
+                'message' => 'Gagal memperbarui data MDP',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $validated = $request->validate([
-            'e_del' => 'nullable|numeric',
-            'arus_rata_rata' => 'nullable|numeric',
-            'arus_i1' => 'nullable|numeric',
-            'arus_i2' => 'nullable|numeric',
-            'arus_i3' => 'nullable|numeric',
-            'tegangan_rata_rata' => 'nullable|numeric',
-            'tegangan_v1' => 'nullable|numeric',
-            'tegangan_v2' => 'nullable|numeric',
-            'tegangan_v3' => 'nullable|numeric',
-            'daya_total' => 'nullable|numeric',
-            'daya_p1' => 'nullable|numeric',
-            'daya_p2' => 'nullable|numeric',
-            'daya_p3' => 'nullable|numeric',
-            'temperatur_transformator' => 'nullable|numeric',
-            'level_oil' => 'nullable|string|in:ok,nok',
-        ]);
-
-        $data->update($validated);
-
-        return response()->json(['message' => 'Data MDP berhasil diperbarui']);
     }
 
     public function destroy($id)

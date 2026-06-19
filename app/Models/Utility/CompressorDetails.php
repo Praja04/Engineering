@@ -58,6 +58,7 @@ class CompressorDetails extends Model
         'suhu_dryer_fx250',
         'suhu_dryer_ir',
         'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -77,5 +78,10 @@ class CompressorDetails extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

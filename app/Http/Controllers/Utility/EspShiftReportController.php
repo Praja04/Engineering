@@ -150,6 +150,106 @@ class EspShiftReportController extends Controller
     }
 
     /**
+     * 👥 MASS APPROVE (Foreman or Supervisor)
+     */
+    public function massApprove(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'required|exists:esp_shift_reports,id',
+        ]);
+
+        $ids = $request->ids;
+        $jabatan = auth()->user()->jabatan;
+        $userId = auth()->id();
+
+        if ($jabatan !== 'foreman' && $jabatan !== 'supervisor') {
+            return response()->json(['message' => 'Anda tidak memiliki wewenang untuk menyetujui laporan ini'], 403);
+        }
+
+        $approvedCount = 0;
+        $errors = [];
+
+        foreach ($ids as $id) {
+            try {
+                \Illuminate\Support\Facades\DB::transaction(function () use ($id, $jabatan, $userId, &$approvedCount, &$errors) {
+                    $data = EspShiftReport::findOrFail($id);
+
+                    if ($jabatan === 'foreman') {
+                        if ($data->foreman_id !== $userId) {
+                            $errors[] = "Laporan tanggal {$data->tanggal_laporan}: Anda bukan foreman yang ditunjuk.";
+                            return;
+                        }
+
+                        if ($data->status !== 'approved_operator') {
+                            $errors[] = "Laporan tanggal {$data->tanggal_laporan}: Status tidak valid untuk approval Foreman.";
+                            return;
+                        }
+
+                        $data->update([
+                            'foreman_approved_at' => now(),
+                            'status'              => 'approved_foreman'
+                        ]);
+
+                        NotificationsModel::where('notifiable_type', EspShiftReport::class)
+                            ->where('notifiable_id', $data->id)
+                            ->where('user_id', $userId)
+                            ->delete();
+
+                        try {
+                            $this->sendNotification($data, $data->supervisor_id);
+                        } catch (\Exception $e) {
+                            Log::error("Notif ESP Supervisor gagal untuk ID {$id}: " . $e->getMessage());
+                        }
+
+                        $approvedCount++;
+                    } elseif ($jabatan === 'supervisor') {
+                        if ($data->supervisor_id !== $userId) {
+                            $errors[] = "Laporan tanggal {$data->tanggal_laporan}: Anda bukan supervisor yang ditunjuk.";
+                            return;
+                        }
+
+                        if ($data->status !== 'approved_foreman') {
+                            $errors[] = "Laporan tanggal {$data->tanggal_laporan}: Status tidak valid untuk approval Supervisor.";
+                            return;
+                        }
+
+                        $data->update([
+                            'supervisor_approved_at' => now(),
+                            'status'                 => 'approved_supervisor'
+                        ]);
+
+                        NotificationsModel::where('notifiable_type', EspShiftReport::class)
+                            ->where('notifiable_id', $data->id)
+                            ->where('user_id', $userId)
+                            ->delete();
+
+                        $approvedCount++;
+                    }
+                });
+            } catch (\Exception $e) {
+                $errors[] = "Gagal memproses ID {$id}: " . $e->getMessage();
+            }
+        }
+
+        if ($approvedCount === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada laporan yang berhasil disetujui.',
+                'errors'  => $errors
+            ], 422);
+        }
+
+        $msg = "Berhasil menyetujui {$approvedCount} laporan.";
+        return response()->json([
+            'success' => true,
+            'message' => $msg,
+            'approved_count' => $approvedCount,
+            'errors'  => $errors
+        ]);
+    }
+
+    /**
      * 🔔 NOTIFICATION HELPER
      * Kirim notifikasi hanya ke foreman & supervisor yang dipilih
      */

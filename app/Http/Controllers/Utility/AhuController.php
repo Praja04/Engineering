@@ -119,8 +119,10 @@ class AhuController extends Controller
 
     public function update(Request $request, $id)
     {
-        $detail = AhuDetails::findOrFail($id);
+        DB::beginTransaction();
+
         try {
+            $detail = AhuDetails::findOrFail($id);
             $validated = $request->validate([
                 'tanggal' => 'required|date',
                 'jam' => 'required',
@@ -154,9 +156,14 @@ class AhuController extends Controller
                 'temp_out_4' => 'nullable|numeric',
             ]);
 
-            $detail->update($validated);
+            $detail->update([
+                ...$validated,
+                'updated_by' => auth()->id(),
+            ]);
+            DB::commit();
             return response()->json(['status' => 200, 'message' => 'Data AHU berhasil diperbarui.']);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['status' => 500, 'message' => 'Gagal update data'], 500);
         }
     }
