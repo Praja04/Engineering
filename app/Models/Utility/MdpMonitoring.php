@@ -37,6 +37,7 @@ class MdpMonitoring extends Model
         'approved_supervisor_by',
         'approved_supervisor_at',
         'reject_reason',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -73,5 +74,10 @@ class MdpMonitoring extends Model
     public function approvedSupervisor()
     {
         return $this->belongsTo(User::class, 'approved_supervisor_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

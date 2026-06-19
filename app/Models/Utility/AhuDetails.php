@@ -65,6 +65,7 @@ class AhuDetails extends Model
         'temp_out_3',
         'temp_out_4',
         'created_by',
+        'updated_by',
     ];
 
     public function ahu()
@@ -75,5 +76,10 @@ class AhuDetails extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

@@ -120,17 +120,26 @@
                             <i class="ri-list-check me-2 text-warning"></i>
                             Daftar Laporan Shift
                         </h6>
-                        <span class="badge bg-warning-subtle text-warning fs-12" id="badge-jabatan">
-                            @if(auth()->user()->jabatan === 'foreman') Level: Foreman
-                            @elseif(auth()->user()->jabatan === 'supervisor') Level: Supervisor
-                            @endif
-                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-sm btn-success d-none" id="btn-mass-approve">
+                                <i class="ri-check-double-line me-1"></i>
+                                Approve Terpilih (<span id="selected-count">0</span>)
+                            </button>
+                            <span class="badge bg-warning-subtle text-warning fs-12" id="badge-jabatan">
+                                @if(auth()->user()->jabatan === 'foreman') Level: Foreman
+                                @elseif(auth()->user()->jabatan === 'supervisor') Level: Supervisor
+                                @endif
+                            </span>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover table-bordered mb-0 align-middle">
                                 <thead class="table-light">
                                     <tr>
+                                        <th width="40" class="text-center">
+                                            <input type="checkbox" class="form-check-input" id="check-all">
+                                        </th>
                                         <th>Tanggal</th>
                                         <th>Operator</th>
                                         <th>Air (m³)</th>
@@ -145,7 +154,7 @@
                                 </thead>
                                 <tbody id="tbody-approval">
                                     <tr>
-                                        <td colspan="10" class="text-center py-4 text-muted">
+                                        <td colspan="11" class="text-center py-4 text-muted">
                                             <i class="ri-loader-4-line"></i> Memuat data...
                                         </td>
                                     </tr>
@@ -311,67 +320,77 @@
             const status = $('#filter-status').val();
             const tanggal = $('#filter-tanggal').val();
 
-            $('#tbody-approval').html(
-                '<tr><td colspan="10" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
-            );
-
-            $.get('{{ route("esp-shift-report.json") }}', {
-                status,
-                tanggal
-            }, function(data) {
-                // Hitung summary
-                const pending = data.filter(r => r.status === pendingStatus).length;
-                const approved = data.filter(r => r.status !== pendingStatus).length;
-                $('#count-pending').text(pending);
-                $('#count-approved').text(approved);
-                $('#count-total').text(data.length);
-
-                if (!data.length) {
-                    $('#tbody-approval').html(
-                        '<tr><td colspan="10" class="text-center py-4 text-muted">Tidak ada laporan yang ditujukan kepada Anda</td></tr>'
-                    );
-                    return;
-                }
-
-                let html = '';
-                data.forEach(function(r) {
-                    const s = statusMap[r.status] ?? {
-                        label: r.status,
-                        cls: 'bg-secondary text-white'
-                    };
-                    const canApprove = r.status === pendingStatus;
-                    const operatorName = r.operator?.username ?? '—';
-
-                    html += `<tr data-row='${JSON.stringify(r)}'>
-                    <td class="fw-medium">${r.tanggal_laporan}</td>
-                    <td>
-                        <span class="badge bg-secondary-subtle text-secondary">
-                            <i class="ri-user-line me-1"></i>${operatorName}
-                        </span>
-                    </td>
-                    <td>${r.pemakaian_air ?? '—'}</td>
-                    <td>${r.pemakaian_steam ?? '—'}</td>
-                    <td>${r.pemakaian_batubara ?? '—'}</td>
-                    <td>${r.running_hour_awal ?? '—'}</td>
-                    <td>${r.running_hour_akhir ?? '—'}</td>
-                    <td class="fs-12 text-muted">${r.created_at ?? '—'}</td>
-                    <td><span class="badge ${s.cls}">${s.label}</span></td>
-                    <td>
-                        <button class="btn btn-xs btn-outline-warning btn-review py-0 px-2 me-1">
-                            <i class="ri-eye-line"></i> Review
-                        </button>
-                        ${canApprove
-                            ? `<button class="btn btn-xs btn-success btn-quick-approve py-0 px-2"
-                                data-id="${r.id}">
-                                <i class="ri-check-line"></i> Approve
-                               </button>`
-                            : ''
-                        }
-                    </td>
-                </tr>`;
-                });
-                $('#tbody-approval').html(html);
-            });
+             $('#tbody-approval').html(
+                 '<tr><td colspan="11" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
+             );
+ 
+             $.get('{{ route("esp-shift-report.json") }}', {
+                 status,
+                 tanggal
+             }, function(data) {
+                 // Hitung summary
+                 const pending = data.filter(r => r.status === pendingStatus).length;
+                 const approved = data.filter(r => r.status !== pendingStatus).length;
+                 $('#count-pending').text(pending);
+                 $('#count-approved').text(approved);
+                 $('#count-total').text(data.length);
+ 
+                 // Reset checkboxes & mass-approve button
+                 $('#check-all').prop('checked', false).prop('disabled', pending === 0);
+                 $('#btn-mass-approve').addClass('d-none');
+                 $('#selected-count').text('0');
+ 
+                 if (!data.length) {
+                     $('#tbody-approval').html(
+                         '<tr><td colspan="11" class="text-center py-4 text-muted">Tidak ada laporan yang ditujukan kepada Anda</td></tr>'
+                     );
+                     return;
+                 }
+ 
+                 let html = '';
+                 data.forEach(function(r) {
+                     const s = statusMap[r.status] ?? {
+                         label: r.status,
+                         cls: 'bg-secondary text-white'
+                     };
+                     const canApprove = r.status === pendingStatus;
+                     const operatorName = r.operator?.username ?? '—';
+ 
+                     const checkboxHtml = canApprove
+                         ? `<td class="text-center"><input type="checkbox" class="form-check-input row-checkbox" value="${r.id}"></td>`
+                         : `<td class="text-center"><input type="checkbox" class="form-check-input" disabled></td>`;
+ 
+                     html += `<tr data-row='${JSON.stringify(r)}'>
+                     ${checkboxHtml}
+                     <td class="fw-medium">${r.tanggal_laporan}</td>
+                     <td>
+                         <span class="badge bg-secondary-subtle text-secondary">
+                             <i class="ri-user-line me-1"></i>${operatorName}
+                         </span>
+                     </td>
+                     <td>${r.pemakaian_air ?? '—'}</td>
+                     <td>${r.pemakaian_steam ?? '—'}</td>
+                     <td>${r.pemakaian_batubara ?? '—'}</td>
+                     <td>${r.running_hour_awal ?? '—'}</td>
+                     <td>${r.running_hour_akhir ?? '—'}</td>
+                     <td class="fs-12 text-muted">${r.created_at ?? '—'}</td>
+                     <td><span class="badge ${s.cls}">${s.label}</span></td>
+                     <td>
+                         <button class="btn btn-xs btn-outline-warning btn-review py-0 px-2 me-1">
+                             <i class="ri-eye-line"></i> Review
+                         </button>
+                         ${canApprove
+                             ? `<button class="btn btn-xs btn-success btn-quick-approve py-0 px-2"
+                                 data-id="${r.id}">
+                                 <i class="ri-check-line"></i> Approve
+                                </button>`
+                             : ''
+                         }
+                     </td>
+                 </tr>`;
+                 });
+                 $('#tbody-approval').html(html);
+             });
         }
 
         // ── FILTER & REFRESH ─────────────────────────────────────────────
@@ -529,6 +548,86 @@
                         icon: 'error',
                         title: 'Gagal',
                         text: xhr.responseJSON?.message ?? 'Terjadi kesalahan.',
+                    });
+                }
+            });
+        }
+
+        // ── CHECKBOX HANDLING & MASS APPROVAL ──────────────────────────────
+        function updateMassApproveButton() {
+            const selectedCount = $('.row-checkbox:checked').length;
+            $('#selected-count').text(selectedCount);
+            if (selectedCount > 0) {
+                $('#btn-mass-approve').removeClass('d-none');
+            } else {
+                $('#btn-mass-approve').addClass('d-none');
+            }
+        }
+
+        $('#check-all').on('change', function() {
+            const checked = $(this).prop('checked');
+            $('.row-checkbox').prop('checked', checked);
+            updateMassApproveButton();
+        });
+
+        $(document).on('change', '.row-checkbox', function() {
+            const total = $('.row-checkbox').length;
+            const checked = $('.row-checkbox:checked').length;
+            $('#check-all').prop('checked', total === checked && total > 0);
+            updateMassApproveButton();
+        });
+
+        $('#btn-mass-approve').on('click', function() {
+            const selectedIds = $('.row-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if (selectedIds.length === 0) return;
+
+            Swal.fire({
+                title: 'Konfirmasi Mass Approve',
+                text: `Apakah Anda yakin ingin menyetujui ${selectedIds.length} laporan terpilih?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Approve Semua',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#198754',
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    doMassApprove(selectedIds);
+                }
+            });
+        });
+
+        function doMassApprove(ids) {
+            $.ajax({
+                url: '{{ route("esp-shift-report.mass-approve") }}',
+                method: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    ids: ids
+                },
+                success: function(res) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: res.message ?? 'Laporan terpilih berhasil diapprove.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                    });
+                    loadData();
+                },
+                error: function(xhr) {
+                    let errorMsg = xhr.responseJSON?.message ?? 'Terjadi kesalahan.';
+                    if (xhr.responseJSON?.errors && xhr.responseJSON.errors.length > 0) {
+                        errorMsg += '<br><br><ul class="text-start fs-13 mb-0">' + 
+                            xhr.responseJSON.errors.map(err => `<li>${err}</li>`).join('') + 
+                            '</ul>';
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        html: errorMsg,
                     });
                 }
             });
