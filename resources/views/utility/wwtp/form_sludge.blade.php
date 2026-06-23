@@ -94,8 +94,9 @@
                                         <div class="form-text">Supervisor yang akan menyetujui laporan ini</div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Sludge Data -->
+                            <!-- Sludge Data -->
                                 <div class="mb-4">
                                     <div class="d-flex align-items-center mb-4">
                                         <div class="flex-grow-1">
