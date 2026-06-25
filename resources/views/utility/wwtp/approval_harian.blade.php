@@ -41,12 +41,12 @@
     <div class="page-content">
         <div class="container-fluid">
 
-            <!-- Loading Overlay -->
+            {{-- <!-- Loading Overlay -->
             <div id="loadingOverlay" class="loading-overlay d-none">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Page Heading -->
             <div class="card border-0 shadow-sm mb-4 page-header-card">
