@@ -31,4 +31,9 @@ return [
         ],
     ],
 
+    'google_sheets' => [
+        'service_account_json' => env('GOOGLE_SERVICE_ACCOUNT_JSON'),
+        'spreadsheet_id' => env('GOOGLE_SHEETS_SPREADSHEET_ID'),
+        'sheet_name' => env('GOOGLE_SHEETS_SHEET_NAME', 'Sheet1'),
+    ],
 ];
