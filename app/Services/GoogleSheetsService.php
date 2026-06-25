@@ -44,8 +44,8 @@ class GoogleSheetsService
                 return;
             }
 
-            // 3. Clear target sheet to remove any old/residual data
-            $clearUrl = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$sheetName}!A1:Z1000:clear";
+            // 3. Clear target sheet to remove any old/residual data across the entire sheet
+            $clearUrl = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/" . rawurlencode($sheetName) . ":clear";
             $clearResponse = Http::withToken($accessToken)
                 ->withBody('{}', 'application/json')
                 ->post($clearUrl);
@@ -54,8 +54,54 @@ class GoogleSheetsService
                 throw new \Exception('Failed to clear spreadsheet: ' . $clearResponse->body());
             }
 
-            // 4. Write new dataset to spreadsheet starting from cell A1
-            $updateUrl = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$sheetName}!A1?valueInputOption=USER_ENTERED";
+            // 4. Retrieve sheet properties to ensure the sheet has at least 26 columns (default Google Sheets size)
+            $spreadsheetUrl = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}";
+            $sheetResponse = Http::withToken($accessToken)->get($spreadsheetUrl);
+
+            if ($sheetResponse->successful()) {
+                $sheets = $sheetResponse->json()['sheets'] ?? [];
+                $targetSheetId = 0;
+                $currentColumnCount = 26; // fallback default
+                foreach ($sheets as $s) {
+                    if (isset($s['properties']) && $s['properties']['title'] === $sheetName) {
+                        $targetSheetId = $s['properties']['sheetId'];
+                        $currentColumnCount = $s['properties']['gridProperties']['columnCount'] ?? 26;
+                        break;
+                    }
+                }
+
+                // Determine the minimum required columns (at least 26, or more if data exceeds it)
+                $dataColumnCount = 0;
+                foreach ($data as $row) {
+                    if (is_array($row)) {
+                        $dataColumnCount = max($dataColumnCount, count($row));
+                    }
+                }
+                $requiredColumnCount = max(26, $dataColumnCount);
+
+                // Only expand columns if current sheet has fewer columns than required (never shrink to avoid deleting user custom columns)
+                if ($currentColumnCount < $requiredColumnCount) {
+                    $batchUpdateUrl = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}:batchUpdate";
+                    Http::withToken($accessToken)->post($batchUpdateUrl, [
+                        'requests' => [
+                            [
+                                'updateSheetProperties' => [
+                                    'properties' => [
+                                        'sheetId' => $targetSheetId,
+                                        'gridProperties' => [
+                                            'columnCount' => $requiredColumnCount
+                                        ]
+                                    ],
+                                    'fields' => 'gridProperties.columnCount'
+                                ]
+                            ]
+                        ]
+                    ]);
+                }
+            }
+
+            // 5. Write new dataset to spreadsheet starting from cell A1
+            $updateUrl = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/" . rawurlencode($sheetName) . "!A1?valueInputOption=USER_ENTERED";
             $updateResponse = Http::withToken($accessToken)->put($updateUrl, [
                 'range' => "{$sheetName}!A1",
                 'majorDimension' => 'ROWS',
@@ -133,28 +179,12 @@ class GoogleSheetsService
             return [];
         }
 
-        // Generate daily dates for the target range (including days with no data)
-        $minDate = WwtpAnalisa::min('analisa_date');
-        $maxDate = WwtpAnalisa::max('analisa_date');
-        $dates = [];
-        if ($minDate && $maxDate) {
-            $start = Carbon::parse($minDate);
-            $end = Carbon::parse($maxDate);
-            // limit to at most 366 days
-            if ($start->diffInDays($end) > 366) {
-                $start = Carbon::now()->startOfMonth();
-                $end = Carbon::now()->endOfMonth();
-            }
-            for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
-                $dates[] = $d->format('Y-m-d');
-            }
-        } else {
-            $start = Carbon::now()->startOfMonth();
-            $end = Carbon::now()->endOfMonth();
-            for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
-                $dates[] = $d->format('Y-m-d');
-            }
-        }
+        // Get unique sorted dates from actual database records
+        $dates = $analisaRecords->pluck('analisa_date')
+            ->map(fn($d) => $d->format('Y-m-d'))
+            ->unique()
+            ->values()
+            ->toArray();
 
         // Build lookup table: lookup[date][parameter_id][point_id] = value
         $lookup = [];
