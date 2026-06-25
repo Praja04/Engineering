@@ -17,9 +17,15 @@ class GoogleSheetsService
      */
     public static function sync()
     {
-        $json = env('GOOGLE_SERVICE_ACCOUNT_JSON');
-        $spreadsheetId = env('GOOGLE_SHEETS_SPREADSHEET_ID');
-        $sheetName = env('GOOGLE_SHEETS_SHEET_NAME', 'Sheet1');
+        $json = config('services.google_sheets.service_account_json');
+        $spreadsheetId = config('services.google_sheets.spreadsheet_id');
+        $sheetName = config('services.google_sheets.sheet_name', 'Sheet1');
+
+        Log::info('Google Config', [
+            'json' => $json,
+            'spreadsheetId' => $spreadsheetId,
+            'sheetName' => $sheetName,
+        ]);
 
         if (!$json || !$spreadsheetId) {
             Log::info('Google Sheets sync skipped: GOOGLE_SERVICE_ACCOUNT_JSON or GOOGLE_SHEETS_SPREADSHEET_ID is not configured in .env.');
