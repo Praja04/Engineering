@@ -20,6 +20,7 @@ Route::middleware('auth')->group(function () {
   Route::get('/wwtp/form_analisa', [WWTPControllerAnalisa::class, 'form_analisa'])->name('wwtp.form_analisa');
   Route::get('/wwtp/data_analisa', [WWTPControllerAnalisa::class, 'data_analisa'])->name('wwtp.data_analisa');
   Route::get('/wwtp/data_analisa/{id}/pdf', [WWTPControllerAnalisa::class, 'downloadPdf'])->name('wwtp.data_analisa.pdf');
+  Route::get('/wwtp/analisa/export', [WWTPControllerAnalisa::class, 'exportExcel'])->name('wwtp.analisa.export');
   Route::get('/wwtp/manage_standar_analisa', [WWTPControllerAnalisa::class, 'manage_standar'])->name('wwtp.manage_standar_analisa')->middleware('access');
   Route::get('/wwtp/analisa/approval', [WWTPControllerAnalisa::class, 'approvalView'])->name('wwtp.analisa.approval');
   Route::get('/wwtp/approval', [WWTPControllerApproval::class, 'approvalView'])->name('wwtp.approval');

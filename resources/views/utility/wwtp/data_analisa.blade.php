@@ -86,9 +86,15 @@
 
                         <!-- Action Buttons -->
                         <div class="row mb-4">
-                            <div class="col-12">
+                            <div class="col-12 d-flex gap-2 flex-wrap">
                                 <a href="{{ url('/wwtp/form_analisa') }}" class="btn btn-info text-white btn-lg">
                                     <i class="mdi mdi-plus-circle me-2"></i>Tambah Data Analisa
+                                </a>
+                                <button id="btnExportExcel" class="btn btn-success text-white btn-lg">
+                                    <i class="mdi mdi-file-excel me-2"></i>Download Excel
+                                </button>
+                                <a href="https://docs.google.com/spreadsheets/d/1VJjPuE8N2UDsbRGLf2GoRO-iW8WMvkNSN_B_PyGxe4A/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="btn btn-lg text-white" style="background-color: #0f9d58; border-color: #0f9d58;">
+                                    <i class="mdi mdi-google-spreadsheet me-2"></i>Buka Google Sheets
                                 </a>
                             </div>
                         </div>
@@ -713,6 +719,17 @@
             window.downloadPdf = function(id) {
                 window.open(`/wwtp/data_analisa/${id}/pdf`, '_blank');
             };
+
+            $('#btnExportExcel').on('click', function() {
+                let url = '/wwtp/analisa/export';
+                let params = [];
+                if (state.bulan) params.push('bulan=' + encodeURIComponent(state.bulan));
+                if (state.search) params.push('search=' + encodeURIComponent(state.search));
+                if (params.length > 0) {
+                    url += '?' + params.join('&');
+                }
+                window.open(url, '_blank');
+            });
 
             function renderPaginationInfo(selector, response) {
                 if (!response.total) {
