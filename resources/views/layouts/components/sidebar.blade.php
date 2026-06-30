@@ -43,6 +43,7 @@
                     @include('layouts.components.sidebar-utility.dashboard')
                     @include('layouts.components.sidebar-maintenance.dashboard-maintenance')
                     @include('layouts.components.sidebar-ejo.dashboard-ejo')
+                    @include('layouts.components.sidebar-operasional.dashboard')
                 @endif
 
 
