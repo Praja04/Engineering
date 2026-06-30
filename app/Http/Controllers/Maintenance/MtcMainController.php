@@ -43,14 +43,19 @@ class MtcMainController extends Controller
     public function getApprovers()
     {
         $staff = User::where('departemen', 'engineering')
-            ->where('jabatan', '!=', 'operator')
+            ->whereIn('jabatan', ['foreman', 'supervisor'])
             ->where(function ($q) {
                 $q->where('bagian', 'Engineering Maintenance & Improvement')
                     ->orWhere('bagian', 'Engineering');
             })
             ->get(['id', 'username']);
 
-        $user = User::where('jabatan', 'supervisor')
+        $user = User::where('departemen', 'engineering')
+            ->where('jabatan', 'supervisor')
+            ->where(function ($q) {
+                $q->where('bagian', 'Engineering Maintenance & Improvement')
+                    ->orWhere('bagian', 'Engineering');
+            })
             ->get(['id', 'username', 'departemen']);
 
         return response()->json([
@@ -119,7 +124,7 @@ class MtcMainController extends Controller
         $drawing = new Drawing();
         $drawing->setName('Approved');
         $drawing->setDescription('Approved Sticker');
-        $drawing->setPath(public_path('assets/images/ttd/utility_approved_sticker.png'));
+        $drawing->setPath(public_path('storage/mtc/ttd/utility_approved_sticker.png'));
         $drawing->setHeight(20);
         $drawing->setCoordinates($cell);
         $drawing->setOffsetX(20);
@@ -237,7 +242,8 @@ class MtcMainController extends Controller
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('D' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('D' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('F' . $materialRow, $item->deskripsi ?? '');
                     $sheet->setCellValue('H' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
@@ -404,7 +410,8 @@ class MtcMainController extends Controller
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('D' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('D' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('F' . $materialRow, $item->deskripsi ?? '');
                     $sheet->setCellValue('H' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
@@ -554,7 +561,8 @@ class MtcMainController extends Controller
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('D' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('D' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('F' . $materialRow, $item->deskripsi ?? '');
                     $sheet->setCellValue('H' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
@@ -693,7 +701,8 @@ class MtcMainController extends Controller
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('D' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('D' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('F' . $materialRow, $item->deskripsi ?? '');
                     $sheet->setCellValue('H' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
@@ -861,7 +870,8 @@ class MtcMainController extends Controller
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('E' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('E' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('G' . $materialRow, $item->deskripsi ?? '');
                     $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
@@ -1033,7 +1043,8 @@ class MtcMainController extends Controller
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('E' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('E' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('G' . $materialRow, $item->deskripsi ?? '');
                     $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;

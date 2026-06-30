@@ -74,7 +74,7 @@ class MdpMonitoringController extends Controller
             ]);
 
             try {
-                $this->sendNotification($report);
+                $this->sendNotification($report, $report->foreman_id);
             } catch (\Exception $e) {
                 Log::error('Notif MDP gagal: ' . $e->getMessage());
             }
@@ -104,26 +104,19 @@ class MdpMonitoringController extends Controller
         }
     }
 
-    private function sendNotification($data)
+    private function sendNotification($data, $userId)
     {
         $approvalUrl = url(route('mdp-monitoring.approval', [], false));
 
-        $recipients = User::whereIn('id', array_filter([
-            $data->foreman_id,
-            $data->supervisor_id,
-        ]))->get();
-
-        foreach ($recipients as $user) {
-            NotificationsModel::create([
-                'user_id'          => $user->id,
-                'title'            => 'Approval Pemantauan MDP',
-                'message'          => 'Laporan pemantauan MDP tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
-                'url'              => $approvalUrl,
-                'notifiable_type'  => MdpMonitoringModel::class,
-                'notifiable_id'    => $data->id,
-                'is_read'          => 0,
-            ]);
-        }
+        NotificationsModel::create([
+            'user_id'          => $userId,
+            'title'            => 'Approval Pemantauan MDP',
+            'message'          => 'Laporan pemantauan MDP tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
+            'url'              => $approvalUrl,
+            'notifiable_type'  => MdpMonitoringModel::class,
+            'notifiable_id'    => $data->id,
+            'is_read'          => 0,
+        ]);
     }
 
     public function approveForeman($id)
@@ -152,6 +145,12 @@ class MdpMonitoringController extends Controller
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id())
             ->delete();
+
+        try {
+            $this->sendNotification($data, $data->supervisor_id);
+        } catch (\Exception $e) {
+            Log::error('Notif MDP Supervisor gagal: ' . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
@@ -249,34 +248,51 @@ class MdpMonitoringController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = MdpMonitoringModel::findOrFail($id);
+        DB::beginTransaction();
+        try {
+            $data = MdpMonitoringModel::findOrFail($id);
 
-        // Hanya bisa edit jika status masih submitted (atau admin)
-        if ($data->status !== 'submitted' && !auth()->user()->hasRole(['superadmin', 'admin'])) {
-            return response()->json(['message' => 'Hanya laporan dengan status submitted yang bisa diubah'], 422);
+            // Hanya bisa edit jika status masih submitted (atau admin)
+            if ($data->status !== 'submitted' && !auth()->user()->hasRole(['superadmin', 'admin'])) {
+                return response()->json(['message' => 'Hanya laporan dengan status submitted yang bisa diubah'], 422);
+            }
+
+            $validated = $request->validate([
+                'e_del' => 'nullable|numeric',
+                'arus_rata_rata' => 'nullable|numeric',
+                'arus_i1' => 'nullable|numeric',
+                'arus_i2' => 'nullable|numeric',
+                'arus_i3' => 'nullable|numeric',
+                'tegangan_rata_rata' => 'nullable|numeric',
+                'tegangan_v1' => 'nullable|numeric',
+                'tegangan_v2' => 'nullable|numeric',
+                'tegangan_v3' => 'nullable|numeric',
+                'daya_total' => 'nullable|numeric',
+                'daya_p1' => 'nullable|numeric',
+                'daya_p2' => 'nullable|numeric',
+                'daya_p3' => 'nullable|numeric',
+                'temperatur_transformator' => 'nullable|numeric',
+                'level_oil' => 'nullable|string|in:ok,nok',
+            ]);
+
+            $data->update([
+                ...$validated,
+                'updated_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Data MDP berhasil diperbarui'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 500,
+                'message' => 'Gagal memperbarui data MDP',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $validated = $request->validate([
-            'e_del' => 'nullable|numeric',
-            'arus_rata_rata' => 'nullable|numeric',
-            'arus_i1' => 'nullable|numeric',
-            'arus_i2' => 'nullable|numeric',
-            'arus_i3' => 'nullable|numeric',
-            'tegangan_rata_rata' => 'nullable|numeric',
-            'tegangan_v1' => 'nullable|numeric',
-            'tegangan_v2' => 'nullable|numeric',
-            'tegangan_v3' => 'nullable|numeric',
-            'daya_total' => 'nullable|numeric',
-            'daya_p1' => 'nullable|numeric',
-            'daya_p2' => 'nullable|numeric',
-            'daya_p3' => 'nullable|numeric',
-            'temperatur_transformator' => 'nullable|numeric',
-            'level_oil' => 'nullable|string|in:ok,nok',
-        ]);
-
-        $data->update($validated);
-
-        return response()->json(['message' => 'Data MDP berhasil diperbarui']);
     }
 
     public function destroy($id)
@@ -448,7 +464,7 @@ class MdpMonitoringController extends Controller
         }
 
         // Path Stiker TTD
-        $signaturePath = asset('storage/operasional/ttd/utility_approved_sticker.png');
+        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
         $hasSignature = file_exists($signaturePath);
 
         // Isi Data Teknis (Berdasarkan Tanggal: Baris 5-35)

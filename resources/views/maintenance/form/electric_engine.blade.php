@@ -401,9 +401,12 @@
                         </div>
 
                         {{-- BUTTON --}}
-                        <div class="text-end mt-4">
-                            <button type="button" id="btn-reset" class="btn btn-outline-danger me-2">
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" id="btn-reset" class="btn btn-outline-danger">
                                 Reset
+                            </button>
+                            <button type="button" id="btn-input-battery" class="btn btn-outline-warning">
+                                <i class="mdi mdi-battery-charging me-1"></i> Input Battery
                             </button>
                             <button type="submit" id="btn-submit" class="btn btn-primary">
                                 Simpan
@@ -454,10 +457,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">User MT/MTC</label>
-                        <select class="form-select" id="userDept">
-                            <option value="">Pilih Departemen</option>
-                        </select>
-                        <select class="form-select mt-2 d-none" id="userDropdown">
+                        <select class="form-select" id="userDropdown">
                             <option value="">Pilih user</option>
                         </select>
                     </div>
@@ -489,7 +489,9 @@
                 time_24hr: true,
                 minuteIncrement: 1,
             });
+
             let index = 0;
+
             $('select[name="paket"]').on('change', function() {
                 const val = $(this).val();
 
@@ -623,6 +625,9 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
+                }).on('select2:clear select2:unselect', function(e) {
+                    $(this).closest('tr').find('input[name*="[desc]"]').val('');
+                    $(this).closest('tr').find('input[name*="[qty]"]').val('');
                 });
             }
 
@@ -704,11 +709,9 @@
             let pendingFormData = null;
             let selectedStaff = null;
             let selectedUser = null;
+            let redirectToBattery = false;
 
-            $('#form-mtc-electric-engine').on('submit', function(e) {
-                e.preventDefault();
-                pendingFormData = new FormData(this);
-
+            function openApproverModal() {
                 $('#modalApprover').modal('show');
 
                 $.get('/api/mtc/users/approvers', function(res) {
@@ -719,26 +722,34 @@
                             `<option value="${u.id}">${u.username}</option>`);
                     });
 
-                    const depts = [...new Set(res.user.map(u => u.departemen))];
-                    const $userDept = $('#userDept');
-                    $userDept.empty().append('<option value="">Pilih Departemen</option>');
-                    depts.forEach(d => $userDept.append(`<option value="${d}">${d}</option>`));
-
-                    $('#userDept').off('change').on('change', function() {
-                        const dept = $(this).val();
-                        const filtered = res.user.filter(u => u.departemen === dept);
-                        const $userDropdown = $('#userDropdown');
-                        $userDropdown.empty().append(
-                            '<option value="">Pilih user</option>');
-                        filtered.forEach(u => {
-                            $userDropdown.append(
-                                `<option value="${u.id}">${u.username}</option>`
-                            );
-                        });
-                        $userDropdown.removeClass('d-none');
-                        selectedUser = null;
+                    const $userDropdown = $('#userDropdown');
+                    $userDropdown.empty().append('<option value="">Pilih user</option>');
+                    res.user.forEach(u => {
+                        $userDropdown.append(
+                            `<option value="${u.id}">${u.username}</option>`
+                        );
                     });
                 });
+            }
+
+            $('#form-mtc-electric-engine').on('submit', function(e) {
+                e.preventDefault();
+                redirectToBattery = false;
+                pendingFormData = new FormData(this);
+                openApproverModal();
+            });
+
+            $('#btn-input-battery').on('click', function() {
+                const form = $('#form-mtc-electric-engine')[0];
+
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                redirectToBattery = true;
+                pendingFormData = new FormData(form);
+                openApproverModal();
             });
 
             $(document).on('change', '#staffDropdown', function() {
@@ -802,7 +813,11 @@
                             timer: 2000,
                             showConfirmButton: false
                         }).then(() => {
-                            resetFormMotorPump();
+                            if (redirectToBattery) {
+                                window.location.href = "{{ route('mtc.battery.index') }}";
+                            } else {
+                                resetFormMotorPump();
+                            }
                         });
                     },
                     error: function(xhr) {

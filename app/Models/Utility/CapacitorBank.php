@@ -2,8 +2,9 @@
 
 namespace App\Models\Utility;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class CapacitorBank extends Model
 {
@@ -35,6 +36,8 @@ class CapacitorBank extends Model
         'cap_c_i3',
 
         'suhu_ruang',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -54,6 +57,17 @@ class CapacitorBank extends Model
 
         'suhu_ruang' => 'decimal:2',
     ];
+
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
 
     // ── ACCESSOR ─────────────────────────────
 

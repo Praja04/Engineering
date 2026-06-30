@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\NotificationsModel;
 use App\Models\Utility\CapacitorBank;
 use App\Models\Utility\CapacitorBankApproval;
-use App\Models\NotificationsModel;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -77,21 +78,35 @@ class CapacitorBankController extends Controller
             ], 422);
         }
 
-        $data = CapacitorBank::create($request->all());
+        DB::beginTransaction();
+        try {
+            $data = CapacitorBank::create([
+                ...$request->all(),
+                'created_by' => auth()->id(),
+            ]);
 
-        // Pastikan record approval ada (foreman_id diisi saat foreman submit)
-        CapacitorBankApproval::firstOrCreate(
-            ['bulan' => $tanggal->month, 'tahun' => $tanggal->year],
-            [
-                'status'      => 'draft',
-                'operator_id' => auth()->id(),
-                'submitted_at' => now(),
-            ]
-        );
-        return response()->json([
-            'message' => 'Data berhasil disimpan.',
-            'data'    => $data
-        ]);
+            // Pastikan record approval ada (foreman_id diisi saat foreman submit)
+            CapacitorBankApproval::firstOrCreate(
+                ['bulan' => $tanggal->month, 'tahun' => $tanggal->year],
+                [
+                    'status'      => 'draft',
+                    'operator_id' => auth()->id(),
+                    'submitted_at' => now(),
+                ]
+            );
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Data berhasil disimpan.',
+                'data'    => $data
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Gagal menyimpan data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -134,7 +149,10 @@ class CapacitorBankController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
-        $data->update($request->all());
+        $data->update([
+            ...$request->all(),
+            'updated_by' => auth()->id(),
+        ]);
 
         return response()->json([
             'message' => 'Data berhasil diupdate.',
@@ -428,6 +446,27 @@ class CapacitorBankController extends Controller
             $this->insertSignatureSection($sheet, $approval);
         }
 
+        // ── Pindahkan kode form dari O38 ke O46 ───────────────
+        $formCode = $sheet->getCell('O38')->getValue();
+        if ($formCode) {
+            $sheet->setCellValue('O46', $formCode);
+            $sheet->setCellValue('O38', null);
+            $sheet->unmergeCells('O38:R38');
+            $sheet->mergeCells('O46:R46');
+            $sheet->getStyle('O46:R46')->applyFromArray([
+                'font' => [
+                    'name' => 'Calibri',
+                    'size' => 10,
+                    'bold' => true,
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_RIGHT,
+                    'vertical'   => Alignment::VERTICAL_TOP,
+                ],
+            ]);
+        }
+
+
         // ── Stream ke browser ─────────────────────────────────
         $filename = "CapacitorBank_{$bulanNames[$bulan]}_{$tahun}.xlsx";
         $writer   = new Xlsx($spreadsheet);
@@ -452,7 +491,7 @@ class CapacitorBankController extends Controller
         $nameRow  = 44;
         $tsRow    = 45;
 
-        $basePath = public_path('storage/operasional/ttd');
+        $basePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
 
         // Helper ambil username dari relasi User
         $getName = fn($user) => $user?->username ?? '-';
@@ -462,7 +501,7 @@ class CapacitorBankController extends Controller
                 'colStart'  => 'A',
                 'colEnd'    => 'F',
                 'label'     => 'Operator / Pelaksana',
-                'ttdFile'   => $basePath . '/ttd_teknisi.jpeg',
+                'ttdFile'   => $basePath,
                 'name'      => $getName($approval->operator),
                 'timestamp' => $approval->submitted_at?->format('d/m/Y H:i') ?? '-',
             ],
@@ -470,7 +509,7 @@ class CapacitorBankController extends Controller
                 'colStart'  => 'G',
                 'colEnd'    => 'L',
                 'label'     => 'Foreman',
-                'ttdFile'   => $basePath . '/ttd_staff.jpeg',
+                'ttdFile'   => $basePath,
                 'name'      => $getName($approval->foreman),
                 'timestamp' => $approval->foreman_approved_at?->format('d/m/Y H:i') ?? '-',
             ],
@@ -478,7 +517,7 @@ class CapacitorBankController extends Controller
                 'colStart'  => 'M',
                 'colEnd'    => 'R',
                 'label'     => 'Supervisor',
-                'ttdFile'   => $basePath . '/ttd_user_eng.jpeg',
+                'ttdFile'   => $basePath,
                 'name'      => $getName($approval->supervisor),
                 'timestamp' => $approval->supervisor_approved_at?->format('d/m/Y H:i') ?? '-',
             ],

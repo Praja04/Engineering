@@ -2,9 +2,12 @@
     $jabatan = Auth::user()->jabatan;
     $bagian = Auth::user()->bagian;
 
-    $isUtility = request()->is('utility/form') || request()->is('utility/data');
+    $isUtility = request()->is('utility/form') || request()->is('utility/data') || request()->is('utility/approval');
 
-    $isEsp = request()->is('utility/esp-operational-report*');
+    $isEsp =
+        request()->is('utility/esp-operational-report*') ||
+        request()->is('utility/esp-shift-report*') ||
+        request()->is('utility/esp-coal-handover*');
     $isWs = request()->is('utility/water-softener*');
     $isGenset = request()->is('utility/warming-up-genset*');
     $isCompressor = request()->is('utility/compressor*');
@@ -49,6 +52,16 @@
                     </a>
                 </li>
 
+                @if ($jabatan != 'operator')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('utility/approval') ? 'active' : '' }}"
+                            href="{{ url('utility/approval') }}">
+                            <i class="mdi mdi-checkbox-marked-circle-outline"></i>
+                            <span>Approval Utility</span>
+                        </a>
+                    </li>
+                @endif
+
             </ul>
         </div>
     </li>
@@ -56,7 +69,7 @@
     {{-- ================= OPERASIONAL ================= --}}
     <li class="nav-item">
         <a class="nav-link menu-link {{ $isOperasional ? '' : 'collapsed' }}" href="#sidebarOperasionalMenu"
-            data-bs-toggle="collapse">
+            aria-expanded="{{ $isOperasional ? 'true' : 'false' }}" data-bs-toggle="collapse">
             <i class="mdi mdi-file-chart"></i>
             <span>Operasional</span>
         </a>
@@ -66,7 +79,7 @@
                 {{-- AHU --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ $isAhu ? '' : 'collapsed' }}" href="#ahuMenu"
-                        data-bs-toggle="collapse">
+                        aria-expanded="{{ $isAhu ? 'true' : 'false' }}" data-bs-toggle="collapse">
                         <span>AHU</span>
                     </a>
 
@@ -103,7 +116,7 @@
                 {{-- Capacitor Bank --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ $isCapacitorBank ? '' : 'collapsed' }}" href="#capacitorBankMenu"
-                        data-bs-toggle="collapse">
+                        data-bs-toggle="collapse" aria-expanded="{{ $isCapacitorBank ? 'true' : 'false' }}">
                         <span>Capacitor Bank</span>
                     </a>
 
@@ -141,7 +154,7 @@
                 {{-- Compressor --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ $isCompressor ? '' : 'collapsed' }}" href="#compressorMenu"
-                        data-bs-toggle="collapse">
+                        data-bs-toggle="collapse" aria-expanded="{{ $isCompressor ? 'true' : 'false' }}">
                         <span>Compressor</span>
                     </a>
 
@@ -180,7 +193,7 @@
                 {{-- ===== ESP ===== --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ $isEsp ? '' : 'collapsed' }}" href="#espMenu"
-                        data-bs-toggle="collapse">
+                        data-bs-toggle="collapse" aria-expanded="{{ $isEsp ? 'true' : 'false' }}">
                         <span>ESP</span>
                     </a>
 
@@ -188,7 +201,7 @@
                         <ul class="nav nav-sm flex-column">
 
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->is('utility/esp-operational-report/form') ? 'active' : '' }}"
+                                <a class="nav-link {{ request()->is('utility/esp-operational-report') ? 'active' : '' }}"
                                     href="{{ url('utility/esp-operational-report/') }}">
                                     Form ESP
                                 </a>
@@ -219,7 +232,7 @@
                 {{-- MDP Monitoring --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ $isMdp ? '' : 'collapsed' }}" href="#mdpMenu"
-                        data-bs-toggle="collapse">
+                        data-bs-toggle="collapse" aria-expanded="{{ $isMdp ? 'true' : 'false' }}">
                         <span>MDP Monitoring</span>
                     </a>
 
@@ -256,7 +269,7 @@
                 {{-- ===== WATER SOFTENER ===== --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ $isWs ? '' : 'collapsed' }}" href="#wsMenu"
-                        data-bs-toggle="collapse">
+                        data-bs-toggle="collapse" aria-expanded="{{ $isWs ? 'true' : 'false' }}">
                         <span>WS (Water Softener)</span>
                     </a>
 
@@ -294,7 +307,7 @@
                 {{-- Warming Up Genset --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ $isGenset ? '' : 'collapsed' }}" href="#gensetMenu"
-                        data-bs-toggle="collapse">
+                        data-bs-toggle="collapse" aria-expanded="{{ $isGenset ? 'true' : 'false' }}">
                         <span>Warming Up Genset</span>
                     </a>
 

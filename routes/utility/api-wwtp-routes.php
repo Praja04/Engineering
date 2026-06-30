@@ -6,13 +6,15 @@ use App\Http\Controllers\Utility\WWTPControllerProses;
 use App\Http\Controllers\Utility\WWTPControllerSludge;
 use App\Http\Controllers\Utility\WWTPControllerAnalisa;
 use App\Http\Controllers\Utility\WWTPController;
+use App\Http\Controllers\Utility\WWTPControllerApproval;
 
 // WWTP Proses Routes
 Route::prefix('wwtp')->group(function () {
     // WWTP Daily Data Routes (Influent Harian) - HARUS DI ATAS /{id}
     Route::get('/all/export', [WWTPController::class, 'export']);
     Route::get('/influent-harian', [WWTPControllerProses::class, 'indexHarian']);
-    Route::post('/influent-harian', [WWTPControllerProses::class, 'storeinfluentHarian'])->name('wwtp.influent-harian.store');
+    Route::get('/influent-harian/previous-data', [WWTPControllerProses::class, 'getPreviousData']);
+    Route::get('/influent-harian/filled-shifts', [WWTPControllerProses::class, 'getFilledShifts']);
     Route::get('/influent-harian/{id}', [WWTPControllerProses::class, 'showHarian']);
     Route::put('/influent-harian/{id}', [WWTPControllerProses::class, 'updateHarian']);
     Route::delete('/influent-harian/{id}', [WWTPControllerProses::class, 'destroyHarian']);
@@ -51,7 +53,7 @@ Route::prefix('wwtp-performance')->group(function () {
     Route::get('/photo-gallery', [WWTPControllerPerformance::class, 'getPhotoGallery'])
         ->name('wwtp.performance.photo-gallery');
     Route::get('/ph-harian', [WWTPControllerPerformance::class, 'indexPHHarian']);
-    Route::post('/ph-harian', [WWTPControllerPerformance::class, 'storePHHarian']);
+    Route::get('/ph-harian/filled-shifts', [WWTPControllerPerformance::class, 'getFilledShifts']);
     Route::get('/ph-harian/{id}', [WWTPControllerPerformance::class, 'showPHHarian']);
     Route::put('/ph-harian/{id}', [WWTPControllerPerformance::class, 'updatePHHarian']);
     Route::delete('/ph-harian/{id}', [WWTPControllerPerformance::class, 'destroyPHHarian']);
@@ -146,38 +148,11 @@ Route::prefix('wwtp-sludge')->group(function () {
         Route::get('/', [WWTPControllerSludge::class, 'index_pengangkutan']);
         Route::get('/{id}', [WWTPControllerSludge::class, 'show_pengangkutan']);
     });
-  
 
+    Route::get('/filled-shifts', [WWTPControllerSludge::class, 'getFilledShifts']);
     Route::post('/', [WWTPControllerSludge::class, 'store']);
     Route::delete('/{id}', [WWTPControllerSludge::class, 'destroy']);
     Route::post('/{id}', [WWTPControllerSludge::class, 'update']);
     Route::get('/', [WWTPControllerSludge::class, 'index']);
     Route::get('/{id}', [WWTPControllerSludge::class, 'show']);
-});
-
-// WWTP Analisa Routes
-Route::prefix('wwtp-analisa')->group(function () {
-    Route::get('/check-filled', [WWTPControllerAnalisa::class, 'checkFilledParameters']);
-    Route::get('/parameters', [WWTPControllerAnalisa::class, 'indexParameter']);
-    Route::post('/parameters', [WWTPControllerAnalisa::class, 'storeParameter']);
-    Route::get('/parameters/{id}', [WWTPControllerAnalisa::class, 'showParameter']);
-    Route::put('/parameters/{id}', [WWTPControllerAnalisa::class, 'updateParameter']);
-    Route::delete('/parameters/{id}', [WWTPControllerAnalisa::class, 'destroyParameter']);
-    Route::get('/points', [WWTPControllerAnalisa::class, 'indexPoint']);
-    Route::post('/points', [WWTPControllerAnalisa::class, 'storePoint']);
-    Route::get('/points/{id}', [WWTPControllerAnalisa::class, 'showPoint']);
-    Route::put('/points/{id}', [WWTPControllerAnalisa::class, 'updatePoint']);
-    Route::delete('/points/{id}', [WWTPControllerAnalisa::class, 'destroyPoint']);
-    Route::get('/standards', [WWTPControllerAnalisa::class, 'indexStandar']);
-    Route::post('/standards', [WWTPControllerAnalisa::class, 'storeStandar']);
-    Route::get('/standards/{id}', [WWTPControllerAnalisa::class, 'showStandar']);
-    Route::put('/standards/{id}', [WWTPControllerAnalisa::class, 'updateStandar']);
-    Route::delete('/standards/{id}', [WWTPControllerAnalisa::class, 'destroyStandar']);
-    Route::post('/', [WWTPControllerAnalisa::class, 'store']);
-    Route::post('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'updateParameterResults']);
-    Route::delete('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'destroyParameterResults']);
-    Route::delete('/{id}', [WWTPControllerAnalisa::class, 'destroy']);
-    Route::post('/{id}', [WWTPControllerAnalisa::class, 'update']);
-    Route::get('/', [WWTPControllerAnalisa::class, 'index']);
-    Route::get('/{id}', [WWTPControllerAnalisa::class, 'show']);
 });

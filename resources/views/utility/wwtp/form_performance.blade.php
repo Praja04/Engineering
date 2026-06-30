@@ -342,6 +342,28 @@
                                             </div>
                                         </div>
 
+                                        <div class="row mb-4" id="daily_approval_row" style="display: none;">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="daily_foreman_id" class="form-label fw-semibold">
+                                                    Pilih Foreman <span class="text-danger">*</span>
+                                                </label>
+                                                <select class="form-select" id="daily_foreman_id" name="foreman_id">
+                                                    <option value="">-- Pilih Foreman --</option>
+                                                </select>
+                                                <div class="form-text">Foreman yang akan memverifikasi laporan ini</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="daily_supervisor_id" class="form-label fw-semibold">
+                                                    Pilih Supervisor <span class="text-danger">*</span>
+                                                </label>
+                                                <select class="form-select" id="daily_supervisor_id"
+                                                    name="supervisor_id">
+                                                    <option value="">-- Pilih Supervisor --</option>
+                                                </select>
+                                                <div class="form-text">Supervisor yang akan menyetujui laporan ini</div>
+                                            </div>
+                                        </div>
+
                                         <div class="mb-4">
                                             <div class="d-flex align-items-center mb-4">
                                                 <div class="flex-grow-1">
@@ -971,6 +993,119 @@
             $('#weekly_tanggal').val(today);
             $('#sample_tanggal').val(today);
 
+            function checkDailyApproval() {
+                const tanggal = $('#daily_tanggal').val();
+                if (!tanggal) {
+                    $('#daily_approval_row').hide();
+                    $('#daily_foreman_id, #daily_supervisor_id').val('').prop('required', false);
+                    $('#submitDailyForm').prop('disabled', false);
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ url('wwtp-approval/check') }}",
+                    method: 'GET',
+                    data: {
+                        tanggal: tanggal
+                    },
+                    success: function(response) {
+                        if (response.approval_exists) {
+                            $('#daily_approval_row').hide();
+                            $('#daily_foreman_id, #daily_supervisor_id').val('').prop('required',
+                                false);
+
+                            // if (response.approval.status === 'approved_foreman' || response.approval
+                            //     .status === 'approved_supervisor') {
+                            //     Swal.fire({
+                            //         icon: 'warning',
+                            //         title: 'Peringatan',
+                            //         text: 'Laporan harian untuk tanggal ini sudah disetujui dan terkunci.',
+                            //         confirmButtonColor: '#3085d6'
+                            //     });
+                            //     $('#submitDailyForm').prop('disabled', true);
+                            // } else {
+                            //     $('#submitDailyForm').prop('disabled', false);
+                            // }
+                        } else {
+                            $('#submitDailyForm').prop('disabled', false);
+                            $('#daily_approval_row').show();
+                            $('#daily_foreman_id, #daily_supervisor_id').prop('required', true);
+
+                            const foremanSelect = $('#daily_foreman_id');
+                            foremanSelect.html('<option value="">-- Pilih Foreman --</option>');
+                            response.foremen.forEach(function(u) {
+                                foremanSelect.append(
+                                    `<option value="${u.id}">${u.username}</option>`);
+                            });
+
+                            const supervisorSelect = $('#daily_supervisor_id');
+                            supervisorSelect.html('<option value="">-- Pilih Supervisor --</option>');
+                            response.supervisors.forEach(function(u) {
+                                supervisorSelect.append(
+                                    `<option value="${u.id}">${u.username}</option>`);
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Gagal mengecek status approval harian:', xhr);
+                    }
+                });
+            }
+
+            function checkFilledShifts() {
+                const tanggal = $('#daily_tanggal').val();
+                if (!tanggal) {
+                    $('#daily_shift option').prop('disabled', false);
+                    return;
+                }
+
+                $.ajax({
+                    url: "/api/wwtp-performance/ph-harian/filled-shifts",
+                    method: 'GET',
+                    data: {
+                        tanggal: tanggal
+                    },
+                    success: function(response) {
+                        if (response.success && response.filled_shifts) {
+                            const currentSelected = $('#daily_shift').val();
+
+                            // Reset semua option
+                            $('#daily_shift option').each(function() {
+                                const originalText = $(this).data('original-text') || $(this)
+                                    .text();
+
+                                $(this)
+                                    .data('original-text', originalText)
+                                    .text(originalText)
+                                    .prop('disabled', false);
+                            });
+
+                            // Disable options present in response.filled_shifts
+                            response.filled_shifts.forEach(function(shift) {
+                                const option = $(`#daily_shift option[value="${shift}"]`);
+
+                                option
+                                    .prop('disabled', true)
+                                    .text(`${option.data('original-text')} (Sudah Terisi)`);
+                            });
+
+                            // If currently selected shift is now disabled, reset it
+                            if (response.filled_shifts.includes(currentSelected)) {
+                                $('#daily_shift').val('');
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Gagal mengambil data shift terisi:', xhr);
+                    }
+                });
+            }
+
+            $('#daily_tanggal').on('change', checkDailyApproval);
+            $('#daily_tanggal').on('change', checkFilledShifts);
+            checkDailyApproval();
+            checkFilledShifts();
+
             // =========================================
             // Card selector logic
             // =========================================
@@ -1044,9 +1179,10 @@
                     '<i class="mdi mdi-loading mdi-spin me-1"></i> Menyimpan...');
 
                 $.ajax({
-                    url: "{{ url('api/wwtp-performance/ph-harian') }}",
+                    url: "{{ url('wwtp/performance/ph-harian') }}",
                     method: 'POST',
                     data: {
+                        _token: "{{ csrf_token() }}",
                         tanggal: $('#daily_tanggal').val(),
                         shift: $('#daily_shift').val(),
                         equalisasi_1: $('#daily_equalisasi_1').val() || null,
@@ -1059,6 +1195,8 @@
                         lumpur_aktif: $('#daily_lumpur_aktif').val() || null,
                         clarifier_2: $('#daily_clarifier_2').val() || null,
                         outlet: $('#daily_outlet').val() || null,
+                        foreman_id: $('#daily_foreman_id').val() || null,
+                        supervisor_id: $('#daily_supervisor_id').val() || null,
                     },
                     success: function(response) {
                         $('#successMessage').html(response.message ||
@@ -1066,6 +1204,8 @@
                         $('#successModal').modal('show');
                         $('#dailyPHForm')[0].reset();
                         $('#daily_tanggal').val(today);
+                        checkDailyApproval();
+                        checkFilledShifts();
                     },
                     error: function(xhr) {
                         showErrorSwal(xhr);
@@ -1076,61 +1216,108 @@
                 });
             });
 
+            // Reset handler daily PH form
+            $('#dailyPHForm').on('reset', function() {
+                setTimeout(function() {
+                    $('#daily_tanggal').val(today);
+                    checkFilledShifts();
+                }, 10);
+            });
+
             // =========================================
             // LOAD: Jenis Sampel
             // =========================================
-            function loadJenisSampel() {
-                $('#sampleLoadingState').removeClass('d-none');
-                $('#sampleErrorState').addClass('d-none');
-                $('#samplePerformanceForm').addClass('d-none');
+            function loadJenisSampel(quiet = false) {
+                const tanggal = $('#sample_tanggal').val();
+
+                if (!quiet) {
+                    $('#sampleLoadingState').removeClass('d-none');
+                    $('#sampleErrorState').addClass('d-none');
+                    $('#samplePerformanceForm').addClass('d-none');
+                } else {
+                    $('#sample_id_sampel').prop('disabled', true);
+                }
 
                 $.ajax({
                     url: "{{ url('api/wwtp-performance/jenis-sampel') }}",
                     method: 'GET',
+                    data: {
+                        tanggal: tanggal
+                    },
                     success: function(response) {
                         const select = $('#sample_id_sampel');
+                        const currentValue = select.val();
                         select.find('option:not(:first)').remove(); // clear existing options
 
                         if (response.success && response.data.length > 0) {
                             response.data.forEach(function(item) {
+                                const isFilled = !!item.is_filled;
+                                const optionText = item.nama_sampel + (isFilled ?
+                                    ' (Sudah diisi)' : '');
                                 select.append(
                                     $('<option>', {
                                         value: item.id,
-                                        text: item.nama_sampel,
-                                        'data-nama': item.nama_sampel
+                                        text: optionText,
+                                        'data-nama': item.nama_sampel,
+                                        disabled: isFilled
                                     })
                                 );
                             });
-                            $('#sampleLoadingState').addClass('d-none');
-                            $('#samplePerformanceForm').removeClass('d-none');
+
+                            // Restore value if it's still available and not disabled
+                            if (currentValue) {
+                                const newOption = select.find(`option[value="${currentValue}"]`);
+                                if (newOption.length && !newOption.prop('disabled')) {
+                                    select.val(currentValue);
+                                } else {
+                                    select.val('');
+                                    $('#selectedSampleInfo').addClass('d-none');
+                                }
+                            }
+
+                            if (!quiet) {
+                                $('#sampleLoadingState').addClass('d-none');
+                                $('#samplePerformanceForm').removeClass('d-none');
+                            }
                         } else {
-                            // No data
-                            $('#sampleLoadingState').addClass('d-none');
-                            $('#sampleErrorState')
-                                .removeClass('d-none')
-                                .html(
-                                    '<i class="mdi mdi-alert-circle me-2"></i>Belum ada jenis sampel yang tersedia. Tambahkan terlebih dahulu melalui manajemen master data.'
-                                );
+                            if (!quiet) {
+                                $('#sampleLoadingState').addClass('d-none');
+                                $('#sampleErrorState')
+                                    .removeClass('d-none')
+                                    .html(
+                                        '<i class="mdi mdi-alert-circle me-2"></i>Belum ada jenis sampel yang tersedia. Tambahkan terlebih dahulu melalui manajemen master data.'
+                                    );
+                            }
                         }
                     },
                     error: function() {
-                        $('#sampleLoadingState').addClass('d-none');
-                        $('#sampleErrorState').removeClass('d-none').html(
-                            '<i class="mdi mdi-alert-circle me-2"></i>Gagal memuat daftar jenis sampel. ' +
-                            '<a href="javascript:void(0)" id="retrySampleLoad" class="alert-link">Coba lagi</a>'
-                        );
-                        // Re-bind retry karena HTML di-replace
-                        $(document).on('click', '#retrySampleLoad', loadJenisSampel);
+                        if (!quiet) {
+                            $('#sampleLoadingState').addClass('d-none');
+                            $('#sampleErrorState').removeClass('d-none').html(
+                                '<i class="mdi mdi-alert-circle me-2"></i>Gagal memuat daftar jenis sampel. ' +
+                                '<a href="javascript:void(0)" id="retrySampleLoad" class="alert-link">Coba lagi</a>'
+                            );
+                            $(document).on('click', '#retrySampleLoad', function() {
+                                loadJenisSampel(false);
+                            });
+                        }
+                    },
+                    complete: function() {
+                        if (quiet) {
+                            $('#sample_id_sampel').prop('disabled', false);
+                        }
                     }
                 });
             }
 
             // Load saat tab sample diklik
             $('[data-bs-target="#sampleForm"]').on('click', function() {
-                // Hanya load jika belum ada option (belum pernah di-load)
-                if ($('#sample_id_sampel option').length <= 1) {
-                    loadJenisSampel();
-                }
+                loadJenisSampel(false);
+            });
+
+            // Listen to date changes
+            $('#sample_tanggal').on('change', function() {
+                loadJenisSampel(true);
             });
 
             // Tampilkan info jenis sampel yang dipilih
@@ -1149,6 +1336,7 @@
                 setTimeout(function() {
                     $('#sample_tanggal').val(today);
                     $('#selectedSampleInfo').addClass('d-none');
+                    loadJenisSampel(true);
                 }, 10);
             });
 
@@ -1182,6 +1370,7 @@
                         $('#samplePerformanceForm')[0].reset();
                         $('#sample_tanggal').val(today);
                         $('#selectedSampleInfo').addClass('d-none');
+                        loadJenisSampel(true);
                     },
                     error: function(xhr) {
                         showErrorSwal(xhr);

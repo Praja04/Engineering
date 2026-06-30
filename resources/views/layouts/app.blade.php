@@ -266,6 +266,11 @@
                     }, "smooth");
                 });
 
+                // number type input agar tidak ke trigger scroll
+                $(document).on('wheel', 'input[type=number]', function() {
+                    $(this).blur();
+                });
+
                 let seenNotifications = new Set();
 
                 function fetchNotifications() {

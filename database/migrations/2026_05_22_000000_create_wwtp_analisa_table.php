@@ -35,7 +35,7 @@ return new class extends Migration
         Schema::create('wwtp_analisa', function (Blueprint $table) {
             $table->id();
             $table->date('analisa_date');
-            $table->integer('shift');
+            $table->integer('shift')->nullable();
             $table->string('area')->nullable();
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();

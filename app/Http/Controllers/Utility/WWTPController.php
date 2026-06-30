@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
-use App\Models\Utility\WwtpSludge;
+use App\Models\Utility\PemakaianChemicalModel;
+use App\Models\Utility\WwtpDailyApproval;
 use App\Models\Utility\WwtpInfluentHarian;
 use App\Models\Utility\WwtpPerformancePHharian;
 use App\Models\Utility\WwtpPerformanceSample;
-use App\Models\Utility\PemakaianChemicalModel;
+use App\Models\Utility\WwtpSludge;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class WWTPController extends Controller
@@ -274,11 +276,12 @@ class WWTPController extends Controller
         $ph       = WwtpPerformancePHharian::whereDate('tanggal', $tanggal)->orderBy('shift')->get()->keyBy('shift');
         $sampel   = WwtpPerformanceSample::whereDate('tanggal', $tanggal)->get()->keyBy('id_sampel');
         $chemical = PemakaianChemicalModel::whereDate('tanggal', $tanggal)
-        ->where('chemical_area',
-            'WWTP'
-        )
-        ->get()
-        ->groupBy(['jenis_pemakaian', 'shift']); // ['PAC powder 1']['shift 1'] => collection
+            ->where(
+                'chemical_area',
+                'WWTP'
+            )
+            ->get()
+            ->groupBy(['jenis_pemakaian', 'shift']); // ['PAC powder 1']['shift 1'] => collection
 
         // ── Load template ─────────────────────────────────────────────────────
         $templatePath = public_path('assets/templates/Template_wwtp.xlsx');
@@ -294,7 +297,9 @@ class WWTPController extends Controller
         // PhpSpreadsheet menolak setCellValue pada non-master merged cell.
         // Fungsi ini selalu menulis ke cell paling kiri-atas dari merged range.
         $setCell = function (string $coord, $value) use ($sheet): void {
-            $col = preg_replace('/[0-9]/', '',
+            $col = preg_replace(
+                '/[0-9]/',
+                '',
                 $coord
             );
             $row = (int) preg_replace('/[A-Z]/', '', $coord);
@@ -326,7 +331,7 @@ class WWTPController extends Controller
 
         // ── Tanggal ───────────────────────────────────────────────────────────
         // M1 adalah merged cell M1:O2, master-nya M1
-        $setCell('M1', 'TANGGAL: ' . $tanggal);
+        $setCell('M2', 'TANGGAL: ' . $tanggal);
 
         // ── pH per Shift ──────────────────────────────────────────────────────
         // Shift 1 = col C | Shift 2 = col H | Shift 3 = col K
@@ -337,24 +342,25 @@ class WWTPController extends Controller
         $s3ph = $ph->get('shift3');
 
         $phFields = [
-            'equalisasi_1'  => 15,
-            'equalisasi_2'  => 16,
-            'netralisasi'   => 17,
-            'sedimentasi_2' => 18,
-            'outlet_anaerob' => 19,
-            'aerob'         => 20,
-            'lumpur_aktif'  => 21,
-            'clarifier_2'   => 22,
-            'sedimentasi_1' => 23,
-            'outlet'        => 24,
+            'equalisasi_1'  => 16,
+            'sedimentasi_1' => 17,
+            'equalisasi_2'  => 18,
+            'netralisasi'   => 19,
+            'sedimentasi_2' => 20,
+            'outlet_anaerob' => 21,
+            'aerob'         => 22,
+            'lumpur_aktif'  => 23,
+            'clarifier_2'   => 24,
+            'outlet'        => 25,
         ];
 
         foreach ($phFields as $field => $row) {
-            $setCell('C' . $row, $s1ph?->{$field} ?? '');
-            $setCell('H' . $row,
+            $setCell('D' . $row, $s1ph?->{$field} ?? '');
+            $setCell(
+                'F' . $row,
                 $s2ph?->{$field} ?? ''
             );
-            $setCell('K' . $row, $s3ph?->{$field} ?? '');
+            $setCell('H' . $row, $s3ph?->{$field} ?? '');
         }
 
         // ── Chemical Dose per Shift ───────────────────────────────────────────
@@ -370,19 +376,19 @@ class WWTPController extends Controller
         //   NPK           → 13
 
         $chemRowMap = [
-            'PAC powder 1'  => 7,
-            'BE-100'        => 8,
-            'C-204'         => 9,
-            'C-9040 step 1' => 10,
-            'NaOH'          => 11,
-            'Denfloc 945'   => 12,
-            'NPK'           => 13,
+            'PAC powder 1'  => 8,
+            'BE-100'        => 9,
+            'C-204'         => 10,
+            'C-9040 step 1' => 11,
+            'NaOH'          => 12,
+            'Denfloc 945'   => 13,
+            'NPK'           => 14,
         ];
 
         $chemShiftCol = [
-            'shift 1' => 'C',
-            'shift 2' => 'H',
-            'shift 3' => 'K',
+            'shift 1' => 'D',
+            'shift 2' => 'F',
+            'shift 3' => 'H',
         ];
 
         foreach ($chemRowMap as $jenis => $row) {
@@ -400,20 +406,33 @@ class WWTPController extends Controller
         $s3in = $influent->get('shift3');
 
         $influentFields = [
-            'pit_garam'          => 27,
-            'pit_produksi_step3' => 28,
-            'pit_sparta'         => 29,
-            'pit_storage'        => 30,
-            'pit_proses_wwtp2'   => 31,
-            'pit_outlet'         => 32,
-            'pit_boiler'         => 33,
-            'pit_domestik'       => 34,
+            'pit_garam'          => 28,
+            'pit_produksi_step3' => 29,
+            'pit_sparta'         => 30,
+            'pit_storage'        => 31,
+            'pit_proses_wwtp2'   => 32,
+            'pit_outlet'         => 33,
+            'pit_boiler'         => 34,
+            'pit_domestik'       => 35,
         ];
 
         foreach ($influentFields as $field => $row) {
-            $setCell('C' . $row, $s1in?->{$field} ?? '');
-            $setCell('G' . $row, $s2in?->{$field} ?? '');
-            $setCell('I' . $row, $s3in?->{$field} ?? '');
+            $val1 = '';
+            if ($s1in && $s1in->{$field} !== null) {
+                $val1 = max(0, (float)$s1in->{$field} - (float)($s1in->{$field . '_awal'} ?? 0));
+            }
+            $val2 = '';
+            if ($s2in && $s2in->{$field} !== null) {
+                $val2 = max(0, (float)$s2in->{$field} - (float)($s2in->{$field . '_awal'} ?? 0));
+            }
+            $val3 = '';
+            if ($s3in && $s3in->{$field} !== null) {
+                $val3 = max(0, (float)$s3in->{$field} - (float)($s3in->{$field . '_awal'} ?? 0));
+            }
+
+            $setCell('D' . $row, $val1);
+            $setCell('F' . $row, $val2);
+            $setCell('H' . $row, $val3);
         }
 
         // ── Sludge per Shift ──────────────────────────────────────────────────
@@ -424,37 +443,37 @@ class WWTPController extends Controller
         $s3sl = $sludge->get('shift3');
 
         // Drain Lumpur (row 36)
-        $setCell('C36', $s1sl?->drain_lumpur     ?? '');
-        $setCell('G36', $s2sl?->drain_lumpur     ?? '');
-        $setCell('I36', $s3sl?->drain_lumpur     ?? '');
+        $setCell('D37', $s1sl?->drain_lumpur     ?? '');
+        $setCell('F37', $s2sl?->drain_lumpur     ?? '');
+        $setCell('H37', $s3sl?->drain_lumpur     ?? '');
 
         // Running Hour SCP (row 37)
-        $setCell('C37', $s1sl?->running_hour_scp ?? '');
-        $setCell('G37', $s2sl?->running_hour_scp ?? '');
-        $setCell('I37', $s3sl?->running_hour_scp ?? '');
+        $setCell('D38', $s1sl?->running_hour_scp ?? '');
+        $setCell('F38', $s2sl?->running_hour_scp ?? '');
+        $setCell('H38', $s3sl?->running_hour_scp ?? '');
 
         // ── Proses / Debit per Shift ──────────────────────────────────────────
         // Shift 1 = col C | Shift 2 = col G | Shift 3 = col I
 
         // Debit 1 (row 39)
-        $setCell('C39', $s1in?->debit1       ?? '');
-        $setCell('G39', $s2in?->debit1       ?? '');
-        $setCell('I39', $s3in?->debit1       ?? '');
+        $setCell('D40', $s1in?->debit1       ?? '');
+        $setCell('F40', $s2in?->debit1       ?? '');
+        $setCell('H40', $s3in?->debit1       ?? '');
 
         // Running WWTP 1 (row 40)
-        $setCell('C40', $s1in?->running_wwtp1 ?? '');
-        $setCell('G40', $s2in?->running_wwtp1 ?? '');
-        $setCell('I40', $s3in?->running_wwtp1 ?? '');
+        $setCell('D41', $s1in?->running_wwtp1 ?? '');
+        $setCell('F41', $s2in?->running_wwtp1 ?? '');
+        $setCell('H41', $s3in?->running_wwtp1 ?? '');
 
         // Debit 2 (row 41)
-        $setCell('C41', $s1in?->debit2       ?? '');
-        $setCell('G41', $s2in?->debit2       ?? '');
-        $setCell('I41', $s3in?->debit2       ?? '');
+        $setCell('D42', $s1in?->debit2       ?? '');
+        $setCell('F42', $s2in?->debit2       ?? '');
+        $setCell('H42', $s3in?->debit2       ?? '');
 
         // Running WWTP 2 (row 42)
-        $setCell('C42', $s1in?->running_wwtp2 ?? '');
-        $setCell('G42', $s2in?->running_wwtp2 ?? '');
-        $setCell('I42', $s3in?->running_wwtp2 ?? '');
+        $setCell('D43', $s1in?->running_wwtp2 ?? '');
+        $setCell('F43', $s2in?->running_wwtp2 ?? '');
+        $setCell('H43', $s3in?->running_wwtp2 ?? '');
 
         // ── Sampel: TSS / SV30 / pH (col M / N / O) ──────────────────────────
         // id_sampel → row (sesuai template dan data JSON)
@@ -469,22 +488,90 @@ class WWTPController extends Controller
         //   9 = Filtrat RAS LA     → 36
 
         $sampelRowMap = [
-            1 => 27,
-            2 => 28,
-            3 => 29,
-            4 => 30,
-            5 => 31,
-            6 => 32,
-            7 => 34,
-            8 => 35,
-            9 => 36,
+            1 => 8,
+            2 => 9,
+            3 => 10,
+            4 => 11,
+            5 => 12,
+            6 => 13,
+            7 => 14,
+            8 => 15,
+            9 => 16,
+            10 => 17,
+            11 => 19,
+            12 => 20,
+            13 => 21,
+            14 => 22,
+            15 => 23,
+            16 => 24,
         ];
 
         foreach ($sampelRowMap as $idSampel => $row) {
             $s = $sampel->get($idSampel);
-            $setCell('M' . $row, $s?->tss  ?? '');
-            $setCell('N' . $row, $s?->sv30 ?? '');
-            $setCell('O' . $row, $s?->ph   ?? '');
+            $setCell('K' . $row, $s?->tss  ?? '');
+            $setCell('L' . $row, $s?->sv30 ?? '');
+            $setCell('M' . $row, $s?->ph   ?? '');
+            $setCell('N' . $row, $s?->mlss   ?? '');
+            $setCell('O' . $row, $s?->svl   ?? '');
+            $setCell('P' . $row, $s?->do   ?? '');
+        }
+
+        // TTD
+        $approval = WwtpDailyApproval::where('tanggal', $tanggal)
+            ->with(['operator', 'foreman', 'supervisor'])
+            ->first();
+
+        if ($approval) {
+            $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+            $hasSticker = file_exists($signaturePath);
+
+            // Operator (B)
+            if (in_array($approval->status, ['submitted', 'approved_foreman', 'approved_supervisor'])) {
+                if ($hasSticker) {
+                    $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawOp->setName('Operator');
+                    $drawOp->setPath($signaturePath);
+                    $drawOp->setHeight(50);
+                    $drawOp->setCoordinates('B46');
+                    $drawOp->setOffsetX(150);
+                    $drawOp->setOffsetY(5);
+                    $drawOp->setWorksheet($sheet);
+                }
+                $setCell('B49', $approval->operator ? $approval->operator->username : '-');
+                $setCell('B50', $approval->submitted_at ? $approval->submitted_at->format('d/m/Y H:i') : '-');
+            }
+
+            // Foreman (E)
+            if (in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+                if ($hasSticker) {
+                    $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawFm->setName('Foreman');
+                    $drawFm->setPath($signaturePath);
+                    $drawFm->setHeight(50);
+                    // $drawFm->setOffsetX(150);
+                    $drawFm->setOffsetY(5);
+                    $drawFm->setCoordinates('G46');
+                    $drawFm->setWorksheet($sheet);
+                }
+                $setCell('E49', $approval->foreman ? $approval->foreman->username : '-');
+                $setCell('E50', $approval->foreman_approved_at ? $approval->foreman_approved_at->format('d/m/Y H:i') : '-');
+            }
+
+            // Supervisor (J)
+            if ($approval->status === 'approved_supervisor') {
+                if ($hasSticker) {
+                    $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawSpv->setName('Supervisor');
+                    $drawSpv->setPath($signaturePath);
+                    $drawSpv->setHeight(50);
+                    // $drawSpv->setOffsetX(150);
+                    $drawSpv->setOffsetY(5);
+                    $drawSpv->setCoordinates('L46');
+                    $drawSpv->setWorksheet($sheet);
+                }
+                $setCell('J49', $approval->supervisor ? $approval->supervisor->username : '-');
+                $setCell('J50', $approval->supervisor_approved_at ? $approval->supervisor_approved_at->format('d/m/Y H:i') : '-');
+            }
         }
 
         // ── Stream download ───────────────────────────────────────────────────

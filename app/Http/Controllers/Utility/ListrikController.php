@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
+use App\Models\Utility\PemakaianListrikModel;
+use App\Models\Utility\UtilityMonthlyApproval;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Utility\PemakaianListrikModel;
-use Illuminate\Support\Carbon;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use Illuminate\Support\Facades\DB;
 
 class ListrikController extends Controller
 {
@@ -82,14 +83,25 @@ class ListrikController extends Controller
             'kw' => 'nullable|numeric',
             'mwh' => 'nullable|numeric',
             'cos' => 'nullable|numeric',
+            'foreman_id' => 'nullable|exists:users,id',
+            'supervisor_id' => 'nullable|exists:users,id',
         ]);
+
+        $bulan = date('Y-m', strtotime($validated['waktu']));
+        $approval = UtilityMonthlyApproval::where('bulan', $bulan)->where('tipe', 'listrik')->first();
+        // if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Laporan Listrik untuk bulan ini (' . $bulan . ') sudah disetujui, sehingga data tidak dapat ditambahkan.'
+        //     ], 422);
+        // }
 
         $operator = auth()->user()->username;
 
         try {
             $exists = PemakaianListrikModel::whereDate('waktu', $validated['waktu'])
-            ->where('panel_type', $validated['panel_type'])
-            ->exists();
+                ->where('panel_type', $validated['panel_type'])
+                ->exists();
 
             if ($exists) {
                 return response()->json([
@@ -112,15 +124,24 @@ class ListrikController extends Controller
 
             // Cari data sebelumnya (n)
             $prevData = PemakaianListrikModel::where('panel_type', $validated['panel_type'])
-            ->where('waktu', '<', $validated['waktu'])
-            ->orderBy('waktu', 'desc')
-            ->first();
+                ->where('waktu', '<', $validated['waktu'])
+                ->orderBy('waktu', 'desc')
+                ->first();
 
             // Hitung usage untuk data sebelumnya
             if ($prevData && $prevData->mwh !== null && $newData->mwh !== null) {
                 $prevData->usage = $newData->mwh - $prevData->mwh;
                 $prevData->save();
             }
+
+            // Ensure monthly approval is created/submitted and foreman notified
+            UtilityMonthlyApproval::checkAndNotify(
+                $bulan,
+                'listrik',
+                auth()->id(),
+                $request->input('foreman_id'),
+                $request->input('supervisor_id')
+            );
 
             return response()->json([
                 'success' => true,
@@ -136,19 +157,19 @@ class ListrikController extends Controller
         }
     }
 
-  
+
 
     public function data_listrik()
     {
 
         $data = PemakaianListrikModel::orderBy('waktu', 'desc')
-        ->get();
+            ->get();
 
         return response()->json($data);
     }
 
 
-   
+
 
     public function getPemakaianListrikData(Request $request)
     {
@@ -169,7 +190,8 @@ class ListrikController extends Controller
 
         // Group by tanggal (YYYY-MM-DD)
         $grouped = $data->groupBy(function ($item) {
-            return date('Y-m-d',
+            return date(
+                'Y-m-d',
                 strtotime($item->waktu)
             );
         });
@@ -185,7 +207,8 @@ class ListrikController extends Controller
 
             // Panel tersedia dan terurut
             $availablePanels = $items->pluck('panel_type')->unique()->values()->all();
-            $panels = array_values(array_intersect($defaultPanelOrder,
+            $panels = array_values(array_intersect(
+                $defaultPanelOrder,
                 $availablePanels
             ));
 
@@ -214,7 +237,8 @@ class ListrikController extends Controller
                     $currentMwh = $items->firstWhere('panel_type', $panel)?->mwh;
                     $nextMwh = $nextItems->firstWhere('panel_type', $panel)?->mwh;
 
-                    if (!is_null($currentMwh) && !is_null($nextMwh)
+                    if (
+                        !is_null($currentMwh) && !is_null($nextMwh)
                     ) {
                         $usage[$panel] = $nextMwh - $currentMwh;
                     } else {
@@ -239,7 +263,7 @@ class ListrikController extends Controller
 
         return response()->json(array_reverse($result));
     }
-    
+
     public function exportPemakaianListrikSpreadsheet(Request $request)
     {
         $month = $request->input('bulan');
@@ -250,9 +274,9 @@ class ListrikController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
-        $panels = array_merge(['MDP'], array_map(fn ($i) => "SDP$i", range(1, 14)));
+        $panels = array_merge(['MDP'], array_map(fn($i) => "SDP$i", range(1, 14)));
 
-        $templatePath = storage_path('app/templates/template_listrik.xlsx');
+        $templatePath = public_path('assets/templates/utility/template_listrik.xlsx');
 
         // --- Load template dengan proteksi XXE dimatikan (hanya untuk template internal) ---
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
@@ -271,6 +295,8 @@ class ListrikController extends Controller
 
         $sheetNames = ['minggu 1', 'minggu 2', 'minggu 3', 'minggu 4', 'minggu 5'];
 
+        $approval = \App\Models\Utility\UtilityMonthlyApproval::where('bulan', $month)->where('tipe', 'listrik')->first();
+
         foreach ($sheetNames as $weekIndex => $sheetName) {
             $sheet = $spreadsheet->getSheetByName($sheetName);
             if (!$sheet) continue;
@@ -287,10 +313,10 @@ class ListrikController extends Controller
 
             foreach ($panels as $panelIndex => $panel) {
                 $data = PemakaianListrikModel::where('panel_type', $panel)
-                ->whereBetween('waktu', [$weekStart, $weekEnd])
+                    ->whereBetween('waktu', [$weekStart, $weekEnd])
                     ->orderBy('waktu')
                     ->get()
-                    ->groupBy(fn ($item) => Carbon::parse($item->waktu)->day);
+                    ->groupBy(fn($item) => Carbon::parse($item->waktu)->day);
 
                 $col = 7 + $panelIndex;
 
@@ -304,7 +330,7 @@ class ListrikController extends Controller
                         $sheet->setCellValue("B{$rowStart}", $tanggal->format('d-m-Y'));
 
                         $jamEntry = PemakaianListrikModel::where('panel_type', 'SDP14')
-                        ->whereDate('waktu', $tanggal->toDateString())
+                            ->whereDate('waktu', $tanggal->toDateString())
                             ->orderBy('created_at')
                             ->first();
 
@@ -328,6 +354,46 @@ class ListrikController extends Controller
                             $sheet->setCellValue("F{$rowStart}", $entry->cos);
                         }
                     }
+                }
+            }
+
+            // Draw signatures if approved/submitted
+            $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+            if (file_exists($signaturePath) && $approval) {
+                if (in_array($approval->status, ['submitted', 'approved_foreman', 'approved_supervisor'])) {
+                    // Operator (C34)
+                    $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawOp->setName('Operator');
+                    $drawOp->setPath($signaturePath);
+                    $drawOp->setHeight(70);
+                    $drawOp->setCoordinates('E34');
+                    $drawOp->setOffsetX(20);
+                    $drawOp->setWorksheet($sheet);
+                    $sheet->setCellValue('C37', '(' . ($approval->operator ? $approval->operator->username : '-') . ')');
+                    $sheet->setCellValue('C38', $approval->submitted_at ? $approval->submitted_at : '-');
+                }
+                if (in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+                    // Foreman (K34)
+                    $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawFm->setName('Foreman');
+                    $drawFm->setPath($signaturePath);
+                    $drawFm->setHeight(70);
+                    $drawFm->setCoordinates('L34');
+                    $drawFm->setOffsetX(100);
+                    $drawFm->setWorksheet($sheet);
+                    $sheet->setCellValue('K37', '(' . ($approval->foreman ? $approval->foreman->username : '-') . ')');
+                    $sheet->setCellValue('K38', $approval->foreman_approved_at ? $approval->foreman_approved_at : '-');
+                }
+                if ($approval->status === 'approved_supervisor') {
+                    // Supervisor (Q34)
+                    $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawSpv->setName('Supervisor');
+                    $drawSpv->setPath($signaturePath);
+                    $drawSpv->setHeight(70);
+                    $drawSpv->setCoordinates('S34');
+                    $drawSpv->setWorksheet($sheet);
+                    $sheet->setCellValue('Q37', '(' . ($approval->supervisor ? $approval->supervisor->username : '-') . ')');
+                    $sheet->setCellValue('Q38', $approval->supervisor_approved_at ? $approval->supervisor_approved_at : '-');
                 }
             }
         }
@@ -370,15 +436,15 @@ class ListrikController extends Controller
 
         // Ambil data per panel_type dan tanggal, lalu hitung delta mwh antar hari berikutnya
         $data = $query->select('panel_type', 'waktu', 'mwh')
-        ->orderBy('panel_type')
-        ->orderBy('waktu')
-        ->get()
-        ->groupBy('panel_type');
+            ->orderBy('panel_type')
+            ->orderBy('waktu')
+            ->get()
+            ->groupBy('panel_type');
 
         $result = [];
 
         foreach ($data as $panel => $records) {
-            $recordsByDate = $records->groupBy(fn ($r) => \Carbon\Carbon::parse($r->waktu)->format('Y-m-d'));
+            $recordsByDate = $records->groupBy(fn($r) => \Carbon\Carbon::parse($r->waktu)->format('Y-m-d'));
             $dates = $recordsByDate->keys();
 
             $series = [];
@@ -421,14 +487,14 @@ class ListrikController extends Controller
         }
 
         $panelTypes = PemakaianListrikModel::whereBetween('waktu', [$start, $end])
-        ->groupBy('panel_type')
-        ->pluck('panel_type');
+            ->groupBy('panel_type')
+            ->pluck('panel_type');
 
         $usages = [];
 
         foreach ($panelTypes as $panel) {
             $data = PemakaianListrikModel::where('panel_type', $panel)
-            ->whereBetween('waktu', [$start, $end])
+                ->whereBetween('waktu', [$start, $end])
                 ->orderBy('waktu')
                 ->pluck('mwh')
                 ->values();
@@ -484,6 +550,14 @@ class ListrikController extends Controller
             'cos' => 'nullable|numeric',
         ]);
 
+        $bulan = date('Y-m', strtotime($request->tanggal));
+        $approval = UtilityMonthlyApproval::where('bulan', $bulan)->where('tipe', 'listrik')->first();
+        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+            return response()->json([
+                'message' => 'Laporan Listrik untuk bulan ini (' . $bulan . ') sudah disetujui, sehingga data tidak dapat diubah.'
+            ], 422);
+        }
+
         $data = PemakaianListrikModel::whereDate('waktu', $request->tanggal)
             ->where('panel_type', $request->panel_type)
             ->first();
@@ -500,8 +574,25 @@ class ListrikController extends Controller
             'cos' => $request->cos,
         ]);
 
+        if ($approval && $approval->status === 'rejected') {
+            $approval->update([
+                'status' => 'submitted',
+                'submitted_at' => now(),
+                'reject_reason' => null
+            ]);
+            $bulanFormatted = Carbon::parse($approval->bulan . '-01')->translatedFormat('F Y');
+            $tipeFormatted = ucfirst($approval->tipe);
+            \App\Models\NotificationsModel::create([
+                'user_id' => $approval->foreman_id,
+                'title' => "Approval Bulanan Utility ({$tipeFormatted})",
+                'message' => "Laporan Pemakaian {$tipeFormatted} Bulan {$bulanFormatted} menunggu persetujuan Anda.",
+                'url' => url('/utility/approval'),
+                'notifiable_type' => UtilityMonthlyApproval::class,
+                'notifiable_id' => $approval->id,
+                'is_read' => 0,
+            ]);
+        }
+
         return response()->json(['message' => 'Data berhasil diperbarui.']);
     }
-
-
 }

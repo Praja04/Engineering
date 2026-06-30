@@ -56,9 +56,19 @@ class ChemicalController extends Controller
             'chemical_area' => 'required',
             'jumlah_pemakaian' => 'required|array',
             'running_hour' => 'nullable|array',
+            'foreman_id' => 'nullable|exists:users,id',
+            'supervisor_id' => 'nullable|exists:users,id',
         ]);
 
         $tanggal = $request->input('tanggal');
+        $bulan = date('Y-m', strtotime($tanggal));
+        $approval = \App\Models\Utility\UtilityMonthlyApproval::where('bulan', $bulan)->where('tipe', 'chemical')->first();
+        // if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+        //     return response()->json([
+        //         'message' => 'Laporan Chemical untuk bulan ini (' . $bulan . ') sudah disetujui, sehingga data tidak dapat ditambahkan.'
+        //     ], 422);
+        // }
+
         $shift = $request->input('shift');
         $chemical_area = $request->input('chemical_area');
         $keterangan = $request->input('keterangan');
@@ -66,7 +76,6 @@ class ChemicalController extends Controller
         $jumlahPemakaian = $request->input('jumlah_pemakaian');
         $running_hour = $request->input('running_hour');
 
-        // $operator = Session::get('username');
         $operator = Auth::user()->username;
         if (count($jenisPemakaian) !== count($jumlahPemakaian)) {
             return response()->json(['message' => 'Data chemical tidak valid.'], 422);
@@ -101,6 +110,15 @@ class ChemicalController extends Controller
             ]);
         }
 
+
+        // Ensure monthly approval is created/submitted and foreman notified
+        \App\Models\Utility\UtilityMonthlyApproval::checkAndNotify(
+            $bulan,
+            'chemical',
+            auth()->id(),
+            $request->input('foreman_id'),
+            $request->input('supervisor_id')
+        );
 
         return response()->json(['message' => 'Data pemakaian chemical berhasil disimpan.']);
     }
@@ -234,7 +252,7 @@ class ChemicalController extends Controller
             return [$key => $satuan];
         });
 
-        $grouped = $data->groupBy(fn ($item) => date('Y-m-d', strtotime($item->tanggal)));
+        $grouped = $data->groupBy(fn($item) => date('Y-m-d', strtotime($item->tanggal)));
         $result = [];
 
         foreach ($grouped as $tanggal => $items) {
@@ -259,7 +277,7 @@ class ChemicalController extends Controller
                         'created_at' => $entry->created_at,
                         'updated_at' => $entry->updated_at,
                     ];
-                })->sortBy(fn ($s) => preg_replace('/\D/', '', strtolower($s['shift'])))->values();
+                })->sortBy(fn($s) => preg_replace('/\D/', '', strtolower($s['shift'])))->values();
 
                 // Hitung total pemakaian dan tentukan satuannya
                 $totalPemakaian = 0;
@@ -352,10 +370,23 @@ class ChemicalController extends Controller
 
         // Urutan chemical sesuai template (kolom B–R)
         $kategori = [
-            'SCF', 'SRTF', 'PAC powder 1', 'PAC powder 2',
-            'C-9040 step 1', 'C-9040 step 2', 'BE-100', 'C-204',
-            'Denfloc 945', 'Defoamer', 'NaOH', 'NPK',
-            'Chlorin', 'SMBS', 'PT100', 'B4', 'SRF'
+            'SCF',
+            'SRTF',
+            'PAC powder 1',
+            'PAC powder 2',
+            'C-9040 step 1',
+            'C-9040 step 2',
+            'BE-100',
+            'C-204',
+            'Denfloc 945',
+            'Defoamer',
+            'NaOH',
+            'NPK',
+            'Chlorin',
+            'SMBS',
+            'PT100',
+            'B4',
+            'SRF'
         ];
 
         // Normalisasi satuan dari chemical_types
@@ -366,12 +397,12 @@ class ChemicalController extends Controller
             });
 
         // Load template
-        $templatePath = storage_path('app/templates/template_chemical.xlsx');
+        $templatePath = public_path('assets/templates/utility/template_chemical.xlsx');
         $spreadsheet = IOFactory::load($templatePath);
         $sheet = $spreadsheet->getActiveSheet();
 
         // Tulis bulan ke cell R1
-        $sheet->setCellValue('R1', $bulan);
+        $sheet->setCellValue('P1', 'BULAN: ' . $bulan);
 
         foreach ($kategori as $index => $chemicalName) {
             // Ambil semua data per chemical untuk bulan tsb
@@ -432,6 +463,46 @@ class ChemicalController extends Controller
 
                 $colLetter = Coordinate::stringFromColumnIndex($colIndex);
                 $sheet->setCellValue("{$colLetter}{$rowIndex}", $dayEntries->isNotEmpty() ? round($totalPemakaian, 3) : '');
+            }
+        }
+
+        $approval = \App\Models\Utility\UtilityMonthlyApproval::where('bulan', $bulan)->where('tipe', 'chemical')->first();
+
+        // Draw signatures if approved/submitted
+        $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
+        if (file_exists($signaturePath) && $approval) {
+            if (in_array($approval->status, ['submitted', 'approved_foreman', 'approved_supervisor'])) {
+                // Operator (A39)
+                $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawOp->setName('Operator');
+                $drawOp->setPath($signaturePath);
+                $drawOp->setHeight(70);
+                $drawOp->setCoordinates('C39');
+                $drawOp->setWorksheet($sheet);
+                $sheet->setCellValue('A42', ($approval->operator ? $approval->operator->username : '-'));
+                $sheet->setCellValue('A43', $approval->submitted_at);
+            }
+            if (in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+                // Foreman (G39)
+                $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawFm->setName('Foreman');
+                $drawFm->setPath($signaturePath);
+                $drawFm->setHeight(70);
+                $drawFm->setCoordinates('H39');
+                $drawFm->setWorksheet($sheet);
+                $sheet->setCellValue('F42', ($approval->foreman ? $approval->foreman->username : '-'));
+                $sheet->setCellValue('F43', $approval->foreman_approved_at);
+            }
+            if ($approval->status === 'approved_supervisor') {
+                // Supervisor (N39)
+                $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                $drawSpv->setName('Supervisor');
+                $drawSpv->setPath($signaturePath);
+                $drawSpv->setHeight(70);
+                $drawSpv->setCoordinates('N39');
+                $drawSpv->setWorksheet($sheet);
+                $sheet->setCellValue('L42', ($approval->supervisor ? $approval->supervisor->username : '-'));
+                $sheet->setCellValue('L43', $approval->supervisor_approved_at);
             }
         }
 
@@ -586,9 +657,17 @@ class ChemicalController extends Controller
         // Definisi chemical berdasarkan area
         $chemicalUtility = ['SCF', 'SRTF', 'PT-100', 'PT100', 'SMBS', 'B4', 'SRF', 'Chlorin'];
         $chemicalWWTP = [
-            'PAC powder 1', 'PAC powder 2','BE-100', 'C-204', 'C-9040 step 1',
-            'C-9040 step 2', 'Denfloc 260 PA', 'Denfloc 945', 'NaOH',
-            'Defoamer', 'NPK'
+            'PAC powder 1',
+            'PAC powder 2',
+            'BE-100',
+            'C-204',
+            'C-9040 step 1',
+            'C-9040 step 2',
+            'Denfloc 260 PA',
+            'Denfloc 945',
+            'NaOH',
+            'Defoamer',
+            'NPK'
         ];
 
         $query = PemakaianChemicalModel::query()
@@ -720,9 +799,17 @@ class ChemicalController extends Controller
         // Definisi chemical berdasarkan area
         $chemicalUtility = ['SCF', 'SRTF', 'PT-100', 'PT100', 'SMBS', 'B4', 'SRF', 'Chlorin'];
         $chemicalWWTP = [
-            'PAC powder 1', 'PAC powder 2', 'BE-100', 'C-204', 'C-9040 step 1',
-            'C-9040 step 2', 'Denfloc 260 PA', 'Denfloc 945', 'NaOH',
-            'Defoamer', 'NPK'
+            'PAC powder 1',
+            'PAC powder 2',
+            'BE-100',
+            'C-204',
+            'C-9040 step 1',
+            'C-9040 step 2',
+            'Denfloc 260 PA',
+            'Denfloc 945',
+            'NaOH',
+            'Defoamer',
+            'NPK'
         ];
 
         $data = PemakaianChemicalModel::whereBetween('tanggal', [$start, $end])->get();
@@ -848,6 +935,14 @@ class ChemicalController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $bulan = date('Y-m', strtotime($request->tanggal));
+        $approval = \App\Models\Utility\UtilityMonthlyApproval::where('bulan', $bulan)->where('tipe', 'chemical')->first();
+        if ($approval && in_array($approval->status, ['approved_foreman', 'approved_supervisor'])) {
+            return response()->json([
+                'message' => 'Laporan Chemical untuk bulan ini (' . $bulan . ') sudah disetujui, sehingga data tidak dapat diubah.'
+            ], 422);
+        }
+
         $data = PemakaianChemicalModel::whereDate('tanggal', $request->tanggal)
             ->where('jenis_pemakaian', $request->jenis_pemakaian)
             ->where('shift', $request->shift)
@@ -862,6 +957,15 @@ class ChemicalController extends Controller
             'jenis_pemakaian' => $request->jenis_pemakaian,
             'notes' => $request->notes,
         ]);
+
+        // Check and transition status back to submitted if rejected
+        \App\Models\Utility\UtilityMonthlyApproval::checkAndNotify(
+            $bulan,
+            'chemical',
+            auth()->id(),
+            $approval->foreman_id ?? null,
+            $approval->supervisor_id ?? null
+        );
 
         return response()->json(['message' => 'Data Chemical berhasil diperbarui.']);
     }

@@ -91,10 +91,16 @@ class AhuController extends Controller
                 [
                     'operator_id' => auth()->id(),
                     'status' => 'draft',
+                    'submitted_at' => now(),
                 ]
             );
 
+            if (empty($main->operator_id)) {
+                $main->update(['operator_id' => auth()->id()]);
+            }
+
             $validated['ahu_id'] = $main->id;
+            $validated['created_by'] = auth()->id();
             $detail = AhuDetails::create($validated);
 
             DB::commit();
@@ -113,8 +119,10 @@ class AhuController extends Controller
 
     public function update(Request $request, $id)
     {
-        $detail = AhuDetails::findOrFail($id);
+        DB::beginTransaction();
+
         try {
+            $detail = AhuDetails::findOrFail($id);
             $validated = $request->validate([
                 'tanggal' => 'required|date',
                 'jam' => 'required',
@@ -148,9 +156,14 @@ class AhuController extends Controller
                 'temp_out_4' => 'nullable|numeric',
             ]);
 
-            $detail->update($validated);
+            $detail->update([
+                ...$validated,
+                'updated_by' => auth()->id(),
+            ]);
+            DB::commit();
             return response()->json(['status' => 200, 'message' => 'Data AHU berhasil diperbarui.']);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['status' => 500, 'message' => 'Gagal update data'], 500);
         }
     }
@@ -160,7 +173,6 @@ class AhuController extends Controller
         $validated = $request->validate([
             'bulan' => 'required|integer',
             'tahun' => 'required|integer',
-            'foreman_id' => 'required|exists:users,id',
             'supervisor_id' => 'required|exists:users,id',
         ]);
 
@@ -172,21 +184,21 @@ class AhuController extends Controller
         if (!$main) return response()->json(['message' => 'Data untuk bulan ini belum tersedia'], 404);
 
         $main->update([
-            'foreman_id' => $validated['foreman_id'],
+            'foreman_id' => auth()->id(),
             'supervisor_id' => $validated['supervisor_id'],
-            'status' => 'submitted',
+            'status' => 'approved_foreman',
             'submitted_at' => now(),
-            'operator_id' => auth()->id(),
+            'approved_foreman_at' => now(),
         ]);
 
-        $this->sendNotification($main);
+        $this->sendNotification($main, $main->supervisor_id);
 
         return response()->json(['message' => 'Laporan bulanan berhasil disubmit untuk approval']);
     }
 
     public function getData(Request $request)
     {
-        $query = AhuDetails::with('ahu')->orderBy('tanggal', 'desc')->orderBy('jam', 'desc');
+        $query = AhuDetails::with('ahu', 'createdBy:id,username')->orderBy('tanggal', 'desc')->orderBy('jam', 'desc');
 
         if ($request->filled('bulan')) {
             $date = Carbon::parse($request->bulan);
@@ -215,6 +227,10 @@ class AhuController extends Controller
 
     public function getCollectedData()
     {
+        if (auth()->user()->jabatan !== 'foreman') {
+            return response()->json(['status' => 200, 'results' => []]);
+        }
+
         $mainDrafts = Ahu::whereIn('status', ['draft', 'rejected'])
             ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'desc')
@@ -268,6 +284,12 @@ class AhuController extends Controller
             ->where('user_id', Auth::id())
             ->delete();
 
+        try {
+            $this->sendNotification($data, $data->supervisor_id);
+        } catch (\Exception $e) {
+            Log::error('Notif AHU Supervisor gagal: ' . $e->getMessage());
+        }
+
         return response()->json(['message' => 'Disetujui Foreman']);
     }
 
@@ -312,7 +334,10 @@ class AhuController extends Controller
 
     public function show($id)
     {
-        $data = AhuDetails::find($id);
+        $data = AhuDetails::with('createdBy')->find($id);
+        if ($data) {
+            $data->creator_name = $data->createdBy ? $data->createdBy->username : '-';
+        }
         return response()->json(['status' => 200, 'data' => $data]);
     }
 
@@ -416,16 +441,18 @@ class AhuController extends Controller
                 $drawOp->setHeight(60);
                 $drawOp->setCoordinates('C40');
                 $drawOp->setWorksheet($sheet);
-                $sheet->setCellValue('A44', '(' . $mainRecord->operator ? $mainRecord->operator->username : '-' . ')');
+                $sheet->setCellValue('B44', $mainRecord->operator ? $mainRecord->operator->username : '-');
+                $sheet->setCellValue('B45', $mainRecord->submitted_at ?? '-');
             }
-            if ($mainRecord->status == 'approved_foreman') {
+            if ($mainRecord->status == 'approved_foreman' || $mainRecord->status == 'approved_supervisor') {
                 $drawFm = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                 $drawFm->setName('Foreman');
                 $drawFm->setPath($signaturePath);
                 $drawFm->setHeight(60);
                 $drawFm->setCoordinates('N40');
                 $drawFm->setWorksheet($sheet);
-                $sheet->setCellValue('A44', '(' . $mainRecord->foreman ? $mainRecord->foreman->username : '-' . ')');
+                $sheet->setCellValue('M44', $mainRecord->foreman ? $mainRecord->foreman->username : '-');
+                $sheet->setCellValue('M45', $mainRecord->approved_foreman_at ?? '-');
             }
             if ($mainRecord->status == 'approved_supervisor') {
                 $drawSpv = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
@@ -434,7 +461,8 @@ class AhuController extends Controller
                 $drawSpv->setHeight(60);
                 $drawSpv->setCoordinates('AA40');
                 $drawSpv->setWorksheet($sheet);
-                $sheet->setCellValue('AA44', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
+                $sheet->setCellValue('Z44', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');
+                $sheet->setCellValue('Z45', $mainRecord->approved_supervisor_at ?? '-');
             }
         }
 
@@ -456,16 +484,12 @@ class AhuController extends Controller
         return response()->json(['status' => 200, 'message' => 'Data dihapus']);
     }
 
-    private function sendNotification($main)
+    private function sendNotification($main, $userId)
     {
         $approvalUrl = url(route('ahu.approval', [], false));
-        $recipients = User::whereIn('id', array_filter([$main->foreman_id, $main->supervisor_id]))->get();
-
-        foreach ($recipients as $user) {
-            NotificationsModel::updateOrCreate(
-                ['user_id' => $user->id, 'notifiable_type' => Ahu::class, 'notifiable_id' => $main->id, 'is_read' => 0],
-                ['title' => 'Approval Bulanan AHU', 'message' => "Laporan AHU Bulan {$main->bulan} {$main->tahun} menunggu persetujuan", 'url' => $approvalUrl]
-            );
-        }
+        NotificationsModel::updateOrCreate(
+            ['user_id' => $userId, 'notifiable_type' => Ahu::class, 'notifiable_id' => $main->id, 'is_read' => 0],
+            ['title' => 'Approval Bulanan AHU', 'message' => "Laporan AHU Bulan {$main->bulan} {$main->tahun} menunggu persetujuan", 'url' => $approvalUrl]
+        );
     }
 }

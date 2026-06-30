@@ -77,23 +77,46 @@ class WarmingUpGenset extends Controller
                 ], 422);
             }
 
+            $isForemanSubmitter = auth()->user() && auth()->user()->jabatan === 'foreman';
+            $isSameAsForeman = auth()->id() == $validated['foreman_id'];
+
+            if ($isForemanSubmitter || $isSameAsForeman) {
+                $status = 'approved_foreman';
+                $approvedForemanBy = $validated['foreman_id'];
+                $approvedForemanAt = now();
+            } else {
+                $status = 'submitted';
+                $approvedForemanBy = null;
+                $approvedForemanAt = null;
+            }
+
             $report = WarmingUpGensetModel::create([
                 ...$validated,
                 'user_id' => auth()->id() ?? 1,
-                'status' => 'submitted',
+                'status' => $status,
+                'approved_foreman_by' => $approvedForemanBy,
+                'approved_foreman_at' => $approvedForemanAt,
             ]);
 
             try {
-                $this->sendNotification($report);
+                if ($report->status === 'approved_foreman') {
+                    $this->sendNotification($report, $report->supervisor_id);
+                } else {
+                    $this->sendNotification($report, $report->foreman_id);
+                }
             } catch (\Exception $e) {
                 Log::error('Notif gagal: ' . $e->getMessage());
             }
 
             DB::commit();
 
+            $msg = $report->status === 'approved_foreman'
+                ? 'Laporan berhasil disubmit & menunggu approval Supervisor.'
+                : 'Laporan berhasil disubmit & menunggu approval Foreman.';
+
             return response()->json([
                 'status' => 200,
-                'message' => 'Laporan berhasil disubmit & menunggu approval.',
+                'message' => $msg,
                 'data' => $report
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -114,26 +137,19 @@ class WarmingUpGenset extends Controller
         }
     }
 
-    private function sendNotification($data)
+    private function sendNotification($data, $userId)
     {
         $approvalUrl = url(route('warming-up-genset.approval', [], false));
 
-        $recipients = User::whereIn('id', array_filter([
-            $data->foreman_id,
-            $data->supervisor_id,
-        ]))->get();
-
-        foreach ($recipients as $user) {
-            NotificationsModel::create([
-                'user_id'          => $user->id,
-                'title'            => 'Approval Warming Up Genset',
-                'message'          => 'Laporan warming up genset tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
-                'url'              => $approvalUrl,
-                'notifiable_type'  => WarmingUpGensetModel::class,
-                'notifiable_id'    => $data->id,
-                'is_read'          => 0,
-            ]);
-        }
+        NotificationsModel::create([
+            'user_id'          => $userId,
+            'title'            => 'Approval Warming Up Genset',
+            'message'          => 'Laporan warming up genset tanggal ' . $data->tanggal_laporan . ' menunggu persetujuan Anda',
+            'url'              => $approvalUrl,
+            'notifiable_type'  => WarmingUpGensetModel::class,
+            'notifiable_id'    => $data->id,
+            'is_read'          => 0,
+        ]);
     }
 
     public function approveForeman($id)
@@ -158,6 +174,12 @@ class WarmingUpGenset extends Controller
             ->where('notifiable_id', $data->id)
             ->where('user_id', auth()->id()) // opsional (biar spesifik)
             ->delete();
+
+        try {
+            $this->sendNotification($data, $data->supervisor_id);
+        } catch (\Exception $e) {
+            Log::error('Notif supervisor gagal: ' . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Laporan disetujui Foreman']);
     }
@@ -248,11 +270,41 @@ class WarmingUpGenset extends Controller
                 'charge_alt_voltage' => 'nullable|numeric',
                 'running_hour' => 'nullable|numeric',
                 'frequency' => 'nullable|numeric',
-                'status_oil_1' => 'nullable|numeric',
-                'status_oil_2' => 'nullable|numeric',
+                'status_oil' => 'nullable|numeric',
+                'status_bbm' => 'nullable|numeric',
             ]);
 
+            $isForemanSubmitter = auth()->user() && auth()->user()->jabatan === 'foreman';
+            $isSameAsForeman = auth()->id() == $validated['foreman_id'];
+
+            if ($isForemanSubmitter || $isSameAsForeman) {
+                $validated['status'] = 'approved_foreman';
+                $validated['approved_foreman_by'] = $validated['foreman_id'];
+                $validated['approved_foreman_at'] = now();
+            } else {
+                $validated['status'] = 'submitted';
+                $validated['approved_foreman_by'] = null;
+                $validated['approved_foreman_at'] = null;
+            }
+            $validated['reject_reason'] = null;
+
             $report->update($validated);
+            $report->refresh();
+
+            // Clear old notifications for this report
+            NotificationsModel::where('notifiable_type', WarmingUpGensetModel::class)
+                ->where('notifiable_id', $report->id)
+                ->delete();
+
+            try {
+                if ($report->status === 'approved_foreman') {
+                    $this->sendNotification($report, $report->supervisor_id);
+                } else {
+                    $this->sendNotification($report, $report->foreman_id);
+                }
+            } catch (\Exception $e) {
+                Log::error('Notif gagal: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'status' => 200,
@@ -455,6 +507,12 @@ class WarmingUpGenset extends Controller
         $hasSignature = file_exists($signaturePath);
 
         $currentRow = 6;
+
+        // Flag approval
+        $allApprovedUser = true; // langsung dianggap approved
+        $allApprovedForeman = true;
+        $allApprovedSupervisor = true;
+
         foreach ($data as $item) {
             // A: Tanggal-Bulan (Contoh: 01-Apr)
             $sheet->setCellValue('A' . $currentRow, Carbon::parse($item->tanggal_laporan)->translatedFormat('d-M'));
@@ -472,33 +530,79 @@ class WarmingUpGenset extends Controller
             $sheet->setCellValue('J' . $currentRow, $item->status_oil);
             $sheet->setCellValue('K' . $currentRow, $item->status_bbm);
 
-            // TTD per Baris (Pelaksana L, Staff M)
-            if ($hasSignature) {
-                // TTD Pelaksana (L)
-                if ($item->status != 'draft') {
-                    $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                    $drawOp->setName('Op');
-                    $drawOp->setPath($signaturePath);
-                    $drawOp->setHeight(20);
-                    $drawOp->setCoordinates('L' . $currentRow);
-                    $drawOp->setWorksheet($sheet);
-                }
-
-                // TTD Staff/Approval (M)
-                if (in_array($item->status, ['approved_foreman', 'approved_supervisor'])) {
-                    $drawApp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                    $drawApp->setName('App');
-                    $drawApp->setPath($signaturePath);
-                    $drawApp->setHeight(20);
-                    $drawApp->setCoordinates('M' . $currentRow);
-                    $drawApp->setWorksheet($sheet);
-                }
+            // Cek approval foreman
+            if (!in_array($item->status, ['approved_foreman', 'approved_supervisor'])) {
+                $allApprovedForeman = false;
             }
+
+            // Cek approval supervisor
+            if ($item->status !== 'approved_supervisor') {
+                $allApprovedSupervisor = false;
+            }
+
             $currentRow++;
         }
 
+        // TTD DI BAWAH (ROW 39)
+        $firstRecord = $data->first();
+        if ($firstRecord) {
+            $hasSticker = file_exists($signaturePath);
+            $offsetX = 60;
+            $offsetY = 10;
+
+            // User/Pelaksana (A43 = Username, A44 = Time)
+            if ($allApprovedUser) {
+                if ($hasSticker) {
+                    $drawUser = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawUser->setName('User');
+                    $drawUser->setPath($signaturePath);
+                    $drawUser->setHeight(70);
+                    $drawUser->setCoordinates('A39');
+                    $drawUser->setOffsetX(110);
+                    $drawUser->setOffsetY(10);
+                    $drawUser->setWorksheet($sheet);
+                }
+                $sheet->setCellValue('A43', $firstRecord->operator ? $firstRecord->operator->username : '-');
+                $sheet->setCellValue('A44', $firstRecord->created_at ? Carbon::parse($firstRecord->created_at)->format('d/m/Y H:i') : '-');
+            }
+
+            // Foreman (E43 = Username, E44 = Time)
+            if ($allApprovedForeman) {
+                if ($hasSticker) {
+                    $drawForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawForeman->setName('Foreman');
+                    $drawForeman->setPath($signaturePath);
+                    $drawForeman->setHeight(70);
+                    $drawForeman->setCoordinates('D39');
+                    $drawForeman->setOffsetX($offsetX);
+                    $drawForeman->setOffsetY($offsetY);
+                    $drawForeman->setWorksheet($sheet);
+                }
+                $foremanUser = $firstRecord->approvedForeman;
+                $sheet->setCellValue('D43', $foremanUser ? $foremanUser->username : '-');
+                $sheet->setCellValue('D44', $firstRecord->approved_foreman_at ? Carbon::parse($firstRecord->approved_foreman_at)->format('d/m/Y H:i') : '-');
+            }
+
+            // Supervisor (I43 = Username, I44 = Time)
+            if ($allApprovedSupervisor) {
+                if ($hasSticker) {
+                    $drawSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawSupervisor->setName('Supervisor');
+                    $drawSupervisor->setPath($signaturePath);
+                    $drawSupervisor->setHeight(70);
+                    $drawSupervisor->setCoordinates('H39');
+                    $drawSupervisor->setOffsetX($offsetX);
+                    $drawSupervisor->setOffsetY($offsetY);
+                    $drawSupervisor->setWorksheet($sheet);
+                }
+                $supervisorUser = $firstRecord->approvedSupervisor;
+                $sheet->setCellValue('H43', $supervisorUser ? $supervisorUser->username : '-');
+                $sheet->setCellValue('H44', $firstRecord->approved_supervisor_at ? Carbon::parse($firstRecord->approved_supervisor_at)->format('d/m/Y H:i') : '-');
+            }
+        }
+
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $filename = 'Genset_WarmingUp_Report_' . now()->format('YmdHis') . '.xlsx';
+        $filename = 'Genset_WarmingUp_Report_' . now()->format('Y') . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');

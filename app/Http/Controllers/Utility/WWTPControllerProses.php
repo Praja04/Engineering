@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Utility\WwtpRecord;
-use App\Models\Utility\WwtpInfluent;
+use App\Models\NotificationsModel;
+use App\Models\Utility\WwtpDailyApproval;
 use App\Models\Utility\WwtpEffluent;
+use App\Models\Utility\WwtpInfluent;
 use App\Models\Utility\WwtpInfluentHarian;
+use App\Models\Utility\WwtpRecord;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class WWTPControllerProses extends Controller
@@ -35,11 +38,11 @@ class WWTPControllerProses extends Controller
     /**
      * Menampilkan semua record WWTP
      */
- 
+
     public function index(Request $request)
     {
         $query = WwtpRecord::with(['influent', 'effluent'])
-        ->orderBy('tanggal', 'desc');
+            ->orderBy('tanggal', 'desc');
 
         if ($request->kategori) {
             $query->where('kategori', $request->kategori);
@@ -52,13 +55,13 @@ class WWTPControllerProses extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('tanggal', 'like', "%{$request->search}%")
-                ->orWhere('kategori', 'like', "%{$request->search}%");
+                    ->orWhere('kategori', 'like', "%{$request->search}%");
             });
         }
 
         return response()->json(
-                $query->paginate($request->input('per_page', 10))
-            );
+            $query->paginate($request->input('per_page', 10))
+        );
     }
 
     /**
@@ -170,8 +173,117 @@ class WWTPControllerProses extends Controller
      */
 
 
+    /**
+     * API: Get previous influent harian reading for _awal fields in form
+     */
+    public function getPreviousData(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+            'shift'   => 'required|in:shift1,shift2,shift3',
+        ]);
+
+        $tanggal = $request->tanggal;
+        $shift   = $request->shift;
+
+        if ($shift !== 'shift1') {
+            $previous = WwtpInfluentHarian::where('tanggal', $tanggal)
+                ->where('shift', '<', $shift)
+                ->orderByRaw("CASE 
+                    WHEN shift = 'shift3' THEN 3 
+                    WHEN shift = 'shift2' THEN 2 
+                    WHEN shift = 'shift1' THEN 1 
+                    ELSE 0 
+                END DESC")
+                ->first();
+
+            if (!$previous) {
+                $previous = WwtpInfluentHarian::where('tanggal', '<', $tanggal)
+                    ->orderBy('tanggal', 'desc')
+                    ->orderByRaw("CASE 
+                        WHEN shift = 'shift3' THEN 3 
+                        WHEN shift = 'shift2' THEN 2 
+                        WHEN shift = 'shift1' THEN 1 
+                        ELSE 0 
+                    END DESC")
+                    ->first();
+            }
+        } else {
+            $previous = WwtpInfluentHarian::where('tanggal', '<', $tanggal)
+                ->orderBy('tanggal', 'desc')
+                ->orderByRaw("CASE 
+                    WHEN shift = 'shift3' THEN 3 
+                    WHEN shift = 'shift2' THEN 2 
+                    WHEN shift = 'shift1' THEN 1 
+                    ELSE 0 
+                END DESC")
+                ->first();
+        }
+
+        return response()->json([
+            'pit_sparta_awal'         => $previous ? ($previous->pit_sparta !== null ? (float) $previous->pit_sparta : ($previous->pit_sparta_awal !== null ? (float) $previous->pit_sparta_awal : 0)) : 0,
+            'pit_garam_awal'          => $previous ? ($previous->pit_garam !== null ? (float) $previous->pit_garam : ($previous->pit_garam_awal !== null ? (float) $previous->pit_garam_awal : 0)) : 0,
+            'pit_domestik_awal'       => $previous ? ($previous->pit_domestik !== null ? (float) $previous->pit_domestik : ($previous->pit_domestik_awal !== null ? (float) $previous->pit_domestik_awal : 0)) : 0,
+            'pit_produksi_step3_awal' => $previous ? ($previous->pit_produksi_step3 !== null ? (float) $previous->pit_produksi_step3 : ($previous->pit_produksi_step3_awal !== null ? (float) $previous->pit_produksi_step3_awal : 0)) : 0,
+            'pit_storage_awal'        => $previous ? ($previous->pit_storage !== null ? (float) $previous->pit_storage : ($previous->pit_storage_awal !== null ? (float) $previous->pit_storage_awal : 0)) : 0,
+            'pit_proses_wwtp2_awal'   => $previous ? ($previous->pit_proses_wwtp2 !== null ? (float) $previous->pit_proses_wwtp2 : ($previous->pit_proses_wwtp2_awal !== null ? (float) $previous->pit_proses_wwtp2_awal : 0)) : 0,
+            'pit_outlet_awal'         => $previous ? ($previous->pit_outlet !== null ? (float) $previous->pit_outlet : ($previous->pit_outlet_awal !== null ? (float) $previous->pit_outlet_awal : 0)) : 0,
+            'pit_boiler_awal'         => $previous ? ($previous->pit_boiler !== null ? (float) $previous->pit_boiler : ($previous->pit_boiler_awal !== null ? (float) $previous->pit_boiler_awal : 0)) : 0,
+        ]);
+    }
+
+    public function getFilledShifts(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+        ]);
+
+        $shifts = WwtpInfluentHarian::where('tanggal', $request->tanggal)
+            ->pluck('shift')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'filled_shifts' => $shifts
+        ]);
+    }
+
+    private function checkDailyApprovalPermission($tanggal, $action)
+    {
+        $user = Auth::user();
+        $jabatan = $user ? $user->jabatan : null;
+
+        $approval = WwtpDailyApproval::where('tanggal', $tanggal)->first();
+        if ($approval) {
+            if ($approval->status === 'approved_supervisor') {
+                if (!in_array($jabatan, ['supervisor', 'admin', 'dept_head'])) {
+                    return 'Laporan harian untuk tanggal ini sudah disetujui Supervisor. Hanya Supervisor yang dapat ' . $action . ' data.';
+                }
+            } elseif ($approval->status === 'approved_foreman') {
+                if (!in_array($jabatan, ['foreman', 'supervisor', 'admin', 'dept_head'])) {
+                    return 'Laporan harian untuk tanggal ini sudah disetujui Foreman. Operator tidak dapat ' . $action . ' data.';
+                }
+            }
+        }
+        return null;
+    }
+
     public function storeinfluentHarian(Request $request)
     {
+        $err = $this->checkDailyApprovalPermission($request->tanggal, 'menambah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
+        }
+
+        $approval = WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
+
+        if (!$approval) {
+            $request->validate([
+                'foreman_id' => 'required|exists:users,id',
+                'supervisor_id' => 'required|exists:users,id',
+            ]);
+        }
+
         $request->validate([
             'tanggal'  => 'required|date',
             'shift'    => 'required|in:shift1,shift2,shift3',
@@ -210,27 +322,123 @@ class WWTPControllerProses extends Controller
             ], 409);
         }
 
+        // Find preceding record
+        $preceding = null;
+        if ($request->shift !== 'shift1') {
+            $preceding = WwtpInfluentHarian::where('tanggal', $request->tanggal)
+                ->where('shift', '<', $request->shift)
+                ->orderByRaw("CASE 
+                    WHEN shift = 'shift3' THEN 3 
+                    WHEN shift = 'shift2' THEN 2 
+                    WHEN shift = 'shift1' THEN 1 
+                    ELSE 0 
+                END DESC")
+                ->first();
+
+            if (!$preceding) {
+                $preceding = WwtpInfluentHarian::where('tanggal', '<', $request->tanggal)
+                    ->orderBy('tanggal', 'desc')
+                    ->orderByRaw("CASE 
+                        WHEN shift = 'shift3' THEN 3 
+                        WHEN shift = 'shift2' THEN 2 
+                        WHEN shift = 'shift1' THEN 1 
+                        ELSE 0 
+                    END DESC")
+                    ->first();
+            }
+        } else {
+            $preceding = WwtpInfluentHarian::where('tanggal', '<', $request->tanggal)
+                ->orderBy('tanggal', 'desc')
+                ->orderByRaw("CASE 
+                    WHEN shift = 'shift3' THEN 3 
+                    WHEN shift = 'shift2' THEN 2 
+                    WHEN shift = 'shift1' THEN 1 
+                    ELSE 0 
+                END DESC")
+                ->first();
+        }
+
         // Simpan data harian
         $harian = WwtpInfluentHarian::create([
             'tanggal' => $request->tanggal,
             'shift'   => $request->shift,
             'pit_sparta'     => $request->pit_sparta,
+            'pit_sparta_awal' => $request->has('pit_sparta_awal') && $request->pit_sparta_awal !== null ? (float) $request->pit_sparta_awal : ($preceding ? ($preceding->pit_sparta !== null ? (float) $preceding->pit_sparta : ($preceding->pit_sparta_awal !== null ? (float) $preceding->pit_sparta_awal : 0)) : (float) $request->pit_sparta),
             'pit_garam'      => $request->pit_garam,
+            'pit_garam_awal' => $request->has('pit_garam_awal') && $request->pit_garam_awal !== null ? (float) $request->pit_garam_awal : ($preceding ? ($preceding->pit_garam !== null ? (float) $preceding->pit_garam : ($preceding->pit_garam_awal !== null ? (float) $preceding->pit_garam_awal : 0)) : (float) $request->pit_garam),
             'pit_domestik'   => $request->pit_domestik,
+            'pit_domestik_awal' => $request->has('pit_domestik_awal') && $request->pit_domestik_awal !== null ? (float) $request->pit_domestik_awal : ($preceding ? ($preceding->pit_domestik !== null ? (float) $preceding->pit_domestik : ($preceding->pit_domestik_awal !== null ? (float) $preceding->pit_domestik_awal : 0)) : (float) $request->pit_domestik),
             'pit_produksi_step3' => $request->pit_produksi_step3,
+            'pit_produksi_step3_awal' => $request->has('pit_produksi_step3_awal') && $request->pit_produksi_step3_awal !== null ? (float) $request->pit_produksi_step3_awal : ($preceding ? ($preceding->pit_produksi_step3 !== null ? (float) $preceding->pit_produksi_step3 : ($preceding->pit_produksi_step3_awal !== null ? (float) $preceding->pit_produksi_step3_awal : 0)) : (float) ($request->pit_produksi_step3 ?? 0)),
             'pit_storage' => $request->pit_storage,
+            'pit_storage_awal' => $request->has('pit_storage_awal') && $request->pit_storage_awal !== null ? (float) $request->pit_storage_awal : ($preceding ? ($preceding->pit_storage !== null ? (float) $preceding->pit_storage : ($preceding->pit_storage_awal !== null ? (float) $preceding->pit_storage_awal : 0)) : (float) ($request->pit_storage ?? 0)),
             'pit_proses_wwtp2' => $request->pit_proses_wwtp2,
+            'pit_proses_wwtp2_awal' => $request->has('pit_proses_wwtp2_awal') && $request->pit_proses_wwtp2_awal !== null ? (float) $request->pit_proses_wwtp2_awal : ($preceding ? ($preceding->pit_proses_wwtp2 !== null ? (float) $preceding->pit_proses_wwtp2 : ($preceding->pit_proses_wwtp2_awal !== null ? (float) $preceding->pit_proses_wwtp2_awal : 0)) : (float) ($request->pit_proses_wwtp2 ?? 0)),
             'pit_outlet' => $request->pit_outlet,
+            'pit_outlet_awal' => $request->has('pit_outlet_awal') && $request->pit_outlet_awal !== null ? (float) $request->pit_outlet_awal : ($preceding ? ($preceding->pit_outlet !== null ? (float) $preceding->pit_outlet : ($preceding->pit_outlet_awal !== null ? (float) $preceding->pit_outlet_awal : 0)) : (float) ($request->pit_outlet ?? 0)),
             'pit_boiler' => $request->pit_boiler,
+            'pit_boiler_awal' => $request->has('pit_boiler_awal') && $request->pit_boiler_awal !== null ? (float) $request->pit_boiler_awal : ($preceding ? ($preceding->pit_boiler !== null ? (float) $preceding->pit_boiler : ($preceding->pit_boiler_awal !== null ? (float) $preceding->pit_boiler_awal : 0)) : (float) ($request->pit_boiler ?? 0)),
             'debit1' => $request->debit1,
             'running_wwtp1' => $request->running_wwtp1,
             'debit2' => $request->debit2,
             'running_wwtp2' => $request->running_wwtp2,
         ]);
 
+        WwtpInfluentHarian::recalculateAwalFieldsFrom($harian->tanggal, $harian->id);
+
+        // Create or update daily approval
+        $approval = WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
+        if (!$approval) {
+            $approval = WwtpDailyApproval::create([
+                'tanggal' => $request->tanggal,
+                'operator_id' => Auth::id(),
+                'foreman_id' => $request->foreman_id,
+                'supervisor_id' => $request->supervisor_id,
+                'status' => 'submitted',
+                'submitted_at' => now(),
+            ]);
+
+            // Notify foreman
+            NotificationsModel::create([
+                'user_id' => $request->foreman_id,
+                'title' => 'Approval Harian WWTP',
+                'message' => 'Data harian WWTP tanggal ' . Carbon::parse($request->tanggal)->format('d/m/Y') . ' telah diajukan dan menunggu persetujuan Anda.',
+                'url' => url('/wwtp/approval'),
+                'notifiable_type' => WwtpDailyApproval::class,
+                'notifiable_id' => $approval->id,
+                'is_read' => 0,
+            ]);
+        } else {
+            if ($approval->status === 'rejected') {
+                $approval->update([
+                    'status' => 'submitted',
+                    'reject_reason' => null,
+                    'operator_id' => Auth::id(),
+                    'submitted_at' => now(),
+                ]);
+
+                // Re-notify foreman
+                if ($approval->foreman_id) {
+                    NotificationsModel::updateOrCreate(
+                        [
+                            'user_id' => $approval->foreman_id,
+                            'notifiable_type' => WwtpDailyApproval::class,
+                            'notifiable_id' => $approval->id,
+                        ],
+                        [
+                            'title' => 'Approval Harian WWTP',
+                            'message' => 'Data harian WWTP tanggal ' . Carbon::parse($request->tanggal)->format('d/m/Y') . ' telah diperbarui dan menunggu persetujuan Anda.',
+                            'url' => url('/wwtp/approval'),
+                            'is_read' => 0,
+                        ]
+                    );
+                }
+            }
+        }
+
         return response()->json([
             'message' => 'Data influent harian berhasil disimpan.',
-            'data'    => $harian
+            'data'    => $harian->fresh()
         ]);
     }
 
@@ -344,13 +552,25 @@ class WWTPControllerProses extends Controller
         $bulan   = $request->input('bulan');
 
         $query = WwtpInfluentHarian::orderBy('tanggal', 'desc')
-        ->orderBy('shift', 'asc');
+            ->orderBy('shift', 'asc');
 
         if ($bulan) {
-            $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan]);
+            $query->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$request->bulan]);
         }
 
         $data = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $dates = $data->pluck('tanggal')->unique()->toArray();
+        $approvals = WwtpDailyApproval::whereIn('tanggal', $dates)->get()->keyBy(function($item) {
+            return \Carbon\Carbon::parse($item->tanggal)->toDateString();
+        });
+
+        $data->getCollection()->transform(function ($item) use ($approvals) {
+            $dateKey = \Carbon\Carbon::parse($item->tanggal)->toDateString();
+            $approval = $approvals->get($dateKey);
+            $item->approval_status = $approval ? $approval->status : null;
+            return $item;
+        });
 
         return response()->json($data);
     }
@@ -360,6 +580,8 @@ class WWTPControllerProses extends Controller
     public function showHarian($id)
     {
         $data = WwtpInfluentHarian::findOrFail($id);
+        $approval = WwtpDailyApproval::where('tanggal', $data->tanggal)->first();
+        $data->approval_status = $approval ? $approval->status : null;
         return response()->json($data);
     }
 
@@ -369,6 +591,16 @@ class WWTPControllerProses extends Controller
     public function updateHarian(Request $request, $id)
     {
         $harian = WwtpInfluentHarian::findOrFail($id);
+
+        $err = $this->checkDailyApprovalPermission($request->tanggal, 'mengubah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
+        }
+
+        $err = $this->checkDailyApprovalPermission($harian->tanggal, 'mengubah');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
+        }
 
         $request->validate([
             'tanggal'  => 'required|date',
@@ -387,12 +619,105 @@ class WWTPControllerProses extends Controller
             'running_wwtp2' => 'nullable|string',
         ]);
 
-        $harian->update($request->all());
+        $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
+
+        $oldDate = $harian->tanggal;
+
+        // Find preceding record for new date/shift (excluding this record itself)
+        $preceding = null;
+        if ($request->shift !== 'shift1') {
+            $preceding = WwtpInfluentHarian::where('tanggal', $request->tanggal)
+                ->where('shift', '<', $request->shift)
+                ->where('id', '!=', $id)
+                ->orderByRaw("CASE 
+                    WHEN shift = 'shift3' THEN 3 
+                    WHEN shift = 'shift2' THEN 2 
+                    WHEN shift = 'shift1' THEN 1 
+                    ELSE 0 
+                END DESC")
+                ->first();
+
+            if (!$preceding) {
+                $preceding = WwtpInfluentHarian::where('tanggal', '<', $request->tanggal)
+                    ->where('id', '!=', $id)
+                    ->orderBy('tanggal', 'desc')
+                    ->orderByRaw("CASE 
+                        WHEN shift = 'shift3' THEN 3 
+                        WHEN shift = 'shift2' THEN 2 
+                        WHEN shift = 'shift1' THEN 1 
+                        ELSE 0 
+                    END DESC")
+                    ->first();
+            }
+        } else {
+            $preceding = WwtpInfluentHarian::where('tanggal', '<', $request->tanggal)
+                ->where('id', '!=', $id)
+                ->orderBy('tanggal', 'desc')
+                ->orderByRaw("CASE 
+                    WHEN shift = 'shift3' THEN 3 
+                    WHEN shift = 'shift2' THEN 2 
+                    WHEN shift = 'shift1' THEN 1 
+                    ELSE 0 
+                END DESC")
+                ->first();
+        }
+
+        $data = $request->all();
+        $fields = [
+            'pit_sparta',
+            'pit_garam',
+            'pit_domestik',
+            'pit_produksi_step3',
+            'pit_storage',
+            'pit_proses_wwtp2',
+            'pit_outlet',
+            'pit_boiler'
+        ];
+        foreach ($fields as $field) {
+            $awalField = $field . '_awal';
+            if ($request->has($awalField) && $request->$awalField !== null) {
+                $data[$awalField] = (float) $request->$awalField;
+            } else {
+                $data[$awalField] = $preceding ? ($preceding->$field !== null ? (float) $preceding->$field : ($preceding->$awalField !== null ? (float) $preceding->$awalField : 0)) : 0;
+            }
+        }
+
+        $harian->update($data);
+
+        $newDate = $harian->tanggal;
+        $startDate = $oldDate < $newDate ? $oldDate : $newDate;
+        WwtpInfluentHarian::recalculateAwalFieldsFrom($startDate, $harian->id);
+
+        // If daily approval exists and is rejected, reset it to submitted
+        if ($approval && $approval->status === 'rejected') {
+            $approval->update([
+                'status' => 'submitted',
+                'reject_reason' => null,
+                'operator_id' => \Illuminate\Support\Facades\Auth::id(),
+                'submitted_at' => now(),
+            ]);
+
+            if ($approval->foreman_id) {
+                \App\Models\NotificationsModel::updateOrCreate(
+                    [
+                        'user_id' => $approval->foreman_id,
+                        'notifiable_type' => \App\Models\Utility\WwtpDailyApproval::class,
+                        'notifiable_id' => $approval->id,
+                    ],
+                    [
+                        'title' => 'Approval Harian WWTP',
+                        'message' => 'Data harian WWTP tanggal ' . Carbon::parse($request->tanggal)->format('d/m/Y') . ' telah diperbarui dan menunggu persetujuan Anda.',
+                        'url' => url('/wwtp/approval'),
+                        'is_read' => 0,
+                    ]
+                );
+            }
+        }
 
         return response()->json([
-                'message' => 'Data harian berhasil diperbarui.',
-                'data' => $harian
-            ]);
+            'message' => 'Data harian berhasil diperbarui.',
+            'data' => $harian->fresh()
+        ]);
     }
 
     /**
@@ -401,7 +726,16 @@ class WWTPControllerProses extends Controller
     public function destroyHarian($id)
     {
         $harian = WwtpInfluentHarian::findOrFail($id);
+
+        $err = $this->checkDailyApprovalPermission($harian->tanggal, 'menghapus');
+        if ($err) {
+            return response()->json(['message' => $err], 403);
+        }
+
+        $oldDate = $harian->tanggal;
         $harian->delete();
+
+        WwtpInfluentHarian::recalculateAwalFieldsFrom($oldDate);
 
         return response()->json(['message' => 'Data harian berhasil dihapus.']);
     }
@@ -448,13 +782,12 @@ class WWTPControllerProses extends Controller
                 if ($record->influent) {
                     return $record->influent->pit_sparta +
                         $record->influent->pit_garam +
-                        $record->influent->pit_domestik+
+                        $record->influent->pit_domestik +
                         $record->influent->pit_produksi_step3 +
                         $record->influent->pit_storage +
                         $record->influent->pit_proses_wwtp2 +
                         $record->influent->pit_outlet +
-                        $record->influent->pit_boiler
-                        ;
+                        $record->influent->pit_boiler;
                 }
                 return 0;
             });
@@ -491,8 +824,8 @@ class WWTPControllerProses extends Controller
         // Jika ada start_date dan end_date dari request, gunakan itu
         // Jika tidak, default ke awal dan akhir bulan
         $startDate = $request->input('start_date')
-        ? Carbon::parse($request->input('start_date'))
-        : Carbon::now()->startOfMonth();
+            ? Carbon::parse($request->input('start_date'))
+            : Carbon::now()->startOfMonth();
 
         $endDate = $request->input('end_date')
             ? Carbon::parse($request->input('end_date'))
@@ -531,8 +864,8 @@ class WWTPControllerProses extends Controller
         // Jika ada start_date dan end_date dari request, gunakan itu
         // Jika tidak, default ke awal dan akhir bulan
         $startDate = $request->input('start_date')
-        ? Carbon::parse($request->input('start_date'))
-        : Carbon::now()->startOfMonth();
+            ? Carbon::parse($request->input('start_date'))
+            : Carbon::now()->startOfMonth();
 
         $endDate = $request->input('end_date')
             ? Carbon::parse($request->input('end_date'))
@@ -640,8 +973,8 @@ class WWTPControllerProses extends Controller
             ->count();
 
         $lastUpdate = WwtpInfluentHarian::orderBy('tanggal', 'desc')
-        ->orderBy('shift', 'desc')
-        ->first();
+            ->orderBy('shift', 'desc')
+            ->first();
 
         // Data hari ini
         $today = Carbon::today();
@@ -671,9 +1004,9 @@ class WWTPControllerProses extends Controller
             ->groupBy('tanggal')
             ->get()
             ->avg(function ($record) {
-                return $record->total_sparta + $record->total_garam + $record->total_domestik + 
-                       $record->total_produksi_step3 + $record->total_storage + $record->total_proses_wwtp2 + 
-                       $record->total_outlet + $record->total_boiler;
+                return $record->total_sparta + $record->total_garam + $record->total_domestik +
+                    $record->total_produksi_step3 + $record->total_storage + $record->total_proses_wwtp2 +
+                    $record->total_outlet + $record->total_boiler;
             });
 
         return response()->json([
@@ -694,11 +1027,11 @@ class WWTPControllerProses extends Controller
     {
         // Ambil start_date dan end_date dari request, default ke awal & akhir bulan
         $startDate = $request->input('start_date')
-        ? Carbon::parse($request->input('start_date'))->startOfDay()
+            ? Carbon::parse($request->input('start_date'))->startOfDay()
             : Carbon::now()->startOfMonth();
 
         $endDate = $request->input('end_date')
-        ? Carbon::parse($request->input('end_date'))->endOfDay()
+            ? Carbon::parse($request->input('end_date'))->endOfDay()
             : Carbon::now()->endOfMonth();
 
         // Agregasi data per hari (sum dari semua shift)
@@ -769,15 +1102,15 @@ class WWTPControllerProses extends Controller
     public function getShiftBreakdownData(Request $request)
     {
         $startDate = $request->query('start_date')
-        ? Carbon::parse($request->query('start_date'))->startOfDay()
-        : Carbon::now()->startOfDay();
+            ? Carbon::parse($request->query('start_date'))->startOfDay()
+            : Carbon::now()->startOfDay();
 
         $endDate = $request->query('end_date')
-        ? Carbon::parse($request->query('end_date'))->endOfDay()
-        : Carbon::now()->endOfDay();
+            ? Carbon::parse($request->query('end_date'))->endOfDay()
+            : Carbon::now()->endOfDay();
 
         $data = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])
-        ->selectRaw('
+            ->selectRaw('
             SUM(pit_sparta) as total_sparta,
             SUM(pit_garam) as total_garam,
             SUM(pit_domestik) as total_domestik,
@@ -861,8 +1194,8 @@ class WWTPControllerProses extends Controller
 
                 $totalVolume = $records->sum(function ($record) {
                     return $record->pit_sparta + $record->pit_garam + $record->pit_domestik +
-                           $record->pit_produksi_step3 + $record->pit_storage + $record->pit_proses_wwtp2 +
-                           $record->pit_outlet + $record->pit_boiler;
+                        $record->pit_produksi_step3 + $record->pit_storage + $record->pit_proses_wwtp2 +
+                        $record->pit_outlet + $record->pit_boiler;
                 });
 
                 return [

@@ -2,6 +2,8 @@
 
 namespace App\Models\Utility;
 
+use App\Models\User;
+use App\Models\Utility\Compressor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -55,6 +57,8 @@ class CompressorDetails extends Model
         'suhu_dryer_tr15',
         'suhu_dryer_fx250',
         'suhu_dryer_ir',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -69,5 +73,15 @@ class CompressorDetails extends Model
     public function compressor()
     {
         return $this->belongsTo(Compressor::class, 'compressor_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

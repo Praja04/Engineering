@@ -284,6 +284,7 @@
                                             <td>
                                                 <input type="number" name="materials[0][qty]"
                                                     class="form-control form-control-sm" min="1">
+                                                <input type="hidden" name="materials[0][uom]" value="">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger removeRow">
@@ -345,10 +346,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">User MT/MTC</label>
-                        <select class="form-select" id="userDept">
-                            <option value="">Pilih Departemen</option>
-                        </select>
-                        <select class="form-select mt-2 d-none" id="userDropdown">
+                        <select class="form-select" id="userDropdown">
                             <option value="">Pilih user</option>
                         </select>
                     </div>
@@ -448,7 +446,8 @@
                                     return {
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
-                                        nama_barang: item.nama_barang
+                                        nama_barang: item.nama_barang,
+                                        uom: item.uom
                                     };
                                 })
                             };
@@ -470,6 +469,11 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
+                    $(this).closest('tr').find('input[name*="[uom]"]').val(data.uom);
+                }).on('select2:clear select2:unselect', function(e) {
+                    $(this).closest('tr').find('input[name*="[desc]"]').val('');
+                    $(this).closest('tr').find('input[name*="[qty]"]').val('');
+                    $(this).closest('tr').find('input[name*="[uom]"]').val('');
                 });
             }
 
@@ -487,6 +491,7 @@
                         </td>
                         <td>
                             <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1">
+                            <input type="hidden" name="materials[${index}][uom]" value="">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
@@ -581,25 +586,12 @@
                             `<option value="${u.id}">${u.username}</option>`);
                     });
 
-                    const depts = [...new Set(res.user.map(u => u.departemen))];
-                    const $userDept = $('#userDept');
-                    $userDept.empty().append('<option value="">Pilih Departemen</option>');
-                    depts.forEach(d => $userDept.append(`<option value="${d}">${d}</option>`));
-
-                    $('#userDept').off('change').on('change', function() {
-                        const dept = $(this).val();
-                        const filtered = res.user.filter(u => u.departemen === dept);
-                        const $userDropdown = $('#userDropdown');
-
-                        $userDropdown.empty().append(
-                            '<option value="">Pilih user</option>');
-                        filtered.forEach(u => {
-                            $userDropdown.append(
-                                `<option value="${u.id}">${u.username}</option>`
-                            );
-                        });
-                        $userDropdown.removeClass('d-none');
-                        selectedUser = null;
+                    const $userDropdown = $('#userDropdown');
+                    $userDropdown.empty().append('<option value="">Pilih user</option>');
+                    res.user.forEach(u => {
+                        $userDropdown.append(
+                            `<option value="${u.id}">${u.username}</option>`
+                        );
                     });
                 });
             });

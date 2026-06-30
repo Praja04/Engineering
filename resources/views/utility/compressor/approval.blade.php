@@ -25,10 +25,26 @@
 
             <div class="card shadow-sm mt-3">
                 <div class="card-body">
+                    <div id="bulkActionContainer" class="mb-3 d-none">
+                        <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
+                            <span class="me-auto fw-medium"><span id="selectedCount">0</span> item terpilih</span>
+                            <button class="btn btn-success btn-sm me-2 px-3" id="btnBulkApprove">
+                                <i class="ri-checkbox-circle-line me-1"></i> Approve Terpilih
+                            </button>
+                            <button class="btn btn-danger btn-sm px-3" id="btnBulkReject">
+                                <i class="ri-close-circle-line me-1"></i> Reject Terpilih
+                            </button>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover align-middle text-nowrap">
                             <thead class="table-light">
                                 <tr>
+                                    <th style="width: 40px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                        </div>
+                                    </th>
                                     <th>Minggu Ke</th>
                                     <th>Bulan</th>
                                     <th>Tahun</th>
@@ -147,6 +163,9 @@
                     mode: 'approval'
                 },
                 success: function(res) {
+                    $('#selectAll').prop('checked', false);
+                    $('#bulkActionContainer').addClass('d-none');
+
                     let html = '';
                     res.data.forEach(item => {
                         let statusBadge = '';
@@ -181,8 +200,24 @@
                             `;
                         }
 
+                        let checkboxHtml = '';
+                        if (actions !== '') {
+                            checkboxHtml = `
+                                <div class="form-check">
+                                    <input class="form-check-input check-item" type="checkbox" value="${item.id}">
+                                </div>
+                            `;
+                        } else {
+                            checkboxHtml = `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" disabled>
+                                </div>
+                            `;
+                        }
+
                         html += `
                             <tr>
+                                <td>${checkboxHtml}</td>
                                 <td class="text-center">${item.week}</td>
                                 <td>${moment().month(item.bulan - 1).format('MMMM')}</td>
                                 <td>${item.tahun}</td>
@@ -205,7 +240,7 @@
 
                     if (res.data.length == 0) {
                         html =
-                            '<tr><td colspan="9" class="text-center">Tidak ada data menunggu approval</td></tr>';
+                            '<tr><td colspan="10" class="text-center">Tidak ada data menunggu approval</td></tr>';
                     }
 
                     $('#tbodyApproval').html(html);
@@ -321,8 +356,93 @@
             });
         }
 
+        function updateBulkUI() {
+            const checkedCount = $('.check-item:checked').length;
+            const totalCount = $('.check-item').length;
+
+            $('#selectedCount').text(checkedCount);
+            if (checkedCount > 0) {
+                $('#bulkActionContainer').removeClass('d-none');
+            } else {
+                $('#bulkActionContainer').addClass('d-none');
+            }
+
+            $('#selectAll').prop('checked', checkedCount === totalCount && totalCount > 0);
+        }
+
         $(document).ready(function() {
             loadApproval();
+
+            $(document).on('change', '#selectAll', function() {
+                $('.check-item').prop('checked', $(this).is(':checked'));
+                updateBulkUI();
+            });
+
+            $(document).on('change', '.check-item', function() {
+                updateBulkUI();
+            });
+
+            $('#btnBulkApprove').click(function() {
+                const ids = $('.check-item:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                Swal.fire({
+                    title: 'Approve Terpilih?',
+                    text: `Anda akan menyetujui ${ids.length} laporan sekaligus.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Approve Semua',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post("{{ route('compressor.bulk-approve') }}", {
+                            _token: "{{ csrf_token() }}",
+                            ids: ids
+                        }, function(res) {
+                            Swal.fire('Berhasil', res.message, 'success');
+                            loadApproval();
+                        }).fail(function(err) {
+                            Swal.fire('Gagal', err.responseJSON?.message || 'Terjadi kesalahan', 'error');
+                        });
+                    }
+                });
+            });
+
+            $('#btnBulkReject').click(function() {
+                const ids = $('.check-item:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                Swal.fire({
+                    title: 'Reject Terpilih',
+                    text: `Anda akan menolak ${ids.length} laporan sekaligus.`,
+                    input: 'textarea',
+                    inputLabel: 'Alasan Penolakan',
+                    inputPlaceholder: 'Tulis alasan...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Reject Semua',
+                    confirmButtonColor: '#d33',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (!result.value) {
+                            Swal.fire('Peringatan', 'Alasan penolakan harus diisi', 'warning');
+                            return;
+                        }
+                        $.post("{{ route('compressor.bulk-reject') }}", {
+                            _token: "{{ csrf_token() }}",
+                            ids: ids,
+                            reason: result.value
+                        }, function(res) {
+                            Swal.fire('Ditolak', res.message, 'info');
+                            loadApproval();
+                        }).fail(function(err) {
+                            Swal.fire('Gagal', err.responseJSON?.message || 'Terjadi kesalahan', 'error');
+                        });
+                    }
+                });
+            });
         });
     </script>
 @endsection
