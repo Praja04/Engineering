@@ -27,7 +27,7 @@ class DimensiRequest extends FormRequest
             'suhu_ruangan' => 'required|string|max:50',
             'kelembaban' => 'required|string|max:50',
             'tgl_kalibrasi' => 'required|date',
-            'catatan' => 'required|string|max:255',
+            'catatan' => 'nullable|string|max:255',
 
             'data' => 'required|array|min:1',
 
