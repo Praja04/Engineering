@@ -630,7 +630,7 @@
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
                                         nama_barang: item.nama_barang,
-                                        qty: item.qty_soh
+                                        qty: item.latest_stock?.qty_soh ?? 0
                                     };
                                 })
                             };
