@@ -79,6 +79,20 @@
             background-color: #dc3545;
             border-color: #dc3545;
         }
+
+        .select2-container--default .select2-selection--single {
+            min-height: 38px;
+            border: 1px solid #ced4da;
+            border-radius: .375rem;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
     </style>
 @endsection
 
@@ -447,7 +461,8 @@
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
                                         nama_barang: item.nama_barang,
-                                        uom: item.uom
+                                        uom: item.uom,
+                                        qty: item.qty_soh,
                                     };
                                 })
                             };
@@ -456,10 +471,14 @@
                     },
                     templateResult: function(data) {
                         if (!data.id) return data.text;
+
                         return $(`
-                            <div class="d-flex flex-column">
-                                <span class="fw-bold" style="font-size: 12.5px;">${data.id}</span>
-                                <small class="text-muted" style="font-size: 11px;">${data.nama_barang}</small>
+                            <div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold">${data.id}</span>
+                                    <span class="badge bg-primary">${data.qty ?? 0}</span>
+                                </div>
+                                <div class="text-muted small">${data.nama_barang}</div>
                             </div>
                         `);
                     },
