@@ -1056,10 +1056,10 @@ class KalibrasiCertificateController extends Controller
             // Isi data ke Excel
             $sheet->setCellValue("D{$row}", $tg->titik_kalibrasi);
             $sheet->setCellValue("H{$row}", $posisi);
-            $sheet->setCellValue("L{$row}", $avg_penunjuk_alat_suhu);
-            $sheet->setCellValue("O{$row}", $tg->avg_penunjuk_alat_rh ?? '');
-            $sheet->setCellValue("R{$row}", $avg_tekanan_standar_suhu);
-            $sheet->setCellValue("U{$row}", $tg->avg_tekanan_standar_rh ?? '');
+            $sheet->setCellValue("L{$row}", $avg_tekanan_standar_suhu);
+            $sheet->setCellValue("O{$row}", $tg->avg_tekanan_standar_rh ?? '');
+            $sheet->setCellValue("R{$row}", $avg_penunjuk_alat_suhu);
+            $sheet->setCellValue("U{$row}", $tg->avg_tekanan_alat_rh ?? '');
             $sheet->setCellValue("X{$row}", round($selisih, 2));
             $sheet->setCellValue("AA{$row}", $tg->avg_kor_alat_rh ?? '');
 
