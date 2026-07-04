@@ -410,7 +410,7 @@
                     if (i === 0) {
                         parentCell = `
                             <td rowspan="3">
-                                <input type="number"
+                                <input type="text"
                                     name="data[${currentIndex}][titik_kalibrasi]">
                             </td>
                             <td rowspan="3">
