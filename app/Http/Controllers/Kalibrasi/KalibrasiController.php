@@ -69,23 +69,48 @@ class KalibrasiController extends Controller
 
     public function storeAlatKalibrasi(Request $request)
     {
-        $validated = $request->validate([
-            'kode_alat' => 'required|string|max:100|unique:alat_kalibrasi,kode_alat',
-            'jenis_kalibrasi' => 'required|string|max:100',
-            'jumlah' => 'required|integer',
-            'nama_alat' => 'required|string|max:100',
-            'departemen_pemilik' => 'required|string|max:100',
-            'lokasi_alat' => 'required|string|max:100',
-            'no_kalibrasi' => 'required|string|max:100',
-            'merk' => 'required|string|max:100',
-            'tipe' => 'required|string|max:100',
-            'kapasitas' => 'required|string',
-            'resolusi' => 'required|string',
-            'range_min' => 'required|string',
-            'range_max' => 'required|string',
-            'limits_permissible_error' => 'required|string',
-            'metode_kalibrasi' => 'required|string|max:255'
-        ]);
+        $validated = $request->validate(
+            [
+                'kode_alat' => 'required|string|max:100|unique:alat_kalibrasi,kode_alat',
+                'jenis_kalibrasi' => 'required|string|max:100',
+                'jumlah' => 'required|integer',
+                'nama_alat' => 'required|string|max:100',
+                'departemen_pemilik' => 'required|string|max:100',
+                'lokasi_alat' => 'required|string|max:100',
+                'no_kalibrasi' => 'required|string|max:100',
+                'merk' => 'required|string|max:100',
+                'tipe' => 'required|string|max:100',
+                'kapasitas' => 'required|string',
+                'resolusi' => 'required|string',
+                'range_min' => 'required|string',
+                'range_max' => 'required|string',
+                'limits_permissible_error' => 'required|string',
+                'metode_kalibrasi' => 'required|string|max:255'
+            ],
+            [
+                'kode_alat.required' => 'Kode alat wajib diisi.',
+                'kode_alat.unique' => 'Kode alat sudah terdaftar.',
+                'kode_alat.max' => 'Kode alat maksimal 100 karakter.',
+
+                'jenis_kalibrasi.required' => 'Jenis kalibrasi wajib diisi.',
+                'jumlah.required' => 'Jumlah wajib diisi.',
+                'jumlah.integer' => 'Jumlah harus berupa angka.',
+
+                'nama_alat.required' => 'Nama alat wajib diisi.',
+                'departemen_pemilik.required' => 'Departemen pemilik wajib diisi.',
+                'lokasi_alat.required' => 'Lokasi alat wajib diisi.',
+                'no_kalibrasi.required' => 'Nomor kalibrasi wajib diisi.',
+                'merk.required' => 'Merk wajib diisi.',
+                'tipe.required' => 'Tipe wajib diisi.',
+                'kapasitas.required' => 'Kapasitas wajib diisi.',
+                'resolusi.required' => 'Resolusi wajib diisi.',
+                'range_min.required' => 'Range minimum wajib diisi.',
+                'range_max.required' => 'Range maksimum wajib diisi.',
+                'limits_permissible_error.required' => 'Limits Permissible Error wajib diisi.',
+                'metode_kalibrasi.required' => 'Metode kalibrasi wajib diisi.',
+                'metode_kalibrasi.max' => 'Metode kalibrasi maksimal 255 karakter.',
+            ]
+        );
 
         try {
             $satuan = match (strtolower($validated['jenis_kalibrasi'])) {
