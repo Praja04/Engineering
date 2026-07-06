@@ -14,8 +14,9 @@
     $isAhu = request()->is('utility/ahu*');
     $isMdp = request()->is('utility/mdp-monitoring*');
     $isCapacitorBank = request()->is('utility/capacitor-bank*');
+    $isBoilerLog = request()->is('utility/boiler-logs*');
 
-    $isOperasional = $isEsp || $isCapacitorBank || $isWs || $isGenset || $isCompressor || $isAhu || $isMdp;
+    $isOperasional = $isEsp || $isCapacitorBank || $isWs || $isGenset || $isCompressor || $isAhu || $isMdp || $isBoilerLog;
 @endphp
 
 @if (
@@ -258,6 +259,43 @@
                                     <a class="nav-link {{ request()->is('utility/mdp-monitoring/approval') ? 'active' : '' }}"
                                         href="{{ url('utility/mdp-monitoring/approval') }}">
                                         Approval MDP
+                                    </a>
+                                </li>
+                            @endif
+
+                        </ul>
+                    </div>
+                </li>
+
+                {{-- Boiler Logs --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ $isBoilerLog ? '' : 'collapsed' }}" href="#boilerLogMenu"
+                        data-bs-toggle="collapse" aria-expanded="{{ $isBoilerLog ? 'true' : 'false' }}">
+                        <span>Boiler Logs</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ $isBoilerLog ? 'show' : '' }}" id="boilerLogMenu">
+                        <ul class="nav nav-sm flex-column">
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/boiler-logs/data') ? 'active' : '' }}"
+                                    href="{{ url('utility/boiler-logs/data') }}">
+                                    Data Boiler
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/boiler-logs/form') ? 'active' : '' }}"
+                                    href="{{ url('utility/boiler-logs/form') }}">
+                                    Form Boiler
+                                </a>
+                            </li>
+
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('utility/boiler-logs/approval') ? 'active' : '' }}"
+                                        href="{{ url('utility/boiler-logs/approval') }}">
+                                        Approval Boiler
                                     </a>
                                 </li>
                             @endif

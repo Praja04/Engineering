@@ -12,7 +12,7 @@ $bagian = Auth::user()->bagian;
 <li class="nav-item">
     <a class="nav-link menu-link" href="#sidebarOperasionalDashboard" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarOperasionalDashboard">
         <i class="mdi mdi-wrench"></i>
-        <span data-key="t-dashboards">Dashboard Operasional</span>
+        <span data-key="t-dashboards">Dashboard <br> Operasional</span>
     </a>
     <div class="collapse menu-dropdown" id="sidebarOperasionalDashboard">
         <ul class="nav nav-sm flex-column">

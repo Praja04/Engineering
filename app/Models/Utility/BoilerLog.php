@@ -51,6 +51,10 @@ class BoilerLog extends Model
         'WaterPump2',
         'Batubara_FK',
         'Steam_FK',
+        'water_flow_total',
+        'water_hmi_flow_rate',
+        'water_hmi_total',
+        'flue_gass_temp',
     ];
 
     protected $casts = [
