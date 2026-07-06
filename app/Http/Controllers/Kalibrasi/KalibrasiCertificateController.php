@@ -1172,7 +1172,7 @@ class KalibrasiCertificateController extends Controller
         $first = $thermo->first();
 
         $ketidakpastian_suhu = $first->ketidak_pastian_suhu ?? '';
-        $ketidakpastian_rh   = ($first && $first->ketidak_pastian_rh !== null) ? $first->ketidak_pastian_rh : 'null';
+        $ketidakpastian_rh   = ($first && $first->ketidak_pastian_rh !== null) ? $first->ketidak_pastian_rh : '';
 
         foreach ($thermo as $tg) {
 
@@ -1186,19 +1186,19 @@ class KalibrasiCertificateController extends Controller
             $posisi = str_ireplace(['kanan', 'kiri'], ['Ka.', 'Ki.'], $posisi);
             $posisi = ucwords(strtolower($posisi));
 
-            $valStandarRh = $tg->avg_tekanan_standar_rh !== null ? $tg->avg_tekanan_standar_rh : 'null';
-            $valAlatRh = ($tg->avg_penunjuk_alat_rh ?? $tg->avg_tekanan_alat_rh) !== null ? ($tg->avg_penunjuk_alat_rh ?? $tg->avg_tekanan_alat_rh) : 'null';
-            $valKorRh = $tg->avg_kor_alat_rh !== null ? $tg->avg_kor_alat_rh : 'null';
+            $valStandarRh = $tg->avg_tekanan_standar_rh !== null ? $tg->avg_tekanan_standar_rh : '';
+            $valAlatRh = ($tg->avg_penunjuk_alat_rh ?? $tg->avg_tekanan_alat_rh) !== null ? ($tg->avg_penunjuk_alat_rh ?? $tg->avg_tekanan_alat_rh) : '';
+            $valKorRh = $tg->avg_kor_alat_rh !== null ? $tg->avg_kor_alat_rh : '';
 
             // Isi data ke Excel
             $sheet->setCellValue("D{$row}", $tg->titik_kalibrasi);
-            $sheet->setCellValue("H{$row}", $posisi);
-            $sheet->setCellValue("L{$row}", $avg_tekanan_standar_suhu);
-            $sheet->setCellValue("O{$row}", $valStandarRh);
-            $sheet->setCellValue("R{$row}", $avg_penunjuk_alat_suhu);
-            $sheet->setCellValue("U{$row}", $valAlatRh);
+            $sheet->setCellValue("H{$row}", $posisi ?? '');
+            $sheet->setCellValue("L{$row}", $avg_tekanan_standar_suhu ?? '');
+            $sheet->setCellValue("O{$row}", $valStandarRh ?? '');
+            $sheet->setCellValue("R{$row}", $avg_penunjuk_alat_suhu ?? '');
+            $sheet->setCellValue("U{$row}", $valAlatRh ?? '');
             $sheet->setCellValue("X{$row}", round($selisih, 2));
-            $sheet->setCellValue("AA{$row}", $valKorRh);
+            $sheet->setCellValue("AA{$row}", $valKorRh ?? '');
 
             $row++;
         }
@@ -1226,8 +1226,8 @@ class KalibrasiCertificateController extends Controller
             $sheet->mergeCells($rangeRh);
 
             // Ambil dari first (lebih aman)
-            $sheet->setCellValue("AD{$startRow}", $ketidakpastian_suhu);
-            $sheet->setCellValue("AG{$startRow}", $ketidakpastian_rh);
+            $sheet->setCellValue("AD{$startRow}", $ketidakpastian_suhu ?? '');
+            $sheet->setCellValue("AG{$startRow}", $ketidakpastian_rh ?? '');
 
             // Center alignment
             $sheet->getStyle($rangeSuhu)
