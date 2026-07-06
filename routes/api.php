@@ -17,6 +17,7 @@ Route::get('scoring/mesin', [MachineScoringController::class, 'api_scoring_mesin
 @include 'utility/api-capacitor-bank-machine-routes.php';
 //api wwtp //
 @include 'utility/api-wwtp-routes.php';
+@include 'utility/api-boiler-routes.php';
 @include 'boiler/api_boiler.php';
 
 // @include 'utility/warming-up-genset-routes.php';
