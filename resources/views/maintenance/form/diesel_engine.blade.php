@@ -19,37 +19,18 @@
             box-shadow: 0 0 0 0.15rem rgba(220, 53, 69, .25) !important;
         }
 
-        .select2-selection__placeholder {
-            font-size: 13px;
+        .select2-container--default .select2-selection--single {
+            min-height: 38px;
+            border: 1px solid #ced4da;
+            border-radius: .375rem;
         }
 
-        /* === DROPDOWN OPTION === */
-        .select2-container--bootstrap-5 .select2-results__option {
-            font-size: 11px !important;
-            padding: 3px 8px !important;
-            line-height: 1.3 !important;
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
         }
 
-        /* TEXT YANG TAMPIL SAAT SUDAH DIPILIH */
-        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-            font-size: 13px !important;
-            line-height: 1.3 !important;
-        }
-
-        /* OPTION YANG AKTIF / HOVER */
-        .select2-container--bootstrap-5 .select2-results__option--highlighted,
-        .select2-container--bootstrap-5 .select2-results__option--selected {
-            font-size: 11px !important;
-        }
-
-        /* TEXT UTAMA */
-        .select2-container--bootstrap-5 .select2-results__option span {
-            font-size: 12px !important;
-        }
-
-        /* TEXT <small> */
-        .select2-container--bootstrap-5 .select2-results__option small {
-            font-size: 10px !important;
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
         }
     </style>
 @endsection
@@ -641,7 +622,8 @@
                                     return {
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
-                                        nama_barang: item.nama_barang
+                                        nama_barang: item.nama_barang,
+                                        qty: item.latest_stock?.qty_soh ?? 0
                                     };
                                 })
                             };
@@ -650,12 +632,16 @@
                     },
                     templateResult: function(data) {
                         if (!data.id) return data.text;
+
                         return $(`
-                        <div class="d-flex flex-column">
-                            <span class="fw-bold" style="font-size: 12.5px;">${data.id}</span>
-                            <small class="text-muted" style="font-size: 11px;">${data.nama_barang}</small>
-                        </div>
-                    `);
+                            <div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-bold">${data.id}</span>
+                                    <span class="badge bg-primary">${data.qty ?? 0}</span>
+                                </div>
+                                <div class="text-muted small">${data.nama_barang}</div>
+                            </div>
+                        `);
                     },
                     templateSelection: function(data) {
                         return data.id || data.text;

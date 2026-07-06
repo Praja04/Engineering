@@ -15,7 +15,7 @@ class KalibrasiMasterTimbanganController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'beban' => 'required|unique:kalibrasi_timbangan_master,beban',
+            'beban' => 'required|unique:cal_timbangan_master,beban',
             'standar_massa' => 'required|numeric',
         ]);
 
@@ -42,7 +42,7 @@ class KalibrasiMasterTimbanganController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'beban' => 'required|unique:kalibrasi_timbangan_master,beban,' . $id,
+            'beban' => 'required|unique:cal_timbangan_master,beban,' . $id,
             'standar_massa' => 'required|numeric',
         ]);
 

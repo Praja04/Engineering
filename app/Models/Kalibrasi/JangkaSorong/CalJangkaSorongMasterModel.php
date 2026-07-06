@@ -9,7 +9,7 @@ class CalJangkaSorongMasterModel extends Model
     protected $table = 'cal_jangka_sorong_master';
 
     protected $fillable = [
-        'no',
+        // 'no',
         'nilai_master'
     ];
 

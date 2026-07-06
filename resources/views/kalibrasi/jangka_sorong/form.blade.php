@@ -197,6 +197,12 @@
             const masters = @json($masters);
             const STORAGE_KEY = 'cal_jangka_sorong_form';
 
+            function formatNumber(val) {
+                if (val === null || val === undefined || val === '') return '';
+                const num = parseFloat(val);
+                return isNaN(num) ? val : num;
+            }
+
             // ---- EVENT: pilih alat ----
             $('#alat_id').on('change', function() {
                 const id = $(this).val();
@@ -351,7 +357,7 @@
                                         style="width: 200px;">
                                     <option value="">-- Pilih Master --</option>
                                     ${masters.map(m =>
-                                        `<option value="${m.id}" data-nilai="${m.nilai_master}">${m.no} - ${m.nilai_master}</option>`
+                                        `<option value="${m.id}" data-nilai="${m.nilai_master}">${formatNumber(m.nilai_master)} mm</option>`
                                     ).join('')}
                                 </select>
                             </div>
@@ -467,7 +473,7 @@
                 let nilai = '';
 
                 if (nilaiRaw !== undefined && nilaiRaw !== '') {
-                    nilai = parseFloat(nilaiRaw).toFixed(2);
+                    nilai = formatNumber(nilaiRaw);
                 }
 
                 $(`.nilaiMasterTitik${titik}`).val(nilai);

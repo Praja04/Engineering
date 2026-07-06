@@ -20,7 +20,7 @@
                     <table class="table table-bordered table-hover align-middle text-center" id="tableMaster">
                         <thead class="table-light">
                             <tr>
-                                <th>No Master</th>
+                                <th>No</th>
                                 <th>Nilai Master (mm)</th>
                                 <th width="20%">Aksi</th>
                             </tr>
@@ -45,11 +45,11 @@
                             @csrf
                             <input type="hidden" id="id" name="id">
                             <div class="modal-body">
-                                <div class="mb-3">
+                                {{-- <div class="mb-3">
                                     <label for="no" class="form-label fw-semibold">No</label>
                                     <input type="text" name="no" id="no" class="form-control"
                                         placeholder="Misal: Titik 1" required>
-                                </div>
+                                </div> --}}
                                 <div class="mb-3">
                                     <label for="nilai_master" class="form-label fw-semibold">Nilai Master (mm)</label>
                                     <input type="number" step="0.0001" name="nilai_master" id="nilai_master"
@@ -87,12 +87,12 @@
                 $.get("{{ route('jangka-sorong.index') }}", function(data) {
                     let rows = '';
                     if (data.length === 0) {
-                        rows = `<tr><td colspan="4" class="text-muted">Belum ada data.</td></tr>`;
+                        rows = `<tr><td colspan="3" class="text-muted">Belum ada data.</td></tr>`;
                     } else {
                         $.each(data, function(i, item) {
                             rows += `
                         <tr>
-                            <td>${item.no}</td>
+                            <td>${i + 1}</td>
                             <td>${formatNumber(item.nilai_master)}</td>
                             <td>
                                 <button class="btn btn-sm btn-warning me-1 btnEdit" data-id="${item.id}" title="Edit">
@@ -170,8 +170,7 @@
                 $.get("{{ url('kalibrasi/master/jangka-sorong') }}/" + id, function(data) {
                     $('#modalTitle').text('Edit Data');
                     $('#id').val(data.id);
-                    $('#no').val(data.no);
-                    $('#nilai_master').val(data.nilai_master);
+                    $('#nilai_master').val(data.nilai_master ? parseFloat(data.nilai_master) : '');
                     modal.show();
                 });
             });
