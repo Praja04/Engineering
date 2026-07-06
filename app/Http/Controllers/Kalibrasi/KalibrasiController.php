@@ -213,19 +213,19 @@ class KalibrasiController extends Controller
                 'max:50',
                 Rule::unique('alat_kalibrasi', 'kode_alat')->ignore($id),
             ],
-            'edit_jenis_kalibrasi' => 'required|string|max:100',
-            'edit_jumlah' => 'required|integer',
-            'edit_nama_alat' => 'required|string|max:100',
-            'edit_departemen_pemilik' => 'required|string|max:100',
-            'edit_lokasi_alat' => 'required|string|max:100',
-            'edit_no_kalibrasi' => 'required|string|max:100',
-            'edit_merk' => 'required|string|max:100',
-            'edit_tipe' => 'required|string|max:100',
-            'edit_kapasitas' => 'required|string',
-            'edit_resolusi' => 'required|string',
-            'edit_range_penggunaan_alat' => 'required|string',
-            'edit_limits_permissible_error' => 'required|string',
-            'edit_metode_kalibrasi' => 'required|string'
+            'edit_jenis_kalibrasi' => 'nullable|string|max:100',
+            'edit_jumlah' => 'nullable|integer',
+            'edit_nama_alat' => 'nullable|string|max:100',
+            'edit_departemen_pemilik' => 'nullable|string|max:100',
+            'edit_lokasi_alat' => 'nullable|string|max:100',
+            'edit_no_kalibrasi' => 'nullable|string|max:100',
+            'edit_merk' => 'nullable|string|max:100',
+            'edit_tipe' => 'nullable|string|max:100',
+            'edit_kapasitas' => 'nullable|string',
+            'edit_resolusi' => 'nullable|string',
+            'edit_range_penggunaan_alat' => 'nullable|string',
+            'edit_limits_permissible_error' => 'nullable|string',
+            'edit_metode_kalibrasi' => 'nullable|string'
         ]);
 
         $data = $this->normalizePlusMinus($validated);
