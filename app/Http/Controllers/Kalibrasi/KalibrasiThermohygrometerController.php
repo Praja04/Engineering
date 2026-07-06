@@ -72,8 +72,8 @@ class KalibrasiThermohygrometerController extends Controller
                     $alatSuhu    = $row['alat'][$i]['suhu'] ?? null;
                     $alatRh      = $row['alat'][$i]['rh'] ?? null;
 
-                    $koreksiStandarSuhu = 0;
-                    $koreksiStandarRh   = 0;
+                    $koreksiStandarSuhu = ($standarSuhu !== null) ? 0 : null;
+                    $koreksiStandarRh   = ($standarRh !== null) ? 0 : null;
 
                     $tekananSuhu = ($standarSuhu !== null) ? ($standarSuhu + $koreksiStandarSuhu) : null;
                     $tekananRh   = ($standarRh !== null) ? ($standarRh + $koreksiStandarRh) : null;
