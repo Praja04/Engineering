@@ -177,13 +177,13 @@
                                     <option value="" disabled selected>Pilih jenis kalibrasi</option>
                                     <option value="timbangan">Timbangan</option>
                                     <option value="pressure">Pressure</option>
-                                    <option value="temperature">Temperature</option>
                                     <option value="volumetrik">Volumetrik</option>
                                     <option value="thermohygrometer">Thermohygrometer</option>
                                     <option value="jangka_sorong">Jangka Sorong</option>
                                     <option value="instrumen">Instrumen</option>
-                                    <option value="dimensi">Dimensi</option>
                                     <option value="flowmeter">Flowmeter</option>
+                                    {{-- <option value="dimensi">Dimensi</option>
+                                    <option value="temperature">Temperature</option> --}}
                                 </select>
                             </div>
                             <div class="col-xxl-3 col-md-6">
@@ -303,13 +303,13 @@
                                 <option value="magnetic">Magnetic</option>
                                 <option value="timbangan">Timbangan</option>
                                 <option value="pressure">Pressure</option>
-                                <option value="temperature">Temperature</option>
                                 <option value="volumetrik">Volumetrik</option>
                                 <option value="thermohygrometer">Thermohygrometer</option>
                                 <option value="jangka_sorong">Jangka Sorong</option>
                                 <option value="instrumen">Instrumen</option>
-                                <option value="dimensi">Dimensi</option>
                                 <option value="flowmeter">Flowmeter</option>
+                                {{-- <option value="temperature">Temperature</option> --}}
+                                {{-- <option value="dimensi">Dimensi</option> --}}
                             </select>
                         </div>
                         <div class="col-md-6">

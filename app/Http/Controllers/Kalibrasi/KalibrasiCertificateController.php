@@ -707,20 +707,26 @@ class KalibrasiCertificateController extends Controller
         $row = $rowStart;
         $index = 0;
 
+        $kapasitasVal = 0;
+        if (!empty($alat->kapasitas)) {
+            if (preg_match('/^\d+([.,]\d+)?/', trim($alat->kapasitas), $matches)) {
+                $kapasitasVal = (float) str_replace(',', '.', $matches[0]);
+            }
+        }
+
         $pressures = $kalibrasi->pressure
             ->sortBy('titik_kalibrasi')
             ->values();
 
         $totalTitik = $pressures->count();
 
-        $step = $totalTitik > 1 ? 100 / ($totalTitik - 1) : 100;
-
         // reverse khusus untuk TURUN
         $pressuresDesc = $pressures->reverse()->values();
 
         foreach ($pressures as $i => $pg) {
 
-            $persentase = $totalTitik > 1 ? $index * $step : 100;
+            $titikVal = (float) ($pg->titik_kalibrasi ?? 0);
+            $persentase = ($kapasitasVal > 0) ? ($titikVal / $kapasitasVal) * 100 : 0;
             $sheet->setCellValue("D{$row}", round($persentase, 2));
 
             // Ambil pasangan turun dari urutan terbalik

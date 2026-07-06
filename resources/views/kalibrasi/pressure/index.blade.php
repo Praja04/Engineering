@@ -80,6 +80,20 @@
             padding: 2px 6px;
             font-size: 11px;
         }
+
+        .select2-container--default .select2-selection--single {
+            min-height: 38px;
+            border: 1px solid #ced4da;
+            border-radius: .375rem;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
     </style>
 @endsection
 
@@ -127,7 +141,8 @@
                                     <div class="col-12 col-md-6 col-xl-6">
                                         <label for="alat_id" class="form-label">Pilih Kode Alat</label>
                                         <div class="input-group">
-                                            <select class="form-select" id="alat_id" name="alat_id">
+                                            <select class="form-select select2" id="alat_id" name="alat_id"
+                                                style="width: 100%">
                                                 <option value="">-- Pilih Kode Alat --</option>
                                                 @foreach ($alat as $a)
                                                     <option value="{{ $a->id }}">
@@ -472,13 +487,19 @@
                 const tbodyNaik = document.querySelector('#tabelNaik tbody');
                 const tbodyTurun = document.querySelector('#tabelTurun tbody');
 
-                if (!tbodyNaik || !tbodyTurun) return;
+                if (!tbodyNaik || !tbodyTurun) {
+                    document.getElementById('jumlahTitik').value = 1;
+                    generateTabel(1);
+                    return;
+                }
 
                 const newIndex = tbodyNaik.querySelectorAll('tr').length;
+                const newTotal = newIndex + 1;
 
-                tbodyNaik.insertAdjacentHTML('beforeend', createRow(newIndex, 'naik'));
-                tbodyTurun.insertAdjacentHTML('beforeend', createRow(newIndex, 'turun'));
+                tbodyNaik.insertAdjacentHTML('beforeend', createRow(newIndex, 'naik', newTotal));
+                tbodyTurun.insertAdjacentHTML('beforeend', createRow(newIndex, 'turun', newTotal));
 
+                renumberRows();
                 saveForm();
             };
 
@@ -499,8 +520,13 @@
                 const rowsNaik = document.querySelectorAll('#tabelNaik tbody tr');
                 const rowsTurun = document.querySelectorAll('#tabelTurun tbody tr');
 
+                const total = rowsNaik.length;
+                const inputJumlah = document.getElementById('jumlahTitik');
+                if (inputJumlah) {
+                    inputJumlah.value = total;
+                }
+
                 rowsNaik.forEach((row, i) => {
-                    const total = rowsNaik.length;
 
                     row.querySelector('td').innerHTML = `
                         ${i}
