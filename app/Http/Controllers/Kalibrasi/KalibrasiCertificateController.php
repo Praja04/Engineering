@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Kalibrasi;
 
 // use \Log;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendRequestApprovalEmailJob;
 use App\Mail\RequestApprovalMail;
 use App\Models\Kalibrasi\KalibrasiApprovalModel;
 use App\Models\Kalibrasi\KalibrasiModel;
@@ -20,12 +21,18 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Chart\DataSeries;
 use PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues;
 use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 class KalibrasiCertificateController extends Controller
 {
+    private function resolveTtdPath($user): ?string
+    {
+        return 'mtc/ttd/utility_approved_sticker.png';
+    }
+
     public function reqApproval(Request $request, $id)
     {
         $request->validate([
@@ -64,6 +71,7 @@ class KalibrasiCertificateController extends Controller
                 $user = User::findOrFail($approverId);
 
                 $isForeman = $user->id === $foremanId;
+                $ttdPath = $isForeman ? $this->resolveTtdPath($user) : null;
 
                 KalibrasiApprovalModel::create([
                     'sertifikat_id' => $sertifikat->id,
@@ -74,26 +82,26 @@ class KalibrasiCertificateController extends Controller
                     'action_at'     => $isForeman ? now() : null,
                     'action_by'     => $isForeman ? $foremanId : null,
                     'catatan'       => null,
-                    'ttd'           => null,
+                    'ttd'           => $ttdPath,
                 ]);
+            }
 
-                if (!$isForeman) {
+            // Kirim notif & email ke Supervisor (Level 2) yang merupakan tingkat pertama setelah Foreman
+            $supervisorUser = User::find($request->supervisor_id);
+            if ($supervisorUser) {
+                // Background Job untuk kirim email
+                SendRequestApprovalEmailJob::dispatch($sertifikat, $supervisorUser);
 
-                    // Email
-                    Mail::to($user->email)
-                        ->queue(new RequestApprovalMail($sertifikat, $user->username));
-
-                    // Notifikasi Database
-                    NotificationsModel::create([
-                        'user_id'         => $user->id,
-                        'notifiable_type' => KalibrasiSertifikatModel::class,
-                        'notifiable_id'   => $sertifikat->id,
-                        'title'           => 'Approval Kalibrasi ' . ucfirst($sertifikat->kalibrasi->jenis_kalibrasi),
-                        'message'         => 'Sertifikat kalibrasi menunggu persetujuan Anda.',
-                        'url'             => route('kalibrasi.certificate.approvals'),
-                        'is_read'         => false,
-                    ]);
-                }
+                // Notifikasi Database
+                NotificationsModel::create([
+                    'user_id'         => $supervisorUser->id,
+                    'notifiable_type' => KalibrasiSertifikatModel::class,
+                    'notifiable_id'   => $sertifikat->id,
+                    'title'           => 'Approval Kalibrasi ' . ucfirst($sertifikat->kalibrasi->jenis_kalibrasi),
+                    'message'         => 'Sertifikat kalibrasi menunggu persetujuan Anda.',
+                    'url'             => route('kalibrasi.certificate.approvals'),
+                    'is_read'         => false,
+                ]);
             }
 
             // Update status sertifikat
@@ -157,25 +165,7 @@ class KalibrasiCertificateController extends Controller
                 ], 400);
             }
 
-            $ttdPath = null;
-
-            if ($request->ttd_base64) {
-
-                // Ambil bagian base64 saja
-                $image = $request->ttd_base64;
-
-                $image = str_replace('data:image/png;base64,', '', $image);
-                $image = str_replace(' ', '+', $image);
-
-                $imageName = 'ttd_' . $approval->approver->username . '_' . $approval->sertifikat_id . '.png';
-
-                Storage::disk('public')->put(
-                    'ttd/kalibrasi/' . $imageName,
-                    base64_decode($image)
-                );
-
-                $ttdPath = 'ttd/kalibrasi/' . $imageName;
-            }
+            $ttdPath = $this->resolveTtdPath(Auth::user());
 
             // Update approval
             $approval->update([
@@ -192,13 +182,33 @@ class KalibrasiCertificateController extends Controller
                 ->where('user_id', $userId) // opsional (biar spesifik)
                 ->delete();
 
-            // Cek apakah semua sudah approved
-            $stillPending = KalibrasiApprovalModel::where('sertifikat_id', $approval->sertifikat_id)
+            // 🔍 Cari approval pending level berikutnya
+            $nextApproval = KalibrasiApprovalModel::where('sertifikat_id', $approval->sertifikat_id)
+                ->where('level', '>', $approval->level)
                 ->where('status', 'pending')
-                ->exists();
+                ->orderBy('level', 'asc')
+                ->first();
 
-            if (!$stillPending) {
-                $approval->sertifikat->update([
+            if ($nextApproval) {
+                // Kirim notifikasi & email ke user level selanjutnya
+                $nextUser = User::find($nextApproval->approver_id);
+                if ($nextUser) {
+                    // Background Job untuk kirim email
+                    SendRequestApprovalEmailJob::dispatch($sertifikat, $nextUser);
+
+                    NotificationsModel::create([
+                        'user_id'         => $nextUser->id,
+                        'notifiable_type' => KalibrasiSertifikatModel::class,
+                        'notifiable_id'   => $sertifikat->id,
+                        'title'           => 'Approval Kalibrasi ' . ucfirst($sertifikat->kalibrasi->jenis_kalibrasi),
+                        'message'         => 'Sertifikat kalibrasi menunggu persetujuan Anda.',
+                        'url'             => route('kalibrasi.certificate.approvals'),
+                        'is_read'         => false,
+                    ]);
+                }
+            } else {
+                // Semua approval selesai, sertifikat approved
+                $sertifikat->update([
                     'status' => 'approved',
                     'issued_at' => now()
                 ]);
@@ -216,7 +226,7 @@ class KalibrasiCertificateController extends Controller
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan.'
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -291,6 +301,106 @@ class KalibrasiCertificateController extends Controller
             ], 500);
         }
     }
+    public function massApprove(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:cal_approvals,id',
+        ]);
+
+        $ids = $request->ids;
+        $userId = Auth::id();
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($ids as $id) {
+                $approval = KalibrasiApprovalModel::findOrFail($id);
+
+                // Pastikan yang approve adalah approver yang benar
+                if ($approval->approver_id !== $userId) {
+                    continue;
+                }
+
+                // Cek apakah sudah pernah diproses
+                if ($approval->status !== 'pending') {
+                    continue;
+                }
+
+                // CEK LEVEL LOCKING
+                $lowerLevelPending = KalibrasiApprovalModel::where('sertifikat_id', $approval->sertifikat_id)
+                    ->where('level', '<', $approval->level)
+                    ->where('status', '!=', 'approved')
+                    ->exists();
+
+                if ($lowerLevelPending) {
+                    continue; // Skip jika level di bawahnya belum di-approve
+                }
+
+                $ttdPath = $this->resolveTtdPath(Auth::user());
+
+                // Update approval
+                $approval->update([
+                    'status'    => 'approved',
+                    'ttd'       => $ttdPath,
+                    'action_at' => now(),
+                    'action_by' => Auth::id(),
+                ]);
+
+                $sertifikat = $approval->sertifikat;
+
+                NotificationsModel::where('notifiable_type', KalibrasiSertifikatModel::class)
+                    ->where('notifiable_id', $sertifikat->id)
+                    ->where('user_id', $userId)
+                    ->delete();
+
+                // 🔍 Cari approval pending level berikutnya
+                $nextApproval = KalibrasiApprovalModel::where('sertifikat_id', $approval->sertifikat_id)
+                    ->where('level', '>', $approval->level)
+                    ->where('status', 'pending')
+                    ->orderBy('level', 'asc')
+                    ->first();
+
+                if ($nextApproval) {
+                    // Kirim notifikasi & email ke user level selanjutnya
+                    $nextUser = User::find($nextApproval->approver_id);
+                    if ($nextUser) {
+                        // Background Job untuk kirim email
+                        SendRequestApprovalEmailJob::dispatch($sertifikat, $nextUser);
+
+                        NotificationsModel::create([
+                            'user_id'         => $nextUser->id,
+                            'notifiable_type' => KalibrasiSertifikatModel::class,
+                            'notifiable_id'   => $sertifikat->id,
+                            'title'           => 'Approval Kalibrasi ' . ucfirst($sertifikat->kalibrasi->jenis_kalibrasi),
+                            'message'         => 'Sertifikat kalibrasi menunggu persetujuan Anda.',
+                            'url'             => route('kalibrasi.certificate.approvals'),
+                            'is_read'         => false,
+                        ]);
+                    }
+                } else {
+                    // Semua approval selesai, sertifikat approved
+                    $sertifikat->update([
+                        'status' => 'approved',
+                        'issued_at' => now()
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Mass approval berhasil diproses.'
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function showApprovalPage()
     {
@@ -305,11 +415,20 @@ class KalibrasiCertificateController extends Controller
                 $q->where('approver_id', $user->id)
                     ->orWhere('role', $user->role);
             })
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('cal_approvals as sub')
+                    ->whereColumn('sub.sertifikat_id', 'cal_approvals.sertifikat_id')
+                    ->whereColumn('sub.level', '<', 'cal_approvals.level')
+                    ->where('sub.status', '!=', 'approved');
+            })
             ->orderBy('level')
             ->orderBy('created_at')
             ->get();
 
-        return view('kalibrasi.certificate.approval', compact('approvals'));
+        $ttdPath = $this->resolveTtdPath($user);
+
+        return view('kalibrasi.certificate.approval', compact('approvals', 'ttdPath'));
     }
 
     public function getSertifikatData(Request $request)
@@ -324,7 +443,15 @@ class KalibrasiCertificateController extends Controller
                 'sertifikat.kalibrasi.alat:id,kode_alat,nama_alat,metode_kalibrasi',
                 'approver:id,username',
             ])
-                ->where('approver_id', $userId);
+                ->where('approver_id', $userId)
+                ->where('status', 'pending')
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('cal_approvals as sub')
+                        ->whereColumn('sub.sertifikat_id', 'cal_approvals.sertifikat_id')
+                        ->whereColumn('sub.level', '<', 'cal_approvals.level')
+                        ->where('sub.status', '!=', 'approved');
+                });
 
             // 🔹 Filter opsional dari frontend
             if ($request->filled('tanggal')) {

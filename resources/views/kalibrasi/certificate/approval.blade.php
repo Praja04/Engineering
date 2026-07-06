@@ -12,16 +12,24 @@
     <div class="page-content">
         <div class="container-fluid">
             <div class="card shadow-sm rounded-3 mb-4" data-aos="fade-up">
-                <div class="card-header">
-                    <h4 class="fw-bold">Approval Kalibrasi</h4>
-                    <p class="card-subtitle">Approval untuk approver terkait data kalibrasi</p>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold mb-0">Approval Kalibrasi</h4>
+                        <p class="card-subtitle mb-0">Approval untuk approver terkait data kalibrasi</p>
+                    </div>
+                    <button id="btnMassApprove" class="btn btn-success shadow-sm" style="display: none;">
+                        <i class="mdi mdi-check-all"></i> Approve Terpilih
+                    </button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered align-middle text-nowrap">
+                        <table class="table table-hover align-middle text-nowrap">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="text-center">No</th>
+                                    <th class="text-center" style="width: 40px;">
+                                        <input type="checkbox" id="checkAll">
+                                    </th>
+                                    <th class="text-center" style="width: 60px;">No</th>
                                     <th>Kode Alat</th>
                                     <th>Jenis Kalibrasi</th>
                                     <th>Tanggal Kalibrasi</th>
@@ -33,6 +41,9 @@
                             <tbody>
                                 @forelse ($approvals as $i => $approval)
                                     <tr>
+                                        <td class="text-center">
+                                            <input type="checkbox" class="checkItem" value="{{ $approval->id }}">
+                                        </td>
                                         <td class="text-center">{{ $i + 1 }}</td>
                                         <td>{{ $approval->sertifikat->kalibrasi->alat->kode_alat ?? '-' }}
                                         <td>{{ Str::title(str_replace('_', ' ', $approval->sertifikat->kalibrasi->jenis_kalibrasi)) }}
@@ -62,7 +73,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">
+                                        <td colspan="8" class="text-center py-4 text-muted">
                                             <i class="mdi mdi-check-circle-outline fs-3 d-block mb-2"></i>
                                             <strong>Tidak ada approval pending</strong>
                                             <div class="small">Semua data kalibrasi sudah Anda tindak lanjuti</div>
@@ -101,23 +112,27 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5 class="modal-title">Tanda Tangan Approver</h5>
+                    <h5 class="modal-title">Konfirmasi Tanda Tangan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
                 <div class="modal-body text-center">
-                    <canvas id="signature-pad" style="border:1px solid #ccc; width:60%;"></canvas>
-
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearTtd">
-                            Reset TTD
-                        </button>
-                    </div>
+                    @if ($ttdPath)
+                        <p class="text-muted mb-3">Tanda tangan Anda akan digunakan untuk approval ini:</p>
+                        <img src="{{ asset('storage/' . $ttdPath) }}" alt="Tanda Tangan" class="img-fluid border rounded"
+                            style="max-height: 150px;">
+                    @else
+                        <div class="alert alert-warning">
+                            <i class="mdi mdi-alert"></i>
+                            Tanda tangan Anda belum tersedia. Hubungi administrator.
+                        </div>
+                    @endif
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="btnSaveTtd">
-                        Simpan & Kirim
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-success" id="btnSaveTtd" {{ !$ttdPath ? 'disabled' : '' }}>
+                        <i class="mdi mdi-check"></i> Konfirmasi & Approve
                     </button>
                 </div>
 
@@ -204,8 +219,6 @@
             });
 
             // Approve & TTD
-            let signaturePad = null;
-            let pendingFormData = null;
             let approveId = null;
 
             $(document).on('click', '.btn-approve', function() {
@@ -214,10 +227,10 @@
 
                 Swal.fire({
                     title: 'Approve data?',
-                    text: 'Pastikan data sudah benar',
+                    text: 'Pastikan data sudah benar sebelum melanjutkan.',
                     icon: 'question',
                     showCancelButton: true,
-                    confirmButtonText: 'Ya, approve',
+                    confirmButtonText: 'Ya, lanjutkan',
                     cancelButtonText: 'Batal',
                     confirmButtonColor: '#28a745',
                     cancelButtonColor: '#6c757d'
@@ -229,102 +242,17 @@
                 });
             });
 
-            $('#modalTtd').on('shown.bs.modal', function() {
-
-                if (!signaturePad) {
-                    const canvas = document.getElementById('signature-pad');
-                    canvas.width = canvas.offsetWidth;
-                    canvas.height = 200;
-                    signaturePad = new SignaturePad(canvas);
-                }
-            });
-
-            $('#btnClearTtd').on('click', function() {
-                signaturePad.clear();
-            });
-
-            $('#modalTtd').on('hidden.bs.modal', function() {
-                if (signaturePad) signaturePad.clear();
-            });
-
             $('#btnSaveTtd').on('click', function() {
-
-                if (!signaturePad || signaturePad.isEmpty()) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'TTD belum diisi',
-                        text: 'Silakan tanda tangan terlebih dahulu'
-                    });
-                    return;
-                }
-
-                const ttdBase64 = signaturePad.toDataURL('image/png');
-
-                // const originalCanvas = document.getElementById('signature-pad');
-                // const croppedCanvas = cropSignatureCanvas(originalCanvas);
-
-                // const ttdBase64 = croppedCanvas.toDataURL('image/png');
-
                 $('#modalTtd').modal('hide');
-
-                // 🔥 submit approve + TTD
-                submitApprove(ttdBase64);
+                submitApprove();
             });
 
-            // function cropSignatureCanvas(canvas) {
-            //     const ctx = canvas.getContext('2d');
-            //     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            //     const data = imageData.data;
-
-            //     let top = null,
-            //         left = null,
-            //         right = null,
-            //         bottom = null;
-
-            //     for (let y = 0; y < canvas.height; y++) {
-            //         for (let x = 0; x < canvas.width; x++) {
-
-            //             const index = (y * canvas.width + x) * 4;
-            //             const alpha = data[index + 3];
-
-            //             if (alpha > 0) { // ada tinta
-            //                 if (top === null) top = y;
-            //                 if (left === null || x < left) left = x;
-            //                 if (right === null || x > right) right = x;
-            //                 bottom = y;
-            //             }
-            //         }
-            //     }
-
-            //     if (top === null) return canvas; // kosong
-
-            //     const croppedWidth = right - left;
-            //     const croppedHeight = bottom - top;
-
-            //     const croppedCanvas = document.createElement('canvas');
-            //     croppedCanvas.width = croppedWidth;
-            //     croppedCanvas.height = croppedHeight;
-
-            //     const croppedCtx = croppedCanvas.getContext('2d');
-            //     croppedCtx.putImageData(
-            //         ctx.getImageData(left, top, croppedWidth, croppedHeight),
-            //         0,
-            //         0
-            //     );
-
-            //     return croppedCanvas;
-            // }
-
-            function submitApprove(ttdBase64) {
-                const $btn = $('#btn-submit');
-                $btn.prop('disabled', true);
-
+            function submitApprove() {
                 $.ajax({
                     url: "{{ url('kalibrasi/approval/approve') }}/" + approveId,
                     type: 'POST',
                     data: {
                         _token: $('meta[name="csrf-token"]').attr('content'),
-                        ttd_base64: ttdBase64
                     },
                     success: function(res) {
                         Swal.fire({
@@ -344,6 +272,74 @@
                     }
                 });
             }
+
+            // Checkbox logic
+            $('#checkAll').on('change', function() {
+                $('.checkItem').prop('checked', this.checked);
+                toggleMassApproveButton();
+            });
+
+            $(document).on('change', '.checkItem', function() {
+                if ($('.checkItem:checked').length === $('.checkItem').length) {
+                    $('#checkAll').prop('checked', true);
+                } else {
+                    $('#checkAll').prop('checked', false);
+                }
+                toggleMassApproveButton();
+            });
+
+            function toggleMassApproveButton() {
+                const checkedCount = $('.checkItem:checked').length;
+                if (checkedCount > 0) {
+                    $('#btnMassApprove').fadeIn();
+                } else {
+                    $('#btnMassApprove').fadeOut();
+                }
+            }
+
+            $('#btnMassApprove').on('click', function() {
+                const ids = $('.checkItem:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                Swal.fire({
+                    title: 'Approve semua data terpilih?',
+                    text: `Anda akan menyetujui ${ids.length} data kalibrasi sekaligus.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Approve',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d'
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+
+                    $.ajax({
+                        url: "{{ route('approval.mass-approve') }}",
+                        type: 'POST',
+                        data: {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            ids: ids
+                        },
+                        success: function(res) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Selesai!',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        },
+                        error: function(xhr) {
+                            let errorMsg = 'Gagal memproses mass approval';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                            Swal.fire('Error', errorMsg, 'error');
+                        }
+                    });
+                });
+            });
         });
     </script>
 @endsection

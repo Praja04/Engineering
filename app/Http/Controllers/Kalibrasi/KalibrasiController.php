@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
@@ -323,6 +324,44 @@ class KalibrasiController extends Controller
             'success' => true,
             'message' => 'Data kalibrasi berhasil dihapus!'
         ]);
+    }
+
+    public function massDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:cal_sertifikat,id',
+        ]);
+
+        $ids = $request->ids;
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($ids as $id) {
+                $certifikat = KalibrasiSertifikatModel::find($id);
+                if (!$certifikat) continue;
+
+                $kalibrasiId = $certifikat->kalibrasi_id;
+                $kalibrasi = KalibrasiModel::find($kalibrasiId);
+                if ($kalibrasi) {
+                    $kalibrasi->delete();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data kalibrasi terpilih berhasil dihapus!'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 
