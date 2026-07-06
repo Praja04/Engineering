@@ -20,7 +20,7 @@ class KalibrasiJangkaSorongController extends Controller
     public function showForm()
     {
         $alat = AlatKalibrasiModel::select('id', 'kode_alat', 'nama_alat')
-            ->where('jenis_kalibrasi', 'jangka_sorong')
+            ->whereIn('jenis_kalibrasi', ['jangka_sorong', 'dimensi'])
             ->get();
 
         $masters = CalJangkaSorongMasterModel::select('id', 'nilai_master')->get();
