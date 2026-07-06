@@ -16,7 +16,7 @@ class KalibrasiMasterJangkaSorongController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'no' => 'required|unique:cal_jangka_sorong_master,no',
+            // 'no' => 'required|unique:cal_jangka_sorong_master,no',
             'nilai_master' => 'required|numeric',
         ]);
 
@@ -43,7 +43,7 @@ class KalibrasiMasterJangkaSorongController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'no' => 'required|unique:kalibrasi_jangka_sorong_master,no,' . $id,
+            // 'no' => 'required|unique:cal_jangka_sorong_master,no,' . $id,
             'nilai_master' => 'required|numeric',
         ]);
 

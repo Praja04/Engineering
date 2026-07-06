@@ -239,10 +239,10 @@
                             <div class="col-xxl-6 col-md-6">
                                 <label for="range_penggunaan_alat" class="form-label">Range Penggunaan Alat</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control" id="range_min" name="range_min"
+                                    <input type="text" class="form-control" id="range_min" name="range_min"
                                         placeholder="0" min="0">
                                     <span class="input-group-text">-</span>
-                                    <input type="number" class="form-control" id="range_max" name="range_max"
+                                    <input type="text" class="form-control" id="range_max" name="range_max"
                                         placeholder="20" min="0">
                                 </div>
                             </div>
@@ -251,7 +251,7 @@
                                     Error</label>
                                 <div class="input-group">
                                     <span class="input-group-text">±</span>
-                                    <input type="number" class="form-control" id="limits_permissible_error"
+                                    <input type="text" class="form-control" id="limits_permissible_error"
                                         name="limits_permissible_error" placeholder="0.03" step="0.01">
                                 </div>
                             </div>

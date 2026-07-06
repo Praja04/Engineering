@@ -17,11 +17,12 @@
                 </div>
 
                 <div class="card-body">
-                    <table class="table table-bordered table-hover align-middle text-center" id="tableMaster">
+                    <table class="table table-hover align-middle text-center" id="tableMaster">
                         <thead class="table-light">
                             <tr>
-                                <th>Beban</th>
-                                <th>Standar Massa</th>
+                                <th>No.</th>
+                                <th>Beban (g)</th>
+                                <th>Standar Massa (g)</th>
                                 <th width="20%">Aksi</th>
                             </tr>
                         </thead>
@@ -92,7 +93,8 @@
                         $.each(data, function(i, item) {
                             rows += `
                         <tr>
-                            <td>${item.beban}</td>
+                            <td>${i + 1}</td>
+                            <td>${formatNumber(item.beban)}</td>
                             <td>${formatNumber(item.standar_massa)}</td>
                             <td>
                                 <button class="btn btn-sm btn-warning me-1 btnEdit" data-id="${item.id}" title="Edit">

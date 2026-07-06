@@ -622,7 +622,7 @@ class KalibrasiCertificateController extends Controller
                     break;
 
                 case 'jangka_sorong':
-                    $kalibrasi->load(['jangkaSorong', 'jangkaSorongSummary']);
+                    $kalibrasi->load(['jangkaSorong.master', 'jangkaSorong.details', 'jangkaSorongSummary']);
                     $this->_fillJangkaSorong($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
                     break;
 
@@ -1039,7 +1039,7 @@ class KalibrasiCertificateController extends Controller
         $first = $thermo->first();
 
         $ketidakpastian_suhu = $first->ketidak_pastian_suhu ?? '';
-        $ketidakpastian_rh   = $first->ketidak_pastian_rh ?? '';
+        $ketidakpastian_rh   = ($first && $first->ketidak_pastian_rh !== null) ? $first->ketidak_pastian_rh : 'null';
 
         foreach ($thermo as $tg) {
 
@@ -1053,15 +1053,19 @@ class KalibrasiCertificateController extends Controller
             $posisi = str_ireplace(['kanan', 'kiri'], ['Ka.', 'Ki.'], $posisi);
             $posisi = ucwords(strtolower($posisi));
 
+            $valStandarRh = $tg->avg_tekanan_standar_rh !== null ? $tg->avg_tekanan_standar_rh : 'null';
+            $valAlatRh = ($tg->avg_penunjuk_alat_rh ?? $tg->avg_tekanan_alat_rh) !== null ? ($tg->avg_penunjuk_alat_rh ?? $tg->avg_tekanan_alat_rh) : 'null';
+            $valKorRh = $tg->avg_kor_alat_rh !== null ? $tg->avg_kor_alat_rh : 'null';
+
             // Isi data ke Excel
             $sheet->setCellValue("D{$row}", $tg->titik_kalibrasi);
             $sheet->setCellValue("H{$row}", $posisi);
-            $sheet->setCellValue("L{$row}", $avg_penunjuk_alat_suhu);
-            $sheet->setCellValue("O{$row}", $tg->avg_penunjuk_alat_rh ?? '');
-            $sheet->setCellValue("R{$row}", $avg_tekanan_standar_suhu);
-            $sheet->setCellValue("U{$row}", $tg->avg_tekanan_standar_rh ?? '');
+            $sheet->setCellValue("L{$row}", $avg_tekanan_standar_suhu);
+            $sheet->setCellValue("O{$row}", $valStandarRh);
+            $sheet->setCellValue("R{$row}", $avg_penunjuk_alat_suhu);
+            $sheet->setCellValue("U{$row}", $valAlatRh);
             $sheet->setCellValue("X{$row}", round($selisih, 2));
-            $sheet->setCellValue("AA{$row}", $tg->avg_kor_alat_rh ?? '');
+            $sheet->setCellValue("AA{$row}", $valKorRh);
 
             $row++;
         }
@@ -1223,16 +1227,18 @@ class KalibrasiCertificateController extends Controller
         $startRow = $row;
 
         $jangkaSorong = $kalibrasi->jangkaSorong
-            ->sortBy('master_ke')
+            ->sortBy(function ($item) {
+                return $item->master ? (float)$item->master->nilai_master : 0;
+            })
             ->values();
 
         $totalTitik = $jangkaSorong->count();
 
         foreach ($jangkaSorong as $tg) {
-
-            $sheet->setCellValue("D{$row}", $tg->master->nilai_master ?? '');
+            $nilaiMaster = $tg->master->nilai_master ?? ($tg->details->first()->nilai_master ?? '');
+            $sheet->setCellValue("D{$row}", $nilaiMaster);
             $sheet->setCellValue("L{$row}", $tg->avg_pembacaan ?? '');
-            $sheet->setCellValue("R{$row}", $tg->master->nilai_master ?? '');
+            $sheet->setCellValue("R{$row}", $nilaiMaster);
             $sheet->setCellValue("X{$row}", $tg->koreksi ?? '');
 
             $row++;

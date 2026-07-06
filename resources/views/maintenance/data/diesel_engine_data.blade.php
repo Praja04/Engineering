@@ -134,6 +134,8 @@
                                 <option value="B">B</option>
                                 <option value="C">C</option>
                                 <option value="D">D</option>
+                                <option value="Korektif">Korektif</option>
+                                <option value="Checkpoint">Checkpoint</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -494,11 +496,11 @@
                             <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
                         </div>
                         ${row.paket === 'Korektif' ? `
-                                                                <div class="col-md-3">
-                                                                    <div class="meta-label">Tanggal Selesai</div>
-                                                                    <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
-                                                                </div>
-                                                                ` : ''}
+                                                                    <div class="col-md-3">
+                                                                        <div class="meta-label">Tanggal Selesai</div>
+                                                                        <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
+                                                                    </div>
+                                                                    ` : ''}
                         <div class="col-md-3">
                             <div class="meta-label">Paket</div>
                             <div class="meta-value">${row.paket ?? '-'}</div>
@@ -529,8 +531,8 @@
                            ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                                                            <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                        `).join('')
+                                                                                <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
+                                                                            `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -988,7 +990,8 @@
 
                     // Add existing MID as option
                     if (item.mid) {
-                        const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi : ''), item.mid, true, true);
+                        const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi :
+                            ''), item.mid, true, true);
                         row.find('.material-mid').append(newOption).trigger('change');
                     }
 

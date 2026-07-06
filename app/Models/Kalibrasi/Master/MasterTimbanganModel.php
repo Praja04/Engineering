@@ -9,7 +9,7 @@ class MasterTimbanganModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'kalibrasi_timbangan_master';
+    protected $table = 'cal_timbangan_master';
 
     protected $fillable = [
         'beban',

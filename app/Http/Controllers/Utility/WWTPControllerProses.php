@@ -985,22 +985,20 @@ class WWTPControllerProses extends Controller
         $endWeek = Carbon::now()->endOfWeek();
 
         $weeklyRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startWeek, $endWeek])
-            ->count();
-
-        // Data bulan ini - rata-rata per hari
+            ->count();        // Data bulan ini - rata-rata per hari
         $startMonth = Carbon::now()->startOfMonth();
         $endMonth = Carbon::now()->endOfMonth();
 
         $monthlyAvg = WwtpInfluentHarian::whereBetween('tanggal', [$startMonth, $endMonth])
             ->selectRaw('tanggal, 
-                SUM(pit_sparta) as total_sparta,
-                SUM(pit_garam) as total_garam,
-                SUM(pit_domestik) as total_domestik,
-                SUM(pit_produksi_step3) as total_produksi_step3,
-                SUM(pit_storage) as total_storage,
-                SUM(pit_proses_wwtp2) as total_proses_wwtp2,
-                SUM(pit_outlet) as total_outlet,
-                SUM(pit_boiler) as total_boiler')
+                SUM(COALESCE(pit_sparta, 0) - COALESCE(pit_sparta_awal, 0)) as total_sparta,
+                SUM(COALESCE(pit_garam, 0) - COALESCE(pit_garam_awal, 0)) as total_garam,
+                SUM(COALESCE(pit_domestik, 0) - COALESCE(pit_domestik_awal, 0)) as total_domestik,
+                SUM(COALESCE(pit_produksi_step3, 0) - COALESCE(pit_produksi_step3_awal, 0)) as total_produksi_step3,
+                SUM(COALESCE(pit_storage, 0) - COALESCE(pit_storage_awal, 0)) as total_storage,
+                SUM(COALESCE(pit_proses_wwtp2, 0) - COALESCE(pit_proses_wwtp2_awal, 0)) as total_proses_wwtp2,
+                SUM(COALESCE(pit_outlet, 0) - COALESCE(pit_outlet_awal, 0)) as total_outlet,
+                SUM(COALESCE(pit_boiler, 0) - COALESCE(pit_boiler_awal, 0)) as total_boiler')
             ->groupBy('tanggal')
             ->get()
             ->avg(function ($record) {
@@ -1040,26 +1038,26 @@ class WWTPControllerProses extends Controller
             ->get()
             ->groupBy('tanggal')
             ->map(function ($records, $date) {
-                $totalSparta   = $records->sum('pit_sparta');
-                $totalGaram    = $records->sum('pit_garam');
-                $totalDomestik = $records->sum('pit_domestik');
-                $totalProduksiStep3 = $records->sum('pit_produksi_step3');
-                $totalStorage = $records->sum('pit_storage');
-                $totalProsesWwtp2 = $records->sum('pit_proses_wwtp2');
-                $totalOutlet = $records->sum('pit_outlet');
-                $totalBoiler = $records->sum('pit_boiler');
+                $totalSparta   = $records->sum(function ($r) { return ($r->pit_sparta ?? 0) - ($r->pit_sparta_awal ?? 0); });
+                $totalGaram    = $records->sum(function ($r) { return ($r->pit_garam ?? 0) - ($r->pit_garam_awal ?? 0); });
+                $totalDomestik = $records->sum(function ($r) { return ($r->pit_domestik ?? 0) - ($r->pit_domestik_awal ?? 0); });
+                $totalProduksiStep3 = $records->sum(function ($r) { return ($r->pit_produksi_step3 ?? 0) - ($r->pit_produksi_step3_awal ?? 0); });
+                $totalStorage = $records->sum(function ($r) { return ($r->pit_storage ?? 0) - ($r->pit_storage_awal ?? 0); });
+                $totalProsesWwtp2 = $records->sum(function ($r) { return ($r->pit_proses_wwtp2 ?? 0) - ($r->pit_proses_wwtp2_awal ?? 0); });
+                $totalOutlet = $records->sum(function ($r) { return ($r->pit_outlet ?? 0) - ($r->pit_outlet_awal ?? 0); });
+                $totalBoiler = $records->sum(function ($r) { return ($r->pit_boiler ?? 0) - ($r->pit_boiler_awal ?? 0); });
 
                 return [
                     'tanggal'      => $date,
-                    'pit_sparta'   => $totalSparta,
-                    'pit_garam'    => $totalGaram,
-                    'pit_domestik' => $totalDomestik,
-                    'pit_produksi_step3' => $totalProduksiStep3,
-                    'pit_storage' => $totalStorage,
-                    'pit_proses_wwtp2' => $totalProsesWwtp2,
-                    'pit_outlet' => $totalOutlet,
-                    'pit_boiler' => $totalBoiler,
-                    'total'        => $totalSparta + $totalGaram + $totalDomestik + $totalProduksiStep3 + $totalStorage + $totalProsesWwtp2 + $totalOutlet + $totalBoiler,
+                    'pit_sparta'   => max(0, $totalSparta),
+                    'pit_garam'    => max(0, $totalGaram),
+                    'pit_domestik' => max(0, $totalDomestik),
+                    'pit_produksi_step3' => max(0, $totalProduksiStep3),
+                    'pit_storage' => max(0, $totalStorage),
+                    'pit_proses_wwtp2' => max(0, $totalProsesWwtp2),
+                    'pit_outlet' => max(0, $totalOutlet),
+                    'pit_boiler' => max(0, $totalBoiler),
+                    'total'        => max(0, $totalSparta) + max(0, $totalGaram) + max(0, $totalDomestik) + max(0, $totalProduksiStep3) + max(0, $totalStorage) + max(0, $totalProsesWwtp2) + max(0, $totalOutlet) + max(0, $totalBoiler),
                     'shift_count'  => $records->count(),
                 ];
             })
@@ -1071,34 +1069,6 @@ class WWTPControllerProses extends Controller
     /**
      * API: Get shift breakdown data (untuk pie chart)
      */
-    // public function getShiftBreakdownData($period = 30)
-    // {
-    //     $startDate = Carbon::now()->subDays($period);
-
-    //     $data = WwtpInfluentHarian::where('tanggal', '>=', $startDate)
-    //         ->selectRaw('shift, 
-    //             SUM(pit_sparta) as total_sparta,
-    //             SUM(pit_garam) as total_garam,
-    //             SUM(pit_domestik) as total_domestik,
-    //             SUM(pit_produksi_step3) as total_produksi_step3,
-    //             SUM(pit_storage) as total_storage,
-    //             SUM(pit_proses_wwtp2) as total_proses_wwtp2,
-    //             SUM(pit_outlet) as total_outlet,
-    //             SUM(pit_boiler) as total_boiler')
-    //         ->groupBy('shift')
-    //         ->get()
-    //         ->map(function ($record) {
-    //             return [
-    //                 'shift' => $record->shift,
-    //                 'total' => $record->total_sparta + $record->total_garam + $record->total_domestik + 
-    //                            $record->total_produksi_step3 + $record->total_storage + $record->total_proses_wwtp2 + 
-    //                            $record->total_outlet + $record->total_boiler,
-    //             ];
-    //         });
-
-    //     return response()->json($data);
-    // }
-
     public function getShiftBreakdownData(Request $request)
     {
         $startDate = $request->query('start_date')
@@ -1107,29 +1077,29 @@ class WWTPControllerProses extends Controller
 
         $endDate = $request->query('end_date')
             ? Carbon::parse($request->query('end_date'))->endOfDay()
-            : Carbon::now()->endOfDay();
+            : Carbon::now()->endOfMonth(); // Keep dynamic, but use request parameters
 
         $data = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])
             ->selectRaw('
-            SUM(pit_sparta) as total_sparta,
-            SUM(pit_garam) as total_garam,
-            SUM(pit_domestik) as total_domestik,
-            SUM(pit_produksi_step3) as total_produksi_step3,
-            SUM(pit_storage) as total_storage,
-            SUM(pit_proses_wwtp2) as total_proses_wwtp2,
-            SUM(pit_outlet) as total_outlet,
-            SUM(pit_boiler) as total_boiler')
+            SUM(COALESCE(pit_sparta, 0) - COALESCE(pit_sparta_awal, 0)) as total_sparta,
+            SUM(COALESCE(pit_garam, 0) - COALESCE(pit_garam_awal, 0)) as total_garam,
+            SUM(COALESCE(pit_domestik, 0) - COALESCE(pit_domestik_awal, 0)) as total_domestik,
+            SUM(COALESCE(pit_produksi_step3, 0) - COALESCE(pit_produksi_step3_awal, 0)) as total_produksi_step3,
+            SUM(COALESCE(pit_storage, 0) - COALESCE(pit_storage_awal, 0)) as total_storage,
+            SUM(COALESCE(pit_proses_wwtp2, 0) - COALESCE(pit_proses_wwtp2_awal, 0)) as total_proses_wwtp2,
+            SUM(COALESCE(pit_outlet, 0) - COALESCE(pit_outlet_awal, 0)) as total_outlet,
+            SUM(COALESCE(pit_boiler, 0) - COALESCE(pit_boiler_awal, 0)) as total_boiler')
             ->first();
 
         return response()->json([
-            'total_sparta'         => (float) $data->total_sparta,
-            'total_garam'          => (float) $data->total_garam,
-            'total_domestik'       => (float) $data->total_domestik,
-            'total_produksi_step3' => (float) $data->total_produksi_step3,
-            'total_storage'        => (float) $data->total_storage,
-            'total_proses_wwtp2'   => (float) $data->total_proses_wwtp2,
-            'total_outlet'         => (float) $data->total_outlet,
-            'total_boiler'         => (float) $data->total_boiler,
+            'total_sparta'         => max(0, (float) $data->total_sparta),
+            'total_garam'          => max(0, (float) $data->total_garam),
+            'total_domestik'       => max(0, (float) $data->total_domestik),
+            'total_produksi_step3' => max(0, (float) $data->total_produksi_step3),
+            'total_storage'        => max(0, (float) $data->total_storage),
+            'total_proses_wwtp2'   => max(0, (float) $data->total_proses_wwtp2),
+            'total_outlet'         => max(0, (float) $data->total_outlet),
+            'total_boiler'         => max(0, (float) $data->total_boiler),
         ]);
     }
 
@@ -1146,7 +1116,14 @@ class WWTPControllerProses extends Controller
             $endMonth = $date->copy()->endOfMonth();
 
             $influentTotal = WwtpInfluentHarian::whereBetween('tanggal', [$startMonth, $endMonth])
-                ->sum(DB::raw('pit_sparta + pit_garam + pit_domestik + pit_produksi_step3 + pit_storage + pit_proses_wwtp2 + pit_outlet + pit_boiler'));
+                ->sum(DB::raw('(COALESCE(pit_sparta, 0) - COALESCE(pit_sparta_awal, 0)) + 
+                               (COALESCE(pit_garam, 0) - COALESCE(pit_garam_awal, 0)) + 
+                               (COALESCE(pit_domestik, 0) - COALESCE(pit_domestik_awal, 0)) + 
+                               (COALESCE(pit_produksi_step3, 0) - COALESCE(pit_produksi_step3_awal, 0)) + 
+                               (COALESCE(pit_storage, 0) - COALESCE(pit_storage_awal, 0)) + 
+                               (COALESCE(pit_proses_wwtp2, 0) - COALESCE(pit_proses_wwtp2_awal, 0)) + 
+                               (COALESCE(pit_outlet, 0) - COALESCE(pit_outlet_awal, 0)) + 
+                               (COALESCE(pit_boiler, 0) - COALESCE(pit_boiler_awal, 0))'));
 
             $months[] = [
                 'month' => $date->format('M Y'),
@@ -1179,23 +1156,28 @@ class WWTPControllerProses extends Controller
                 $shifts = $records->map(function ($record) {
                     return [
                         'shift' => $record->shift,
-                        'pit_sparta' => $record->pit_sparta,
-                        'pit_garam' => $record->pit_garam,
-                        'pit_domestik' => $record->pit_domestik,
-                        'pit_produksi_step3' => $record->pit_produksi_step3,
-                        'pit_storage' => $record->pit_storage,
-                        'pit_proses_wwtp2' => $record->pit_proses_wwtp2,
-                        'pit_outlet' => $record->pit_outlet,
-                        'pit_boiler' => $record->pit_boiler,
+                        'pit_sparta' => max(0, ($record->pit_sparta ?? 0) - ($record->pit_sparta_awal ?? 0)),
+                        'pit_garam' => max(0, ($record->pit_garam ?? 0) - ($record->pit_garam_awal ?? 0)),
+                        'pit_domestik' => max(0, ($record->pit_domestik ?? 0) - ($record->pit_domestik_awal ?? 0)),
+                        'pit_produksi_step3' => max(0, ($record->pit_produksi_step3 ?? 0) - ($record->pit_produksi_step3_awal ?? 0)),
+                        'pit_storage' => max(0, ($record->pit_storage ?? 0) - ($record->pit_storage_awal ?? 0)),
+                        'pit_proses_wwtp2' => max(0, ($record->pit_proses_wwtp2 ?? 0) - ($record->pit_proses_wwtp2_awal ?? 0)),
+                        'pit_outlet' => max(0, ($record->pit_outlet ?? 0) - ($record->pit_outlet_awal ?? 0)),
+                        'pit_boiler' => max(0, ($record->pit_boiler ?? 0) - ($record->pit_boiler_awal ?? 0)),
                         'debit1' => $record->debit1,
                         'debit2' => $record->debit2,
                     ];
                 });
 
                 $totalVolume = $records->sum(function ($record) {
-                    return $record->pit_sparta + $record->pit_garam + $record->pit_domestik +
-                        $record->pit_produksi_step3 + $record->pit_storage + $record->pit_proses_wwtp2 +
-                        $record->pit_outlet + $record->pit_boiler;
+                    return max(0, ($record->pit_sparta ?? 0) - ($record->pit_sparta_awal ?? 0)) +
+                        max(0, ($record->pit_garam ?? 0) - ($record->pit_garam_awal ?? 0)) +
+                        max(0, ($record->pit_domestik ?? 0) - ($record->pit_domestik_awal ?? 0)) +
+                        max(0, ($record->pit_produksi_step3 ?? 0) - ($record->pit_produksi_step3_awal ?? 0)) +
+                        max(0, ($record->pit_storage ?? 0) - ($record->pit_storage_awal ?? 0)) +
+                        max(0, ($record->pit_proses_wwtp2 ?? 0) - ($record->pit_proses_wwtp2_awal ?? 0)) +
+                        max(0, ($record->pit_outlet ?? 0) - ($record->pit_outlet_awal ?? 0)) +
+                        max(0, ($record->pit_boiler ?? 0) - ($record->pit_boiler_awal ?? 0));
                 });
 
                 return [

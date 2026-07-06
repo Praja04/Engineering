@@ -23,7 +23,7 @@ class KalibrasiJangkaSorongController extends Controller
             ->where('jenis_kalibrasi', 'jangka_sorong')
             ->get();
 
-        $masters = CalJangkaSorongMasterModel::select('id', 'no', 'nilai_master')->get();
+        $masters = CalJangkaSorongMasterModel::select('id', 'nilai_master')->get();
 
         return view('kalibrasi.jangka_sorong.form', compact('alat', 'masters'));
     }
@@ -89,7 +89,8 @@ class KalibrasiJangkaSorongController extends Controller
 
                 $stdDev = sqrt($variance);
 
-                $nilaiMasterTitik = floatval($nilaiMaster[$titik][0] ?? 0);
+                $master = CalJangkaSorongMasterModel::find($masterIdTitik[$titik]);
+                $nilaiMasterTitik = $master ? floatval($master->nilai_master) : 0.0;
                 $koreksi = $nilaiMasterTitik - $avg;
 
                 $stdDevPerTitik[] = $stdDev;

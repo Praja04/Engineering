@@ -31,7 +31,7 @@ class ThermohygrometerRequest extends FormRequest
             'data' => ['nullable', 'array', 'min:1'],
 
             // tiap titik
-            'data.*.titik_kalibrasi' => ['nullable', 'numeric'],
+            'data.*.titik_kalibrasi' => ['nullable', 'string'],
             'data.*.posisi' => ['nullable', 'string', 'max:255'],
             'data.*' => [
                 function ($attribute, $value, $fail) {
