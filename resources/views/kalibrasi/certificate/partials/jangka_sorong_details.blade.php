@@ -159,7 +159,7 @@
                          <table class="table table-hover table-sm text-center mb-0">
                              <thead class="table-light">
                                  <tr>
-                                     <th>No Master</th>
+                                     <th>No</th>
                                      <th>Nilai Master (mm)</th>
                                      <th>Avg Pembacaan (mm)</th>
                                      <th>Std Deviasi</th>
@@ -169,8 +169,8 @@
                              <tbody id="detail_summary">
                                  @foreach ($main->jangkaSorong as $js)
                                      <tr>
-                                         <td>{{ $js->master->no }}</td>
-                                         <td>{{ formNum($js->master->nilai_master) }}</td>
+                                         <td>{{ $loop->iteration }}</td>
+                                         <td>{{ formNum($js->master->nilai_master ?? ($js->details->first()->nilai_master ?? '')) }}</td>
                                          <td>{{ formNum($js->avg_pembacaan) }}</td>
                                          <td>{{ formNum($js->std_dev) }}</td>
                                          <td>{{ formNum($js->koreksi) }}</td>

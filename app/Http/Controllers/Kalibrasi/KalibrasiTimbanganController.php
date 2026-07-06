@@ -19,6 +19,7 @@ use App\Models\Kalibrasi\Timbangan\PingganModel;
 use App\Models\Kalibrasi\Timbangan\PingganSummariesModel;
 use App\Models\Kalibrasi\Timbangan\TareModel;
 use App\Models\Kalibrasi\Timbangan\TareSummariesModel;
+use App\Models\Kalibrasi\Master\MasterTimbanganModel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -194,11 +195,15 @@ class KalibrasiTimbanganController extends Controller
                 $m1 = $nilai['M1']['pembacaan'] ?? null;
                 $m2 = $nilai['M2']['pembacaan'] ?? null;
 
-                // Ambil beban dari salah satu (biasanya sama semua dalam 1 massa_ke)
-                $beban = $nilai['Z']['beban']
-                    ?? $nilai['M1']['beban']
-                    ?? $nilai['M2']['beban']
-                    ?? null;
+                // Ambil beban dari jenis M1 untuk tiap massa_ke
+                $beban = $nilai['M1']['beban'] ?? null;
+
+                // Cocokkan beban dengan master timbangan untuk mengambil standar_massa
+                $master = null;
+                if (!is_null($beban)) {
+                    $master = MasterTimbanganModel::where('beban', $beban)->first();
+                }
+                $standarMassa = $master ? $master->standar_massa : $beban;
 
                 $avg_z = $z;
 
@@ -210,8 +215,8 @@ class KalibrasiTimbanganController extends Controller
                     ? $avg_m - $avg_z
                     : null;
 
-                $koreksi = isset($selisih_zm)
-                    ? (0 - $selisih_zm)
+                $koreksi = (isset($standarMassa, $selisih_zm))
+                    ? $standarMassa - $selisih_zm
                     : null;
 
                 $absolut = isset($koreksi)
@@ -221,7 +226,8 @@ class KalibrasiTimbanganController extends Controller
                 KeseragamanSkalaSummariesModel::create([
                     'kalibrasi_id'    => $kalibrasi->id,
                     'massa_ke'        => $massaKe,
-                    'beban'           => $titikMassaMap["setengah_kapasitas"] ?? null, // Bisa disesuaikan kalau nanti ada mapping massa tertentu
+                    'beban'           => $beban,
+                    'standar_massa'   => $standarMassa,
                     'avg_z'           => $avg_z,
                     'avg_m'           => $avg_m,
                     'selisih_zm'      => $selisih_zm,

@@ -75,11 +75,11 @@ class KalibrasiThermohygrometerController extends Controller
                     $koreksiStandarSuhu = 0;
                     $koreksiStandarRh   = 0;
 
-                    $tekananSuhu = $standarSuhu + $koreksiStandarSuhu;
-                    $tekananRh   = $standarRh + $koreksiStandarRh;
+                    $tekananSuhu = ($standarSuhu !== null) ? ($standarSuhu + $koreksiStandarSuhu) : null;
+                    $tekananRh   = ($standarRh !== null) ? ($standarRh + $koreksiStandarRh) : null;
 
-                    $koreksiAlatSuhu = $tekananSuhu - $alatSuhu;
-                    $koreksiAlatRh   = $tekananRh - $alatRh;
+                    $koreksiAlatSuhu = ($tekananSuhu !== null && $alatSuhu !== null) ? ($tekananSuhu - $alatSuhu) : null;
+                    $koreksiAlatRh   = ($tekananRh !== null && $alatRh !== null) ? ($tekananRh - $alatRh) : null;
 
                     KalibrasiThermohygrometerDetailModel::create([
                         'thermohygro_id' => $thermo->id,
@@ -98,8 +98,12 @@ class KalibrasiThermohygrometerController extends Controller
                         'koreksi_alat_rh' => $koreksiAlatRh,
                     ]);
 
-                    $suhuArr[] = ['penunjuk_alat' => $alatSuhu, 'tekanan' => $tekananSuhu];
-                    $rhArr[]   = ['penunjuk_alat' => $alatRh,   'tekanan' => $tekananRh];
+                    if ($alatSuhu !== null && $tekananSuhu !== null) {
+                        $suhuArr[] = ['penunjuk_alat' => $alatSuhu, 'tekanan' => $tekananSuhu];
+                    }
+                    if ($alatRh !== null && $tekananRh !== null) {
+                        $rhArr[]   = ['penunjuk_alat' => $alatRh,   'tekanan' => $tekananRh];
+                    }
                 }
 
                 // ===============================
@@ -115,7 +119,7 @@ class KalibrasiThermohygrometerController extends Controller
                         fn($x) => pow($x[$key] - $avg($arr, $key), 2),
                         $arr
                     )) / (count($arr) - 1))
-                    : 0;
+                    : (count($arr) === 1 ? 0 : null);
 
                 $avgSuhuAlat = $avg($suhuArr, 'penunjuk_alat');
                 $avgSuhuTekanan = $avg($suhuArr, 'tekanan');
@@ -141,19 +145,19 @@ class KalibrasiThermohygrometerController extends Controller
                     $referensi = round($avgSuhuTekanan); // atau bisa floor/ceil
                 }
 
-                $ketidakpastianSuhu = $defaultKetidakpastianSuhu[$referensi] ?? 0.44461;
-                $ketidakpastianRh   = $defaultKetidakpastianRh[$referensi] ?? 2.74458;
+                $ketidakpastianSuhu = (count($suhuArr) > 0) ? ($defaultKetidakpastianSuhu[$referensi] ?? 0.44461) : null;
+                $ketidakpastianRh   = (count($rhArr) > 0) ? ($defaultKetidakpastianRh[$referensi] ?? 2.74458) : null;
 
                 $thermo->update([
                     'avg_penunjuk_alat_suhu' => $avgSuhuAlat,
                     'avg_tekanan_standar_suhu' => $avgSuhuTekanan,
-                    'avg_kor_alat_suhu' => $avgSuhuTekanan - $avgSuhuAlat,
+                    'avg_kor_alat_suhu' => ($avgSuhuTekanan !== null && $avgSuhuAlat !== null) ? ($avgSuhuTekanan - $avgSuhuAlat) : null,
                     'std_deviasi_suhu' => $std($suhuArr, 'tekanan'),
                     'ketidak_pastian_suhu' => $ketidakpastianSuhu,
 
                     'avg_penunjuk_alat_rh' => $avgRhAlat,
                     'avg_tekanan_standar_rh' => $avgRhTekanan,
-                    'avg_kor_alat_rh' => $avgRhTekanan - $avgRhAlat,
+                    'avg_kor_alat_rh' => ($avgRhTekanan !== null && $avgRhAlat !== null) ? ($avgRhTekanan - $avgRhAlat) : null,
                     'std_deviasi_rh' => $std($rhArr, 'tekanan'),
                     'ketidak_pastian_rh' => $ketidakpastianRh,
                 ]);

@@ -53,7 +53,7 @@
                         <div class="row align-items-center justify-content-between g-2">
                             <div class="col-12 col-sm-auto d-flex align-items-center flex-wrap gap-2">
                                 <h5 class="mb-0 d-flex align-items-center">
-                                    Form Kalibrasi Thermometer
+                                    Form Kalibrasi Thermohygrometer
                                 </h5>
                             </div>
                         </div>

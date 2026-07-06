@@ -208,7 +208,7 @@
                                         <table class="table table-hover table-sm text-center mb-0">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th>No Master</th>
+                                                    <th>No</th>
                                                     <th>Nilai Master (mm)</th>
                                                     <th>Avg Pembacaan (mm)</th>
                                                     <th>Std Deviasi</th>
@@ -456,11 +456,11 @@
 
                 if (pengukuranList.length > 0) {
 
-                    pengukuranList.forEach(js => {
+                    pengukuranList.forEach((js, i) => {
 
                         summaryBody.append(`
                             <tr>
-                                <td>${js.master?.no ?? '-'}</td>
+                                <td>${i + 1}</td>
                                 <td>${formatNumber(js.master?.nilai_master)}</td>
                                 <td>${formatNumber(js.avg_pembacaan)}</td>
                                 <td>${formatNumber(js.std_dev)}</td>

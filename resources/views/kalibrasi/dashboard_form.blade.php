@@ -114,6 +114,7 @@
                 </div>
 
                 <!-- Kalibrasi Temperature -->
+                {{--
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-secondary text-dark cursor-pointer"
                         onclick="window.location.href='{{ route('kalibrasi.form.temperature') }}'">
@@ -126,6 +127,7 @@
                         </div>
                     </div>
                 </div>
+                --}}
 
                 <!-- Kalibrasi Instrumen -->
                 <div class="col-md-6 col-lg-4">
@@ -142,6 +144,7 @@
                 </div>
 
                 <!-- Kalibrasi Dimensi -->
+                {{--
                 <div class="col-md-6 col-lg-4">
                     <div class="card card-animate bg-soft-warning text-dark cursor-pointer"
                         onclick="window.location.href='{{ route('kalibrasi.form.dimensi') }}'">
@@ -154,6 +157,7 @@
                         </div>
                     </div>
                 </div>
+                --}}
 
                 <!-- Kalibrasi Flow Meter -->
                 <div class="col-md-6 col-lg-4">

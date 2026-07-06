@@ -351,7 +351,7 @@
                                         style="width: 200px;">
                                     <option value="">-- Pilih Master --</option>
                                     ${masters.map(m =>
-                                        `<option value="${m.id}" data-nilai="${m.nilai_master}">${m.no} - ${m.nilai_master}</option>`
+                                        `<option value="${m.id}" data-nilai="${m.nilai_master}">${m.nilai_master}</option>`
                                     ).join('')}
                                 </select>
                             </div>
