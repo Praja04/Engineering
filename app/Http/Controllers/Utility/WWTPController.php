@@ -9,6 +9,7 @@ use App\Models\Utility\WwtpInfluentHarian;
 use App\Models\Utility\WwtpPerformancePHharian;
 use App\Models\Utility\WwtpPerformanceSample;
 use App\Models\Utility\WwtpSludge;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -578,6 +579,184 @@ class WWTPController extends Controller
 
         $writer   = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $filename = 'WWTP_' . str_replace('-', '', $tanggal) . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function exportMonthly(Request $request)
+    {
+        $month = $request->month;
+        $year  = $request->year;
+
+        if (!$month || !$year) {
+            return response()->json(['status' => 'error', 'message' => 'Parameter bulan dan tahun wajib diisi.'], 422);
+        }
+
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->toDateString();
+        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->toDateString();
+        $daysInMonth = Carbon::createFromDate($year, $month, 1)->daysInMonth;
+
+        // ── Load template ─────────────────────────────────────────────────────
+        $templatePath = public_path('assets/templates/Template_wwtp_bulanan.xlsx');
+
+        if (!file_exists($templatePath)) {
+            return "<script>alert('Template WWTP Bulanan tidak ditemukan'); window.close();</script>";
+        }
+
+        $spreadsheet = IOFactory::load($templatePath);
+        $sheet       = $spreadsheet->getActiveSheet();
+
+        // ── Helper: setCellValue aman untuk merged cell ───────────────────────
+        $setCell = function (string $coord, $value) use ($sheet): void {
+            $col = preg_replace(
+                '/[0-9]/',
+                '',
+                $coord
+            );
+            $row = (int) preg_replace('/[A-Z]/', '', $coord);
+            $colIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($col);
+
+            foreach ($sheet->getMergeCells() as $mergeRange) {
+                [$rangeStart] = explode(':', $mergeRange);
+                [$startCol, $startRow] = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::coordinateFromString($rangeStart);
+                $startColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($startCol);
+                $startRow    = (int) $startRow;
+
+                [$rangeEnd] = array_reverse(explode(':', $mergeRange));
+                [$endCol, $endRow] = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::coordinateFromString($rangeEnd);
+                $endColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($endCol);
+                $endRow    = (int) $endRow;
+
+                if (
+                    $colIdx >= $startColIdx && $colIdx <= $endColIdx
+                    && $row >= $startRow    && $row <= $endRow
+                ) {
+                    $sheet->setCellValue($startCol . $startRow, $value);
+                    return;
+                }
+            }
+
+            $sheet->setCellValue($coord, $value);
+        };
+
+        // ── Set header TAHUN & BULAN ──────────────────────────────────────────
+        $indoMonths = [
+            1  => 'JANUARI',
+            2  => 'FEBRUARI',
+            3  => 'MARET',
+            4  => 'APRIL',
+            5  => 'MEI',
+            6  => 'JUNI',
+            7  => 'JULI',
+            8  => 'AGUSTUS',
+            9  => 'SEPTEMBER',
+            10 => 'OKTOBER',
+            11 => 'NOVEMBER',
+            12 => 'DESEMBER'
+        ];
+        $monthName = $indoMonths[(int)$month] ?? '';
+        $setCell('AE2', "TAHUN : {$year}\nBULAN : {$monthName}");
+
+        // ── Ambil data dari DB ────────────────────────────────────────────────
+        $influentData = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])
+            ->get()
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->tanggal)->format('j'); // 1 sampai 31
+            });
+
+        $chemicalData = PemakaianChemicalModel::whereBetween('tanggal', [$startDate, $endDate])
+            ->where('chemical_area', 'WWTP')
+            ->get()
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->tanggal)->format('j'); // 1 sampai 31
+            });
+
+        $chemicalMapping = [
+            15 => ['PAC powder 1', 'PAC 1', 'PAC Step 1', 'PAC (Step 1)'],
+            16 => ['PAC powder 2', 'PAC 2', 'PAC Step 2', 'PAC (Step 2)'],
+            17 => ['BE-100', 'BE 100'],
+            18 => ['C-204', 'C204', 'C 204'],
+            19 => ['C-9040 step 1', 'C9040 step 1', 'C 9040 (Step 1)'],
+            20 => ['C-9040 step 2', 'C9040 step 2', 'C 9040 (Step 2)'],
+            21 => ['Denfloc 260 PA', 'Denfloc 945', 'Denfloc 945 PC'],
+            22 => ['NaOH step 1', 'NaOH 1', 'NaOH Step 1'],
+            23 => ['NaOH step 2', 'NaOH 2', 'NaOH Step 2', 'NaOH'],
+        ];
+
+        // ── Isi data ke cell ─────────────────────────────────────────────────
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(4 + $day); // Day 1 = E (kolom ke-5)
+
+            // 1. Proses Harian & Pit (influent)
+            $dayRecords = $influentData->get($day) ?? collect();
+
+            if ($dayRecords->isNotEmpty()) {
+                // Row 6-7: debit1 & debit2 (Average across shifts)
+                $debit1Vals = $dayRecords->pluck('debit1')->filter(fn($v) => $v !== null);
+                $avgDebit1 = $debit1Vals->isNotEmpty() ? $debit1Vals->average() : '';
+                $setCell($colLetter . '6', $avgDebit1);
+
+                $debit2Vals = $dayRecords->pluck('debit2')->filter(fn($v) => $v !== null);
+                $avgDebit2 = $debit2Vals->isNotEmpty() ? $debit2Vals->average() : '';
+                $setCell($colLetter . '7', $avgDebit2);
+
+                // Row 8-14: flowmeter difference sum across shifts
+                $fields = [
+                    8  => 'pit_outlet',
+                    9  => 'pit_produksi_step3',
+                    10 => 'pit_sparta',
+                    11 => 'pit_garam',
+                    12 => 'pit_boiler',
+                    13 => 'pit_domestik',
+                    14 => 'pit_storage',
+                ];
+
+                foreach ($fields as $row => $field) {
+                    $totalDiff = 0;
+                    $hasAnyValue = false;
+                    foreach ($dayRecords as $rec) {
+                        if ($rec->{$field} !== null) {
+                            $hasAnyValue = true;
+                            $diff = max(0, (float)$rec->{$field} - (float)($rec->{$field . '_awal'} ?? 0));
+                            $totalDiff += $diff;
+                        }
+                    }
+                    $setCell($colLetter . $row, $hasAnyValue ? $totalDiff : '');
+                }
+            } else {
+                $setCell($colLetter . '6', '');
+                $setCell($colLetter . '7', '');
+                for ($row = 8; $row <= 14; $row++) {
+                    $setCell($colLetter . $row, '');
+                }
+            }
+
+            // 2. Chemical (Row 15-23)
+            $dayChems = $chemicalData->get($day) ?? collect();
+            for ($row = 15; $row <= 23; $row++) {
+                $possibleNames = $chemicalMapping[$row];
+                $matchingChems = $dayChems->filter(function ($item) use ($possibleNames) {
+                    return in_array(strtolower(trim($item->jenis_pemakaian)), array_map('strtolower', $possibleNames));
+                });
+
+                if ($matchingChems->isNotEmpty()) {
+                    $values = $matchingChems->pluck('nilai_pemakaian')->filter(fn($v) => $v !== null);
+                    $avgChem = $values->isNotEmpty() ? $values->average() : '';
+                    $setCell($colLetter . $row, $avgChem);
+                } else {
+                    $setCell($colLetter . $row, '');
+                }
+            }
+        }
+
+        // ── Stream download ───────────────────────────────────────────────────
+        $writer   = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'WWTP_Bulanan_' . $year . '_' . sprintf('%02d', $month) . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');

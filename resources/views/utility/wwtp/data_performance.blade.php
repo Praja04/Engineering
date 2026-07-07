@@ -570,12 +570,30 @@
                     <div class="modal-body p-4">
                         <div class="alert alert-info border-0 shadow-sm mb-4">
                             <i class="fas fa-info-circle me-2"></i>Laporan mencakup data <strong>Proses, Performance,
-                                Sludge,</strong> dan <strong>Chemical</strong> pada tanggal yang dipilih.
+                                Sludge,</strong> dan <strong>Chemical</strong> pada tanggal atau bulan yang dipilih.
                         </div>
                         <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Tipe Export</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="export_type" id="export_type_daily" value="daily" checked>
+                                    <label class="form-check-label" for="export_type_daily">Harian</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="export_type" id="export_type_monthly" value="monthly">
+                                    <label class="form-check-label" for="export_type_monthly">Bulanan</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3" id="input_tanggal_container">
                             <label class="form-label fw-bold text-muted small text-uppercase">Pilih Tanggal Laporan</label>
                             <input type="date" class="form-control form-control-lg" id="export_tanggal"
                                 value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}">
+                        </div>
+                        <div class="mb-3 d-none" id="input_bulan_container">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Pilih Bulan Laporan</label>
+                            <input type="month" class="form-control form-control-lg" id="export_bulan"
+                                value="{{ date('Y-m') }}" max="{{ date('Y-m') }}">
                         </div>
                     </div>
                     <div class="modal-footer bg-light">
@@ -712,19 +730,43 @@
             /* ─────────────────────────────────────────────
                EXPORT EXCEL
             ───────────────────────────────────────────── */
+            $('input[name="export_type"]').on('change', function() {
+                if ($(this).val() === 'daily') {
+                    $('#input_tanggal_container').removeClass('d-none');
+                    $('#input_bulan_container').addClass('d-none');
+                } else {
+                    $('#input_tanggal_container').addClass('d-none');
+                    $('#input_bulan_container').removeClass('d-none');
+                }
+            });
+
             $('#btnExport').on('click', function() {
                 $('#exportExcelModal').modal('show');
             });
 
             $('#btnProcessExport').on('click', function() {
-                const tanggal = $('#export_tanggal').val();
-                if (!tanggal) {
-                    Swal.fire('Peringatan', 'Silakan pilih tanggal terlebih dahulu', 'warning');
-                    return;
+                const type = $('input[name="export_type"]:checked').val();
+                if (type === 'daily') {
+                    const tanggal = $('#export_tanggal').val();
+                    if (!tanggal) {
+                        Swal.fire('Peringatan', 'Silakan pilih tanggal terlebih dahulu', 'warning');
+                        return;
+                    }
+                    window.open(`{{ route('wwtp.export') }}?tanggal=${tanggal}`, '_blank');
+                } else {
+                    const bulanVal = $('#export_bulan').val();
+                    if (!bulanVal) {
+                        Swal.fire('Peringatan', 'Silakan pilih bulan terlebih dahulu', 'warning');
+                        return;
+                    }
+                    const parts = bulanVal.split('-');
+                    const year = parts[0];
+                    const month = parseInt(parts[1], 10);
+                    window.open(`{{ route('wwtp.export-monthly') }}?month=${month}&year=${year}`, '_blank');
                 }
-                window.open(`{{ route('wwtp.export') }}?tanggal=${tanggal}`, '_blank');
                 $('#exportExcelModal').modal('hide');
             });
+
 
             /* ─────────────────────────────────────────────
                STATE — one object per tab
