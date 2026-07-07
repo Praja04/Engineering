@@ -271,6 +271,9 @@
                     $(this).blur();
                 });
 
+                // Input type number di mobile agar trigger buka numeric keyboard
+                $('input[type="number"]').attr('inputmode', 'numeric');
+
                 let seenNotifications = new Set();
 
                 function fetchNotifications() {
