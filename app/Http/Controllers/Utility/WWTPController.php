@@ -677,16 +677,170 @@ class WWTPController extends Controller
             });
 
         $chemicalMapping = [
-            15 => ['PAC powder 1', 'PAC 1', 'PAC Step 1', 'PAC (Step 1)'],
-            16 => ['PAC powder 2', 'PAC 2', 'PAC Step 2', 'PAC (Step 2)'],
-            17 => ['BE-100', 'BE 100'],
-            18 => ['C-204', 'C204', 'C 204'],
-            19 => ['C-9040 step 1', 'C9040 step 1', 'C 9040 (Step 1)'],
-            20 => ['C-9040 step 2', 'C9040 step 2', 'C 9040 (Step 2)'],
-            21 => ['Denfloc 260 PA', 'Denfloc 945', 'Denfloc 945 PC'],
-            22 => ['NaOH step 1', 'NaOH 1', 'NaOH Step 1'],
-            23 => ['NaOH step 2', 'NaOH 2', 'NaOH Step 2', 'NaOH'],
+            15 => ['PAC powder 1'],
+            16 => ['PAC powder 2'],
+            17 => ['BE-100'],
+            18 => ['C-204'],
+            19 => ['C-9040 step 1'],
+            20 => ['C-9040 step 2'],
+            21 => ['Denfloc 260 PA'],
+            22 => ['NaOH'],
+            23 => ['NaOH step 2'],
+            36 => ['Denfloc 945'],
+            37 => ['Enzim'],
+            38 => ['NPK'],
         ];
+
+        // ── Ambil data analisa ────────────────────────────────────────────────
+        $paramCOD = \App\Models\Utility\wwtp_analisa\WwtpParameter::where('parameter_name', 'like', '%COD%')->first();
+        $paramTSS = \App\Models\Utility\wwtp_analisa\WwtpParameter::where('parameter_name', 'like', '%TSS%')->first();
+        $paramPH  = \App\Models\Utility\wwtp_analisa\WwtpParameter::where('parameter_name', 'like', '%pH%')->first();
+        $paramEC  = \App\Models\Utility\wwtp_analisa\WwtpParameter::where('parameter_name', 'like', '%EC%')->first();
+
+        $analisaRecords = \App\Models\Utility\wwtp_analisa\WwtpAnalisa::with('details')
+            ->whereBetween('analisa_date', [$startDate, $endDate])
+            ->get();
+
+        $analisaData = $analisaRecords->groupBy(function ($item) {
+            return Carbon::parse($item->analisa_date)->format('j'); // 1 sampai 31
+        });
+
+        $pointNamesMap = [
+            'Influent'           => ['Influent', 'Influent COD'],
+            'Outlet DAF'         => ['Outlet DAF', 'DAF pre'],
+            'Equalisasi 2'       => ['Equalisasi 2', 'New Anaerob', 'Sparta'],
+            'Inlet Anaerob'      => ['Inlet Anaerob'],
+            'Outlet Anaerob'     => ['Outlet Anaerob'],
+            'Aerasi-1'           => ['Aerasi-1'],
+            'Aerasi-2'           => ['Aerasi-2'],
+            'Aerasi-3'           => ['Aerasi-3'],
+            'Aerasi-4'           => ['Aerasi-4'],
+            'Aerasi-5'           => ['Aerasi-5'],
+            'Lumpur Aktif'       => ['Lumpur Aktif'],
+            'Clarifier 1'        => ['Clarifier 1', 'Clarifier-1'],
+            'Clarifier 2'        => ['Clarifier 2', 'Clarifier-2'],
+            'SDM 1'              => ['SDM 1', 'Sedimen-1', 'Sedimen 1'],
+            'Filtrat SCP'        => ['Filtrat SCP', 'Fitrat SCP'],
+            'Outlet Sand Filter' => ['Outlet Sand Filter'],
+            'Effluent'           => ['Effluent', 'Pit Outlet (Effluent)', 'Effluent COD (max 300 ppm)'],
+        ];
+
+        $dbPoints = \App\Models\Utility\wwtp_analisa\WwtpPoint::all();
+        $pointIdMap = [];
+        foreach ($pointNamesMap as $key => $names) {
+            foreach ($names as $name) {
+                $found = $dbPoints->first(function ($p) use ($name) {
+                    return strtolower(trim($p->point_name)) === strtolower(trim($name));
+                });
+                if ($found) {
+                    $pointIdMap[$key] = $found->id;
+                    break;
+                }
+            }
+        }
+
+        $analisaPointOrder = [
+            'Influent',
+            'Outlet DAF',
+            'Equalisasi 2',
+            'Inlet Anaerob',
+            'Outlet Anaerob',
+            'Aerasi-1',
+            'Aerasi-2',
+            'Aerasi-3',
+            'Aerasi-4',
+            'Aerasi-5',
+            'Lumpur Aktif',
+            'Clarifier 1',
+            'Clarifier 2',
+            'SDM 1',
+            'Filtrat SCP',
+            'Outlet Sand Filter',
+            'Effluent',
+        ];
+
+        $getAnalisaVal = function ($day, $parameterId, $pointKey) use ($analisaData, $pointIdMap) {
+            if (!$parameterId || !isset($pointIdMap[$pointKey])) {
+                return 0;
+            }
+            $pointId = $pointIdMap[$pointKey];
+            $records = $analisaData->get($day) ?? collect();
+            if ($records->isEmpty()) {
+                return 0;
+            }
+            $values = collect();
+            foreach ($records as $rec) {
+                $detail = $rec->details->first(function ($d) use ($parameterId, $pointId) {
+                    return $d->parameter_id == $parameterId && $d->point_id == $pointId;
+                });
+                if ($detail && $detail->hasil_analisa !== null) {
+                    $values->push((float)$detail->hasil_analisa);
+                }
+            }
+            return $values->isNotEmpty() ? $values->average() : 0;
+        };
+
+        // ── Ambil data performance sample ──────────────────────────────────────
+        $performanceSamples = WwtpPerformanceSample::whereBetween('tanggal', [$startDate, $endDate])
+            ->get()
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->tanggal)->format('j'); // 1 sampai 31
+            });
+
+        $sampleNamesMap = [
+            'Aerasi 1'         => ['Aerasi 1', 'Aerasi-1'],
+            'Aerasi 2'         => ['Aerasi 2', 'Aerasi-2'],
+            'Aerasi 3'         => ['Aerasi 3', 'Aerasi-3'],
+            'Aerasi 4'         => ['Aerasi 4', 'Aerasi-4'],
+            'Aerasi 5'         => ['Aerasi 5', 'Aerasi-5'],
+            'Lumpur Aktif'     => ['Lumpur Aktif'],
+            'Netralisasi'      => ['Netralisasi'],
+            'Sedimen 2'        => ['Sedimen 2', 'Sedimen-2'],
+            'Anaerob'          => ['Anaerob'],
+            'RAS Aerasi'       => ['RAS Aerasi', 'Ras Aerasi'],
+            'RAS Lumpur Aktif' => ['RAS Lumpur Aktif', 'Ras Lumpur Aktif'],
+            'Clarifier 1'      => ['Clarifier 1', 'Clarifier-1'],
+            'Clarifier 2'      => ['Clarifier 2', 'Clarifier-2'],
+            'Sedimen 1'        => ['Sedimen 1', 'Sedimen-1'],
+        ];
+
+        $dbSamples = \App\Models\Utility\WwtpJenisSample::all();
+        $sampleIdMap = [];
+        foreach ($sampleNamesMap as $key => $names) {
+            foreach ($names as $name) {
+                $found = $dbSamples->first(function ($s) use ($name) {
+                    return strtolower(trim($s->nama_sampel)) === strtolower(trim($name));
+                });
+                if ($found) {
+                    $sampleIdMap[$key] = $found->id;
+                    break;
+                }
+            }
+        }
+
+        $getSampleVal = function ($day, $sampleKey, $field) use ($performanceSamples, $sampleIdMap) {
+            if (!isset($sampleIdMap[$sampleKey])) {
+                return 0;
+            }
+            $sampleId = $sampleIdMap[$sampleKey];
+            $daySamples = $performanceSamples->get($day) ?? collect();
+            if ($daySamples->isEmpty()) {
+                return 0;
+            }
+            $matching = $daySamples->filter(fn($item) => $item->id_sampel == $sampleId);
+            if ($matching->isEmpty()) {
+                return 0;
+            }
+            $values = $matching->pluck($field)->filter(fn($v) => $v !== null);
+            return $values->isNotEmpty() ? $values->average() : 0;
+        };
+
+        // ── Ambil data sludge ────────────────────────────────────────────────
+        $sludgeData = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])
+            ->get()
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->tanggal)->format('j'); // 1 sampai 31
+            });
 
         // ── Isi data ke cell ─────────────────────────────────────────────────
         for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -734,10 +888,9 @@ class WWTPController extends Controller
                 }
             }
 
-            // 2. Chemical (Row 15-23)
+            // 2. Chemical
             $dayChems = $chemicalData->get($day) ?? collect();
-            for ($row = 15; $row <= 23; $row++) {
-                $possibleNames = $chemicalMapping[$row];
+            foreach ($chemicalMapping as $row => $possibleNames) {
                 $matchingChems = $dayChems->filter(function ($item) use ($possibleNames) {
                     return in_array(strtolower(trim($item->jenis_pemakaian)), array_map('strtolower', $possibleNames));
                 });
@@ -749,6 +902,105 @@ class WWTPController extends Controller
                 } else {
                     $setCell($colLetter . $row, 0);
                 }
+            }
+
+            // 3. Analisa COD (Row 50-66)
+            $paramId = $paramCOD?->id;
+            foreach ($analisaPointOrder as $idx => $pointKey) {
+                $row = 50 + $idx;
+                $val = $getAnalisaVal($day, $paramId, $pointKey);
+                $setCell($colLetter . $row, $val);
+            }
+
+            // 4. Analisa TSS (Row 67-83)
+            $paramId = $paramTSS?->id;
+            foreach ($analisaPointOrder as $idx => $pointKey) {
+                $row = 67 + $idx;
+                $val = $getAnalisaVal($day, $paramId, $pointKey);
+                $setCell($colLetter . $row, $val);
+            }
+
+            // 5. Analisa pH (Row 84-100)
+            $paramId = $paramPH?->id;
+            foreach ($analisaPointOrder as $idx => $pointKey) {
+                $row = 84 + $idx;
+                $val = $getAnalisaVal($day, $paramId, $pointKey);
+                $setCell($colLetter . $row, $val);
+            }
+
+            // 6. Analisa EC (Row 101-117)
+            $paramId = $paramEC?->id;
+            foreach ($analisaPointOrder as $idx => $pointKey) {
+                $row = 101 + $idx;
+                $val = $getAnalisaVal($day, $paramId, $pointKey);
+                $setCell($colLetter . $row, $val);
+            }
+
+            // 7. SV30 (Row 118-123)
+            $sampleKeys = ['Aerasi 1', 'Aerasi 2', 'Aerasi 3', 'Aerasi 4', 'Aerasi 5', 'Lumpur Aktif'];
+            foreach ($sampleKeys as $idx => $key) {
+                $row = 118 + $idx;
+                $val = $getSampleVal($day, $key, 'sv30');
+                $setCell($colLetter . $row, $val);
+            }
+
+            // 8. MLSS (Row 124-129)
+            foreach ($sampleKeys as $idx => $key) {
+                $row = 124 + $idx;
+                $val = $getSampleVal($day, $key, 'mlss');
+                $setCell($colLetter . $row, $val);
+            }
+
+            // 9. SVI (Row 130-135)
+            foreach ($sampleKeys as $idx => $key) {
+                $row = 130 + $idx;
+                $val = $getSampleVal($day, $key, 'svl');
+                $setCell($colLetter . $row, $val);
+            }
+
+            // 10. F/M Ratio (Row 136-141)
+            for ($row = 136; $row <= 141; $row++) {
+                $setCell($colLetter . $row, 0);
+            }
+
+            // 11. SV30 Slurry (Row 142-154)
+            $slurrySampleOrder = [
+                'Netralisasi',
+                'Sedimen 2',
+                'Anaerob',
+                'Aerasi 1',
+                'Aerasi 2',
+                'Aerasi 3',
+                'Aerasi 4',
+                'Aerasi 5',
+                'RAS Aerasi',
+                'Lumpur Aktif',
+                'Clarifier 1',
+                'Clarifier 2',
+                'Sedimen 1',
+            ];
+            foreach ($slurrySampleOrder as $idx => $key) {
+                $row = 142 + $idx;
+                $val = $getSampleVal($day, $key, 'sv30');
+                $setCell($colLetter . $row, $val);
+            }
+
+            // 12. Sludge Screwpress (Row 155-157)
+            $daySludge = $sludgeData->get($day) ?? collect();
+            if ($daySludge->isNotEmpty()) {
+                $totalDrain = $daySludge->sum('drain_lumpur');
+                $setCell($colLetter . '155', $totalDrain);
+
+                $totalRh = $daySludge->sum('running_hour_scp');
+                $setCell($colLetter . '156', $totalRh);
+
+                $sludgeContentVals = $daySludge->pluck('sludge_content')->filter(fn($v) => $v !== null);
+                $avgSludgeContent = $sludgeContentVals->isNotEmpty() ? $sludgeContentVals->average() : 0;
+                $setCell($colLetter . '157', $avgSludgeContent);
+            } else {
+                $setCell($colLetter . '155', 0);
+                $setCell($colLetter . '156', 0);
+                $setCell($colLetter . '157', 0);
             }
         }
 
