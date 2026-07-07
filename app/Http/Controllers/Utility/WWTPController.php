@@ -698,11 +698,11 @@ class WWTPController extends Controller
             if ($dayRecords->isNotEmpty()) {
                 // Row 6-7: debit1 & debit2 (Average across shifts)
                 $debit1Vals = $dayRecords->pluck('debit1')->filter(fn($v) => $v !== null);
-                $avgDebit1 = $debit1Vals->isNotEmpty() ? $debit1Vals->average() : '';
+                $avgDebit1 = $debit1Vals->isNotEmpty() ? $debit1Vals->average() : 0;
                 $setCell($colLetter . '6', $avgDebit1);
 
                 $debit2Vals = $dayRecords->pluck('debit2')->filter(fn($v) => $v !== null);
-                $avgDebit2 = $debit2Vals->isNotEmpty() ? $debit2Vals->average() : '';
+                $avgDebit2 = $debit2Vals->isNotEmpty() ? $debit2Vals->average() : 0;
                 $setCell($colLetter . '7', $avgDebit2);
 
                 // Row 8-14: flowmeter difference sum across shifts
@@ -718,21 +718,19 @@ class WWTPController extends Controller
 
                 foreach ($fields as $row => $field) {
                     $totalDiff = 0;
-                    $hasAnyValue = false;
                     foreach ($dayRecords as $rec) {
                         if ($rec->{$field} !== null) {
-                            $hasAnyValue = true;
                             $diff = max(0, (float)$rec->{$field} - (float)($rec->{$field . '_awal'} ?? 0));
                             $totalDiff += $diff;
                         }
                     }
-                    $setCell($colLetter . $row, $hasAnyValue ? $totalDiff : '');
+                    $setCell($colLetter . $row, $totalDiff);
                 }
             } else {
-                $setCell($colLetter . '6', '');
-                $setCell($colLetter . '7', '');
+                $setCell($colLetter . '6', 0);
+                $setCell($colLetter . '7', 0);
                 for ($row = 8; $row <= 14; $row++) {
-                    $setCell($colLetter . $row, '');
+                    $setCell($colLetter . $row, 0);
                 }
             }
 
@@ -746,10 +744,10 @@ class WWTPController extends Controller
 
                 if ($matchingChems->isNotEmpty()) {
                     $values = $matchingChems->pluck('nilai_pemakaian')->filter(fn($v) => $v !== null);
-                    $avgChem = $values->isNotEmpty() ? $values->average() : '';
+                    $avgChem = $values->isNotEmpty() ? $values->average() : 0;
                     $setCell($colLetter . $row, $avgChem);
                 } else {
-                    $setCell($colLetter . $row, '');
+                    $setCell($colLetter . $row, 0);
                 }
             }
         }
