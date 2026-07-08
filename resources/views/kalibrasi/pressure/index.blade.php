@@ -469,13 +469,13 @@
                             <input type="hidden" name="${tipe}_titik_${index}" value="${nilaiTitik}">
                         </td>
 
-                        <td><input type="number" step="0.01" name="${tipe}_alat_${index}_1" required></td>
-                        <td><input type="number" step="0.01" name="${tipe}_alat_${index}_2" required></td>
-                        <td><input type="number" step="0.01" name="${tipe}_alat_${index}_3" required></td>
+                        <td><input type="number" step="any" name="${tipe}_alat_${index}_1" required></td>
+                        <td><input type="number" step="any" name="${tipe}_alat_${index}_2" required></td>
+                        <td><input type="number" step="any" name="${tipe}_alat_${index}_3" required></td>
 
-                        <td><input type="number" step="0.01" name="${tipe}_standar_${index}_1" required></td>
-                        <td><input type="number" step="0.01" name="${tipe}_standar_${index}_2" required></td>
-                        <td><input type="number" step="0.01" name="${tipe}_standar_${index}_3" required></td>
+                        <td><input type="number" step="any" name="${tipe}_standar_${index}_1" required></td>
+                        <td><input type="number" step="any" name="${tipe}_standar_${index}_2" required></td>
+                        <td><input type="number" step="any" name="${tipe}_standar_${index}_3" required></td>
 
                         <td>${deleteButton}</td>
                     </tr>

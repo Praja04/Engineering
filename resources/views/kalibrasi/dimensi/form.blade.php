@@ -365,7 +365,7 @@
 
                     row.penunjuk_standar.forEach((val, j) => {
                         standarInputs += `
-                            <input type="number" step="0.01"
+                            <input type="number" step="any"
                                 name="data[${i}][penunjuk_standar][]"
                                 value="${val}"
                                 class="input-mini">
@@ -374,7 +374,7 @@
 
                     row.penunjuk_alat.forEach((val, j) => {
                         alatInputs += `
-                            <input type="number" step="0.01"
+                            <input type="number" step="any"
                                 name="data[${i}][penunjuk_alat][]"
                                 value="${val}"
                                 class="input-mini">
@@ -430,13 +430,13 @@
 
                     for (let j = 0; j < 10; j++) {
                         standarInputs += `
-                            <input type="number" step="0.01"
+                            <input type="number" step="any"
                                 name="data[${i}][penunjuk_standar][]"
                                 class="input-mini">
                         `;
 
                         alatInputs += `
-                            <input type="number" step="0.01"
+                            <input type="number" step="any"
                                 name="data[${i}][penunjuk_alat][]"
                                 class="input-mini">
                         `;
@@ -517,14 +517,14 @@
 
                 for (let j = 0; j < 10; j++) {
                     standarInputs += `
-                        <input type="number" step="0.01"
+                        <input type="number" step="any"
                             name="data[${rowIndex}][penunjuk_standar][]"
                             
                             class="input-mini">
                     `;
 
                     alatInputs += `
-                        <input type="number" step="0.01"
+                        <input type="number" step="any"
                             name="data[${rowIndex}][penunjuk_alat][]"
                             
                             class="input-mini">

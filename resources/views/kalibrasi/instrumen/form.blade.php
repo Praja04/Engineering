@@ -527,10 +527,10 @@
                     }
 
                     row += `
-                        <td><input type="number" step="0.001" name="alat[${i}][]" class="input-mini"></td>
-                        <td><input type="number" step="0.001" name="standar[${i}][]" class="input-mini"></td>
-                        <td><input type="number" step="0.001" name="pembacaan_alat[${i}][]" class="input-mini"></td>
-                        <td><input type="number" step="0.001" name="pembacaan_standar[${i}][]" class="input-mini"></td>
+                        <td><input type="number" step="any" name="alat[${i}][]" class="input-mini"></td>
+                        <td><input type="number" step="any" name="standar[${i}][]" class="input-mini"></td>
+                        <td><input type="number" step="any" name="pembacaan_alat[${i}][]" class="input-mini"></td>
+                        <td><input type="number" step="any" name="pembacaan_standar[${i}][]" class="input-mini"></td>
                     `;
 
                     if (j === 1) {
