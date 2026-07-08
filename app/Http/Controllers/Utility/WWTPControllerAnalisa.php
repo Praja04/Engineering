@@ -101,13 +101,17 @@ class WWTPControllerAnalisa extends Controller
 
     public function exportExcel(Request $request)
     {
-        $bulan = $request->input('bulan'); // Format YYYY-MM
-        $search = $request->input('search');
+        $start_date = $request->input('start_date');
+        $end_date   = $request->input('end_date');
+        $bulan      = $request->input('bulan'); // Format YYYY-MM
+        $search     = $request->input('search');
 
         $query = WwtpAnalisa::with(['details.parameter', 'details.point'])
             ->orderBy('analisa_date', 'asc');
 
-        if ($bulan) {
+        if ($start_date && $end_date) {
+            $query->whereBetween('analisa_date', [$start_date, $end_date]);
+        } elseif ($bulan) {
             $query->whereRaw("DATE_FORMAT(analisa_date, '%Y-%m') = ?", [$bulan]);
         }
 
@@ -117,15 +121,24 @@ class WWTPControllerAnalisa extends Controller
 
         $analisaRecords = $query->get();
 
-        if ($analisaRecords->isEmpty() && !$bulan) {
+        if ($analisaRecords->isEmpty() && !($start_date && $end_date) && !$bulan) {
             return "<script>alert('Tidak ada data analisa ditemukan untuk periode tersebut'); window.close();</script>";
         }
 
         // Generate daily dates for the target range (including days with no data)
         $dates = [];
-        if ($bulan) {
+        if ($start_date && $end_date) {
+            $start = Carbon::parse($start_date);
+            $end   = Carbon::parse($end_date);
+            if ($start->diffInDays($end) > 366) {
+                return "<script>alert('Range tanggal maksimal adalah 1 tahun.'); window.close();</script>";
+            }
+            for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+                $dates[] = $d->format('Y-m-d');
+            }
+        } elseif ($bulan) {
             $start = Carbon::createFromFormat('Y-m', $bulan)->startOfMonth();
-            $end = Carbon::createFromFormat('Y-m', $bulan)->endOfMonth();
+            $end   = Carbon::createFromFormat('Y-m', $bulan)->endOfMonth();
             for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
                 $dates[] = $d->format('Y-m-d');
             }
@@ -194,7 +207,9 @@ class WWTPControllerAnalisa extends Controller
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
 
         $periodeText = 'Periode: ';
-        if ($bulan) {
+        if ($start_date && $end_date) {
+            $periodeText .= Carbon::parse($start_date)->translatedFormat('d F Y') . ' s/d ' . Carbon::parse($end_date)->translatedFormat('d F Y');
+        } elseif ($bulan) {
             $periodeText .= Carbon::createFromFormat('Y-m', $bulan)->translatedFormat('F Y');
         } else {
             $periodeText .= 'Semua Periode';

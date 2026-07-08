@@ -232,6 +232,38 @@
                 </div>
             </div>
 
+            {{-- MODAL: Export Excel Date Range --}}
+            <div class="modal fade" id="exportExcelModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title text-success">
+                                <i class="mdi mdi-file-excel me-2"></i>Export Excel Analisa WWTP
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <form id="formExportExcel">
+                                <div class="mb-3">
+                                    <label for="export_start_date" class="form-label fw-semibold">Tanggal Mulai</label>
+                                    <input type="date" class="form-control" id="export_start_date" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="export_end_date" class="form-label fw-semibold">Tanggal Selesai</label>
+                                    <input type="date" class="form-control" id="export_end_date" required>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-success text-white" id="btnSubmitExportExcel">
+                                <i class="mdi mdi-download me-1"></i>Download Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 @endsection
@@ -258,6 +290,13 @@
             const detailModal = bootstrap.Modal.getOrCreateInstance(detailModalEl);
 
             detailModalEl.addEventListener('hidden.bs.modal', function() {
+                cleanupModalOverlay();
+            });
+
+            const exportModalEl = document.getElementById('exportExcelModal');
+            const exportModal = bootstrap.Modal.getOrCreateInstance(exportModalEl);
+
+            exportModalEl.addEventListener('hidden.bs.modal', function() {
                 cleanupModalOverlay();
             });
 
@@ -721,14 +760,50 @@
             };
 
             $('#btnExportExcel').on('click', function() {
+                // Default to first day of month to today, or if state.bulan is selected use that month
+                let startVal = '';
+                let endVal = '';
+                
+                if (state.bulan) {
+                    startVal = `${state.bulan}-01`;
+                    // get last day of that month
+                    const [y, m] = state.bulan.split('-');
+                    const lastDay = new Date(y, m, 0).getDate();
+                    endVal = `${state.bulan}-${String(lastDay).padStart(2, '0')}`;
+                } else {
+                    const now = new Date();
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    startVal = `${y}-${m}-01`;
+                    endVal = now.toISOString().split('T')[0];
+                }
+                
+                $('#export_start_date').val(startVal);
+                $('#export_end_date').val(endVal);
+                exportModal.show();
+            });
+
+            $('#btnSubmitExportExcel').on('click', function() {
+                const start = $('#export_start_date').val();
+                const end = $('#export_end_date').val();
+                
+                if (!start || !end) {
+                    showError('Pilih tanggal mulai dan selesai terlebih dahulu.');
+                    return;
+                }
+                if (new Date(start) > new Date(end)) {
+                    showError('Tanggal mulai tidak boleh melebihi tanggal selesai.');
+                    return;
+                }
+                
                 let url = '/wwtp/analisa/export';
                 let params = [];
-                if (state.bulan) params.push('bulan=' + encodeURIComponent(state.bulan));
+                params.push('start_date=' + encodeURIComponent(start));
+                params.push('end_date=' + encodeURIComponent(end));
                 if (state.search) params.push('search=' + encodeURIComponent(state.search));
-                if (params.length > 0) {
-                    url += '?' + params.join('&');
-                }
-                window.open(url, '_blank');
+                
+                window.open(url + '?' + params.join('&'), '_blank');
+                exportModal.hide();
             });
 
             function renderPaginationInfo(selector, response) {
