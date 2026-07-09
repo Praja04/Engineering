@@ -8,6 +8,7 @@
  'check_indikator_display' => 'Check Indikator Display',
  'check_motor_blower' => 'Check Motor Blower',
  'check_fan_belt_blower' => 'Check Fan Belt Blower',
+ 'check_pelumasan_blower' => 'Check Pelumasan Blower',
  'check_pergerakan_motor_swing' => 'Check Pergerakan Motor Swing',
  'check_kontroler_indoor' => 'Check Kontroler Indoor',
  'check_saluran_drain_kondensasi' => 'Check Saluran Drain Kondensasi',
@@ -27,8 +28,46 @@
  'check_jalur_freon' => 'Check Jalur Freon',
  'check_jalur_distribusi_udara' => 'Check Jalur Distribusi Udara',
  'check_jalur_return_udara' => 'Check Jalur Return Udara',
+ 'check_suhu_supply' => 'Check Suhu Supply',
+ 'check_suhu_return' => 'Check Suhu Return',
+ 'check_flow_supply' => 'Check Flow Supply',
+ 'check_flow_return' => 'Check Flow Return',
  ],
  ];
+
+ $fieldTypes = [
+ 'check_filter_udara' => 'both',
+ 'check_cover_filter_udara' => 'both',
+ 'check_electrical_indoor' => 'both',
+ 'check_suhu_evaporator' => 'both',
+ 'check_indikator_display' => 'both',
+ 'check_motor_blower' => 'both',
+ 'check_fan_belt_blower' => 'ahu',
+ 'check_pelumasan_blower' => 'ahu',
+ 'check_pergerakan_motor_swing' => 'ac',
+ 'check_kontroler_indoor' => 'ac',
+ 'check_saluran_drain_kondensasi' => 'both',
+ 'sirkulasi_evaporator' => 'both',
+
+ 'check_kondisi_kondensor' => 'both',
+ 'check_electrical_outdoor' => 'both',
+ 'check_motor_fan' => 'ac',
+ 'check_tekanan_freon' => 'both',
+ 'pelumasan_motor_fan' => 'ac',
+ 'kebersihan_unit_body_outdoor' => 'both',
+
+ 'check_jalur_freon' => 'both',
+ 'check_jalur_distribusi_udara' => 'both',
+ 'check_jalur_return_udara' => 'both',
+ 'check_suhu_supply' => 'ahu',
+ 'check_suhu_return' => 'ahu',
+ 'check_flow_supply' => 'ahu',
+ 'check_flow_return' => 'ahu',
+ ];
+
+ $namaMesin = strtoupper($data->mesin->nama_mesin ?? '');
+ $isAHU = str_contains($namaMesin, 'AHU');
+ $isAC = str_contains($namaMesin, 'AC');
 
  function badge($v)
  {
@@ -92,20 +131,29 @@
          </tr>
      </thead>
      <tbody>
-         @foreach ($checklist as $section => $items)
-         @php $rowspan = count($items); @endphp
-         @foreach ($items as $field => $label)
-         <tr>
-             @if ($loop->first)
-             <td rowspan="{{ $rowspan }}" class="fw-bold align-middle text-center">
-                 {{ $section }}
-             </td>
-             @endif
-             <td>{{ $label }}</td>
-             <td class="text-center">{!! badge($data->$field) !!}</td>
-         </tr>
-         @endforeach
-         @endforeach
+          @foreach ($checklist as $section => $items)
+          @php
+              $filteredItems = [];
+              foreach ($items as $field => $label) {
+                  $type = $fieldTypes[$field] ?? 'both';
+                  if ($isAHU && !$isAC && $type === 'ac') continue;
+                  if ($isAC && !$isAHU && $type === 'ahu') continue;
+                  $filteredItems[$field] = $label;
+              }
+              $rowspan = count($filteredItems);
+          @endphp
+          @foreach ($filteredItems as $field => $label)
+          <tr>
+              @if ($loop->first)
+              <td rowspan="{{ $rowspan }}" class="fw-bold align-middle text-center">
+                  {{ $section }}
+              </td>
+              @endif
+              <td>{{ $label }}</td>
+              <td class="text-center">{!! badge($data->$field) !!}</td>
+          </tr>
+          @endforeach
+          @endforeach
      </tbody>
  </table>
 

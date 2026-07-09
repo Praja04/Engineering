@@ -340,6 +340,7 @@
                     ['check_indikator_display', 'Check Indikator Display'],
                     ['check_motor_blower', 'Check Motor Blower'],
                     ['check_fan_belt_blower', 'Check Fan Belt Blower'],
+                    ['check_pelumasan_blower', 'Check Pelumasan Blower'],
                     ['check_pergerakan_motor_swing', 'Check Pergerakan Motor Swing'],
                     ['check_kontroler_indoor', 'Check Kontroler Indoor'],
                     ['check_saluran_drain_kondensasi', 'Check Saluran Drain Kondensasi'],
@@ -359,7 +360,41 @@
                     ['check_jalur_freon', 'Check Jalur Freon'],
                     ['check_jalur_distribusi_udara', 'Check Jalur Distribusi Udara'],
                     ['check_jalur_return_udara', 'Check Jalur Return Udara'],
+                    ['check_suhu_supply', 'Check Suhu Supply'],
+                    ['check_suhu_return', 'Check Suhu Return'],
+                    ['check_flow_supply', 'Check Flow Supply'],
+                    ['check_flow_return', 'Check Flow Return'],
                 ],
+            };
+
+            const fieldTypes = {
+                'check_filter_udara': 'both',
+                'check_cover_filter_udara': 'both',
+                'check_electrical_indoor': 'both',
+                'check_suhu_evaporator': 'both',
+                'check_indikator_display': 'both',
+                'check_motor_blower': 'both',
+                'check_fan_belt_blower': 'ahu',
+                'check_pelumasan_blower': 'ahu',
+                'check_pergerakan_motor_swing': 'ac',
+                'check_kontroler_indoor': 'ac',
+                'check_saluran_drain_kondensasi': 'both',
+                'sirkulasi_evaporator': 'both',
+
+                'check_kondisi_kondensor': 'both',
+                'check_electrical_outdoor': 'both',
+                'check_motor_fan': 'ac',
+                'check_tekanan_freon': 'both',
+                'pelumasan_motor_fan': 'ac',
+                'kebersihan_unit_body_outdoor': 'both',
+
+                'check_jalur_freon': 'both',
+                'check_jalur_distribusi_udara': 'both',
+                'check_jalur_return_udara': 'both',
+                'check_suhu_supply': 'ahu',
+                'check_suhu_return': 'ahu',
+                'check_flow_supply': 'ahu',
+                'check_flow_return': 'ahu',
             };
 
             $('#editNamaMesin').select2({
@@ -394,6 +429,43 @@
 
             populateMesinOptions();
 
+            $('#editNamaMesin').on('change', function() {
+                const selectedId = $(this).val();
+                const mesin = mesinList.find(m => m.id == selectedId);
+                const namaMesin = mesin ? (mesin.nama_mesin || '').toUpperCase() : '';
+
+                filterEditFields(namaMesin);
+            });
+
+            function filterEditFields(namaMesin) {
+                const isAHU = namaMesin.includes('AHU');
+                const isAC = namaMesin.includes('AC');
+
+                $('#editSections .edit-col').each(function() {
+                    const $col = $(this);
+                    const type = $col.data('type');
+
+                    let visible = true;
+                    if (isAHU && !isAC && type === 'ac') {
+                        visible = false;
+                    } else if (isAC && !isAHU && type === 'ahu') {
+                        visible = false;
+                    }
+
+                    if (visible) {
+                        $col.removeClass('d-none');
+                    } else {
+                        $col.addClass('d-none');
+                        // Reset input for hidden col
+                        $col.find('input[type="radio"]').prop('checked', false);
+                        // Checked "No Check" radio button so it sends default blank value
+                        $col.find('input[value=""]').prop('checked', true);
+                        $col.find('.ket-wrap').addClass('d-none');
+                        $col.find('.ket-input').val('').removeAttr('required');
+                    }
+                });
+            }
+
             function fmtDate(iso) {
                 if (!iso) return '-';
                 const d = new Date(iso);
@@ -423,8 +495,19 @@
             }
 
             function buildDetailHTML(row) {
+                const namaMesin = (row.refrigerasi?.mesin?.nama_mesin || '').toUpperCase();
+                const isAHU = namaMesin.includes('AHU');
+                const isAC = namaMesin.includes('AC');
+
                 const section = (title, items) => {
-                    const cells = items.map(([key, label]) => `
+                    const filteredItems = items.filter(([key]) => {
+                        const type = fieldTypes[key] ?? 'both';
+                        if (isAHU && !isAC && type === 'ac') return false;
+                        if (isAC && !isAHU && type === 'ahu') return false;
+                        return true;
+                    });
+
+                    const cells = filteredItems.map(([key, label]) => `
                         <div class="item-cell">
                             <div class="item-label">${label}</div>
                             <div>${statusBadge(row.refrigerasi?.[key])}</div>
@@ -731,8 +814,9 @@
             function renderEditSection(title, items, row) {
                 const cells = items.map(([key, label]) => {
                     const state = valToState(row.refrigerasi?.[key]);
+                    const type = fieldTypes[key] ?? 'both';
                     return `
-                        <div class="col-lg-4 col-md-6 col-12">
+                        <div class="col-lg-4 col-md-6 col-12 edit-col" data-type="${type}">
                             <div class="item-edit" data-field="${key}" data-label="${key}" data-label-display="${label}">
                                 <div class="d-flex justify-content-between align-items-start gap-2">
                                     <div class="item-label">${label}</div>
@@ -859,7 +943,7 @@
                 let pairs = [];
                 let valid = true;
 
-                $('#editSections .item-edit').each(function() {
+                $('#editSections .item-edit:visible').each(function() {
                     const $card = $(this);
                     const field = $card.data('field');
                     const label = $card.data('label'); // sudah humanize

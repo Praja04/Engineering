@@ -35,6 +35,7 @@ class MtcRefrigerasiRequest extends FormRequest
             'check_indikator_display' => 'nullable|boolean',
             'check_motor_blower' => 'nullable|boolean',
             'check_fan_belt_blower' => 'nullable|boolean',
+            'check_pelumasan_blower' => 'nullable|boolean',
             'check_pergerakan_motor_swing' => 'nullable|boolean',
             'check_kontroler_indoor' => 'nullable|boolean',
             'check_saluran_drain_kondensasi' => 'nullable|boolean',
@@ -56,6 +57,10 @@ class MtcRefrigerasiRequest extends FormRequest
             'check_jalur_freon' => 'nullable|boolean',
             'check_jalur_distribusi_udara' => 'nullable|boolean',
             'check_jalur_return_udara' => 'nullable|boolean',
+            'check_suhu_supply' => 'nullable|boolean',
+            'check_suhu_return' => 'nullable|boolean',
+            'check_flow_supply' => 'nullable|boolean',
+            'check_flow_return' => 'nullable|boolean',
         ];
     }
 
@@ -72,6 +77,7 @@ class MtcRefrigerasiRequest extends FormRequest
                 'check_indikator_display',
                 'check_motor_blower',
                 'check_fan_belt_blower',
+                'check_pelumasan_blower',
                 'check_pergerakan_motor_swing',
                 'check_kontroler_indoor',
                 'check_saluran_drain_kondensasi',
@@ -89,6 +95,10 @@ class MtcRefrigerasiRequest extends FormRequest
                 'check_jalur_freon',
                 'check_jalur_distribusi_udara',
                 'check_jalur_return_udara',
+                'check_suhu_supply',
+                'check_suhu_return',
+                'check_flow_supply',
+                'check_flow_return',
             ];
 
             // minimal ada 1 yang bernilai true / 1 / "on"
