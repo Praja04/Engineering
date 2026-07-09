@@ -132,6 +132,8 @@
                                     <th>No Unit</th>
                                     <th>Departemen</th>
                                     <th>Shift</th>
+                                    <th>Persentase</th>
+                                    <th>Status</th>
                                     <th style="width:180px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -193,7 +195,8 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">No Unit</label>
-                                <input type="text" class="form-control" name="no_unit" id="editNoUnit">
+                                <input type="hidden" name="no_unit" id="editNoUnitVal">
+                                <input type="text" class="form-control" id="editNoUnit" readonly>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Waktu Mulai <span class="text-danger">*</span></label>
@@ -217,7 +220,7 @@
                             <div class="col-md-3">
                                 <label class="form-label">Hours Meter (Jam Operasional) <span
                                         class="text-danger">*</span></label>
-                                <input type="numeric" class="form-control" name="hour_meter" id="editHourMeter"
+                                <input type="number" class="form-control" name="hours_meter" id="editHourMeter"
                                     required>
                             </div>
                         </div>
@@ -301,67 +304,115 @@
                 lift_chains: {
                     label: 'Lift Chains',
                     standar: 'Kekencangan kanan dan kiri sama serta terlubrikasi',
+                    type: 'forklift_es',
                 },
                 fork: {
                     label: 'Pengecekan Fork',
                     standar: 'Tidak bengkok dan tidak patah',
+                    type: 'all',
                 },
                 body_unit: {
                     label: 'Check Body Unit',
                     standar: 'Tidak lecet dan tidak penyok',
+                    type: 'all',
                 },
                 lampu_kombinasi_kiri: {
                     label: 'Check Lampu Kombinasi Kiri',
                     standar: 'Menyala normal dan tidak pecah',
+                    type: 'forklift',
                 },
                 lampu_kombinasi_kanan: {
                     label: 'Check Lampu Kombinasi Kanan',
                     standar: 'Menyala normal dan tidak pecah',
+                    type: 'forklift',
                 },
                 lampu_sorot: {
                     label: 'Check Lampu Sorot / Head Lamp',
                     standar: 'Menyala normal dan tidak pecah',
+                    type: 'forklift',
                 },
                 lampu_sign_depan_kanan: {
                     label: 'Check Lampu Sign Depan Kanan',
                     standar: 'Menyala normal dan tidak pecah',
+                    type: 'forklift',
                 },
                 lampu_sign_depan_kiri: {
                     label: 'Check Lampu Sign Depan Kiri',
                     standar: 'Menyala normal dan tidak pecah',
+                    type: 'forklift',
                 },
                 klakson: {
                     label: 'Check Klakson / Horn',
                     standar: 'Bunyi saat tombol ditekan',
+                    type: 'all',
                 },
                 buzzer_back: {
                     label: 'Check Buzzer Back',
                     standar: 'Berbunyi normal saat maju dan mundur',
+                    type: 'forklift',
                 },
                 kaca_spion: {
                     label: 'Check Kaca Spion',
                     standar: 'Terpasang dengan baik dan tidak pecah',
+                    type: 'forklift',
                 },
                 baut_roda: {
                     label: 'Check Kekencangan Baut Roda',
                     standar: 'Kencang dan tidak patah',
+                    type: 'all',
                 },
                 ban: {
                     label: 'Check Ban',
                     standar: 'Masih bagus dan layak pakai',
+                    type: 'all',
                 },
                 kebersihan_unit: {
                     label: 'Check Kebersihan Unit',
                     standar: 'Bersih dari kotoran dan debu',
+                    type: 'all',
                 },
                 panel_display: {
                     label: 'Check Panel Display',
                     standar: 'Berfungsi normal, tidak pecah, dan tidak ada alarm',
+                    type: 'all',
                 },
                 sistem_kemudi: {
                     label: 'Sistem Kemudi',
                     standar: 'Tidak berat dan bergerak lancar',
+                    type: 'all',
                 }
+            };
+
+            // Add missing ones just to be safe
+            electricP2h.level_minyak_rem = {
+                label: 'Check Level Minyak Rem',
+                standar: 'Berada di level max',
+                type: 'forklift',
+            };
+            electricP2h.level_oli_hydraulic = {
+                label: 'Check Level Oli Hydraulic',
+                standar: 'Berada di level max',
+                type: 'forklift',
+            };
+            electricP2h.isi_air_aki = {
+                label: 'Check Isi Air Aki',
+                standar: 'Berada di level standar',
+                type: 'all',
+            };
+            electricP2h.baterai = {
+                label: 'Check Baterai',
+                standar: 'Tidak kurang dari 30%',
+                type: 'all',
+            };
+            electricP2h.hydraulic_system = {
+                label: 'Hydraulic System',
+                standar: 'Berfungsi dengan baik dan terlubrikasi',
+                type: 'all',
+            };
+            electricP2h.selang_hydraulic = {
+                label: 'Selang Hydraulic',
+                standar: 'Tidak ada kebocoran oli',
+                type: 'forklift',
             };
 
             function fmtDate(iso) {
@@ -393,6 +444,28 @@
             }
 
             function buildDetailHTML(row) {
+                const namaMesin = (row.electric_p2h?.mesin?.nama_mesin || '').toUpperCase();
+                const isForklift = namaMesin.includes('FORKLIFT');
+                const isPM = namaMesin.includes('PALLET MOVER') || namaMesin.includes('PM');
+                const isES = namaMesin.includes('STACKER') || namaMesin.includes('STEKER') || namaMesin.includes('ES');
+                let activeType = '';
+                if (isForklift) activeType = 'forklift';
+                else if (isPM) activeType = 'pm';
+                else if (isES) activeType = 'es';
+
+                const filteredElectricP2h = {};
+                Object.entries(electricP2h).forEach(([key, item]) => {
+                    let visible = false;
+                    if (!activeType) visible = true;
+                    else if (item.type === 'all') visible = true;
+                    else if (activeType === 'forklift') visible = true;
+                    else if (activeType === 'es' && item.type === 'forklift_es') visible = true;
+                    
+                    if (visible) {
+                        filteredElectricP2h[key] = item;
+                    }
+                });
+
                 const section = (title, items, rowData) => {
                     const cells = Object.entries(items).map(([key, item]) => `
                         <div class="item-cell d-flex justify-content-between align-items-start gap-3">
@@ -442,23 +515,27 @@
                         </div>
                         <div class="col-md-3">
                             <div class="meta-label">No Unit</div>
-                            <div class="meta-value">${row.electric_p2h.no_unit ?? '-'}</div>
+                            <div class="meta-value">${row.electric_p2h?.mesin?.nama_mesin || row.electric_p2h?.no_unit || '-'}</div>
                         </div>
                         <div class="col-md-3">
-                            <div class="meta-label">No Unit</div>
+                            <div class="meta-label">Shift</div>
                             <div class="meta-value">${row.electric_p2h.shift ?? '-'}</div>
                         </div>
                         <div class="col-md-3">
                             <div class="meta-label">Dibuat oleh</div>
-                            <div class="meta-value">${row.created_by.username ?? row.created_by.created_by ?? '-'}</div>
+                            <div class="meta-value">${row.created_by?.username ?? '-'}</div>
                         </div>
-                         <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="meta-label">Hours Meter (Jam Operasional)</div>
-                            <div class="meta-value">${row.electric_p2h.hours_meter ?? row.electric_p2h.hours_meter ?? '-'}</div>
+                            <div class="meta-value">${row.electric_p2h.hours_meter ?? '-'}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="meta-label">Persentase Score</div>
+                            <div class="meta-value"><strong class="text-primary">${row.electric_p2h.persentase ? row.electric_p2h.persentase + '%' : '-'}</strong></div>
                         </div>
                     </div>
 
-                    ${section('Electric P2H', electricP2h, row.electric_p2h)}
+                    ${section('Electric P2H', filteredElectricP2h, row.electric_p2h)}
 
                     <div class="row g-3 mt-2">
                         <div class="col-md-4">
@@ -522,9 +599,11 @@
                         defaultContent: '-'
                     },
                     {
-                        data: 'electric_p2h.no_unit',
+                        data: null,
                         orderable: false,
-                        defaultContent: '-'
+                        render: function(row) {
+                            return row.electric_p2h?.mesin?.nama_mesin || row.electric_p2h?.no_unit || '-';
+                        }
                     },
                     {
                         data: 'departemen',
@@ -535,6 +614,13 @@
                         data: 'electric_p2h.shift',
                         orderable: false,
                         defaultContent: '-'
+                    },
+                    {
+                        data: 'electric_p2h.persentase',
+                        orderable: true,
+                        render: function(data) {
+                            return data ? `<strong class="text-primary">${data}%</strong>` : '-';
+                        }
                     },
                     {
                         data: null,
@@ -680,8 +766,25 @@
             function renderEditSection(title, items, row) {
 
                 const electricP2hlData = row?.electric_p2h || {};
+                const namaMesin = (row?.electric_p2h?.mesin?.nama_mesin || '').toUpperCase();
+                
+                const isForklift = namaMesin.includes('FORKLIFT');
+                const isPM = namaMesin.includes('PALLET MOVER') || namaMesin.includes('PM');
+                const isES = namaMesin.includes('STACKER') || namaMesin.includes('STEKER') || namaMesin.includes('ES');
+                let activeType = '';
+                if (isForklift) activeType = 'forklift';
+                else if (isPM) activeType = 'pm';
+                else if (isES) activeType = 'es';
 
                 const cells = Object.entries(items).map(([key, item]) => {
+                    let visible = false;
+                    if (!activeType) visible = true;
+                    else if (item.type === 'all') visible = true;
+                    else if (activeType === 'forklift') visible = true;
+                    else if (activeType === 'es' && item.type === 'forklift_es') visible = true;
+
+                    if (!visible) return '';
+
                     const rawValue = electricP2hlData[key];
                     const state = valToState(rawValue);
 
@@ -787,11 +890,27 @@
                 $('#editTanggal').val(toDateInputValue(row.tanggal));
                 $('#editWaktuMulai').val((row.waktu_mulai ?? '').toString().slice(0, 5));
                 $('#editWaktuSelesai').val((row.waktu_selesai ?? '').toString().slice(0, 5));
-                $('#editNoUnit').val(row.electric_p2h.no_unit ?? '');
+                
+                $('#editNoUnitVal').val(row.electric_p2h.no_unit ?? '');
+                $('#editNoUnit').val(row.electric_p2h.mesin?.nama_mesin || row.electric_p2h.no_unit || '');
+                
                 $('#editShift').val(row.electric_p2h.shift ?? '');
                 $('#editDepartemen').val(row.departemen ?? '');
                 $('#editCatatan').val(row.electric_p2h.catatan ?? '');
                 $('#editHourMeter').val(row.electric_p2h.hours_meter ?? '');
+
+                const namaMesin = (row.electric_p2h.mesin?.nama_mesin || '').toUpperCase();
+                const isForklift = namaMesin.includes('FORKLIFT');
+                const isPM = namaMesin.includes('PALLET MOVER') || namaMesin.includes('PM');
+                const isES = namaMesin.includes('STACKER') || namaMesin.includes('STEKER') || namaMesin.includes('ES');
+                const $hoursCol = $('#editHourMeter').closest('.col-md-3');
+                if (isForklift || isPM || isES) {
+                    $hoursCol.removeClass('d-none');
+                    $('#editHourMeter').attr('required', true);
+                } else {
+                    $hoursCol.addClass('d-none');
+                    $('#editHourMeter').removeAttr('required').val('');
+                }
 
                 $('#editSub').text(
                     `${fmtDate(row.tanggal)} • ${row.waktu_mulai ?? '-'} - ${row.waktu_selesai ?? '-'}`);

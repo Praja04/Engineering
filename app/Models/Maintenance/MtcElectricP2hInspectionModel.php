@@ -41,6 +41,7 @@ class MtcElectricP2hInspectionModel extends Model
         'panel_display',
         'sistem_kemudi',
         'hours_meter',
+        'persentase',
     ];
 
     /* ================= RELATION ================= */
@@ -52,6 +53,6 @@ class MtcElectricP2hInspectionModel extends Model
 
     public function mesin()
     {
-        return $this->belongsTo(MtcMasterMesinModel::class, 'mesin_id');
+        return $this->belongsTo(MtcMasterMesinModel::class, 'no_unit');
     }
 }

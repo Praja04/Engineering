@@ -19,7 +19,7 @@ class MtcElectricP2hController extends Controller
 {
     public function index()
     {
-        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Electrical P2H')
+        $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Electric P2H')
             ->orderBy('id')->get();
 
         return view('maintenance.form.electric_p2h', compact('mesin'));
@@ -37,12 +37,18 @@ class MtcElectricP2hController extends Controller
         MtcMainRequest $mainRequest,
         MtcElectricP2hRequest $detailRequest
     ) {
-        DB::transaction(function () use ($mainRequest, $detailRequest) {
+        $persentase = 0.0;
+
+        DB::transaction(function () use ($mainRequest, $detailRequest, &$persentase) {
 
             $userId = Auth::id();
 
             $tanggal = $mainRequest->validated()['tanggal'];
             $shift   = $detailRequest->validated()['shift'];
+            $no_unit = $detailRequest->validated()['no_unit'];
+
+            $mesin = MtcMasterMesinModel::find($no_unit);
+            $namaMesin = $mesin ? strtoupper($mesin->nama_mesin) : '';
 
             // CEK DATA SUDAH ADA ATAU BELUM
             $exists = MtcElectricP2hInspectionModel::where('shift', $shift)
@@ -67,9 +73,12 @@ class MtcElectricP2hController extends Controller
                 'created_by' => $userId,
             ]);
 
+            $persentase = $this->calculatePercentage($namaMesin, $detailRequest->validated());
+
             MtcElectricP2hInspectionModel::create([
                 ...$detailRequest->validated(),
                 'mtc_main_id' => $main->id,
+                'persentase'  => $persentase,
             ]);
 
             $ttdPaths = [
@@ -136,6 +145,7 @@ class MtcElectricP2hController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Data P2H Electric berhasil disimpan',
+            'persentase' => $persentase,
         ]);
     }
 
@@ -145,7 +155,7 @@ class MtcElectricP2hController extends Controller
             ->where('jenis_mtc', 'Electrical P2H')
             ->with([
                 'createdBy:id,username',
-                'electricP2h'
+                'electricP2h.mesin'
             ]);
 
         // 🔍 filter tanggal
@@ -201,9 +211,17 @@ class MtcElectricP2hController extends Controller
 
             $tanggal = $mainRequest->validated()['tanggal'];
             $shift   = $detailRequest->validated()['shift'];
+            $no_unit = $detailRequest->validated()['no_unit'];
 
-            // CEK DATA SUDAH ADA ATAU BELUM
+            $mesin = MtcMasterMesinModel::find($no_unit);
+            $namaMesin = $mesin ? strtoupper($mesin->nama_mesin) : '';
+
+            $main = MtcMainModel::findOrFail($id);
+            $inspection = MtcElectricP2hInspectionModel::where('mtc_main_id', $main->id)->firstOrFail();
+
+            // CEK DATA SUDAH ADA ATAU BELUM (abaikan jika itu row ini sendiri)
             $exists = MtcElectricP2hInspectionModel::where('shift', $shift)
+                ->where('id', '!=', $inspection->id)
                 ->whereHas('main', function ($q) use ($tanggal) {
                     $q->where('tanggal', $tanggal)
                         ->where('jenis_mtc', 'Electrical P2H');
@@ -217,16 +235,16 @@ class MtcElectricP2hController extends Controller
                 ], 422));
             }
 
-            $main = MtcMainModel::findOrFail($id);
-            $inspection = MtcElectricP2hInspectionModel::where('mtc_main_id', $main->id)->firstOrFail();
-
             $main->update([
                 ...$mainRequest->validated(),
                 'updated_by' => $userId,
             ]);
 
+            $persentase = $this->calculatePercentage($namaMesin, $detailRequest->validated());
+
             $inspection->update([
-                ...$detailRequest->validated()
+                ...$detailRequest->validated(),
+                'persentase' => $persentase,
             ]);
         });
 
@@ -234,5 +252,170 @@ class MtcElectricP2hController extends Controller
             'status'  => 'success',
             'message' => 'Data P2H Electric berhasil diperbarui',
         ]);
+    }
+
+    private function calculatePercentage(string $namaMesin, array $data): float
+    {
+        $isForklift = str_contains($namaMesin, 'FORKLIFT');
+        $isPM = str_contains($namaMesin, 'PALLET MOVER') || str_contains($namaMesin, 'PM');
+        $isES = str_contains($namaMesin, 'STACKER') || str_contains($namaMesin, 'STEKER') || str_contains($namaMesin, 'ES');
+
+        $activeType = '';
+        if ($isForklift) {
+            $activeType = 'forklift';
+        } elseif ($isPM) {
+            $activeType = 'pm';
+        } elseif ($isES) {
+            $activeType = 'es';
+        }
+
+        if (!$activeType) {
+            return 0.0;
+        }
+
+        $categories = [];
+
+        if ($activeType === 'forklift') {
+            $categories = [
+                'fisik' => [
+                    'items' => [
+                        'body_unit',
+                        'lampu_kombinasi_kiri',
+                        'lampu_kombinasi_kanan',
+                        'lampu_sorot',
+                        'lampu_sign_depan_kanan',
+                        'lampu_sign_depan_kiri',
+                        'kebersihan_unit',
+                    ],
+                    'weight' => 20,
+                    'item_weight' => 2.9,
+                ],
+                'operational' => [
+                    'items' => [
+                        'level_oli_hydraulic',
+                        'isi_air_aki',
+                        'baterai',
+                        'hydraulic_system',
+                        'selang_hydraulic',
+                        'lift_chains',
+                        'fork',
+                        'baut_roda',
+                        'panel_display',
+                        'hours_meter',
+                        'sistem_kemudi',
+                    ],
+                    'weight' => 50,
+                    'item_weight' => 4.5,
+                ],
+                'safety' => [
+                    'items' => [
+                        'klakson',
+                        'buzzer_back',
+                        'kaca_spion',
+                        'ban',
+                        'level_minyak_rem',
+                    ],
+                    'weight' => 30,
+                    'item_weight' => 6.0,
+                ],
+            ];
+        } elseif ($activeType === 'pm') {
+            $categories = [
+                'fisik' => [
+                    'items' => [
+                        'body_unit',
+                        'kebersihan_unit',
+                    ],
+                    'weight' => 20,
+                    'item_weight' => 10.0,
+                ],
+                'operational' => [
+                    'items' => [
+                        'isi_air_aki',
+                        'baterai',
+                        'hydraulic_system',
+                        'fork',
+                        'baut_roda',
+                        'panel_display',
+                        'hours_meter',
+                        'sistem_kemudi',
+                    ],
+                    'weight' => 50,
+                    'item_weight' => 6.3,
+                ],
+                'safety' => [
+                    'items' => [
+                        'klakson',
+                        'ban',
+                    ],
+                    'weight' => 30,
+                    'item_weight' => 15.0,
+                ],
+            ];
+        } elseif ($activeType === 'es') {
+            $categories = [
+                'fisik' => [
+                    'items' => [
+                        'body_unit',
+                        'kebersihan_unit',
+                    ],
+                    'weight' => 20,
+                    'item_weight' => 10.0,
+                ],
+                'operational' => [
+                    'items' => [
+                        'isi_air_aki',
+                        'baterai',
+                        'hydraulic_system',
+                        'fork',
+                        'baut_roda',
+                        'panel_display',
+                        'hours_meter',
+                        'lift_chains',
+                        'sistem_kemudi',
+                    ],
+                    'weight' => 50,
+                    'item_weight' => 5.6,
+                ],
+                'safety' => [
+                    'items' => [
+                        'klakson',
+                        'ban',
+                    ],
+                    'weight' => 30,
+                    'item_weight' => 15.0,
+                ],
+            ];
+        }
+
+        $totalScore = 0.0;
+
+        foreach ($categories as $cat) {
+            $catScore = 0.0;
+            $catItemsCount = count($cat['items']);
+            $okCount = 0;
+
+            foreach ($cat['items'] as $item) {
+                if ($item === 'hours_meter') {
+                    if (isset($data['hours_meter']) && $data['hours_meter'] !== '') {
+                        $okCount++;
+                        $catScore += $cat['item_weight'];
+                    }
+                } else {
+                    if (isset($data[$item]) && ($data[$item] == '1' || $data[$item] === true || $data[$item] === 1)) {
+                        $okCount++;
+                        $catScore += $cat['item_weight'];
+                    }
+                }
+            }
+
+            if ($okCount === $catItemsCount) {
+                $totalScore += $cat['weight'];
+            } else {
+                $totalScore += $catScore;
+            }
+        }
+
+        return min(100.00, round($totalScore, 2));
     }
 }

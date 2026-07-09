@@ -1,4 +1,4 @@
- @php
+@php
  $sipil = [
  'level_minyak_rem' => [
  'label' => 'Check Level Minyak Rem',
@@ -90,6 +90,45 @@
  ],
  ];
 
+ $fieldTypes = [
+     'level_minyak_rem' => 'forklift',
+     'level_oli_hydraulic' => 'forklift',
+     'isi_air_aki' => 'all',
+     'baterai' => 'all',
+     'hydraulic_system' => 'all',
+     'selang_hydraulic' => 'forklift',
+     'lift_chains' => 'forklift_es',
+     'fork' => 'all',
+     'body_unit' => 'all',
+     'lampu_kombinasi_kiri' => 'forklift',
+     'lampu_kombinasi_kanan' => 'forklift',
+     'lampu_sorot' => 'forklift',
+     'lampu_sign_depan_kanan' => 'forklift',
+     'lampu_sign_depan_kiri' => 'forklift',
+     'klakson' => 'all',
+     'buzzer_back' => 'forklift',
+     'kaca_spion' => 'forklift',
+     'baut_roda' => 'all',
+     'ban' => 'all',
+     'kebersihan_unit' => 'all',
+     'panel_display' => 'all',
+     'sistem_kemudi' => 'all',
+ ];
+
+ $namaMesin = strtoupper(optional($data->mesin)->nama_mesin ?? '');
+ $isForklift = str_contains($namaMesin, 'FORKLIFT');
+ $isPM = str_contains($namaMesin, 'PALLET MOVER') || str_contains($namaMesin, 'PM');
+ $isES = str_contains($namaMesin, 'STACKER') || str_contains($namaMesin, 'STEKER') || str_contains($namaMesin, 'ES');
+
+ $activeType = '';
+ if ($isForklift) {
+     $activeType = 'forklift';
+ } elseif ($isPM) {
+     $activeType = 'pm';
+ } elseif ($isES) {
+     $activeType = 'es';
+ }
+
  function badge($v)
  {
  return $v === null
@@ -121,7 +160,7 @@
      </tr>
      <tr>
          <th>No Unit</th>
-         <td>: {{ $data->no_unit }}</td>
+         <td>: {{ optional($data->mesin)->nama_mesin ?? $data->no_unit }}</td>
      </tr>
      <tr>
          <th>Shift</th>
@@ -131,6 +170,12 @@
          <th>Hours Meter</th>
          <td>: {{ $data->hours_meter ?? '-' }}</td>
      </tr>
+     @if (isset($data->persentase))
+     <tr>
+         <th>Persentase Score</th>
+         <td>: <strong class="text-primary">{{ $data->persentase }}%</strong></td>
+     </tr>
+     @endif
      <tr>
          <th>Catatan</th>
          <td>: {{ $data->catatan ?? '-' }}</td>
@@ -153,6 +198,20 @@
      </thead>
      <tbody>
          @foreach ($sipil as $field => $item)
+         @php
+             $type = $fieldTypes[$field] ?? 'all';
+             $visible = false;
+             if (!$activeType) {
+                 $visible = true;
+             } elseif ($type === 'all') {
+                 $visible = true;
+             } elseif ($activeType === 'forklift') {
+                 $visible = true;
+             } elseif ($activeType === 'es' && $type === 'forklift_es') {
+                 $visible = true;
+             }
+         @endphp
+         @if ($visible)
          <tr>
              <td class="fw-semibold">{{ $item['label'] }}</td>
              <td>{{ $item['standar'] }}</td>
@@ -160,6 +219,7 @@
                  {!! badge($data->$field ?? null) !!}
              </td>
          </tr>
+         @endif
          @endforeach
      </tbody>
  </table>
