@@ -26,13 +26,6 @@
             <div class="card shadow-sm mt-3">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <select id="filter_mode" class="form-select form-select-sm" style="width: 150px;"
-                                onchange="loadApproval()">
-                                <option value="approval">Perlu Review</option>
-                                <option value="history">Semua Riwayat</option>
-                            </select>
-                        </div>
 
                         <div class="d-flex gap-2">
                             <button id="btnBulkApprove" class="btn btn-success btn-sm rounded-pill px-3"
@@ -177,13 +170,12 @@
 
         function loadApproval(page = 1) {
             currentPage = page;
-            let mode = $('#filter_mode').val();
 
             $.ajax({
                 url: API_URL,
                 type: "GET",
                 data: {
-                    mode: mode,
+                    mode: 'approval',
                     page: page
                 },
                 success: function(res) {

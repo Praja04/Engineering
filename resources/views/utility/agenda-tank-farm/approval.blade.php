@@ -26,14 +26,6 @@
             <div class="card shadow-sm mt-3">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <select id="filter_mode" class="form-select form-select-sm" style="width: 150px;"
-                                onchange="loadApproval()">
-                                <option value="approval">Perlu Review</option>
-                                <option value="history">Semua Riwayat</option>
-                            </select>
-                        </div>
-
                         <div class="d-flex gap-2">
                             <button id="btnBulkApprove" class="btn btn-success btn-sm rounded-pill px-3"
                                 onclick="bulkApprove()" style="display:none;">
@@ -177,13 +169,12 @@
 
         function loadApproval(page = 1) {
             currentPage = page;
-            let mode = $('#filter_mode').val();
 
             $.ajax({
                 url: API_URL,
                 type: "GET",
                 data: {
-                    mode: mode,
+                    mode: 'approval',
                     page: page
                 },
                 success: function(res) {
@@ -280,49 +271,174 @@
             }
         }
 
-        const ALL_FIELDS = [
-            { field: 'kelistrikan_pompa_sumur_1', label: 'Cek Kelistrikan (A, V) Pompa Sumur 1' },
-            { field: 'kelistrikan_pompa_sumur_2', label: 'Cek Kelistrikan (A, V) Pompa Sumur 2' },
-            { field: 'kelistrikan_pompa_sumur_4', label: 'Cek Kelistrikan (A, V) Pompa Sumur 4' },
-            { field: 'kelistrikan_pompa_sumur_5', label: 'Cek Kelistrikan (A, V) Pompa Sumur 5' },
-            { field: 'pressure_pompa_sumur_1', label: 'Cek Pressure Pompa Sumur 1' },
-            { field: 'pressure_pompa_sumur_2', label: 'Cek Pressure Pompa Sumur 2' },
-            { field: 'pressure_pompa_sumur_4', label: 'Cek Pressure Pompa Sumur 4' },
-            { field: 'pressure_pompa_sumur_5', label: 'Cek Pressure Pompa Sumur 5' },
-            { field: 'flow_meter_pompa_sumur_1', label: 'Cek Flow Meter Pompa Sumur 1' },
-            { field: 'flow_meter_pompa_sumur_2', label: 'Cek Flow Meter Pompa Sumur 2' },
-            { field: 'flow_meter_pompa_sumur_4', label: 'Cek Flow Meter Pompa Sumur 4' },
-            { field: 'flow_meter_pompa_sumur_5', label: 'Cek Flow Meter Pompa Sumur 5' },
-            { field: 'drain_lumpur_settling_tank', label: 'Drain Lumpur Settling Tank' },
-            { field: 'kelistrikan_pompa_10p3', label: 'Cek Kelistrikan (A, V) Pompa 10P3' },
-            { field: 'kelistrikan_pompa_10p3a', label: 'Cek Kelistrikan (A, V) Pompa 10P3a' },
-            { field: 'pressure_gauge_intermediate', label: 'Cek Pressure Gauge Intermediate' },
-            { field: 'level_bandul_tank_farm', label: 'Cek Level Bandul Tank Farm' },
-            { field: 'flow_meter_fresh_water_tank', label: 'Cek Flow Meter Fresh Water Tank' },
-            { field: 'flow_meter_fwt_to_ro', label: 'Cek Flow Meter Fresh Water Tank to Mesin RO' },
-            { field: 'kelistrikan_pompa_10p4', label: 'Cek Kelistrikan (A, V) Pompa 10P4' },
-            { field: 'kelistrikan_pompa_10p4a', label: 'Cek Kelistrikan (A, V) Pompa 10P4a' },
-            { field: 'pressure_gauge_pompa_10p4_p4a', label: 'Cek Pressure Gauge Pompa 10P4 & P4a' },
-            { field: 'kelistrikan_pompa_10p5', label: 'Cek Kelistrikan (A, V) Pompa 10P5' },
-            { field: 'kelistrikan_pompa_10p5a', label: 'Cek Kelistrikan (A, V) Pompa 10P5a' },
-            { field: 'kelistrikan_pompa_10p5b', label: 'Cek Kelistrikan (A, V) Pompa 10P5b' },
-            { field: 'flow_meter_ro_reject_tank', label: 'Cek Flow Meter RO Reject Tank' },
-            { field: 'pressure_gauge_pompa_10p5_10p5a', label: 'Cek Pressure Gauge Pompa 10P5 & 10P5a' },
-            { field: 'drain_lumpur_tangki_intermediate', label: 'Drain Lumpur Tangki Intermediate' },
-            { field: 'inspeksi_all_pompa_tf_intermediate', label: 'Inspeksi All Pompa Tank Farm dan Intermediet (HLT)' },
-            { field: 'inspeksi_pompa_20p1', label: 'Inspeksi (HLTE) Pompa 20P1' },
-            { field: 'inspeksi_pompa_20p1a', label: 'Inspeksi (HLTE) Pompa 20P1a' },
-            { field: 'kelistrikan_pompa_20p2', label: 'Cek Kelistrikan (A, V) Pompa 20P2' },
-            { field: 'kelistrikan_pompa_20p2a', label: 'Cek Kelistrikan (A, V) Pompa 20P2a' },
-            { field: 'kelistrikan_pompa_60p1', label: 'Cek Kelistrikan (A, V) Pompa 60P1' },
-            { field: 'kelistrikan_pompa_60p2', label: 'Cek Kelistrikan (A, V) Pompa 60P2' },
-            { field: 'kelistrikan_pompa_60p3', label: 'Cek Kelistrikan (A, V) Pompa 60P3' },
-            { field: 'pressure_gauge_pompa_60p1', label: 'Cek Pressure Gauge Pompa 60P1' },
-            { field: 'pressure_gauge_pompa_60p2', label: 'Cek Pressure Gauge Pompa 60P2' },
-            { field: 'pressure_gauge_pompa_60p3', label: 'Cek Pressure Gauge Pompa 60P3' },
-            { field: 'baterai_pompa_60p3', label: 'Cek Batterai Pompa 60P3' },
-            { field: 'bahan_bakar_pompa_60p3', label: 'Cek Bahan Bakar Pompa 60P3' },
-            { field: 'pressure_gauge_water_tank_hydrant', label: 'Cek Pressure Gauge Water Tank Hydrant' }
+        const ALL_FIELDS = [{
+                field: 'kelistrikan_pompa_sumur_1',
+                label: 'Cek Kelistrikan (A, V) Pompa Sumur 1'
+            },
+            {
+                field: 'kelistrikan_pompa_sumur_2',
+                label: 'Cek Kelistrikan (A, V) Pompa Sumur 2'
+            },
+            {
+                field: 'kelistrikan_pompa_sumur_4',
+                label: 'Cek Kelistrikan (A, V) Pompa Sumur 4'
+            },
+            {
+                field: 'kelistrikan_pompa_sumur_5',
+                label: 'Cek Kelistrikan (A, V) Pompa Sumur 5'
+            },
+            {
+                field: 'pressure_pompa_sumur_1',
+                label: 'Cek Pressure Pompa Sumur 1'
+            },
+            {
+                field: 'pressure_pompa_sumur_2',
+                label: 'Cek Pressure Pompa Sumur 2'
+            },
+            {
+                field: 'pressure_pompa_sumur_4',
+                label: 'Cek Pressure Pompa Sumur 4'
+            },
+            {
+                field: 'pressure_pompa_sumur_5',
+                label: 'Cek Pressure Pompa Sumur 5'
+            },
+            {
+                field: 'flow_meter_pompa_sumur_1',
+                label: 'Cek Flow Meter Pompa Sumur 1'
+            },
+            {
+                field: 'flow_meter_pompa_sumur_2',
+                label: 'Cek Flow Meter Pompa Sumur 2'
+            },
+            {
+                field: 'flow_meter_pompa_sumur_4',
+                label: 'Cek Flow Meter Pompa Sumur 4'
+            },
+            {
+                field: 'flow_meter_pompa_sumur_5',
+                label: 'Cek Flow Meter Pompa Sumur 5'
+            },
+            {
+                field: 'drain_lumpur_settling_tank',
+                label: 'Drain Lumpur Settling Tank'
+            },
+            {
+                field: 'kelistrikan_pompa_10p3',
+                label: 'Cek Kelistrikan (A, V) Pompa 10P3'
+            },
+            {
+                field: 'kelistrikan_pompa_10p3a',
+                label: 'Cek Kelistrikan (A, V) Pompa 10P3a'
+            },
+            {
+                field: 'pressure_gauge_intermediate',
+                label: 'Cek Pressure Gauge Intermediate'
+            },
+            {
+                field: 'level_bandul_tank_farm',
+                label: 'Cek Level Bandul Tank Farm'
+            },
+            {
+                field: 'flow_meter_fresh_water_tank',
+                label: 'Cek Flow Meter Fresh Water Tank'
+            },
+            {
+                field: 'flow_meter_fwt_to_ro',
+                label: 'Cek Flow Meter Fresh Water Tank to Mesin RO'
+            },
+            {
+                field: 'kelistrikan_pompa_10p4',
+                label: 'Cek Kelistrikan (A, V) Pompa 10P4'
+            },
+            {
+                field: 'kelistrikan_pompa_10p4a',
+                label: 'Cek Kelistrikan (A, V) Pompa 10P4a'
+            },
+            {
+                field: 'pressure_gauge_pompa_10p4_p4a',
+                label: 'Cek Pressure Gauge Pompa 10P4 & P4a'
+            },
+            {
+                field: 'kelistrikan_pompa_10p5',
+                label: 'Cek Kelistrikan (A, V) Pompa 10P5'
+            },
+            {
+                field: 'kelistrikan_pompa_10p5a',
+                label: 'Cek Kelistrikan (A, V) Pompa 10P5a'
+            },
+            {
+                field: 'kelistrikan_pompa_10p5b',
+                label: 'Cek Kelistrikan (A, V) Pompa 10P5b'
+            },
+            {
+                field: 'flow_meter_ro_reject_tank',
+                label: 'Cek Flow Meter RO Reject Tank'
+            },
+            {
+                field: 'pressure_gauge_pompa_10p5_10p5a',
+                label: 'Cek Pressure Gauge Pompa 10P5 & 10P5a'
+            },
+            {
+                field: 'drain_lumpur_tangki_intermediate',
+                label: 'Drain Lumpur Tangki Intermediate'
+            },
+            {
+                field: 'inspeksi_all_pompa_tf_intermediate',
+                label: 'Inspeksi All Pompa Tank Farm dan Intermediet (HLT)'
+            },
+            {
+                field: 'inspeksi_pompa_20p1',
+                label: 'Inspeksi (HLTE) Pompa 20P1'
+            },
+            {
+                field: 'inspeksi_pompa_20p1a',
+                label: 'Inspeksi (HLTE) Pompa 20P1a'
+            },
+            {
+                field: 'kelistrikan_pompa_20p2',
+                label: 'Cek Kelistrikan (A, V) Pompa 20P2'
+            },
+            {
+                field: 'kelistrikan_pompa_20p2a',
+                label: 'Cek Kelistrikan (A, V) Pompa 20P2a'
+            },
+            {
+                field: 'kelistrikan_pompa_60p1',
+                label: 'Cek Kelistrikan (A, V) Pompa 60P1'
+            },
+            {
+                field: 'kelistrikan_pompa_60p2',
+                label: 'Cek Kelistrikan (A, V) Pompa 60P2'
+            },
+            {
+                field: 'kelistrikan_pompa_60p3',
+                label: 'Cek Kelistrikan (A, V) Pompa 60P3'
+            },
+            {
+                field: 'pressure_gauge_pompa_60p1',
+                label: 'Cek Pressure Gauge Pompa 60P1'
+            },
+            {
+                field: 'pressure_gauge_pompa_60p2',
+                label: 'Cek Pressure Gauge Pompa 60P2'
+            },
+            {
+                field: 'pressure_gauge_pompa_60p3',
+                label: 'Cek Pressure Gauge Pompa 60P3'
+            },
+            {
+                field: 'baterai_pompa_60p3',
+                label: 'Cek Batterai Pompa 60P3'
+            },
+            {
+                field: 'bahan_bakar_pompa_60p3',
+                label: 'Cek Bahan Bakar Pompa 60P3'
+            },
+            {
+                field: 'pressure_gauge_water_tank_hydrant',
+                label: 'Cek Pressure Gauge Water Tank Hydrant'
+            }
         ];
 
         function showDetails(id) {
@@ -359,7 +475,8 @@
                 });
 
                 if (details.length === 0) {
-                    contentHtml = '<div class="alert alert-warning text-center">Tidak ada data checklist harian</div>';
+                    contentHtml =
+                        '<div class="alert alert-warning text-center">Tidak ada data checklist harian</div>';
                 }
 
                 $('#modalMonthlyContent').html(contentHtml);
@@ -495,7 +612,8 @@
             </li>`;
 
                 for (let i = 1; i <= pagination.last_page; i++) {
-                    if (i === 1 || i === pagination.last_page || (i >= pagination.current_page - 2 && i <= pagination.current_page + 2)) {
+                    if (i === 1 || i === pagination.last_page || (i >= pagination.current_page - 2 && i <= pagination
+                            .current_page + 2)) {
                         html += `<li class="page-item ${pagination.current_page === i ? 'active' : ''}">
                         <a class="page-link" href="javascript:void(0)" onclick="loadApproval(${i})">${i}</a>
                     </li>`;

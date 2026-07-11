@@ -539,8 +539,8 @@
                         <div class="col-6"><strong>Pressure CT OUT:</strong> ${formatNum(data.pressure_ct_out)} Bar</div>
                         <div class="col-6"><strong>Temperatur CT IN:</strong> ${formatNum(data.temp_ct_in)} °C</div>
                         <div class="col-6"><strong>Temperatur CT OUT:</strong> ${formatNum(data.temp_ct_out)} °C</div>
-                        <div class="col-6"><strong>Flowrate RO Awal:</strong> ${formatNum(data.flowrate_ro_awal)}</div>
-                        <div class="col-6"><strong>Flowrate RO Akhir:</strong> ${formatNum(data.flowrate_ro_akhir)}</div>
+                        <div class="col-6"><strong>Flowrate RO Awal:</strong> ${formatNum(data.flowrate_ro_awal)} °C</div>
+                        <div class="col-6"><strong>Flowrate RO Akhir:</strong> ${formatNum(data.flowrate_ro_akhir)} °C</div>
                     </div>
                 `;
                 $('#detailContent').html(html);
