@@ -660,12 +660,20 @@ class AgendaRoWsController extends Controller
                 foreach ($rowMap as $field => $rowNum) {
                     $val = $item->{$field};
                     $symbol = '';
+                    $color = null;
                     if ($val === 'OK') {
                         $symbol = '✓';
+                        $color = 'FF28A745'; // Green
                     } elseif ($val === 'NOK') {
                         $symbol = '✗';
+                        $color = 'FFDC3545'; // Red
                     }
-                    $sheet->setCellValue($colLetter . $rowNum, $symbol);
+                    
+                    $cell = $colLetter . $rowNum;
+                    $sheet->setCellValue($cell, $symbol);
+                    if ($color) {
+                        $sheet->getStyle($cell)->getFont()->getColor()->setARGB($color);
+                    }
                 }
             }
 
