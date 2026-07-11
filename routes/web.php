@@ -70,6 +70,10 @@ Route::middleware('auth')->group(function () {
     @include 'utility/warming-up-genset-routes.php';
     @include 'utility/mdp-routes.php';
     @include 'utility/compressor-routes.php';
+    @include 'utility/cooling-tower-routes.php';
+    @include 'utility/reverse-osmosis-routes.php';
+    @include 'utility/agenda-ro-ws-routes.php';
+    @include 'utility/agenda-tank-farm-routes.php';
     @include 'utility/ahu-routes.php';
     @include 'utility/boiler-routes.php';
     @include 'ejo/ejo-routes.php';
