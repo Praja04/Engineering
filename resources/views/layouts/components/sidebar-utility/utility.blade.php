@@ -19,6 +19,11 @@
     $isReverseOsmosis = request()->is('utility/reverse-osmosis*');
     $isAgendaRoWs = request()->is('utility/agenda-ro-ws*');
     $isAgendaTankFarm = request()->is('utility/agenda-tank-farm*');
+    $isAgendaAhu = request()->is('utility/agenda-ahu*');
+    $isPemantauanPompa = request()->is('utility/pemantauan-pompa-utility*');
+    $isAgendaCoolingTower = request()->is('utility/agenda-cooling-tower*');
+    $isAgendaCompressor = request()->is('utility/agenda-compressor*');
+    $isAnalisisUtility = request()->is('utility/analisis-utility*');
 
     $isOperasional =
         $isEsp ||
@@ -30,10 +35,15 @@
         $isReverseOsmosis ||
         $isAgendaRoWs ||
         $isAgendaTankFarm ||
+        $isAgendaAhu ||
+        $isPemantauanPompa ||
+        $isAgendaCoolingTower ||
+        $isAgendaCompressor ||
+        $isAnalisisUtility ||
         $isAhu ||
         $isMdp ||
         $isBoilerLog;
- @endphp
+@endphp
 
 @if (
     $jabatan === 'admin' ||
@@ -428,12 +438,14 @@
 
                 {{-- Reverse Osmosis --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isReverseOsmosis ? '' : 'collapsed' }}" href="#reverseOsmosisMenu"
-                        data-bs-toggle="collapse" aria-expanded="{{ $isReverseOsmosis ? 'true' : 'false' }}">
+                    <a class="nav-link menu-link {{ $isReverseOsmosis ? '' : 'collapsed' }}"
+                        href="#reverseOsmosisMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isReverseOsmosis ? 'true' : 'false' }}">
                         <span>Reverse Osmosis</span>
                     </a>
 
-                    <div class="collapse menu-dropdown {{ $isReverseOsmosis ? 'show' : '' }}" id="reverseOsmosisMenu">
+                    <div class="collapse menu-dropdown {{ $isReverseOsmosis ? 'show' : '' }}"
+                        id="reverseOsmosisMenu">
                         <ul class="nav nav-sm flex-column">
 
                             <li class="nav-item">
@@ -455,6 +467,45 @@
                                     <a class="nav-link {{ request()->is('utility/reverse-osmosis/approval') ? 'active' : '' }}"
                                         href="{{ url('utility/reverse-osmosis/approval') }}">
                                         Approval Reverse Osmosis
+                                    </a>
+                                </li>
+                            @endif
+
+                        </ul>
+                    </div>
+                </li>
+
+                {{-- Pemantauan Pompa Utility --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ $isPemantauanPompa ? '' : 'collapsed' }}"
+                        href="#pemantauanPompaMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isPemantauanPompa ? 'true' : 'false' }}">
+                        <span>Pemantauan Pompa</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ $isPemantauanPompa ? 'show' : '' }}"
+                        id="pemantauanPompaMenu">
+                        <ul class="nav nav-sm flex-column">
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/pemantauan-pompa-utility') ? 'active' : '' }}"
+                                    href="{{ url('utility/pemantauan-pompa-utility/') }}">
+                                    Form Pemantauan Pompa
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/pemantauan-pompa-utility/data') ? 'active' : '' }}"
+                                    href="{{ url('utility/pemantauan-pompa-utility/data') }}">
+                                    Data Pemantauan Pompa
+                                </a>
+                            </li>
+
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('utility/pemantauan-pompa-utility/approval') ? 'active' : '' }}"
+                                        href="{{ url('utility/pemantauan-pompa-utility/approval') }}">
+                                        Approval Pemantauan Pompa
                                     </a>
                                 </li>
                             @endif
@@ -502,12 +553,14 @@
 
                 {{-- Agenda Tank Farm & Hydrant --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isAgendaTankFarm ? '' : 'collapsed' }}" href="#agendaTankFarmMenu"
-                        data-bs-toggle="collapse" aria-expanded="{{ $isAgendaTankFarm ? 'true' : 'false' }}">
+                    <a class="nav-link menu-link {{ $isAgendaTankFarm ? '' : 'collapsed' }}"
+                        href="#agendaTankFarmMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isAgendaTankFarm ? 'true' : 'false' }}">
                         <span>Agenda Tank Farm & Hydrant</span>
                     </a>
 
-                    <div class="collapse menu-dropdown {{ $isAgendaTankFarm ? 'show' : '' }}" id="agendaTankFarmMenu">
+                    <div class="collapse menu-dropdown {{ $isAgendaTankFarm ? 'show' : '' }}"
+                        id="agendaTankFarmMenu">
                         <ul class="nav nav-sm flex-column">
 
                             <li class="nav-item">
@@ -529,6 +582,160 @@
                                     <a class="nav-link {{ request()->is('utility/agenda-tank-farm/approval') ? 'active' : '' }}"
                                         href="{{ url('utility/agenda-tank-farm/approval') }}">
                                         Approval Agenda TF-HY
+                                    </a>
+                                </li>
+                            @endif
+
+                        </ul>
+                    </div>
+                </li>
+
+                {{-- Agenda AHU --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ $isAgendaAhu ? '' : 'collapsed' }}" href="#agendaAhuMenu"
+                        data-bs-toggle="collapse" aria-expanded="{{ $isAgendaAhu ? 'true' : 'false' }}">
+                        <span>Agenda AHU</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ $isAgendaAhu ? 'show' : '' }}" id="agendaAhuMenu">
+                        <ul class="nav nav-sm flex-column">
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/agenda-ahu') ? 'active' : '' }}"
+                                    href="{{ url('utility/agenda-ahu/') }}">
+                                    Form Agenda AHU
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/agenda-ahu/data') ? 'active' : '' }}"
+                                    href="{{ url('utility/agenda-ahu/data') }}">
+                                    Data Agenda AHU
+                                </a>
+                            </li>
+
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('utility/agenda-ahu/approval') ? 'active' : '' }}"
+                                        href="{{ url('utility/agenda-ahu/approval') }}">
+                                        Approval Agenda AHU
+                                    </a>
+                                </li>
+                            @endif
+
+                        </ul>
+                    </div>
+                </li>
+
+                {{-- Agenda Cooling Tower --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ $isAgendaCoolingTower ? '' : 'collapsed' }}"
+                        href="#agendaCoolingTowerMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isAgendaCoolingTower ? 'true' : 'false' }}">
+                        <span>Agenda Cooling Tower</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ $isAgendaCoolingTower ? 'show' : '' }}"
+                        id="agendaCoolingTowerMenu">
+                        <ul class="nav nav-sm flex-column">
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/agenda-cooling-tower') ? 'active' : '' }}"
+                                    href="{{ url('utility/agenda-cooling-tower/') }}">
+                                    Form Agenda CT
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/agenda-cooling-tower/data') ? 'active' : '' }}"
+                                    href="{{ url('utility/agenda-cooling-tower/data') }}">
+                                    Data Agenda CT
+                                </a>
+                            </li>
+
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('utility/agenda-cooling-tower/approval') ? 'active' : '' }}"
+                                        href="{{ url('utility/agenda-cooling-tower/approval') }}">
+                                        Approval Agenda CT
+                                    </a>
+                                </li>
+                            @endif
+
+                        </ul>
+                    </div>
+                </li>
+
+                {{-- Agenda Compressor --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ $isAgendaCompressor ? '' : 'collapsed' }}"
+                        href="#agendaCompressorMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isAgendaCompressor ? 'true' : 'false' }}">
+                        <span>Agenda Compressor</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ $isAgendaCompressor ? 'show' : '' }}"
+                        id="agendaCompressorMenu">
+                        <ul class="nav nav-sm flex-column">
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/agenda-compressor') ? 'active' : '' }}"
+                                    href="{{ url('utility/agenda-compressor/') }}">
+                                    Form Agenda Compressor
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/agenda-compressor/data') ? 'active' : '' }}"
+                                    href="{{ url('utility/agenda-compressor/data') }}">
+                                    Data Agenda Compressor
+                                </a>
+                            </li>
+
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('utility/agenda-compressor/approval') ? 'active' : '' }}"
+                                        href="{{ url('utility/agenda-compressor/approval') }}">
+                                        Approval Agenda Compressor
+                                    </a>
+                                </li>
+                            @endif
+
+                        </ul>
+                    </div>
+                </li>
+
+                {{-- Analisis Utility --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ $isAnalisisUtility ? '' : 'collapsed' }}"
+                        href="#analisisUtilityMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isAnalisisUtility ? 'true' : 'false' }}">
+                        <span>Analisis Utility</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ $isAnalisisUtility ? 'show' : '' }}"
+                        id="analisisUtilityMenu">
+                        <ul class="nav nav-sm flex-column">
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/analisis-utility') ? 'active' : '' }}"
+                                    href="{{ url('utility/analisis-utility/') }}">
+                                    Form Analisis Utility
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/analisis-utility/data') ? 'active' : '' }}"
+                                    href="{{ url('utility/analisis-utility/data') }}">
+                                    Data Analisis Utility
+                                </a>
+                            </li>
+
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('utility/analisis-utility/approval') ? 'active' : '' }}"
+                                        href="{{ url('utility/analisis-utility/approval') }}">
+                                        Approval Analisis Utility
                                     </a>
                                 </li>
                             @endif
