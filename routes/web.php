@@ -74,6 +74,11 @@ Route::middleware('auth')->group(function () {
     @include 'utility/reverse-osmosis-routes.php';
     @include 'utility/agenda-ro-ws-routes.php';
     @include 'utility/agenda-tank-farm-routes.php';
+    @include 'utility/agenda-ahu-routes.php';
+    @include 'utility/pemantauan-pompa-utility-routes.php';
+    @include 'utility/agenda-cooling-tower-routes.php';
+    @include 'utility/agenda-compressor-routes.php';
+    @include 'utility/analisis-utility-routes.php';
     @include 'utility/ahu-routes.php';
     @include 'utility/boiler-routes.php';
     @include 'ejo/ejo-routes.php';
