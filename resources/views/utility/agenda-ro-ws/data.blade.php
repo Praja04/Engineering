@@ -22,7 +22,8 @@
                             </div>
 
                             <div class="d-flex gap-2">
-                                <a href="{{ route('agenda-ro-ws.index') }}" class="btn btn-warning btn-sm rounded-pill px-3">
+                                <a href="{{ route('agenda-ro-ws.index') }}"
+                                    class="btn btn-warning btn-sm rounded-pill px-3">
                                     <i class="ri-add-line me-1"></i> Input
                                 </a>
 
@@ -147,21 +148,42 @@
                         <!-- Segmented control template wrapper function -->
                         @php
                             if (!function_exists('renderEditChecklistItem')) {
-                                function renderEditChecklistItem($fieldName, $labelText) {
+                                function renderEditChecklistItem($fieldName, $labelText)
+                                {
                                     return '
                                     <div class="edit-item d-flex justify-content-between align-items-center flex-wrap py-2 border-bottom">
                                         <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0 small">
-                                            ' . $labelText . '
+                                            ' .
+                                        $labelText .
+                                        '
                                         </div>
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <input type="radio" class="btn-check" name="' . $fieldName . '" id="edit_' . $fieldName . '_empty" value="">
-                                            <label class="btn btn-outline-secondary px-3" for="edit_' . $fieldName . '_empty">Kosong</label>
+                                            <input type="radio" class="btn-check" name="' .
+                                        $fieldName .
+                                        '" id="edit_' .
+                                        $fieldName .
+                                        '_empty" value="">
+                                            <label class="btn btn-outline-secondary px-3" for="edit_' .
+                                        $fieldName .
+                                        '_empty">Kosong</label>
 
-                                            <input type="radio" class="btn-check" name="' . $fieldName . '" id="edit_' . $fieldName . '_ok" value="OK">
-                                            <label class="btn btn-outline-success px-3" for="edit_' . $fieldName . '_ok">OK</label>
+                                            <input type="radio" class="btn-check" name="' .
+                                        $fieldName .
+                                        '" id="edit_' .
+                                        $fieldName .
+                                        '_ok" value="OK">
+                                            <label class="btn btn-outline-success px-3" for="edit_' .
+                                        $fieldName .
+                                        '_ok">OK</label>
 
-                                            <input type="radio" class="btn-check" name="' . $fieldName . '" id="edit_' . $fieldName . '_nok" value="NOK">
-                                            <label class="btn btn-outline-danger px-3" for="edit_' . $fieldName . '_nok">NOK</label>
+                                            <input type="radio" class="btn-check" name="' .
+                                        $fieldName .
+                                        '" id="edit_' .
+                                        $fieldName .
+                                        '_nok" value="NOK">
+                                            <label class="btn btn-outline-danger px-3" for="edit_' .
+                                        $fieldName .
+                                        '_nok">NOK</label>
                                         </div>
                                     </div>
                                     ';
@@ -313,35 +335,108 @@
         const API_URL = "{{ route('agenda-ro-ws.get-data') }}";
         let currentPage = 1;
 
-        const FIELDS_RO = [
-            { field: 'inspeksi_hpt_pump', label: 'Inspeksi (HLT) High Pressure Pump' },
-            { field: 'inspeksi_cip_pump', label: 'Inspeksi (HLT) CIP Pump' },
-            { field: 'inspeksi_blower_ro', label: 'Inspeksi (HLT) Blower RO' },
-            { field: 'cek_chemical', label: 'Cek Chemical' },
-            { field: 'pencatatan_flow_meter_produksi', label: 'Pencatatan Flow Meter Produksi RO Produk' },
-            { field: 'cek_nilai_conductivity', label: 'Cek Nilai Conductivity' },
-            { field: 'cek_dp_1st_2st', label: 'Cek ΔP 1st & 2st' },
-            { field: 'cek_dp_mmf_1_2', label: 'Cek ΔP MMF #1 & MMF #2' },
-            { field: 'pencatatan_flow_meter_konsumsi', label: 'Pencatatan Flow Meter Konsumsi RO Produk' },
-            { field: 'backwash_mmf_1', label: 'Backwash MMF #1' },
-            { field: 'backwash_mmf_2', label: 'Backwash MMF #2' },
-            { field: 'cek_kondisi_rotameter_mmf_1', label: 'Cek Kondisi Rota Meter MMF 1' },
-            { field: 'cek_kondisi_rotameter_mmf_2', label: 'Cek Kondisi Rota Meter MMF 2' },
-            { field: 'cek_kondisi_rotameter_ro_product', label: 'Cek Kondisi Rotameter RO Product' },
-            { field: 'cek_kondisi_rotameter_ro_reject', label: 'Cek Kondisi Rotameter RO Reject' },
-            { field: 'kalibrasi_dosis_kimia', label: 'Kalibrasi Dosis Penggunaan Kimia' },
-            { field: 'cleaning_unit_ro', label: 'Cleaning Unit RO' },
-            { field: 'cleaning_unit_mmf_1', label: 'Cleaning Unit MMF 1' },
-            { field: 'cleaning_unit_mmf_2', label: 'Cleaning Unit MMF 2' }
+        const FIELDS_RO = [{
+                field: 'inspeksi_hpt_pump',
+                label: 'Inspeksi (HLT) High Pressure Pump'
+            },
+            {
+                field: 'inspeksi_cip_pump',
+                label: 'Inspeksi (HLT) CIP Pump'
+            },
+            {
+                field: 'inspeksi_blower_ro',
+                label: 'Inspeksi (HLT) Blower RO'
+            },
+            {
+                field: 'cek_chemical',
+                label: 'Cek Chemical'
+            },
+            {
+                field: 'pencatatan_flow_meter_produksi',
+                label: 'Pencatatan Flow Meter Produksi RO Produk'
+            },
+            {
+                field: 'cek_nilai_conductivity',
+                label: 'Cek Nilai Conductivity'
+            },
+            {
+                field: 'cek_dp_1st_2st',
+                label: 'Cek ΔP 1st & 2st'
+            },
+            {
+                field: 'cek_dp_mmf_1_2',
+                label: 'Cek ΔP MMF #1 & MMF #2'
+            },
+            {
+                field: 'pencatatan_flow_meter_konsumsi',
+                label: 'Pencatatan Flow Meter Konsumsi RO Produk'
+            },
+            {
+                field: 'backwash_mmf_1',
+                label: 'Backwash MMF #1'
+            },
+            {
+                field: 'backwash_mmf_2',
+                label: 'Backwash MMF #2'
+            },
+            {
+                field: 'cek_kondisi_rotameter_mmf_1',
+                label: 'Cek Kondisi Rota Meter MMF 1'
+            },
+            {
+                field: 'cek_kondisi_rotameter_mmf_2',
+                label: 'Cek Kondisi Rota Meter MMF 2'
+            },
+            {
+                field: 'cek_kondisi_rotameter_ro_product',
+                label: 'Cek Kondisi Rotameter RO Product'
+            },
+            {
+                field: 'cek_kondisi_rotameter_ro_reject',
+                label: 'Cek Kondisi Rotameter RO Reject'
+            },
+            {
+                field: 'kalibrasi_dosis_kimia',
+                label: 'Kalibrasi Dosis Penggunaan Kimia'
+            },
+            {
+                field: 'cleaning_unit_ro',
+                label: 'Cleaning Unit RO'
+            },
+            {
+                field: 'cleaning_unit_mmf_1',
+                label: 'Cleaning Unit MMF 1'
+            },
+            {
+                field: 'cleaning_unit_mmf_2',
+                label: 'Cleaning Unit MMF 2'
+            }
         ];
 
-        const FIELDS_WS = [
-            { field: 'cek_output_hardness', label: 'Cek Output Hardness' },
-            { field: 'cek_flow_produk', label: 'Cek Flow Produk' },
-            { field: 'regenerasi_mesin_ws', label: 'Regenerasi Mesin Water Softener' },
-            { field: 'cek_pompa_transfer', label: 'Cek Kondisi Pompa Transfer (H,L,T)' },
-            { field: 'cek_pompa_suplai', label: 'Cek Kondisi Pompa Suplai (H,L,T)' },
-            { field: 'cleaning_tanki_buffer_ws', label: 'Cleaning Tanki Buffer WS' }
+        const FIELDS_WS = [{
+                field: 'cek_output_hardness',
+                label: 'Cek Output Hardness'
+            },
+            {
+                field: 'cek_flow_produk',
+                label: 'Cek Flow Produk'
+            },
+            {
+                field: 'regenerasi_mesin_ws',
+                label: 'Regenerasi Mesin Water Softener'
+            },
+            {
+                field: 'cek_pompa_transfer',
+                label: 'Cek Kondisi Pompa Transfer (H,L,T)'
+            },
+            {
+                field: 'cek_pompa_suplai',
+                label: 'Cek Kondisi Pompa Suplai (H,L,T)'
+            },
+            {
+                field: 'cleaning_tanki_buffer_ws',
+                label: 'Cleaning Tanki Buffer WS'
+            }
         ];
 
         const ALL_FIELDS = [...FIELDS_RO, ...FIELDS_WS];
@@ -396,12 +491,14 @@
                                         <button class="btn btn-sm btn-info" onclick="showDetail(${item.id})" title="Detail">
                                             <i class="ri-eye-line"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-primary" onclick="editData(${item.id})" title="Edit">
-                                            <i class="ri-edit-line"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})" title="Hapus">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>
+                                        @if (auth()->user()->jabatan != 'operator')
+                                            <button class="btn btn-sm btn-primary" onclick="editData(${item.id})" title="Edit">
+                                                <i class="ri-edit-line"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})" title="Hapus">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -409,7 +506,8 @@
                     });
 
                     if (res.data.length == 0) {
-                        html = '<tr><td colspan="6" class="text-center py-4 text-muted">Data checklist tidak ditemukan</td></tr>';
+                        html =
+                            '<tr><td colspan="6" class="text-center py-4 text-muted">Data checklist tidak ditemukan</td></tr>';
                     }
 
                     $('#tbodyData').html(html);
@@ -483,8 +581,10 @@
             let listHtml = '<ul class="list-group list-group-flush">';
             fieldList.forEach(f => {
                 let badge = '<span class="badge bg-secondary">-</span>';
-                if (item[f.field] === 'OK') badge = '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
-                else if (item[f.field] === 'NOK') badge = '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+                if (item[f.field] === 'OK') badge =
+                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
+                else if (item[f.field] === 'NOK') badge =
+                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
 
                 listHtml += `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -501,7 +601,7 @@
             let monthData = window.collectedData[index];
             let app = monthData.approval;
             let monthName = moment().month(app.bulan - 1).format('MMMM');
-            
+
             let dataHtml = '';
             monthData.data.forEach(item => {
                 let countOk = 0;
@@ -655,7 +755,8 @@
             </li>`;
 
                 for (let i = 1; i <= pagination.last_page; i++) {
-                    if (i == 1 || i == pagination.last_page || (i >= pagination.current_page - 2 && i <= pagination.current_page + 2)) {
+                    if (i == 1 || i == pagination.last_page || (i >= pagination.current_page - 2 && i <= pagination
+                            .current_page + 2)) {
                         html += `<li class="page-item ${pagination.current_page == i ? 'active' : ''}">
                         <a class="page-link" href="javascript:void(0)" onclick="loadData(${i})">${i}</a>
                     </li>`;
@@ -719,9 +820,10 @@
             $('#btnExportConfirm').on('click', function() {
                 const bulan = $('select[name="bulan"]', '#formExport').val();
                 const tahun = $('input[name="tahun"]', '#formExport').val();
-                
+
                 let btn = $(this);
-                btn.prop('disabled', true).html('<i class="ri-loader-4-line align-middle me-1"></i> Downloading...');
+                btn.prop('disabled', true).html(
+                    '<i class="ri-loader-4-line align-middle me-1"></i> Downloading...');
 
                 fetch(`{{ route('agenda-ro-ws.export') }}?bulan=${bulan}&tahun=${tahun}`)
                     .then(async response => {
@@ -731,14 +833,15 @@
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Data Tidak Ditemukan',
-                                text: json.message || 'Tidak ada data ditemukan untuk periode tersebut.'
+                                text: json.message ||
+                                    'Tidak ada data ditemukan untuk periode tersebut.'
                             });
                         } else if (response.ok) {
                             const blob = await response.blob();
                             const url = window.URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            
+
                             const disposition = response.headers.get('content-disposition');
                             let filename = 'Agenda_RO_WS_Report.xlsx';
                             if (disposition && disposition.indexOf('filename=') !== -1) {
@@ -751,7 +854,8 @@
                             window.URL.revokeObjectURL(url);
                             $('#modalExport').modal('hide');
                         } else {
-                            Swal.fire('Gagal!', 'Terjadi kesalahan saat mengunduh laporan.', 'error');
+                            Swal.fire('Gagal!', 'Terjadi kesalahan saat mengunduh laporan.',
+                                'error');
                         }
                     })
                     .catch(err => {
@@ -759,7 +863,8 @@
                         Swal.fire('Gagal!', 'Koneksi ke server gagal.', 'error');
                     })
                     .finally(() => {
-                        btn.prop('disabled', false).html('<i class="ri-download-cloud-2-line me-1"></i> Download Excel');
+                        btn.prop('disabled', false).html(
+                            '<i class="ri-download-cloud-2-line me-1"></i> Download Excel');
                     });
             });
         });

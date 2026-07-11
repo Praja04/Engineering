@@ -568,12 +568,14 @@
                                         <button class="btn btn-sm btn-info" onclick="showDetail(${item.id})" title="Detail">
                                             <i class="ri-eye-line"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-primary" onclick="editData(${item.id})" title="Edit">
-                                            <i class="ri-edit-line"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})" title="Hapus">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>
+                                        @if (auth()->user()->jabatan != 'operator')
+                                            <button class="btn btn-sm btn-primary" onclick="editData(${item.id})" title="Edit">
+                                                <i class="ri-edit-line"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})" title="Hapus">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

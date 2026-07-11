@@ -22,7 +22,8 @@
                             </div>
 
                             <div class="d-flex gap-2">
-                                <a href="{{ route('reverse-osmosis.index') }}" class="btn btn-warning btn-sm rounded-pill px-3">
+                                <a href="{{ route('reverse-osmosis.index') }}"
+                                    class="btn btn-warning btn-sm rounded-pill px-3">
                                     <i class="ri-add-line me-1"></i> Input
                                 </a>
 
@@ -148,96 +149,120 @@
                                 <input type="date" name="tanggal" id="edit_tanggal" class="form-control" required>
                             </div>
 
-                            <div class="col-12 mt-3"><span class="badge bg-soft-primary text-primary">MMF (Multi Media Filter)</span></div>
+                            <div class="col-12 mt-3"><span class="badge bg-soft-primary text-primary">MMF (Multi Media
+                                    Filter)</span></div>
                             <div class="col-md-3">
                                 <label class="form-label">Pressure Feed MMF 1</label>
-                                <input type="number" step="0.01" name="mmf_pressure_feed_1" id="edit_mmf_pressure_feed_1" class="form-control">
+                                <input type="number" step="0.01" name="mmf_pressure_feed_1"
+                                    id="edit_mmf_pressure_feed_1" class="form-control">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Pressure Feed MMF 2</label>
-                                <input type="number" step="0.01" name="mmf_pressure_feed_2" id="edit_mmf_pressure_feed_2" class="form-control">
+                                <input type="number" step="0.01" name="mmf_pressure_feed_2"
+                                    id="edit_mmf_pressure_feed_2" class="form-control">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Pressure Produk MMF 1</label>
-                                <input type="number" step="0.01" name="mmf_pressure_produk_1" id="edit_mmf_pressure_produk_1" class="form-control">
+                                <input type="number" step="0.01" name="mmf_pressure_produk_1"
+                                    id="edit_mmf_pressure_produk_1" class="form-control">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Pressure Produk MMF 2</label>
-                                <input type="number" step="0.01" name="mmf_pressure_produk_2" id="edit_mmf_pressure_produk_2" class="form-control">
+                                <input type="number" step="0.01" name="mmf_pressure_produk_2"
+                                    id="edit_mmf_pressure_produk_2" class="form-control">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Output Flow MMF 1</label>
-                                <input type="number" step="0.01" name="mmf_output_flow_1" id="edit_mmf_output_flow_1" class="form-control">
+                                <input type="number" step="0.01" name="mmf_output_flow_1"
+                                    id="edit_mmf_output_flow_1" class="form-control">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Output Flow MMF 2</label>
-                                <input type="number" step="0.01" name="mmf_output_flow_2" id="edit_mmf_output_flow_2" class="form-control">
+                                <input type="number" step="0.01" name="mmf_output_flow_2"
+                                    id="edit_mmf_output_flow_2" class="form-control">
                             </div>
                             <div class="col-md-3 d-flex align-items-end mb-2">
                                 <div class="form-check form-switch">
-                                    <input type="checkbox" name="mmf_status_backwash_1" class="form-check-input" id="edit_backwash1" value="1">
+                                    <input type="checkbox" name="mmf_status_backwash_1" class="form-check-input"
+                                        id="edit_backwash1" value="1">
                                     <label class="form-check-label fw-bold" for="edit_backwash1">Backwash MMF 1</label>
                                 </div>
                             </div>
                             <div class="col-md-3 d-flex align-items-end mb-2">
                                 <div class="form-check form-switch">
-                                    <input type="checkbox" name="mmf_status_backwash_2" class="form-check-input" id="edit_backwash2" value="1">
+                                    <input type="checkbox" name="mmf_status_backwash_2" class="form-check-input"
+                                        id="edit_backwash2" value="1">
                                     <label class="form-check-label fw-bold" for="edit_backwash2">Backwash MMF 2</label>
                                 </div>
                             </div>
 
-                            <div class="col-12 mt-3"><span class="badge bg-soft-warning text-warning">Micron Filter</span></div>
+                            <div class="col-12 mt-3"><span class="badge bg-soft-warning text-warning">Micron Filter</span>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">Pressure Inlet Micron Filter</label>
-                                <input type="number" step="0.01" name="micron_filter_pressure_inlet" id="edit_micron_filter_pressure_inlet" class="form-control">
+                                <input type="number" step="0.01" name="micron_filter_pressure_inlet"
+                                    id="edit_micron_filter_pressure_inlet" class="form-control">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Pressure Outlet Micron Filter</label>
-                                <input type="number" step="0.01" name="micron_filter_pressure_outlet" id="edit_micron_filter_pressure_outlet" class="form-control">
+                                <input type="number" step="0.01" name="micron_filter_pressure_outlet"
+                                    id="edit_micron_filter_pressure_outlet" class="form-control">
                             </div>
 
-                            <div class="col-12 mt-3"><span class="badge bg-soft-info text-info">RO (Reverse Osmosis)</span></div>
+                            <div class="col-12 mt-3"><span class="badge bg-soft-info text-info">RO (Reverse
+                                    Osmosis)</span></div>
                             <div class="col-md-4">
                                 <label class="form-label">Permeate Flowrate</label>
-                                <input type="number" step="0.01" name="ro_permeate_flowrate" id="edit_ro_permeate_flowrate" class="form-control">
+                                <input type="number" step="0.01" name="ro_permeate_flowrate"
+                                    id="edit_ro_permeate_flowrate" class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">RO Reject Flowrate</label>
-                                <input type="number" step="0.01" name="ro_reject_flowrate" id="edit_ro_reject_flowrate" class="form-control">
+                                <input type="number" step="0.01" name="ro_reject_flowrate"
+                                    id="edit_ro_reject_flowrate" class="form-control">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Flowmeter Accumulation</label>
-                                <input type="number" step="0.01" name="ro_flowmeter_accumulation" id="edit_ro_flowmeter_accumulation" class="form-control">
+                                <input type="number" step="0.01" name="ro_flowmeter_accumulation"
+                                    id="edit_ro_flowmeter_accumulation" class="form-control">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Pressure Inlet 1st Stage</label>
-                                <input type="number" step="0.01" name="ro_pressure_inlet_1st_stage" id="edit_ro_pressure_inlet_1st_stage" class="form-control">
+                                <input type="number" step="0.01" name="ro_pressure_inlet_1st_stage"
+                                    id="edit_ro_pressure_inlet_1st_stage" class="form-control">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Pressure Inlet 2nd Stage</label>
-                                <input type="number" step="0.01" name="ro_pressure_inlet_2nd_stage" id="edit_ro_pressure_inlet_2nd_stage" class="form-control">
+                                <input type="number" step="0.01" name="ro_pressure_inlet_2nd_stage"
+                                    id="edit_ro_pressure_inlet_2nd_stage" class="form-control">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Pressure Concentrate</label>
-                                <input type="number" step="0.01" name="ro_pressure_concentrate" id="edit_ro_pressure_concentrate" class="form-control">
+                                <input type="number" step="0.01" name="ro_pressure_concentrate"
+                                    id="edit_ro_pressure_concentrate" class="form-control">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Pressure RO Produk</label>
-                                <input type="number" step="0.01" name="ro_pressure_produk" id="edit_ro_pressure_produk" class="form-control">
+                                <input type="number" step="0.01" name="ro_pressure_produk"
+                                    id="edit_ro_pressure_produk" class="form-control">
                             </div>
 
-                            <div class="col-12 mt-3"><span class="badge bg-soft-danger text-danger">CIP (Clean In Place)</span></div>
+                            <div class="col-12 mt-3"><span class="badge bg-soft-danger text-danger">CIP (Clean In
+                                    Place)</span></div>
                             <div class="col-md-6">
                                 <label class="form-label">Keterangan CIP</label>
-                                <input type="text" name="cip_keterangan" id="edit_cip_keterangan" class="form-control">
+                                <input type="text" name="cip_keterangan" id="edit_cip_keterangan"
+                                    class="form-control">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Jenis Chemical CIP</label>
-                                <input type="text" name="cip_jenis_chemical" id="edit_cip_jenis_chemical" class="form-control">
+                                <input type="text" name="cip_jenis_chemical" id="edit_cip_jenis_chemical"
+                                    class="form-control">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Qty Chemical CIP</label>
-                                <input type="text" name="cip_qty_chemical" id="edit_cip_qty_chemical" class="form-control">
+                                <input type="text" name="cip_qty_chemical" id="edit_cip_qty_chemical"
+                                    class="form-control">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Hasil CIP</label>
@@ -330,7 +355,8 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title text-white"><i class="ri-file-excel-2-line me-1"></i> Export Excel Reverse Osmosis
+                    <h5 class="modal-title text-white"><i class="ri-file-excel-2-line me-1"></i> Export Excel Reverse
+                        Osmosis
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
@@ -415,12 +441,14 @@
                                         <button class="btn btn-sm btn-info" onclick="showDetail(${item.id})" title="Detail">
                                             <i class="ri-eye-line"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-primary" onclick="editData(${item.id})" title="Edit">
-                                            <i class="ri-edit-line"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})" title="Hapus">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>
+                                        @if (auth()->user()->jabatan != 'operator')
+                                            <button class="btn btn-sm btn-primary" onclick="editData(${item.id})" title="Edit">
+                                                <i class="ri-edit-line"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})" title="Hapus">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -674,7 +702,8 @@
             </li>`;
 
                 for (let i = 1; i <= pagination.last_page; i++) {
-                    if (i == 1 || i == pagination.last_page || (i >= pagination.current_page - 2 && i <= pagination.current_page + 2)) {
+                    if (i == 1 || i == pagination.last_page || (i >= pagination.current_page - 2 && i <= pagination
+                            .current_page + 2)) {
                         html += `<li class="page-item ${pagination.current_page == i ? 'active' : ''}">
                         <a class="page-link" href="javascript:void(0)" onclick="loadData(${i})">${i}</a>
                     </li>`;
@@ -738,9 +767,10 @@
             $('#btnExportConfirm').on('click', function() {
                 const bulan = $('select[name="bulan"]', '#formExport').val();
                 const tahun = $('input[name="tahun"]', '#formExport').val();
-                
+
                 let btn = $(this);
-                btn.prop('disabled', true).html('<i class="ri-loader-4-line align-middle me-1"></i> Downloading...');
+                btn.prop('disabled', true).html(
+                    '<i class="ri-loader-4-line align-middle me-1"></i> Downloading...');
 
                 fetch(`{{ route('reverse-osmosis.export') }}?bulan=${bulan}&tahun=${tahun}`)
                     .then(async response => {
@@ -750,14 +780,15 @@
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Data Tidak Ditemukan',
-                                text: json.message || 'Tidak ada data ditemukan untuk periode tersebut.'
+                                text: json.message ||
+                                    'Tidak ada data ditemukan untuk periode tersebut.'
                             });
                         } else if (response.ok) {
                             const blob = await response.blob();
                             const url = window.URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            
+
                             const disposition = response.headers.get('content-disposition');
                             let filename = 'Reverse_Osmosis_Report.xlsx';
                             if (disposition && disposition.indexOf('filename=') !== -1) {
@@ -770,7 +801,8 @@
                             window.URL.revokeObjectURL(url);
                             $('#modalExport').modal('hide');
                         } else {
-                            Swal.fire('Gagal!', 'Terjadi kesalahan saat mengunduh laporan.', 'error');
+                            Swal.fire('Gagal!', 'Terjadi kesalahan saat mengunduh laporan.',
+                                'error');
                         }
                     })
                     .catch(err => {
@@ -778,7 +810,8 @@
                         Swal.fire('Gagal!', 'Koneksi ke server gagal.', 'error');
                     })
                     .finally(() => {
-                        btn.prop('disabled', false).html('<i class="ri-download-cloud-2-line me-1"></i> Download Excel');
+                        btn.prop('disabled', false).html(
+                            '<i class="ri-download-cloud-2-line me-1"></i> Download Excel');
                     });
             });
         });

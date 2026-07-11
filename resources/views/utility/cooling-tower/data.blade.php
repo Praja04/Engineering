@@ -374,12 +374,14 @@
                                         <button class="btn btn-sm btn-info" onclick="showDetail(${item.id})" title="Detail">
                                             <i class="ri-eye-line"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-primary" onclick="editData(${item.id})" title="Edit">
-                                            <i class="ri-edit-line"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})" title="Hapus">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>
+                                        @if (auth()->user()->jabatan != 'operator')
+                                            <button class="btn btn-sm btn-primary" onclick="editData(${item.id})" title="Edit">
+                                                <i class="ri-edit-line"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteData(${item.id})" title="Hapus">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -667,9 +669,10 @@
             $('#btnExportConfirm').on('click', function() {
                 const bulan = $('select[name="bulan"]', '#formExport').val();
                 const tahun = $('input[name="tahun"]', '#formExport').val();
-                
+
                 let btn = $(this);
-                btn.prop('disabled', true).html('<i class="ri-loader-4-line align-middle me-1"></i> Downloading...');
+                btn.prop('disabled', true).html(
+                    '<i class="ri-loader-4-line align-middle me-1"></i> Downloading...');
 
                 fetch(`{{ route('cooling-tower.export') }}?bulan=${bulan}&tahun=${tahun}`)
                     .then(async response => {
@@ -679,14 +682,15 @@
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Data Tidak Ditemukan',
-                                text: json.message || 'Tidak ada data ditemukan untuk periode tersebut.'
+                                text: json.message ||
+                                    'Tidak ada data ditemukan untuk periode tersebut.'
                             });
                         } else if (response.ok) {
                             const blob = await response.blob();
                             const url = window.URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            
+
                             const disposition = response.headers.get('content-disposition');
                             let filename = 'Cooling_Tower_Report.xlsx';
                             if (disposition && disposition.indexOf('filename=') !== -1) {
@@ -699,7 +703,8 @@
                             window.URL.revokeObjectURL(url);
                             $('#modalExport').modal('hide');
                         } else {
-                            Swal.fire('Gagal!', 'Terjadi kesalahan saat mengunduh laporan.', 'error');
+                            Swal.fire('Gagal!', 'Terjadi kesalahan saat mengunduh laporan.',
+                                'error');
                         }
                     })
                     .catch(err => {
@@ -707,7 +712,8 @@
                         Swal.fire('Gagal!', 'Koneksi ke server gagal.', 'error');
                     })
                     .finally(() => {
-                        btn.prop('disabled', false).html('<i class="ri-download-cloud-2-line me-1"></i> Download Excel');
+                        btn.prop('disabled', false).html(
+                            '<i class="ri-download-cloud-2-line me-1"></i> Download Excel');
                     });
             });
         });
