@@ -80,10 +80,10 @@ class MtcRefrigerasiModel extends Model
         'check_jalur_freon' => 'boolean',
         'check_jalur_distribusi_udara' => 'boolean',
         'check_jalur_return_udara' => 'boolean',
-        'check_suhu_supply' => 'boolean',
-        'check_suhu_return' => 'boolean',
-        'check_flow_supply' => 'boolean',
-        'check_flow_return' => 'boolean',
+        'check_suhu_supply' => 'float',
+        'check_suhu_return' => 'float',
+        'check_flow_supply' => 'float',
+        'check_flow_return' => 'float',
     ];
 
     public function main()

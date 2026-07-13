@@ -69,14 +69,24 @@
  $isAHU = str_contains($namaMesin, 'AHU');
  $isAC = str_contains($namaMesin, 'AC');
 
- function badge($v)
- {
- return $v === null
- ? '<span class="badge bg-secondary">No Check</span>'
- : ($v
- ? '<span class="badge bg-success">OK</span>'
- : '<span class="badge bg-danger">NG</span>');
- }
+ $numericFields = [
+      'check_suhu_supply' => true,
+      'check_suhu_return' => true,
+      'check_flow_supply' => true,
+      'check_flow_return' => true,
+  ];
+
+  function badge($v, $isNumeric = false)
+  {
+      if ($isNumeric) {
+          return $v === null ? '-' : '<strong>' . htmlspecialchars($v) . '</strong>';
+      }
+      return $v === null
+          ? '<span class="badge bg-secondary">No Check</span>'
+          : ($v
+              ? '<span class="badge bg-success">OK</span>'
+              : '<span class="badge bg-danger">NG</span>');
+  }
  @endphp
 
  <h5 class="mb-3">Mtc Refrigerasi Inspection</h5>
@@ -150,7 +160,7 @@
               </td>
               @endif
               <td>{{ $label }}</td>
-              <td class="text-center">{!! badge($data->$field) !!}</td>
+              <td class="text-center">{!! badge($data->$field, isset($numericFields[$field])) !!}</td>
           </tr>
           @endforeach
           @endforeach

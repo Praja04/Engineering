@@ -149,6 +149,13 @@
                                 'check_flow_return' => 'Check Flow Return', // AHU
                             ];
 
+                            $numericFields = [
+                                'check_suhu_supply' => true,
+                                'check_suhu_return' => true,
+                                'check_flow_supply' => true,
+                                'check_flow_return' => true,
+                            ];
+
                             $fieldTypes = [
                                 'check_filter_udara' => 'both',
                                 'check_cover_filter_udara' => 'both',
@@ -186,7 +193,8 @@
                             <div class="row g-3 mb-3">
                                 @foreach ($row as $field => $label)
                                     <div class="col-md-6 col-12">
-                                        <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}" data-type="{{ $fieldTypes[$field] ?? 'both' }}">
+                                        <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}"
+                                            data-type="{{ $fieldTypes[$field] ?? 'both' }}">
 
                                             <label class="form-label fw-semibold" data-label="{{ $field }}">
                                                 {{ $label }}
@@ -222,8 +230,8 @@
                             <div class="row g-3 mb-3">
                                 @foreach ($row as $field => $label)
                                     <div class="col-md-6 col-12">
-                                        <div class="card shadow-sm item-card p-3 item-row"
-                                            data-field="{{ $field }}" data-type="{{ $fieldTypes[$field] ?? 'both' }}">
+                                        <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}"
+                                            data-type="{{ $fieldTypes[$field] ?? 'both' }}">
 
                                             <label class="form-label fw-semibold" data-label="{{ $field }}">
                                                 {{ $label }}
@@ -262,31 +270,38 @@
                                 @foreach ($row as $field => $label)
                                     <div class="col-md-6 col-12">
                                         <div class="card shadow-sm item-card p-3 item-row"
-                                            data-field="{{ $field }}" data-type="{{ $fieldTypes[$field] ?? 'both' }}">
+                                            data-field="{{ $field }}"
+                                            data-type="{{ $fieldTypes[$field] ?? 'both' }}">
 
                                             <label class="form-label fw-semibold" data-label="{{ $field }}">
                                                 {{ $label }}
                                             </label>
 
-                                            <div class="btn-group btn-group-sm w-100">
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="1"
-                                                    id="{{ $field }}_ok">
-                                                <label class="btn btn-outline-success"
-                                                    for="{{ $field }}_ok">OK</label>
+                                            @if (isset($numericFields[$field]))
+                                                <input type="number" step="0.01" class="form-control form-control-sm"
+                                                    name="{{ $field }}" id="{{ $field }}"
+                                                    placeholder="Masukkan nilai numeric...">
+                                            @else
+                                                <div class="btn-group btn-group-sm w-100">
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="1"
+                                                        id="{{ $field }}_ok">
+                                                    <label class="btn btn-outline-success"
+                                                        for="{{ $field }}_ok">OK</label>
 
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="0"
-                                                    id="{{ $field }}_ng">
-                                                <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
-                                                    OK</label>
-                                            </div>
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="0"
+                                                        id="{{ $field }}_ng">
+                                                    <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
+                                                        OK</label>
+                                                </div>
 
-                                            <div class="keterangan-wrapper d-none mt-2">
-                                                <input type="text" class="form-control form-control-sm"
-                                                    name="keterangan_{{ $field }}"
-                                                    placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
-                                            </div>
+                                                <div class="keterangan-wrapper d-none mt-2">
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        name="keterangan_{{ $field }}"
+                                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                </div>
+                                            @endif
 
                                         </div>
                                     </div>
@@ -381,6 +396,7 @@
             </div>
         </div>
     </div>
+
     {{-- Modal Pilih Approver --}}
     <div class="modal fade" id="modalApprover" tabindex="-1">
         <div class="modal-dialog">
@@ -524,6 +540,7 @@
                         $col.addClass('d-none');
                         // Reset input for hidden row
                         $row.find('input[type="radio"]').prop('checked', false);
+                        $row.find('input[type="number"]').val('');
                         $row.find('.keterangan-wrapper').addClass('d-none');
                         $row.find('input[type="text"]').val('').removeAttr('required');
                         $row.removeClass('not-ok');

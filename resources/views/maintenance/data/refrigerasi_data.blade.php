@@ -331,6 +331,13 @@
             let currentRows = [];
             const mesinList = @json($mesin);
 
+            const numericFields = {
+                'check_suhu_supply': true,
+                'check_suhu_return': true,
+                'check_flow_supply': true,
+                'check_flow_return': true
+            };
+
             const fields = {
                 unit_indoor: [
                     ['check_filter_udara', 'Check Filter Udara'],
@@ -460,6 +467,7 @@
                         $col.find('input[type="radio"]').prop('checked', false);
                         // Checked "No Check" radio button so it sends default blank value
                         $col.find('input[value=""]').prop('checked', true);
+                        $col.find('input[type="number"]').val('');
                         $col.find('.ket-wrap').addClass('d-none');
                         $col.find('.ket-input').val('').removeAttr('required');
                     }
@@ -507,12 +515,21 @@
                         return true;
                     });
 
-                    const cells = filteredItems.map(([key, label]) => `
-                        <div class="item-cell">
-                            <div class="item-label">${label}</div>
-                            <div>${statusBadge(row.refrigerasi?.[key])}</div>
-                        </div>
-                    `).join('');
+                    const cells = filteredItems.map(([key, label]) => {
+                        let displayValue;
+                        if (numericFields[key]) {
+                            const val = row.refrigerasi?.[key];
+                            displayValue = (val !== null && val !== undefined && val !== '') ? `<strong>${val}</strong>` : '-';
+                        } else {
+                            displayValue = statusBadge(row.refrigerasi?.[key]);
+                        }
+                        return `
+                            <div class="item-cell">
+                                <div class="item-label">${label}</div>
+                                <div>${displayValue}</div>
+                            </div>
+                        `;
+                    }).join('');
 
                     return `
                         <div class="mb-3">
@@ -811,10 +828,25 @@
                 return '';
             }
 
-            function renderEditSection(title, items, row) {
+             function renderEditSection(title, items, row) {
                 const cells = items.map(([key, label]) => {
-                    const state = valToState(row.refrigerasi?.[key]);
                     const type = fieldTypes[key] ?? 'both';
+
+                    if (numericFields[key]) {
+                        const val = row.refrigerasi?.[key] ?? '';
+                        return `
+                            <div class="col-lg-4 col-md-6 col-12 edit-col" data-type="${type}">
+                                <div class="item-edit" data-field="${key}" data-label="${key}" data-label-display="${label}">
+                                    <div class="d-flex flex-column gap-1">
+                                        <div class="item-label">${label}</div>
+                                        <input type="number" step="0.01" class="form-control form-control-sm numeric-edit-input" name="${key}" value="${val}" placeholder="Masukkan nilai numeric...">
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    const state = valToState(row.refrigerasi?.[key]);
                     return `
                         <div class="col-lg-4 col-md-6 col-12 edit-col" data-type="${type}">
                             <div class="item-edit" data-field="${key}" data-label="${key}" data-label-display="${label}">

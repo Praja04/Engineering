@@ -57,10 +57,10 @@ class MtcRefrigerasiRequest extends FormRequest
             'check_jalur_freon' => 'nullable|boolean',
             'check_jalur_distribusi_udara' => 'nullable|boolean',
             'check_jalur_return_udara' => 'nullable|boolean',
-            'check_suhu_supply' => 'nullable|boolean',
-            'check_suhu_return' => 'nullable|boolean',
-            'check_flow_supply' => 'nullable|boolean',
-            'check_flow_return' => 'nullable|boolean',
+            'check_suhu_supply' => 'nullable|numeric',
+            'check_suhu_return' => 'nullable|numeric',
+            'check_flow_supply' => 'nullable|numeric',
+            'check_flow_return' => 'nullable|numeric',
         ];
     }
 
@@ -101,12 +101,19 @@ class MtcRefrigerasiRequest extends FormRequest
                 'check_flow_return',
             ];
 
-            // minimal ada 1 yang bernilai true / 1 / "on"
+            // minimal ada 1 yang bernilai true / 1 / "on" (atau terisi numeric)
             $hasAnyChecked = false;
             foreach ($checklistFields as $field) {
-                if ($this->boolean($field)) { // true kalau field ada & truthy
-                    $hasAnyChecked = true;
-                    break;
+                if (in_array($field, ['check_suhu_supply', 'check_suhu_return', 'check_flow_supply', 'check_flow_return'])) {
+                    if ($this->input($field) !== null && $this->input($field) !== '') {
+                        $hasAnyChecked = true;
+                        break;
+                    }
+                } else {
+                    if ($this->boolean($field)) { // true kalau field ada & truthy
+                        $hasAnyChecked = true;
+                        break;
+                    }
                 }
             }
 
