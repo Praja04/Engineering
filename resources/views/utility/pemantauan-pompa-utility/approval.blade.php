@@ -2,6 +2,17 @@
 
 @section('title', 'Approval Pemantauan Pompa Utility')
 
+@section('styles')
+    <style>
+        .collapse-trigger[aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.2s ease;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
@@ -76,29 +87,9 @@
                         </div>
                     </div>
 
-                    <!-- Details Table -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm align-middle text-nowrap">
-                            <thead class="table-light text-center small">
-                                <tr>
-                                    <th>Tanggal</th>
-                                    @for ($i = 1; $i <= 22; $i++)
-                                        <th>F{{ $i }}</th>
-                                    @endfor
-                                </tr>
-                            </thead>
-                            <tbody id="tbodyReviewDetails" class="small">
-                                <!-- Rows injected via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="alert alert-info mt-3 py-2 small">
-                        <strong>Keterangan Kolom:</strong><br>
-                        F1: Cek Ampere Pompa 10P3 | F2: 10P3A | F3: 10P4 | F4: 10P4A | F5: 10P5B | F6: 20P1 | F7: 20P1A |
-                        F8: 20P2 | F9: 20P2A | F10: 60P1 | F11: 60P2 | F12: 60P3 | F13: HP PUMP | F14: CIP PUMP | F15: TF WS
-                        | F16: Fan 1 | F17: Fan 2 | F18: Fan 3 | F19: Fan 4 | F20: CT 10000P1 | F21: CT 10000P2 | F22: CT
-                        10000P3
+                    <!-- Details Collapsible List -->
+                    <div id="modalReviewContent" class="px-2">
+                        <!-- Injected via JS -->
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -233,6 +224,57 @@
             });
         }
 
+        const FIELDS_10P_20P = [
+            { field: 'ampere_pompa_10p3', label: 'Cek Ampere Pompa 10P3' },
+            { field: 'ampere_pompa_10p3a', label: 'Cek Ampere Pompa 10P3A' },
+            { field: 'ampere_pompa_10p4', label: 'Cek Ampere Pompa 10P4' },
+            { field: 'ampere_pompa_10p4a', label: 'Cek Ampere Pompa 10P4A' },
+            { field: 'ampere_pompa_10p5b', label: 'Cek Ampere Pompa 10P5B' },
+            { field: 'ampere_pompa_20p1', label: 'Cek Ampere Pompa 20P1' },
+            { field: 'ampere_pompa_20p1a', label: 'Cek Ampere Pompa 20P1A' },
+            { field: 'ampere_pompa_20p2', label: 'Cek Ampere Pompa 20P2' },
+            { field: 'ampere_pompa_20p2a', label: 'Cek Ampere Pompa 20P2A' }
+        ];
+
+        const FIELDS_60P_UTILITY = [
+            { field: 'ampere_pompa_60p1', label: 'Cek Ampere Pompa 60P1' },
+            { field: 'ampere_pompa_60p2', label: 'Cek Ampere Pompa 60P2' },
+            { field: 'ampere_pompa_60p3', label: 'Cek Ampere Pompa 60P3' },
+            { field: 'ampere_pompa_hp_pump', label: 'Cek Ampere Pompa HP Pump' },
+            { field: 'ampere_pompa_cip_pump', label: 'Cek Ampere Pompa CIP Pump' },
+            { field: 'ampere_pompa_tf_ws', label: 'Cek Ampere Pompa TF WS' }
+        ];
+
+        const FIELDS_FAN_CT = [
+            { field: 'ampere_fan_1', label: 'Cek Ampere Fan 1' },
+            { field: 'ampere_fan_2', label: 'Cek Ampere Fan 2' },
+            { field: 'ampere_fan_3', label: 'Cek Ampere Fan 3' },
+            { field: 'ampere_fan_4', label: 'Cek Ampere Fan 4' },
+            { field: 'ampere_pompa_ct_10000p1', label: 'Cek Ampere Pompa CT 10000P1' },
+            { field: 'ampere_pompa_ct_10000p2', label: 'Cek Ampere Pompa CT 10000P2' },
+            { field: 'ampere_pompa_ct_10000p3', label: 'Cek Ampere Pompa CT 10000P3' }
+        ];
+
+        function buildChecklistStatusHtml(item, fieldList) {
+            let listHtml = '<ul class="list-group list-group-flush">';
+            fieldList.forEach(f => {
+                let badge = '<span class="badge bg-secondary">-</span>';
+                if (item[f.field] === 'OK') badge =
+                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
+                else if (item[f.field] === 'NOK') badge =
+                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+
+                listHtml += `
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 border-bottom-0">
+                    <span class="small fw-medium text-muted" style="font-size: 0.8rem; text-align: left;">${f.label}</span>
+                    ${badge}
+                </li>
+                `;
+            });
+            listHtml += '</ul>';
+            return listHtml;
+        }
+
         function reviewDetails(id) {
             $.ajax({
                 url: `{{ url('utility/pemantauan-pompa-utility/show-monthly') }}/${id}`,
@@ -246,27 +288,55 @@
 
                     let detailsHtml = '';
                     res.details.forEach(d => {
-                        let rowCells = '';
+                        let countOk = 0;
+                        let countNok = 0;
                         FIELDS.forEach(f => {
-                            let cellVal = d[f] || '';
-                            let badge = '-';
-                            if (cellVal === 'OK') badge =
-                                '<span class="text-success fw-bold">✓</span>';
-                            else if (cellVal === 'NOK') badge =
-                                '<span class="text-danger fw-bold">✗</span>';
-
-                            rowCells += `<td class="text-center">${badge}</td>`;
+                            if (d[f] === 'OK') countOk++;
+                            else if (d[f] === 'NOK') countNok++;
                         });
 
                         detailsHtml += `
-                        <tr>
-                            <td class="text-center fw-medium bg-light">${d.tanggal}</td>
-                            ${rowCells}
-                        </tr>
+                        <div class="card border mb-2 shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 collapse-trigger" 
+                                 role="button" 
+                                 data-bs-toggle="collapse" 
+                                 data-bs-target="#collapse-${d.id}" 
+                                 aria-expanded="false"
+                                 style="cursor: pointer;">
+                                <span class="fw-bold text-dark"><i class="ri-calendar-event-line me-2 text-primary"></i>Tanggal: ${d.tanggal}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-success">${countOk} OK</span>
+                                    <span class="badge bg-danger">${countNok} NOK</span>
+                                    <i class="ri-arrow-down-s-line fs-5 transition-icon"></i>
+                                </div>
+                            </div>
+                            <div id="collapse-${d.id}" class="collapse">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-primary mb-2 small border-bottom pb-1">Pompa 10P & Pompa 20P</div>
+                                            ${buildChecklistStatusHtml(d, FIELDS_10P_20P)}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-warning-emphasis mb-2 small border-bottom pb-1">Pompa 60P & Pompa Utility</div>
+                                            ${buildChecklistStatusHtml(d, FIELDS_60P_UTILITY)}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-danger mb-2 small border-bottom pb-1">Fan & Pompa CT</div>
+                                            ${buildChecklistStatusHtml(d, FIELDS_FAN_CT)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         `;
                     });
 
-                    $('#tbodyReviewDetails').html(detailsHtml);
+                    if (res.details.length === 0) {
+                        detailsHtml = '<div class="alert alert-warning text-center">Tidak ada data checklist harian</div>';
+                    }
+
+                    $('#modalReviewContent').html(detailsHtml);
                     $('#modalReview').modal('show');
                 }
             });

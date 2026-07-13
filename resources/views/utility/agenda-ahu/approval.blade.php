@@ -2,6 +2,18 @@
 
 @section('title', 'Approval Bulanan Agenda AHU')
 
+@section('styles')
+    <style>
+        .collapse-trigger[aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+
+        .transition-icon {
+            transition: transform 0.2s ease;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
@@ -347,30 +359,38 @@
                         $('#modalMonthlyTitle').text(
                             `Detail Laporan Bulanan - ${moment().month(header.bulan - 1).format('MMMM')} ${header.tahun}`
                         );
-                        $('#hdr_operator').text(header.operator ? header.operator.name : '-');
-                        $('#hdr_foreman').text(header.foreman ? header.foreman.name : '-');
-                        $('#hdr_supervisor').text(header.supervisor ? header.supervisor.name : '-');
+                        $('#hdr_operator').text(header.operator ? header.operator.username : '-');
+                        $('#hdr_foreman').text(header.foreman ? header.foreman.username : '-');
+                        $('#hdr_supervisor').text(header.supervisor ? header.supervisor.username : '-');
 
                         let html = '';
                         res.details.forEach(d => {
                             html += `
-                                <div class="card mb-3 border">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0 fw-bold">${d.tanggal}</h6>
+                                <div class="card mb-3 border shadow-sm">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 collapse-trigger" 
+                                         role="button" 
+                                         data-bs-toggle="collapse" 
+                                         data-bs-target="#collapse-${d.id}" 
+                                         aria-expanded="false" 
+                                         style="cursor: pointer;">
+                                        <h6 class="mb-0 fw-bold text-dark"><i class="ri-calendar-event-line me-2 text-primary"></i>Tanggal: ${d.tanggal}</h6>
+                                        <i class="ri-arrow-down-s-line fs-5 transition-icon"></i>
                                     </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="fw-bold text-primary mb-2">Cek Kelistrikan & Pressure</div>
-                                                ${buildChecklistStatusHtml(d, FIELDS_KELISTRIKAN_PRESSURE)}
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="fw-bold text-warning-emphasis mb-2">Cek Temperature Gauge</div>
-                                                ${buildChecklistStatusHtml(d, FIELDS_TEMPERATURE)}
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="fw-bold text-danger mb-2">Cleaning & Inspeksi</div>
-                                                ${buildChecklistStatusHtml(d, FIELDS_CLEAN_INSPEKSI)}
+                                    <div id="collapse-${d.id}" class="collapse">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="fw-bold text-primary mb-2">Cek Kelistrikan & Pressure</div>
+                                                    ${buildChecklistStatusHtml(d, FIELDS_KELISTRIKAN_PRESSURE)}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="fw-bold text-warning-emphasis mb-2">Cek Temperature Gauge</div>
+                                                    ${buildChecklistStatusHtml(d, FIELDS_TEMPERATURE)}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="fw-bold text-danger mb-2">Cleaning & Inspeksi</div>
+                                                    ${buildChecklistStatusHtml(d, FIELDS_CLEAN_INSPEKSI)}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

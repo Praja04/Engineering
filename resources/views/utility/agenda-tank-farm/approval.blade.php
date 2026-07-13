@@ -2,6 +2,17 @@
 
 @section('title', 'Approval Bulanan Agenda Tank Farm & Hydrant')
 
+@section('styles')
+    <style>
+        .collapse-trigger[aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.2s ease;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
@@ -441,6 +452,77 @@
             }
         ];
 
+        const FIELDS_SUMUR = [
+            { field: 'kelistrikan_pompa_sumur_1', label: 'Cek Kelistrikan (A, V) Pompa Sumur 1' },
+            { field: 'kelistrikan_pompa_sumur_2', label: 'Cek Kelistrikan (A, V) Pompa Sumur 2' },
+            { field: 'kelistrikan_pompa_sumur_4', label: 'Cek Kelistrikan (A, V) Pompa Sumur 4' },
+            { field: 'kelistrikan_pompa_sumur_5', label: 'Cek Kelistrikan (A, V) Pompa Sumur 5' },
+            { field: 'pressure_pompa_sumur_1', label: 'Cek Pressure Pompa Sumur 1' },
+            { field: 'pressure_pompa_sumur_2', label: 'Cek Pressure Pompa Sumur 2' },
+            { field: 'pressure_pompa_sumur_4', label: 'Cek Pressure Pompa Sumur 4' },
+            { field: 'pressure_pompa_sumur_5', label: 'Cek Pressure Pompa Sumur 5' },
+            { field: 'flow_meter_pompa_sumur_1', label: 'Cek Flow Meter Pompa Sumur 1' },
+            { field: 'flow_meter_pompa_sumur_2', label: 'Cek Flow Meter Pompa Sumur 2' },
+            { field: 'flow_meter_pompa_sumur_4', label: 'Cek Flow Meter Pompa Sumur 4' },
+            { field: 'flow_meter_pompa_sumur_5', label: 'Cek Flow Meter Pompa Sumur 5' },
+            { field: 'drain_lumpur_settling_tank', label: 'Drain Lumpur Settling Tank' }
+        ];
+
+        const FIELDS_TRANSFER = [
+            { field: 'kelistrikan_pompa_10p3', label: 'Cek Kelistrikan (A, V) Pompa 10P3' },
+            { field: 'kelistrikan_pompa_10p3a', label: 'Cek Kelistrikan (A, V) Pompa 10P3a' },
+            { field: 'pressure_gauge_intermediate', label: 'Cek Pressure Gauge Intermediate' },
+            { field: 'level_bandul_tank_farm', label: 'Cek Level Bandul Tank Farm' },
+            { field: 'flow_meter_fresh_water_tank', label: 'Cek Flow Meter Fresh Water Tank' },
+            { field: 'flow_meter_fwt_to_ro', label: 'Cek Flow Meter Fresh Water Tank to Mesin RO' },
+            { field: 'kelistrikan_pompa_10p4', label: 'Cek Kelistrikan (A, V) Pompa 10P4' },
+            { field: 'kelistrikan_pompa_10p4a', label: 'Cek Kelistrikan (A, V) Pompa 10P4a' },
+            { field: 'pressure_gauge_pompa_10p4_p4a', label: 'Cek Pressure Gauge Pompa 10P4 & P4a' },
+            { field: 'kelistrikan_pompa_10p5', label: 'Cek Kelistrikan (A, V) Pompa 10P5' },
+            { field: 'kelistrikan_pompa_10p5a', label: 'Cek Kelistrikan (A, V) Pompa 10P5a' },
+            { field: 'kelistrikan_pompa_10p5b', label: 'Cek Kelistrikan (A, V) Pompa 10P5b' },
+            { field: 'flow_meter_ro_reject_tank', label: 'Cek Flow Meter RO Reject Tank' },
+            { field: 'pressure_gauge_pompa_10p5_10p5a', label: 'Cek Pressure Gauge Pompa 10P5 & 10P5a' },
+            { field: 'drain_lumpur_tangki_intermediate', label: 'Drain Lumpur Tangki Intermediate' },
+            { field: 'inspeksi_all_pompa_tf_intermediate', label: 'Inspeksi All Pompa Tank Farm dan Intermediet (HLT)' }
+        ];
+
+        const FIELDS_HYDRANT = [
+            { field: 'inspeksi_pompa_20p1', label: 'Inspeksi (HLTE) Pompa 20P1' },
+            { field: 'inspeksi_pompa_20p1a', label: 'Inspeksi (HLTE) Pompa 20P1a' },
+            { field: 'kelistrikan_pompa_20p2', label: 'Cek Kelistrikan (A, V) Pompa 20P2' },
+            { field: 'kelistrikan_pompa_20p2a', label: 'Cek Kelistrikan (A, V) Pompa 20P2a' },
+            { field: 'kelistrikan_pompa_60p1', label: 'Cek Kelistrikan (A, V) Pompa 60P1' },
+            { field: 'kelistrikan_pompa_60p2', label: 'Cek Kelistrikan (A, V) Pompa 60P2' },
+            { field: 'kelistrikan_pompa_60p3', label: 'Cek Kelistrikan (A, V) Pompa 60P3' },
+            { field: 'pressure_gauge_pompa_60p1', label: 'Cek Pressure Gauge Pompa 60P1' },
+            { field: 'pressure_gauge_pompa_60p2', label: 'Cek Pressure Gauge Pompa 60P2' },
+            { field: 'pressure_gauge_pompa_60p3', label: 'Cek Pressure Gauge Pompa 60P3' },
+            { field: 'baterai_pompa_60p3', label: 'Cek Batterai Pompa 60P3' },
+            { field: 'bahan_bakar_pompa_60p3', label: 'Cek Bahan Bakar Pompa 60P3' },
+            { field: 'pressure_gauge_water_tank_hydrant', label: 'Cek Pressure Gauge Water Tank Hydrant' }
+        ];
+
+        function buildChecklistStatusHtml(item, fieldList) {
+            let listHtml = '<ul class="list-group list-group-flush">';
+            fieldList.forEach(f => {
+                let badge = '<span class="badge bg-secondary">-</span>';
+                if (item[f.field] === 'OK') badge =
+                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
+                else if (item[f.field] === 'NOK') badge =
+                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+
+                listHtml += `
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 border-bottom-0">
+                    <span class="small fw-medium text-muted" style="font-size: 0.8rem; text-align: left;">${f.label}</span>
+                    ${badge}
+                </li>
+                `;
+            });
+            listHtml += '</ul>';
+            return listHtml;
+        }
+
         function showDetails(id) {
             $.get("{{ url('utility/agenda-tank-farm/show-monthly') }}/" + id, function(res) {
                 let main = res.header;
@@ -462,13 +544,37 @@
                     });
 
                     contentHtml += `
-                    <div class="card border mb-2">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
-                            <span class="fw-bold">Tanggal: ${item.tanggal}</span>
-                            <span>
-                                <span class="badge bg-success me-1">${countOk} OK</span>
+                    <div class="card border mb-2 shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 collapse-trigger" 
+                             role="button" 
+                             data-bs-toggle="collapse" 
+                             data-bs-target="#collapse-${item.id}" 
+                             aria-expanded="false"
+                             style="cursor: pointer;">
+                            <span class="fw-bold text-dark"><i class="ri-calendar-event-line me-2 text-primary"></i>Tanggal: ${item.tanggal}</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success">${countOk} OK</span>
                                 <span class="badge bg-danger">${countNok} NOK</span>
-                            </span>
+                                <i class="ri-arrow-down-s-line fs-5 transition-icon"></i>
+                            </div>
+                        </div>
+                        <div id="collapse-${item.id}" class="collapse">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="fw-bold text-primary mb-2 small border-bottom pb-1">Pompa Sumur & Settling Tank</div>
+                                        ${buildChecklistStatusHtml(item, FIELDS_SUMUR)}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="fw-bold text-warning-emphasis mb-2 small border-bottom pb-1">Pompa Transfer & Intermediate</div>
+                                        ${buildChecklistStatusHtml(item, FIELDS_TRANSFER)}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="fw-bold text-danger mb-2 small border-bottom pb-1">Pompa Hydrant & Pompa 20P</div>
+                                        ${buildChecklistStatusHtml(item, FIELDS_HYDRANT)}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     `;

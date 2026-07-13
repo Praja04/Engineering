@@ -2,6 +2,17 @@
 
 @section('title', 'Approval Agenda Cooling Tower')
 
+@section('styles')
+    <style>
+        .collapse-trigger[aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.2s ease;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
@@ -76,47 +87,9 @@
                         </div>
                     </div>
 
-                    <!-- Details Table -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm align-middle text-nowrap">
-                            <thead class="table-light text-center small align-middle">
-                                <tr>
-                                    <th>Tanggal</th>
-                                    @for ($i = 1; $i <= 36; $i++)
-                                        <th>F{{ $i }}</th>
-                                    @endfor
-                                </tr>
-                            </thead>
-                            <tbody id="tbodyReviewDetails" class="small">
-                                <!-- Rows injected via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="alert alert-info mt-3 py-2 small">
-                        <strong>Keterangan Kolom:</strong><br>
-                        <div class="row">
-                            <div class="col-md-4">
-                                F1-F3: Kelistrikan Pompa 10000P2, P2a, P2b<br>
-                                F4-F7: Kelistrikan Fan 1, 2, 3, 4<br>
-                                F8-F9: Suhu Out & In Cooling Tower<br>
-                                F10-F11: Pressure Out & In CT<br>
-                                F12-F13: pH Air CT & Stok Chemical
-                            </div>
-                            <div class="col-md-4">
-                                F14: Cleaning Saringan Bak CT<br>
-                                F15-F17: Cleaning Strainer Pompa 10000P2, P2a, P2b<br>
-                                F18-F20: Greasing Pompa 10000P2, P2a, P2b<br>
-                                F21-F23: Pengecekan Rubber Coupling Pompa 10000P2, P2a, P2b<br>
-                                F24-F26: Cleaning Check Valve Pompa 10000P2, P2a, P2b
-                            </div>
-                            <div class="col-md-4">
-                                F27: Kalibrasi Dosis Chemical<br>
-                                F28-F31: Greasing & Cleaning Fan 1, 2, 3, 4<br>
-                                F32-F35: Pengecekan Sling Fan CT 1, 2, 3, 4<br>
-                                F36: Inspeksi Baut & Mur (All)
-                            </div>
-                        </div>
+                    <!-- Details Collapsible List -->
+                    <div id="modalReviewContent" class="px-2">
+                        <!-- Injected via JS -->
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -263,6 +236,71 @@
             });
         }
 
+        const FIELDS_KEL_SUHU = [
+            { field: 'kelistrikan_pompa_10000p2', label: 'Kelistrikan Pompa 10000P2' },
+            { field: 'kelistrikan_pompa_10000p2a', label: 'Kelistrikan Pompa 10000P2a' },
+            { field: 'kelistrikan_pompa_10000p2b', label: 'Kelistrikan Pompa 10000P2b' },
+            { field: 'kelistrikan_fan_1', label: 'Kelistrikan Fan 1' },
+            { field: 'kelistrikan_fan_2', label: 'Kelistrikan Fan 2' },
+            { field: 'kelistrikan_fan_3', label: 'Kelistrikan Fan 3' },
+            { field: 'kelistrikan_fan_4', label: 'Kelistrikan Fan 4' },
+            { field: 'suhu_out_ct', label: 'Suhu Out CT' },
+            { field: 'suhu_in_ct', label: 'Suhu In CT' },
+            { field: 'pressure_out_ct', label: 'Pressure Out CT' },
+            { field: 'pressure_in_ct', label: 'Pressure In CT' },
+            { field: 'ph_air_ct', label: 'pH Air CT' },
+            { field: 'stok_chemical', label: 'Stok Chemical' }
+        ];
+
+        const FIELDS_CLEAN_GREASE = [
+            { field: 'cleaning_saringan_bak', label: 'Cleaning Saringan Bak CT' },
+            { field: 'cleaning_strainer_10000p2', label: 'Cleaning Strainer Pompa 10000P2' },
+            { field: 'cleaning_strainer_10000p2a', label: 'Cleaning Strainer Pompa 10000P2a' },
+            { field: 'cleaning_strainer_10000p2b', label: 'Cleaning Strainer Pompa 10000P2b' },
+            { field: 'greasing_pompa_10000p2', label: 'Greasing Pompa 10000P2' },
+            { field: 'greasing_pompa_10000p2a', label: 'Greasing Pompa 10000P2a' },
+            { field: 'greasing_pompa_10000p2b', label: 'Greasing Pompa 10000P2b' },
+            { field: 'rubber_coupling_10000p2', label: 'Rubber Coupling Pompa 10000P2' },
+            { field: 'rubber_coupling_10000p2a', label: 'Rubber Coupling Pompa 10000P2a' },
+            { field: 'rubber_coupling_10000p2b', label: 'Rubber Coupling Pompa 10000P2b' },
+            { field: 'cleaning_valve_10000p2', label: 'Cleaning Check Valve Pompa 10000P2' },
+            { field: 'cleaning_valve_10000p2a', label: 'Cleaning Check Valve Pompa 10000P2a' },
+            { field: 'cleaning_valve_10000p2b', label: 'Cleaning Check Valve Pompa 10000P2b' }
+        ];
+
+        const FIELDS_FAN_INSP = [
+            { field: 'kalibrasi_dosis_chemical', label: 'Kalibrasi Dosis Chemical' },
+            { field: 'greasing_cleaning_fan_1', label: 'Greasing & Cleaning Fan 1' },
+            { field: 'greasing_cleaning_fan_2', label: 'Greasing & Cleaning Fan 2' },
+            { field: 'greasing_cleaning_fan_3', label: 'Greasing & Cleaning Fan 3' },
+            { field: 'greasing_cleaning_fan_4', label: 'Greasing & Cleaning Fan 4' },
+            { field: 'sling_fan_ct_1', label: 'Pengecekan Sling Fan CT 1' },
+            { field: 'sling_fan_ct_2', label: 'Pengecekan Sling Fan CT 2' },
+            { field: 'sling_fan_ct_3', label: 'Pengecekan Sling Fan CT 3' },
+            { field: 'sling_fan_ct_4', label: 'Pengecekan Sling Fan CT 4' },
+            { field: 'inspeksi_baut_mur', label: 'Inspeksi Baut & Mur (All)' }
+        ];
+
+        function buildChecklistStatusHtml(item, fieldList) {
+            let listHtml = '<ul class="list-group list-group-flush">';
+            fieldList.forEach(f => {
+                let badge = '<span class="badge bg-secondary">-</span>';
+                if (item[f.field] === 'OK') badge =
+                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
+                else if (item[f.field] === 'NOK') badge =
+                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+
+                listHtml += `
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 border-bottom-0">
+                    <span class="small fw-medium text-muted" style="font-size: 0.8rem; text-align: left;">${f.label}</span>
+                    ${badge}
+                </li>
+                `;
+            });
+            listHtml += '</ul>';
+            return listHtml;
+        }
+
         function reviewDetails(id) {
             $.ajax({
                 url: `{{ url('utility/agenda-cooling-tower/show-monthly') }}/${id}`,
@@ -276,25 +314,55 @@
 
                     let detailsHtml = '';
                     res.details.forEach(d => {
-                        let rowCells = '';
+                        let countOk = 0;
+                        let countNok = 0;
                         FIELDS.forEach(f => {
-                            let cellVal = d[f] || '';
-                            let badge = '-';
-                            if (cellVal === 'OK') badge = '<span class="text-success fw-bold">✓</span>';
-                            else if (cellVal === 'NOK') badge = '<span class="text-danger fw-bold">✗</span>';
-
-                            rowCells += `<td class="text-center">${badge}</td>`;
+                            if (d[f] === 'OK') countOk++;
+                            else if (d[f] === 'NOK') countNok++;
                         });
 
                         detailsHtml += `
-                        <tr>
-                            <td class="text-center fw-medium bg-light">${d.tanggal}</td>
-                            ${rowCells}
-                        </tr>
+                        <div class="card border mb-2 shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 collapse-trigger" 
+                                 role="button" 
+                                 data-bs-toggle="collapse" 
+                                 data-bs-target="#collapse-${d.id}" 
+                                 aria-expanded="false"
+                                 style="cursor: pointer;">
+                                <span class="fw-bold text-dark"><i class="ri-calendar-event-line me-2 text-primary"></i>Tanggal: ${d.tanggal}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-success">${countOk} OK</span>
+                                    <span class="badge bg-danger">${countNok} NOK</span>
+                                    <i class="ri-arrow-down-s-line fs-5 transition-icon"></i>
+                                </div>
+                            </div>
+                            <div id="collapse-${d.id}" class="collapse">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-primary mb-2 small border-bottom pb-1">Kelistrikan & Parameter</div>
+                                            ${buildChecklistStatusHtml(d, FIELDS_KEL_SUHU)}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-warning-emphasis mb-2 small border-bottom pb-1">Cleaning & Maintenance</div>
+                                            ${buildChecklistStatusHtml(d, FIELDS_CLEAN_GREASE)}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-danger mb-2 small border-bottom pb-1">Fan & Inspeksi</div>
+                                            ${buildChecklistStatusHtml(d, FIELDS_FAN_INSP)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         `;
                     });
 
-                    $('#tbodyReviewDetails').html(detailsHtml);
+                    if (res.details.length === 0) {
+                        detailsHtml = '<div class="alert alert-warning text-center">Tidak ada data checklist harian</div>';
+                    }
+
+                    $('#modalReviewContent').html(detailsHtml);
                     $('#modalReview').modal('show');
                 }
             });

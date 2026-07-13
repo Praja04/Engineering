@@ -2,6 +2,17 @@
 
 @section('title', 'Approval Bulanan Agenda RO-WS')
 
+@section('styles')
+    <style>
+        .collapse-trigger[aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.2s ease;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
@@ -300,6 +311,57 @@
             { field: 'cleaning_tanki_buffer_ws', label: 'Cleaning Tanki Buffer WS' }
         ];
 
+        const FIELDS_RO = [
+            { field: 'inspeksi_hpt_pump', label: 'Inspeksi (HLT) High Pressure Pump' },
+            { field: 'inspeksi_cip_pump', label: 'Inspeksi (HLT) CIP Pump' },
+            { field: 'inspeksi_blower_ro', label: 'Inspeksi (HLT) Blower RO' },
+            { field: 'cek_chemical', label: 'Cek Chemical' },
+            { field: 'pencatatan_flow_meter_produksi', label: 'Pencatatan Flow Meter Produksi RO Produk' },
+            { field: 'cek_nilai_conductivity', label: 'Cek Nilai Conductivity' },
+            { field: 'cek_dp_1st_2st', label: 'Cek ΔP 1st & 2st' },
+            { field: 'cek_dp_mmf_1_2', label: 'Cek ΔP MMF #1 & MMF #2' },
+            { field: 'pencatatan_flow_meter_konsumsi', label: 'Pencatatan Flow Meter Konsumsi RO Produk' },
+            { field: 'backwash_mmf_1', label: 'Backwash MMF #1' },
+            { field: 'backwash_mmf_2', label: 'Backwash MMF #2' },
+            { field: 'cek_kondisi_rotameter_mmf_1', label: 'Cek Kondisi Rota Meter MMF 1' },
+            { field: 'cek_kondisi_rotameter_mmf_2', label: 'Cek Kondisi Rota Meter MMF 2' },
+            { field: 'cek_kondisi_rotameter_ro_product', label: 'Cek Kondisi Rotameter RO Product' },
+            { field: 'cek_kondisi_rotameter_ro_reject', label: 'Cek Kondisi Rotameter RO Reject' },
+            { field: 'kalibrasi_dosis_kimia', label: 'Kalibrasi Dosis Penggunaan Kimia' },
+            { field: 'cleaning_unit_ro', label: 'Cleaning Unit RO' },
+            { field: 'cleaning_unit_mmf_1', label: 'Cleaning Unit MMF 1' },
+            { field: 'cleaning_unit_mmf_2', label: 'Cleaning Unit MMF 2' }
+        ];
+
+        const FIELDS_WS = [
+            { field: 'cek_output_hardness', label: 'Cek Output Hardness' },
+            { field: 'cek_flow_produk', label: 'Cek Flow Produk' },
+            { field: 'regenerasi_mesin_ws', label: 'Regenerasi Mesin Water Softener' },
+            { field: 'cek_pompa_transfer', label: 'Cek Kondisi Pompa Transfer (H,L,T)' },
+            { field: 'cek_pompa_suplai', label: 'Cek Kondisi Pompa Suplai (H,L,T)' },
+            { field: 'cleaning_tanki_buffer_ws', label: 'Cleaning Tanki Buffer WS' }
+        ];
+
+        function buildChecklistStatusHtml(item, fieldList) {
+            let listHtml = '<ul class="list-group list-group-flush">';
+            fieldList.forEach(f => {
+                let badge = '<span class="badge bg-secondary">-</span>';
+                if (item[f.field] === 'OK') badge =
+                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
+                else if (item[f.field] === 'NOK') badge =
+                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+
+                listHtml += `
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 border-bottom-0">
+                    <span class="small fw-medium text-muted" style="font-size: 0.8rem; text-align: left;">${f.label}</span>
+                    ${badge}
+                </li>
+                `;
+            });
+            listHtml += '</ul>';
+            return listHtml;
+        }
+
         function showDetails(id) {
             $.get("{{ url('utility/agenda-ro-ws/show-monthly') }}/" + id, function(res) {
                 let main = res.header;
@@ -321,13 +383,33 @@
                     });
 
                     contentHtml += `
-                    <div class="card border mb-2">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
-                            <span class="fw-bold">Tanggal: ${item.tanggal}</span>
-                            <span>
-                                <span class="badge bg-success me-1">${countOk} OK</span>
+                    <div class="card border mb-2 shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 collapse-trigger" 
+                             role="button" 
+                             data-bs-toggle="collapse" 
+                             data-bs-target="#collapse-${item.id}" 
+                             aria-expanded="false"
+                             style="cursor: pointer;">
+                            <span class="fw-bold text-dark"><i class="ri-calendar-event-line me-2 text-primary"></i>Tanggal: ${item.tanggal}</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success">${countOk} OK</span>
                                 <span class="badge bg-danger">${countNok} NOK</span>
-                            </span>
+                                <i class="ri-arrow-down-s-line fs-5 transition-icon"></i>
+                            </div>
+                        </div>
+                        <div id="collapse-${item.id}" class="collapse">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="fw-bold text-primary mb-2 small border-bottom pb-1">Agenda Reverse Osmosis (RO)</div>
+                                        ${buildChecklistStatusHtml(item, FIELDS_RO)}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="fw-bold text-danger-emphasis mb-2 small border-bottom pb-1">Agenda Water Softener (WS)</div>
+                                        ${buildChecklistStatusHtml(item, FIELDS_WS)}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     `;

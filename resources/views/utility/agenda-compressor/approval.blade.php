@@ -2,6 +2,17 @@
 
 @section('title', 'Approval Agenda Compressor')
 
+@section('styles')
+    <style>
+        .collapse-trigger[aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.2s ease;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
@@ -76,44 +87,9 @@
                         </div>
                     </div>
 
-                    <!-- Details Table -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm align-middle text-nowrap">
-                            <thead class="table-light text-center small align-middle">
-                                <tr>
-                                    <th>Tanggal</th>
-                                    @for ($i = 1; $i <= 25; $i++)
-                                        <th>F{{ $i }}</th>
-                                    @endfor
-                                </tr>
-                            </thead>
-                            <tbody id="tbodyReviewDetails" class="small">
-                                <!-- Rows injected via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="alert alert-info mt-3 py-2 small">
-                        <strong>Keterangan Kolom:</strong><br>
-                        <div class="row">
-                            <div class="col-md-4">
-                                F1-F5: AQ55VSD (Press, RH, Elem Out, Kelistrikan, RPM)<br>
-                                F6-F9: GA37 (Press, RH, Kelistrikan, Elem Out)<br>
-                                F10-F13: IR55 (Press, RH, Kelistrikan, Temp)
-                            </div>
-                            <div class="col-md-4">
-                                F14: Cleaning Strainer AQ55VSD<br>
-                                F15: Cleaning Blowoff GA37<br>
-                                F16: Replace Filter IR55<br>
-                                F17-F19: Motor Inspeksi AQ55VSD, GA37, IR55 (HLT)
-                            </div>
-                            <div class="col-md-4">
-                                F20-F22: Dryer Inspeksi 120, TR15, IR (HLT)<br>
-                                F23: Press In/Out Cooling Tower<br>
-                                F24: Press Receiver Tank<br>
-                                F25: Press Dryer In/Out
-                            </div>
-                        </div>
+                    <!-- Details Collapsible List -->
+                    <div id="modalReviewContent" class="px-2">
+                        <!-- Injected via JS -->
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -250,6 +226,60 @@
             });
         }
 
+        const FIELDS_AQ_GA = [
+            { field: 'pressure_aq55vsd', label: 'Pressure AQ55VSD' },
+            { field: 'running_hour_aq55vsd', label: 'Running Hour AQ55VSD' },
+            { field: 'element_outlet_aq55vsd', label: 'Element Outlet AQ55VSD' },
+            { field: 'kelistrikan_aq55vsd', label: 'Kelistrikan AQ55VSD' },
+            { field: 'rpm_aq55vsd', label: 'RPM AQ55VSD' },
+            { field: 'pressure_ga37', label: 'Pressure GA37' },
+            { field: 'running_hour_ga37', label: 'Running Hour GA37' },
+            { field: 'kelistrikan_ga37', label: 'Kelistrikan GA37' },
+            { field: 'element_outlet_ga37', label: 'Element Outlet GA37' }
+        ];
+
+        const FIELDS_IR_CLEAN = [
+            { field: 'pressure_ir55', label: 'Pressure IR55' },
+            { field: 'running_hour_ir55', label: 'Running Hour IR55' },
+            { field: 'kelistrikan_ir55', label: 'Kelistrikan IR55' },
+            { field: 'temperature_ir55', label: 'Temperature IR55' },
+            { field: 'cleaning_strainer_aq55vsd', label: 'Cleaning Strainer AQ55VSD' },
+            { field: 'cleaning_valve_ga37', label: 'Cleaning Blowoff GA37' },
+            { field: 'replace_filter_ir55', label: 'Replace Filter IR55' },
+            { field: 'inspeksi_motor_aq55vsd', label: 'Inspeksi Motor AQ55VSD (HLT)' },
+            { field: 'inspeksi_motor_ga37', label: 'Inspeksi Motor GA37 (HLT)' },
+            { field: 'inspeksi_motor_ir55', label: 'Inspeksi Motor IR55 (HLT)' }
+        ];
+
+        const FIELDS_DRYER_PRESS = [
+            { field: 'inspeksi_dryer_120', label: 'Inspeksi Dryer 120 (HLT)' },
+            { field: 'inspeksi_dryer_tr15', label: 'Inspeksi Dryer TR15 (HLT)' },
+            { field: 'inspeksi_dryer_ir', label: 'Inspeksi Dryer IR (HLT)' },
+            { field: 'pressure_in_out_ct', label: 'Pressure In/Out Cooling Tower' },
+            { field: 'pressure_bejana_receiver', label: 'Pressure Bejana Receiver Tank' },
+            { field: 'pressure_in_out_dryer', label: 'Pressure In/Out Dryer' }
+        ];
+
+        function buildChecklistStatusHtml(item, fieldList) {
+            let listHtml = '<ul class="list-group list-group-flush">';
+            fieldList.forEach(f => {
+                let badge = '<span class="badge bg-secondary">-</span>';
+                if (item[f.field] === 'OK') badge =
+                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
+                else if (item[f.field] === 'NOK') badge =
+                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+
+                listHtml += `
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 border-bottom-0">
+                    <span class="small fw-medium text-muted" style="font-size: 0.8rem; text-align: left;">${f.label}</span>
+                    ${badge}
+                </li>
+                `;
+            });
+            listHtml += '</ul>';
+            return listHtml;
+        }
+
         function reviewDetails(id) {
             $.ajax({
                 url: `{{ url('utility/agenda-compressor/show-monthly') }}/${id}`,
@@ -263,27 +293,55 @@
 
                     let detailsHtml = '';
                     res.details.forEach(d => {
-                        let rowCells = '';
+                        let countOk = 0;
+                        let countNok = 0;
                         FIELDS.forEach(f => {
-                            let cellVal = d[f] || '';
-                            let badge = '-';
-                            if (cellVal === 'OK') badge =
-                                '<span class="text-success fw-bold">✓</span>';
-                            else if (cellVal === 'NOK') badge =
-                                '<span class="text-danger fw-bold">✗</span>';
-
-                            rowCells += `<td class="text-center">${badge}</td>`;
+                            if (d[f] === 'OK') countOk++;
+                            else if (d[f] === 'NOK') countNok++;
                         });
 
                         detailsHtml += `
-                        <tr>
-                            <td class="text-center fw-medium bg-light">${d.tanggal}</td>
-                            ${rowCells}
-                        </tr>
+                        <div class="card border mb-2 shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 collapse-trigger" 
+                                 role="button" 
+                                 data-bs-toggle="collapse" 
+                                 data-bs-target="#collapse-${d.id}" 
+                                 aria-expanded="false"
+                                 style="cursor: pointer;">
+                                <span class="fw-bold text-dark"><i class="ri-calendar-event-line me-2 text-primary"></i>Tanggal: ${d.tanggal}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-success">${countOk} OK</span>
+                                    <span class="badge bg-danger">${countNok} NOK</span>
+                                    <i class="ri-arrow-down-s-line fs-5 transition-icon"></i>
+                                </div>
+                            </div>
+                            <div id="collapse-${d.id}" class="collapse">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-primary mb-2 small border-bottom pb-1">AQ55VSD & GA37</div>
+                                            ${buildChecklistStatusHtml(d, FIELDS_AQ_GA)}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-warning-emphasis mb-2 small border-bottom pb-1">IR55 & Cleaning/Inspeksi</div>
+                                            ${buildChecklistStatusHtml(d, FIELDS_IR_CLEAN)}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-danger mb-2 small border-bottom pb-1">Dryer & Pressure Gauge</div>
+                                            ${buildChecklistStatusHtml(d, FIELDS_DRYER_PRESS)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         `;
                     });
 
-                    $('#tbodyReviewDetails').html(detailsHtml);
+                    if (res.details.length === 0) {
+                        detailsHtml = '<div class="alert alert-warning text-center">Tidak ada data checklist harian</div>';
+                    }
+
+                    $('#modalReviewContent').html(detailsHtml);
                     $('#modalReview').modal('show');
                 }
             });
