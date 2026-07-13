@@ -16,14 +16,20 @@ class MtcMaterialDashboardController extends Controller
      */
     public function index()
     {
-        // Get unique maintenance types and packages for dropdown filters
-        $jenisMtcList = MtcMainModel::select('jenis_mtc')
+        // Get unique maintenance types and packages for dropdown filters, only those having material requirements with quantity > 0
+        $jenisMtcList = MtcMainModel::whereHas('kebutuhanMaterial', function ($q) {
+                $q->where('qty', '>', 0);
+            })
+            ->select('jenis_mtc')
             ->whereNotNull('jenis_mtc')
             ->distinct()
             ->orderBy('jenis_mtc')
             ->pluck('jenis_mtc');
 
-        $paketList = MtcMainModel::select('paket')
+        $paketList = MtcMainModel::whereHas('kebutuhanMaterial', function ($q) {
+                $q->where('qty', '>', 0);
+            })
+            ->select('paket')
             ->whereNotNull('paket')
             ->distinct()
             ->orderBy('paket')
@@ -45,10 +51,11 @@ class MtcMaterialDashboardController extends Controller
             ? Carbon::parse($request->end_date)->endOfDay()
             : Carbon::now()->endOfDay();
 
-        // 1. Base Query for Material Requirements
+        // 1. Base Query for Material Requirements (exclude records with quantity 0 or less)
         $query = MtcKebutuhanMaterialModel::query()
             ->join('mtc_main', 'mtc_kebutuhan_material.mtc_main_id', '=', 'mtc_main.id')
-            ->whereBetween('mtc_main.tanggal', [$startDate, $endDate]);
+            ->whereBetween('mtc_main.tanggal', [$startDate, $endDate])
+            ->where('mtc_kebutuhan_material.qty', '>', 0);
 
         if ($request->filled('jenis_mtc')) {
             $query->where('mtc_main.jenis_mtc', $request->jenis_mtc);
@@ -128,6 +135,7 @@ class MtcMaterialDashboardController extends Controller
         $query = MtcKebutuhanMaterialModel::query()
             ->select('mtc_kebutuhan_material.*')
             ->join('mtc_main', 'mtc_kebutuhan_material.mtc_main_id', '=', 'mtc_main.id')
+            ->where('mtc_kebutuhan_material.qty', '>', 0)
             ->with(['main.createdBy']);
 
         // Filter: Date range
