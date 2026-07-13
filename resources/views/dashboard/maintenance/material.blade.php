@@ -299,6 +299,15 @@
 
             // Render Bar Chart (Top Materials)
             function renderBarChart(data) {
+                const container = document.querySelector("#chartTopMaterials");
+                if (!data || data.length === 0) {
+                    if (barChart) {
+                        barChart.destroy();
+                        barChart = null;
+                    }
+                    container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada data untuk periode ini</div>';
+                    return;
+                }
                 const categories = data.map(item => item.label);
                 const seriesData = data.map(item => item.qty);
 
@@ -353,6 +362,15 @@
 
             // Render Pie Chart (Distribution)
             function renderPieChart(data) {
+                const container = document.querySelector("#chartDistribution");
+                if (!data || data.length === 0) {
+                    if (pieChart) {
+                        pieChart.destroy();
+                        pieChart = null;
+                    }
+                    container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada data untuk periode ini</div>';
+                    return;
+                }
                 const labels = data.map(item => item.jenis_mtc);
                 const series = data.map(item => item.qty);
 
@@ -415,6 +433,15 @@
 
             // Render Trend Line/Area Chart
             function renderTrendChart(data) {
+                const container = document.querySelector("#chartMonthlyTrend");
+                if (!data || data.length === 0) {
+                    if (trendChart) {
+                        trendChart.destroy();
+                        trendChart = null;
+                    }
+                    container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada data untuk periode ini</div>';
+                    return;
+                }
                 const categories = data.map(item => item.formatted_month);
                 const seriesData = data.map(item => parseFloat(item.total_qty));
 
