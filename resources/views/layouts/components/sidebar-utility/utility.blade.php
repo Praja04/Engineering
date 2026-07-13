@@ -105,8 +105,9 @@
             <ul class="nav nav-sm flex-column">
                 {{-- AHU --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isAhu ? '' : 'collapsed' }}" href="#ahuMenu"
+                    <a class="nav-link {{ $isAhu ? '' : 'collapsed' }}" href="#ahuMenu"
                         aria-expanded="{{ $isAhu ? 'true' : 'false' }}" data-bs-toggle="collapse">
+                        <i class="bx bx-git-commit fs-12"></i>
                         <span>AHU</span>
                     </a>
 
@@ -142,9 +143,9 @@
 
                 {{-- Capacitor Bank --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isCapacitorBank ? '' : 'collapsed' }}" href="#capacitorBankMenu"
+                    <a class="nav-link {{ $isCapacitorBank ? '' : 'collapsed' }}" href="#capacitorBankMenu"
                         data-bs-toggle="collapse" aria-expanded="{{ $isCapacitorBank ? 'true' : 'false' }}">
-                        <span>Capacitor Bank</span>
+                        <i class="bx bx-git-commit fs-12"></i><span>Capacitor Bank</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isCapacitorBank ? 'show' : '' }}" id="capacitorBankMenu">
@@ -179,9 +180,9 @@
 
                 {{-- Compressor --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isCompressor ? '' : 'collapsed' }}" href="#compressorMenu"
+                    <a class="nav-link {{ $isCompressor ? '' : 'collapsed' }}" href="#compressorMenu"
                         data-bs-toggle="collapse" aria-expanded="{{ $isCompressor ? 'true' : 'false' }}">
-                        <span>Compressor</span>
+                        <i class="bx bx-git-commit fs-12"></i> <span>Compressor</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isCompressor ? 'show' : '' }}" id="compressorMenu">
@@ -216,9 +217,9 @@
 
                 {{-- ===== ESP ===== --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isEsp ? '' : 'collapsed' }}" href="#espMenu"
-                        data-bs-toggle="collapse" aria-expanded="{{ $isEsp ? 'true' : 'false' }}">
-                        <span>ESP</span>
+                    <a class="nav-link {{ $isEsp ? '' : 'collapsed' }}" href="#espMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isEsp ? 'true' : 'false' }}">
+                        <i class="bx bx-git-commit fs-12"></i><span>ESP</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isEsp ? 'show' : '' }}" id="espMenu">
@@ -253,9 +254,9 @@
 
                 {{-- MDP Monitoring --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isMdp ? '' : 'collapsed' }}" href="#mdpMenu"
-                        data-bs-toggle="collapse" aria-expanded="{{ $isMdp ? 'true' : 'false' }}">
-                        <span>MDP Monitoring</span>
+                    <a class="nav-link {{ $isMdp ? '' : 'collapsed' }}" href="#mdpMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isMdp ? 'true' : 'false' }}">
+                        <i class="bx bx-git-commit fs-12"></i><span>MDP Monitoring</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isMdp ? 'show' : '' }}" id="mdpMenu">
@@ -290,9 +291,9 @@
 
                 {{-- Boiler Logs --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isBoilerLog ? '' : 'collapsed' }}" href="#boilerLogMenu"
+                    <a class="nav-link {{ $isBoilerLog ? '' : 'collapsed' }}" href="#boilerLogMenu"
                         data-bs-toggle="collapse" aria-expanded="{{ $isBoilerLog ? 'true' : 'false' }}">
-                        <span>Boiler Logs</span>
+                        <i class="bx bx-git-commit fs-12"></i><span>Boiler Logs</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isBoilerLog ? 'show' : '' }}" id="boilerLogMenu">
@@ -327,9 +328,9 @@
 
                 {{-- ===== WATER SOFTENER ===== --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isWs ? '' : 'collapsed' }}" href="#wsMenu"
-                        data-bs-toggle="collapse" aria-expanded="{{ $isWs ? 'true' : 'false' }}">
-                        <span>WS (Water Softener)</span>
+                    <a class="nav-link {{ $isWs ? '' : 'collapsed' }}" href="#wsMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isWs ? 'true' : 'false' }}">
+                        <i class="bx bx-git-commit fs-12"></i> <span>WS (Water Softener)</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isWs ? 'show' : '' }}" id="wsMenu">
@@ -364,9 +365,9 @@
 
                 {{-- Warming Up Genset --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isGenset ? '' : 'collapsed' }}" href="#gensetMenu"
+                    <a class="nav-link {{ $isGenset ? '' : 'collapsed' }}" href="#gensetMenu"
                         data-bs-toggle="collapse" aria-expanded="{{ $isGenset ? 'true' : 'false' }}">
-                        <span>Warming Up Genset</span>
+                        <i class="bx bx-git-commit fs-12"></i><span>Warming Up Genset</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isGenset ? 'show' : '' }}" id="gensetMenu">
@@ -401,9 +402,9 @@
 
                 {{-- Cooling Tower --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isCoolingTower ? '' : 'collapsed' }}" href="#coolingTowerMenu"
+                    <a class="nav-link {{ $isCoolingTower ? '' : 'collapsed' }}" href="#coolingTowerMenu"
                         data-bs-toggle="collapse" aria-expanded="{{ $isCoolingTower ? 'true' : 'false' }}">
-                        <span>Cooling Tower</span>
+                        <i class="bx bx-git-commit fs-12"></i><span>Cooling Tower</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isCoolingTower ? 'show' : '' }}" id="coolingTowerMenu">
@@ -438,10 +439,9 @@
 
                 {{-- Reverse Osmosis --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isReverseOsmosis ? '' : 'collapsed' }}"
-                        href="#reverseOsmosisMenu" data-bs-toggle="collapse"
-                        aria-expanded="{{ $isReverseOsmosis ? 'true' : 'false' }}">
-                        <span>Reverse Osmosis</span>
+                    <a class="nav-link {{ $isReverseOsmosis ? '' : 'collapsed' }}" href="#reverseOsmosisMenu"
+                        data-bs-toggle="collapse" aria-expanded="{{ $isReverseOsmosis ? 'true' : 'false' }}">
+                        <i class="bx bx-git-commit fs-12"></i><span>Reverse Osmosis</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isReverseOsmosis ? 'show' : '' }}"
@@ -477,10 +477,9 @@
 
                 {{-- Pemantauan Pompa Utility --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isPemantauanPompa ? '' : 'collapsed' }}"
-                        href="#pemantauanPompaMenu" data-bs-toggle="collapse"
-                        aria-expanded="{{ $isPemantauanPompa ? 'true' : 'false' }}">
-                        <span>Pemantauan Pompa</span>
+                    <a class="nav-link {{ $isPemantauanPompa ? '' : 'collapsed' }}" href="#pemantauanPompaMenu"
+                        data-bs-toggle="collapse" aria-expanded="{{ $isPemantauanPompa ? 'true' : 'false' }}">
+                        <i class="bx bx-git-commit fs-12"></i><span>Pemantauan Pompa</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isPemantauanPompa ? 'show' : '' }}"
@@ -516,10 +515,9 @@
 
                 {{-- Analisis Utility --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isAnalisisUtility ? '' : 'collapsed' }}"
-                        href="#analisisUtilityMenu" data-bs-toggle="collapse"
-                        aria-expanded="{{ $isAnalisisUtility ? 'true' : 'false' }}">
-                        <span>Analisis Utility</span>
+                    <a class="nav-link {{ $isAnalisisUtility ? '' : 'collapsed' }}" href="#analisisUtilityMenu"
+                        data-bs-toggle="collapse" aria-expanded="{{ $isAnalisisUtility ? 'true' : 'false' }}">
+                        <i class="bx bx-git-commit fs-12"></i><span>Analisis Utility</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isAnalisisUtility ? 'show' : '' }}"
@@ -555,9 +553,9 @@
 
                 {{-- Agenda RO-WS --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isAgendaRoWs ? '' : 'collapsed' }}" href="#agendaRoWsMenu"
+                    <a class="nav-link {{ $isAgendaRoWs ? '' : 'collapsed' }}" href="#agendaRoWsMenu"
                         data-bs-toggle="collapse" aria-expanded="{{ $isAgendaRoWs ? 'true' : 'false' }}">
-                        <span>Agenda RO-WS</span>
+                        <i class="bx bx-git-commit fs-12"></i><span>Agenda RO-WS</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isAgendaRoWs ? 'show' : '' }}" id="agendaRoWsMenu">
@@ -592,10 +590,9 @@
 
                 {{-- Agenda Tank Farm & Hydrant --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isAgendaTankFarm ? '' : 'collapsed' }}"
-                        href="#agendaTankFarmMenu" data-bs-toggle="collapse"
-                        aria-expanded="{{ $isAgendaTankFarm ? 'true' : 'false' }}">
-                        <span>Agenda Tank Farm & Hydrant</span>
+                    <a class="nav-link {{ $isAgendaTankFarm ? '' : 'collapsed' }}" href="#agendaTankFarmMenu"
+                        data-bs-toggle="collapse" aria-expanded="{{ $isAgendaTankFarm ? 'true' : 'false' }}">
+                        <i class="bx bx-git-commit fs-12"></i><span>Agenda Tank Farm & Hydrant</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isAgendaTankFarm ? 'show' : '' }}"
@@ -631,9 +628,9 @@
 
                 {{-- Agenda AHU --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isAgendaAhu ? '' : 'collapsed' }}" href="#agendaAhuMenu"
+                    <a class="nav-link {{ $isAgendaAhu ? '' : 'collapsed' }}" href="#agendaAhuMenu"
                         data-bs-toggle="collapse" aria-expanded="{{ $isAgendaAhu ? 'true' : 'false' }}">
-                        <span>Agenda AHU</span>
+                        <i class="bx bx-git-commit fs-12"></i><span>Agenda AHU</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isAgendaAhu ? 'show' : '' }}" id="agendaAhuMenu">
@@ -668,10 +665,10 @@
 
                 {{-- Agenda Cooling Tower --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isAgendaCoolingTower ? '' : 'collapsed' }}"
+                    <a class="nav-link {{ $isAgendaCoolingTower ? '' : 'collapsed' }}"
                         href="#agendaCoolingTowerMenu" data-bs-toggle="collapse"
                         aria-expanded="{{ $isAgendaCoolingTower ? 'true' : 'false' }}">
-                        <span>Agenda Cooling Tower</span>
+                        <i class="bx bx-git-commit fs-12"></i><span>Agenda Cooling Tower</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isAgendaCoolingTower ? 'show' : '' }}"
@@ -707,10 +704,9 @@
 
                 {{-- Agenda Compressor --}}
                 <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isAgendaCompressor ? '' : 'collapsed' }}"
-                        href="#agendaCompressorMenu" data-bs-toggle="collapse"
-                        aria-expanded="{{ $isAgendaCompressor ? 'true' : 'false' }}">
-                        <span>Agenda Compressor</span>
+                    <a class="nav-link {{ $isAgendaCompressor ? '' : 'collapsed' }}" href="#agendaCompressorMenu"
+                        data-bs-toggle="collapse" aria-expanded="{{ $isAgendaCompressor ? 'true' : 'false' }}">
+                        <i class="bx bx-git-commit fs-12"></i><span>Agenda Compressor</span>
                     </a>
 
                     <div class="collapse menu-dropdown {{ $isAgendaCompressor ? 'show' : '' }}"
