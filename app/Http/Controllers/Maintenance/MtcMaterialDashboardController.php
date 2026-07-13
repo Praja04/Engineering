@@ -85,13 +85,11 @@ class MtcMaterialDashboardController extends Controller
 
         // 4. Monthly Trend of consumption (quantity sum grouped by month)
         $trendData = $trendQuery
-            ->select(
-                DB::raw("DATE_FORMAT(mtc_main.tanggal, '%Y-%m') as year_month"),
-                DB::raw("DATE_FORMAT(mtc_main.tanggal, '%b %Y') as formatted_month"),
-                DB::raw('SUM(mtc_kebutuhan_material.qty) as total_qty')
-            )
-            ->groupBy('year_month', 'formatted_month')
-            ->orderBy('year_month', 'ASC')
+            ->selectRaw("DATE_FORMAT(mtc_main.tanggal, '%Y-%m') as trend_month")
+            ->selectRaw("DATE_FORMAT(mtc_main.tanggal, '%b %Y') as formatted_month")
+            ->selectRaw("SUM(mtc_kebutuhan_material.qty) as total_qty")
+            ->groupBy('trend_month', 'formatted_month')
+            ->orderBy('trend_month', 'ASC')
             ->get();
 
         // 5. Maintenance Type distribution
