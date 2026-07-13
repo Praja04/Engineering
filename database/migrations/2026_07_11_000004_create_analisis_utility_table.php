@@ -31,53 +31,52 @@ return new class extends Migration
             $table->foreignId('analisis_utility_id')->nullable()->constrained('analisis_utility', 'id', 'fk_analisis_util_details_main')->nullOnDelete();
             $table->date('tanggal')->unique(); // Daily log is unique
 
-            // 37 Checklist fields (all nullable strings containing OK / NOK)
-            // pH
-            $table->string('ph_fw_storage', 10)->nullable();
-            $table->string('ph_ws_storage', 10)->nullable();
-            $table->string('ph_ro_storage', 10)->nullable();
-            $table->string('ph_in_mmf', 10)->nullable();
-            $table->string('ph_buffer_tank_ws', 10)->nullable();
-            $table->string('ph_outlet_ws', 10)->nullable();
-            $table->string('ph_menara_ws', 10)->nullable();
-            $table->string('ph_depo_lt1', 10)->nullable();
-            $table->string('ph_depo_lt2', 10)->nullable();
-            $table->string('ph_cooling_tower', 10)->nullable();
-            $table->string('ph_boiler', 10)->nullable();
-            $table->string('ph_outlet_ws_2', 10)->nullable();
+            // 37 input decimal
+            $table->decimal('ph_fw_storage', 10, 2)->nullable();
+            $table->decimal('ph_ws_storage', 10, 2)->nullable();
+            $table->decimal('ph_ro_storage', 10, 2)->nullable();
+            $table->decimal('ph_in_mmf', 10, 2)->nullable();
+            $table->decimal('ph_buffer_tank_ws', 10, 2)->nullable();
+            $table->decimal('ph_outlet_ws', 10, 2)->nullable();
+            $table->decimal('ph_menara_ws', 10, 2)->nullable();
+            $table->decimal('ph_depo_lt1', 10, 2)->nullable();
+            $table->decimal('ph_depo_lt2', 10, 2)->nullable();
+            $table->decimal('ph_cooling_tower', 10, 2)->nullable();
+            $table->decimal('ph_boiler', 10, 2)->nullable();
+            $table->decimal('ph_outlet_ws_2', 10, 2)->nullable();
 
             // TDS
-            $table->string('tds_fw_storage', 10)->nullable();
-            $table->string('tds_ws_storage', 10)->nullable();
-            $table->string('tds_ro_storage', 10)->nullable();
-            $table->string('tds_in_mmf', 10)->nullable();
-            $table->string('tds_out_ro', 10)->nullable();
-            $table->string('tds_menara_ws', 10)->nullable();
-            $table->string('tds_daily_tank_dissolver', 10)->nullable();
-            $table->string('tds_depo_lt1', 10)->nullable();
-            $table->string('tds_depo_lt2', 10)->nullable();
-            $table->string('tds_cooling_tower', 10)->nullable();
-            $table->string('tds_boiler', 10)->nullable();
+            $table->decimal('tds_fw_storage', 10, 2)->nullable();
+            $table->decimal('tds_ws_storage', 10, 2)->nullable();
+            $table->decimal('tds_ro_storage', 10, 2)->nullable();
+            $table->decimal('tds_in_mmf', 10, 2)->nullable();
+            $table->decimal('tds_out_ro', 10, 2)->nullable();
+            $table->decimal('tds_menara_ws', 10, 2)->nullable();
+            $table->decimal('tds_daily_tank_dissolver', 10, 2)->nullable();
+            $table->decimal('tds_depo_lt1', 10, 2)->nullable();
+            $table->decimal('tds_depo_lt2', 10, 2)->nullable();
+            $table->decimal('tds_cooling_tower', 10, 2)->nullable();
+            $table->decimal('tds_boiler', 10, 2)->nullable();
 
             // Turbidity
-            $table->string('turbidity_in_mmf', 10)->nullable();
-            $table->string('turbidity_out_mmf', 10)->nullable();
-            $table->string('turbidity_cooling_tower', 10)->nullable();
+            $table->decimal('turbidity_in_mmf', 10, 2)->nullable();
+            $table->decimal('turbidity_out_mmf', 10, 2)->nullable();
+            $table->decimal('turbidity_cooling_tower', 10, 2)->nullable();
 
             // Chlorine
-            $table->string('chlorine_mmf', 10)->nullable();
-            $table->string('chlorine_menara', 10)->nullable();
-            $table->string('chlorine_depo_lt1', 10)->nullable();
-            $table->string('chlorine_depo_lt2', 10)->nullable();
-            $table->string('chlorine_daily_tank_dissolver', 10)->nullable();
+            $table->decimal('chlorine_mmf', 10, 2)->nullable();
+            $table->decimal('chlorine_menara', 10, 2)->nullable();
+            $table->decimal('chlorine_depo_lt1', 10, 2)->nullable();
+            $table->decimal('chlorine_depo_lt2', 10, 2)->nullable();
+            $table->decimal('chlorine_daily_tank_dissolver', 10, 2)->nullable();
 
             // Hardness
-            $table->string('hardness_inlet_ws', 10)->nullable();
-            $table->string('hardness_outlet_ws', 10)->nullable();
-            $table->string('hardness_ws_storage', 10)->nullable();
-            $table->string('hardness_ct', 10)->nullable();
-            $table->string('hardness_ro', 10)->nullable();
-            $table->string('hardness_boiler', 10)->nullable();
+            $table->decimal('hardness_inlet_ws', 10, 2)->nullable();
+            $table->decimal('hardness_outlet_ws', 10, 2)->nullable();
+            $table->decimal('hardness_ws_storage', 10, 2)->nullable();
+            $table->decimal('hardness_ct', 10, 2)->nullable();
+            $table->decimal('hardness_ro', 10, 2)->nullable();
+            $table->decimal('hardness_boiler', 10, 2)->nullable();
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

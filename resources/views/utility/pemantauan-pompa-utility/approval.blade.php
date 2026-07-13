@@ -255,14 +255,14 @@
             { field: 'ampere_pompa_ct_10000p3', label: 'Cek Ampere Pompa CT 10000P3' }
         ];
 
-        function buildChecklistStatusHtml(item, fieldList) {
+        function buildNumericStatusHtml(item, fieldList) {
             let listHtml = '<ul class="list-group list-group-flush">';
             fieldList.forEach(f => {
+                let val = item[f.field];
                 let badge = '<span class="badge bg-secondary">-</span>';
-                if (item[f.field] === 'OK') badge =
-                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
-                else if (item[f.field] === 'NOK') badge =
-                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+                if (val !== undefined && val !== null && val !== '') {
+                    badge = `<span class="badge bg-primary px-2 py-1">${Number(val)} A</span>`;
+                }
 
                 listHtml += `
                 <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 border-bottom-0">
@@ -288,13 +288,6 @@
 
                     let detailsHtml = '';
                     res.details.forEach(d => {
-                        let countOk = 0;
-                        let countNok = 0;
-                        FIELDS.forEach(f => {
-                            if (d[f] === 'OK') countOk++;
-                            else if (d[f] === 'NOK') countNok++;
-                        });
-
                         detailsHtml += `
                         <div class="card border mb-2 shadow-sm">
                             <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 collapse-trigger" 
@@ -305,8 +298,7 @@
                                  style="cursor: pointer;">
                                 <span class="fw-bold text-dark"><i class="ri-calendar-event-line me-2 text-primary"></i>Tanggal: ${d.tanggal}</span>
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-success">${countOk} OK</span>
-                                    <span class="badge bg-danger">${countNok} NOK</span>
+                                    <span class="badge bg-soft-info text-info">Ampere Monitor</span>
                                     <i class="ri-arrow-down-s-line fs-5 transition-icon"></i>
                                 </div>
                             </div>
@@ -315,15 +307,15 @@
                                     <div class="row">
                                         <div class="col-md-4">
                                             <div class="fw-bold text-primary mb-2 small border-bottom pb-1">Pompa 10P & Pompa 20P</div>
-                                            ${buildChecklistStatusHtml(d, FIELDS_10P_20P)}
+                                            ${buildNumericStatusHtml(d, FIELDS_10P_20P)}
                                         </div>
                                         <div class="col-md-4">
                                             <div class="fw-bold text-warning-emphasis mb-2 small border-bottom pb-1">Pompa 60P & Pompa Utility</div>
-                                            ${buildChecklistStatusHtml(d, FIELDS_60P_UTILITY)}
+                                            ${buildNumericStatusHtml(d, FIELDS_60P_UTILITY)}
                                         </div>
                                         <div class="col-md-4">
                                             <div class="fw-bold text-danger mb-2 small border-bottom pb-1">Fan & Pompa CT</div>
-                                            ${buildChecklistStatusHtml(d, FIELDS_FAN_CT)}
+                                            ${buildNumericStatusHtml(d, FIELDS_FAN_CT)}
                                         </div>
                                     </div>
                                 </div>

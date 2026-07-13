@@ -65,10 +65,10 @@
                             </div>
                         </div>
 
-                        <!-- Helper function to generate checklist item row -->
+                        <!-- Helper function to generate  item row -->
                         @php
-                            if (!function_exists('renderChecklistItem')) {
-                                function renderChecklistItem($fieldName, $labelText)
+                            if (!function_exists('renderItem')) {
+                                function renderItem($fieldName, $labelText)
                                 {
                                     return '
                                 <div class="checklist-item d-flex justify-content-between align-items-center flex-wrap py-3 px-2 border-bottom">
@@ -77,33 +77,13 @@
                                         $labelText .
                                         '
                                     </div>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <input type="radio" class="btn-check" name="' .
+                                    <div style="width: 200px;">
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" class="form-control" name="' .
                                         $fieldName .
-                                        '" id="' .
-                                        $fieldName .
-                                        '_empty" value="" checked>
-                                        <label class="btn btn-outline-secondary px-3" for="' .
-                                        $fieldName .
-                                        '_empty">Kosong</label>
-
-                                        <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="' .
-                                        $fieldName .
-                                        '_ok" value="OK">
-                                        <label class="btn btn-outline-success px-3" for="' .
-                                        $fieldName .
-                                        '_ok">OK</label>
-
-                                        <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="' .
-                                        $fieldName .
-                                        '_nok" value="NOK">
-                                        <label class="btn btn-outline-danger px-3" for="' .
-                                        $fieldName .
-                                        '_nok">NOK</label>
+                                        '" placeholder="0.00">
+                                            <span class="input-group-text">A</span>
+                                        </div>
                                     </div>
                                 </div>
                                 ';
@@ -119,18 +99,18 @@
                                 </h6>
                             </div>
                             <div class="card-body py-1">
-                                {!! renderChecklistItem('ampere_pompa_10p3', 'Cek Ampere Pompa 10P3') !!}
-                                {!! renderChecklistItem('ampere_pompa_10p3a', 'Cek Ampere Pompa 10P3A') !!}
-                                {!! renderChecklistItem('ampere_pompa_10p4', 'Cek Ampere Pompa 10P4') !!}
-                                {!! renderChecklistItem('ampere_pompa_10p4a', 'Cek Ampere Pompa 10P4A') !!}
-                                {!! renderChecklistItem('ampere_pompa_10p5b', 'Cek Ampere Pompa 10P5B') !!}
-                                {!! renderChecklistItem('ampere_pompa_20p1', 'Cek Ampere Pompa 20P1') !!}
-                                {!! renderChecklistItem('ampere_pompa_20p1a', 'Cek Ampere Pompa 20P1A') !!}
-                                {!! renderChecklistItem('ampere_pompa_20p2', 'Cek Ampere Pompa 20P2') !!}
-                                {!! renderChecklistItem('ampere_pompa_20p2a', 'Cek Ampere Pompa 20P2A') !!}
-                                {!! renderChecklistItem('ampere_pompa_60p1', 'Cek Ampere Pompa 60P1') !!}
-                                {!! renderChecklistItem('ampere_pompa_60p2', 'Cek Ampere Pompa 60P2') !!}
-                                {!! renderChecklistItem('ampere_pompa_60p3', 'Cek Ampere Pompa 60P3') !!}
+                                {!! renderItem('ampere_pompa_10p3', 'Cek Ampere Pompa 10P3') !!}
+                                {!! renderItem('ampere_pompa_10p3a', 'Cek Ampere Pompa 10P3A') !!}
+                                {!! renderItem('ampere_pompa_10p4', 'Cek Ampere Pompa 10P4') !!}
+                                {!! renderItem('ampere_pompa_10p4a', 'Cek Ampere Pompa 10P4A') !!}
+                                {!! renderItem('ampere_pompa_10p5b', 'Cek Ampere Pompa 10P5B') !!}
+                                {!! renderItem('ampere_pompa_20p1', 'Cek Ampere Pompa 20P1') !!}
+                                {!! renderItem('ampere_pompa_20p1a', 'Cek Ampere Pompa 20P1A') !!}
+                                {!! renderItem('ampere_pompa_20p2', 'Cek Ampere Pompa 20P2') !!}
+                                {!! renderItem('ampere_pompa_20p2a', 'Cek Ampere Pompa 20P2A') !!}
+                                {!! renderItem('ampere_pompa_60p1', 'Cek Ampere Pompa 60P1') !!}
+                                {!! renderItem('ampere_pompa_60p2', 'Cek Ampere Pompa 60P2') !!}
+                                {!! renderItem('ampere_pompa_60p3', 'Cek Ampere Pompa 60P3') !!}
                             </div>
                         </div>
 
@@ -142,12 +122,12 @@
                                 </h6>
                             </div>
                             <div class="card-body py-1">
-                                {!! renderChecklistItem('ampere_pompa_hp_pump', 'Cek Ampere Pompa HP PUMP') !!}
-                                {!! renderChecklistItem('ampere_pompa_cip_pump', 'Cek Ampere Pompa CIP PUMP') !!}
-                                {!! renderChecklistItem('ampere_pompa_tf_ws', 'Cek Ampere Pompa TF WS') !!}
-                                {!! renderChecklistItem('ampere_pompa_ct_10000p1', 'Cek Ampere pompa CT 10000P1') !!}
-                                {!! renderChecklistItem('ampere_pompa_ct_10000p2', 'Cek Ampere pompa CT 10000P2') !!}
-                                {!! renderChecklistItem('ampere_pompa_ct_10000p3', 'Cek Ampere pompa CT 10000P3') !!}
+                                {!! renderItem('ampere_pompa_hp_pump', 'Cek Ampere Pompa HP PUMP') !!}
+                                {!! renderItem('ampere_pompa_cip_pump', 'Cek Ampere Pompa CIP PUMP') !!}
+                                {!! renderItem('ampere_pompa_tf_ws', 'Cek Ampere Pompa TF WS') !!}
+                                {!! renderItem('ampere_pompa_ct_10000p1', 'Cek Ampere pompa CT 10000P1') !!}
+                                {!! renderItem('ampere_pompa_ct_10000p2', 'Cek Ampere pompa CT 10000P2') !!}
+                                {!! renderItem('ampere_pompa_ct_10000p3', 'Cek Ampere pompa CT 10000P3') !!}
                             </div>
                         </div>
 
@@ -159,16 +139,16 @@
                                 </h6>
                             </div>
                             <div class="card-body py-1">
-                                {!! renderChecklistItem('ampere_fan_1', 'Cek Ampere Fan 1') !!}
-                                {!! renderChecklistItem('ampere_fan_2', 'Cek Ampere Fan 2') !!}
-                                {!! renderChecklistItem('ampere_fan_3', 'Cek Ampere Fan 3') !!}
-                                {!! renderChecklistItem('ampere_fan_4', 'Cek Ampere Fan 4') !!}
+                                {!! renderItem('ampere_fan_1', 'Cek Ampere Fan 1') !!}
+                                {!! renderItem('ampere_fan_2', 'Cek Ampere Fan 2') !!}
+                                {!! renderItem('ampere_fan_3', 'Cek Ampere Fan 3') !!}
+                                {!! renderItem('ampere_fan_4', 'Cek Ampere Fan 4') !!}
                             </div>
                         </div>
 
                         <div class="text-end mb-5">
                             <button type="submit" class="btn btn-primary px-5 btn-lg rounded-pill shadow-sm">
-                                <i class="ri-send-plane-2-line me-1"></i> Submit Checklist
+                                <i class="ri-send-plane-2-line me-1"></i> Submit
                             </button>
                         </div>
 
@@ -187,8 +167,8 @@
                 e.preventDefault();
 
                 let hasValue = false;
-                $(this).find('input[type="radio"]:checked').each(function() {
-                    if ($(this).val() !== '') {
+                $(this).find('input[type="number"]').each(function() {
+                    if ($(this).val().trim() !== '') {
                         hasValue = true;
                         return false;
                     }
@@ -198,7 +178,7 @@
                     Swal.fire({
                         icon: 'warning',
                         title: 'Peringatan',
-                        text: 'Minimal harus ada 1 checklist (OK / NOK) yang diisi sebelum submit.'
+                        text: 'Minimal harus ada 1 parameter yang diisi sebelum submit.'
                     });
                     return;
                 }
@@ -219,14 +199,8 @@
                             showConfirmButton: false
                         });
 
-                        // Reset radio buttons to "Kosong"
-                        $('#formPemantauanPompa').find('input[type="radio"]').each(function() {
-                            if ($(this).val() === '') {
-                                $(this).prop('checked', true);
-                            } else {
-                                $(this).prop('checked', false);
-                            }
-                        });
+                        // Reset inputs
+                        $('#formPemantauanPompa').find('input[type="number"]').val('');
                     },
                     error: function(xhr) {
                         let err = xhr.responseJSON;

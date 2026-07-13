@@ -32,30 +32,30 @@ return new class extends Migration
             $table->date('tanggal')->unique(); // Daily log is unique
 
             // 22 Checklist fields (all nullable strings containing OK / NOK)
-            $table->string('ampere_pompa_10p3', 10)->nullable();
-            $table->string('ampere_pompa_10p3a', 10)->nullable();
-            $table->string('ampere_pompa_10p4', 10)->nullable();
-            $table->string('ampere_pompa_10p4a', 10)->nullable();
-            $table->string('ampere_pompa_10p5b', 10)->nullable();
-            $table->string('ampere_pompa_20p1', 10)->nullable();
-            $table->string('ampere_pompa_20p1a', 10)->nullable();
-            $table->string('ampere_pompa_20p2', 10)->nullable();
-            $table->string('ampere_pompa_20p2a', 10)->nullable();
-            $table->string('ampere_pompa_60p1', 10)->nullable();
-            $table->string('ampere_pompa_60p2', 10)->nullable();
-            $table->string('ampere_pompa_60p3', 10)->nullable();
-            $table->string('ampere_pompa_hp_pump', 10)->nullable();
-            $table->string('ampere_pompa_cip_pump', 10)->nullable();
-            $table->string('ampere_pompa_tf_ws', 10)->nullable();
-            
-            $table->string('ampere_fan_1', 10)->nullable();
-            $table->string('ampere_fan_2', 10)->nullable();
-            $table->string('ampere_fan_3', 10)->nullable();
-            $table->string('ampere_fan_4', 10)->nullable();
-            
-            $table->string('ampere_pompa_ct_10000p1', 10)->nullable();
-            $table->string('ampere_pompa_ct_10000p2', 10)->nullable();
-            $table->string('ampere_pompa_ct_10000p3', 10)->nullable();
+            $table->decimal('ampere_pompa_10p3', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_10p3a', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_10p4', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_10p4a', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_10p5b', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_20p1', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_20p1a', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_20p2', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_20p2a', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_60p1', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_60p2', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_60p3', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_hp_pump', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_cip_pump', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_tf_ws', 10, 2)->nullable();
+
+            $table->decimal('ampere_fan_1', 10, 2)->nullable();
+            $table->decimal('ampere_fan_2', 10, 2)->nullable();
+            $table->decimal('ampere_fan_3', 10, 2)->nullable();
+            $table->decimal('ampere_fan_4', 10, 2)->nullable();
+
+            $table->decimal('ampere_pompa_ct_10000p1', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_ct_10000p2', 10, 2)->nullable();
+            $table->decimal('ampere_pompa_ct_10000p3', 10, 2)->nullable();
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

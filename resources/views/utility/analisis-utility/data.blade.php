@@ -87,9 +87,8 @@
                             <thead class="table-light align-middle text-center">
                                 <tr>
                                     <th>Tanggal</th>
-                                    <th>Checklist OK</th>
-                                    <th>Checklist NOK</th>
-                                    <th>Belum Diisi / Kosong</th>
+                                    <th>Parameter Terisi</th>
+                                    <th>Parameter Kosong</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
@@ -145,11 +144,11 @@
                             <input type="date" name="tanggal" id="edit_tanggal" class="form-control" required>
                         </div>
 
-                        <!-- Segmented control template wrapper function -->
                         @php
                             if (!function_exists('renderAnalisisEditChecklistItem')) {
-                                function renderAnalisisEditChecklistItem($fieldName, $labelText)
+                                function renderAnalisisEditChecklistItem($fieldName, $labelText, $unit = '')
                                 {
+                                    $unitAddon = $unit ? '<span class="input-group-text">' . $unit . '</span>' : '';
                                     return '
                                     <div class="edit-item d-flex justify-content-between align-items-center flex-wrap py-2 border-bottom">
                                         <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0 small">
@@ -157,33 +156,11 @@
                                         $labelText .
                                         '
                                         </div>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_empty" value="">
-                                            <label class="btn btn-outline-secondary px-3" for="edit_' .
-                                        $fieldName .
-                                        '_empty">Kosong</label>
-
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_ok" value="OK">
-                                            <label class="btn btn-outline-success px-3" for="edit_' .
-                                        $fieldName .
-                                        '_ok">OK</label>
-
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_nok" value="NOK">
-                                            <label class="btn btn-outline-danger px-3" for="edit_' .
-                                        $fieldName .
-                                        '_nok">NOK</label>
+                                        <div style="width: 150px;">
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" step="0.01" class="form-control" name="' . $fieldName . '" id="edit_' . $fieldName . '" placeholder="0.00">
+                                                ' . $unitAddon . '
+                                            </div>
                                         </div>
                                     </div>
                                     ';
@@ -195,57 +172,57 @@
                             <div class="col-md-6">
                                 <div class="card border-0 bg-light p-3 mb-3">
                                     <h6 class="fw-bold text-primary mb-2">pH Air</h6>
-                                    {!! renderAnalisisEditChecklistItem('ph_fw_storage', 'Masukkan pH FW Storage') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_ws_storage', 'Masukkan pH WS Storage') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_ro_storage', 'Masukkan pH RO Storage') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_in_mmf', 'Masukkan pH In MMF') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_buffer_tank_ws', 'Masukkan pH Buffer Tank WS') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_outlet_ws', 'Masukkan pH Outlet WS') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_menara_ws', 'Masukkan pH Menara WS') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_depo_lt1', 'Masukkan pH Depo Lt.1') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_depo_lt2', 'Masukkan pH Depo Lt.2') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_cooling_tower', 'Masukkan pH Cooling Tower') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_boiler', 'Masukkan pH Boiler') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_outlet_ws_2', 'Masukkan pH Outlet WS (2)') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_fw_storage', 'Masukkan pH FW Storage', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_ws_storage', 'Masukkan pH WS Storage', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_ro_storage', 'Masukkan pH RO Storage', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_in_mmf', 'Masukkan pH In MMF', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_buffer_tank_ws', 'Masukkan pH Buffer Tank WS', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_outlet_ws', 'Masukkan pH Outlet WS', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_menara_ws', 'Masukkan pH Menara WS', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_depo_lt1', 'Masukkan pH Depo Lt.1', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_depo_lt2', 'Masukkan pH Depo Lt.2', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_cooling_tower', 'Masukkan pH Cooling Tower', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_boiler', 'Masukkan pH Boiler', 'pH') !!}
+                                    {!! renderAnalisisEditChecklistItem('ph_outlet_ws_2', 'Masukkan pH Outlet WS (2)', 'pH') !!}
                                 </div>
 
                                 <div class="card border-0 bg-light p-3 mb-3">
                                     <h6 class="fw-bold text-danger mb-2">Turbidity & Chlorine</h6>
-                                    {!! renderAnalisisEditChecklistItem('turbidity_in_mmf', 'Masukkan Turbidity IN MMF') !!}
-                                    {!! renderAnalisisEditChecklistItem('turbidity_out_mmf', 'Masukkan Turbidity Out MMF') !!}
-                                    {!! renderAnalisisEditChecklistItem('turbidity_cooling_tower', 'Masukkan Turbidity Cooling Tower') !!}
-                                    {!! renderAnalisisEditChecklistItem('chlorine_mmf', 'Masukkan Chlorine MMF') !!}
-                                    {!! renderAnalisisEditChecklistItem('chlorine_menara', 'Masukkan Chlorine Menara') !!}
-                                    {!! renderAnalisisEditChecklistItem('chlorine_depo_lt1', 'Masukkan Chlorine Depo LT.1') !!}
-                                    {!! renderAnalisisEditChecklistItem('chlorine_depo_lt2', 'Masukkan Chlorine Depo LT.2') !!}
-                                    {!! renderAnalisisEditChecklistItem('chlorine_daily_tank_dissolver', 'Masukkan Chlorine Daily Tank Dissolver') !!}
+                                    {!! renderAnalisisEditChecklistItem('turbidity_in_mmf', 'Masukkan Turbidity IN MMF', 'NTU') !!}
+                                    {!! renderAnalisisEditChecklistItem('turbidity_out_mmf', 'Masukkan Turbidity Out MMF', 'NTU') !!}
+                                    {!! renderAnalisisEditChecklistItem('turbidity_cooling_tower', 'Masukkan Turbidity Cooling Tower', 'NTU') !!}
+                                    {!! renderAnalisisEditChecklistItem('chlorine_mmf', 'Masukkan Chlorine MMF', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('chlorine_menara', 'Masukkan Chlorine Menara', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('chlorine_depo_lt1', 'Masukkan Chlorine Depo LT.1', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('chlorine_depo_lt2', 'Masukkan Chlorine Depo LT.2', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('chlorine_daily_tank_dissolver', 'Masukkan Chlorine Daily Tank Dissolver', 'ppm') !!}
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="card border-0 bg-light p-3 mb-3">
                                     <h6 class="fw-bold text-success mb-2">TDS Air</h6>
-                                    {!! renderAnalisisEditChecklistItem('tds_fw_storage', 'Masukkan TDS FW Storage') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_ws_storage', 'Masukkan TDS WS Storage') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_ro_storage', 'Masukkan TDS RO Storage') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_in_mmf', 'Masukkan TDS In MMF') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_out_ro', 'Masukkan TDS Out RO') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_menara_ws', 'Masukkan TDS menara WS') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_daily_tank_dissolver', 'Masukkan TDS daily Tank dissolver') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_depo_lt1', 'Masukkan TDS Depo Lt.1') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_depo_lt2', 'Masukkan TDS Depo Lt.2') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_cooling_tower', 'Masukkan TDS Cooling Tower') !!}
-                                    {!! renderAnalisisEditChecklistItem('tds_boiler', 'Masukkan TDS Boiler') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_fw_storage', 'Masukkan TDS FW Storage', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_ws_storage', 'Masukkan TDS WS Storage', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_ro_storage', 'Masukkan TDS RO Storage', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_in_mmf', 'Masukkan TDS In MMF', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_out_ro', 'Masukkan TDS Out RO', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_menara_ws', 'Masukkan TDS menara WS', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_daily_tank_dissolver', 'Masukkan TDS daily Tank dissolver', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_depo_lt1', 'Masukkan TDS Depo Lt.1', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_depo_lt2', 'Masukkan TDS Depo Lt.2', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_cooling_tower', 'Masukkan TDS Cooling Tower', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('tds_boiler', 'Masukkan TDS Boiler', 'ppm') !!}
                                 </div>
 
                                 <div class="card border-0 bg-light p-3 mb-3">
                                     <h6 class="fw-bold text-secondary mb-2">Hardness Air</h6>
-                                    {!! renderAnalisisEditChecklistItem('hardness_inlet_ws', 'Masukkan hardness Inlet WS') !!}
-                                    {!! renderAnalisisEditChecklistItem('hardness_outlet_ws', 'Masukkan hardness Outlet WS') !!}
-                                    {!! renderAnalisisEditChecklistItem('hardness_ws_storage', 'Masukkan hardness WS Storage') !!}
-                                    {!! renderAnalisisEditChecklistItem('hardness_ct', 'Masukkan hardness CT') !!}
-                                    {!! renderAnalisisEditChecklistItem('hardness_ro', 'Masukkan hardness RO') !!}
-                                    {!! renderAnalisisEditChecklistItem('hardness_boiler', 'Masukkan hardness Boiler') !!}
+                                    {!! renderAnalisisEditChecklistItem('hardness_inlet_ws', 'Masukkan hardness Inlet WS', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('hardness_outlet_ws', 'Masukkan hardness Outlet WS', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('hardness_ws_storage', 'Masukkan hardness WS Storage', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('hardness_ct', 'Masukkan hardness CT', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('hardness_ro', 'Masukkan hardness RO', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem('hardness_boiler', 'Masukkan hardness Boiler', 'ppm') !!}
                                 </div>
                             </div>
                         </div>
@@ -362,52 +339,52 @@
         let currentPage = 1;
 
         const FIELDS_PH = [
-            { field: 'ph_fw_storage', label: 'Masukkan pH FW Storage' },
-            { field: 'ph_ws_storage', label: 'Masukkan pH WS Storage' },
-            { field: 'ph_ro_storage', label: 'Masukkan pH RO Storage' },
-            { field: 'ph_in_mmf', label: 'Masukkan pH In MMF' },
-            { field: 'ph_buffer_tank_ws', label: 'Masukkan pH Buffer Tank WS' },
-            { field: 'ph_outlet_ws', label: 'Masukkan pH Outlet WS' },
-            { field: 'ph_menara_ws', label: 'Masukkan pH Menara WS' },
-            { field: 'ph_depo_lt1', label: 'Masukkan pH Depo Lt.1' },
-            { field: 'ph_depo_lt2', label: 'Masukkan pH Depo Lt.2' },
-            { field: 'ph_cooling_tower', label: 'Masukkan pH Cooling Tower' },
-            { field: 'ph_boiler', label: 'Masukkan pH Boiler' },
-            { field: 'ph_outlet_ws_2', label: 'Masukkan pH Outlet WS (2)' }
+            { field: 'ph_fw_storage', label: 'Masukkan pH FW Storage', unit: 'pH' },
+            { field: 'ph_ws_storage', label: 'Masukkan pH WS Storage', unit: 'pH' },
+            { field: 'ph_ro_storage', label: 'Masukkan pH RO Storage', unit: 'pH' },
+            { field: 'ph_in_mmf', label: 'Masukkan pH In MMF', unit: 'pH' },
+            { field: 'ph_buffer_tank_ws', label: 'Masukkan pH Buffer Tank WS', unit: 'pH' },
+            { field: 'ph_outlet_ws', label: 'Masukkan pH Outlet WS', unit: 'pH' },
+            { field: 'ph_menara_ws', label: 'Masukkan pH Menara WS', unit: 'pH' },
+            { field: 'ph_depo_lt1', label: 'Masukkan pH Depo Lt.1', unit: 'pH' },
+            { field: 'ph_depo_lt2', label: 'Masukkan pH Depo Lt.2', unit: 'pH' },
+            { field: 'ph_cooling_tower', label: 'Masukkan pH Cooling Tower', unit: 'pH' },
+            { field: 'ph_boiler', label: 'Masukkan pH Boiler', unit: 'pH' },
+            { field: 'ph_outlet_ws_2', label: 'Masukkan pH Outlet WS (2)', unit: 'pH' }
         ];
 
         const FIELDS_TDS = [
-            { field: 'tds_fw_storage', label: 'Masukkan TDS FW Storage' },
-            { field: 'tds_ws_storage', label: 'Masukkan TDS WS Storage' },
-            { field: 'tds_ro_storage', label: 'Masukkan TDS RO Storage' },
-            { field: 'tds_in_mmf', label: 'Masukkan TDS In MMF' },
-            { field: 'tds_out_ro', label: 'Masukkan TDS Out RO' },
-            { field: 'tds_menara_ws', label: 'Masukkan TDS menara WS' },
-            { field: 'tds_daily_tank_dissolver', label: 'Masukkan TDS daily Tank dissolver' },
-            { field: 'tds_depo_lt1', label: 'Masukkan TDS Depo Lt.1' },
-            { field: 'tds_depo_lt2', label: 'Masukkan TDS Depo Lt.2' },
-            { field: 'tds_cooling_tower', label: 'Masukkan TDS Cooling Tower' },
-            { field: 'tds_boiler', label: 'Masukkan TDS Boiler' }
+            { field: 'tds_fw_storage', label: 'Masukkan TDS FW Storage', unit: 'ppm' },
+            { field: 'tds_ws_storage', label: 'Masukkan TDS WS Storage', unit: 'ppm' },
+            { field: 'tds_ro_storage', label: 'Masukkan TDS RO Storage', unit: 'ppm' },
+            { field: 'tds_in_mmf', label: 'Masukkan TDS In MMF', unit: 'ppm' },
+            { field: 'tds_out_ro', label: 'Masukkan TDS Out RO', unit: 'ppm' },
+            { field: 'tds_menara_ws', label: 'Masukkan TDS menara WS', unit: 'ppm' },
+            { field: 'tds_daily_tank_dissolver', label: 'Masukkan TDS daily Tank dissolver', unit: 'ppm' },
+            { field: 'tds_depo_lt1', label: 'Masukkan TDS Depo Lt.1', unit: 'ppm' },
+            { field: 'tds_depo_lt2', label: 'Masukkan TDS Depo Lt.2', unit: 'ppm' },
+            { field: 'tds_cooling_tower', label: 'Masukkan TDS Cooling Tower', unit: 'ppm' },
+            { field: 'tds_boiler', label: 'Masukkan TDS Boiler', unit: 'ppm' }
         ];
 
         const FIELDS_TURB_CHLOR = [
-            { field: 'turbidity_in_mmf', label: 'Masukkan Turbidity IN MMF' },
-            { field: 'turbidity_out_mmf', label: 'Masukkan Turbidity Out MMF' },
-            { field: 'turbidity_cooling_tower', label: 'Masukkan Turbidity Cooling Tower' },
-            { field: 'chlorine_mmf', label: 'Masukkan Chlorine MMF' },
-            { field: 'chlorine_menara', label: 'Masukkan Chlorine Menara' },
-            { field: 'chlorine_depo_lt1', label: 'Masukkan Chlorine Depo LT.1' },
-            { field: 'chlorine_depo_lt2', label: 'Masukkan Chlorine Depo LT.2' },
-            { field: 'chlorine_daily_tank_dissolver', label: 'Masukkan Chlorine Daily Tank Dissolver' }
+            { field: 'turbidity_in_mmf', label: 'Masukkan Turbidity IN MMF', unit: 'NTU' },
+            { field: 'turbidity_out_mmf', label: 'Masukkan Turbidity Out MMF', unit: 'NTU' },
+            { field: 'turbidity_cooling_tower', label: 'Masukkan Turbidity Cooling Tower', unit: 'NTU' },
+            { field: 'chlorine_mmf', label: 'Masukkan Chlorine MMF', unit: 'ppm' },
+            { field: 'chlorine_menara', label: 'Masukkan Chlorine Menara', unit: 'ppm' },
+            { field: 'chlorine_depo_lt1', label: 'Masukkan Chlorine Depo LT.1', unit: 'ppm' },
+            { field: 'chlorine_depo_lt2', label: 'Masukkan Chlorine Depo LT.2', unit: 'ppm' },
+            { field: 'chlorine_daily_tank_dissolver', label: 'Masukkan Chlorine Daily Tank Dissolver', unit: 'ppm' }
         ];
 
         const FIELDS_HARDNESS = [
-            { field: 'hardness_inlet_ws', label: 'Masukkan hardness Inlet WS' },
-            { field: 'hardness_outlet_ws', label: 'Masukkan hardness Outlet WS' },
-            { field: 'hardness_ws_storage', label: 'Masukkan hardness WS Storage' },
-            { field: 'hardness_ct', label: 'Masukkan hardness CT' },
-            { field: 'hardness_ro', label: 'Masukkan hardness RO' },
-            { field: 'hardness_boiler', label: 'Masukkan hardness Boiler' }
+            { field: 'hardness_inlet_ws', label: 'Masukkan hardness Inlet WS', unit: 'ppm' },
+            { field: 'hardness_outlet_ws', label: 'Masukkan hardness Outlet WS', unit: 'ppm' },
+            { field: 'hardness_ws_storage', label: 'Masukkan hardness WS Storage', unit: 'ppm' },
+            { field: 'hardness_ct', label: 'Masukkan hardness CT', unit: 'ppm' },
+            { field: 'hardness_ro', label: 'Masukkan hardness RO', unit: 'ppm' },
+            { field: 'hardness_boiler', label: 'Masukkan hardness Boiler', unit: 'ppm' }
         ];
 
         const ALL_FIELDS = [...FIELDS_PH, ...FIELDS_TDS, ...FIELDS_TURB_CHLOR, ...FIELDS_HARDNESS];
@@ -439,21 +416,20 @@
                             '<span class="badge bg-danger">Rejected</span>';
                         else statusBadge = '<span class="badge bg-secondary">-</span>';
 
-                        let countOk = 0;
-                        let countNok = 0;
-                        let countEmpty = 0;
-
+                        // Count filled / empty values
+                        let countFilled = 0;
                         ALL_FIELDS.forEach(f => {
-                            if (item[f.field] === 'OK') countOk++;
-                            else if (item[f.field] === 'NOK') countNok++;
-                            else countEmpty++;
+                            let val = item[f.field];
+                            if (val !== undefined && val !== null && val !== '') {
+                                countFilled++;
+                            }
                         });
-
+                        let countEmpty = ALL_FIELDS.length - countFilled;
+ 
                         html += `
                             <tr>
                                 <td class="text-center fw-medium">${item.tanggal}</td>
-                                <td class="text-center text-success fw-bold">${countOk} Items</td>
-                                <td class="text-center text-danger fw-bold">${countNok} Items</td>
+                                <td class="text-center text-success fw-bold">${countFilled} Items</td>
                                 <td class="text-center text-secondary">${countEmpty} Items</td>
                                 <td class="text-center">${statusBadge}</td>
                                 <td class="text-center">
@@ -546,15 +522,16 @@
             });
         }
 
-        function buildChecklistStatusHtml(item, fieldList) {
+        function buildNumericStatusHtml(item, fieldList) {
             let listHtml = '<ul class="list-group list-group-flush">';
             fieldList.forEach(f => {
+                let val = item[f.field];
                 let badge = '<span class="badge bg-secondary">-</span>';
-                if (item[f.field] === 'OK') badge =
-                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
-                else if (item[f.field] === 'NOK') badge =
-                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
-
+                let unit = f.unit || '';
+                if (val !== undefined && val !== null && val !== '') {
+                    badge = `<span class="badge bg-primary px-2 py-1">${Number(val)}${unit ? ' ' + unit : ''}</span>`;
+                }
+ 
                 listHtml += `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <span class="small fw-medium">${f.label}</span>
@@ -581,15 +558,15 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="fw-bold text-primary mb-2">pH Air</div>
-                                    ${buildChecklistStatusHtml(d, FIELDS_PH)}
+                                    ${buildNumericStatusHtml(d, FIELDS_PH)}
                                     <div class="fw-bold text-danger mb-2 mt-3">Turbidity & Chlorine</div>
-                                    ${buildChecklistStatusHtml(d, FIELDS_TURB_CHLOR)}
+                                    ${buildNumericStatusHtml(d, FIELDS_TURB_CHLOR)}
                                 </div>
                                 <div class="col-md-6">
                                     <div class="fw-bold text-success mb-2">TDS Air</div>
-                                    ${buildChecklistStatusHtml(d, FIELDS_TDS)}
+                                    ${buildNumericStatusHtml(d, FIELDS_TDS)}
                                     <div class="fw-bold text-secondary mb-2 mt-3">Hardness Air</div>
-                                    ${buildChecklistStatusHtml(d, FIELDS_HARDNESS)}
+                                    ${buildNumericStatusHtml(d, FIELDS_HARDNESS)}
                                 </div>
                             </div>
                         </div>
@@ -678,7 +655,7 @@
                                             <h6 class="card-title text-primary fw-bold mb-0">pH Air</h6>
                                         </div>
                                         <div class="card-body p-0">
-                                            ${buildChecklistStatusHtml(item, FIELDS_PH)}
+                                            ${buildNumericStatusHtml(item, FIELDS_PH)}
                                         </div>
                                     </div>
                                     <div class="card shadow-none border mb-3">
@@ -686,7 +663,7 @@
                                             <h6 class="card-title text-danger fw-bold mb-0">Turbidity & Chlorine</h6>
                                         </div>
                                         <div class="card-body p-0">
-                                            ${buildChecklistStatusHtml(item, FIELDS_TURB_CHLOR)}
+                                            ${buildNumericStatusHtml(item, FIELDS_TURB_CHLOR)}
                                         </div>
                                     </div>
                                 </div>
@@ -696,7 +673,7 @@
                                             <h6 class="card-title text-success fw-bold mb-0">TDS Air</h6>
                                         </div>
                                         <div class="card-body p-0">
-                                            ${buildChecklistStatusHtml(item, FIELDS_TDS)}
+                                            ${buildNumericStatusHtml(item, FIELDS_TDS)}
                                         </div>
                                     </div>
                                     <div class="card shadow-none border mb-3">
@@ -704,7 +681,7 @@
                                             <h6 class="card-title text-secondary fw-bold mb-0">Hardness Air</h6>
                                         </div>
                                         <div class="card-body p-0">
-                                            ${buildChecklistStatusHtml(item, FIELDS_HARDNESS)}
+                                            ${buildNumericStatusHtml(item, FIELDS_HARDNESS)}
                                         </div>
                                     </div>
                                 </div>
@@ -729,7 +706,7 @@
 
                         ALL_FIELDS.forEach(f => {
                             let val = item[f.field] || '';
-                            $(`input[name="${f.field}"][value="${val}"]`).prop('checked', true);
+                            $(`#edit_${f.field}`).val(val);
                         });
 
                         $('#modalEdit').modal('show');

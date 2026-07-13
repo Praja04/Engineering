@@ -66,45 +66,28 @@
 
                         <!-- Helper function to generate checklist item row -->
                         @php
-                            if (!function_exists('renderAnalisisChecklistItem')) {
-                                function renderAnalisisChecklistItem($fieldName, $labelText)
+                            if (!function_exists('renderAnalisisItem')) {
+                                function renderAnalisisItem($fieldName, $labelText, $unit = '')
                                 {
+                                    $unitAddon = $unit ? '<span class="input-group-text">' . $unit . '</span>' : '';
                                     return '
-                                <div class="checklist-item d-flex justify-content-between align-items-center flex-wrap py-3 px-2 border-bottom">
-                                    <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0">
-                                        ' .
+                                    <div class="checklist-item d-flex justify-content-between align-items-center flex-wrap py-3 px-2 border-bottom">
+                                        <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0">
+                                            ' .
                                         $labelText .
                                         '
+                                        </div>
+                                        <div style="width: 200px;">
+                                            <div class="input-group">
+                                                <input type="number" step="0.01" class="form-control" name="' .
+                                        $fieldName .
+                                        '" placeholder="0.00">
+                                                ' .
+                                        $unitAddon .
+                                        '
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="' .
-                                        $fieldName .
-                                        '_empty" value="" checked>
-                                        <label class="btn btn-outline-secondary px-3" for="' .
-                                        $fieldName .
-                                        '_empty">Kosong</label>
-
-                                        <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="' .
-                                        $fieldName .
-                                        '_ok" value="OK">
-                                        <label class="btn btn-outline-success px-3" for="' .
-                                        $fieldName .
-                                        '_ok">OK</label>
-
-                                        <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="' .
-                                        $fieldName .
-                                        '_nok" value="NOK">
-                                        <label class="btn btn-outline-danger px-3" for="' .
-                                        $fieldName .
-                                        '_nok">NOK</label>
-                                    </div>
-                                </div>
                                 ';
                                 }
                             }
@@ -118,18 +101,18 @@
                                 </h6>
                             </div>
                             <div class="card-body py-1">
-                                {!! renderAnalisisChecklistItem('ph_fw_storage', 'Masukkan pH FW Storage') !!}
-                                {!! renderAnalisisChecklistItem('ph_ws_storage', 'Masukkan pH WS Storage') !!}
-                                {!! renderAnalisisChecklistItem('ph_ro_storage', 'Masukkan pH RO Storage') !!}
-                                {!! renderAnalisisChecklistItem('ph_in_mmf', 'Masukkan pH In MMF') !!}
-                                {!! renderAnalisisChecklistItem('ph_buffer_tank_ws', 'Masukkan pH Buffer Tank WS') !!}
-                                {!! renderAnalisisChecklistItem('ph_outlet_ws', 'Masukkan pH Outlet WS') !!}
-                                {!! renderAnalisisChecklistItem('ph_menara_ws', 'Masukkan pH Menara WS') !!}
-                                {!! renderAnalisisChecklistItem('ph_depo_lt1', 'Masukkan pH Depo Lt.1') !!}
-                                {!! renderAnalisisChecklistItem('ph_depo_lt2', 'Masukkan pH Depo Lt.2') !!}
-                                {!! renderAnalisisChecklistItem('ph_cooling_tower', 'Masukkan pH Cooling Tower') !!}
-                                {!! renderAnalisisChecklistItem('ph_boiler', 'Masukkan pH Boiler') !!}
-                                {!! renderAnalisisChecklistItem('ph_outlet_ws_2', 'Masukkan pH Outlet WS (2)') !!}
+                                {!! renderAnalisisItem('ph_fw_storage', 'Masukkan pH FW Storage', 'pH') !!}
+                                {!! renderAnalisisItem('ph_ws_storage', 'Masukkan pH WS Storage', 'pH') !!}
+                                {!! renderAnalisisItem('ph_ro_storage', 'Masukkan pH RO Storage', 'pH') !!}
+                                {!! renderAnalisisItem('ph_in_mmf', 'Masukkan pH In MMF', 'pH') !!}
+                                {!! renderAnalisisItem('ph_buffer_tank_ws', 'Masukkan pH Buffer Tank WS', 'pH') !!}
+                                {!! renderAnalisisItem('ph_outlet_ws', 'Masukkan pH Outlet WS', 'pH') !!}
+                                {!! renderAnalisisItem('ph_menara_ws', 'Masukkan pH Menara WS', 'pH') !!}
+                                {!! renderAnalisisItem('ph_depo_lt1', 'Masukkan pH Depo Lt.1', 'pH') !!}
+                                {!! renderAnalisisItem('ph_depo_lt2', 'Masukkan pH Depo Lt.2', 'pH') !!}
+                                {!! renderAnalisisItem('ph_cooling_tower', 'Masukkan pH Cooling Tower', 'pH') !!}
+                                {!! renderAnalisisItem('ph_boiler', 'Masukkan pH Boiler', 'pH') !!}
+                                {!! renderAnalisisItem('ph_outlet_ws_2', 'Masukkan pH Outlet WS (2)', 'pH') !!}
                             </div>
                         </div>
 
@@ -141,17 +124,17 @@
                                 </h6>
                             </div>
                             <div class="card-body py-1">
-                                {!! renderAnalisisChecklistItem('tds_fw_storage', 'Masukkan TDS FW Storage') !!}
-                                {!! renderAnalisisChecklistItem('tds_ws_storage', 'Masukkan TDS WS Storage') !!}
-                                {!! renderAnalisisChecklistItem('tds_ro_storage', 'Masukkan TDS RO Storage') !!}
-                                {!! renderAnalisisChecklistItem('tds_in_mmf', 'Masukkan TDS In MMF') !!}
-                                {!! renderAnalisisChecklistItem('tds_out_ro', 'Masukkan TDS Out RO') !!}
-                                {!! renderAnalisisChecklistItem('tds_menara_ws', 'Masukkan TDS menara WS') !!}
-                                {!! renderAnalisisChecklistItem('tds_daily_tank_dissolver', 'Masukkan TDS daily Tank dissolver') !!}
-                                {!! renderAnalisisChecklistItem('tds_depo_lt1', 'Masukkan TDS Depo Lt.1') !!}
-                                {!! renderAnalisisChecklistItem('tds_depo_lt2', 'Masukkan TDS Depo Lt.2') !!}
-                                {!! renderAnalisisChecklistItem('tds_cooling_tower', 'Masukkan TDS Cooling Tower') !!}
-                                {!! renderAnalisisChecklistItem('tds_boiler', 'Masukkan TDS Boiler') !!}
+                                {!! renderAnalisisItem('tds_fw_storage', 'Masukkan TDS FW Storage', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_ws_storage', 'Masukkan TDS WS Storage', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_ro_storage', 'Masukkan TDS RO Storage', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_in_mmf', 'Masukkan TDS In MMF', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_out_ro', 'Masukkan TDS Out RO', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_menara_ws', 'Masukkan TDS menara WS', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_daily_tank_dissolver', 'Masukkan TDS daily Tank dissolver', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_depo_lt1', 'Masukkan TDS Depo Lt.1', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_depo_lt2', 'Masukkan TDS Depo Lt.2', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_cooling_tower', 'Masukkan TDS Cooling Tower', 'ppm') !!}
+                                {!! renderAnalisisItem('tds_boiler', 'Masukkan TDS Boiler', 'ppm') !!}
                             </div>
                         </div>
 
@@ -163,14 +146,14 @@
                                 </h6>
                             </div>
                             <div class="card-body py-1">
-                                {!! renderAnalisisChecklistItem('turbidity_in_mmf', 'Masukkan Turbidity IN MMF') !!}
-                                {!! renderAnalisisChecklistItem('turbidity_out_mmf', 'Masukkan Turbidity Out MMF') !!}
-                                {!! renderAnalisisChecklistItem('turbidity_cooling_tower', 'Masukkan Turbidity Cooling Tower') !!}
-                                {!! renderAnalisisChecklistItem('chlorine_mmf', 'Masukkan Chlorine MMF') !!}
-                                {!! renderAnalisisChecklistItem('chlorine_menara', 'Masukkan Chlorine Menara') !!}
-                                {!! renderAnalisisChecklistItem('chlorine_depo_lt1', 'Masukkan Chlorine Depo LT.1') !!}
-                                {!! renderAnalisisChecklistItem('chlorine_depo_lt2', 'Masukkan Chlorine Depo LT.2') !!}
-                                {!! renderAnalisisChecklistItem('chlorine_daily_tank_dissolver', 'Masukkan Chlorine Daily Tank Dissolver') !!}
+                                {!! renderAnalisisItem('turbidity_in_mmf', 'Masukkan Turbidity IN MMF', 'NTU') !!}
+                                {!! renderAnalisisItem('turbidity_out_mmf', 'Masukkan Turbidity Out MMF', 'NTU') !!}
+                                {!! renderAnalisisItem('turbidity_cooling_tower', 'Masukkan Turbidity Cooling Tower', 'NTU') !!}
+                                {!! renderAnalisisItem('chlorine_mmf', 'Masukkan Chlorine MMF', 'ppm') !!}
+                                {!! renderAnalisisItem('chlorine_menara', 'Masukkan Chlorine Menara', 'ppm') !!}
+                                {!! renderAnalisisItem('chlorine_depo_lt1', 'Masukkan Chlorine Depo LT.1', 'ppm') !!}
+                                {!! renderAnalisisItem('chlorine_depo_lt2', 'Masukkan Chlorine Depo LT.2', 'ppm') !!}
+                                {!! renderAnalisisItem('chlorine_daily_tank_dissolver', 'Masukkan Chlorine Daily Tank Dissolver', 'ppm') !!}
                             </div>
                         </div>
 
@@ -182,18 +165,19 @@
                                 </h6>
                             </div>
                             <div class="card-body py-1">
-                                {!! renderAnalisisChecklistItem('hardness_inlet_ws', 'Masukkan hardness Inlet WS') !!}
-                                {!! renderAnalisisChecklistItem('hardness_outlet_ws', 'Masukkan hardness Outlet WS') !!}
-                                {!! renderAnalisisChecklistItem('hardness_ws_storage', 'Masukkan hardness WS Storage') !!}
-                                {!! renderAnalisisChecklistItem('hardness_ct', 'Masukkan hardness CT') !!}
-                                {!! renderAnalisisChecklistItem('hardness_ro', 'Masukkan hardness RO') !!}
-                                {!! renderAnalisisChecklistItem('hardness_boiler', 'Masukkan hardness Boiler') !!}
+                                {!! renderAnalisisItem('hardness_inlet_ws', 'Masukkan hardness Inlet WS', 'ppm') !!}
+                                {!! renderAnalisisItem('hardness_outlet_ws', 'Masukkan hardness Outlet WS', 'ppm') !!}
+                                {!! renderAnalisisItem('hardness_ws_storage', 'Masukkan hardness WS Storage', 'ppm') !!}
+                                {!! renderAnalisisItem('hardness_ct', 'Masukkan hardness CT', 'ppm') !!}
+                                {!! renderAnalisisItem('hardness_ro', 'Masukkan hardness RO', 'ppm') !!}
+                                {!! renderAnalisisItem('hardness_boiler', 'Masukkan hardness Boiler', 'ppm') !!}
                             </div>
                         </div>
 
                         <div class="text-end mb-5">
-                            <button type="submit" class="btn btn-teal px-5 btn-lg rounded-pill shadow-sm text-white" style="background-color: #0f766e;">
-                                <i class="ri-send-plane-2-line me-1"></i> Submit Analisis
+                            <button type="submit" class="btn btn-teal px-5 btn-lg rounded-pill shadow-sm text-white"
+                                style="background-color: #0f766e;">
+                                <i class="ri-send-plane-2-line me-1"></i> Submit
                             </button>
                         </div>
 
@@ -212,8 +196,8 @@
                 e.preventDefault();
 
                 let hasValue = false;
-                $(this).find('input[type="radio"]:checked').each(function() {
-                    if ($(this).val() !== '') {
+                $(this).find('input[type="number"]').each(function() {
+                    if ($(this).val().trim() !== '') {
                         hasValue = true;
                         return false;
                     }
@@ -223,7 +207,7 @@
                     Swal.fire({
                         icon: 'warning',
                         title: 'Peringatan',
-                        text: 'Minimal harus ada 1 checklist (OK / NOK) yang diisi sebelum submit.'
+                        text: 'Minimal harus ada 1 parameter yang diisi sebelum submit.'
                     });
                     return;
                 }
@@ -244,14 +228,8 @@
                             showConfirmButton: false
                         });
 
-                        // Reset radio buttons to "Kosong"
-                        $('#formAnalisisUtility').find('input[type="radio"]').each(function() {
-                            if ($(this).val() === '') {
-                                $(this).prop('checked', true);
-                            } else {
-                                $(this).prop('checked', false);
-                            }
-                        });
+                        // Reset inputs
+                        $('#formAnalisisUtility').find('input[type="number"]').val('');
                     },
                     error: function(xhr) {
                         let err = xhr.responseJSON;

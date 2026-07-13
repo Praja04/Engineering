@@ -514,6 +514,45 @@
                     </div>
                 </li>
 
+                {{-- Analisis Utility --}}
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ $isAnalisisUtility ? '' : 'collapsed' }}"
+                        href="#analisisUtilityMenu" data-bs-toggle="collapse"
+                        aria-expanded="{{ $isAnalisisUtility ? 'true' : 'false' }}">
+                        <span>Analisis Utility</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ $isAnalisisUtility ? 'show' : '' }}"
+                        id="analisisUtilityMenu">
+                        <ul class="nav nav-sm flex-column">
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/analisis-utility') ? 'active' : '' }}"
+                                    href="{{ url('utility/analisis-utility/') }}">
+                                    Form Analisis Utility
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/analisis-utility/data') ? 'active' : '' }}"
+                                    href="{{ url('utility/analisis-utility/data') }}">
+                                    Data Analisis Utility
+                                </a>
+                            </li>
+
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('utility/analisis-utility/approval') ? 'active' : '' }}"
+                                        href="{{ url('utility/analisis-utility/approval') }}">
+                                        Approval Analisis Utility
+                                    </a>
+                                </li>
+                            @endif
+
+                        </ul>
+                    </div>
+                </li>
+
                 {{-- Agenda RO-WS --}}
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ $isAgendaRoWs ? '' : 'collapsed' }}" href="#agendaRoWsMenu"
@@ -697,45 +736,6 @@
                                     <a class="nav-link {{ request()->is('utility/agenda-compressor/approval') ? 'active' : '' }}"
                                         href="{{ url('utility/agenda-compressor/approval') }}">
                                         Approval Agenda Compressor
-                                    </a>
-                                </li>
-                            @endif
-
-                        </ul>
-                    </div>
-                </li>
-
-                {{-- Analisis Utility --}}
-                <li class="nav-item">
-                    <a class="nav-link menu-link {{ $isAnalisisUtility ? '' : 'collapsed' }}"
-                        href="#analisisUtilityMenu" data-bs-toggle="collapse"
-                        aria-expanded="{{ $isAnalisisUtility ? 'true' : 'false' }}">
-                        <span>Analisis Utility</span>
-                    </a>
-
-                    <div class="collapse menu-dropdown {{ $isAnalisisUtility ? 'show' : '' }}"
-                        id="analisisUtilityMenu">
-                        <ul class="nav nav-sm flex-column">
-
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->is('utility/analisis-utility') ? 'active' : '' }}"
-                                    href="{{ url('utility/analisis-utility/') }}">
-                                    Form Analisis Utility
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->is('utility/analisis-utility/data') ? 'active' : '' }}"
-                                    href="{{ url('utility/analisis-utility/data') }}">
-                                    Data Analisis Utility
-                                </a>
-                            </li>
-
-                            @if ($jabatan != 'operator')
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->is('utility/analisis-utility/approval') ? 'active' : '' }}"
-                                        href="{{ url('utility/analisis-utility/approval') }}">
-                                        Approval Analisis Utility
                                     </a>
                                 </li>
                             @endif

@@ -37,28 +37,28 @@ class PemantauanPompaUtilityController extends Controller
         try {
             $validated = $request->validate([
                 'tanggal' => 'required|date',
-                'ampere_pompa_10p3' => 'nullable|in:OK,NOK',
-                'ampere_pompa_10p3a' => 'nullable|in:OK,NOK',
-                'ampere_pompa_10p4' => 'nullable|in:OK,NOK',
-                'ampere_pompa_10p4a' => 'nullable|in:OK,NOK',
-                'ampere_pompa_10p5b' => 'nullable|in:OK,NOK',
-                'ampere_pompa_20p1' => 'nullable|in:OK,NOK',
-                'ampere_pompa_20p1a' => 'nullable|in:OK,NOK',
-                'ampere_pompa_20p2' => 'nullable|in:OK,NOK',
-                'ampere_pompa_20p2a' => 'nullable|in:OK,NOK',
-                'ampere_pompa_60p1' => 'nullable|in:OK,NOK',
-                'ampere_pompa_60p2' => 'nullable|in:OK,NOK',
-                'ampere_pompa_60p3' => 'nullable|in:OK,NOK',
-                'ampere_pompa_hp_pump' => 'nullable|in:OK,NOK',
-                'ampere_pompa_cip_pump' => 'nullable|in:OK,NOK',
-                'ampere_pompa_tf_ws' => 'nullable|in:OK,NOK',
-                'ampere_fan_1' => 'nullable|in:OK,NOK',
-                'ampere_fan_2' => 'nullable|in:OK,NOK',
-                'ampere_fan_3' => 'nullable|in:OK,NOK',
-                'ampere_fan_4' => 'nullable|in:OK,NOK',
-                'ampere_pompa_ct_10000p1' => 'nullable|in:OK,NOK',
-                'ampere_pompa_ct_10000p2' => 'nullable|in:OK,NOK',
-                'ampere_pompa_ct_10000p3' => 'nullable|in:OK,NOK',
+                'ampere_pompa_10p3' => 'nullable|numeric',
+                'ampere_pompa_10p3a' => 'nullable|numeric',
+                'ampere_pompa_10p4' => 'nullable|numeric',
+                'ampere_pompa_10p4a' => 'nullable|numeric',
+                'ampere_pompa_10p5b' => 'nullable|numeric',
+                'ampere_pompa_20p1' => 'nullable|numeric',
+                'ampere_pompa_20p1a' => 'nullable|numeric',
+                'ampere_pompa_20p2' => 'nullable|numeric',
+                'ampere_pompa_20p2a' => 'nullable|numeric',
+                'ampere_pompa_60p1' => 'nullable|numeric',
+                'ampere_pompa_60p2' => 'nullable|numeric',
+                'ampere_pompa_60p3' => 'nullable|numeric',
+                'ampere_pompa_hp_pump' => 'nullable|numeric',
+                'ampere_pompa_cip_pump' => 'nullable|numeric',
+                'ampere_pompa_tf_ws' => 'nullable|numeric',
+                'ampere_fan_1' => 'nullable|numeric',
+                'ampere_fan_2' => 'nullable|numeric',
+                'ampere_fan_3' => 'nullable|numeric',
+                'ampere_fan_4' => 'nullable|numeric',
+                'ampere_pompa_ct_10000p1' => 'nullable|numeric',
+                'ampere_pompa_ct_10000p2' => 'nullable|numeric',
+                'ampere_pompa_ct_10000p3' => 'nullable|numeric',
             ]);
 
             // Cek Duplikat di Details
@@ -124,28 +124,28 @@ class PemantauanPompaUtilityController extends Controller
 
             $validated = $request->validate([
                 'tanggal' => 'required|date',
-                'ampere_pompa_10p3' => 'nullable|in:OK,NOK',
-                'ampere_pompa_10p3a' => 'nullable|in:OK,NOK',
-                'ampere_pompa_10p4' => 'nullable|in:OK,NOK',
-                'ampere_pompa_10p4a' => 'nullable|in:OK,NOK',
-                'ampere_pompa_10p5b' => 'nullable|in:OK,NOK',
-                'ampere_pompa_20p1' => 'nullable|in:OK,NOK',
-                'ampere_pompa_20p1a' => 'nullable|in:OK,NOK',
-                'ampere_pompa_20p2' => 'nullable|in:OK,NOK',
-                'ampere_pompa_20p2a' => 'nullable|in:OK,NOK',
-                'ampere_pompa_60p1' => 'nullable|in:OK,NOK',
-                'ampere_pompa_60p2' => 'nullable|in:OK,NOK',
-                'ampere_pompa_60p3' => 'nullable|in:OK,NOK',
-                'ampere_pompa_hp_pump' => 'nullable|in:OK,NOK',
-                'ampere_pompa_cip_pump' => 'nullable|in:OK,NOK',
-                'ampere_pompa_tf_ws' => 'nullable|in:OK,NOK',
-                'ampere_fan_1' => 'nullable|in:OK,NOK',
-                'ampere_fan_2' => 'nullable|in:OK,NOK',
-                'ampere_fan_3' => 'nullable|in:OK,NOK',
-                'ampere_fan_4' => 'nullable|in:OK,NOK',
-                'ampere_pompa_ct_10000p1' => 'nullable|in:OK,NOK',
-                'ampere_pompa_ct_10000p2' => 'nullable|in:OK,NOK',
-                'ampere_pompa_ct_10000p3' => 'nullable|in:OK,NOK',
+                'ampere_pompa_10p3' => 'nullable|numeric',
+                'ampere_pompa_10p3a' => 'nullable|numeric',
+                'ampere_pompa_10p4' => 'nullable|numeric',
+                'ampere_pompa_10p4a' => 'nullable|numeric',
+                'ampere_pompa_10p5b' => 'nullable|numeric',
+                'ampere_pompa_20p1' => 'nullable|numeric',
+                'ampere_pompa_20p1a' => 'nullable|numeric',
+                'ampere_pompa_20p2' => 'nullable|numeric',
+                'ampere_pompa_20p2a' => 'nullable|numeric',
+                'ampere_pompa_60p1' => 'nullable|numeric',
+                'ampere_pompa_60p2' => 'nullable|numeric',
+                'ampere_pompa_60p3' => 'nullable|numeric',
+                'ampere_pompa_hp_pump' => 'nullable|numeric',
+                'ampere_pompa_cip_pump' => 'nullable|numeric',
+                'ampere_pompa_tf_ws' => 'nullable|numeric',
+                'ampere_fan_1' => 'nullable|numeric',
+                'ampere_fan_2' => 'nullable|numeric',
+                'ampere_fan_3' => 'nullable|numeric',
+                'ampere_fan_4' => 'nullable|numeric',
+                'ampere_pompa_ct_10000p1' => 'nullable|numeric',
+                'ampere_pompa_ct_10000p2' => 'nullable|numeric',
+                'ampere_pompa_ct_10000p3' => 'nullable|numeric',
             ]);
 
             // Cek Duplikat di Details (jika tanggal berubah)
@@ -499,20 +499,12 @@ class PemantauanPompaUtilityController extends Controller
                     // Column B starts at index 2
                     $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(2 + $index);
                     $val = $item->{$field};
-                    $symbol = '';
-                    $color = null;
-                    if ($val === 'OK') {
-                        $symbol = '✓';
-                        $color = 'FF28A745'; // Green
-                    } elseif ($val === 'NOK') {
-                        $symbol = '✗';
-                        $color = 'FFDC3545'; // Red
-                    }
 
                     $cell = $colLetter . $rowNum;
-                    $sheet->setCellValue($cell, $symbol);
-                    if ($color) {
-                        $sheet->getStyle($cell)->getFont()->getColor()->setARGB($color);
+                    if ($val !== null && $val !== '') {
+                        $sheet->setCellValue($cell, (float)$val);
+                    } else {
+                        $sheet->setCellValue($cell, '');
                     }
                 }
             }
@@ -535,7 +527,7 @@ class PemantauanPompaUtilityController extends Controller
                         $drawingOperator = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                         $drawingOperator->setName('Submitted Operator ' . $monthNum);
                         $drawingOperator->setPath($tempPathOp);
-                        $drawingOperator->setHeight(120);
+                        $drawingOperator->setHeight(100);
                         $drawingOperator->setCoordinates('D40');
                         $drawingOperator->setWorksheet($sheet);
                     }
@@ -553,8 +545,8 @@ class PemantauanPompaUtilityController extends Controller
                         $drawingForeman = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                         $drawingForeman->setName('Approved Foreman ' . $monthNum);
                         $drawingForeman->setPath($tempPathFm);
-                        $drawingForeman->setHeight(120);
-                        $drawingForeman->setCoordinates('I40');
+                        $drawingForeman->setHeight(100);
+                        $drawingForeman->setCoordinates('J40');
                         $drawingForeman->setWorksheet($sheet);
                     }
                     $sheet->setCellValue('G45', $mainRecord->foreman ? $mainRecord->foreman->username : '-');
@@ -571,8 +563,8 @@ class PemantauanPompaUtilityController extends Controller
                         $drawingSupervisor = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                         $drawingSupervisor->setName('Approved Supervisor ' . $monthNum);
                         $drawingSupervisor->setPath($tempPathSpv);
-                        $drawingSupervisor->setHeight(120);
-                        $drawingSupervisor->setCoordinates('T40');
+                        $drawingSupervisor->setHeight(100);
+                        $drawingSupervisor->setCoordinates('S40');
                         $drawingSupervisor->setWorksheet($sheet);
                     }
                     $sheet->setCellValue('O45', $mainRecord->supervisor ? $mainRecord->supervisor->username : '-');

@@ -2,6 +2,17 @@
 
 @section('title', 'Approval Analisis Utility')
 
+@section('styles')
+    <style>
+        .collapse-trigger[aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.2s ease;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
@@ -76,44 +87,9 @@
                         </div>
                     </div>
 
-                    <!-- Details Table -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm align-middle text-nowrap">
-                            <thead class="table-light text-center small align-middle">
-                                <tr>
-                                    <th>Tanggal</th>
-                                    @for ($i = 1; $i <= 37; $i++)
-                                        <th>F{{ $i }}</th>
-                                    @endfor
-                                </tr>
-                            </thead>
-                            <tbody id="tbodyReviewDetails" class="small">
-                                <!-- Rows injected via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="alert alert-info mt-3 py-2 small">
-                        <strong>Keterangan Kolom:</strong><br>
-                        <div class="row">
-                            <div class="col-md-4">
-                                F1-F4: pH (FW, WS, RO, In MMF)<br>
-                                F5-F8: pH (Buffer WS, Out WS, Menara WS, Depo Lt1)<br>
-                                F9-F12: pH (Depo Lt2, CT, Boiler, Out WS 2)<br>
-                                F13-F16: TDS (FW, WS, RO, In MMF)
-                            </div>
-                            <div class="col-md-4">
-                                F17-F20: TDS (Out RO, Menara WS, Dissolver, Depo Lt1)<br>
-                                F21-F23: TDS (Depo Lt2, CT, Boiler)<br>
-                                F24-F26: Turbidity (In MMF, Out MMF, CT)<br>
-                                F27-F30: Chlorine (MMF, Menara, Depo Lt1, Depo Lt2)
-                            </div>
-                            <div class="col-md-4">
-                                F31: Chlorine Daily Tank Dissolver<br>
-                                F32-F35: Hardness (Inlet WS, Outlet WS, WS Storage, CT)<br>
-                                F36-F37: Hardness (RO, Boiler)
-                            </div>
-                        </div>
+                    <!-- Details Collapsible List -->
+                    <div id="modalReviewContent" class="px-2">
+                        <!-- Injected via JS -->
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -235,6 +211,73 @@
             });
         }
 
+        const FIELDS_PH = [
+            { field: 'ph_fw_storage', label: 'pH FW Storage' },
+            { field: 'ph_ws_storage', label: 'pH WS Storage' },
+            { field: 'ph_ro_storage', label: 'pH RO Storage' },
+            { field: 'ph_in_mmf', label: 'pH In MMF' },
+            { field: 'ph_buffer_tank_ws', label: 'pH Buffer Tank WS' },
+            { field: 'ph_outlet_ws', label: 'pH Outlet WS' },
+            { field: 'ph_menara_ws', label: 'pH Menara WS' },
+            { field: 'ph_depo_lt1', label: 'pH Depo Lt.1' },
+            { field: 'ph_depo_lt2', label: 'pH Depo Lt.2' },
+            { field: 'ph_cooling_tower', label: 'pH Cooling Tower' },
+            { field: 'ph_boiler', label: 'pH Boiler' },
+            { field: 'ph_outlet_ws_2', label: 'pH Outlet WS 2' }
+        ];
+
+        const FIELDS_TDS = [
+            { field: 'tds_fw_storage', label: 'TDS FW Storage' },
+            { field: 'tds_ws_storage', label: 'TDS WS Storage' },
+            { field: 'tds_ro_storage', label: 'TDS RO Storage' },
+            { field: 'tds_in_mmf', label: 'TDS In MMF' },
+            { field: 'tds_out_ro', label: 'TDS Out RO' },
+            { field: 'tds_menara_ws', label: 'TDS Menara WS' },
+            { field: 'tds_daily_tank_dissolver', label: 'TDS Daily Tank Dissolver' },
+            { field: 'tds_depo_lt1', label: 'TDS Depo Lt.1' },
+            { field: 'tds_depo_lt2', label: 'TDS Depo Lt.2' },
+            { field: 'tds_cooling_tower', label: 'TDS Cooling Tower' },
+            { field: 'tds_boiler', label: 'TDS Boiler' }
+        ];
+
+        const FIELDS_OTHER = [
+            { field: 'turbidity_in_mmf', label: 'Turbidity In MMF', unit: 'NTU' },
+            { field: 'turbidity_out_mmf', label: 'Turbidity Out MMF', unit: 'NTU' },
+            { field: 'turbidity_cooling_tower', label: 'Turbidity Cooling Tower', unit: 'NTU' },
+            { field: 'chlorine_mmf', label: 'Chlorine MMF', unit: 'ppm' },
+            { field: 'chlorine_menara', label: 'Chlorine Menara', unit: 'ppm' },
+            { field: 'chlorine_depo_lt1', label: 'Chlorine Depo Lt.1', unit: 'ppm' },
+            { field: 'chlorine_depo_lt2', label: 'Chlorine Depo Lt.2', unit: 'ppm' },
+            { field: 'chlorine_daily_tank_dissolver', label: 'Chlorine Daily Tank Dissolver', unit: 'ppm' },
+            { field: 'hardness_inlet_ws', label: 'Hardness Inlet WS', unit: 'ppm' },
+            { field: 'hardness_outlet_ws', label: 'Hardness Outlet WS', unit: 'ppm' },
+            { field: 'hardness_ws_storage', label: 'Hardness WS Storage', unit: 'ppm' },
+            { field: 'hardness_ct', label: 'Hardness CT', unit: 'ppm' },
+            { field: 'hardness_ro', label: 'Hardness RO', unit: 'ppm' },
+            { field: 'hardness_boiler', label: 'Hardness Boiler', unit: 'ppm' }
+        ];
+
+        function buildAnalisisStatusHtml(item, fieldList, defaultUnit) {
+            let listHtml = '<ul class="list-group list-group-flush">';
+            fieldList.forEach(f => {
+                let val = item[f.field];
+                let badge = '<span class="badge bg-secondary">-</span>';
+                let unit = f.unit || defaultUnit || '';
+                if (val !== undefined && val !== null && val !== '') {
+                    badge = `<span class="badge bg-primary px-2 py-1">${Number(val)}${unit ? ' ' + unit : ''}</span>`;
+                }
+
+                listHtml += `
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 border-bottom-0">
+                    <span class="small fw-medium text-muted" style="font-size: 0.8rem; text-align: left;">${f.label}</span>
+                    ${badge}
+                </li>
+                `;
+            });
+            listHtml += '</ul>';
+            return listHtml;
+        }
+
         function reviewDetails(id) {
             $.ajax({
                 url: `{{ url('utility/analisis-utility/show-monthly') }}/${id}`,
@@ -248,27 +291,47 @@
 
                     let detailsHtml = '';
                     res.details.forEach(d => {
-                        let rowCells = '';
-                        FIELDS.forEach(f => {
-                            let cellVal = d[f] || '';
-                            let badge = '-';
-                            if (cellVal === 'OK') badge =
-                                '<span class="text-success fw-bold">✓</span>';
-                            else if (cellVal === 'NOK') badge =
-                                '<span class="text-danger fw-bold">✗</span>';
-
-                            rowCells += `<td class="text-center">${badge}</td>`;
-                        });
-
                         detailsHtml += `
-                        <tr>
-                            <td class="text-center fw-medium bg-light">${d.tanggal}</td>
-                            ${rowCells}
-                        </tr>
+                        <div class="card border mb-2 shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 collapse-trigger" 
+                                 role="button" 
+                                 data-bs-toggle="collapse" 
+                                 data-bs-target="#collapse-${d.id}" 
+                                 aria-expanded="false"
+                                 style="cursor: pointer;">
+                                <span class="fw-bold text-dark"><i class="ri-calendar-event-line me-2 text-primary"></i>Tanggal: ${d.tanggal}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-soft-info text-info">Analisis Parameter</span>
+                                    <i class="ri-arrow-down-s-line fs-5 transition-icon"></i>
+                                </div>
+                            </div>
+                            <div id="collapse-${d.id}" class="collapse">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-primary mb-2 small border-bottom pb-1">pH Parameter</div>
+                                            ${buildAnalisisStatusHtml(d, FIELDS_PH, '')}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-warning-emphasis mb-2 small border-bottom pb-1">TDS Parameter</div>
+                                            ${buildAnalisisStatusHtml(d, FIELDS_TDS, 'ppm')}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="fw-bold text-danger mb-2 small border-bottom pb-1">Turbidity, Chlorine & Hardness</div>
+                                            ${buildAnalisisStatusHtml(d, FIELDS_OTHER, '')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         `;
                     });
 
-                    $('#tbodyReviewDetails').html(detailsHtml);
+                    if (res.details.length === 0) {
+                        detailsHtml = '<div class="alert alert-warning text-center">Tidak ada data checklist harian</div>';
+                    }
+
+                    $('#modalReviewContent').html(detailsHtml);
                     $('#modalReview').modal('show');
                 }
             });

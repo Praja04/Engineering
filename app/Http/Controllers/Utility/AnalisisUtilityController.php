@@ -42,21 +42,47 @@ class AnalisisUtilityController extends Controller
             ];
 
             $fields = [
-                'ph_fw_storage', 'ph_ws_storage', 'ph_ro_storage', 'ph_in_mmf',
-                'ph_buffer_tank_ws', 'ph_outlet_ws', 'ph_menara_ws', 'ph_depo_lt1',
-                'ph_depo_lt2', 'ph_cooling_tower', 'ph_boiler', 'ph_outlet_ws_2',
-                'tds_fw_storage', 'tds_ws_storage', 'tds_ro_storage', 'tds_in_mmf',
-                'tds_out_ro', 'tds_menara_ws', 'tds_daily_tank_dissolver', 'tds_depo_lt1',
-                'tds_depo_lt2', 'tds_cooling_tower', 'tds_boiler',
-                'turbidity_in_mmf', 'turbidity_out_mmf', 'turbidity_cooling_tower',
-                'chlorine_mmf', 'chlorine_menara', 'chlorine_depo_lt1', 'chlorine_depo_lt2',
+                'ph_fw_storage',
+                'ph_ws_storage',
+                'ph_ro_storage',
+                'ph_in_mmf',
+                'ph_buffer_tank_ws',
+                'ph_outlet_ws',
+                'ph_menara_ws',
+                'ph_depo_lt1',
+                'ph_depo_lt2',
+                'ph_cooling_tower',
+                'ph_boiler',
+                'ph_outlet_ws_2',
+                'tds_fw_storage',
+                'tds_ws_storage',
+                'tds_ro_storage',
+                'tds_in_mmf',
+                'tds_out_ro',
+                'tds_menara_ws',
+                'tds_daily_tank_dissolver',
+                'tds_depo_lt1',
+                'tds_depo_lt2',
+                'tds_cooling_tower',
+                'tds_boiler',
+                'turbidity_in_mmf',
+                'turbidity_out_mmf',
+                'turbidity_cooling_tower',
+                'chlorine_mmf',
+                'chlorine_menara',
+                'chlorine_depo_lt1',
+                'chlorine_depo_lt2',
                 'chlorine_daily_tank_dissolver',
-                'hardness_inlet_ws', 'hardness_outlet_ws', 'hardness_ws_storage',
-                'hardness_ct', 'hardness_ro', 'hardness_boiler',
+                'hardness_inlet_ws',
+                'hardness_outlet_ws',
+                'hardness_ws_storage',
+                'hardness_ct',
+                'hardness_ro',
+                'hardness_boiler',
             ];
 
             foreach ($fields as $f) {
-                $rules[$f] = 'nullable|in:OK,NOK';
+                $rules[$f] = 'nullable|numeric';
             }
 
             $validated = $request->validate($rules);
@@ -127,21 +153,47 @@ class AnalisisUtilityController extends Controller
             ];
 
             $fields = [
-                'ph_fw_storage', 'ph_ws_storage', 'ph_ro_storage', 'ph_in_mmf',
-                'ph_buffer_tank_ws', 'ph_outlet_ws', 'ph_menara_ws', 'ph_depo_lt1',
-                'ph_depo_lt2', 'ph_cooling_tower', 'ph_boiler', 'ph_outlet_ws_2',
-                'tds_fw_storage', 'tds_ws_storage', 'tds_ro_storage', 'tds_in_mmf',
-                'tds_out_ro', 'tds_menara_ws', 'tds_daily_tank_dissolver', 'tds_depo_lt1',
-                'tds_depo_lt2', 'tds_cooling_tower', 'tds_boiler',
-                'turbidity_in_mmf', 'turbidity_out_mmf', 'turbidity_cooling_tower',
-                'chlorine_mmf', 'chlorine_menara', 'chlorine_depo_lt1', 'chlorine_depo_lt2',
+                'ph_fw_storage',
+                'ph_ws_storage',
+                'ph_ro_storage',
+                'ph_in_mmf',
+                'ph_buffer_tank_ws',
+                'ph_outlet_ws',
+                'ph_menara_ws',
+                'ph_depo_lt1',
+                'ph_depo_lt2',
+                'ph_cooling_tower',
+                'ph_boiler',
+                'ph_outlet_ws_2',
+                'tds_fw_storage',
+                'tds_ws_storage',
+                'tds_ro_storage',
+                'tds_in_mmf',
+                'tds_out_ro',
+                'tds_menara_ws',
+                'tds_daily_tank_dissolver',
+                'tds_depo_lt1',
+                'tds_depo_lt2',
+                'tds_cooling_tower',
+                'tds_boiler',
+                'turbidity_in_mmf',
+                'turbidity_out_mmf',
+                'turbidity_cooling_tower',
+                'chlorine_mmf',
+                'chlorine_menara',
+                'chlorine_depo_lt1',
+                'chlorine_depo_lt2',
                 'chlorine_daily_tank_dissolver',
-                'hardness_inlet_ws', 'hardness_outlet_ws', 'hardness_ws_storage',
-                'hardness_ct', 'hardness_ro', 'hardness_boiler',
+                'hardness_inlet_ws',
+                'hardness_outlet_ws',
+                'hardness_ws_storage',
+                'hardness_ct',
+                'hardness_ro',
+                'hardness_boiler',
             ];
 
             foreach ($fields as $f) {
-                $rules[$f] = 'nullable|in:OK,NOK';
+                $rules[$f] = 'nullable|numeric';
             }
 
             $validated = $request->validate($rules);
@@ -444,17 +496,43 @@ class AnalisisUtilityController extends Controller
 
         // List 37 fields in exact sequential order mapping to Columns C to AM
         $fields = [
-            'ph_fw_storage', 'ph_ws_storage', 'ph_ro_storage', 'ph_in_mmf',
-            'ph_buffer_tank_ws', 'ph_outlet_ws', 'ph_menara_ws', 'ph_depo_lt1',
-            'ph_depo_lt2', 'ph_cooling_tower', 'ph_boiler', 'ph_outlet_ws_2',
-            'tds_fw_storage', 'tds_ws_storage', 'tds_ro_storage', 'tds_in_mmf',
-            'tds_out_ro', 'tds_menara_ws', 'tds_daily_tank_dissolver', 'tds_depo_lt1',
-            'tds_depo_lt2', 'tds_cooling_tower', 'tds_boiler',
-            'turbidity_in_mmf', 'turbidity_out_mmf', 'turbidity_cooling_tower',
-            'chlorine_mmf', 'chlorine_menara', 'chlorine_depo_lt1', 'chlorine_depo_lt2',
+            'ph_fw_storage',
+            'ph_ws_storage',
+            'ph_ro_storage',
+            'ph_in_mmf',
+            'ph_buffer_tank_ws',
+            'ph_outlet_ws',
+            'ph_menara_ws',
+            'ph_depo_lt1',
+            'ph_depo_lt2',
+            'ph_cooling_tower',
+            'ph_boiler',
+            'ph_outlet_ws_2',
+            'tds_fw_storage',
+            'tds_ws_storage',
+            'tds_ro_storage',
+            'tds_in_mmf',
+            'tds_out_ro',
+            'tds_menara_ws',
+            'tds_daily_tank_dissolver',
+            'tds_depo_lt1',
+            'tds_depo_lt2',
+            'tds_cooling_tower',
+            'tds_boiler',
+            'turbidity_in_mmf',
+            'turbidity_out_mmf',
+            'turbidity_cooling_tower',
+            'chlorine_mmf',
+            'chlorine_menara',
+            'chlorine_depo_lt1',
+            'chlorine_depo_lt2',
             'chlorine_daily_tank_dissolver',
-            'hardness_inlet_ws', 'hardness_outlet_ws', 'hardness_ws_storage',
-            'hardness_ct', 'hardness_ro', 'hardness_boiler',
+            'hardness_inlet_ws',
+            'hardness_outlet_ws',
+            'hardness_ws_storage',
+            'hardness_ct',
+            'hardness_ro',
+            'hardness_boiler',
         ];
 
         $isFirst = true;
@@ -481,27 +559,19 @@ class AnalisisUtilityController extends Controller
             // Column C is Field 1, Column D is Field 2, ...
             $rowNum = 6;
             foreach ($monthRecords as $item) {
-                $dayNum = (int)Carbon::parse($item->tanggal)->day;
-                $sheet->setCellValue('A' . $rowNum, $dayNum);
+                $formattedDate = Carbon::parse($item->tanggal)->format('d');
+                $sheet->setCellValue('A' . $rowNum, $formattedDate);
 
                 $fieldIndex = 0;
                 foreach ($fields as $fieldName) {
                     $val = $item->{$fieldName};
-                    $symbol = '';
-                    $color = null;
-                    if ($val === 'OK') {
-                        $symbol = '✓';
-                        $color = 'FF28A745'; // Green
-                    } elseif ($val === 'NOK') {
-                        $symbol = '✗';
-                        $color = 'FFDC3545'; // Red
-                    }
 
                     $colLetter = Coordinate::stringFromColumnIndex(3 + $fieldIndex); // C is 3
                     $cell = $colLetter . $rowNum;
-                    $sheet->setCellValue($cell, $symbol);
-                    if ($color) {
-                        $sheet->getStyle($cell)->getFont()->getColor()->setARGB($color);
+                    if ($val !== null && $val !== '') {
+                        $sheet->setCellValue($cell, (float)$val);
+                    } else {
+                        $sheet->setCellValue($cell, '');
                     }
                     $fieldIndex++;
                 }

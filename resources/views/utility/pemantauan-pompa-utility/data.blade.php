@@ -87,9 +87,8 @@
                             <thead class="table-light align-middle text-center">
                                 <tr>
                                     <th>Tanggal</th>
-                                    <th>Checklist OK</th>
-                                    <th>Checklist NOK</th>
-                                    <th>Belum Diisi / Kosong</th>
+                                    <th>Parameter Terisi</th>
+                                    <th>Parameter Kosong</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
@@ -145,7 +144,6 @@
                             <input type="date" name="tanggal" id="edit_tanggal" class="form-control" required>
                         </div>
 
-                        <!-- Segmented control template wrapper function -->
                         @php
                             if (!function_exists('renderEditChecklistItem')) {
                                 function renderEditChecklistItem($fieldName, $labelText)
@@ -157,33 +155,11 @@
                                         $labelText .
                                         '
                                         </div>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_empty" value="">
-                                            <label class="btn btn-outline-secondary px-3" for="edit_' .
-                                        $fieldName .
-                                        '_empty">Kosong</label>
-
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_ok" value="OK">
-                                            <label class="btn btn-outline-success px-3" for="edit_' .
-                                        $fieldName .
-                                        '_ok">OK</label>
-
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_nok" value="NOK">
-                                            <label class="btn btn-outline-danger px-3" for="edit_' .
-                                        $fieldName .
-                                        '_nok">NOK</label>
+                                        <div style="width: 150px;">
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" step="0.01" class="form-control" name="' . $fieldName . '" id="edit_' . $fieldName . '" placeholder="0.00">
+                                                <span class="input-group-text">A</span>
+                                            </div>
                                         </div>
                                     </div>
                                     ';
@@ -396,22 +372,20 @@
                             '<span class="badge bg-danger">Rejected</span>';
                         else statusBadge = '<span class="badge bg-secondary">-</span>';
 
-                        // Count OK / NOK / Empty values
-                        let countOk = 0;
-                        let countNok = 0;
-                        let countEmpty = 0;
-
+                        // Count filled / empty values
+                        let countFilled = 0;
                         ALL_FIELDS.forEach(f => {
-                            if (item[f.field] === 'OK') countOk++;
-                            else if (item[f.field] === 'NOK') countNok++;
-                            else countEmpty++;
+                            let val = item[f.field];
+                            if (val !== undefined && val !== null && val !== '') {
+                                countFilled++;
+                            }
                         });
-
+                        let countEmpty = ALL_FIELDS.length - countFilled;
+ 
                         html += `
                             <tr>
                                 <td class="text-center fw-medium">${item.tanggal}</td>
-                                <td class="text-center text-success fw-bold">${countOk} Items</td>
-                                <td class="text-center text-danger fw-bold">${countNok} Items</td>
+                                <td class="text-center text-success fw-bold">${countFilled} Items</td>
                                 <td class="text-center text-secondary">${countEmpty} Items</td>
                                 <td class="text-center">${statusBadge}</td>
                                 <td class="text-center">
@@ -505,15 +479,15 @@
             });
         }
 
-        function buildChecklistStatusHtml(item, fieldList) {
+        function buildNumericStatusHtml(item, fieldList) {
             let listHtml = '<ul class="list-group list-group-flush">';
             fieldList.forEach(f => {
+                let val = item[f.field];
                 let badge = '<span class="badge bg-secondary">-</span>';
-                if (item[f.field] === 'OK') badge =
-                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
-                else if (item[f.field] === 'NOK') badge =
-                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
-
+                if (val !== undefined && val !== null && val !== '') {
+                    badge = `<span class="badge bg-primary px-2 py-1">${Number(val)} A</span>`;
+                }
+ 
                 listHtml += `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <span class="small fw-medium">${f.label}</span>
@@ -540,15 +514,15 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="fw-bold text-primary mb-2">Cek Ampere Pompa Utility</div>
-                                    ${buildChecklistStatusHtml(d, FIELDS_PUMP_UTILITY)}
+                                    ${buildNumericStatusHtml(d, FIELDS_PUMP_UTILITY)}
                                 </div>
                                 <div class="col-md-4">
                                     <div class="fw-bold text-warning-emphasis mb-2">Cek Ampere Pompa TF, WS, CIP & CT</div>
-                                    ${buildChecklistStatusHtml(d, FIELDS_PUMP_CT_WS)}
+                                    ${buildNumericStatusHtml(d, FIELDS_PUMP_CT_WS)}
                                 </div>
                                 <div class="col-md-4">
                                     <div class="fw-bold text-danger mb-2">Cek Ampere Fan</div>
-                                    ${buildChecklistStatusHtml(d, FIELDS_FAN)}
+                                    ${buildNumericStatusHtml(d, FIELDS_FAN)}
                                 </div>
                             </div>
                         </div>
@@ -637,7 +611,7 @@
                                             <h6 class="card-title text-primary fw-bold mb-0">Cek Ampere Pompa Utility</h6>
                                         </div>
                                         <div class="card-body p-0">
-                                            ${buildChecklistStatusHtml(item, FIELDS_PUMP_UTILITY)}
+                                            ${buildNumericStatusHtml(item, FIELDS_PUMP_UTILITY)}
                                         </div>
                                     </div>
                                 </div>
@@ -647,7 +621,7 @@
                                             <h6 class="card-title text-warning-emphasis fw-bold mb-0">Cek Ampere Pompa TF, WS, CIP & CT</h6>
                                         </div>
                                         <div class="card-body p-0">
-                                            ${buildChecklistStatusHtml(item, FIELDS_PUMP_CT_WS)}
+                                            ${buildNumericStatusHtml(item, FIELDS_PUMP_CT_WS)}
                                         </div>
                                     </div>
                                 </div>
@@ -657,7 +631,7 @@
                                             <h6 class="card-title text-danger fw-bold mb-0">Cek Ampere Fan</h6>
                                         </div>
                                         <div class="card-body p-0">
-                                            ${buildChecklistStatusHtml(item, FIELDS_FAN)}
+                                            ${buildNumericStatusHtml(item, FIELDS_FAN)}
                                         </div>
                                     </div>
                                 </div>
@@ -682,7 +656,7 @@
 
                         ALL_FIELDS.forEach(f => {
                             let val = item[f.field] || '';
-                            $(`input[name="${f.field}"][value="${val}"]`).prop('checked', true);
+                            $(`#edit_${f.field}`).val(val);
                         });
 
                         $('#modalEdit').modal('show');
