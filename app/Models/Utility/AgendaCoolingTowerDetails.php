@@ -53,10 +53,12 @@ class AgendaCoolingTowerDetails extends Model
         'inspeksi_baut_mur',
         'created_by',
         'updated_by',
+        'keterangan',
     ];
 
     protected $casts = [
         'tanggal' => 'date:Y-m-d',
+        'keterangan' => 'array',
     ];
 
     protected function serializeDate(\DateTimeInterface $date)

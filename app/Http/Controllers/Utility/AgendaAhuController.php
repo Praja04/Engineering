@@ -98,6 +98,18 @@ class AgendaAhuController extends Controller
                 $main->update(['operator_id' => Auth::id()]);
             }
 
+            // Extract keterangan
+            $keterangan = [];
+            foreach ($request->all() as $key => $val) {
+                if (str_starts_with($key, 'keterangan_') && !empty($val)) {
+                    $fieldName = substr($key, 11);
+                    if ($request->input($fieldName) === 'NOK') {
+                        $keterangan[$fieldName] = $val;
+                    }
+                }
+            }
+            $validated['keterangan'] = !empty($keterangan) ? $keterangan : null;
+
             $validated['agenda_ahu_id'] = $main->id;
             $validated['created_by'] = Auth::id();
             $detail = AgendaAhuDetails::create($validated);
@@ -169,6 +181,18 @@ class AgendaAhuController extends Controller
 
             // USER REQUIREMENT: User can still update even if approved foreman/supervisor.
             // Bypassing any approval checks/locks here.
+
+            // Extract keterangan
+            $keterangan = [];
+            foreach ($request->all() as $key => $val) {
+                if (str_starts_with($key, 'keterangan_') && !empty($val)) {
+                    $fieldName = substr($key, 11);
+                    if ($request->input($fieldName) === 'NOK') {
+                        $keterangan[$fieldName] = $val;
+                    }
+                }
+            }
+            $validated['keterangan'] = !empty($keterangan) ? $keterangan : null;
 
             $detail->update([
                 ...$validated,

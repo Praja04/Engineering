@@ -42,10 +42,12 @@ class AgendaCompressorDetails extends Model
         'pressure_in_out_dryer',
         'created_by',
         'updated_by',
+        'keterangan',
     ];
 
     protected $casts = [
         'tanggal' => 'date:Y-m-d',
+        'keterangan' => 'array',
     ];
 
     protected function serializeDate(\DateTimeInterface $date)

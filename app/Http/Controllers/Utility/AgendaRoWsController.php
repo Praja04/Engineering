@@ -106,6 +106,18 @@ class AgendaRoWsController extends Controller
                 $main->update(['operator_id' => Auth::id()]);
             }
 
+            // Extract keterangan
+            $keterangan = [];
+            foreach ($request->all() as $key => $val) {
+                if (str_starts_with($key, 'keterangan_') && !empty($val)) {
+                    $fieldName = substr($key, 11);
+                    if ($request->input($fieldName) === 'NOK') {
+                        $keterangan[$fieldName] = $val;
+                    }
+                }
+            }
+            $validated['keterangan'] = !empty($keterangan) ? $keterangan : null;
+
             $validated['agenda_ro_ws_id'] = $main->id;
             $validated['created_by'] = Auth::id();
             $detail = AgendaRoWsDetails::create($validated);
@@ -188,6 +200,18 @@ class AgendaRoWsController extends Controller
                     ], 422);
                 }
             }
+
+            // Extract keterangan
+            $keterangan = [];
+            foreach ($request->all() as $key => $val) {
+                if (str_starts_with($key, 'keterangan_') && !empty($val)) {
+                    $fieldName = substr($key, 11);
+                    if ($request->input($fieldName) === 'NOK') {
+                        $keterangan[$fieldName] = $val;
+                    }
+                }
+            }
+            $validated['keterangan'] = !empty($keterangan) ? $keterangan : null;
 
             $detail->update([
                 ...$validated,

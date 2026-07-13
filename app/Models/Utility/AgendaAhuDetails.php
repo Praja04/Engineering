@@ -43,10 +43,12 @@ class AgendaAhuDetails extends Model
         'inspeksi_h_ahu_1_4',
         'created_by',
         'updated_by',
+        'keterangan',
     ];
 
     protected $casts = [
         'tanggal' => 'date:Y-m-d',
+        'keterangan' => 'array',
     ];
 
     protected function serializeDate(\DateTimeInterface $date)

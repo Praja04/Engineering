@@ -151,40 +151,22 @@
                                 function renderEditChecklistItem($fieldName, $labelText)
                                 {
                                     return '
-                                    <div class="edit-item d-flex justify-content-between align-items-center flex-wrap py-2 border-bottom">
-                                        <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0 small">
-                                            ' .
-                                        $labelText .
-                                        '
-                                        </div>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_empty" value="">
-                                            <label class="btn btn-outline-secondary px-3" for="edit_' .
-                                        $fieldName .
-                                        '_empty">Kosong</label>
+                                    <div class="edit-item py-2 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                            <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0 small">
+                                                ' . $labelText . '
+                                            </div>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_empty" value="" style="display: none;">
 
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_ok" value="OK">
-                                            <label class="btn btn-outline-success px-3" for="edit_' .
-                                        $fieldName .
-                                        '_ok">OK</label>
+                                                <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_ok" value="OK">
+                                                <label class="btn btn-outline-success px-3 rounded-start" for="edit_' . $fieldName . '_ok">OK</label>
 
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_nok" value="NOK">
-                                            <label class="btn btn-outline-danger px-3" for="edit_' .
-                                        $fieldName .
-                                        '_nok">NOK</label>
+                                                <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_nok" value="NOK">
+                                                <label class="btn btn-outline-danger px-3 rounded-end" for="edit_' . $fieldName . '_nok">NOK</label>
+                                            </div>
                                         </div>
+                                        <input type="text" class="form-control form-control-sm edit-input-description bg-soft-danger text-danger border-danger mt-2" name="keterangan_' . $fieldName . '" id="edit_keterangan_' . $fieldName . '" placeholder="Isi keterangan kerusakan / ketidaksesuaian..." style="display: none;">
                                     </div>
                                     ';
                                 }
@@ -579,17 +561,22 @@
 
         function buildChecklistStatusHtml(item, fieldList) {
             let listHtml = '<ul class="list-group list-group-flush">';
+            let ketMap = item.keterangan || {};
             fieldList.forEach(f => {
                 let badge = '<span class="badge bg-secondary">-</span>';
-                if (item[f.field] === 'OK') badge =
-                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
-                else if (item[f.field] === 'NOK') badge =
-                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+                if (item[f.field] === 'OK') {
+                    badge = '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
+                } else if (item[f.field] === 'NOK') {
+                    let ketText = ketMap[f.field] ?
+                        `<span class="text-danger d-block small mt-1 text-end">Keterangan: ${ketMap[f.field]}</span>` :
+                        '';
+                    badge = `<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>${ketText}`;
+                }
 
                 listHtml += `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
+                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
                     <span class="small fw-medium">${f.label}</span>
-                    ${badge}
+                    <div class="text-end">${badge}</div>
                 </li>
                 `;
             });
@@ -704,12 +691,20 @@
                 $('#edit_id').val(data.id);
                 $('#edit_tanggal').val(data.tanggal.substring(0, 10));
 
+                let ketMap = data.keterangan || {};
                 ALL_FIELDS.forEach(f => {
                     let val = data[f.field];
+                    let descInput = $(`#edit_keterangan_${f.field}`);
+                    descInput.hide().prop('required', false).val('');
+
                     if (val === 'OK') {
                         $(`#edit_${f.field}_ok`).prop('checked', true);
                     } else if (val === 'NOK') {
                         $(`#edit_${f.field}_nok`).prop('checked', true);
+                        descInput.show().prop('required', true);
+                        if (ketMap[f.field]) {
+                            descInput.val(ketMap[f.field]);
+                        }
                     } else {
                         $(`#edit_${f.field}_empty`).prop('checked', true);
                     }
@@ -812,6 +807,19 @@
 
         $(document).ready(function() {
             loadData();
+
+            // Listen for radio button changes in edit modal to toggle description fields
+            $(document).on('change', '.edit-radio-checklist', function() {
+                let name = $(this).attr('name');
+                let val = $(this).val();
+                let descInput = $(`#edit_keterangan_${name}`);
+
+                if (val === 'NOK') {
+                    descInput.slideDown().prop('required', true);
+                } else {
+                    descInput.slideUp().prop('required', false).val('');
+                }
+            });
 
             $('#btnExport').on('click', function() {
                 $('#modalExport').modal('show');

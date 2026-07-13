@@ -66,20 +66,22 @@
                         if (!function_exists('renderChecklistItem')) {
                             function renderChecklistItem($fieldName, $labelText) {
                                 return '
-                                <div class="checklist-item d-flex justify-content-between align-items-center flex-wrap py-3 px-2 border-bottom">
-                                    <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0">
-                                        ' . $labelText . '
-                                    </div>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <input type="radio" class="btn-check" name="' . $fieldName . '" id="' . $fieldName . '_empty" value="" checked>
-                                        <label class="btn btn-outline-secondary px-3" for="' . $fieldName . '_empty">Kosong</label>
+                                <div class="checklist-item py-3 px-2 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                        <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0">
+                                            ' . $labelText . '
+                                        </div>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <input type="radio" class="btn-check radio-checklist" name="' . $fieldName . '" id="' . $fieldName . '_empty" value="" checked style="display: none;">
 
-                                        <input type="radio" class="btn-check" name="' . $fieldName . '" id="' . $fieldName . '_ok" value="OK">
-                                        <label class="btn btn-outline-success px-3" for="' . $fieldName . '_ok">OK</label>
+                                            <input type="radio" class="btn-check radio-checklist" name="' . $fieldName . '" id="' . $fieldName . '_ok" value="OK">
+                                            <label class="btn btn-outline-success px-3 rounded-start" for="' . $fieldName . '_ok">OK</label>
 
-                                        <input type="radio" class="btn-check" name="' . $fieldName . '" id="' . $fieldName . '_nok" value="NOK">
-                                        <label class="btn btn-outline-danger px-3" for="' . $fieldName . '_nok">NOK</label>
+                                            <input type="radio" class="btn-check radio-checklist" name="' . $fieldName . '" id="' . $fieldName . '_nok" value="NOK">
+                                            <label class="btn btn-outline-danger px-3 rounded-end" for="' . $fieldName . '_nok">NOK</label>
+                                        </div>
                                     </div>
+                                    <input type="text" class="form-control form-control-sm input-description bg-soft-danger text-danger border-danger mt-2" name="keterangan_' . $fieldName . '" id="keterangan_' . $fieldName . '" placeholder="Isi keterangan kerusakan / ketidaksesuaian..." style="display: none;">
                                 </div>
                                 ';
                             }
@@ -211,6 +213,9 @@
                             $(this).prop('checked', false);
                         }
                     });
+
+                    // Clear and hide all description inputs
+                    $('.input-description').hide().prop('required', false).val('');
                 },
                 error: function(xhr) {
                     let err = xhr.responseJSON;
@@ -229,6 +234,19 @@
                         '<i class="ri-send-plane-2-line me-1"></i> Submit Checklist');
                 }
             });
+        });
+
+        // Listen for radio button changes to toggle description fields
+        $(document).on('change', '.radio-checklist', function() {
+            let name = $(this).attr('name');
+            let val = $(this).val();
+            let descInput = $(`#keterangan_${name}`);
+            
+            if (val === 'NOK') {
+                descInput.slideDown().prop('required', true);
+            } else {
+                descInput.slideUp().prop('required', false).val('');
+            }
         });
     });
 </script>

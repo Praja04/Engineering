@@ -91,8 +91,10 @@ class CoolingTowerController extends Controller
                 $main->update(['operator_id' => Auth::id()]);
             }
 
+            // flowrate disimpan langsung di details (sekali per hari)
             $validated['cooling_tower_id'] = $main->id;
             $validated['created_by'] = Auth::id();
+
             $detail = CoolingTowerDetails::create($validated);
 
             DB::commit();
@@ -158,6 +160,7 @@ class CoolingTowerController extends Controller
                 }
             }
 
+            // flowrate langsung di-update di details row
             $detail->update([
                 ...$validated,
                 'updated_by' => Auth::id(),
@@ -264,6 +267,7 @@ class CoolingTowerController extends Controller
 
         $items = collect($data->items())->map(function ($item) {
             $item->approval_status = $item->coolingTower ? $item->coolingTower->status : 'none';
+            // flowrate now comes directly from the details row
             return $item;
         });
 
@@ -281,6 +285,37 @@ class CoolingTowerController extends Controller
         ]);
     }
 
+    /**
+     * Check if flowrate fields have already been filled for the given date (once per day).
+     * Looks in cooling_tower_details for any row on that date that has flowrate set.
+     */
+    public function checkFlowrate(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+        ]);
+
+        $tanggal = $request->tanggal;
+
+        // Find any detail on this date that already has flowrate_ro_awal filled
+        $awalRow = CoolingTowerDetails::where('tanggal', $tanggal)
+            ->whereNotNull('flowrate_ro_awal')
+            ->first();
+
+        // Find any detail on this date that already has flowrate_ro_akhir filled
+        $akhirRow = CoolingTowerDetails::where('tanggal', $tanggal)
+            ->whereNotNull('flowrate_ro_akhir')
+            ->first();
+
+        return response()->json([
+            'status'                  => 200,
+            'flowrate_ro_awal_filled'  => $awalRow !== null,
+            'flowrate_ro_awal'         => $awalRow ? $awalRow->flowrate_ro_awal : null,
+            'flowrate_ro_akhir_filled' => $akhirRow !== null,
+            'flowrate_ro_akhir'        => $akhirRow ? $akhirRow->flowrate_ro_akhir : null,
+        ]);
+    }
+
     public function getCollectedData()
     {
         $mainDrafts = CoolingTower::whereIn('status', ['draft', 'rejected'])
@@ -292,9 +327,10 @@ class CoolingTowerController extends Controller
         foreach ($mainDrafts as $main) {
             $details = CoolingTowerDetails::where('cooling_tower_id', $main->id)->get();
             if ($details->count() > 0) {
+                // flowrate is already on each detail row — no extra mapping needed
                 $result[] = [
                     'approval' => $main,
-                    'data' => $details
+                    'data'     => $details
                 ];
             }
         }
@@ -477,21 +513,23 @@ class CoolingTowerController extends Controller
 
     public function show($id)
     {
-        $data = CoolingTowerDetails::with('createdBy')->find($id);
+        // flowrate_ro_awal & flowrate_ro_akhir are columns on CoolingTowerDetails — no extra mapping needed
+        $data = CoolingTowerDetails::with(['createdBy', 'coolingTower'])->find($id);
         return response()->json(['status' => 200, 'data' => $data]);
     }
 
     public function showMonthlyDetails($id)
     {
         $main = CoolingTower::with(['operator', 'foreman', 'supervisor'])->findOrFail($id);
+        // flowrate is already on each detail row — no extra mapping needed
         $details = CoolingTowerDetails::where('cooling_tower_id', $id)
             ->orderBy('tanggal', 'asc')
             ->orderBy('jam', 'asc')
             ->get();
 
         return response()->json([
-            'status' => 200,
-            'header' => $main,
+            'status'  => 200,
+            'header'  => $main,
             'details' => $details
         ]);
     }
@@ -601,8 +639,11 @@ class CoolingTowerController extends Controller
                 $day = (int)Carbon::parse($tanggal)->day;
                 $rowNumber = 7 + ($day - 1); // Row 7 for day 1, Row 8 for day 2...
 
-                $roAwal = null;
-                $roAkhir = null;
+                // Write flowrate for this day (once per day — take any entry that has it)
+                $awalDetail  = $dayRecords->firstWhere(fn($r) => $r->flowrate_ro_awal !== null);
+                $akhirDetail = $dayRecords->firstWhere(fn($r) => $r->flowrate_ro_akhir !== null);
+                if ($awalDetail)  $sheet->setCellValue('Z'  . $rowNumber, $awalDetail->flowrate_ro_awal);
+                if ($akhirDetail) $sheet->setCellValue('AA' . $rowNumber, $akhirDetail->flowrate_ro_akhir);
 
                 foreach ($dayRecords as $item) {
                     $jamKey = $item->jam instanceof Carbon ? $item->jam->format('H:i') : substr($item->jam, 0, 5); // "08:00"
@@ -639,28 +680,14 @@ class CoolingTowerController extends Controller
                         $sheet->setCellValue('X' . $rowNumber, $item->temp_ct_in);
                         $sheet->setCellValue('Y' . $rowNumber, $item->temp_ct_out);
                     }
-
-                    // Extract flowrate
-                    if ($item->flowrate_ro_awal !== null && $roAwal === null) {
-                        $roAwal = $item->flowrate_ro_awal;
-                    }
-                    if ($item->flowrate_ro_akhir !== null) {
-                        $roAkhir = $item->flowrate_ro_akhir;
-                    }
-                }
-
-                // Write flowrate (Z - AA)
-                if ($roAwal !== null) {
-                    $sheet->setCellValue('Z' . $rowNumber, $roAwal);
-                }
-                if ($roAkhir !== null) {
-                    $sheet->setCellValue('AA' . $rowNumber, $roAkhir);
                 }
             }
 
+            $mainRecord  = $monthRecords->first()->coolingTower;
+            $totalDays   = Carbon::create($yearStr, $monthNum)->daysInMonth;
+
             // TTD / Approval Section
             $signaturePath = public_path('storage/operasional/ttd/utility_approved_sticker.png');
-            $mainRecord = $monthRecords->first()->coolingTower;
 
             if ($mainRecord) {
                 $hasSticker = file_exists($signaturePath);

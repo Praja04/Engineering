@@ -59,10 +59,12 @@ class AgendaTankFarmDetails extends Model
         'pressure_gauge_water_tank_hydrant',
         'created_by',
         'updated_by',
+        'keterangan',
     ];
 
     protected $casts = [
         'tanggal' => 'date:Y-m-d',
+        'keterangan' => 'array',
     ];
 
     protected function serializeDate(\DateTimeInterface $date)

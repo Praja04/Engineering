@@ -11,6 +11,7 @@ Route::prefix('utility/cooling-tower')->as('cooling-tower.')->group(function () 
     // API Routes
     Route::post('/store', [CoolingTowerController::class, 'store'])->name('store');
     Route::get('/get-data', [CoolingTowerController::class, 'getData'])->name('get-data');
+    Route::get('/check-flowrate', [CoolingTowerController::class, 'checkFlowrate'])->name('check-flowrate');
     Route::get('/export', [CoolingTowerController::class, 'export'])->name('export');
     Route::get('/get-collected', [CoolingTowerController::class, 'getCollectedData'])->name('get-collected');
     Route::get('/get-approval-data', [CoolingTowerController::class, 'getApprovalData'])->name('get-approval-data');

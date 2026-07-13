@@ -344,17 +344,20 @@
 
         function buildChecklistStatusHtml(item, fieldList) {
             let listHtml = '<ul class="list-group list-group-flush">';
+            let ketMap = item.keterangan || {};
             fieldList.forEach(f => {
                 let badge = '<span class="badge bg-secondary">-</span>';
-                if (item[f.field] === 'OK') badge =
-                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
-                else if (item[f.field] === 'NOK') badge =
-                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+                if (item[f.field] === 'OK') {
+                    badge = '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
+                } else if (item[f.field] === 'NOK') {
+                    let ketText = ketMap[f.field] ? `<span class="text-danger d-block small mt-1 text-end">Keterangan: ${ketMap[f.field]}</span>` : '';
+                    badge = `<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>${ketText}`;
+                }
 
                 listHtml += `
-                <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2 border-bottom-0">
+                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap py-1 px-2 border-bottom-0">
                     <span class="small fw-medium text-muted" style="font-size: 0.8rem; text-align: left;">${f.label}</span>
-                    ${badge}
+                    <div class="text-end">${badge}</div>
                 </li>
                 `;
             });

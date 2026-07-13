@@ -123,6 +123,18 @@ class AgendaTankFarmController extends Controller
                 $main->update(['operator_id' => Auth::id()]);
             }
 
+            // Extract keterangan
+            $keterangan = [];
+            foreach ($request->all() as $key => $val) {
+                if (str_starts_with($key, 'keterangan_') && !empty($val)) {
+                    $fieldName = substr($key, 11);
+                    if ($request->input($fieldName) === 'NOK') {
+                        $keterangan[$fieldName] = $val;
+                    }
+                }
+            }
+            $validated['keterangan'] = !empty($keterangan) ? $keterangan : null;
+
             $validated['agenda_tank_farm_id'] = $main->id;
             $validated['created_by'] = Auth::id();
             $detail = AgendaTankFarmDetails::create($validated);
@@ -222,6 +234,18 @@ class AgendaTankFarmController extends Controller
                     ], 422);
                 }
             }
+
+            // Extract keterangan
+            $keterangan = [];
+            foreach ($request->all() as $key => $val) {
+                if (str_starts_with($key, 'keterangan_') && !empty($val)) {
+                    $fieldName = substr($key, 11);
+                    if ($request->input($fieldName) === 'NOK') {
+                        $keterangan[$fieldName] = $val;
+                    }
+                }
+            }
+            $validated['keterangan'] = !empty($keterangan) ? $keterangan : null;
 
             $detail->update([
                 ...$validated,

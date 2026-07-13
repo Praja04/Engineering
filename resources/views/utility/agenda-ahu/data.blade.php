@@ -22,8 +22,7 @@
                             </div>
 
                             <div class="d-flex gap-2">
-                                <a href="{{ route('agenda-ahu.index') }}"
-                                    class="btn btn-warning btn-sm rounded-pill px-3">
+                                <a href="{{ route('agenda-ahu.index') }}" class="btn btn-warning btn-sm rounded-pill px-3">
                                     <i class="ri-add-line me-1"></i> Input
                                 </a>
 
@@ -113,7 +112,7 @@
 
     <!-- Modal Detail -->
     <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
                     <h5 class="modal-title text-white">Detail Checklist Agenda AHU</h5>
@@ -151,40 +150,22 @@
                                 function renderEditChecklistItem($fieldName, $labelText)
                                 {
                                     return '
-                                    <div class="edit-item d-flex justify-content-between align-items-center flex-wrap py-2 border-bottom">
-                                        <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0 small">
-                                            ' .
-                                        $labelText .
-                                        '
-                                        </div>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_empty" value="">
-                                            <label class="btn btn-outline-secondary px-3" for="edit_' .
-                                        $fieldName .
-                                        '_empty">Kosong</label>
+                                    <div class="edit-item py-2 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                            <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0 small">
+                                                ' . $labelText . '
+                                            </div>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_empty" value="" style="display: none;">
 
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_ok" value="OK">
-                                            <label class="btn btn-outline-success px-3" for="edit_' .
-                                        $fieldName .
-                                        '_ok">OK</label>
+                                                <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_ok" value="OK">
+                                                <label class="btn btn-outline-success px-3 rounded-start" for="edit_' . $fieldName . '_ok">OK</label>
 
-                                            <input type="radio" class="btn-check" name="' .
-                                        $fieldName .
-                                        '" id="edit_' .
-                                        $fieldName .
-                                        '_nok" value="NOK">
-                                            <label class="btn btn-outline-danger px-3" for="edit_' .
-                                        $fieldName .
-                                        '_nok">NOK</label>
+                                                <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_nok" value="NOK">
+                                                <label class="btn btn-outline-danger px-3 rounded-end" for="edit_' . $fieldName . '_nok">NOK</label>
+                                            </div>
                                         </div>
+                                        <input type="text" class="form-control form-control-sm edit-input-description bg-soft-danger text-danger border-danger mt-2" name="keterangan_' . $fieldName . '" id="edit_keterangan_' . $fieldName . '" placeholder="Isi keterangan kerusakan / ketidaksesuaian..." style="display: none;">
                                     </div>
                                     ';
                                 }
@@ -340,39 +321,114 @@
         const API_URL = "{{ route('agenda-ahu.get-data') }}";
         let currentPage = 1;
 
-        const FIELDS_KELISTRIKAN_PRESSURE = [
-            { field: 'kelistrikan_ahu_1', label: 'Cek kelistrikan (A,V) AHU 1' },
-            { field: 'kelistrikan_ahu_2', label: 'Cek kelistrikan (A,V) AHU 2' },
-            { field: 'kelistrikan_ahu_3', label: 'Cek kelistrikan (A,V) AHU 3' },
-            { field: 'kelistrikan_ahu_4', label: 'Cek kelistrikan (A,V) AHU 4' },
-            { field: 'pressur_gauge_in_ahu_1', label: 'Cek pressur gauge in AHU 1' },
-            { field: 'pressur_gauge_in_ahu_2', label: 'Cek pressur gauge in AHU 2' },
-            { field: 'pressur_gauge_in_ahu_3', label: 'Cek pressur gauge in AHU 3' },
-            { field: 'pressur_gauge_in_ahu_4', label: 'Cek pressur gauge in AHU 4' },
-            { field: 'pressur_gauge_out_ahu_1', label: 'Cek pressur gauge out AHU 1' },
-            { field: 'pressur_gauge_out_ahu_2', label: 'Cek pressur gauge out AHU 2' },
-            { field: 'pressur_gauge_out_ahu_3', label: 'Cek pressur gauge out AHU 3' },
-            { field: 'pressur_gauge_out_ahu_4', label: 'Cek pressur gauge out AHU 4' }
+        const FIELDS_KELISTRIKAN_PRESSURE = [{
+                field: 'kelistrikan_ahu_1',
+                label: 'Cek kelistrikan (A,V) AHU 1'
+            },
+            {
+                field: 'kelistrikan_ahu_2',
+                label: 'Cek kelistrikan (A,V) AHU 2'
+            },
+            {
+                field: 'kelistrikan_ahu_3',
+                label: 'Cek kelistrikan (A,V) AHU 3'
+            },
+            {
+                field: 'kelistrikan_ahu_4',
+                label: 'Cek kelistrikan (A,V) AHU 4'
+            },
+            {
+                field: 'pressur_gauge_in_ahu_1',
+                label: 'Cek pressur gauge in AHU 1'
+            },
+            {
+                field: 'pressur_gauge_in_ahu_2',
+                label: 'Cek pressur gauge in AHU 2'
+            },
+            {
+                field: 'pressur_gauge_in_ahu_3',
+                label: 'Cek pressur gauge in AHU 3'
+            },
+            {
+                field: 'pressur_gauge_in_ahu_4',
+                label: 'Cek pressur gauge in AHU 4'
+            },
+            {
+                field: 'pressur_gauge_out_ahu_1',
+                label: 'Cek pressur gauge out AHU 1'
+            },
+            {
+                field: 'pressur_gauge_out_ahu_2',
+                label: 'Cek pressur gauge out AHU 2'
+            },
+            {
+                field: 'pressur_gauge_out_ahu_3',
+                label: 'Cek pressur gauge out AHU 3'
+            },
+            {
+                field: 'pressur_gauge_out_ahu_4',
+                label: 'Cek pressur gauge out AHU 4'
+            }
         ];
 
-        const FIELDS_TEMPERATURE = [
-            { field: 'temp_gauge_in_ahu_1', label: 'Cek temperature gauge in AHU 1' },
-            { field: 'temp_gauge_in_ahu_2', label: 'Cek temperature gauge in AHU 2' },
-            { field: 'temp_gauge_in_ahu_3', label: 'Cek temperature gauge in AHU 3' },
-            { field: 'temp_gauge_in_ahu_4', label: 'Cek temperature gauge in AHU 4' },
-            { field: 'temp_gauge_out_ahu_1', label: 'Cek temperature gauge out AHU 1' },
-            { field: 'temp_gauge_out_ahu_2', label: 'Cek temperature gauge out AHU 2' },
-            { field: 'temp_gauge_out_ahu_3', label: 'Cek temperature gauge out AHU 3' },
-            { field: 'temp_gauge_out_ahu_4', label: 'Cek temperature gauge out AHU 4' }
+        const FIELDS_TEMPERATURE = [{
+                field: 'temp_gauge_in_ahu_1',
+                label: 'Cek temperature gauge in AHU 1'
+            },
+            {
+                field: 'temp_gauge_in_ahu_2',
+                label: 'Cek temperature gauge in AHU 2'
+            },
+            {
+                field: 'temp_gauge_in_ahu_3',
+                label: 'Cek temperature gauge in AHU 3'
+            },
+            {
+                field: 'temp_gauge_in_ahu_4',
+                label: 'Cek temperature gauge in AHU 4'
+            },
+            {
+                field: 'temp_gauge_out_ahu_1',
+                label: 'Cek temperature gauge out AHU 1'
+            },
+            {
+                field: 'temp_gauge_out_ahu_2',
+                label: 'Cek temperature gauge out AHU 2'
+            },
+            {
+                field: 'temp_gauge_out_ahu_3',
+                label: 'Cek temperature gauge out AHU 3'
+            },
+            {
+                field: 'temp_gauge_out_ahu_4',
+                label: 'Cek temperature gauge out AHU 4'
+            }
         ];
 
-        const FIELDS_CLEAN_INSPEKSI = [
-            { field: 'clean_filter_strainer_1', label: 'Cleaning filter udara & strainer 1' },
-            { field: 'clean_filter_strainer_2', label: 'Cleaning filter udara & strainer 2' },
-            { field: 'clean_filter_strainer_3', label: 'Cleaning filter udara & strainer 3' },
-            { field: 'clean_filter_strainer_4', label: 'Cleaning filter udara & strainer 4' },
-            { field: 'clean_filter_bebas_ahu', label: 'Cleaning filter udara bebas ke AHU' },
-            { field: 'inspeksi_h_ahu_1_4', label: 'Inspeksi (H) AHU 1 s/d 4' }
+        const FIELDS_CLEAN_INSPEKSI = [{
+                field: 'clean_filter_strainer_1',
+                label: 'Cleaning filter udara & strainer 1'
+            },
+            {
+                field: 'clean_filter_strainer_2',
+                label: 'Cleaning filter udara & strainer 2'
+            },
+            {
+                field: 'clean_filter_strainer_3',
+                label: 'Cleaning filter udara & strainer 3'
+            },
+            {
+                field: 'clean_filter_strainer_4',
+                label: 'Cleaning filter udara & strainer 4'
+            },
+            {
+                field: 'clean_filter_bebas_ahu',
+                label: 'Cleaning filter udara bebas ke AHU'
+            },
+            {
+                field: 'inspeksi_h_ahu_1_4',
+                label: 'Inspeksi (H) AHU 1 s/d 4'
+            }
         ];
 
         const ALL_FIELDS = [...FIELDS_KELISTRIKAN_PRESSURE, ...FIELDS_TEMPERATURE, ...FIELDS_CLEAN_INSPEKSI];
@@ -515,17 +571,22 @@
 
         function buildChecklistStatusHtml(item, fieldList) {
             let listHtml = '<ul class="list-group list-group-flush">';
+            let ketMap = item.keterangan || {};
             fieldList.forEach(f => {
                 let badge = '<span class="badge bg-secondary">-</span>';
-                if (item[f.field] === 'OK') badge =
-                    '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
-                else if (item[f.field] === 'NOK') badge =
-                    '<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>';
+                if (item[f.field] === 'OK') {
+                    badge = '<span class="badge bg-success"><i class="ri-check-line"></i> OK</span>';
+                } else if (item[f.field] === 'NOK') {
+                    let ketText = ketMap[f.field] ?
+                        `<span class="text-danger d-block small mt-1 text-end">Keterangan: ${ketMap[f.field]}</span>` :
+                        '';
+                    badge = `<span class="badge bg-danger"><i class="ri-close-line"></i> NOK</span>${ketText}`;
+                }
 
                 listHtml += `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
+                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
                     <span class="small fw-medium">${f.label}</span>
-                    ${badge}
+                    <div class="text-end">${badge}</div>
                 </li>
                 `;
             });
@@ -535,8 +596,10 @@
 
         function showCollectedDetail(index) {
             let item = window.collectedData[index];
-            $('#modalCollectedDetailTitle').text(`Detail Checklist Bulan ${moment().month(item.approval.bulan-1).format('MMMM')} - ${item.approval.tahun}`);
-            
+            $('#modalCollectedDetailTitle').text(
+                `Detail Checklist Bulan ${moment().month(item.approval.bulan-1).format('MMMM')} - ${item.approval.tahun}`
+                );
+
             let html = '';
             item.data.forEach(d => {
                 html += `
@@ -689,9 +752,21 @@
                         $('#edit_id').val(item.id);
                         $('#edit_tanggal').val(item.tanggal);
 
+                        let ketMap = item.keterangan || {};
+
                         ALL_FIELDS.forEach(f => {
                             let val = item[f.field] || '';
+                            let descInput = $(`#edit_keterangan_${f.field}`);
+                            descInput.hide().prop('required', false).val('');
+
                             $(`input[name="${f.field}"][value="${val}"]`).prop('checked', true);
+
+                            if (val === 'NOK') {
+                                descInput.show().prop('required', true);
+                                if (ketMap[f.field]) {
+                                    descInput.val(ketMap[f.field]);
+                                }
+                            }
                         });
 
                         $('#modalEdit').modal('show');
@@ -842,6 +917,19 @@
 
         $(document).ready(function() {
             loadData();
+
+            // Listen for radio button changes in edit modal to toggle description fields
+            $(document).on('change', '.edit-radio-checklist', function() {
+                let name = $(this).attr('name');
+                let val = $(this).val();
+                let descInput = $(`#edit_keterangan_${name}`);
+
+                if (val === 'NOK') {
+                    descInput.slideDown().prop('required', true);
+                } else {
+                    descInput.slideUp().prop('required', false).val('');
+                }
+            });
         });
     </script>
 @endsection

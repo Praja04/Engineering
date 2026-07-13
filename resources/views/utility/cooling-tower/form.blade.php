@@ -97,14 +97,19 @@
                                     <input type="number" step="0.01" name="temp_ct_out" class="form-control"
                                         placeholder="0.00">
                                 </div>
-
-                                <div class="col-12 mt-4"><span class="badge bg-soft-info text-info">Flowrate RO to CT</span></div>
-                                <div class="col-md-6">
+                                <div class="col-12 mt-4 flowrate-header"><span class="badge bg-soft-info text-info">Flowrate RO to CT</span></div>
+                                <div class="col-12 flowrate-filled-info" style="display:none;">
+                                    <div class="alert alert-info py-2 px-3 mb-0 small">
+                                        <i class="ri-information-line me-1"></i>
+                                        <span id="flowrate-filled-text"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 flowrate-awal-col">
                                     <label class="form-label">Flowrate RO Awal</label>
                                     <input type="number" step="0.01" name="flowrate_ro_awal" class="form-control"
                                         placeholder="0.00">
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 flowrate-akhir-col">
                                     <label class="form-label">Flowrate RO Akhir</label>
                                     <input type="number" step="0.01" name="flowrate_ro_akhir" class="form-control"
                                         placeholder="0.00">
@@ -130,12 +135,79 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
+        function checkFlowrateStatus() {
+            let tanggal = $('input[name="tanggal"]').val();
+            if (!tanggal) {
+                // No date: show all flowrate fields
+                $('.flowrate-awal-col, .flowrate-akhir-col, .flowrate-header').show();
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('cooling-tower.check-flowrate') }}",
+                type: "GET",
+                data: { tanggal: tanggal },
+                success: function(res) {
+                    let showHeader = false;
+                    let infoMessages = [];
+
+                    if (res.flowrate_ro_awal_filled) {
+                        $('.flowrate-awal-col').hide();
+                        $('input[name="flowrate_ro_awal"]').val('');
+                        if (res.flowrate_ro_awal !== null && res.flowrate_ro_awal !== undefined) {
+                            infoMessages.push('Flowrate Awal sudah terisi: <strong>' + res.flowrate_ro_awal + '</strong>');
+                        }
+                    } else {
+                        $('.flowrate-awal-col').show();
+                        showHeader = true;
+                    }
+
+                    if (res.flowrate_ro_akhir_filled) {
+                        $('.flowrate-akhir-col').hide();
+                        $('input[name="flowrate_ro_akhir"]').val('');
+                        if (res.flowrate_ro_akhir !== null && res.flowrate_ro_akhir !== undefined) {
+                            infoMessages.push('Flowrate Akhir sudah terisi: <strong>' + res.flowrate_ro_akhir + '</strong>');
+                        }
+                    } else {
+                        $('.flowrate-akhir-col').show();
+                        showHeader = true;
+                    }
+
+                    if (infoMessages.length > 0) {
+                        showHeader = true;
+                        $('#flowrate-filled-text').html(infoMessages.join(' &nbsp;|&nbsp; '));
+                        $('.flowrate-filled-info').show();
+                    } else {
+                        $('.flowrate-filled-info').hide();
+                        $('#flowrate-filled-text').html('');
+                    }
+
+                    if (showHeader) {
+                        $('.flowrate-header').show();
+                    } else {
+                        $('.flowrate-header').hide();
+                    }
+                },
+                error: function() {
+                    // On error, show all fields so user can still input
+                    $('.flowrate-awal-col, .flowrate-akhir-col, .flowrate-header').show();
+                }
+            });
+        }
+
+        // Run on page load
+        checkFlowrateStatus();
+
+        // Listen both 'change' and 'input' to cover all browsers/interactions
+        $('input[name="tanggal"]').on('change input', checkFlowrateStatus);
+
+
         $('#formCoolingTower').submit(function(e) {
             e.preventDefault();
 
             let hasValue = false;
             $(this).find('input[type="number"]').each(function() {
-                if ($(this).val().trim() !== '') {
+                if ($(this).is(':visible') && $(this).val().trim() !== '') {
                     hasValue = true;
                     return false;
                 }
@@ -166,6 +238,7 @@
                         showConfirmButton: false
                     });
                     $('#formCoolingTower')[0].reset();
+                    checkFlowrateStatus();
                 },
                 error: function(xhr) {
                     let err = xhr.responseJSON;

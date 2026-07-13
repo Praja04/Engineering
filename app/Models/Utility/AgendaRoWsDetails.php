@@ -42,10 +42,12 @@ class AgendaRoWsDetails extends Model
         'cleaning_tanki_buffer_ws',
         'created_by',
         'updated_by',
+        'keterangan',
     ];
 
     protected $casts = [
         'tanggal' => 'date:Y-m-d',
+        'keterangan' => 'array',
     ];
 
     protected function serializeDate(\DateTimeInterface $date)
