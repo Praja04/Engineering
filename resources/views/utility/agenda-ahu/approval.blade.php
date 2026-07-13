@@ -133,7 +133,7 @@
                 url: API_URL,
                 type: "GET",
                 data: {
-                    mode: approval,
+                    mode: 'approval',
                     page: page
                 },
                 success: function(res) {
