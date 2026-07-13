@@ -16,6 +16,7 @@ use App\Http\Controllers\Maintenance\MtcDieselEngineController;
 use App\Http\Controllers\Maintenance\MtcElectricEngineController;
 use App\Http\Controllers\Maintenance\MtcMainController;
 use App\Http\Controllers\Maintenance\MtcMasterMesinController;
+use App\Http\Controllers\Maintenance\MtcMaterialDashboardController;
 
 Route::middleware(['auth'])->group(function () {
     Route::prefix('mtc')->group(function () {
@@ -132,5 +133,12 @@ Route::middleware(['auth'])->group(function () {
 
         // Route for downloading maintenance data
         Route::get('/download-data/{jenis_mtc}/{id}', [MtcMainController::class, 'downloadMaintenanceData'])->name('mtc.download.data');
+
+        // Material Requirements Dashboard
+        Route::prefix('dashboard')->group(function () {
+            Route::get('/material', [MtcMaterialDashboardController::class, 'index'])->name('mtc.dashboard.material');
+            Route::get('/material/charts', [MtcMaterialDashboardController::class, 'getDashboardCharts'])->name('mtc.dashboard.material.charts');
+            Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMaterialList'])->name('mtc.dashboard.material.list');
+        });
     });
 });
