@@ -90,7 +90,8 @@
             <div class="row g-4 mb-4">
                 <!-- Card 1 -->
                 <div class="col-xl-4 col-md-6">
-                    <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class=
+                    "card stat-card border-0 shadow-sm h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
@@ -305,10 +306,11 @@
                         barChart.destroy();
                         barChart = null;
                     }
-                    container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada data untuk periode ini</div>';
+                    container.innerHTML =
+                        '<div class="text-center p-5 text-muted">Tidak ada data untuk periode ini</div>';
                     return;
                 }
-                const categories = data.map(item => item.label);
+                const categories = data.map(item => item.label || 'Tanpa Deskripsi');
                 const seriesData = data.map(item => item.qty);
 
                 const options = {
@@ -368,7 +370,8 @@
                         pieChart.destroy();
                         pieChart = null;
                     }
-                    container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada data untuk periode ini</div>';
+                    container.innerHTML =
+                        '<div class="text-center p-5 text-muted">Tidak ada data untuk periode ini</div>';
                     return;
                 }
                 const labels = data.map(item => item.jenis_mtc);
@@ -439,7 +442,8 @@
                         trendChart.destroy();
                         trendChart = null;
                     }
-                    container.innerHTML = '<div class="text-center p-5 text-muted">Tidak ada data untuk periode ini</div>';
+                    container.innerHTML =
+                        '<div class="text-center p-5 text-muted">Tidak ada data untuk periode ini</div>';
                     return;
                 }
                 const categories = data.map(item => item.formatted_month);

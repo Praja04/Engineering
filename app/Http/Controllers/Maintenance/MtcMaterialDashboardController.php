@@ -78,6 +78,8 @@ class MtcMaterialDashboardController extends Controller
 
         // 3. Top 10 Materials (by total quantity)
         $topMaterials = $topMaterialsQuery
+            ->whereNotNull('mtc_kebutuhan_material.deskripsi')
+            ->where('mtc_kebutuhan_material.deskripsi', '!=', '')
             ->select('mtc_kebutuhan_material.deskripsi', 'mtc_kebutuhan_material.mid', DB::raw('SUM(mtc_kebutuhan_material.qty) as total_qty'))
             ->groupBy('mtc_kebutuhan_material.deskripsi', 'mtc_kebutuhan_material.mid')
             ->orderBy('total_qty', 'DESC')
@@ -85,7 +87,7 @@ class MtcMaterialDashboardController extends Controller
             ->get()
             ->map(function ($item) {
                 return [
-                    'label' => $item->mid ? "{$item->mid} - {$item->deskripsi}" : $item->deskripsi,
+                    'label' => $item->mid ? "{$item->mid} - {$item->deskripsi}" : ($item->deskripsi ?? 'Tanpa Deskripsi'),
                     'qty' => floatval($item->total_qty)
                 ];
             });
