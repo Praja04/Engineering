@@ -315,6 +315,19 @@
 
         let currentId = null;
 
+        function formatDecimalDisplay(val, unit = '') {
+            if (val === null || val === undefined || val === '') return '—';
+            const num = parseFloat(val);
+            if (isNaN(num)) return val + (unit ? ' ' + unit : '');
+            return num + (unit ? ' ' + unit : '');
+        }
+
+        function formatDecimalVal(val) {
+            if (val === null || val === undefined || val === '') return '';
+            const num = parseFloat(val);
+            return isNaN(num) ? val : num;
+        }
+
         // ── LOAD DATA ────────────────────────────────────────────────────
         function loadData() {
             const status = $('#filter-status').val();
@@ -368,11 +381,11 @@
                              <i class="ri-user-line me-1"></i>${operatorName}
                          </span>
                      </td>
-                     <td>${r.pemakaian_air ?? '—'}</td>
-                     <td>${r.pemakaian_steam ?? '—'}</td>
-                     <td>${r.pemakaian_batubara ?? '—'}</td>
-                     <td>${r.running_hour_awal ?? '—'}</td>
-                     <td>${r.running_hour_akhir ?? '—'}</td>
+                     <td>${formatDecimalVal(r.pemakaian_air) || '—'}</td>
+                     <td>${formatDecimalVal(r.pemakaian_steam) || '—'}</td>
+                     <td>${formatDecimalVal(r.pemakaian_batubara) || '—'}</td>
+                     <td>${formatDecimalVal(r.running_hour_awal) || '—'}</td>
+                     <td>${formatDecimalVal(r.running_hour_akhir) || '—'}</td>
                      <td class="fs-12 text-muted">${r.created_at ?? '—'}</td>
                      <td><span class="badge ${s.cls}">${s.label}</span></td>
                      <td>
@@ -409,18 +422,18 @@
             $('#m-foreman').text(r.foreman?.username ?? '—');
             $('#m-supervisor').text(r.supervisor?.username ?? '—');
 
-            $('#m-air').text(r.pemakaian_air !== null ? r.pemakaian_air + ' m³' : '—');
-            $('#m-steam').text(r.pemakaian_steam !== null ? r.pemakaian_steam + ' ton' : '—');
-            $('#m-batubara').text(r.pemakaian_batubara !== null ? r.pemakaian_batubara + ' ton' : '—');
-            $('#m-efisiensi').text(r.efisiensi_batubara !== null ? r.efisiensi_batubara + ' %' : '—');
-            $('#m-pengisian').text(r.pengisian_batubara !== null ? r.pengisian_batubara + ' ton' : '—');
-            $('#m-rh-awal').text(r.running_hour_awal !== null ? r.running_hour_awal + ' jam' : '—');
-            $('#m-rh-akhir').text(r.running_hour_akhir !== null ? r.running_hour_akhir + ' jam' : '—');
-            $('#m-ft-awal').text(r.feed_tank_awal !== null ? r.feed_tank_awal + ' m³' : '—');
-            $('#m-ft-akhir').text(r.feed_tank_akhir !== null ? r.feed_tank_akhir + ' m³' : '—');
-            $('#m-scf').text(r.chemical_scf !== null ? r.chemical_scf + ' L' : '—');
-            $('#m-srtf').text(r.chemical_srtf !== null ? r.chemical_srtf + ' L' : '—');
-            $('#m-dosis').text(r.dosis !== null ? r.dosis + ' ppm' : '—');
+            $('#m-air').text(formatDecimalDisplay(r.pemakaian_air, 'm³'));
+            $('#m-steam').text(formatDecimalDisplay(r.pemakaian_steam, 'ton'));
+            $('#m-batubara').text(formatDecimalDisplay(r.pemakaian_batubara, 'ton'));
+            $('#m-efisiensi').text(formatDecimalDisplay(r.efisiensi_batubara, '%'));
+            $('#m-pengisian').text(formatDecimalDisplay(r.pengisian_batubara, 'ton'));
+            $('#m-rh-awal').text(formatDecimalDisplay(r.running_hour_awal, 'jam'));
+            $('#m-rh-akhir').text(formatDecimalDisplay(r.running_hour_akhir, 'jam'));
+            $('#m-ft-awal').text(formatDecimalDisplay(r.feed_tank_awal, 'm³'));
+            $('#m-ft-akhir').text(formatDecimalDisplay(r.feed_tank_akhir, 'm³'));
+            $('#m-scf').text(formatDecimalDisplay(r.chemical_scf, 'L'));
+            $('#m-srtf').text(formatDecimalDisplay(r.chemical_srtf, 'L'));
+            $('#m-dosis').text(formatDecimalDisplay(r.dosis, 'ppm'));
 
             // Approval chain visual
             const steps = [{
