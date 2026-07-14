@@ -271,6 +271,16 @@
                     $(this).blur();
                 });
 
+                // Input type number di mobile agar trigger buka numeric keyboard
+                $('input[type="number"]').attr('inputmode', 'numeric');
+
+                // Handle AJAX errors globally
+                $(document).ajaxError(function(event, xhr) {
+                    if (xhr.status === 401 || xhr.status === 419) {
+                        window.location.href = "/";
+                    }
+                });
+
                 let seenNotifications = new Set();
 
                 function fetchNotifications() {

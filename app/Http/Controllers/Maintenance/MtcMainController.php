@@ -1315,9 +1315,9 @@ class MtcMainController extends Controller
         $spreadsheet = IOFactory::load($path);
         $sheet = $spreadsheet->getActiveSheet();
 
-        $data = MtcMainModel::where('jenis_mtc', 'Electric P2h')
+        $data = MtcMainModel::where('jenis_mtc', 'Electrical P2H')
             ->where('id', $id)
-            ->with('electricP2h', 'kebutuhanMaterial', 'approvals')
+            ->with('electricP2h.mesin', 'kebutuhanMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -1358,10 +1358,11 @@ class MtcMainController extends Controller
             if (!$inspection) continue;
 
             // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('D4', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('D5', ': ' . $main->electricP2h->no_unit ?? '-');
+            $sheet->setCellValue('D4', ': ' . ($main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-'));
+            $sheet->setCellValue('D5', ': ' . ($main->electricP2h->mesin->nama_mesin ?? $main->electricP2h->no_unit ?? '-'));
             $sheet->setCellValue('I4', $main->departemen ?? '-');
-            $sheet->setCellValue('I31', 'Catatan : ' . $main->electricP2h->catatan ?? '-');
+            $sheet->setCellValue('I31', 'Catatan : ' . ($main->electricP2h->catatan ?? '-'));
+            $sheet->setCellValue('I32', 'Persentase Score: ' . ($main->electricP2h->persentase ? $main->electricP2h->persentase . '%' : '-'));
 
             foreach ($fieldRowMap as $field => $row) {
 

@@ -62,8 +62,10 @@ Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
         Route::get('/certificate/cetak/{id}', [KalibrasiCertificateController::class, 'printSertifikat'])->name('kalibrasi.certificate.cetak');
         Route::get('/certificate/download/{id}', [KalibrasiCertificateController::class, 'downloadSertifikat'])->name('kalibrasi.certificate.download');
         Route::delete('/certificate/delete/{id}', [KalibrasiController::class, 'destroy'])->name('kalibrasi.certificate.delete');
+        Route::post('/certificate/mass-delete', [KalibrasiController::class, 'massDelete'])->name('kalibrasi.certificate.mass-delete');
         Route::get('/approval/detail/{id}', [KalibrasiController::class, 'detail'])->name('kalibrasi.certificate.download');
         Route::post('/approval/approve/{id}', [KalibrasiCertificateController::class, 'approve'])->name('approval.approve');
+        Route::post('/approval/mass-approve', [KalibrasiCertificateController::class, 'massApprove'])->name('approval.mass-approve');
         Route::post('/approval/reject/{id}', [KalibrasiCertificateController::class, 'reject'])->name('approval.reject');
 
         // Pressure Routes

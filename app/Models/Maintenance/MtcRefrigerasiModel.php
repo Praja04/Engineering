@@ -24,6 +24,7 @@ class MtcRefrigerasiModel extends Model
         'check_indikator_display',
         'check_motor_blower',
         'check_fan_belt_blower',
+        'check_pelumasan_blower',
         'check_pergerakan_motor_swing',
         'check_kontroler_indoor',
         'check_saluran_drain_kondensasi',
@@ -41,6 +42,10 @@ class MtcRefrigerasiModel extends Model
         'check_jalur_freon',
         'check_jalur_distribusi_udara',
         'check_jalur_return_udara',
+        'check_suhu_supply',
+        'check_suhu_return',
+        'check_flow_supply',
+        'check_flow_return',
 
         // Catatan
         // 'keterangan',
@@ -57,6 +62,7 @@ class MtcRefrigerasiModel extends Model
         'check_indikator_display' => 'boolean',
         'check_motor_blower' => 'boolean',
         'check_fan_belt_blower' => 'boolean',
+        'check_pelumasan_blower' => 'boolean',
         'check_pergerakan_motor_swing' => 'boolean',
         'check_kontroler_indoor' => 'boolean',
         'check_saluran_drain_kondensasi' => 'boolean',
@@ -74,6 +80,10 @@ class MtcRefrigerasiModel extends Model
         'check_jalur_freon' => 'boolean',
         'check_jalur_distribusi_udara' => 'boolean',
         'check_jalur_return_udara' => 'boolean',
+        'check_suhu_supply' => 'float',
+        'check_suhu_return' => 'float',
+        'check_flow_supply' => 'float',
+        'check_flow_return' => 'float',
     ];
 
     public function main()

@@ -435,22 +435,22 @@
                             ${parentCell}
 
                             <td>
-                                <input type="number" step="0.01"
+                                <input type="number" step="any"
                                     name="data[${currentIndex}][standar][${i}][suhu]">
                             </td>
 
                             <td>
-                                <input type="number" step="0.01"
+                                <input type="number" step="any"
                                     name="data[${currentIndex}][standar][${i}][rh]">
                             </td>
 
                             <td>
-                                <input type="number" step="0.01"
+                                <input type="number" step="any"
                                     name="data[${currentIndex}][alat][${i}][suhu]">
                             </td>
 
                             <td>
-                                <input type="number" step="0.01"
+                                <input type="number" step="any"
                                     name="data[${currentIndex}][alat][${i}][rh]">
                             </td>
 

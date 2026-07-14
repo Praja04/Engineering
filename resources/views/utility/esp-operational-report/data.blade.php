@@ -635,6 +635,20 @@
             let currentOpRow = null; // simpan row yang sedang dibuka modal
             let currentCoalRow = null;
 
+            // Helper to format decimals: removes trailing zeros (e.g. 12.00 -> 12, 12.50 -> 12.5)
+            function formatDecimalVal(val) {
+                if (val === null || val === undefined || val === '') return '';
+                const num = parseFloat(val);
+                return isNaN(num) ? val : num;
+            }
+
+            function formatDecimalDisplay(val, unit = '') {
+                if (val === null || val === undefined || val === '') return '—';
+                const num = parseFloat(val);
+                if (isNaN(num)) return val + (unit ? ' ' + unit : '');
+                return num + (unit ? ' ' + unit : '');
+            }
+
             // ── TAB TOGGLE ───────────────────────────────────────────────────
             $('#tab-operational').on('click', function() {
                 activeTab = 'operational';
@@ -723,11 +737,11 @@
                             data-row='${JSON.stringify(r)}'>
                     <td class="fw-medium">${r.jam}</td>
                     <td>${r.grup ? '<span class="badge bg-primary-subtle text-primary">'+r.grup+'</span>' : '—'}</td>
-                    <td>${r.arus_primer ?? '—'}</td>
-                    <td>${r.arus_sekunder ?? '—'}</td>
-                    <td>${r.tegangan_primer ?? '—'}</td>
-                    <td>${r.tegangan_sekunder ?? '—'}</td>
-                    <td>${r.suhu_thermal ?? '—'}</td>
+                    <td>${formatDecimalVal(r.arus_primer) || '—'}</td>
+                    <td>${formatDecimalVal(r.arus_sekunder) || '—'}</td>
+                    <td>${formatDecimalVal(r.tegangan_primer) || '—'}</td>
+                    <td>${formatDecimalVal(r.tegangan_sekunder) || '—'}</td>
+                    <td>${formatDecimalVal(r.suhu_thermal) || '—'}</td>
                     <td>
                         ${hasData
                             ? `<button class="btn btn-xs btn-outline-primary btn-detail-op py-0 px-2">
@@ -781,12 +795,12 @@
                         };
                         html += `<tr style="cursor:pointer;" data-row='${JSON.stringify(r)}'>
                     <td class="fw-medium">${r.tanggal_laporan}</td>
-                    <td>${r.pemakaian_air ?? '—'}</td>
-                    <td>${r.pemakaian_steam ?? '—'}</td>
-                    <td>${r.pemakaian_batubara ?? '—'}</td>
-                    <td>${r.efisiensi_batubara ?? '—'}</td>
-                    <td>${r.running_hour_awal ?? '—'}</td>
-                    <td>${r.running_hour_akhir ?? '—'}</td>
+                    <td>${formatDecimalVal(r.pemakaian_air) || '—'}</td>
+                    <td>${formatDecimalVal(r.pemakaian_steam) || '—'}</td>
+                    <td>${formatDecimalVal(r.pemakaian_batubara) || '—'}</td>
+                    <td>${formatDecimalVal(r.efisiensi_batubara) || '—'}</td>
+                    <td>${formatDecimalVal(r.running_hour_awal) || '—'}</td>
+                    <td>${formatDecimalVal(r.running_hour_akhir) || '—'}</td>
                     <td><span class="badge ${s.cls}">${s.label}</span></td>
                     <td>
                         <button class="btn btn-xs btn-outline-danger btn-detail-shift py-0 px-2">
@@ -819,9 +833,9 @@
                         const operatorName = r.operator?.username ?? '—';
                         html += `<tr style="cursor:pointer;" data-row='${JSON.stringify(r)}'>
                     <td class="fw-medium">${r.tanggal_laporan}</td>
-                    <td>${r.penyuplai_qty ?? '—'}</td>
+                    <td>${formatDecimalVal(r.penyuplai_qty) || '—'}</td>
                     <td>${r.penyuplai_nik_nama ?? '—'}</td>
-                    <td>${r.penerima_qty ?? '—'}</td>
+                    <td>${formatDecimalVal(r.penerima_qty) || '—'}</td>
                     <td>${r.penerima_nik_nama ?? '—'}</td>
                     <td>
                         <span class="badge bg-secondary-subtle text-secondary">
@@ -847,12 +861,11 @@
                 $('#modal-op-jam').text(r.jam);
                 $('#d-op-jam').text(r.jam);
                 $('#d-op-grup').text(r.grup ?? '—');
-                $('#d-op-arus-primer').text(r.arus_primer !== null ? r.arus_primer + ' A' : '—');
-                $('#d-op-arus-sekunder').text(r.arus_sekunder !== null ? r.arus_sekunder + ' mA' : '—');
-                $('#d-op-teg-primer').text(r.tegangan_primer !== null ? r.tegangan_primer + ' V' : '—');
-                $('#d-op-teg-sekunder').text(r.tegangan_sekunder !== null ? r.tegangan_sekunder + ' kV' :
-                    '—');
-                $('#d-op-suhu').text(r.suhu_thermal !== null ? r.suhu_thermal + ' °C' : '—');
+                $('#d-op-arus-primer').text(formatDecimalDisplay(r.arus_primer, 'A'));
+                $('#d-op-arus-sekunder').text(formatDecimalDisplay(r.arus_sekunder, 'mA'));
+                $('#d-op-teg-primer').text(formatDecimalDisplay(r.tegangan_primer, 'V'));
+                $('#d-op-teg-sekunder').text(formatDecimalDisplay(r.tegangan_sekunder, 'kV'));
+                $('#d-op-suhu').text(formatDecimalDisplay(r.suhu_thermal, '°C'));
                 new bootstrap.Modal('#modal-operational').show();
             });
 
@@ -865,11 +878,11 @@
                     $('#edit-op-jam').val(r.jam);
                     $('#edit-op-tanggal').val($('#filter-tanggal').val());
                     $('#edit-op-grup').val(r.grup);
-                    $('#edit-op-arus-primer').val(r.arus_primer);
-                    $('#edit-op-arus-sekunder').val(r.arus_sekunder);
-                    $('#edit-op-teg-primer').val(r.tegangan_primer);
-                    $('#edit-op-teg-sekunder').val(r.tegangan_sekunder);
-                    $('#edit-op-suhu').val(r.suhu_thermal);
+                    $('#edit-op-arus-primer').val(formatDecimalVal(r.arus_primer));
+                    $('#edit-op-arus-sekunder').val(formatDecimalVal(r.arus_sekunder));
+                    $('#edit-op-teg-primer').val(formatDecimalVal(r.tegangan_primer));
+                    $('#edit-op-teg-sekunder').val(formatDecimalVal(r.tegangan_sekunder));
+                    $('#edit-op-suhu').val(formatDecimalVal(r.suhu_thermal));
                     new bootstrap.Modal('#modal-edit-operational').show();
                 }, 300);
             });
@@ -915,22 +928,18 @@
                 const r = $(this).closest('tr').data('row');
                 currentShiftRow = r;
                 $('#modal-shift-tgl').text(r.tanggal_laporan);
-                $('#d-sh-air').text(r.pemakaian_air !== null ? r.pemakaian_air + ' m³' : '—');
-                $('#d-sh-steam').text(r.pemakaian_steam !== null ? r.pemakaian_steam + ' ton' : '—');
-                $('#d-sh-batubara').text(r.pemakaian_batubara !== null ? r.pemakaian_batubara + ' ton' :
-                    '—');
-                $('#d-sh-efisiensi').text(r.efisiensi_batubara !== null ? r.efisiensi_batubara + ' %' :
-                    '—');
-                $('#d-sh-pengisian').text(r.pengisian_batubara !== null ? r.pengisian_batubara + ' ton' :
-                    '—');
-                $('#d-sh-rh-awal').text(r.running_hour_awal !== null ? r.running_hour_awal + ' jam' : '—');
-                $('#d-sh-rh-akhir').text(r.running_hour_akhir !== null ? r.running_hour_akhir + ' jam' :
-                    '—');
-                $('#d-sh-ft-awal').text(r.feed_tank_awal !== null ? r.feed_tank_awal + ' m³' : '—');
-                $('#d-sh-ft-akhir').text(r.feed_tank_akhir !== null ? r.feed_tank_akhir + ' m³' : '—');
-                $('#d-sh-scf').text(r.chemical_scf !== null ? r.chemical_scf + ' L' : '—');
-                $('#d-sh-srtf').text(r.chemical_srtf !== null ? r.chemical_srtf + ' L' : '—');
-                $('#d-sh-dosis').text(r.dosis !== null ? r.dosis + ' ppm' : '—');
+                $('#d-sh-air').text(formatDecimalDisplay(r.pemakaian_air, 'm³'));
+                $('#d-sh-steam').text(formatDecimalDisplay(r.pemakaian_steam, 'ton'));
+                $('#d-sh-batubara').text(formatDecimalDisplay(r.pemakaian_batubara, 'ton'));
+                $('#d-sh-efisiensi').text(formatDecimalDisplay(r.efisiensi_batubara, '%'));
+                $('#d-sh-pengisian').text(formatDecimalDisplay(r.pengisian_batubara, 'ton'));
+                $('#d-sh-rh-awal').text(formatDecimalDisplay(r.running_hour_awal, 'jam'));
+                $('#d-sh-rh-akhir').text(formatDecimalDisplay(r.running_hour_akhir, 'jam'));
+                $('#d-sh-ft-awal').text(formatDecimalDisplay(r.feed_tank_awal, 'm³'));
+                $('#d-sh-ft-akhir').text(formatDecimalDisplay(r.feed_tank_akhir, 'm³'));
+                $('#d-sh-scf').text(formatDecimalDisplay(r.chemical_scf, 'L'));
+                $('#d-sh-srtf').text(formatDecimalDisplay(r.chemical_srtf, 'L'));
+                $('#d-sh-dosis').text(formatDecimalDisplay(r.dosis, 'ppm'));
 
                 // Timeline approval
                 const steps = [{
@@ -980,18 +989,18 @@
                 setTimeout(function() {
                     $('#edit-sh-tgl-label').text(r.tanggal_laporan);
                     $('#edit-sh-id').val(r.id);
-                    $('#edit-sh-air').val(r.pemakaian_air);
-                    $('#edit-sh-steam').val(r.pemakaian_steam);
-                    $('#edit-sh-batubara').val(r.pemakaian_batubara);
-                    $('#edit-sh-efisiensi').val(r.efisiensi_batubara);
-                    $('#edit-sh-pengisian').val(r.pengisian_batubara);
-                    $('#edit-sh-rh-awal').val(r.running_hour_awal);
-                    $('#edit-sh-rh-akhir').val(r.running_hour_akhir);
-                    $('#edit-sh-ft-awal').val(r.feed_tank_awal);
-                    $('#edit-sh-ft-akhir').val(r.feed_tank_akhir);
-                    $('#edit-sh-scf').val(r.chemical_scf);
-                    $('#edit-sh-srtf').val(r.chemical_srtf);
-                    $('#edit-sh-dosis').val(r.dosis);
+                    $('#edit-sh-air').val(formatDecimalVal(r.pemakaian_air));
+                    $('#edit-sh-steam').val(formatDecimalVal(r.pemakaian_steam));
+                    $('#edit-sh-batubara').val(formatDecimalVal(r.pemakaian_batubara));
+                    $('#edit-sh-efisiensi').val(formatDecimalVal(r.efisiensi_batubara));
+                    $('#edit-sh-pengisian').val(formatDecimalVal(r.pengisian_batubara));
+                    $('#edit-sh-rh-awal').val(formatDecimalVal(r.running_hour_awal));
+                    $('#edit-sh-rh-akhir').val(formatDecimalVal(r.running_hour_akhir));
+                    $('#edit-sh-ft-awal').val(formatDecimalVal(r.feed_tank_awal));
+                    $('#edit-sh-ft-akhir').val(formatDecimalVal(r.feed_tank_akhir));
+                    $('#edit-sh-scf').val(formatDecimalVal(r.chemical_scf));
+                    $('#edit-sh-srtf').val(formatDecimalVal(r.chemical_srtf));
+                    $('#edit-sh-dosis').val(formatDecimalVal(r.dosis));
                     new bootstrap.Modal('#modal-edit-shift').show();
                 }, 300);
             });
@@ -1001,7 +1010,7 @@
                 e.preventDefault();
                 const id = $('#edit-sh-id').val();
                 $.ajax({
-                    url: `/esp/shift/${id}`,
+                    url: `/utility/esp-shift-report/${id}`,
                     method: 'POST',
                     data: {
                         _token: $('meta[name="csrf-token"]').attr('content'),
@@ -1036,9 +1045,9 @@
                 const r = $(this).closest('tr').data('row');
                 currentCoalRow = r;
                 $('#modal-coal-tgl').text(r.tanggal_laporan);
-                $('#d-coal-penyuplai-qty').text(r.penyuplai_qty !== null ? r.penyuplai_qty + ' Ton' : '—');
+                $('#d-coal-penyuplai-qty').text(formatDecimalDisplay(r.penyuplai_qty, 'Ton'));
                 $('#d-coal-penyuplai-name').text(r.penyuplai_nik_nama ?? '—');
-                $('#d-coal-penerima-qty').text(r.penerima_qty !== null ? r.penerima_qty + ' Ton' : '—');
+                $('#d-coal-penerima-qty').text(formatDecimalDisplay(r.penerima_qty, 'Ton'));
                 $('#d-coal-penerima-name').text(r.penerima_nik_nama ?? '—');
                 $('#d-coal-operator').text(r.operator?.username ?? '—');
                 new bootstrap.Modal('#modal-coal').show();
@@ -1051,9 +1060,9 @@
                 setTimeout(function() {
                     $('#edit-coal-tgl-label').text(r.tanggal_laporan);
                     $('#edit-coal-id').val(r.id);
-                    $('#edit-coal-penyuplai-qty').val(r.penyuplai_qty);
+                    $('#edit-coal-penyuplai-qty').val(formatDecimalVal(r.penyuplai_qty));
                     $('#edit-coal-penyuplai-name').val(r.penyuplai_nik_nama);
-                    $('#edit-coal-penerima-qty').val(r.penerima_qty);
+                    $('#edit-coal-penerima-qty').val(formatDecimalVal(r.penerima_qty));
                     $('#edit-coal-penerima-name').val(r.penerima_nik_nama);
                     new bootstrap.Modal('#modal-edit-coal').show();
                 }, 300);

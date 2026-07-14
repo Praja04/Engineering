@@ -565,6 +565,13 @@
     <script>
         $(function() {
 
+            // Helper to format decimals: removes trailing zeros (e.g. 12.00 -> 12, 12.50 -> 12.5)
+            function formatDecimalVal(val) {
+                if (val === null || val === undefined || val === '') return '';
+                const num = parseFloat(val);
+                return isNaN(num) ? val : num;
+            }
+
             // ── CLOCK & info tanggal laporan shift ──────────────────────────
             function updateClock() {
                 const now = new Date();
@@ -685,11 +692,11 @@
                         html += `<tr class="${hasData ? '' : 'text-muted'}">
                     <td class="fw-medium">${r.jam}</td>
                     <td>${r.grup ?? '—'}</td>
-                    <td>${r.arus_primer ?? '—'}</td>
-                    <td>${r.arus_sekunder ?? '—'}</td>
-                    <td>${r.tegangan_primer ?? '—'}</td>
-                    <td>${r.tegangan_sekunder ?? '—'}</td>
-                    <td>${r.suhu_thermal ?? '—'}</td>
+                    <td>${formatDecimalVal(r.arus_primer) || '—'}</td>
+                    <td>${formatDecimalVal(r.arus_sekunder) || '—'}</td>
+                    <td>${formatDecimalVal(r.tegangan_primer) || '—'}</td>
+                    <td>${formatDecimalVal(r.tegangan_sekunder) || '—'}</td>
+                    <td>${formatDecimalVal(r.suhu_thermal) || '—'}</td>
                 </tr>`;
                     });
                     $('#tbody-operational-preview').html(html ||

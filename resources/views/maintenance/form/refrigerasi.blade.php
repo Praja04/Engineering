@@ -58,7 +58,8 @@
                                     </option>
                                     @foreach ($mesin as $item)
                                         <option value="{{ $item->id }}" data-lokasi="{{ $item->lokasi }}"
-                                            data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}">
+                                            data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}"
+                                            data-nama-mesin="{{ $item->nama_mesin }}">
                                             {{ $item->nama_mesin }} - {{ $item->lokasi }}
                                         </option>
                                     @endforeach
@@ -115,32 +116,74 @@
 
                         @php
                             $unitIndoor = [
-                                'check_filter_udara' => 'Check Filter Udara',
-                                'check_cover_filter_udara' => 'Check Cover Filter Udara',
-                                'check_electrical_indoor' => 'Check Electrical (Indoor)',
-                                'check_suhu_evaporator' => 'Check Suhu Evaporator',
-                                'check_indikator_display' => 'Check Indikator Display',
-                                'check_motor_blower' => 'Check Motor Blower',
-                                'check_fan_belt_blower' => 'Check Fan Belt Blower',
-                                'check_pergerakan_motor_swing' => 'Check Pergerakan Motor Swing',
-                                'check_kontroler_indoor' => 'Check Kontroler Indoor',
-                                'check_saluran_drain_kondensasi' => 'Check Saluran Drain Kondensasi',
-                                'sirkulasi_evaporator' => 'Sirkulasi Evaporator',
+                                'check_filter_udara' => 'Check Filter Udara', // AHU/AC
+                                'check_cover_filter_udara' => 'Check Cover Filter Udara', // AHU/AC
+                                'check_electrical_indoor' => 'Check Electrical (Indoor)', // AHU/AC
+                                'check_suhu_evaporator' => 'Check Suhu Evaporator', // AHU/AC
+                                'check_indikator_display' => 'Check Indikator Display', // AHU/AC
+                                'check_motor_blower' => 'Check Motor Blower', // AHU/AC
+                                'check_fan_belt_blower' => 'Check Fan Belt Blower', // AHU
+                                'check_pelumasan_blower' => 'Check Pelumasan Blower', // AHU
+                                'check_pergerakan_motor_swing' => 'Check Pergerakan Motor Swing', // AC
+                                'check_kontroler_indoor' => 'Check Kontroler Indoor', // AC
+                                'check_saluran_drain_kondensasi' => 'Check Saluran Drain Kondensasi', // AHU/AC
+                                'sirkulasi_evaporator' => 'Sirkulasi Evaporator', // AHU/AC
                             ];
 
                             $unitOutdoor = [
-                                'check_kondisi_kondensor' => 'Check Kondisi Kondensor',
-                                'check_electrical_outdoor' => 'Check Electrical (Outdoor)',
-                                'check_motor_fan' => 'Check Motor Fan',
-                                'check_tekanan_freon' => 'Check Tekanan Freon',
-                                'pelumasan_motor_fan' => 'Pelumasan Motor Fan',
-                                'kebersihan_unit_body_outdoor' => 'Kebersihan Unit & Body Outdoor',
+                                'check_kondisi_kondensor' => 'Check Kondisi Kondensor', // AHU/AC
+                                'check_electrical_outdoor' => 'Check Electrical (Outdoor)', // AHU/AC
+                                'check_motor_fan' => 'Check Motor Fan', // AC
+                                'check_tekanan_freon' => 'Check Tekanan Freon', // AHU/AC
+                                'pelumasan_motor_fan' => 'Pelumasan Motor Fan', // AC
+                                'kebersihan_unit_body_outdoor' => 'Kebersihan Unit & Body Outdoor', //AHU/AC
                             ];
 
                             $jalurDistribusi = [
-                                'check_jalur_freon' => 'Check Jalur Freon',
-                                'check_jalur_distribusi_udara' => 'Check Jalur Distribusi Udara',
-                                'check_jalur_return_udara' => 'Check Jalur Return Udara',
+                                'check_jalur_freon' => 'Check Jalur Freon', // AHU/AC
+                                'check_jalur_distribusi_udara' => 'Check Jalur Distribusi Udara', // AHU/AC
+                                'check_jalur_return_udara' => 'Check Jalur Return Udara', // AHU/AC
+                                'check_suhu_supply' => 'Check Suhu Supply', // AHU
+                                'check_suhu_return' => 'Check Suhu Return', // AHU
+                                'check_flow_supply' => 'Check Flow Supply', // AHU
+                                'check_flow_return' => 'Check Flow Return', // AHU
+                            ];
+
+                            $numericFields = [
+                                'check_suhu_supply' => true,
+                                'check_suhu_return' => true,
+                                'check_flow_supply' => true,
+                                'check_flow_return' => true,
+                            ];
+
+                            $fieldTypes = [
+                                'check_filter_udara' => 'both',
+                                'check_cover_filter_udara' => 'both',
+                                'check_electrical_indoor' => 'both',
+                                'check_suhu_evaporator' => 'both',
+                                'check_indikator_display' => 'both',
+                                'check_motor_blower' => 'both',
+                                'check_fan_belt_blower' => 'ahu',
+                                'check_pelumasan_blower' => 'ahu',
+                                'check_pergerakan_motor_swing' => 'ac',
+                                'check_kontroler_indoor' => 'ac',
+                                'check_saluran_drain_kondensasi' => 'both',
+                                'sirkulasi_evaporator' => 'both',
+
+                                'check_kondisi_kondensor' => 'both',
+                                'check_electrical_outdoor' => 'both',
+                                'check_motor_fan' => 'ac',
+                                'check_tekanan_freon' => 'both',
+                                'pelumasan_motor_fan' => 'ac',
+                                'kebersihan_unit_body_outdoor' => 'both',
+
+                                'check_jalur_freon' => 'both',
+                                'check_jalur_distribusi_udara' => 'both',
+                                'check_jalur_return_udara' => 'both',
+                                'check_suhu_supply' => 'ahu',
+                                'check_suhu_return' => 'ahu',
+                                'check_flow_supply' => 'ahu',
+                                'check_flow_return' => 'ahu',
                             ];
                         @endphp
 
@@ -150,7 +193,8 @@
                             <div class="row g-3 mb-3">
                                 @foreach ($row as $field => $label)
                                     <div class="col-md-6 col-12">
-                                        <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+                                        <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}"
+                                            data-type="{{ $fieldTypes[$field] ?? 'both' }}">
 
                                             <label class="form-label fw-semibold" data-label="{{ $field }}">
                                                 {{ $label }}
@@ -186,8 +230,8 @@
                             <div class="row g-3 mb-3">
                                 @foreach ($row as $field => $label)
                                     <div class="col-md-6 col-12">
-                                        <div class="card shadow-sm item-card p-3 item-row"
-                                            data-field="{{ $field }}">
+                                        <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}"
+                                            data-type="{{ $fieldTypes[$field] ?? 'both' }}">
 
                                             <label class="form-label fw-semibold" data-label="{{ $field }}">
                                                 {{ $label }}
@@ -226,31 +270,38 @@
                                 @foreach ($row as $field => $label)
                                     <div class="col-md-6 col-12">
                                         <div class="card shadow-sm item-card p-3 item-row"
-                                            data-field="{{ $field }}">
+                                            data-field="{{ $field }}"
+                                            data-type="{{ $fieldTypes[$field] ?? 'both' }}">
 
                                             <label class="form-label fw-semibold" data-label="{{ $field }}">
                                                 {{ $label }}
                                             </label>
 
-                                            <div class="btn-group btn-group-sm w-100">
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="1"
-                                                    id="{{ $field }}_ok">
-                                                <label class="btn btn-outline-success"
-                                                    for="{{ $field }}_ok">OK</label>
+                                            @if (isset($numericFields[$field]))
+                                                <input type="number" step="0.01" class="form-control form-control-sm"
+                                                    name="{{ $field }}" id="{{ $field }}"
+                                                    placeholder="Masukkan nilai numeric...">
+                                            @else
+                                                <div class="btn-group btn-group-sm w-100">
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="1"
+                                                        id="{{ $field }}_ok">
+                                                    <label class="btn btn-outline-success"
+                                                        for="{{ $field }}_ok">OK</label>
 
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="0"
-                                                    id="{{ $field }}_ng">
-                                                <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
-                                                    OK</label>
-                                            </div>
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="0"
+                                                        id="{{ $field }}_ng">
+                                                    <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
+                                                        OK</label>
+                                                </div>
 
-                                            <div class="keterangan-wrapper d-none mt-2">
-                                                <input type="text" class="form-control form-control-sm"
-                                                    name="keterangan_{{ $field }}"
-                                                    placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
-                                            </div>
+                                                <div class="keterangan-wrapper d-none mt-2">
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        name="keterangan_{{ $field }}"
+                                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                </div>
+                                            @endif
 
                                         </div>
                                     </div>
@@ -345,6 +396,7 @@
             </div>
         </div>
     </div>
+
     {{-- Modal Pilih Approver --}}
     <div class="modal fade" id="modalApprover" tabindex="-1">
         <div class="modal-dialog">
@@ -421,11 +473,13 @@
                 const lokasi = selected.data('lokasi') || '';
                 const departemen = selected.data('departemen') || '';
                 const kodeMesin = selected.data('kode-mesin') || '';
+                const namaMesin = (selected.data('nama-mesin') || '').toUpperCase();
 
                 $('input[name="kode_mesin"]').val(kodeMesin);
                 $('input[name="lokasi"]').val(lokasi);
                 $('input[name="departemen"]').val(departemen);
 
+                filterChecklistFields(namaMesin);
             });
 
             $('#mesin_id').select2({
@@ -464,10 +518,40 @@
 
             });
 
+            function filterChecklistFields(namaMesin) {
+                const isAHU = namaMesin.includes('AHU');
+                const isAC = namaMesin.includes('AC');
+
+                $('.item-row').each(function() {
+                    const $row = $(this);
+                    const type = $row.data('type'); // 'both', 'ahu', 'ac'
+                    const $col = $row.closest('.col-md-6');
+
+                    let visible = true;
+                    if (isAHU && !isAC && type === 'ac') {
+                        visible = false;
+                    } else if (isAC && !isAHU && type === 'ahu') {
+                        visible = false;
+                    }
+
+                    if (visible) {
+                        $col.removeClass('d-none');
+                    } else {
+                        $col.addClass('d-none');
+                        // Reset input for hidden row
+                        $row.find('input[type="radio"]').prop('checked', false);
+                        $row.find('input[type="number"]').val('');
+                        $row.find('.keterangan-wrapper').addClass('d-none');
+                        $row.find('input[type="text"]').val('').removeAttr('required');
+                        $row.removeClass('not-ok');
+                    }
+                });
+            }
+
             function collectNotOkDetails() {
                 const details = [];
 
-                $('.item-row').each(function() {
+                $('.item-row:visible').each(function() {
                     const $row = $(this);
                     const isNg = $row.find('input[value="0"]').is(':checked');
                     if (!isNg) return;
@@ -608,7 +692,7 @@
                 $('#materialTable tbody').empty();
                 index = 1;
 
-
+                filterChecklistFields('');
             }
             let pendingFormData = null;
             let selectedStaff = null;

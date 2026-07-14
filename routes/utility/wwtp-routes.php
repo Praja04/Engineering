@@ -25,6 +25,8 @@ Route::middleware('auth')->group(function () {
   Route::get('/wwtp/analisa/approval', [WWTPControllerAnalisa::class, 'approvalView'])->name('wwtp.analisa.approval');
   Route::get('/wwtp/approval', [WWTPControllerApproval::class, 'approvalView'])->name('wwtp.approval');
   Route::get('/wwtp/export', [WWTPController::class, 'export'])->name('wwtp.export');
+  Route::get('/wwtp/export-monthly', [WWTPController::class, 'exportMonthly'])->name('wwtp.export-monthly');
+
 
   Route::post('wwtp/performance/ph-harian', [WWTPControllerPerformance::class, 'storePHHarian']);
   Route::post('wwtp/proses/influent-harian', [WWTPControllerProses::class, 'storeinfluentHarian'])->name('wwtp.influent-harian.store');

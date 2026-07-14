@@ -337,7 +337,7 @@
                         </td>
                         <td>
                             <input type="number"
-                                step="0.0001"
+                                step="any"
                                 class="form-control form-control-sm bg-soft-warning text-center"
                                 name="nilai_pembacaan[${t}][]">
                             <input type="hidden" name="no[${t}][]" value="${i + 1}">

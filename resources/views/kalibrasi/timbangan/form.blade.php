@@ -221,13 +221,13 @@
 
                                                     @foreach (['mendekati_nol', 'setengah_kapasitas', 'full_kapasitas'] as $slug)
                                                         <td>
-                                                            <input type="number" step="0.01"
+                                                            <input type="number" step="any"
                                                                 class="form-control form-control-sm text-center"
                                                                 name="data[{{ $slug }}][{{ $i }}][z]"
                                                                 value="0">
                                                         </td>
                                                         <td>
-                                                            <input type="number" step="0.01"
+                                                            <input type="number" step="any"
                                                                 class="form-control form-control-sm text-center"
                                                                 name="data[{{ $slug }}][{{ $i }}][m]">
                                                         </td>
@@ -262,13 +262,13 @@
                                                     <td>0</td>
                                                     <td>
                                                         <input class="form-control form-control-sm" type="number"
-                                                            step="0.01"
+                                                            step="any"
                                                             name="keseragaman[0_{{ $i }}][beban]"
                                                             value="0">
                                                     </td>
                                                     <td>
                                                         <input class="form-control form-control-sm" type="number"
-                                                            step="0.01"
+                                                            step="any"
                                                             name="keseragaman[0_{{ $i }}][pembacaan]"
                                                             value="0">
                                                     </td>
@@ -280,12 +280,12 @@
                                                         <td>{{ $i }}M</td>
                                                         <td>
                                                             <input class="form-control form-control-sm" type="number"
-                                                                step="0.01"
+                                                                step="any"
                                                                 name="keseragaman[{{ $i }}M_1][beban]">
                                                         </td>
                                                         <td>
                                                             <input class="form-control form-control-sm" type="number"
-                                                                step="0.01"
+                                                                step="any"
                                                                 name="keseragaman[{{ $i }}M_1][pembacaan]">
                                                         </td>
                                                     </tr>
@@ -295,12 +295,12 @@
                                                         <td>{{ $i }}M</td>
                                                         <td>
                                                             <input class="form-control form-control-sm" type="number"
-                                                                step="0.01"
+                                                                step="any"
                                                                 name="keseragaman[{{ $i }}M_2][beban]">
                                                         </td>
                                                         <td>
                                                             <input class="form-control form-control-sm" type="number"
-                                                                step="0.01"
+                                                                step="any"
                                                                 name="keseragaman[{{ $i }}M_2][pembacaan]">
                                                         </td>
                                                     </tr>
@@ -326,7 +326,7 @@
                                                 <td>:</td>
                                                 <td>
                                                     <input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="pinggan[diameter]" class="info-input">
+                                                        step="any" name="pinggan[diameter]" class="info-input">
                                                 </td>
                                                 <td style="text-align:left;">mm</td>
                                             </tr>
@@ -338,7 +338,7 @@
                                                 <td>:</td>
                                                 <td>
                                                     <input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="pinggan[massa]" class="info-input">
+                                                        step="any" name="pinggan[massa]" class="info-input">
                                                 </td>
                                                 <td style="text-align:left;">gram</td>
                                             </tr>
@@ -363,19 +363,19 @@
                                                 {{-- Input --}}
                                                 <tr>
                                                     <td><input class="form-control form-control-sm" type="number"
-                                                            step="0.01"
+                                                            step="any"
                                                             name="pinggan[percobaan_{{ $p }}][tengah]"></td>
                                                     <td><input class="form-control form-control-sm" type="number"
-                                                            step="0.01"
+                                                            step="any"
                                                             name="pinggan[percobaan_{{ $p }}][depan]"></td>
                                                     <td><input class="form-control form-control-sm" type="number"
-                                                            step="0.01"
+                                                            step="any"
                                                             name="pinggan[percobaan_{{ $p }}][belakang]"></td>
                                                     <td><input class="form-control form-control-sm" type="number"
-                                                            step="0.01"
+                                                            step="any"
                                                             name="pinggan[percobaan_{{ $p }}][kiri]"></td>
                                                     <td><input class="form-control form-control-sm" type="number"
-                                                            step="0.01"
+                                                            step="any"
                                                             name="pinggan[percobaan_{{ $p }}][kanan]"></td>
                                                 </tr>
                                             @endfor
@@ -400,7 +400,7 @@
                                                 </td>
                                                 <td>
                                                     <input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="tare[massa]" class="info-input">
+                                                        step="any" name="tare[massa]" class="info-input">
                                                 </td>
                                             </tr>
 
@@ -421,10 +421,10 @@
                                             <tr>
                                                 <td>Zero</td>
                                                 <td><input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="tare[tanpa][zero_1]" value="0"></td>
+                                                        step="any" name="tare[tanpa][zero_1]" value="0"></td>
                                                 <td>Zero</td>
                                                 <td><input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="tare[dengan][zero_1]" value="0">
+                                                        step="any" name="tare[dengan][zero_1]" value="0">
                                                 </td>
                                             </tr>
 
@@ -432,30 +432,30 @@
                                             <tr>
                                                 <td>M</td>
                                                 <td><input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="tare[tanpa][m_1]"></td>
+                                                        step="any" name="tare[tanpa][m_1]"></td>
                                                 <td>M</td>
                                                 <td><input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="tare[dengan][m_1]"></td>
+                                                        step="any" name="tare[dengan][m_1]"></td>
                                             </tr>
 
                                             {{-- M 2 --}}
                                             <tr>
                                                 <td>M</td>
                                                 <td><input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="tare[tanpa][m_2]"></td>
+                                                        step="any" name="tare[tanpa][m_2]"></td>
                                                 <td>M</td>
                                                 <td><input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="tare[dengan][m_2]"></td>
+                                                        step="any" name="tare[dengan][m_2]"></td>
                                             </tr>
 
                                             {{-- Zero akhir --}}
                                             <tr>
                                                 <td>Zero</td>
                                                 <td><input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="tare[tanpa][zero_2]" value="0"></td>
+                                                        step="any" name="tare[tanpa][zero_2]" value="0"></td>
                                                 <td>Zero</td>
                                                 <td><input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="tare[dengan][zero_2]" value="0">
+                                                        step="any" name="tare[dengan][zero_2]" value="0">
                                                 </td>
                                             </tr>
 
@@ -479,7 +479,7 @@
                                                 </td>
                                                 <td>
                                                     <input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="histerisis[pembacaan_terkecil]"
+                                                        step="any" name="histerisis[pembacaan_terkecil]"
                                                         class="info-input">
                                                 </td>
                                                 <td style="text-align:left;">gram</td>
@@ -492,7 +492,7 @@
                                                 </td>
                                                 <td>
                                                     <input class="form-control form-control-sm" type="number"
-                                                        step="0.01" name="histerisis[m_setengah]" class="info-input">
+                                                        step="any" name="histerisis[m_setengah]" class="info-input">
                                                 </td>
                                                 <td style="text-align:left;">gram</td>
                                             </tr>
@@ -513,7 +513,8 @@
                                                 @for ($i = 1; $i <= 3; $i++)
                                                     <td>
                                                         <input class="form-control form-control-sm" type="number"
-                                                            step="0.01" name="histerisis[z1][{{ $i }}]" value="0">
+                                                            step="any" name="histerisis[z1][{{ $i }}]"
+                                                            value="0">
                                                     </td>
                                                 @endfor
                                             </tr>
@@ -525,7 +526,7 @@
                                                 @for ($i = 1; $i <= 3; $i++)
                                                     <td>
                                                         <input class="form-control form-control-sm" type="number"
-                                                            step="0.01" name="histerisis[m1][{{ $i }}]">
+                                                            step="any" name="histerisis[m1][{{ $i }}]">
                                                     </td>
                                                 @endfor
                                             </tr>
@@ -537,7 +538,7 @@
                                                 @for ($i = 1; $i <= 3; $i++)
                                                     <td>
                                                         <input class="form-control form-control-sm" type="number"
-                                                            step="0.01"
+                                                            step="any"
                                                             name="histerisis[m_plus][{{ $i }}]">
                                                     </td>
                                                 @endfor
@@ -550,7 +551,7 @@
                                                 @for ($i = 1; $i <= 3; $i++)
                                                     <td>
                                                         <input class="form-control form-control-sm" type="number"
-                                                            step="0.01" name="histerisis[m2][{{ $i }}]">
+                                                            step="any" name="histerisis[m2][{{ $i }}]">
                                                     </td>
                                                 @endfor
                                             </tr>
@@ -562,7 +563,8 @@
                                                 @for ($i = 1; $i <= 3; $i++)
                                                     <td>
                                                         <input class="form-control form-control-sm" type="number"
-                                                            step="0.01" name="histerisis[z2][{{ $i }}]" value="0">
+                                                            step="any" name="histerisis[z2][{{ $i }}]"
+                                                            value="0">
                                                     </td>
                                                 @endfor
                                             </tr>
