@@ -276,7 +276,8 @@
 
                 // Handle AJAX errors globally
                 $(document).ajaxError(function(event, xhr) {
-                    if (xhr.status === 401 || xhr.status === 419) {
+                    // if (xhr.status === 401 || xhr.status === 419) {
+                    if (xhr.status === 401) {
                         window.location.href = "/";
                     }
                 });
