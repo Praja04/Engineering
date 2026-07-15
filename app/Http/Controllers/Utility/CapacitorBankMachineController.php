@@ -267,4 +267,290 @@ class CapacitorBankMachineController extends Controller
             'summary' => $summary,
         ]);
     }
+
+    /**
+     * GET /utility/capacitor-bank/report
+     * Render the report dashboard view.
+     */
+    public function reportView()
+    {
+        return view('utility.capacitor-bank.report');
+    }
+
+    /**
+     * GET /utility/capacitor-bank/report/data
+     * Get JSON data for the report dashboard based on a selected date.
+     */
+    public function reportData(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'nullable|date',
+        ]);
+
+        $tanggal = $request->input('tanggal', Carbon::today()->toDateString());
+
+        // 1. Fetch data
+        $machineData = CapacitorBankMachineData::where('tanggal', $tanggal)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $capHistories = CapacitorBankCapHistory::where('tanggal', $tanggal)
+            ->orderBy('recorded_at', 'asc')
+            ->get();
+
+        // 2. Compute averages for summary cards
+        $count = $machineData->count();
+        $avgCurrent = $count > 0 ? (float) $machineData->avg('current') : 0;
+        
+        $avgVllVab = $count > 0 ? (float) $machineData->avg('voltage_ll_Vab') : 0;
+        $avgVllVbc = $count > 0 ? (float) $machineData->avg('voltage_ll_Vbc') : 0;
+        $avgVllVca = $count > 0 ? (float) $machineData->avg('voltage_ll_Vca') : 0;
+        $avgVll = $count > 0 ? ($avgVllVab + $avgVllVbc + $avgVllVca) / 3 : 0;
+
+        $avgVlnVan = $count > 0 ? (float) $machineData->avg('voltage_ln_Van') : 0;
+        $avgVlnVbn = $count > 0 ? (float) $machineData->avg('voltage_ln_Vbn') : 0;
+        $avgVlnVcn = $count > 0 ? (float) $machineData->avg('voltage_ln_Vcn') : 0;
+        $avgVln = $count > 0 ? ($avgVlnVan + $avgVlnVbn + $avgVlnVcn) / 3 : 0;
+
+        $avgPtot = $count > 0 ? (float) $machineData->avg('power_Ptot') : 0;
+        $avgQtot = $count > 0 ? (float) $machineData->avg('power_Qtot') : 0;
+        $avgStot = $count > 0 ? (float) $machineData->avg('power_Stot') : 0;
+
+        $avgPFa = $count > 0 ? (float) $machineData->avg('pf_PFa') : 0;
+        $avgPFb = $count > 0 ? (float) $machineData->avg('pf_PFb') : 0;
+        $avgPFc = $count > 0 ? (float) $machineData->avg('pf_PFc') : 0;
+        $avgPF = $count > 0 ? ($avgPFa + $avgPFb + $avgPFc) / 3 : 0;
+
+        $avgFreq = $count > 0 ? (float) $machineData->avg('freq') : 0;
+
+        $latestRecord = $machineData->last();
+        $latestCapType = $latestRecord ? $latestRecord->cap_type : 'Tidak ada';
+
+        // 3. Compute Capacitor Switch-On/Off frequency and status
+        $capSummary = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $key = "cap{$i}";
+            $capSummary[$key] = [
+                'on_count'  => $machineData->where('cap_type', $key)->count(),
+                'off_count' => $machineData->where('cap_type', '!=', $key)->count(),
+            ];
+        }
+
+        // 4. Compute ON/OFF state transitions throughout the day
+        $transitions = [];
+        $prevState = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $prevState["cap{$i}"] = 0; // Default to OFF
+        }
+
+        // Check last state from the previous record before this date to have an accurate baseline
+        $lastPriorMachineData = CapacitorBankMachineData::where('tanggal', '<', $tanggal)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($lastPriorMachineData && $lastPriorMachineData->cap_type) {
+            preg_match('/(\d+)$/', $lastPriorMachineData->cap_type, $matches);
+            $priorActiveNum = isset($matches[1]) ? (int) $matches[1] : null;
+            if ($priorActiveNum !== null) {
+                $prevState["cap{$priorActiveNum}"] = 1;
+            }
+        }
+
+        foreach ($machineData as $data) {
+            $createdAt = Carbon::parse($data->created_at);
+            $timeFormatted = $createdAt->format('H:i:s');
+
+            // Resolve active cap for this record
+            $activeCapNum = null;
+            if ($data->cap_type) {
+                preg_match('/(\d+)$/', $data->cap_type, $matches);
+                $activeCapNum = isset($matches[1]) ? (int) $matches[1] : null;
+            }
+
+            // Create current state array for this record
+            $currState = [];
+            for ($i = 1; $i <= 12; $i++) {
+                $currState["cap{$i}"] = ($activeCapNum === $i) ? 1 : 0;
+            }
+
+            // Check for changes
+            for ($i = 1; $i <= 12; $i++) {
+                $capKey = "cap{$i}";
+                $currVal = $currState[$capKey];
+                $prevVal = $prevState[$capKey];
+
+                if ($currVal !== $prevVal) {
+                    $transitions[] = [
+                        'timestamp' => $createdAt->toDateTimeString(),
+                        'capacitor' => "Capacitor {$i}",
+                        'event'     => $currVal === 1 ? 'ON' : 'OFF',
+                        'time_formatted' => $timeFormatted,
+                    ];
+                    $prevState[$capKey] = $currVal;
+                }
+            }
+        }
+
+        // Sort transitions chronologically
+        usort($transitions, function ($a, $b) {
+            return strcmp($a['timestamp'], $b['timestamp']);
+        });
+
+        // 5. Map Trends data
+        $groupedTrends = [];
+        foreach ($machineData as $data) {
+            $time = Carbon::parse($data->created_at)->format('H:i');
+
+            $activeCapNum = null;
+            if ($data->cap_type) {
+                preg_match('/(\d+)$/', $data->cap_type, $matches);
+                $activeCapNum = isset($matches[1]) ? (int) $matches[1] : null;
+            }
+
+            $currentA = null;
+            $currentB = null;
+
+            if ($activeCapNum !== null) {
+                if (in_array($activeCapNum, [1, 3, 5, 7, 9, 11])) {
+                    $currentA = (float) $data->current;
+                } elseif (in_array($activeCapNum, [2, 4, 6, 8, 10, 12])) {
+                    $currentB = (float) $data->current;
+                }
+            }
+
+            if (!isset($groupedTrends[$time])) {
+                $groupedTrends[$time] = [
+                    'time' => $time,
+                    'current' => (float) $data->current,
+                    'current_a' => $currentA,
+                    'current_b' => $currentB,
+                    'v_ab' => (float) $data->voltage_ll_Vab,
+                    'v_bc' => (float) $data->voltage_ll_Vbc,
+                    'v_ca' => (float) $data->voltage_ll_Vca,
+                    'v_an' => (float) $data->voltage_ln_Van,
+                    'v_bn' => (float) $data->voltage_ln_Vbn,
+                    'v_cn' => (float) $data->voltage_ln_Vcn,
+                    'p_tot' => (float) $data->power_Ptot,
+                    'q_tot' => (float) $data->power_Qtot,
+                    's_tot' => (float) $data->power_Stot,
+                    'cap_types' => $data->cap_type ? [$data->cap_type] : [],
+                ];
+            } else {
+                if ($currentA !== null) {
+                    $groupedTrends[$time]['current_a'] = $currentA;
+                }
+                if ($currentB !== null) {
+                    $groupedTrends[$time]['current_b'] = $currentB;
+                }
+                if ($data->current !== null) {
+                    $groupedTrends[$time]['current'] = ($groupedTrends[$time]['current'] + (float)$data->current) / 2;
+                }
+                if ($data->cap_type) {
+                    $groupedTrends[$time]['cap_types'][] = $data->cap_type;
+                }
+                if ($data->voltage_ll_Vab !== null) {
+                    $groupedTrends[$time]['v_ab'] = ($groupedTrends[$time]['v_ab'] + (float)$data->voltage_ll_Vab) / 2;
+                }
+                if ($data->voltage_ll_Vbc !== null) {
+                    $groupedTrends[$time]['v_bc'] = ($groupedTrends[$time]['v_bc'] + (float)$data->voltage_ll_Vbc) / 2;
+                }
+                if ($data->voltage_ll_Vca !== null) {
+                    $groupedTrends[$time]['v_ca'] = ($groupedTrends[$time]['v_ca'] + (float)$data->voltage_ll_Vca) / 2;
+                }
+                if ($data->voltage_ln_Van !== null) {
+                    $groupedTrends[$time]['v_an'] = ($groupedTrends[$time]['v_an'] + (float)$data->voltage_ln_Van) / 2;
+                }
+                if ($data->voltage_ln_Vbn !== null) {
+                    $groupedTrends[$time]['v_bn'] = ($groupedTrends[$time]['v_bn'] + (float)$data->voltage_ln_Vbn) / 2;
+                }
+                if ($data->voltage_ln_Vcn !== null) {
+                    $groupedTrends[$time]['v_cn'] = ($groupedTrends[$time]['v_cn'] + (float)$data->voltage_ln_Vcn) / 2;
+                }
+                if ($data->power_Ptot !== null) {
+                    $groupedTrends[$time]['p_tot'] = ($groupedTrends[$time]['p_tot'] + (float)$data->power_Ptot) / 2;
+                }
+                if ($data->power_Qtot !== null) {
+                    $groupedTrends[$time]['q_tot'] = ($groupedTrends[$time]['q_tot'] + (float)$data->power_Qtot) / 2;
+                }
+                if ($data->power_Stot !== null) {
+                    $groupedTrends[$time]['s_tot'] = ($groupedTrends[$time]['s_tot'] + (float)$data->power_Stot) / 2;
+                }
+            }
+        }
+
+        foreach ($groupedTrends as &$trend) {
+            $trend['cap_type'] = count($trend['cap_types']) > 0 ? implode(', ', array_unique($trend['cap_types'])) : 'None';
+            unset($trend['cap_types']);
+        }
+        $trends = array_values($groupedTrends);
+
+        // 6. Map raw data table (all details)
+        $rawTable = [];
+        foreach ($machineData as $data) {
+            $activeCapNum = null;
+            if ($data->cap_type) {
+                preg_match('/(\d+)$/', $data->cap_type, $matches);
+                $activeCapNum = isset($matches[1]) ? (int) $matches[1] : null;
+            }
+
+            $currentA = null;
+            $currentB = null;
+
+            if ($activeCapNum !== null) {
+                if (in_array($activeCapNum, [1, 3, 5, 7, 9, 11])) {
+                    $currentA = $data->current;
+                } elseif (in_array($activeCapNum, [2, 4, 6, 8, 10, 12])) {
+                    $currentB = $data->current;
+                }
+            }
+
+            $rawTable[] = [
+                'time' => Carbon::parse($data->created_at)->format('H:i:s'),
+                'cap_type' => $data->cap_type ?: 'None',
+                'current' => $data->current,
+                'current_a' => $currentA,
+                'current_b' => $currentB,
+                'v_ab' => $data->voltage_ll_Vab,
+                'v_bc' => $data->voltage_ll_Vbc,
+                'v_ca' => $data->voltage_ll_Vca,
+                'v_an' => $data->voltage_ln_Van,
+                'v_bn' => $data->voltage_ln_Vbn,
+                'v_cn' => $data->voltage_ln_Vcn,
+                'p_tot' => $data->power_Ptot,
+                'q_tot' => $data->power_Qtot,
+                's_tot' => $data->power_Stot,
+                'pf' => $data->pf_PFa !== null ? ($data->pf_PFa + $data->pf_PFb + $data->pf_PFc)/3 : null,
+                'cosphi' => $data->cosphi_dPFa !== null ? ($data->cosphi_dPFa + $data->cosphi_dPFb + $data->cosphi_dPFc)/3 : null,
+                'freq' => $data->freq,
+            ];
+        }
+
+        return response()->json([
+            'tanggal' => $tanggal,
+            'summary' => [
+                'avg_current' => round($avgCurrent, 2),
+                'avg_vll' => round($avgVll, 2),
+                'avg_vll_vab' => round($avgVllVab, 2),
+                'avg_vll_vbc' => round($avgVllVbc, 2),
+                'avg_vll_vca' => round($avgVllVca, 2),
+                'avg_vln' => round($avgVln, 2),
+                'avg_vln_van' => round($avgVlnVan, 2),
+                'avg_vln_vbn' => round($avgVlnVbn, 2),
+                'avg_vln_vcn' => round($avgVlnVcn, 2),
+                'avg_ptot' => round($avgPtot, 2),
+                'avg_qtot' => round($avgQtot, 2),
+                'avg_stot' => round($avgStot, 2),
+                'avg_pf' => round($avgPF, 3),
+                'avg_freq' => round($avgFreq, 2),
+                'latest_cap_type' => $latestCapType,
+                'total_records' => $count,
+                'total_transitions' => count($transitions),
+            ],
+            'cap_summary' => $capSummary,
+            'transitions' => $transitions,
+            'trends' => $trends,
+            'raw_table' => $rawTable,
+        ]);
+    }
 }

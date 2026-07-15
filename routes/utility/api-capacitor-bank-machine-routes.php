@@ -14,4 +14,6 @@ Route::prefix('utility/capbank')->group(function () {
     // Cap ON/OFF history
     Route::get('/cap-history', [CapacitorBankMachineController::class, 'capHistory']);
     Route::get('/cap-history/summary', [CapacitorBankMachineController::class, 'capHistorySummary']);
+
+    Route::get('/report/data', [CapacitorBankMachineController::class, 'reportData'])->name('report.data');
 });
