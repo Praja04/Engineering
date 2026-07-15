@@ -327,7 +327,7 @@
 
                 // 🔹 HEADER
                 $('#formKalibrasi').find('input, select, textarea').each(function() {
-                    if (this.name && !this.name.includes('naik_') && !this.name.includes('turun_')) {
+                    if (this.name && this.name !== '_token' && !this.name.includes('naik_') && !this.name.includes('turun_')) {
                         data.header[this.name] = $(this).val();
                     }
                 });

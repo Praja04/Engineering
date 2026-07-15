@@ -288,7 +288,7 @@
                 // 🔹 HEADER (yang bukan data[...])
                 $('#formThermometer').find('input, select, textarea').each(function() {
 
-                    if (this.name && !this.name.startsWith('data[')) {
+                    if (this.name && this.name !== '_token' && !this.name.startsWith('data[')) {
                         data.header[this.name] = $(this).val();
                     }
                 });

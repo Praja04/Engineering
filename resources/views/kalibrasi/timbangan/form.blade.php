@@ -652,7 +652,7 @@
 
                 $form.find("input, select, textarea").each(function() {
                     let name = $(this).attr("name");
-                    if (name) {
+                    if (name && name !== '_token') {
                         formData[name] = $(this).val();
                     }
                 });
