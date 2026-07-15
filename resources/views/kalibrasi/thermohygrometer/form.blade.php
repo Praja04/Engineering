@@ -524,6 +524,9 @@
                 $.ajax({
                     url: `{{ route('kalibrasi.thermohygrometer.store') }}`,
                     method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     data: $('#formThermometer').serialize(),
 
                     success: function(res) {
