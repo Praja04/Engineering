@@ -323,17 +323,59 @@ class CapacitorBankMachineController extends Controller
 
         $avgFreq = $count > 0 ? (float) $machineData->avg('freq') : 0;
 
-        $latestRecord = $machineData->last();
-        $latestCapType = $latestRecord ? $latestRecord->cap_type : 'Tidak ada';
+        $latestCapType = 'Tidak ada';
+        if ($machineData->isNotEmpty()) {
+            $latestTs = $machineData->last()->created_at;
+            $latestRecords = $machineData->filter(function ($item) use ($latestTs) {
+                return $item->created_at == $latestTs;
+            });
+            $latestCaps = [];
+            foreach ($latestRecords as $lr) {
+                if ($lr->cap_type) {
+                    $latestCaps[] = strtoupper($lr->cap_type);
+                }
+            }
+            $latestCapType = count($latestCaps) > 0 ? implode(', ', array_unique($latestCaps)) : 'Tidak ada';
+        }
 
-        // 3. Compute Capacitor Switch-On/Off frequency and status
+        // Group machine data by created_at (actual timestamp) to combine multiple capacitor activations
+        $groupedByTime = [];
+        foreach ($machineData as $data) {
+            $ts = Carbon::parse($data->created_at)->toDateTimeString();
+            if (!isset($groupedByTime[$ts])) {
+                $groupedByTime[$ts] = [
+                    'timestamp' => $ts,
+                    'created_at' => $data->created_at,
+                    'active_caps' => [],
+                ];
+            }
+            if ($data->cap_type) {
+                $groupedByTime[$ts]['active_caps'][] = $data->cap_type;
+            }
+        }
+
+        // Sort chronologically by timestamp key
+        ksort($groupedByTime);
+
+        // 3. Compute Capacitor Switch-On/Off frequency and status based on grouped intervals
         $capSummary = [];
         for ($i = 1; $i <= 12; $i++) {
             $key = "cap{$i}";
             $capSummary[$key] = [
-                'on_count'  => $machineData->where('cap_type', $key)->count(),
-                'off_count' => $machineData->where('cap_type', '!=', $key)->count(),
+                'on_count'  => 0,
+                'off_count' => 0,
             ];
+        }
+
+        foreach ($groupedByTime as $ts => $group) {
+            for ($i = 1; $i <= 12; $i++) {
+                $key = "cap{$i}";
+                if (in_array($key, $group['active_caps'])) {
+                    $capSummary[$key]['on_count']++;
+                } else {
+                    $capSummary[$key]['off_count']++;
+                }
+            }
         }
 
         // 4. Compute ON/OFF state transitions throughout the day
@@ -344,34 +386,37 @@ class CapacitorBankMachineController extends Controller
             $prevState["cap{$i}"] = 0; // Default to OFF
         }
 
-        // Check last state from the previous record before this date to have an accurate baseline
+        // Get the last active state before this date
         $lastPriorMachineData = CapacitorBankMachineData::where('tanggal', '<', $tanggal)
             ->orderBy('created_at', 'desc')
-            ->first();
+            ->get(); // Get the latest ones to reconstruct the state
 
-        if ($lastPriorMachineData && $lastPriorMachineData->cap_type) {
-            preg_match('/(\d+)$/', $lastPriorMachineData->cap_type, $matches);
-            $priorActiveNum = isset($matches[1]) ? (int) $matches[1] : null;
-            if ($priorActiveNum !== null) {
-                $prevState["cap{$priorActiveNum}"] = 1;
+        if ($lastPriorMachineData->isNotEmpty()) {
+            // Reconstruct the last state by looking at the last unique timestamp's records
+            $lastPriorTs = $lastPriorMachineData->first()->created_at;
+            $priorRecords = $lastPriorMachineData->filter(function ($item) use ($lastPriorTs) {
+                return $item->created_at == $lastPriorTs;
+            });
+            foreach ($priorRecords as $prior) {
+                if ($prior->cap_type) {
+                    preg_match('/(\d+)$/', $prior->cap_type, $matches);
+                    $priorActiveNum = isset($matches[1]) ? (int) $matches[1] : null;
+                    if ($priorActiveNum !== null) {
+                        $prevState["cap{$priorActiveNum}"] = 1;
+                    }
+                }
             }
         }
 
-        foreach ($machineData as $data) {
-            $createdAt = Carbon::parse($data->created_at);
+        foreach ($groupedByTime as $ts => $group) {
+            $createdAt = Carbon::parse($group['created_at']);
             $timeFormatted = $createdAt->format('H:i:s');
 
-            // Resolve active cap for this record
-            $activeCapNum = null;
-            if ($data->cap_type) {
-                preg_match('/(\d+)$/', $data->cap_type, $matches);
-                $activeCapNum = isset($matches[1]) ? (int) $matches[1] : null;
-            }
-
-            // Create current state array for this record
+            // Current state for this timestamp
             $currState = [];
             for ($i = 1; $i <= 12; $i++) {
-                $currState["cap{$i}"] = ($activeCapNum === $i) ? 1 : 0;
+                $capKey = "cap{$i}";
+                $currState[$capKey] = in_array($capKey, $group['active_caps']) ? 1 : 0;
             }
 
             // Check for changes
@@ -392,9 +437,9 @@ class CapacitorBankMachineController extends Controller
             }
         }
 
-        // Sort transitions chronologically
+        // Sort transitions chronologically (descending: latest first)
         usort($transitions, function ($a, $b) {
-            return strcmp($a['timestamp'], $b['timestamp']);
+            return strcmp($b['timestamp'], $a['timestamp']);
         });
 
         // 5. Map Trends data

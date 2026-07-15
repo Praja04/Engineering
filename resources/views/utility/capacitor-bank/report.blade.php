@@ -841,12 +841,16 @@
 
                 // Update Capacitor Grid Status
                 $('.cap-grid-item').removeClass('active-cap');
+                const latestUpper = res.summary.latest_cap_type.toUpperCase();
+                const activeCaps = latestUpper.split(',').map(function(item) {
+                    return item.trim();
+                });
                 for (let i = 1; i <= 12; i++) {
                     const count = res.cap_summary[`cap${i}`].on_count;
                     $(`#capGridCount${i}`).text(count);
 
                     // If currently active in latest reading
-                    if (res.summary.latest_cap_type === `cap${i}`) {
+                    if (activeCaps.includes(`CAP${i}`)) {
                         $(`#capGridItem${i}`).addClass('active-cap');
                     }
                 }
