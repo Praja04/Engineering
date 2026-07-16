@@ -434,8 +434,9 @@
             <div class="report-header fade-in-up">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                     <div>
-                        <h4><i class="mdi mdi-chart-bell-curve-cumulative me-2"></i>Report Capacitor Bank - Auto IoT</h4>
-                        <p>Dashboard telemetry capacitor bank yang diupdate otomatis setiap 30 menit</p>
+                        <h4 class="text-white"><i class="mdi mdi-chart-bell-curve-cumulative me-2"></i>Report Capacitor Bank
+                        </h4>
+                        <p class="text-white">Dashboard telemetry capacitor bank yang diupdate otomatis setiap 30 menit</p>
                     </div>
                     {{-- <div class="d-flex align-items-center gap-2">
                         <a href="{{ route('capacitor-bank.index') }}"
@@ -550,8 +551,8 @@
                         <div class="col-lg-12">
                             <div class="chart-card">
                                 <div class="chart-card-header">
-                                    <h6 class="chart-card-title"><i class="bx bx-line-chart me-1 text-primary"></i> 2.
-                                        Tren Arus (Current R-S-T)</h6>
+                                    <h6 class="chart-card-title"><i class="bx bx-line-chart me-1 text-primary"></i>Tren
+                                        Arus (Current R-S-T)</h6>
                                     <span class="badge bg-primary-subtle text-primary">A</span>
                                 </div>
                                 <div id="chartCurrent"></div>
@@ -560,7 +561,7 @@
                         <div class="col-lg-12">
                             <div class="chart-card">
                                 <div class="chart-card-header">
-                                    <h6 class="chart-card-title"><i class="bx bx-line-chart me-1 text-info"></i> 3. Tren
+                                    <h6 class="chart-card-title"><i class="bx bx-line-chart me-1 text-info"></i>Tren
                                         Tegangan Line-to-Line (L-L)</h6>
                                     <span class="badge bg-info-subtle text-info">V</span>
                                 </div>
@@ -574,7 +575,7 @@
                         <div class="col-lg-12">
                             <div class="chart-card">
                                 <div class="chart-card-header">
-                                    <h6 class="chart-card-title"><i class="bx bx-line-chart me-1 text-indigo"></i> 4. Tren
+                                    <h6 class="chart-card-title"><i class="bx bx-line-chart me-1 text-indigo"></i>Tren
                                         Tegangan Line-to-Neutral (L-N)</h6>
                                     <span class="badge bg-indigo-subtle text-indigo">V</span>
                                 </div>
@@ -584,56 +585,11 @@
                         <div class="col-lg-12">
                             <div class="chart-card">
                                 <div class="chart-card-header">
-                                    <h6 class="chart-card-title"><i class="bx bx-area-chart me-1 text-emerald"></i> 5.
-                                        Tren Power (P, Q, S)</h6>
+                                    <h6 class="chart-card-title"><i class="bx bx-line-chart me-1 text-emerald"></i>Tren
+                                        Power (P, Q, S)</h6>
                                     <span class="badge bg-emerald-subtle text-emerald">kW/kVAR/kVA</span>
                                 </div>
                                 <div id="chartPower"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- ── 4. Summary per Cap & Timeline transitions ── --}}
-                    <div class="row">
-                        <div class="col-lg-7">
-                            <div class="chart-card chart-card-equal">
-                                <div class="chart-card-header">
-                                    <h6 class="chart-card-title"><i class="bx bx-bar-chart-alt-2 me-1 text-warning"></i>
-                                        6. Frekuensi Aktif per Kapasitor</h6>
-                                    <span class="badge bg-warning-subtle text-warning">Frekuensi (Kali)</span>
-                                </div>
-                                <div class="mb-4">
-                                    <div id="chartCapFreq"></div>
-                                </div>
-                                <h6 class="fw-bold mb-3" style="font-size: 0.85rem; color: #64748b;">Statistik Aktif per
-                                    Kapasitor (Hari Ini)</h6>
-                                <div class="row g-2" id="capGrid">
-                                    @for ($i = 1; $i <= 12; $i++)
-                                        <div class="col-4 col-sm-3 col-md-2">
-                                            <div class="cap-grid-item" id="capGridItem{{ $i }}">
-                                                <div class="cap-name">CAP {{ $i }}</div>
-                                                <div class="cap-count" id="capGridCount{{ $i }}">0</div>
-                                            </div>
-                                        </div>
-                                    @endfor
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-5">
-                            <div class="chart-card chart-card-equal">
-                                <div class="chart-card-header">
-                                    <h6 class="chart-card-title"><i class="bx bx-calendar-event me-1 text-danger"></i> Log
-                                        ON/OFF Transisi Kapasitor</h6>
-                                    <span class="badge bg-danger-subtle text-danger" id="countTransitions">0 Event</span>
-                                </div>
-                                <div class="timeline-container custom-scroll" id="transitionsLog">
-                                    <!-- Dynamic Timeline Items Go Here -->
-                                    <div
-                                        class="d-flex flex-column align-items-center justify-content-center h-100 text-center py-5 text-muted">
-                                        <i class="bx bx-calendar-x fs-2"></i>
-                                        <p class="mt-2 small mb-0">Tidak ada transisi hari ini</p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -839,51 +795,6 @@
                 $('#valLatestCap').text(res.summary.latest_cap_type);
                 $('#subLatestCap').text(`${res.summary.total_transitions} Transisi ON/OFF`);
 
-                // Update Capacitor Grid Status
-                $('.cap-grid-item').removeClass('active-cap');
-                const latestUpper = res.summary.latest_cap_type.toUpperCase();
-                const activeCaps = latestUpper.split(',').map(function(item) {
-                    return item.trim();
-                });
-                for (let i = 1; i <= 12; i++) {
-                    const count = res.cap_summary[`cap${i}`].on_count;
-                    $(`#capGridCount${i}`).text(count);
-
-                    // If currently active in latest reading
-                    if (activeCaps.includes(`CAP${i}`)) {
-                        $(`#capGridItem${i}`).addClass('active-cap');
-                    }
-                }
-
-                // Update Timeline Logs
-                let logHtml = '';
-                if (res.transitions.length > 0) {
-                    res.transitions.forEach(function(item) {
-                        const eventClass = item.event === 'ON' ? 'event-on' : 'event-off';
-                        const badgeClass = item.event === 'ON' ? 'bg-success-subtle text-success' :
-                            'bg-danger-subtle text-danger';
-                        logHtml += `
-                        <div class="timeline-event ${eventClass}">
-                            <div class="timeline-time">${item.time_formatted}</div>
-                            <div class="timeline-text">
-                                <span class="badge ${badgeClass} small me-2">${item.event}</span>
-                                <strong>${item.capacitor.toUpperCase()}</strong> telah beralih status
-                            </div>
-                        </div>
-                    `;
-                    });
-                    $('#countTransitions').text(`${res.transitions.length} Event`);
-                } else {
-                    logHtml = `
-                    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-center py-5 text-muted">
-                        <i class="bx bx-calendar-x fs-2"></i>
-                        <p class="mt-2 small mb-0">Tidak ada transisi state kapasitor hari ini</p>
-                    </div>
-                `;
-                    $('#countTransitions').text('0 Event');
-                }
-                $('#transitionsLog').html(logHtml);
-
                 // Populate Raw Data Table
                 renderTable(res.raw_table);
 
@@ -933,13 +844,13 @@
                 // --- 2. Chart Current (Phase A vs Phase B) ---
                 const currentOpts = getHighchartsBaseOptions('line', timeLabels);
                 currentOpts.series = [{
-                        name: 'Phase A Current (A)',
+                        name: 'Phase A Current',
                         data: trends.map(d => d.current_a),
                         color: '#3b82f6',
                         connectNulls: true
                     },
                     {
-                        name: 'Phase B Current (A)',
+                        name: 'Phase B Current',
                         data: trends.map(d => d.current_b),
                         color: '#ef4444',
                         connectNulls: true
@@ -1010,29 +921,6 @@
                     }
                 ];
                 Highcharts.chart('chartPower', powerOpts);
-
-                // --- 6. Chart Capacitor Frequency (Bar/Column) ---
-                const capNames = [];
-                const capCounts = [];
-                for (let i = 1; i <= 12; i++) {
-                    capNames.push(`CAP ${i}`);
-                    capCounts.push(capSummary[`cap${i}`].on_count);
-                }
-
-                const capFreqOpts = getHighchartsBaseOptions('column', capNames);
-                capFreqOpts.chart.height = 240;
-                capFreqOpts.plotOptions.column.dataLabels = {
-                    enabled: true,
-                    style: {
-                        fontSize: '10px'
-                    }
-                };
-                capFreqOpts.series = [{
-                    name: 'Kali Aktif',
-                    data: capCounts,
-                    color: '#f59e0b'
-                }];
-                Highcharts.chart('chartCapFreq', capFreqOpts);
             }
 
             // ── 6. Filter Table Actions ──
@@ -1089,6 +977,11 @@
 
             // Auto load on init
             loadReportData();
+
+            // Auto refresh every 15 minutes
+            setInterval(function() {
+                loadReportData();
+            }, 15 * 60 * 1000);
         });
     </script>
 @endsection
