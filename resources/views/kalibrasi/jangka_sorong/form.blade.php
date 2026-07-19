@@ -240,7 +240,7 @@
                 $('#formJangkaSorong').find('input, select, textarea').each(function() {
 
                     const name = $(this).attr('name');
-                    if (!name) return;
+                    if (!name || name === '_token') return;
 
                     // Skip detail fields
                     if (name.includes('nilai_pembacaan') ||

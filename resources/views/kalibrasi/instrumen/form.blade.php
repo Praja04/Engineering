@@ -398,7 +398,7 @@
             function saveDraft() {
                 let form = $("#formInstrumen");
 
-                let data = form.serializeArray();
+                let data = form.serializeArray().filter(item => item.name !== '_token');
 
                 form.find("input[type=checkbox]").each(function() {
                     if (!this.checked) {

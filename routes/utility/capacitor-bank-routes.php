@@ -2,15 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\CapacitorBankController;
+use App\Http\Controllers\Utility\CapacitorBankMachineController;
 
 // ============================================================
 // Capacitor Bank — Engineering Utility
 // ============================================================
 
-Route::prefix('utility/capacitor-bank')
-->name('capacitor-bank.')
-->middleware(['auth'])
-->group(function () {
+Route::prefix('utility/capacitor-bank')->name('capacitor-bank.')->middleware(['auth'])->group(function () {
 
     // ── Views ────────────────────────────────────────────
     Route::get('/',         [CapacitorBankController::class, 'index'])->name('index');
@@ -35,4 +33,8 @@ Route::prefix('utility/capacitor-bank')
 
     // ── Update Harian ────────────────────────────────────  ← TETAP PALING BAWAH
     Route::put('/{tanggal}', [CapacitorBankController::class, 'update'])->name('update');
+});
+
+Route::prefix('utility/capbank-monitoring')->name('capbank-monitoring.')->middleware(['auth'])->group(function () {
+    Route::get('/report', [CapacitorBankMachineController::class, 'reportView'])->name('report');
 });

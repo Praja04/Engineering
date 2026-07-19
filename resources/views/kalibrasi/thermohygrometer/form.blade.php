@@ -288,7 +288,7 @@
                 // 🔹 HEADER (yang bukan data[...])
                 $('#formThermometer').find('input, select, textarea').each(function() {
 
-                    if (this.name && !this.name.startsWith('data[')) {
+                    if (this.name && this.name !== '_token' && !this.name.startsWith('data[')) {
                         data.header[this.name] = $(this).val();
                     }
                 });
@@ -524,6 +524,9 @@
                 $.ajax({
                     url: `{{ route('kalibrasi.thermohygrometer.store') }}`,
                     method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     data: $('#formThermometer').serialize(),
 
                     success: function(res) {
