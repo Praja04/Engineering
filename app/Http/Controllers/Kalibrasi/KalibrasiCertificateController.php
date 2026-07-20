@@ -860,10 +860,10 @@ class KalibrasiCertificateController extends Controller
             $pgTurun = $pressuresDesc[$i];
 
             $sheet->setCellValue("H{$row}", $pg->titik_kalibrasi ?? '');
-            $sheet->setCellValue("L{$row}", $pg->avg_penunjuk_alat_naik ?? '');
-            $sheet->setCellValue("O{$row}", $pgTurun->avg_penunjuk_alat_turun ?? '');
-            $sheet->setCellValue("R{$row}", $pg->avg_tekanan_standar_naik ?? '');
-            $sheet->setCellValue("U{$row}", $pgTurun->avg_tekanan_standar_turun ?? '');
+            $sheet->setCellValue("L{$row}", $pg->avg_tekanan_standar_naik  ?? '');
+            $sheet->setCellValue("O{$row}", $pgTurun->avg_penunjuk_alat_naik ?? '');
+            $sheet->setCellValue("R{$row}", $pg->avg_penunjuk_alat_naik ?? '');
+            $sheet->setCellValue("U{$row}", $pgTurun->avg_penunjuk_alat_turun ?? '');
             $sheet->setCellValue("X{$row}", $pg->avg_koreksi_alat_naik ?? '');
             $sheet->setCellValue("AA{$row}", $pgTurun->avg_koreksi_alat_turun ?? '');
             $sheet->setCellValue("AD{$row}", $pg->u_gabungan ?? '');
