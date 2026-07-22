@@ -11,7 +11,7 @@ $bagian = Auth::user()->bagian;
 )
 <li class="nav-item">
     <a class="nav-link menu-link" href="#sidebarUtilityDashboard" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarUtilityDashboard">
-        <i class="mdi mdi-wrench"></i>
+        <i class="mdi mdi-water"></i>
         <span data-key="t-dashboards">Dashboard Utility & WWTP</span>
     </a>
     <div class="collapse menu-dropdown" id="sidebarUtilityDashboard">

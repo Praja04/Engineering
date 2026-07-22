@@ -152,6 +152,7 @@
                                                 <option value="Engineering Maintenance & Improvement">Engineering
                                                     Maintenance & Improvement</option>
                                                 <option value="Engineering Produksi">Engineering Produksi</option>
+                                                <option value="Engineering Produksi (EPR)">Engineering Produksi (EPR)</option>
                                                 <option value="Engineering WWTP">Engineering WWTP</option>
                                                 <option value="Engineering Workshop & Project">Engineering Workshop &
                                                     Project</option>
@@ -233,6 +234,7 @@
                                         <option value="Engineering Maintenance & Improvement">Engineering
                                             Maintenance & Improvement</option>
                                         <option value="Engineering Produksi">Engineering Produksi</option>
+                                        <option value="Engineering Produksi (EPR)">Engineering Produksi (EPR)</option>
                                         <option value="Engineering WWTP">Engineering WWTP</option>
                                         <option value="Engineering Workshop & Project">Engineering Workshop &
                                             Project</option>
