@@ -43,6 +43,7 @@
                     @include('layouts.components.sidebar-utility.dashboard')
                     @include('layouts.components.sidebar-maintenance.dashboard-maintenance')
                     @include('layouts.components.sidebar-ejo.dashboard-ejo')
+                    @include('layouts.components.sidebar-epr.dashboard-epr')
                     @include('layouts.components.sidebar-operasional.dashboard')
                 @endif
 
@@ -53,6 +54,7 @@
                     <li class="menu-title"><span data-key="t-menu">Engineering Menu</span></li>
                     @include('layouts.components.sidebar-utility.kpi')
                     @include('layouts.components.sidebar-utility.utility')
+                    @include('layouts.components.sidebar-epr.menu-epr')
                     @include('layouts.components.sidebar-utility.wwtp')
                     @include('layouts.components.sidebar-boiler.menu-boiler')
                     @include('layouts.components.sidebar-kalibrasi.menu-kalibrasi')
@@ -68,6 +70,7 @@
                         @include('layouts.components.sidebar-kalibrasi.data-master')
                         @include('layouts.components.sidebar-scoring.menu-scoring-master')
                         @include('layouts.components.sidebar-maintenance.master-maintenance')
+                        @include('layouts.components.sidebar-epr.master-epr')
                     @endif
 
                     <!-- /////////////////////Manage User/////////////// -->

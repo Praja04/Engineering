@@ -167,7 +167,7 @@
                         <div class="card shadow-sm category-card mb-4" style="border-left-color: #6366f1;">
                             <div class="card-header bg-soft-indigo border-0" style="background-color: #e0e7ff;">
                                 <h6 class="card-title text-indigo fw-bold mb-0" style="color: #4338ca;">
-                                    <i class="ri-loop-left-line me-2"></i> Rubber Coupling & Sling Fan
+                                    <i class="ri-repeat-line me-2"></i> Rubber Coupling & Sling Fan
                                 </h6>
                             </div>
                             <div class="card-body py-1">

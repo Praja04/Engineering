@@ -86,8 +86,9 @@ Route::middleware('auth')->group(function () {
 
     //////////    End View Routes   ///////////
 
-    // Boiler Routes
     @include('boiler/boiler.php');
+
+    @include 'epr/epr-routes.php';
 
     @include('maintenance/maintenance.php');
 });

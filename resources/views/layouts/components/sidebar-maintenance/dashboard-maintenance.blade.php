@@ -11,7 +11,7 @@ $jabatan === 'supervisor' ||
 ($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement'])))
 <li class="nav-item">
     <a class="nav-link menu-link {{ request()->is('mtc/dashboard/*') || request()->is('mtc/agenda') ? '' : 'collapsed' }}" href="#sidebarMtcDashboard" data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->is('mtc/dashboard/*') || request()->is('mtc/agenda') ? 'true' : 'false' }}" aria-controls="sidebarMtcDashboard">
-        <i class="mdi mdi-wrench"></i>
+        <i class="mdi mdi-toolbox"></i>
         <span data-key="t-dashboards">Dashboard MTC</span>
     </a>
     <div class="collapse menu-dropdown {{ request()->is('mtc/dashboard/*') || request()->is('mtc/agenda') ? 'show' : '' }}" id="sidebarMtcDashboard">

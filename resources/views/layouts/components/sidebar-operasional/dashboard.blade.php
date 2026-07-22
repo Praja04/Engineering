@@ -14,7 +14,7 @@
             href="#sidebarOperasionalDashboard" data-bs-toggle="collapse" role="button"
             aria-expanded="{{ request()->routeIs('capbank-monitoring.*') ? 'true' : 'false' }}"
             aria-controls="sidebarOperasionalDashboard">
-            <i class="mdi mdi-wrench"></i>
+            <i class="mdi mdi-flash"></i>
             <span data-key="t-dashboards">Dashboard <br> Operasional</span>
         </a>
         <div class="collapse menu-dropdown {{ request()->routeIs('capbank-monitoring.*') ? 'show' : '' }}"
