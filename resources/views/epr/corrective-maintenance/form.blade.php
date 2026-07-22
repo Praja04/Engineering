@@ -99,17 +99,12 @@
                                 {{-- Mesin --}}
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold">Mesin <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="f-mesin" name="mesin" placeholder="Ketik kode mesin (cth: E, J, AI...)" list="machine-list" required>
-                                    <datalist id="machine-list">
-                                        <option value="A"><option value="B"><option value="C"><option value="D">
-                                        <option value="E"><option value="F"><option value="G"><option value="H">
-                                        <option value="I"><option value="J"><option value="K"><option value="L">
-                                        <option value="M"><option value="N"><option value="O"><option value="P">
-                                        <option value="Q"><option value="R"><option value="S"><option value="T">
-                                        <option value="U"><option value="V"><option value="W"><option value="X">
-                                        <option value="Y"><option value="Z"><option value="AH"><option value="AI">
-                                        <option value="AJ"><option value="AK"><option value="AL"><option value="AM">
-                                    </datalist>
+                                    <select class="form-select" id="f-mesin" name="mesin" required>
+                                        <option value="">Pilih Mesin...</option>
+                                        @foreach($machines as $m)
+                                            <option value="{{ $m->name }}">{{ $m->name }} {{ $m->code ? ' (' . $m->code . ')' : '' }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
 
                                 {{-- Pouch/Sachet --}}

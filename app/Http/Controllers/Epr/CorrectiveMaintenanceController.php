@@ -15,7 +15,8 @@ class CorrectiveMaintenanceController extends Controller
     public function form()
     {
         $jenisDts = JenisDt::where('aktif', true)->orderBy('name', 'asc')->get();
-        return view('epr.corrective-maintenance.form', compact('jenisDts'));
+        $machines = \App\Models\ScoringMesin\Machine::orderBy('name', 'asc')->get();
+        return view('epr.corrective-maintenance.form', compact('jenisDts', 'machines'));
     }
 
     public function data()
@@ -441,5 +442,123 @@ class CorrectiveMaintenanceController extends Controller
                 'message' => 'Terjadi kesalahan saat mengimpor data: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    // ── Extra Data Management (Cost, OEE KPI, Action Plan) ──
+
+    public function extraData(Request $request)
+    {
+        $month = $request->input('month', date('Y-m'));
+
+        $costs = \App\Models\Epr\CmCost::where('tanggal', 'like', $month . '%')->orderBy('tanggal', 'desc')->get();
+        $kpis = \App\Models\Epr\CmMachineKpi::where('month', $month)->orderBy('mesin', 'asc')->get();
+        $actionPlans = \App\Models\Epr\CmActionPlan::where('month', $month)->orderBy('mesin', 'asc')->get();
+
+        $machines = \App\Models\ScoringMesin\Machine::orderBy('name', 'asc')->get();
+
+        return view('epr.corrective-maintenance.extra-data', compact('month', 'costs', 'kpis', 'actionPlans', 'machines'));
+    }
+
+    public function storeCost(Request $request)
+    {
+        $request->validate([
+            'mesin' => 'required|string',
+            'tanggal' => 'required|date',
+            'kategori_biaya' => 'required|string',
+            'jumlah_biaya' => 'required|numeric|min:0',
+        ]);
+
+        \App\Models\Epr\CmCost::create([
+            'mesin' => $request->input('mesin'),
+            'tanggal' => $request->input('tanggal'),
+            'kategori_biaya' => $request->input('kategori_biaya'),
+            'deskripsi' => $request->input('deskripsi'),
+            'jumlah_biaya' => $request->input('jumlah_biaya'),
+            'created_by' => Auth::id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Data biaya perbaikan berhasil disimpan.');
+    }
+
+    public function deleteCost($id)
+    {
+        $cost = \App\Models\Epr\CmCost::findOrFail($id);
+        $cost->delete();
+        return redirect()->back()->with('success', 'Data biaya berhasil dihapus.');
+    }
+
+    public function storeKpi(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|string',
+            'mesin' => 'required|string',
+            'availability_pct' => 'required|numeric|min:0|max:100',
+            'performance_pct' => 'required|numeric|min:0|max:100',
+            'quality_pct' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $avail = (float)$request->input('availability_pct');
+        $perf = (float)$request->input('performance_pct');
+        $qual = (float)$request->input('quality_pct');
+        $oee = round(($avail * $perf * $qual) / 10000, 1);
+
+        \App\Models\Epr\CmMachineKpi::updateOrCreate(
+            ['month' => $request->input('month'), 'mesin' => $request->input('mesin')],
+            [
+                'availability_pct' => $avail,
+                'performance_pct' => $perf,
+                'quality_pct' => $qual,
+                'oee_pct' => $oee,
+                'pm_compliance_pct' => $request->input('pm_compliance_pct', 90),
+                'repeat_failure_pct' => $request->input('repeat_failure_pct', 10),
+                'minor_stop_freq' => $request->input('minor_stop_freq', 10),
+                'cost_per_hour' => $request->input('cost_per_hour', 50),
+                'energy_per_pack' => $request->input('energy_per_pack', 0.35),
+                'created_by' => Auth::id(),
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Data OEE KPI Mesin berhasil disimpan.');
+    }
+
+    public function deleteKpi($id)
+    {
+        $kpi = \App\Models\Epr\CmMachineKpi::findOrFail($id);
+        $kpi->delete();
+        return redirect()->back()->with('success', 'Data KPI berhasil dihapus.');
+    }
+
+    public function storeActionPlan(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|string',
+            'mesin' => 'required|string',
+            'isu_utama' => 'required|string',
+        ]);
+
+        \App\Models\Epr\CmActionPlan::create([
+            'month' => $request->input('month'),
+            'mesin' => $request->input('mesin'),
+            'isu_utama' => $request->input('isu_utama'),
+            'akar_masalah' => $request->input('akar_masalah'),
+            'saran_perbaikan' => $request->input('saran_perbaikan'),
+            'pic' => $request->input('pic'),
+            'target_date' => $request->input('target_date'),
+            'w1_status' => $request->input('w1_status', 'none'),
+            'w2_status' => $request->input('w2_status', 'none'),
+            'w3_status' => $request->input('w3_status', 'none'),
+            'w4_status' => $request->input('w4_status', 'none'),
+            'status' => $request->input('status', 'Open'),
+            'created_by' => Auth::id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Action plan berhasil disimpan.');
+    }
+
+    public function deleteActionPlan($id)
+    {
+        $ap = \App\Models\Epr\CmActionPlan::findOrFail($id);
+        $ap->delete();
+        return redirect()->back()->with('success', 'Action plan berhasil dihapus.');
     }
 }

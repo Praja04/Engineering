@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth'])->group(function () {
 
     Route::get('epr/dashboard', [DashboardController::class, 'index'])->name('epr.dashboard');
+    Route::get('epr/dashboard/cm', [DashboardController::class, 'cmDashboard'])->name('epr.dashboard.cm');
 
     // ── Predictive Maintenance (Operator & Foreman) ──
     Route::prefix('epr/predictive-maintenance')->as('epr.pm.')->group(function () {
@@ -34,6 +35,15 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [CorrectiveMaintenanceController::class, 'destroy'])->name('destroy');
         Route::get('/export', [CorrectiveMaintenanceController::class, 'export'])->name('export');
         Route::post('/import', [CorrectiveMaintenanceController::class, 'import'])->name('import');
+
+        // Extra Data: Cost, KPI, Action Plan
+        Route::get('/extra-data', [CorrectiveMaintenanceController::class, 'extraData'])->name('extra-data');
+        Route::post('/cost/store', [CorrectiveMaintenanceController::class, 'storeCost'])->name('cost.store');
+        Route::delete('/cost/{id}', [CorrectiveMaintenanceController::class, 'deleteCost'])->name('cost.delete');
+        Route::post('/kpi/store', [CorrectiveMaintenanceController::class, 'storeKpi'])->name('kpi.store');
+        Route::delete('/kpi/{id}', [CorrectiveMaintenanceController::class, 'deleteKpi'])->name('kpi.delete');
+        Route::post('/action-plan/store', [CorrectiveMaintenanceController::class, 'storeActionPlan'])->name('action-plan.store');
+        Route::delete('/action-plan/{id}', [CorrectiveMaintenanceController::class, 'deleteActionPlan'])->name('action-plan.delete');
     });
 
     // ── Master Data Jenis DT ──

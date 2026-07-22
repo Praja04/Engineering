@@ -132,7 +132,7 @@
                             <input type="text" class="form-control" id="filter-search" placeholder="Cari mesin, keterangan, jenis DT...">
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <label class="form-label small fw-semibold mb-1 text-muted">Shift</label>
                         <select class="form-select form-select-sm" id="filter-shift">
                             <option value="">Semua</option>
@@ -149,7 +149,7 @@
                             <option value="Sachet">Sachet</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <label class="form-label small fw-semibold mb-1 text-muted">E / M</label>
                         <select class="form-select form-select-sm" id="filter-em">
                             <option value="">Semua</option>
@@ -161,53 +161,167 @@
                         <label class="form-label small fw-semibold mb-1 text-muted">Bulan</label>
                         <input type="month" class="form-control form-control-sm" id="filter-month" value="{{ date('Y-m') }}">
                     </div>
-                    <div class="col-md-1 d-flex align-items-end gap-1">
-                        <button class="btn btn-primary btn-sm w-100" onclick="applyFilters()" title="Filter">
-                            <i class="ri-filter-3-line"></i>
+                    <div class="col-md-1">
+                        <label class="form-label small fw-semibold mb-1 text-muted">Week</label>
+                        <select class="form-select form-select-sm" id="filter-week">
+                            <option value="">Semua</option>
+                            <option value="1">Week 1</option>
+                            <option value="2">Week 2</option>
+                            <option value="3">Week 3</option>
+                            <option value="4">Week 4</option>
+                            <option value="5">Week 5</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end gap-1">
+                        <button class="btn btn-primary btn-sm px-2 w-100 d-flex align-items-center justify-content-center gap-1" onclick="applyFilters()" title="Filter">
+                            <i class="ri-filter-3-line"></i> <span>Filter</span>
                         </button>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()" title="Reset">
-                            <i class="ri-refresh-line"></i>
+                        <button class="btn btn-outline-secondary btn-sm px-2 w-100 d-flex align-items-center justify-content-center gap-1" onclick="resetFilters()" title="Reset">
+                            <i class="ri-refresh-line"></i> <span>Reset</span>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Data Table --}}
-        <div class="card border-0 shadow-sm" style="border-radius: 12px;">
-            <div class="card-body p-4 bg-white">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle mb-0" id="tableData">
-                        <thead class="table-light">
-                            <tr>
-                                <th width="60" class="text-center">NO</th>
-                                <th width="120">TANGGAL</th>
-                                <th width="100">SHIFT/GRUP</th>
-                                <th width="90">MESIN</th>
-                                <th width="110">POUCH/SACHET</th>
-                                <th>KETERANGAN DOWNTIME</th>
-                                <th width="180">JENIS DT</th>
-                                <th width="100" class="text-center">DOWNTIME</th>
-                                <th width="150" class="text-center">KLASIFIKASI</th>
-                                <th width="140" class="text-center">AKSI</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            {{-- Dynamically filled --}}
-                        </tbody>
-                    </table>
-                </div>
+        {{-- Navigation Tabs --}}
+        <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#tab-detail-log" role="tab">
+                    <i class="ri-file-list-3-line me-1"></i> Data Log Corrective Maintenance
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-summary-dt" role="tab">
+                    <i class="ri-bar-chart-grouped-line me-1"></i> Frekuensi DT by Jenis DT (Per Week)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-machine-group" role="tab">
+                    <i class="ri-pie-chart-line me-1"></i> Jumlah DT Mesin / Grup (MTBF & Availability)
+                </a>
+            </li>
+        </ul>
 
-                {{-- Pagination --}}
-                <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top" id="pagination-container" style="display: none;">
-                    <div class="text-muted small">
-                        Showing <span id="page-start" class="fw-semibold">0</span> to <span id="page-end" class="fw-semibold">0</span> of <span id="page-total" class="fw-semibold">0</span> entries
+        <div class="tab-content">
+            {{-- Tab 1: Detail Log --}}
+            <div class="tab-pane active" id="tab-detail-log" role="tabpanel">
+                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                    <div class="card-body p-4 bg-white">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle mb-0" id="tableData">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="60" class="text-center">NO</th>
+                                        <th width="120">TANGGAL</th>
+                                        <th width="100">SHIFT/GRUP</th>
+                                        <th width="90">MESIN</th>
+                                        <th width="110">POUCH/SACHET</th>
+                                        <th>KETERANGAN DOWNTIME</th>
+                                        <th width="180">JENIS DT</th>
+                                        <th width="100" class="text-center">DOWNTIME</th>
+                                        <th width="150" class="text-center">KLASIFIKASI</th>
+                                        <th width="140" class="text-center">AKSI</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    {{-- Dynamically filled --}}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- Pagination --}}
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top d-none" id="pagination-container">
+                            <div class="text-muted small">
+                                Showing <span id="page-start" class="fw-semibold">0</span> to <span id="page-end" class="fw-semibold">0</span> of <span id="page-total" class="fw-semibold">0</span> entries
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-rounded pagination-sm justify-content-end mb-0" id="pagination-links">
+                                    <!-- Dynamic pagination links -->
+                                </ul>
+                            </nav>
+                        </div>
                     </div>
-                    <nav>
-                        <ul class="pagination pagination-rounded pagination-sm justify-content-end mb-0" id="pagination-links">
-                            <!-- Dynamic pagination links -->
-                        </ul>
-                    </nav>
+                </div>
+            </div>
+
+            {{-- Tab 2: Frekuensi DT by Jenis DT --}}
+            <div class="tab-pane" id="tab-summary-dt" role="tabpanel">
+                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                    <div class="card-body p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-uppercase text-dark mb-0">
+                                <i class="ri-bar-chart-2-line text-success me-2"></i>FREKUENSI DT BY JENIS DT ALL MESIN
+                            </h5>
+                            <span class="badge bg-soft-success text-success px-3 py-2 fs-12 fw-semibold" id="summary-period-badge">
+                                Periode: -
+                            </span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0" id="tableSummary">
+                                <thead class="table-success text-dark align-middle">
+                                    <tr>
+                                        <th width="110" class="text-center">TANGGAL</th>
+                                        <th>JENIS DT</th>
+                                        <th width="150" class="text-center">Count of JENIS</th>
+                                        <th width="170" class="text-center">Sum of TOTAL MENIT</th>
+                                        <th width="120" class="text-center">MTTR</th>
+                                        <th width="120" class="text-center">Persen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableSummaryBody">
+                                    {{-- Dynamically filled --}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Tab 3: Jumlah DT Mesin / Grup --}}
+            <div class="tab-pane" id="tab-machine-group" role="tabpanel">
+                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                    <div class="card-body p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-uppercase text-dark mb-0">
+                                <i class="ri-dashboard-3-line text-warning me-2"></i>JUMLAH DT MESIN / GROUP (MTBF & AVAILABILITY)
+                            </h5>
+                            <span class="badge bg-soft-warning text-warning px-3 py-2 fs-12 fw-semibold" id="machine-period-badge">
+                                Periode: -
+                            </span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0" id="tableMachineGroup">
+                                <thead class="table-light text-dark align-middle text-center">
+                                    <tr>
+                                        <th width="120" style="background-color: #fde047; color: #713f12;">UNIT MESIN</th>
+                                        <th width="100" style="background-color: #38bdf8; color: #0c4a6e;">A</th>
+                                        <th width="100" style="background-color: #fde047; color: #713f12;">B</th>
+                                        <th width="100" style="background-color: #4ade80; color: #14532d;">C</th>
+                                        <th width="150" style="background-color: #fef08a; color: #713f12;">JUMLAH / MTTR</th>
+                                        <th width="120" style="background-color: #e9d5ff; color: #581c87;">MTBF (x)</th>
+                                        <th width="150" style="background-color: #f472b6; color: #831843;">MTBF (MENIT)</th>
+                                        <th width="130" style="background-color: #c084fc; color: #581c87;">Availability</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableMachineGroupBody">
+                                    {{-- Dynamically filled --}}
+                                </tbody>
+                                <tfoot class="fw-bold" style="background-color: #fffbeb;">
+                                    <tr>
+                                        <td class="text-center" style="background-color: #fde047;">JUMLAH</td>
+                                        <td class="text-center font-monospace" style="background-color: #38bdf8;" id="total-group-a">0</td>
+                                        <td class="text-center font-monospace" style="background-color: #fde047;" id="total-group-b">0</td>
+                                        <td class="text-center font-monospace" style="background-color: #4ade80;" id="total-group-c">0</td>
+                                        <td class="text-center font-monospace" style="background-color: #fef08a;" id="total-group-all">0</td>
+                                        <td class="text-center font-monospace" id="total-mtbf-x">0.00</td>
+                                        <td class="text-center font-monospace text-muted" id="total-mtbf-menit">#DIV/0!</td>
+                                        <td class="text-center font-monospace text-muted" id="total-availability">-</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -258,11 +372,22 @@ $(document).ready(function() {
         });
     }
 
+    function getWeekOfMonth(dateStr) {
+        if (!dateStr) return 1;
+        const dt = new Date(dateStr + 'T00:00:00');
+        const day = dt.getDate();
+        const firstDayOfMonth = new Date(dt.getFullYear(), dt.getMonth(), 1);
+        let firstDayOfWeek = firstDayOfMonth.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+        let offset = (firstDayOfWeek === 0 ? 7 : firstDayOfWeek) - 1;
+        return Math.ceil((day + offset) / 7);
+    }
+
     function applyFiltersListOnly() {
         const search = $('#filter-search').val().trim().toLowerCase();
         const shift = $('#filter-shift').val();
         const pouchSachet = $('#filter-pouchSachet').val();
         const em = $('#filter-em').val();
+        const week = $('#filter-week').val();
 
         let filtered = reports;
 
@@ -277,6 +402,7 @@ $(document).ready(function() {
         if (shift) filtered = filtered.filter(r => r.shift === shift);
         if (pouchSachet) filtered = filtered.filter(r => r.pouch_sachet === pouchSachet);
         if (em) filtered = filtered.filter(r => r.electrical_mechanical === em);
+        if (week) filtered = filtered.filter(r => getWeekOfMonth(r.tanggal) == week);
 
         // Stats calculation
         $('#stat-total').text(filtered.length);
@@ -293,6 +419,8 @@ $(document).ready(function() {
         filteredReports = filtered;
         currentPage = 1;
         renderTable();
+        renderSummaryTable();
+        renderMachineGroupTable();
     }
 
     window.applyFilters = function() {
@@ -304,6 +432,7 @@ $(document).ready(function() {
         $('#filter-shift').val('');
         $('#filter-pouchSachet').val('');
         $('#filter-em').val('');
+        $('#filter-week').val('');
         $('#filter-month').val("{{ date('Y-m') }}");
         loadReports();
     };
@@ -330,11 +459,11 @@ $(document).ready(function() {
 
         if (!totalItems) {
             tbody.append('<tr><td colspan="10" class="text-center text-muted py-4"><i class="ri-file-list-3-line fs-2 mb-2 d-block text-muted"></i>Tidak ada data laporan</td></tr>');
-            $('#pagination-container').hide();
+            $('#pagination-container').addClass('d-none');
             return;
         }
 
-        $('#pagination-container').show();
+        $('#pagination-container').removeClass('d-none');
 
         pageList.forEach((r, i) => {
             const dateStr = formatDate(r.tanggal);
@@ -587,6 +716,170 @@ $(document).ready(function() {
         div.textContent = str;
         return div.innerHTML;
     }
+
+    function renderSummaryTable() {
+        const tbody = $('#tableSummaryBody');
+        tbody.empty();
+
+        const selectedWeek = $('#filter-week').val();
+        const monthVal = $('#filter-month').val();
+
+        $('#summary-period-badge').text(`Periode: ${monthVal || 'Semua'}${selectedWeek ? ' (Week ' + selectedWeek + ')' : ''}`);
+
+        let items = filteredReports;
+
+        if (!items.length) {
+            tbody.append('<tr><td colspan="6" class="text-center text-muted py-4"><i class="ri-file-list-3-line fs-2 mb-2 d-block text-muted"></i>Tidak ada data ringkasan</td></tr>');
+            return;
+        }
+
+        // Group items by week number
+        const weeksMap = {};
+        items.forEach(r => {
+            const wNum = getWeekOfMonth(r.tanggal);
+            if (!weeksMap[wNum]) weeksMap[wNum] = [];
+            weeksMap[wNum].push(r);
+        });
+
+        const weekNumbers = Object.keys(weeksMap).sort((a, b) => Number(a) - Number(b));
+
+        weekNumbers.forEach(wNum => {
+            const weekItems = weeksMap[wNum];
+            const totalMenitInWeek = weekItems.reduce((acc, curr) => acc + (curr.total_menit || 0), 0);
+
+            // Group by jenis_dt_name
+            const jenisMap = {};
+            weekItems.forEach(r => {
+                const jName = r.jenis_dt_name || 'Lainnya';
+                if (!jenisMap[jName]) {
+                    jenisMap[jName] = { name: jName, count: 0, sumMenit: 0 };
+                }
+                jenisMap[jName].count += 1;
+                jenisMap[jName].sumMenit += (r.total_menit || 0);
+            });
+
+            // Sort by sumMenit descending
+            const jenisList = Object.values(jenisMap).sort((a, b) => b.sumMenit - a.sumMenit);
+            const rowCount = jenisList.length;
+
+            jenisList.forEach((jItem, index) => {
+                const mttr = jItem.count > 0 ? Math.round(jItem.sumMenit / jItem.count) : 0;
+                const persenVal = totalMenitInWeek > 0 ? ((jItem.sumMenit / totalMenitInWeek) * 100) : 0;
+                const persenStr = persenVal.toFixed(2) + '%';
+
+                let weekCellHtml = '';
+                if (index === 0) {
+                    weekCellHtml = `<td rowspan="${rowCount}" class="text-center align-middle fw-bold" style="background-color: #fef3c7; color: #92400e; font-size: 13px; border-right: 2px solid #f59e0b;">WEEK ${wNum}</td>`;
+                }
+
+                tbody.append(`
+                    <tr>
+                        ${weekCellHtml}
+                        <td class="fw-semibold text-dark">${esc(jItem.name)}</td>
+                        <td class="text-center font-monospace">${jItem.count}</td>
+                        <td class="text-center font-monospace fw-semibold text-danger">${jItem.sumMenit}</td>
+                        <td class="text-center font-monospace fw-bold">${mttr}</td>
+                        <td class="text-center font-monospace text-primary fw-semibold">${persenStr}</td>
+                    </tr>
+                `);
+            });
+        });
+    }
+
+    function renderMachineGroupTable() {
+        const tbody = $('#tableMachineGroupBody');
+        tbody.empty();
+
+        const monthVal = $('#filter-month').val();
+        const selectedWeek = $('#filter-week').val();
+        $('#machine-period-badge').text(`Periode: ${monthVal || 'Semua'}${selectedWeek ? ' (Week ' + selectedWeek + ')' : ''}`);
+
+        let items = filteredReports;
+
+        if (!items.length) {
+            tbody.append('<tr><td colspan="8" class="text-center text-muted py-4"><i class="ri-file-list-3-line fs-2 mb-2 d-block text-muted"></i>Tidak ada data ringkasan mesin</td></tr>');
+            $('#total-group-a').text('0');
+            $('#total-group-b').text('0');
+            $('#total-group-c').text('0');
+            $('#total-group-all').text('0');
+            $('#total-mtbf-x').text('0.00');
+            $('#total-mtbf-menit').text('#DIV/0!');
+            $('#total-availability').text('-');
+            return;
+        }
+
+        const daysInPeriod = selectedWeek ? 7 : 30;
+        const plannedOperatingMinutes = daysInPeriod * 24 * 60;
+
+        const machineNames = [...new Set(items.map(r => r.mesin).filter(Boolean))].sort();
+
+        let grandA = 0, grandB = 0, grandC = 0, grandTotal = 0;
+
+        machineNames.forEach(mName => {
+            const mItems = items.filter(r => r.mesin === mName);
+
+            const groupA = mItems.filter(r => (r.grup || '').toUpperCase() === 'A');
+            const groupB = mItems.filter(r => (r.grup || '').toUpperCase() === 'B');
+            const groupC = mItems.filter(r => (r.grup || '').toUpperCase() === 'C');
+
+            const countA = groupA.length;
+            const countB = groupB.length;
+            const countC = groupC.length;
+
+            const sumMenitA = groupA.reduce((acc, c) => acc + (c.total_menit || 0), 0);
+            const sumMenitB = groupB.reduce((acc, c) => acc + (c.total_menit || 0), 0);
+            const sumMenitC = groupC.reduce((acc, c) => acc + (c.total_menit || 0), 0);
+
+            const totalCount = countA + countB + countC;
+            const totalDowntimeMenit = sumMenitA + sumMenitB + sumMenitC;
+
+            grandA += countA;
+            grandB += countB;
+            grandC += countC;
+            grandTotal += totalCount;
+
+            const mtbfX = (totalCount / 3).toFixed(2);
+
+            let mtbfMenitStr = '#DIV/0!';
+            let availabilityStr = '-';
+
+            if (totalCount > 0) {
+                const operatingMinutes = Math.max(0, plannedOperatingMinutes - totalDowntimeMenit);
+                const mtbfMenit = (operatingMinutes / totalCount).toFixed(2);
+                mtbfMenitStr = mtbfMenit;
+
+                const avail = (operatingMinutes / plannedOperatingMinutes).toFixed(2);
+                availabilityStr = avail;
+            }
+
+            const rowBg = totalCount === 0 ? 'style="background-color: #f9fafb;"' : '';
+
+            tbody.append(`
+                <tr ${rowBg}>
+                    <td class="text-center fw-bold text-dark" style="background-color: #fef08a;">${esc(mName)}</td>
+                    <td class="text-center font-monospace" style="background-color: #e0f2fe;">${countA}</td>
+                    <td class="text-center font-monospace" style="background-color: #fef9c3;">${countB}</td>
+                    <td class="text-center font-monospace" style="background-color: #dcfce7;">${countC}</td>
+                    <td class="text-center font-monospace fw-bold text-dark" style="background-color: #fef08a;">${totalCount}</td>
+                    <td class="text-center font-monospace">${mtbfX}</td>
+                    <td class="text-center font-monospace ${mtbfMenitStr === '#DIV/0!' ? 'text-muted' : 'fw-semibold text-success'}">${mtbfMenitStr}</td>
+                    <td class="text-center font-monospace ${availabilityStr === '-' ? 'text-muted' : 'fw-bold text-primary'}">${availabilityStr}</td>
+                </tr>
+            `);
+        });
+
+        $('#total-group-a').text(grandA);
+        $('#total-group-b').text(grandB);
+        $('#total-group-c').text(grandC);
+        $('#total-group-all').text(grandTotal);
+        $('#total-mtbf-x').text((grandTotal / 3).toFixed(2));
+        $('#total-mtbf-menit').text('#DIV/0!');
+        $('#total-availability').text('-');
+    }
+
+    $('#filter-search').on('input', applyFiltersListOnly);
+    $('#filter-shift, #filter-pouchSachet, #filter-em, #filter-week').on('change', applyFiltersListOnly);
+    $('#filter-month').on('change', loadReports);
 
     loadReports();
 });
