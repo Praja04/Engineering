@@ -179,9 +179,6 @@ class DashboardController extends Controller
 
         // Build per-machine monthly trend series
         $topMachinesForTrend = array_slice(array_column($worst5, 'mesin'), 0, 4);
-        if (empty($topMachinesForTrend)) {
-            $topMachinesForTrend = ['F2 / A', 'D1 / D', 'D5 / H', 'D7 / J'];
-        }
 
         $chartTrendSeries = [];
         foreach ($topMachinesForTrend as $mName) {
@@ -213,20 +210,16 @@ class DashboardController extends Controller
         $paretoCosts = [];
         $paretoCumulative = [];
         $runningSum = 0;
-        $grandTotalCost = array_sum($costByMachine) ?: 1;
+        $grandTotalCost = array_sum($costByMachine) ?: 0;
 
-        foreach ($costByMachine as $mName => $cVal) {
-            $paretoCategories[] = $mName;
-            $costJuta = round($cVal / 1000000, 1);
-            $paretoCosts[] = $costJuta;
-            $runningSum += $cVal;
-            $paretoCumulative[] = round(($runningSum / $grandTotalCost) * 100, 1);
-        }
-
-        if (empty($paretoCategories)) {
-            $paretoCategories = ['D5 / H', 'D12 / AE', 'F2 / A', 'D1 / D', 'D13 / AF', 'D7 / J', 'D17 / AJ'];
-            $paretoCosts = [54.1, 17.1, 15.9, 14.0, 8.9, 7.5, 5.2];
-            $paretoCumulative = [44, 58, 71, 82, 90, 96, 100];
+        if ($grandTotalCost > 0) {
+            foreach ($costByMachine as $mName => $cVal) {
+                $paretoCategories[] = $mName;
+                $costJuta = round($cVal / 1000000, 1);
+                $paretoCosts[] = $costJuta;
+                $runningSum += $cVal;
+                $paretoCumulative[] = round(($runningSum / $grandTotalCost) * 100, 1);
+            }
         }
 
         // Build Machine Performance Map scatter data
@@ -246,9 +239,9 @@ class DashboardController extends Controller
         }
 
         $chartPerfMapSeries = [
-            ['name' => 'Low MTBF / Frequent Stop', 'data' => !empty($perfFreqStop) ? $perfFreqStop : [[15, 4.2], [22, 3.5], [28, 2.1]]],
-            ['name' => 'High Breakdown (Prioritas)', 'data' => !empty($perfHighBd) ? $perfHighBd : [[8, 8.67], [12, 6.19], [18, 3.58]]],
-            ['name' => 'Healthy Zone / Ideal', 'data' => !empty($perfHealthy) ? $perfHealthy : [[52, 1.4], [65, 0.64], [78, 3.71], [62, 2.82]]],
+            ['name' => 'Low MTBF / Frequent Stop', 'data' => $perfFreqStop],
+            ['name' => 'High Breakdown (Prioritas)', 'data' => $perfHighBd],
+            ['name' => 'Healthy Zone / Ideal', 'data' => $perfHealthy],
         ];
 
         // Build Reliability Quadrant scatter data (MTTR vs MTBF)
@@ -268,9 +261,9 @@ class DashboardController extends Controller
         }
 
         $chartReliabilitySeries = [
-            ['name' => 'High MTTR (Slow Repair)', 'data' => !empty($relHighMttr) ? $relHighMttr : [[18, 553], [25, 478], [22, 327]]],
-            ['name' => 'Low MTTR (Fast Repair)', 'data' => !empty($relLowMttr) ? $relLowMttr : [[15, 120], [28, 150]]],
-            ['name' => 'Ideal Condition (Fast & Stable)', 'data' => !empty($relIdeal) ? $relIdeal : [[65, 48], [72, 125], [68, 180]]],
+            ['name' => 'High MTTR (Slow Repair)', 'data' => $relHighMttr],
+            ['name' => 'Low MTTR (Fast Repair)', 'data' => $relLowMttr],
+            ['name' => 'Ideal Condition (Fast & Stable)', 'data' => $relIdeal],
         ];
 
         $dbMachineKpis = \App\Models\Epr\CmMachineKpi::where('month', $month)->get();
@@ -278,11 +271,11 @@ class DashboardController extends Controller
 
         // Calculate Additional KPI Averages
         $additionalKpiAvg = [
-            'pm_compliance' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('pm_compliance_pct'), 1) : 92.0,
-            'repeat_failure' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('repeat_failure_pct'), 1) : 18.7,
-            'minor_stop' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('minor_stop_freq'), 1) : 12.4,
-            'cost_per_hour' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('cost_per_hour'), 1) : 61.2,
-            'energy_per_pack' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('energy_per_pack'), 2) : 0.36,
+            'pm_compliance' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('pm_compliance_pct'), 1) : 0,
+            'repeat_failure' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('repeat_failure_pct'), 1) : 0,
+            'minor_stop' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('minor_stop_freq'), 1) : 0,
+            'cost_per_hour' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('cost_per_hour'), 1) : 0,
+            'energy_per_pack' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('energy_per_pack'), 2) : 0,
         ];
 
         return view('epr.dashboard-cm', compact(
