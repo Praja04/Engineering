@@ -114,10 +114,7 @@ class DashboardController extends Controller
             ->get();
 
         // Total Days & Planned Minutes in selected month
-        $yearMonth = explode('-', $month);
-        $year = isset($yearMonth[0]) ? (int)$yearMonth[0] : (int)date('Y');
-        $mNum = isset($yearMonth[1]) ? (int)$yearMonth[1] : (int)date('m');
-        $daysInMonth = checkdate($mNum, 1, $year) ? cal_days_in_month(CAL_GREGORIAN, $mNum, $year) : 30;
+        $daysInMonth = (int) date('t', strtotime("$month-01"));
         $plannedMinsPerMachine = $daysInMonth * 24 * 60;
 
         // Aggregate by Machine
