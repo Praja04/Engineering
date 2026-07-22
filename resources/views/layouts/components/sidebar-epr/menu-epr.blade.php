@@ -88,6 +88,11 @@ $isEpr = request()->is('epr/*');
                                 <i class="ri-database-2-line me-2"></i><span>Corrective Data</span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('epr/corrective-maintenance/extra-data*') ? 'active' : '' }}" href="{{ route('epr.cm.extra-data') }}">
+                                <i class="ri-money-dollar-circle-line me-2"></i><span>Input Biaya & KPI CM</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </li>

@@ -7,7 +7,7 @@ $bagian = Auth::user()->bagian;
 ($jabatan === 'admin') ||
 ($jabatan === 'dept_head') ||
 ($jabatan === 'supervisor') ||
-($jabatan === 'foreman' && $bagian === 'Engineering Maintenance & Improvement')
+($jabatan === 'foreman' && ($bagian === 'Engineering Maintenance & Improvement' || $bagian === 'Engineering Produksi (EPR)'))
 )
 <li class="nav-item">
     <a class="nav-link menu-link" href="#sidebarScoringMesin" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarScoringMesin">
