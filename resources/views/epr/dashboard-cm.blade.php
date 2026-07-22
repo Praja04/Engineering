@@ -115,7 +115,7 @@
                         <span class="kpi-title">AVAILABILITY AVG</span>
                         <i class="ri-percent-line text-success fs-18"></i>
                     </div>
-                    <div class="kpi-value text-success" id="kpi-avail">{{ number_format($avgAvailPct > 0 ? $avgAvailPct : 84.7, 1) }}%</div>
+                    <div class="kpi-value text-success" id="kpi-avail">{{ number_format($avgAvailPct, 1) }}%</div>
                     <div class="kpi-target mt-1">Target ≥ 85%</div>
                 </div>
             </div>
@@ -125,7 +125,7 @@
                         <span class="kpi-title">TOTAL BREAKDOWN</span>
                         <i class="ri-error-warning-line text-danger fs-18"></i>
                     </div>
-                    <div class="kpi-value text-danger" id="kpi-breakdown">{{ number_format($avgBreakdownPct > 0 ? $avgBreakdownPct : 3.41, 2) }}%</div>
+                    <div class="kpi-value text-danger" id="kpi-breakdown">{{ number_format($avgBreakdownPct, 2) }}%</div>
                     <div class="kpi-target mt-1">Target ≤ 3%</div>
                 </div>
             </div>
@@ -135,7 +135,7 @@
                         <span class="kpi-title">MTTR AVG</span>
                         <i class="ri-time-line text-warning fs-18"></i>
                     </div>
-                    <div class="kpi-value text-warning" id="kpi-mttr">{{ $avgMttr > 0 ? $avgMttr : 228 }} <span class="fs-12 text-muted font-normal">menit</span></div>
+                    <div class="kpi-value text-warning" id="kpi-mttr">{{ $avgMttr }} <span class="fs-12 text-muted font-normal">menit</span></div>
                     <div class="kpi-target mt-1">Target ≤ 180 menit</div>
                 </div>
             </div>
@@ -145,7 +145,7 @@
                         <span class="kpi-title">MTBF AVG</span>
                         <i class="ri-shield-check-line text-info fs-18"></i>
                     </div>
-                    <div class="kpi-value text-info" id="kpi-mtbf">{{ $avgMtbf > 0 ? $avgMtbf : 34 }}</div>
+                    <div class="kpi-value text-info" id="kpi-mtbf">{{ $avgMtbf }}</div>
                     <div class="kpi-target mt-1">Target ≥ 30</div>
                 </div>
             </div>
@@ -155,8 +155,8 @@
                         <span class="kpi-title">TOTAL COST</span>
                         <i class="ri-money-dollar-circle-line text-violet fs-18" style="color:#8b5cf6;"></i>
                     </div>
-                    <div class="kpi-value" style="color: #8b5cf6;" id="kpi-cost">{{ $totalCostVal > 0 ? 'Rp ' . number_format($totalCostVal / 1000000, 1) . ' Jt' : 'Rp 142,1 Jt' }}</div>
-                    <div class="kpi-target mt-1 text-danger">vs Pekan Lalu <i class="ri-arrow-down-line"></i> 8,7%</div>
+                    <div class="kpi-value" style="color: #8b5cf6;" id="kpi-cost">{{ $totalCostVal > 0 ? 'Rp ' . number_format($totalCostVal / 1000000, 1) . ' Jt' : 'Rp 0' }}</div>
+                    <div class="kpi-target mt-1 text-muted">Akurat dari DB</div>
                 </div>
             </div>
             <div class="col-xl-2 col-md-4 col-6">
@@ -165,7 +165,7 @@
                         <span class="kpi-title text-danger">WORST MACHINE</span>
                         <i class="ri-alarm-warning-fill text-danger fs-18"></i>
                     </div>
-                    <div class="kpi-value text-danger fs-18" id="kpi-worst">{{ $worstMachineName !== '—' ? $worstMachineName : 'F2 / A' }}</div>
+                    <div class="kpi-value text-danger fs-18" id="kpi-worst">{{ $worstMachineName }}</div>
                     <div class="kpi-target mt-1 text-danger font-semibold">Berdasarkan skor terjatuh</div>
                 </div>
             </div>
@@ -217,11 +217,7 @@
                                     <td>{{ $t['mtbf'] }}</td>
                                 </tr>
                                 @empty
-                                <tr><td>1</td><td class="fw-bold">D17 / AJ</td><td><span class="badge bg-success">92</span></td><td>88%</td><td>0,64%</td><td>48</td><td>9</td></tr>
-                                <tr><td>2</td><td class="fw-bold">D8 / K</td><td><span class="badge bg-success">89</span></td><td>87%</td><td>1,40%</td><td>125</td><td>35,5</td></tr>
-                                <tr><td>3</td><td class="fw-bold">D7 / J</td><td><span class="badge bg-success">87</span></td><td>82%</td><td>3,71%</td><td>333</td><td>69</td></tr>
-                                <tr><td>4</td><td class="fw-bold">D16 / AI</td><td><span class="badge bg-success">84</span></td><td>87%</td><td>2,82%</td><td>211</td><td>33</td></tr>
-                                <tr><td>5</td><td class="fw-bold">D11 / B</td><td><span class="badge bg-success">82</span></td><td>83%</td><td>2,78%</td><td>186,3</td><td>35</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted py-3">Belum ada data untuk bulan ini.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -253,11 +249,7 @@
                                     <td>{{ $w['mtbf'] }}</td>
                                 </tr>
                                 @empty
-                                <tr><td>1</td><td class="fw-bold text-danger">F2 / A</td><td><span class="badge bg-danger">41</span></td><td class="text-danger fw-bold">78%</td><td class="text-danger fw-bold">8,67%</td><td>478</td><td>67</td></tr>
-                                <tr><td>2</td><td class="fw-bold text-danger">D5 / H</td><td><span class="badge bg-danger">45</span></td><td>91%</td><td>3,58%</td><td>327</td><td>59</td></tr>
-                                <tr><td>3</td><td class="fw-bold text-danger">D1 / D</td><td><span class="badge bg-danger">49</span></td><td>85%</td><td>6,19%</td><td>553</td><td>70</td></tr>
-                                <tr><td>4</td><td class="fw-bold text-danger">D12 / AE</td><td><span class="badge bg-danger">51</span></td><td class="text-danger">41%</td><td>—</td><td>—</td><td>—</td></tr>
-                                <tr><td>5</td><td class="fw-bold text-danger">D13 / AF</td><td><span class="badge bg-danger">55</span></td><td>85%</td><td>3,99%</td><td>258,7</td><td>32,3</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted py-3">Belum ada data untuk bulan ini.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -326,13 +318,7 @@
                                     <td><span class="status-dot {{ $kpi->oee_pct >= 85 ? 'dot-green' : ($kpi->oee_pct >= 70 ? 'dot-yellow' : 'dot-red') }}"></span></td>
                                 </tr>
                                 @empty
-                                <tr><td class="fw-bold">D17 / AJ</td><td>88,0</td><td>93,5</td><td>99,3</td><td class="fw-bold text-success">81,6</td><td><span class="status-dot dot-green"></span></td></tr>
-                                <tr><td class="fw-bold">D8 / K</td><td>87,0</td><td>92,0</td><td>98,8</td><td class="fw-bold text-success">79,0</td><td><span class="status-dot dot-green"></span></td></tr>
-                                <tr><td class="fw-bold">D7 / J</td><td>82,0</td><td>91,0</td><td>98,5</td><td class="fw-bold text-warning">73,6</td><td><span class="status-dot dot-yellow"></span></td></tr>
-                                <tr><td class="fw-bold">D11 / B</td><td>83,0</td><td>89,5</td><td>98,2</td><td class="fw-bold text-warning">72,7</td><td><span class="status-dot dot-yellow"></span></td></tr>
-                                <tr><td class="fw-bold text-danger">F2 / A</td><td class="text-danger fw-bold">78,0</td><td>82,0</td><td>96,5</td><td class="fw-bold text-danger">61,5</td><td><span class="status-dot dot-red"></span></td></tr>
-                                <tr><td class="fw-bold text-danger">D5 / H</td><td>84,0</td><td>84,0</td><td>97,0</td><td class="fw-bold text-danger">68,7</td><td><span class="status-dot dot-red"></span></td></tr>
-                                <tr><td class="fw-bold text-danger">D1 / D</td><td>85,0</td><td>83,0</td><td>97,0</td><td class="fw-bold text-danger">68,6</td><td><span class="status-dot dot-red"></span></td></tr>
+                                <tr><td colspan="6" class="text-center text-muted py-3">Belum ada data OEE untuk bulan ini.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -424,34 +410,7 @@
                                     <td class="text-center font-monospace">{{ $ap->target_date }}</td>
                                 </tr>
                                 @empty
-                                <tr>
-                                    <td><span class="badge bg-danger">F2 / A</span></td>
-                                    <td>Breakdown Tertinggi (8,67%)</td>
-                                    <td>Trouble Conveyor Sering Jammed</td>
-                                    <td>Overhaul Conveyor, Perbaiki Guide & Sensor Monitoring Harian</td>
-                                    <td class="text-center font-monospace">17 Mei 2026</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge bg-danger">D5 / H</span></td>
-                                    <td>Cost Tinggi & Breakdown</td>
-                                    <td>Component Aus, Setting Tidak Stabil</td>
-                                    <td>Root Cause Analysis, Ganti Part Aus, Setting & Standardisasi</td>
-                                    <td class="text-center font-monospace">17 Mei 2026</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge bg-warning">D1 / D</span></td>
-                                    <td>MTTR Tertinggi (553 menit)</td>
-                                    <td>Proses Finding Problem Lama</td>
-                                    <td>Improve Response, Checklist Troubleshooting, Tools Readiness</td>
-                                    <td class="text-center font-monospace">24 Mei 2026</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge bg-warning">D12 / AE</span></td>
-                                    <td>Cost Spike (April - Mei)</td>
-                                    <td>Major Repair, Part Mahal</td>
-                                    <td>Spare Part Audit, Planning Overhaul</td>
-                                    <td class="text-center font-monospace">24 Mei 2026</td>
-                                </tr>
+                                <tr><td colspan="5" class="text-center text-muted py-3">Belum ada action plan untuk bulan ini.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -488,60 +447,7 @@
                                     <td>@if($ap->w4_status !== 'none') <span class="gantt-bar bg-gantt-{{ $ap->w4_status }}"></span> @endif</td>
                                 </tr>
                                 @empty
-                                <tr>
-                                    <td>1</td>
-                                    <td class="text-start fw-semibold">Overhaul Conveyor F2</td>
-                                    <td>MECH</td>
-                                    <td><span class="gantt-bar bg-gantt-red"></span></td>
-                                    <td><span class="gantt-bar bg-gantt-red"></span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td class="text-start fw-semibold">Root Cause D5</td>
-                                    <td>MECH</td>
-                                    <td><span class="gantt-bar bg-gantt-red"></span></td>
-                                    <td><span class="gantt-bar bg-gantt-red"></span></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td class="text-start fw-semibold">Reduce MTTR D1</td>
-                                    <td>MECH/EL</td>
-                                    <td></td>
-                                    <td><span class="gantt-bar bg-gantt-orange"></span></td>
-                                    <td><span class="gantt-bar bg-gantt-orange"></span></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>4</td>
-                                    <td class="text-start fw-semibold">Spare Part Audit D12</td>
-                                    <td>STORE</td>
-                                    <td></td>
-                                    <td><span class="gantt-bar bg-gantt-yellow"></span></td>
-                                    <td><span class="gantt-bar bg-gantt-yellow"></span></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>5</td>
-                                    <td class="text-start fw-semibold">Condition Monitoring D13</td>
-                                    <td>MECH</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td><span class="gantt-bar bg-gantt-yellow"></span></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>6</td>
-                                    <td class="text-start fw-semibold">PM Compliance Improvement</td>
-                                    <td>ALL</td>
-                                    <td><span class="gantt-bar bg-gantt-green"></span></td>
-                                    <td><span class="gantt-bar bg-gantt-green"></span></td>
-                                    <td><span class="gantt-bar bg-gantt-green"></span></td>
-                                    <td><span class="gantt-bar bg-gantt-green"></span></td>
-                                </tr>
+                                <tr><td colspan="7" class="text-center text-muted py-3">Belum ada timeline untuk bulan ini.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
