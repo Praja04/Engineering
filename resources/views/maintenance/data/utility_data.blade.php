@@ -256,6 +256,13 @@
                             </div>
                         </div>
 
+
+                        <div class="row g-3 mt-1" id="editTanggalSelesaiRow" style="display:none;">
+                            <div class="col-md-3">
+                                <label class="form-label">Tanggal Selesai <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="tanggal_selesai" id="editTanggalSelesai">
+                            </div>
+                        </div>
                         <div id="editSections"><!-- injected --></div>
 
                         <div class="row g-3 mt-2">
@@ -903,6 +910,8 @@
                 $('#editWaktuMulai').val((row.waktu_mulai ?? '').toString().slice(0, 5));
                 $('#editWaktuSelesai').val((row.waktu_selesai ?? '').toString().slice(0, 5));
                 $('#editPaket').val(row.paket ?? '');
+                $('#editTanggalSelesai').val(row.tanggal_selesai ? row.tanggal_selesai.substring(0, 10) : '');
+                toggleEditTanggalSelesai(row.paket ?? '');
                 // $('#editKeterangan').val(row.keterangan ?? '');
                 $('#editKorektif').val(row.korektif ?? '');
                 $('#editNamaMesin')
@@ -933,6 +942,22 @@
                 new bootstrap.Modal(document.getElementById('modalEdit')).show();
             });
 
+            
+            function toggleEditTanggalSelesai(paket) {
+                const row = $('#editTanggalSelesaiRow');
+                const input = $('#editTanggalSelesai');
+                if (paket === 'Korektif') {
+                    row.show();
+                    input.prop('required', true);
+                } else {
+                    row.hide();
+                    input.prop('required', false).val('');
+                }
+            }
+
+            $('#editPaket').on('change', function() {
+                toggleEditTanggalSelesai($(this).val());
+            });
             function initMidSelect2Edit(element) {
                 $(element).select2({
                     theme: 'bootstrap-5',

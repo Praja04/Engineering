@@ -214,7 +214,6 @@
                                 <input type="text" class="form-control" name="departemen" id="editDepartemen"
                                     readonly>
                             </div>
-                        </div>
 
                         <div id="editSections"><!-- injected checklist items --></div>
 
@@ -798,6 +797,7 @@
                 $('#editKorektif').val(row.korektif ?? '');
                 $('#editRekomendasi').val(row.rekomendasi ?? '');
 
+
                 $('#editSub').text(
                     `${fmtDate(row.tanggal)} • ${row.waktu_mulai ?? '-'} - ${row.waktu_selesai ?? '-'}`);
 
@@ -830,6 +830,7 @@
                     }
                 });
             });
+
 
             function initMidSelect2Edit(element) {
                  $(element).select2({
