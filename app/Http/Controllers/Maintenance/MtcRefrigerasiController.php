@@ -14,8 +14,10 @@ use App\Models\Maintenance\MtcMasterMesinModel;
 use App\Models\Maintenance\MtcRefrigerasiModel;
 use App\Http\Requests\Maintenance\MtcMainRequest;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
-use App\Http\Requests\Maintenance\MtcRefrigerasiRequest;
 use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
+use App\Models\Maintenance\MtcPenggantianMaterialModel;
+use App\Http\Requests\Maintenance\MtcPenggantianMaterialRequest;
+use App\Http\Requests\Maintenance\MtcRefrigerasiRequest;
 use Illuminate\Support\Str;
 
 class MtcRefrigerasiController extends Controller
@@ -59,9 +61,10 @@ class MtcRefrigerasiController extends Controller
     public function store(
         MtcMainRequest $mainRequest,
         MtcRefrigerasiRequest $detailRequest,
-        MtcKebutuhanMaterialRequest $materials
+        MtcKebutuhanMaterialRequest $materials,
+        MtcPenggantianMaterialRequest $replacements
     ) {
-        DB::transaction(function () use ($mainRequest, $detailRequest, $materials) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $replacements) {
 
             $userId = Auth::id();
 
@@ -80,6 +83,16 @@ class MtcRefrigerasiController extends Controller
 
             foreach ($materials->materials ?? [] as $item) {
                 MtcKebutuhanMaterialModel::create([
+                    'mtc_main_id' => $main->id,
+                    'mid'         => $item['mid'] ?? null,
+                    'deskripsi'   => $item['desc'] ?? null,
+                    'qty'         => $item['qty'] ?? 0,
+                    'created_by'  => $userId,
+                ]);
+            }
+
+            foreach ($replacements->replacements ?? [] as $item) {
+                MtcPenggantianMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid'         => $item['mid'] ?? null,
                     'deskripsi'   => $item['desc'] ?? null,
@@ -166,6 +179,7 @@ class MtcRefrigerasiController extends Controller
                 'refrigerasi.mesin:id,nama_mesin,lokasi',
                 // ⚠️ optional: comment kalau berat
                 'kebutuhanMaterial',
+                'penggantianMaterial',
             ]);
 
         // filter tanggal
@@ -207,9 +221,10 @@ class MtcRefrigerasiController extends Controller
         MtcMainRequest $mainRequest,
         MtcRefrigerasiRequest $detailRequest,
         MtcKebutuhanMaterialRequest $materials,
+        MtcPenggantianMaterialRequest $replacements,
         $id
     ) {
-        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $id) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $replacements, $id) {
 
             $userId = Auth::id();
 
@@ -226,7 +241,7 @@ class MtcRefrigerasiController extends Controller
             $existingIds = $main->kebutuhanMaterial()->pluck('id')->toArray();
             $incomingIds = [];
 
-            foreach ($materials['materials'] as $item) {
+            foreach ($materials['materials'] ?? [] as $item) {
 
                 if (!empty($item['id'])) {
                     $incomingIds[] = $item['id'];
@@ -255,11 +270,43 @@ class MtcRefrigerasiController extends Controller
             if ($toDelete) {
                 MtcKebutuhanMaterialModel::whereIn('id', $toDelete)->delete();
             }
+
+            $existingReplIds = $main->penggantianMaterial()->pluck('id')->toArray();
+            $incomingReplIds = [];
+
+            foreach ($replacements['replacements'] ?? [] as $item) {
+
+                if (!empty($item['id'])) {
+                    $incomingReplIds[] = $item['id'];
+
+                    MtcPenggantianMaterialModel::where('id', $item['id'])->update([
+                        'mid'        => $item['mid'] ?? null,
+                        'deskripsi'  => $item['deskripsi'] ?? null,
+                        'qty'        => $item['qty'] ?? 0,
+                        'updated_by' => $userId,
+                    ]);
+                } else {
+                    $new = MtcPenggantianMaterialModel::create([
+                        'mtc_main_id' => $main->id,
+                        'mid'         => $item['mid'] ?? null,
+                        'deskripsi'   => $item['deskripsi'] ?? null,
+                        'qty'         => $item['qty'] ?? 0,
+                        'created_by'  => $userId,
+                    ]);
+
+                    $incomingReplIds[] = $new->id;
+                }
+            }
+
+            $toDeleteRepl = array_diff($existingReplIds, $incomingReplIds);
+            if ($toDeleteRepl) {
+                MtcPenggantianMaterialModel::whereIn('id', $toDeleteRepl)->delete();
+            }
         });
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data berhasil diperbarui',
+            'message' => 'Data MTC Refrigerasi berhasil diupdate',
         ]);
     }
 }

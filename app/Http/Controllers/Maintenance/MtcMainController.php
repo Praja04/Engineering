@@ -145,7 +145,7 @@ class MtcMainController extends Controller
 
         $data = MtcMainModel::where('jenis_mtc', 'Motor Pompa')
             ->where('id', $id)
-            ->with('motorPump', 'kebutuhanMaterial', 'approvals')
+            ->with('motorPump', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -190,15 +190,15 @@ class MtcMainController extends Controller
             if (!$inspection) continue;
 
             // ================= HEADER =================
-            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
-            $sheet->setCellValue('C6', $main->departemen ?? '-');
-            $sheet->setCellValue('F3', ': ' . $inspection->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('F4', ': ' . $inspection->mesin->kode_mesin ?? '-');
-            $sheet->setCellValue('F5', ': ' . $inspection->mesin->lokasi ?? '-');
-            $sheet->setCellValue('F6', ': ' . $main->paket ?? '-');
-            $sheet->setCellValue('A41', 'Tindakan Korektif : ' . ($main->korektif ?? ''));
+            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('B4', ': ' . $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('B5', ': ' . $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('B6', ': ' . $main->departemen ?? '-');
+            $sheet->setCellValue('G3', ': ' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('G4', ': ' . $inspection->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('G5', ': ' . $inspection->mesin->lokasi ?? '-');
+            $sheet->setCellValue('G6', ': ' . $main->paket ?? '-');
+            $sheet->setCellValue('A52', 'Tindakan Korektif : ' . ($main->korektif ?? ''));
 
             // ================= PARSE KETERANGAN =================
             $keteranganMap = [];
@@ -231,20 +231,35 @@ class MtcMainController extends Controller
                 }
 
                 // kolom kondisi
-                $sheet->setCellValue('D' . $row, $kondisi);
+                $sheet->setCellValue('E' . $row, $kondisi);
 
                 $ket = $keteranganMap[$field] ?? '';
-                $sheet->setCellValue('E' . $row, $ket);
+                $sheet->setCellValue('F' . $row, $ket);
             }
 
-            $materialRow = 43;
+            // PENGGANTIAN SPAREPART
+            $sparepartRow = 42;
+
+            if ($main->penggantianMaterial && $main->penggantianMaterial->count()) {
+                foreach ($main->penggantianMaterial as $item) {
+
+                    $sheet->setCellValue('A' . $sparepartRow, $item->mid ?? '');
+                    $sheet->setCellValue('B' . $sparepartRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('D' . $sparepartRow, $item->qty ?? '');
+
+                    $sparepartRow++;
+                }
+            }
+
+            // KEBUTUHAN MATERIAL
+            $materialRow = 42;
 
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('D' . $materialRow, $item->mid ?? '');
-                    $sheet->setCellValue('F' . $materialRow, $item->deskripsi ?? '');
-                    $sheet->setCellValue('H' . $materialRow, $item->qty ?? '');
+                    $sheet->setCellValue('E' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('G' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
                 }
@@ -256,14 +271,14 @@ class MtcMainController extends Controller
                     if ($item->status !== 'approved') continue;
                     switch (strtolower($item->role)) {
                         case 'teknisi':
-                            $sheet->setCellValue('D53', 'Dibuat: ' . $item->approver?->username ?? '-');
-                            $this->insertApprovalSticker($sheet, 'G53');
+                            $sheet->setCellValue('E52', 'Dibuat: ' . $item->approver?->username ?? '-');
+                            $this->insertApprovalSticker($sheet, 'H52');
                             break;
                         case 'staff':
-                            $this->insertApprovalSticker($sheet, 'G55');
+                            $this->insertApprovalSticker($sheet, 'H54');
                             break;
                         case 'user':
-                            $this->insertApprovalSticker($sheet, 'G57');
+                            $this->insertApprovalSticker($sheet, 'H56');
                             break;
                     }
                 }
@@ -288,7 +303,7 @@ class MtcMainController extends Controller
 
         $data = MtcMainModel::where('jenis_mtc', 'Utility')
             ->where('id', $id)
-            ->with('utility', 'kebutuhanMaterial', 'approvals')
+            ->with('utility', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -358,15 +373,15 @@ class MtcMainController extends Controller
             if (!$inspection) continue;
 
             // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
-            $sheet->setCellValue('C6', $main->departemen ?? '-');
-            $sheet->setCellValue('F3', ': ' . $main->utility->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('F4', ': ' . $main->utility->mesin->kode_mesin ?? '-');
-            $sheet->setCellValue('F5', ': ' . $main->utility->mesin->lokasi ?? '-');
-            $sheet->setCellValue('F6', ': ' . $main->paket ?? '-');
-            $sheet->setCellValue('A67', 'Tindakan Korektif : ' . $main->korektif);
+            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('B4', ': ' . $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('B5', ': ' . $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('B6', ': ' . $main->departemen ?? '-');
+            $sheet->setCellValue('G3', ': ' . $main->utility->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('G4', ': ' . $main->utility->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('G5', ': ' . $main->utility->mesin->lokasi ?? '-');
+            $sheet->setCellValue('G6', ': ' . $main->paket ?? '-');
+            $sheet->setCellValue('A73', 'Tindakan Korektif : ' . $main->korektif);
 
             // ================= PARSE KETERANGAN =================
             $keteranganMap = [];
@@ -398,10 +413,24 @@ class MtcMainController extends Controller
                     $kondisi = '';
                 }
 
-                $sheet->setCellValue('D' . $row, $kondisi);
+                $sheet->setCellValue('E' . $row, $kondisi);
 
                 $ket = $keteranganMap[$field] ?? '';
-                $sheet->setCellValue('E' . $row, $ket);
+                $sheet->setCellValue('F' . $row, $ket);
+            }
+
+            // PENGGANTIAN SPAREPART
+            $sparepartRow = 69;
+
+            if ($main->penggantianMaterial && $main->penggantianMaterial->count()) {
+                foreach ($main->penggantianMaterial as $item) {
+
+                    $sheet->setCellValue('A' . $sparepartRow, $item->mid ?? '');
+                    $sheet->setCellValue('B' . $sparepartRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('D' . $sparepartRow, $item->qty ?? '');
+
+                    $sparepartRow++;
+                }
             }
 
             // KEBUTUHAN MATERIAL
@@ -410,9 +439,9 @@ class MtcMainController extends Controller
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('D' . $materialRow, $item->mid ?? '');
-                    $sheet->setCellValue('F' . $materialRow, $item->deskripsi ?? '');
-                    $sheet->setCellValue('H' . $materialRow, $item->qty ?? '');
+                    $sheet->setCellValue('E' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('G' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
                 }
@@ -429,16 +458,16 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $sheet->setCellValue('D73', 'Dibuat: ' . $item->approver?->username ?? '-');
-                            $this->insertApprovalSticker($sheet, 'G73');
+                            $sheet->setCellValue('E73', 'Dibuat: ' . $item->approver?->username ?? '-');
+                            $this->insertApprovalSticker($sheet, 'H73');
                             break;
 
                         case 'staff':
-                            $this->insertApprovalSticker($sheet, 'G75');
+                            $this->insertApprovalSticker($sheet, 'H75');
                             break;
 
                         case 'user':
-                            $this->insertApprovalSticker($sheet, 'G77');
+                            $this->insertApprovalSticker($sheet, 'H77');
                             break;
                     }
                 }
@@ -463,7 +492,7 @@ class MtcMainController extends Controller
 
         $data = MtcMainModel::where('jenis_mtc', 'Electrical')
             ->where('id', $id)
-            ->with('electrical', 'kebutuhanMaterial', 'approvals')
+            ->with('electrical', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -511,14 +540,173 @@ class MtcMainController extends Controller
             if (!$inspection) continue;
 
             // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
-            $sheet->setCellValue('C6', $main->departemen ?? '-');
+            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('B4', ': ' . $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('B5', ': ' . $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('B6', ': ' . $main->departemen ?? '-');
             $sheet->setCellValue('F3', ': ' . $inspection->mesin->nama_mesin ?? '-');
             $sheet->setCellValue('F4', ': ' . $inspection->mesin->kode_mesin ?? '-');
             $sheet->setCellValue('F5', ': ' . $inspection->mesin->lokasi ?? '-');
             $sheet->setCellValue('F6', ': ' . $main->paket ?? '-');
+            $sheet->setCellValue('A57', 'Tindakan Korektif : ' . $main->korektif);
+
+            $keteranganMap = [];
+
+            if (!empty($main->keterangan)) {
+                $items = explode('|', $main->keterangan);
+
+                foreach ($items as $item) {
+                    $parts = explode(':', $item, 2);
+
+                    if (count($parts) == 2) {
+                        $key = trim($parts[0]);
+                        $val = trim($parts[1]);
+
+                        $keteranganMap[$key] = $val;
+                    }
+                }
+            }
+
+            foreach ($fieldRowMap as $field => $row) {
+
+                $value = $inspection->{$field};
+
+                if ($value === true) {
+                    $kondisi = '✓';
+                } elseif ($value === false) {
+                    $kondisi = '✗';
+                } else {
+                    $kondisi = '';
+                }
+
+                $sheet->setCellValue('E' . $row, $kondisi);
+                $ket = $keteranganMap[$field] ?? '';
+                $sheet->setCellValue('F' . $row, $ket);
+            }
+
+            // PENGGANTIAN SPAREPART
+            $sparepartRow = 51;
+
+            if ($main->penggantianMaterial && $main->penggantianMaterial->count()) {
+                foreach ($main->penggantianMaterial as $item) {
+
+                    $sheet->setCellValue('A' . $sparepartRow, $item->mid ?? '');
+                    $sheet->setCellValue('B' . $sparepartRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('D' . $sparepartRow, $item->qty ?? '');
+
+                    $sparepartRow++;
+                }
+            }
+
+            // KEBUTUHAN MATERIAL
+            $materialRow = 51;
+
+            if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
+                foreach ($main->kebutuhanMaterial as $item) {
+
+                    $sheet->setCellValue('E' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('G' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
+
+                    $materialRow++;
+                }
+            }
+
+            // Sticker Approval
+            if ($main->approvals && $main->approvals->count()) {
+
+                foreach ($main->approvals as $item) {
+
+                    // hanya kalau approved
+                    if ($item->status !== 'approved') continue;
+
+                    switch (strtolower($item->role)) {
+
+                        case 'teknisi':
+                            $sheet->setCellValue('E57', 'Dibuat: ' . $item->approver?->username ?? '-');
+                            $this->insertApprovalSticker($sheet, 'H57');
+                            break;
+
+                        case 'staff':
+                            $this->insertApprovalSticker($sheet, 'H59');
+                            break;
+
+                        case 'user':
+                            $this->insertApprovalSticker($sheet, 'H61');
+                            break;
+                    }
+                }
+            }
+
+            break;
+        }
+
+        return $this->downloadExcel($spreadsheet, 'electrical');
+    }
+
+    private function exportRefrigerasi($id)
+    {
+        $path = public_path('assets/templates/maintenance/refrigerasi.xlsx');
+
+        if (!file_exists($path)) {
+            return response()->json(['message' => 'Template not found'], 404);
+        }
+
+        $spreadsheet = IOFactory::load($path);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $data = MtcMainModel::where('jenis_mtc', 'Refrigerasi')
+            ->where('id', $id)
+            ->with('refrigerasi', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
+        $fieldRowMap = [
+            // Unit Indoor
+            'check_filter_udara' => 8,
+            'check_cover_filter_udara' => 9,
+            'check_electrical_indoor' => 10,
+            'check_suhu_evaporator' => 11,
+            'check_indikator_display' => 12,
+            'check_motor_blower' => 13,
+            'check_fan_belt_blower' => 14,
+            'check_pelumasan_blower' => 15,
+            'check_pergerakan_motor_swing' => 16,
+            'check_kontroler_indoor' => 17,
+            'check_saluran_drain_kondensasi' => 18,
+            'sirkulasi_evaporator' => 19,
+
+            // Unit Outdoor
+            'check_kondisi_kondensor' => 21,
+            'check_electrical_outdoor' => 22,
+            'check_motor_fan' => 23,
+            'check_tekanan_freon' => 24,
+            'pelumasan_motor_fan' => 25,
+            'kebersihan_unit_body_outdoor' => 26,
+
+            // Jalur Distribusi
+            'check_jalur_freon' => 29,
+            'check_jalur_distribusi_udara' => 30,
+            'check_jalur_return_udara' => 31,
+            'check_suhu_supply' => 32,
+            'check_suhu_return' => 33,
+            'check_flow_supply' => 34,
+            'check_flow_return' => 35,
+        ];
+
+        foreach ($data as $main) {
+            $inspection = $main->refrigerasi;
+            if (!$inspection) continue;
+
+            // header (sekali isi aja, bukan per row)
+            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('B4', ': ' . $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('B5', ': ' . $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('B6', ': ' . $main->departemen ?? '-');
+            $sheet->setCellValue('G3', ': ' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('G4', ': ' . $inspection->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('G5', ': ' . $inspection->mesin->lokasi ?? '-');
+            $sheet->setCellValue('G6', ': ' . $main->paket ?? '-');
             $sheet->setCellValue('A49', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
@@ -550,20 +738,34 @@ class MtcMainController extends Controller
                     $kondisi = '';
                 }
 
-                $sheet->setCellValue('D' . $row, $kondisi);
+                $sheet->setCellValue('E' . $row, $kondisi);
                 $ket = $keteranganMap[$field] ?? '';
-                $sheet->setCellValue('E' . $row, $ket);
+                $sheet->setCellValue('F' . $row, $ket);
+            }
+
+            // PENGGANTIAN SPAREPART
+            $sparepartRow = 39;
+
+            if ($main->penggantianMaterial && $main->penggantianMaterial->count()) {
+                foreach ($main->penggantianMaterial as $item) {
+
+                    $sheet->setCellValue('A' . $sparepartRow, $item->mid ?? '');
+                    $sheet->setCellValue('B' . $sparepartRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('D' . $sparepartRow, $item->qty ?? '');
+
+                    $sparepartRow++;
+                }
             }
 
             // KEBUTUHAN MATERIAL
-            $materialRow = 51;
+            $materialRow = 39;
 
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('D' . $materialRow, $item->mid ?? '');
-                    $sheet->setCellValue('F' . $materialRow, $item->deskripsi ?? '');
-                    $sheet->setCellValue('H' . $materialRow, $item->qty ?? '');
+                    $sheet->setCellValue('E' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('G' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
                 }
@@ -580,156 +782,16 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $sheet->setCellValue('D57', 'Dibuat: ' . $item->approver?->username ?? '-');
-                            $this->insertApprovalSticker($sheet, 'G57');
+                            $sheet->setCellValue('E49', 'Dibuat: ' . $item->approver?->username ?? '-');
+                            $this->insertApprovalSticker($sheet, 'H49');
                             break;
 
                         case 'staff':
-                            $this->insertApprovalSticker($sheet, 'G59');
+                            $this->insertApprovalSticker($sheet, 'H51');
                             break;
 
                         case 'user':
-                            $this->insertApprovalSticker($sheet, 'G61');
-                            break;
-                    }
-                }
-            }
-
-            break;
-        }
-
-        return $this->downloadExcel($spreadsheet, 'electrical');
-    }
-
-    private function exportRefrigerasi($id)
-    {
-        $path = public_path('assets/templates/maintenance/refrigerasi.xlsx');
-
-        if (!file_exists($path)) {
-            return response()->json(['message' => 'Template not found'], 404);
-        }
-
-        $spreadsheet = IOFactory::load($path);
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $data = MtcMainModel::where('jenis_mtc', 'Refrigerasi')
-            ->where('id', $id)
-            ->with('refrigerasi', 'kebutuhanMaterial', 'approvals')
-            ->orderBy('tanggal', 'desc')
-            ->get();
-
-        $fieldRowMap = [
-            // Unit Indoor
-            'check_filter_udara' => 8,
-            'check_cover_filter_udara' => 9,
-            'check_electrical_indoor' => 10,
-            'check_suhu_evaporator' => 11,
-            'check_indikator_display' => 12,
-            'check_motor_blower' => 13,
-            'check_fan_belt_blower' => 14,
-            'check_pergerakan_motor_swing' => 15,
-            'check_kontroler_indoor' => 16,
-            'check_saluran_drain_kondensasi' => 17,
-            'sirkulasi_evaporator' => 18,
-
-            // Unit Outdoor
-            'check_kondisi_kondensor' => 21,
-            'check_electrical_outdoor' => 22,
-            'check_motor_fan' => 23,
-            'check_tekanan_freon' => 24,
-            'pelumasan_motor_fan' => 25,
-            'kebersihan_unit_body_outdoor' => 26,
-
-            // Jalur Distribusi
-            'check_jalur_freon' => 29,
-            'check_jalur_distribusi_udara' => 30,
-            'check_jalur_return_udara' => 31,
-        ];
-
-        foreach ($data as $main) {
-            $inspection = $main->refrigerasi;
-            if (!$inspection) continue;
-
-            // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
-            $sheet->setCellValue('C6', $main->departemen ?? '-');
-            $sheet->setCellValue('F3', ': ' . $inspection->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('F4', ': ' . $inspection->mesin->kode_mesin ?? '-');
-            $sheet->setCellValue('F5', ': ' . $inspection->mesin->lokasi ?? '-');
-            $sheet->setCellValue('F6', ': ' . $main->paket ?? '-');
-            $sheet->setCellValue('A35', 'Tindakan Korektif : ' . $main->korektif);
-
-            $keteranganMap = [];
-
-            if (!empty($main->keterangan)) {
-                $items = explode('|', $main->keterangan);
-
-                foreach ($items as $item) {
-                    $parts = explode(':', $item, 2);
-
-                    if (count($parts) == 2) {
-                        $key = trim($parts[0]);
-                        $val = trim($parts[1]);
-
-                        $keteranganMap[$key] = $val;
-                    }
-                }
-            }
-
-            foreach ($fieldRowMap as $field => $row) {
-
-                $value = $inspection->{$field};
-
-                if ($value === true) {
-                    $kondisi = '✓';
-                } elseif ($value === false) {
-                    $kondisi = '✗';
-                } else {
-                    $kondisi = '';
-                }
-
-                $sheet->setCellValue('D' . $row, $kondisi);
-                $ket = $keteranganMap[$field] ?? '';
-                $sheet->setCellValue('E' . $row, $ket);
-            }
-
-            // KEBUTUHAN MATERIAL
-            $materialRow = 37;
-
-            if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
-                foreach ($main->kebutuhanMaterial as $item) {
-
-                    $sheet->setCellValue('D' . $materialRow, $item->mid ?? '');
-                    $sheet->setCellValue('F' . $materialRow, $item->deskripsi ?? '');
-                    $sheet->setCellValue('H' . $materialRow, $item->qty ?? '');
-
-                    $materialRow++;
-                }
-            }
-
-            // Sticker Approval
-            if ($main->approvals && $main->approvals->count()) {
-
-                foreach ($main->approvals as $item) {
-
-                    // hanya kalau approved
-                    if ($item->status !== 'approved') continue;
-
-                    switch (strtolower($item->role)) {
-
-                        case 'teknisi':
-                            $sheet->setCellValue('D47', 'Dibuat: ' . $item->approver?->username ?? '-');
-                            $this->insertApprovalSticker($sheet, 'G47');
-                            break;
-
-                        case 'staff':
-                            $this->insertApprovalSticker($sheet, 'G49');
-                            break;
-
-                        case 'user':
-                            $this->insertApprovalSticker($sheet, 'G51');
+                            $this->insertApprovalSticker($sheet, 'H53');
                             break;
                     }
                 }
@@ -754,7 +816,7 @@ class MtcMainController extends Controller
 
         $data = MtcMainModel::where('jenis_mtc', 'Electric Engine')
             ->where('id', $id)
-            ->with('electricEngine', 'kebutuhanMaterial', 'approvals')
+            ->with('electricEngine', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -819,16 +881,16 @@ class MtcMainController extends Controller
             if (!$inspection) continue;
 
             // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
-            $sheet->setCellValue('C6', $main->departemen ?? '-');
-            $sheet->setCellValue('C7', $main->paket ?? '-');
-            $sheet->setCellValue('G3', ': ' . $inspection->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('G4', ': ' . $inspection->mesin->kode_mesin ?? '-');
-            $sheet->setCellValue('G5', ': ' . $inspection->mesin->lokasi ?? '-');
-            $sheet->setCellValue('G6', ': ' . $main->running_hour ?? '-');
-            $sheet->setCellValue('A65', 'Tindakan Korektif : ' . $main->korektif);
+            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('B4', ': ' . $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('B5', ': ' . $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('B6', ': ' . $main->departemen ?? '-');
+            $sheet->setCellValue('B7', ': ' . $main->paket ?? '-');
+            $sheet->setCellValue('L3', ': ' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('L4', ': ' . $inspection->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('L5', ': ' . $inspection->mesin->lokasi ?? '-');
+            $sheet->setCellValue('L6', ': ' . $main->running_hour ?? '-');
+            $sheet->setCellValue('A72', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
 
@@ -859,9 +921,23 @@ class MtcMainController extends Controller
                     $kondisi = '';
                 }
 
-                $sheet->setCellValue('E' . $row, $kondisi);
+                $sheet->setCellValue('J' . $row, $kondisi);
                 $ket = $keteranganMap[$field] ?? '';
-                $sheet->setCellValue('F' . $row, $ket);
+                $sheet->setCellValue('K' . $row, $ket);
+            }
+
+            // PENGGANTIAN SPAREPART
+            $sparepartRow = 57;
+
+            if ($main->penggantianMaterial && $main->penggantianMaterial->count()) {
+                foreach ($main->penggantianMaterial as $item) {
+
+                    $sheet->setCellValue('A' . $sparepartRow, $item->mid ?? '');
+                    $sheet->setCellValue('B' . $sparepartRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('I' . $sparepartRow, $item->qty ?? '');
+
+                    $sparepartRow++;
+                }
             }
 
             // KEBUTUHAN MATERIAL
@@ -870,9 +946,9 @@ class MtcMainController extends Controller
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('E' . $materialRow, $item->mid ?? '');
-                    $sheet->setCellValue('G' . $materialRow, $item->deskripsi ?? '');
-                    $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
+                    $sheet->setCellValue('J' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('L' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('N' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
                 }
@@ -889,16 +965,16 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $sheet->setCellValue('D72', 'Dibuat: ' . $item->approver?->username ?? '-');
-                            $this->insertApprovalSticker($sheet, 'H72');
+                            $sheet->setCellValue('J72', 'Dibuat: ' . $item->approver?->username ?? '-');
+                            $this->insertApprovalSticker($sheet, 'M72');
                             break;
 
                         case 'staff':
-                            $this->insertApprovalSticker($sheet, 'H74');
+                            $this->insertApprovalSticker($sheet, 'M74');
                             break;
 
                         case 'user':
-                            $this->insertApprovalSticker($sheet, 'H76');
+                            $this->insertApprovalSticker($sheet, 'M76');
                             break;
                     }
                 }
@@ -923,7 +999,7 @@ class MtcMainController extends Controller
 
         $data = MtcMainModel::where('jenis_mtc', 'Diesel Engine')
             ->where('id', $id)
-            ->with('dieselEngine', 'kebutuhanMaterial', 'approvals')
+            ->with('dieselEngine', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -992,16 +1068,16 @@ class MtcMainController extends Controller
             if (!$inspection) continue;
 
             // header (sekali isi aja, bukan per row)
-            $sheet->setCellValue('C3', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('C4', $main->waktu_mulai ?? '-');
-            $sheet->setCellValue('C5', $main->waktu_selesai ?? '-');
-            $sheet->setCellValue('C6', $main->departemen ?? '-');
-            $sheet->setCellValue('C7', $main->paket ?? '-');
-            $sheet->setCellValue('G3', ': ' . $inspection->mesin->nama_mesin ?? '-');
-            $sheet->setCellValue('G4', ': ' . $inspection->mesin->kode_mesin ?? '-');
-            $sheet->setCellValue('G5', ': ' . $inspection->mesin->lokasi ?? '-');
-            $sheet->setCellValue('G6', ': ' . $main->running_hour ?? '-');
-            $sheet->setCellValue('A62', 'Tindakan Korektif : ' . $main->korektif);
+            $sheet->setCellValue('B3', ': ' . $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
+            $sheet->setCellValue('B4', ': ' . $main->waktu_mulai ?? '-');
+            $sheet->setCellValue('B5', ': ' . $main->waktu_selesai ?? '-');
+            $sheet->setCellValue('B6', ': ' . $main->departemen ?? '-');
+            $sheet->setCellValue('B7', ': ' . $main->paket ?? '-');
+            $sheet->setCellValue('F3', ': ' . $inspection->mesin->nama_mesin ?? '-');
+            $sheet->setCellValue('F4', ': ' . $inspection->mesin->kode_mesin ?? '-');
+            $sheet->setCellValue('F5', ': ' . $inspection->mesin->lokasi ?? '-');
+            $sheet->setCellValue('F6', ': ' . $main->running_hour ?? '-');
+            $sheet->setCellValue('A74', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
 
@@ -1032,9 +1108,23 @@ class MtcMainController extends Controller
                     $kondisi = '';
                 }
 
-                $sheet->setCellValue('E' . $row, $kondisi);
+                $sheet->setCellValue('F' . $row, $kondisi);
                 $ket = $keteranganMap[$field] ?? '';
-                $sheet->setCellValue('F' . $row, $ket);
+                $sheet->setCellValue('G' . $row, $ket);
+            }
+
+            // PENGGANTIAN SPAREPART
+            $sparepartRow = 64;
+
+            if ($main->penggantianMaterial && $main->penggantianMaterial->count()) {
+                foreach ($main->penggantianMaterial as $item) {
+
+                    $sheet->setCellValue('A' . $sparepartRow, $item->mid ?? '');
+                    $sheet->setCellValue('B' . $sparepartRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('E' . $sparepartRow, $item->qty ?? '');
+
+                    $sparepartRow++;
+                }
             }
 
             // KEBUTUHAN MATERIAL
@@ -1043,9 +1133,9 @@ class MtcMainController extends Controller
             if ($main->kebutuhanMaterial && $main->kebutuhanMaterial->count()) {
                 foreach ($main->kebutuhanMaterial as $item) {
 
-                    $sheet->setCellValue('E' . $materialRow, $item->mid ?? '');
-                    $sheet->setCellValue('G' . $materialRow, $item->deskripsi ?? '');
-                    $sheet->setCellValue('I' . $materialRow, $item->qty ?? '');
+                    $sheet->setCellValue('F' . $materialRow, $item->mid ?? '');
+                    $sheet->setCellValue('H' . $materialRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('J' . $materialRow, $item->qty ?? '');
 
                     $materialRow++;
                 }
@@ -1062,16 +1152,16 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $sheet->setCellValue('D74', 'Dibuat: ' . $item->approver?->username ?? '-');
-                            $this->insertApprovalSticker($sheet, 'H74');
+                            $sheet->setCellValue('F74', 'Dibuat: ' . $item->approver?->username ?? '-');
+                            $this->insertApprovalSticker($sheet, 'I74');
                             break;
 
                         case 'staff':
-                            $this->insertApprovalSticker($sheet, 'H76');
+                            $this->insertApprovalSticker($sheet, 'I76');
                             break;
 
                         case 'user':
-                            $this->insertApprovalSticker($sheet, 'H78');
+                            $this->insertApprovalSticker($sheet, 'I78');
                             break;
                     }
                 }
@@ -1096,7 +1186,7 @@ class MtcMainController extends Controller
 
         $data = MtcMainModel::where('jenis_mtc', 'Battery')
             ->where('id', $id)
-            ->with('battery', 'kebutuhanMaterial', 'approvals')
+            ->with('battery', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -1194,7 +1284,7 @@ class MtcMainController extends Controller
 
         $data = MtcMainModel::where('jenis_mtc', 'Sipil')
             ->where('id', $id)
-            ->with('sipil', 'kebutuhanMaterial', 'approvals')
+            ->with('sipil', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -1220,7 +1310,7 @@ class MtcMainController extends Controller
             $sheet->setCellValue('G4', ': ' . $main->lokasi ?? '-');
             $sheet->setCellValue('G5', ': ' . $main->departemen ?? '-');
             $sheet->setCellValue('A16', 'Rekomendasi : ' . $main->rekomendasi);
-            $sheet->setCellValue('A17', 'Tindakan Korektif : ' . $main->korektif);
+            $sheet->setCellValue('A34', 'Tindakan Korektif : ' . $main->korektif);
 
             $keteranganMap = [];
 
@@ -1255,6 +1345,20 @@ class MtcMainController extends Controller
 
                 $ket = $keteranganMap[$field] ?? '';
                 $sheet->setCellValue('F' . $row, $ket);
+            }
+
+            // PENGGANTIAN SPAREPART
+            $sparepartRow = 19;
+
+            if ($main->penggantianMaterial && $main->penggantianMaterial->count()) {
+                foreach ($main->penggantianMaterial as $item) {
+
+                    $sheet->setCellValue('A' . $sparepartRow, $item->mid ?? '');
+                    $sheet->setCellValue('B' . $sparepartRow, $item->deskripsi ?? '');
+                    $sheet->setCellValue('d' . $sparepartRow, $item->qty ?? '');
+
+                    $sparepartRow++;
+                }
             }
 
             // KEBUTUHAN MATERIAL
@@ -1315,9 +1419,9 @@ class MtcMainController extends Controller
         $spreadsheet = IOFactory::load($path);
         $sheet = $spreadsheet->getActiveSheet();
 
-        $data = MtcMainModel::where('jenis_mtc', 'Electrical P2H')
+        $data = MtcMainModel::where('jenis_mtc', 'Electric P2H')
             ->where('id', $id)
-            ->with('electricP2h.mesin', 'kebutuhanMaterial', 'approvals')
+            ->with('electricP2h.mesin', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 
@@ -1444,9 +1548,9 @@ class MtcMainController extends Controller
         $spreadsheet = IOFactory::load($path);
         $sheet = $spreadsheet->getActiveSheet();
 
-        $data = MtcMainModel::where('jenis_mtc', 'Diesel P2h')
+        $data = MtcMainModel::where('jenis_mtc', 'Diesel P2H')
             ->where('id', $id)
-            ->with('dieselP2h', 'kebutuhanMaterial', 'approvals')
+            ->with('dieselP2h', 'kebutuhanMaterial', 'penggantianMaterial', 'approvals')
             ->orderBy('tanggal', 'desc')
             ->get();
 

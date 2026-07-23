@@ -148,3 +148,30 @@
      </tbody>
  </table>
  @endif
+
+ <h6 class="mt-4 mb-2">Penggantian Material</h6>
+
+ @if ($main->penggantianMaterial->isEmpty())
+ <div class="text-muted fst-italic">
+     Tidak ada penggantian material
+ </div>
+ @else
+ <table class="table table-sm table-bordered align-middle">
+     <thead class="table-light text-center">
+         <tr>
+             <th width="120">MID</th>
+             <th>Deskripsi</th>
+             <th width="80">Qty</th>
+         </tr>
+     </thead>
+     <tbody>
+         @foreach ($main->penggantianMaterial as $replacement)
+         <tr>
+             <td class="text-center">{{ $replacement->mid }}</td>
+             <td>{{ $replacement->deskripsi }}</td>
+             <td class="text-center">{{ $replacement->qty }}</td>
+         </tr>
+         @endforeach
+     </tbody>
+ </table>
+ @endif

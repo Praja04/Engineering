@@ -253,6 +253,29 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <div class="fw-bold mb-2 mt-4">Penggantian Material</div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle" id="replacementTableEdit">
+                                <thead class="table-light text-nowrap">
+                                    <tr>
+                                        <th style="width: 20%">MID</th>
+                                        <th>Deskripsi</th>
+                                        <th style="width: 15%">Jumlah</th>
+                                        <th class="text-center" style="width: 10%">
+                                            <button type="button" class="btn btn-sm btn-primary"
+                                                id="btnAddReplacementEdit">
+                                                +
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="modal-footer">
@@ -424,11 +447,21 @@
                             <div class="group-title">Tindakan Korektif</div>
                             <div>${row.korektif ?? '-'}</div>
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <div class="group-title">Kebutuhan Material</div>
                        ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
+                                                                                                                                <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
+                                                                                                                            `).join('')
+                                : '<div>-</div>'
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <div class="group-title">Penggantian Material</div>
+                       ${
+                                row.penggantian_material && row.penggantian_material.length
+                                ? row.penggantian_material.map(m => `
                                                                                                                                 <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
                                                                                                                             `).join('')
                                 : '<div>-</div>'
@@ -772,6 +805,9 @@
                 renderEditMaterials(
                     row.kebutuhan_material ?? []
                 );
+                renderEditReplacements(
+                    row.penggantian_material ?? []
+                );
 
                 const ketMap = parseKeteranganPairs(row.keterangan);
 
@@ -787,147 +823,245 @@
                 new bootstrap.Modal(document.getElementById('modalEdit')).show();
             });
 
+            $('#modalEdit').on('shown.bs.modal', function() {
+                $('.material-mid, .replacement-mid').each(function() {
+                    if (!$(this).hasClass("select2-hidden-accessible")) {
+                        initMidSelect2Edit(this);
+                    }
+                });
+            });
+
             function initMidSelect2Edit(element) {
-                $(element).select2({
-                    theme: 'bootstrap-5',
-                    placeholder: 'Cari MID / Nama Barang...',
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: $('#modalEdit'),
-                    ajax: {
-                        url: 'http://10.11.10.130:8087/api/wsp/barang',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function(params) {
-                            return {
-                                q: params.term
-                            };
-                        },
-                        processResults: function(response) {
-                            return {
-                                results: response.data.map(function(item) {
-                                    return {
-                                        id: item.mid_barang,
-                                        text: item.mid_barang + ' - ' + item.nama_barang,
-                                        nama_barang: item.nama_barang,
-                                        uom: item.uom
-                                    };
-                                })
-                            };
-                        },
-                        cache: true
-                    },
-                    templateResult: function(data) {
-                        if (!data.id) return data.text;
-                        return $(`
-                            <div class="d-flex flex-column">
-                                <span class="fw-bold" style="font-size: 12.5px;">${data.id}</span>
-                                <small class="text-muted" style="font-size: 11px;">${data.nama_barang}</small>
-                            </div>
-                        `);
-                    },
-                    templateSelection: function(data) {
-                        return data.id || data.text;
-                    }
-                }).on('select2:select', function(e) {
-                    const data = e.params.data;
-                    $(this).closest('tr').find('.material-deskripsi').val(data.nama_barang);
-                    $(this).closest('tr').find('.material-uom').val(data.uom);
-                }).on('select2:clear select2:unselect', function(e) {
-                    $(this).closest('tr').find('.material-deskripsi').val('');
-                    $(this).closest('tr').find('.material-qty').val('');
-                    $(this).closest('tr').find('.material-uom').val('');
-                });
-            }
+                 $(element).select2({
+                     theme: 'bootstrap-5',
+                     placeholder: 'Cari MID / Nama Barang...',
+                     allowClear: true,
+                     width: '100%',
+                     dropdownParent: $(element).closest('.modal-content'),
+                     ajax: {
+                         url: 'http://10.11.10.130:8087/api/wsp/barang',
+                         dataType: 'json',
+                         delay: 250,
+                         data: function(params) {
+                             return {
+                                 q: params.term
+                             };
+                         },
+                         processResults: function(response) {
+                             return {
+                                 results: response.data.map(function(item) {
+                                     return {
+                                         id: item.mid_barang,
+                                         text: item.mid_barang + ' - ' + item.nama_barang,
+                                         nama_barang: item.nama_barang,
+                                         uom: item.uom
+                                     };
+                                 })
+                             };
+                         },
+                         cache: true
+                     },
+                     templateResult: function(data) {
+                         if (!data.id) return data.text;
+                         return $(`
+                             <div class="d-flex flex-column">
+                                 <span class="fw-bold" style="font-size: 12.5px;">${data.id}</span>
+                                 <small class="text-muted" style="font-size: 11px;">${data.nama_barang}</small>
+                             </div>
+                         `);
+                     },
+                     templateSelection: function(data) {
+                         return data.id || data.text;
+                     }
+                 }).on('select2:select', function(e) {
+                      const data = e.params.data;
+                      $(this).closest('tr').find('.material-deskripsi, .replacement-deskripsi').val(data.nama_barang);
+                      $(this).closest('tr').find('.material-uom, .replacement-uom').val(data.uom);
+                      $(this).closest('tr').find('.material-qty, .replacement-qty').prop('required', true);
+                  }).on('select2:clear select2:unselect', function(e) {
+                      $(this).closest('tr').find('.material-deskripsi, .replacement-deskripsi').val('');
+                      $(this).closest('tr').find('.material-qty, .replacement-qty').val('').prop('required', false);
+                      $(this).closest('tr').find('.material-uom, .replacement-uom').val('');
+                  });
+             }
 
-            function renderEditMaterials(materials) {
-                const tbody = $('#materialTableEdit tbody');
-                tbody.empty();
+             function renderEditMaterials(materials) {
+                 const tbody = $('#materialTableEdit tbody');
+                 tbody.empty();
 
-                if (!materials || materials.length === 0) {
-                    addMaterialRowEdit();
-                    return;
-                }
+                 if (!materials || materials.length === 0) {
+                     return;
+                 }
 
-                materials.forEach((item, index) => {
-                    const row = $(materialRowTemplate(index));
+                 materials.forEach((item, index) => {
+                     const row = $(materialRowTemplate(index));
 
-                    row.find('.material-id').val(item.id);
-                    row.find('.material-deskripsi').val(item.deskripsi);
-                    row.find('.material-qty').val(item.qty);
-                    row.find('.material-uom').val(item.uom);
+                     row.find('.material-id').val(item.id);
+                     row.find('.material-deskripsi').val(item.deskripsi);
+                     row.find('.material-qty').val(item.qty);
+                     row.find('.material-uom').val(item.uom);
 
-                    // Add existing MID as option
-                    if (item.mid) {
-                        const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi : ''), item.mid, true, true);
-                        row.find('.material-mid').append(newOption).trigger('change');
-                    }
+                     // Add existing MID as option
+                     if (item.mid) {
+                         const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi : ''), item.mid, true, true);
+                         row.find('.material-mid').append(newOption).trigger('change');
+                         row.find('.material-qty').prop('required', true);
+                     }
 
-                    tbody.append(row);
-                    initMidSelect2Edit(row.find('.material-mid'));
-                });
-            }
+                      tbody.append(row);
+                  });
+             }
 
-            function materialRowTemplate(index) {
-                return `
-                    <tr class="material-row">
-                        <input type="hidden" name="materials[${index}][id]" class="material-id">
+             function materialRowTemplate(index) {
+                 return `
+                     <tr class="material-row">
+                         <input type="hidden" name="materials[${index}][id]" class="material-id">
 
-                        <td>
-                            <select name="materials[${index}][mid]" class="form-control form-control-sm material-mid"></select>
-                        </td>
+                         <td>
+                             <select name="materials[${index}][mid]" class="form-control form-control-sm material-mid"></select>
+                         </td>
 
-                        <td>
-                            <input type="text"
-                                name="materials[${index}][deskripsi]"
-                                class="form-control form-control-sm material-deskripsi">
-                        </td>
+                         <td>
+                             <input type="text"
+                                 name="materials[${index}][deskripsi]"
+                                 class="form-control form-control-sm material-deskripsi">
+                         </td>
 
-                        <td>
-                            <input type="number"
-                                name="materials[${index}][qty]"
-                                class="form-control form-control-sm material-qty"
-                                min="1">
-                            <input type="hidden"
-                                name="materials[${index}][uom]"
-                                class="material-uom">
-                        </td>
+                         <td>
+                             <input type="number"
+                                 name="materials[${index}][qty]"
+                                 class="form-control form-control-sm material-qty"
+                                 min="1">
+                             <input type="hidden"
+                                 name="materials[${index}][uom]"
+                                 class="material-uom">
+                         </td>
 
-                        <td class="text-center">
-                            <button type="button"
-                                    class="btn btn-sm btn-danger btnRemoveMaterial">
-                                ×
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }
+                         <td class="text-center">
+                             <button type="button"
+                                     class="btn btn-sm btn-danger btnRemoveMaterial">
+                                 ×
+                             </button>
+                         </td>
+                     </tr>
+                 `;
+             }
 
-            $('#btnAddMaterialEdit').on('click', function() {
-                addMaterialRowEdit();
-            });
+             $('#btnAddMaterialEdit').on('click', function() {
+                 addMaterialRowEdit();
+             });
 
-            function addMaterialRowEdit() {
-                const index = $('#materialTableEdit tbody tr').length;
-                const $row = $(materialRowTemplate(index));
-                $('#materialTableEdit tbody').append($row);
-                initMidSelect2Edit($row.find('.material-mid'));
-            }
+             function addMaterialRowEdit() {
+                 const index = $('#materialTableEdit tbody tr').length;
+                 const $row = $(materialRowTemplate(index));
+                 $('#materialTableEdit tbody').append($row);
+                 initMidSelect2Edit($row.find('.material-mid'));
+             }
 
-            $(document).on('click', '.btnRemoveMaterial', function() {
-                $(this).closest('tr').remove();
-                reindexMaterialRows();
-            });
+             $(document).on('click', '.btnRemoveMaterial', function() {
+                 $(this).closest('tr').remove();
+                 reindexMaterialRows();
+             });
 
-            function reindexMaterialRows() {
-                $('#materialTableEdit tbody tr').each(function(i) {
-                    $(this).find('input').each(function() {
-                        this.name = this.name.replace(/\[\d+]/, `[${i}]`);
-                    });
-                });
-            }
+             function reindexMaterialRows() {
+                 $('#materialTableEdit tbody tr').each(function(i) {
+                     $(this).find('input, select').each(function() {
+                         if (this.name) {
+                             this.name = this.name.replace(/\[\d+]/, `[${i}]`);
+                         }
+                     });
+                 });
+             }
 
-            function collectNotOkDetails() {
+             function renderEditReplacements(replacements) {
+                 const tbody = $('#replacementTableEdit tbody');
+                 tbody.empty();
+
+                 if (!replacements || replacements.length === 0) {
+                     return;
+                 }
+
+                 replacements.forEach((item, index) => {
+                     const row = $(replacementRowTemplate(index));
+
+                     row.find('.replacement-id').val(item.id);
+                     row.find('.replacement-deskripsi').val(item.deskripsi);
+                     row.find('.replacement-qty').val(item.qty);
+                     row.find('.replacement-uom').val(item.uom);
+
+                     // Add existing MID as option
+                     if (item.mid) {
+                         const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi : ''), item.mid, true, true);
+                         row.find('.replacement-mid').append(newOption).trigger('change');
+                         row.find('.replacement-qty').prop('required', true);
+                     }
+
+                      tbody.append(row);
+                  });
+             }
+
+             function replacementRowTemplate(index) {
+                 return `
+                     <tr class="replacement-row">
+                         <input type="hidden" name="replacements[${index}][id]" class="replacement-id">
+
+                         <td>
+                             <select name="replacements[${index}][mid]" class="form-control form-control-sm replacement-mid"></select>
+                         </td>
+
+                         <td>
+                             <input type="text"
+                                 name="replacements[${index}][deskripsi]"
+                                 class="form-control form-control-sm replacement-deskripsi">
+                         </td>
+
+                         <td>
+                             <input type="number"
+                                 name="replacements[${index}][qty]"
+                                 class="form-control form-control-sm replacement-qty"
+                                 min="1">
+                             <input type="hidden"
+                                 name="replacements[${index}][uom]"
+                                 class="replacement-uom">
+                         </td>
+
+                         <td class="text-center">
+                             <button type="button"
+                                     class="btn btn-sm btn-danger btnRemoveReplacement">
+                                 ×
+                             </button>
+                         </td>
+                     </tr>
+                 `;
+             }
+
+             $('#btnAddReplacementEdit').on('click', function() {
+                 addReplacementRowEdit();
+             });
+
+             function addReplacementRowEdit() {
+                 const index = $('#replacementTableEdit tbody tr').length;
+                 const $row = $(replacementRowTemplate(index));
+                 $('#replacementTableEdit tbody').append($row);
+                 initMidSelect2Edit($row.find('.replacement-mid'));
+             }
+
+             $(document).on('click', '.btnRemoveReplacement', function() {
+                 $(this).closest('tr').remove();
+                 reindexReplacementRows();
+             });
+
+             function reindexReplacementRows() {
+                 $('#replacementTableEdit tbody tr').each(function(i) {
+                     $(this).find('input, select').each(function() {
+                         if (this.name) {
+                             this.name = this.name.replace(/\[\d+]/, `[${i}]`);
+                         }
+                     });
+                 });
+             }
+
+             function collectNotOkDetails() {
                 let pairs = [];
                 let valid = true;
 
@@ -962,6 +1096,36 @@
             // Submit edit
             $('#formEditSipil').on('submit', function(e) {
                 e.preventDefault();
+
+                // Validate material & replacements rows
+                let materialsValid = true;
+                $('#materialTableEdit tbody tr, #replacementTableEdit tbody tr').each(function() {
+                    const midSelect = $(this).find('.material-mid, .replacement-mid');
+                    const qtyInput = $(this).find('.material-qty, .replacement-qty');
+                    
+                    if (midSelect.length > 0) {
+                        const midVal = midSelect.val();
+                        const qtyVal = qtyInput.val();
+                        
+                        if (!midVal || !qtyVal || qtyVal <= 0) {
+                            materialsValid = false;
+                            midSelect.next('.select2-container').find('.select2-selection').addClass('is-invalid');
+                            qtyInput.addClass('is-invalid');
+                        } else {
+                            midSelect.next('.select2-container').find('.select2-selection').removeClass('is-invalid');
+                            qtyInput.removeClass('is-invalid');
+                        }
+                    }
+                });
+
+                if (!materialsValid) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validasi Gagal',
+                        text: 'Harap isi semua item MID dan Qty pada material/penggantian yang telah Anda tambahkan.'
+                    });
+                    return false;
+                }
 
                 const id = $('#editId').val();
                 const $btn = $('#btnSaveEdit');

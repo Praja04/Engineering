@@ -23,9 +23,10 @@ class MtcKebutuhanMaterialRequest extends FormRequest
     {
         return [
             'materials'               => ['nullable', 'array'],
-            'materials.*.mid'         => ['nullable', 'string'],
+            'materials.*.mid'         => ['required', 'string'],
+            'materials.*.desc'        => ['nullable', 'string'],
             'materials.*.deskripsi'   => ['nullable', 'string'],
-            'materials.*.qty'         => ['nullable', 'integer', 'min:1'],
+            'materials.*.qty'         => ['required', 'integer', 'min:1'],
             'materials.*.uom'         => ['nullable', 'string'],
         ];
     }

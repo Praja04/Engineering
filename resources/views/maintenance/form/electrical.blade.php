@@ -370,25 +370,30 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+
+                        {{-- Penggantian Material --}}
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Penggantian Material</label>
+                                <table class="table table-bordered" id="replacementTable">
+                                    <thead class="table-light text-no-wrap">
                                         <tr>
-                                            <td>
-                                                <select name="materials[0][mid]"
-                                                    class="form-control form-control-sm mid-select2"></select>
-                                            </td>
-                                            <td>
-                                                <input type="text" name="materials[0][desc]"
-                                                    class="form-control form-control-sm">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="materials[0][qty]"
-                                                    class="form-control form-control-sm" min="1">
-                                            </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger removeRow">
-                                                    ×
+                                            <th style="width: 20%">MID</th>
+                                            <th>Deskripsi</th>
+                                            <th style="width: 15%">Jumlah</th>
+                                            <th class="text-center" style="width: 10%">
+                                                <button type="button" class="btn btn-sm btn-primary" id="addReplacementRow">
+                                                    +
                                                 </button>
-                                            </td>
+                                            </th>
                                         </tr>
+                                    </thead>
+                                    <tbody>
                                     </tbody>
                                 </table>
 
@@ -502,6 +507,7 @@
             });
 
             let index = 0;
+            let replacementIndex = 0;
             $('#mesin_id').on('change', function() {
                 const selected = $(this).find(':selected');
 
@@ -603,7 +609,9 @@
                 $('.is-invalid').removeClass('is-invalid');
 
                 $('#materialTable tbody').empty();
-                index = 1;
+                index = 0;
+                $('#replacementTable tbody').empty();
+                replacementIndex = 0;
 
 
             }
@@ -656,9 +664,10 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
+                    $(this).closest('tr').find('input[name*="[qty]"]').prop('required', true);
                 }).on('select2:clear select2:unselect', function(e) {
                     $(this).closest('tr').find('input[name*="[desc]"]').val('');
-                    $(this).closest('tr').find('input[name*="[qty]"]').val('');
+                    $(this).closest('tr').find('input[name*="[qty]"]').val('').prop('required', false);
                 });
             }
 
@@ -690,11 +699,34 @@
                 index++;
             });
 
+            $('#addReplacementRow').on('click', function() {
+                let row = `
+                    <tr>
+                        <td>
+                            <select name="replacements[${replacementIndex}][mid]" class="form-control form-control-sm mid-select2"></select>
+                        </td>
+                        <td>
+                            <input type="text" name="replacements[${replacementIndex}][desc]" class="form-control form-control-sm">
+                        </td>
+                        <td>
+                            <input type="number" name="replacements[${replacementIndex}][qty]" class="form-control form-control-sm" min="1">
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
+                        </td>
+                    </tr>
+                `;
+
+                const $row = $(row);
+                $('#replacementTable tbody').append($row);
+                initMidSelect2($row.find('.mid-select2'));
+                replacementIndex++;
+            });
+
             $(document).on('click', '.removeRow', function() {
                 $(this).closest('tr').remove();
-
             });
-            // End Kebutuhan Material
+            // End Kebutuhan & Penggantian Material
 
             let pendingFormData = null;
             let selectedStaff = null;
@@ -702,6 +734,37 @@
 
             $('#form-mtc-electrical').on('submit', function(e) {
                 e.preventDefault();
+
+                // Validate material & replacements rows
+                let isValid = true;
+                $('#materialTable tbody tr, #replacementTable tbody tr').each(function() {
+                    const midSelect = $(this).find('.mid-select2');
+                    const qtyInput = $(this).find('input[name*="[qty]"]');
+                    
+                    if (midSelect.length > 0) {
+                        const midVal = midSelect.val();
+                        const qtyVal = qtyInput.val();
+                        
+                        if (!midVal || !qtyVal || qtyVal <= 0) {
+                            isValid = false;
+                            midSelect.next('.select2-container').find('.select2-selection').addClass('is-invalid');
+                            qtyInput.addClass('is-invalid');
+                        } else {
+                            midSelect.next('.select2-container').find('.select2-selection').removeClass('is-invalid');
+                            qtyInput.removeClass('is-invalid');
+                        }
+                    }
+                });
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validasi Gagal',
+                        text: 'Harap isi semua item MID dan Qty pada material/penggantian yang telah Anda tambahkan.'
+                    });
+                    return false;
+                }
+
                 pendingFormData = new FormData(this);
 
                 $('#modalApprover').modal('show');
