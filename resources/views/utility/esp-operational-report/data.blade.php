@@ -413,13 +413,6 @@
                         </div>
                     </div>
                 </div>
-                @if (auth()->user()->jabatan !== 'operator')
-                    <div class="modal-footer border-top">
-                        <button type="button" class="btn btn-outline-danger btn-sm" id="btn-edit-shift">
-                            <i class="ri-edit-line me-1"></i>Edit Data
-                        </button>
-                    </div>
-                @endif
             </div>
         </div>
     </div>
@@ -733,23 +726,24 @@
                     let html = '';
                     data.forEach(function(r) {
                         const hasData = r.arus_primer !== null;
-                        html += `<tr class="${hasData ? '' : 'text-muted opacity-50'}" style="cursor:${hasData?'pointer':'default'};"
-                            data-row='${JSON.stringify(r)}'>
-                    <td class="fw-medium">${r.jam}</td>
-                    <td>${r.grup ? '<span class="badge bg-primary-subtle text-primary">'+r.grup+'</span>' : '—'}</td>
-                    <td>${formatDecimalVal(r.arus_primer) || '—'}</td>
-                    <td>${formatDecimalVal(r.arus_sekunder) || '—'}</td>
-                    <td>${formatDecimalVal(r.tegangan_primer) || '—'}</td>
-                    <td>${formatDecimalVal(r.tegangan_sekunder) || '—'}</td>
-                    <td>${formatDecimalVal(r.suhu_thermal) || '—'}</td>
-                    <td>
-                        ${hasData
-                            ? `<button class="btn btn-xs btn-outline-primary btn-detail-op py-0 px-2">
-                                                        <i class="ri-eye-line"></i></button>`
-                            : '—'
-                        }
-                    </td>
-                </tr>`;
+                        html += `
+                            <tr class="${hasData ? '' : 'text-muted opacity-50'}" style="cursor:${hasData?'pointer':'default'};"
+                                data-row='${JSON.stringify(r)}'>
+                                <td class="fw-medium">${r.jam}</td>
+                                <td>${r.grup ? '<span class="badge bg-primary-subtle text-primary">'+r.grup+'</span>' : '—'}</td>
+                                <td>${formatDecimalVal(r.arus_primer) || '—'}</td>
+                                <td>${formatDecimalVal(r.arus_sekunder) || '—'}</td>
+                                <td>${formatDecimalVal(r.tegangan_primer) || '—'}</td>
+                                <td>${formatDecimalVal(r.tegangan_sekunder) || '—'}</td>
+                                <td>${formatDecimalVal(r.suhu_thermal) || '—'}</td>
+                                <td>
+                                    ${hasData
+                                        ? `<button class="btn btn-xs btn-outline-primary btn-detail-op py-0 px-2">
+                                                                <i class="ri-eye-line"></i></button>`
+                                        : '—'
+                                    }
+                                </td>
+                            </tr>`;
                     });
                     $('#tbody-operational').html(html ||
                         '<tr><td colspan="8" class="text-center py-4 text-muted">Belum ada data</td></tr>'
@@ -803,9 +797,14 @@
                     <td>${formatDecimalVal(r.running_hour_akhir) || '—'}</td>
                     <td><span class="badge ${s.cls}">${s.label}</span></td>
                     <td>
-                        <button class="btn btn-xs btn-outline-danger btn-detail-shift py-0 px-2">
+                        <button class="btn btn-xs btn-outline-danger btn-detail-shift py-0 px-2" title="Detail">
                             <i class="ri-eye-line"></i>
                         </button>
+                        @if (auth()->user()->jabatan !== 'operator')
+                            <button type="button" class="btn btn-xs btn-outline-primary btn-edit-shift-row py-0 px-2" title="Edit">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                        @endif
                     </td>
                 </tr>`;
                     });
@@ -982,27 +981,26 @@
                 new bootstrap.Modal('#modal-shift').show();
             });
 
-            // Buka edit shift
-            $('#btn-edit-shift').on('click', function() {
-                const r = currentShiftRow;
-                bootstrap.Modal.getInstance('#modal-shift').hide();
-                setTimeout(function() {
-                    $('#edit-sh-tgl-label').text(r.tanggal_laporan);
-                    $('#edit-sh-id').val(r.id);
-                    $('#edit-sh-air').val(formatDecimalVal(r.pemakaian_air));
-                    $('#edit-sh-steam').val(formatDecimalVal(r.pemakaian_steam));
-                    $('#edit-sh-batubara').val(formatDecimalVal(r.pemakaian_batubara));
-                    $('#edit-sh-efisiensi').val(formatDecimalVal(r.efisiensi_batubara));
-                    $('#edit-sh-pengisian').val(formatDecimalVal(r.pengisian_batubara));
-                    $('#edit-sh-rh-awal').val(formatDecimalVal(r.running_hour_awal));
-                    $('#edit-sh-rh-akhir').val(formatDecimalVal(r.running_hour_akhir));
-                    $('#edit-sh-ft-awal').val(formatDecimalVal(r.feed_tank_awal));
-                    $('#edit-sh-ft-akhir').val(formatDecimalVal(r.feed_tank_akhir));
-                    $('#edit-sh-scf').val(formatDecimalVal(r.chemical_scf));
-                    $('#edit-sh-srtf').val(formatDecimalVal(r.chemical_srtf));
-                    $('#edit-sh-dosis').val(formatDecimalVal(r.dosis));
-                    new bootstrap.Modal('#modal-edit-shift').show();
-                }, 300);
+            // Buka edit shift langsung dari baris tabel
+            $(document).on('click', '.btn-edit-shift-row', function(e) {
+                e.stopPropagation();
+                const r = $(this).closest('tr').data('row');
+                currentShiftRow = r;
+                $('#edit-sh-tgl-label').text(r.tanggal_laporan);
+                $('#edit-sh-id').val(r.id);
+                $('#edit-sh-air').val(formatDecimalVal(r.pemakaian_air));
+                $('#edit-sh-steam').val(formatDecimalVal(r.pemakaian_steam));
+                $('#edit-sh-batubara').val(formatDecimalVal(r.pemakaian_batubara));
+                $('#edit-sh-efisiensi').val(formatDecimalVal(r.efisiensi_batubara));
+                $('#edit-sh-pengisian').val(formatDecimalVal(r.pengisian_batubara));
+                $('#edit-sh-rh-awal').val(formatDecimalVal(r.running_hour_awal));
+                $('#edit-sh-rh-akhir').val(formatDecimalVal(r.running_hour_akhir));
+                $('#edit-sh-ft-awal').val(formatDecimalVal(r.feed_tank_awal));
+                $('#edit-sh-ft-akhir').val(formatDecimalVal(r.feed_tank_akhir));
+                $('#edit-sh-scf').val(formatDecimalVal(r.chemical_scf));
+                $('#edit-sh-srtf').val(formatDecimalVal(r.chemical_srtf));
+                $('#edit-sh-dosis').val(formatDecimalVal(r.dosis));
+                new bootstrap.Modal('#modal-edit-shift').show();
             });
 
             // Submit edit shift
