@@ -16,12 +16,17 @@ class EspCoalHandoverController extends Controller
     {
         $query = EspCoalHandover::query();
 
-        if ($request->filled('tanggal')) {
-            $query->where('tanggal_laporan', $request->tanggal);
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_laporan', [$request->start_date, $request->end_date]);
+        } else {
+            $query->whereBetween('tanggal_laporan', [
+                Carbon::now()->subDays(14)->toDateString(),
+                Carbon::now()->toDateString()
+            ]);
         }
 
         return response()->json(
-            $query->with('operator')->latest()->get()
+            $query->with('operator')->orderBy('tanggal_laporan', 'desc')->get()
         );
     }
 

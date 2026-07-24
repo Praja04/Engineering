@@ -54,13 +54,27 @@
                                     <div class="vr mx-1" style="height:36px;"></div>
                                 </div>
 
-                                {{-- Filter Tanggal --}}
-                                <div class="col-auto">
+                                {{-- Filter Tanggal (Operational & Shift) --}}
+                                <div class="col-auto filter-tanggal-single-wrapper">
                                     <label class="form-label mb-0 me-2 fs-13 text-muted">Tanggal</label>
                                 </div>
-                                <div class="col-auto">
+                                <div class="col-auto filter-tanggal-single-wrapper">
                                     <input type="date" class="form-control form-control-sm" id="filter-tanggal"
                                         value="{{ date('Y-m-d') }}">
+                                </div>
+
+                                {{-- Filter Range Tanggal (Coal Handover) --}}
+                                <div class="col-auto filter-tanggal-range-wrapper" style="display:none;">
+                                    <label class="form-label mb-0 me-2 fs-13 text-muted">Range Tanggal</label>
+                                </div>
+                                <div class="col-auto filter-tanggal-range-wrapper" style="display:none;">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <input type="date" class="form-control form-control-sm" id="filter-start-date"
+                                            value="{{ date('Y-m-d', strtotime('-14 days')) }}">
+                                        <span class="text-muted fs-12">s/d</span>
+                                        <input type="date" class="form-control form-control-sm" id="filter-end-date"
+                                            value="{{ date('Y-m-d') }}">
+                                    </div>
                                 </div>
 
                                 {{-- Filter Grup (hanya operational) --}}
@@ -652,6 +666,8 @@
                 $('#section-tbl-shift').hide();
                 $('#section-tbl-coal').hide();
                 $('#filter-grup-wrapper').show();
+                $('.filter-tanggal-single-wrapper').show();
+                $('.filter-tanggal-range-wrapper').hide();
                 $('#btn-export').show();
                 loadOperational();
             });
@@ -665,6 +681,8 @@
                 $('#section-tbl-shift').show();
                 $('#section-tbl-coal').hide();
                 $('#filter-grup-wrapper').hide();
+                $('.filter-tanggal-single-wrapper').show();
+                $('.filter-tanggal-range-wrapper').hide();
                 $('#btn-export').hide();
                 loadShift();
             });
@@ -678,6 +696,8 @@
                 $('#section-tbl-shift').hide();
                 $('#section-tbl-coal').show();
                 $('#filter-grup-wrapper').hide();
+                $('.filter-tanggal-single-wrapper').hide();
+                $('.filter-tanggal-range-wrapper').show();
                 $('#btn-export').hide();
                 loadCoal();
             });
@@ -686,7 +706,9 @@
             $('#filter-tanggal, #filter-grup').on('change', function() {
                 if (activeTab === 'operational') loadOperational();
                 else if (activeTab === 'shift') loadShift();
-                else if (activeTab === 'coal') loadCoal();
+            });
+            $('#filter-start-date, #filter-end-date').on('change', function() {
+                if (activeTab === 'coal') loadCoal();
             });
             $('#btn-refresh').on('click', function() {
                 if (activeTab === 'operational') loadOperational();
@@ -814,12 +836,14 @@
 
             // ── LOAD COAL ───────────────────────────────────────────────────
             function loadCoal() {
-                const tanggal = $('#filter-tanggal').val();
+                const startDate = $('#filter-start-date').val();
+                const endDate = $('#filter-end-date').val();
                 $('#tbody-coal').html(
                     '<tr><td colspan="7" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
                 );
                 $.get('{{ route('esp-coal-handover.json') }}', {
-                    tanggal
+                    start_date: startDate,
+                    end_date: endDate
                 }, function(data) {
                     if (!data.length) {
                         $('#tbody-coal').html(
