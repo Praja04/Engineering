@@ -213,4 +213,116 @@ class WWTPControllerApproval extends Controller
             'message' => 'Laporan harian berhasil ditolak.'
         ]);
     }
+
+    public function massApprove(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:wwtp_daily_approvals,id'
+        ]);
+
+        $user = Auth::user();
+        $jabatan = $user->jabatan;
+        $userId = $user->id;
+
+        if ($jabatan !== 'supervisor') {
+            return response()->json(['message' => 'Hanya Supervisor yang dapat melakukan mass approval.'], 403);
+        }
+
+        $approvals = WwtpDailyApproval::whereIn('id', $request->ids)
+            ->where('supervisor_id', $userId)
+            ->where('status', 'approved_foreman')
+            ->get();
+
+        if ($approvals->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data valid yang dapat disetujui.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($approvals as $approval) {
+                $approval->update([
+                    'status' => 'approved_supervisor',
+                    'supervisor_approved_at' => now(),
+                    'reject_reason' => null
+                ]);
+
+                \App\Models\NotificationsModel::where('notifiable_type', WwtpDailyApproval::class)
+                    ->where('notifiable_id', $approval->id)
+                    ->where('user_id', $userId)
+                    ->delete();
+            }
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => count($approvals) . ' data harian berhasil disetujui.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Terjadi kesalahan saat menyetujui data: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function massReject(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:wwtp_daily_approvals,id',
+            'reason' => 'required|string|max:255'
+        ]);
+
+        $user = Auth::user();
+        $jabatan = $user->jabatan;
+        $userId = $user->id;
+
+        if ($jabatan !== 'supervisor') {
+            return response()->json(['message' => 'Hanya Supervisor yang dapat melakukan mass reject.'], 403);
+        }
+
+        $approvals = WwtpDailyApproval::whereIn('id', $request->ids)
+            ->where('supervisor_id', $userId)
+            ->where('status', 'approved_foreman')
+            ->get();
+
+        if ($approvals->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data valid yang dapat ditolak.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($approvals as $approval) {
+                $approval->update([
+                    'status' => 'rejected',
+                    'reject_reason' => $request->reason
+                ]);
+
+                \App\Models\NotificationsModel::where('notifiable_type', WwtpDailyApproval::class)
+                    ->where('notifiable_id', $approval->id)
+                    ->where('user_id', $userId)
+                    ->delete();
+
+                if ($approval->operator_id) {
+                    \App\Models\NotificationsModel::create([
+                        'user_id' => $approval->operator_id,
+                        'title' => 'Laporan Harian WWTP Ditolak',
+                        'message' => 'Data harian WWTP tanggal ' . $approval->tanggal->format('d/m/Y') . ' ditolak (Mass Reject). Alasan: ' . $request->reason,
+                        'url' => url('/wwtp/data_proses'),
+                        'notifiable_type' => WwtpDailyApproval::class,
+                        'notifiable_id' => $approval->id,
+                        'is_read' => 0,
+                    ]);
+                }
+            }
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => count($approvals) . ' data harian berhasil ditolak.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Terjadi kesalahan saat menolak data: ' . $e->getMessage()], 500);
+        }
+    }
 }

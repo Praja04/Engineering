@@ -40,6 +40,8 @@ Route::middleware('auth')->group(function () {
   Route::prefix('wwtp-approval')->middleware('auth')->group(function () {
     Route::get('/check', [WWTPControllerApproval::class, 'checkApproval']);
     Route::get('/list', [WWTPControllerApproval::class, 'getApprovalList']);
+    Route::post('/mass-approve', [WWTPControllerApproval::class, 'massApprove']);
+    Route::post('/mass-reject', [WWTPControllerApproval::class, 'massReject']);
     Route::get('/{id}', [WWTPControllerApproval::class, 'show']);
     Route::post('/{id}/approve', [WWTPControllerApproval::class, 'approve']);
     Route::post('/{id}/reject', [WWTPControllerApproval::class, 'reject']);
@@ -48,6 +50,8 @@ Route::middleware('auth')->group(function () {
   Route::prefix('api/wwtp-analisa')->group(function () {
     Route::get('/users/approvers', [WWTPControllerAnalisa::class, 'getUsersForApproval']);
     Route::get('/approval-list', [WWTPControllerAnalisa::class, 'getApprovalList']);
+    Route::post('/mass-approve', [WWTPControllerAnalisa::class, 'massApprove']);
+    Route::post('/mass-reject', [WWTPControllerAnalisa::class, 'massReject']);
     Route::post('/{id}/approve', [WWTPControllerAnalisa::class, 'approve']);
     Route::post('/{id}/reject', [WWTPControllerAnalisa::class, 'reject']);
     Route::get('/check-filled', [WWTPControllerAnalisa::class, 'checkFilledParameters']);
