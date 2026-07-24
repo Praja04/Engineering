@@ -712,12 +712,31 @@ class KalibrasiCertificateController extends Controller
                     ];
                 });
 
+            // If jenis is thermohygrometer, pre-load to check if it's actually temperature (no RH)
+            $isThermo = true;
+            if ($jenis === 'thermohygrometer') {
+                $kalibrasi->load(['thermohygrometer']);
+                $first = $kalibrasi->thermohygrometer->first();
+                if ($first) {
+                    $valStd = $first->avg_tekanan_standar_rh;
+                    $valAlat = $first->avg_penunjuk_alat_rh;
+                    if (($valStd === null || $valStd == 0 || $valStd === '') && ($valAlat === null || $valAlat == 0 || $valAlat === '')) {
+                        $isThermo = false;
+                    }
+                }
+            }
+
             // Tentukan path template Excel
-            $templatePath = public_path("assets/templates/template_kalibrasi_{$jenis}_sertifikat.xlsx");
+            $templateJenis = $jenis;
+            if ($jenis === 'thermohygrometer' && !$isThermo) {
+                $templateJenis = 'temperature';
+            }
+
+            $templatePath = public_path("assets/templates/template_kalibrasi_{$templateJenis}_sertifikat.xlsx");
             if (!file_exists($templatePath)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => "Template sertifikat untuk {$jenis} tidak ditemukan."
+                    'message' => "Template sertifikat untuk {$templateJenis} tidak ditemukan."
                 ], 404);
             }
 
@@ -809,7 +828,6 @@ class KalibrasiCertificateController extends Controller
 
     private function _fillPressure(Spreadsheet $spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat)
     {
-
         $sheet = $spreadsheet->getActiveSheet();
 
         // Header Information Alat & kalibrasi
@@ -860,10 +878,10 @@ class KalibrasiCertificateController extends Controller
             $pgTurun = $pressuresDesc[$i];
 
             $sheet->setCellValue("H{$row}", $pg->titik_kalibrasi ?? '');
-            $sheet->setCellValue("L{$row}", $pg->avg_tekanan_standar_naik  ?? '');
-            $sheet->setCellValue("O{$row}", $pgTurun->avg_penunjuk_alat_naik ?? '');
-            $sheet->setCellValue("R{$row}", $pg->avg_penunjuk_alat_naik ?? '');
-            $sheet->setCellValue("U{$row}", $pgTurun->avg_penunjuk_alat_turun ?? '');
+            $sheet->setCellValue("L{$row}", $pg->avg_penunjuk_alat_naik  ?? '');
+            $sheet->setCellValue("O{$row}", $pgTurun->avg_penunjuk_alat_turun ?? '');
+            $sheet->setCellValue("R{$row}", $pg->avg_tekanan_standar_naik ?? '');
+            $sheet->setCellValue("U{$row}", $pgTurun->avg_tekanan_standar_turun ?? '');
             $sheet->setCellValue("X{$row}", $pg->avg_koreksi_alat_naik ?? '');
             $sheet->setCellValue("AA{$row}", $pgTurun->avg_koreksi_alat_turun ?? '');
             $sheet->setCellValue("AD{$row}", $pg->u_gabungan ?? '');
@@ -1174,6 +1192,16 @@ class KalibrasiCertificateController extends Controller
         $ketidakpastian_suhu = $first->ketidak_pastian_suhu ?? '';
         $ketidakpastian_rh   = ($first && $first->ketidak_pastian_rh !== null) ? $first->ketidak_pastian_rh : '';
 
+        // Differentiate between Thermo and Temperature (RH is empty/0)
+        $isThermo = false;
+        if ($first) {
+            $valStd = $first->avg_tekanan_standar_rh;
+            $valAlat = $first->avg_penunjuk_alat_rh;
+            if (($valStd !== null && $valStd != 0 && $valStd !== '') || ($valAlat !== null && $valAlat != 0 && $valAlat !== '')) {
+                $isThermo = true;
+            }
+        }
+
         foreach ($thermo as $tg) {
 
             $avg_tekanan_standar_suhu = (float) ($tg->avg_tekanan_standar_suhu ?? 0);
@@ -1188,17 +1216,36 @@ class KalibrasiCertificateController extends Controller
 
             $valStandarRh = $tg->avg_tekanan_standar_rh !== null ? $tg->avg_tekanan_standar_rh : '';
             $valAlatRh = ($tg->avg_penunjuk_alat_rh ?? $tg->avg_tekanan_alat_rh) !== null ? ($tg->avg_penunjuk_alat_rh ?? $tg->avg_tekanan_alat_rh) : '';
-            $valKorRh = $tg->avg_kor_alat_rh !== null ? $tg->avg_kor_alat_rh : '';
+            $valKorRh = $tg->avg_koreksi_rh !== null ? $tg->avg_koreksi_rh : '';
 
             // Isi data ke Excel
             $sheet->setCellValue("D{$row}", $tg->titik_kalibrasi);
             $sheet->setCellValue("H{$row}", $posisi ?? '');
-            $sheet->setCellValue("L{$row}", $avg_tekanan_standar_suhu ?? '');
-            $sheet->setCellValue("O{$row}", $valStandarRh ?? '');
-            $sheet->setCellValue("R{$row}", $avg_penunjuk_alat_suhu ?? '');
-            $sheet->setCellValue("U{$row}", $valAlatRh ?? '');
+            $sheet->setCellValue("L{$row}", $avg_penunjuk_alat_suhu ?? '');
+            $sheet->setCellValue("O{$row}", $valAlatRh ?? '');
+            $sheet->setCellValue("R{$row}", $avg_tekanan_standar_suhu ?? '');
+            $sheet->setCellValue("U{$row}", $valStandarRh ?? '');
             $sheet->setCellValue("X{$row}", round($selisih, 2));
             $sheet->setCellValue("AA{$row}", $valKorRh ?? '');
+
+            if (!$isThermo) {
+                // Merge horizontally for each row
+                $sheet->mergeCells("AD{$row}:AF{$row}");
+                $sheet->mergeCells("AG{$row}:AI{$row}");
+
+                $sheet->setCellValue("AD{$row}", $tg->ketidak_pastian_suhu ?? '');
+                $sheet->setCellValue("AG{$row}", $tg->ketidak_pastian_rh ?? '');
+
+                // Center alignment
+                $sheet->getStyle("AD{$row}:AF{$row}")
+                    ->getAlignment()
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                $sheet->getStyle("AG{$row}:AI{$row}")
+                    ->getAlignment()
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            }
 
             $row++;
         }
@@ -1221,29 +1268,31 @@ class KalibrasiCertificateController extends Controller
                 $sheet->unmergeCells($rangeRh);
             }
 
-            // Merge sesuai panjang titik
-            $sheet->mergeCells($rangeSuhu);
-            $sheet->mergeCells($rangeRh);
+            if ($isThermo) {
+                // Merge sesuai panjang titik
+                $sheet->mergeCells($rangeSuhu);
+                $sheet->mergeCells($rangeRh);
 
-            // Ambil dari first (lebih aman)
-            $sheet->setCellValue("AD{$startRow}", $ketidakpastian_suhu ?? '');
-            $sheet->setCellValue("AG{$startRow}", $ketidakpastian_rh ?? '');
+                // Ambil dari first (lebih aman)
+                $sheet->setCellValue("AD{$startRow}", $ketidakpastian_suhu ?? '');
+                $sheet->setCellValue("AG{$startRow}", $ketidakpastian_rh ?? '');
 
-            // Center alignment
-            $sheet->getStyle($rangeSuhu)
-                ->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                // Center alignment
+                $sheet->getStyle($rangeSuhu)
+                    ->getAlignment()
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
-            $sheet->getStyle($rangeRh)
-                ->getAlignment()
-                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                $sheet->getStyle($rangeRh)
+                    ->getAlignment()
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            }
         }
 
 
-        $baseRow = 62;
-        $nameRow = 66;
+        $baseRow = $isThermo ? 62 : 61;
+        $nameRow = $isThermo ? 66 : 65;
 
         $this->_applyApprovals($sheet, $approvals, $baseRow, $nameRow);
 
@@ -1260,13 +1309,6 @@ class KalibrasiCertificateController extends Controller
 
                 if (empty($oldSeries)) continue;
 
-                $categoryRange = "Sertifikat!\$H\${$rowStart}:\$H\${$rowEnd}"; // Titik kalibrasi (X)
-                $titikKalibrasiRange = "Sertifikat!\$H\${$rowStart}:\$H\${$rowEnd}"; // Titik kalibrasi (X)
-                $alatNaikRange = "Sertifikat!\$L\${$rowStart}:\$L\${$rowEnd}";
-                $alatTurunRange = "Sertifikat!\$O\${$rowStart}:\$O\${$rowEnd}";
-                $standarNaikRange = "Sertifikat!\$R\${$rowStart}:\$R\${$rowEnd}";
-                $standarTurunRange = "Sertifikat!\$U\${$rowStart}:\$U\${$rowEnd}";
-
                 $categoryAxis = [
                     new DataSeriesValues(
                         'String',
@@ -1277,33 +1319,65 @@ class KalibrasiCertificateController extends Controller
                     )
                 ];
 
-                $seriesList = [
-                    [
-                        'label' => '"Titik Kalibrasi"',
-                        'range' => $titikKalibrasiRange,
-                        'order' => [0],
-                    ],
-                    [
-                        'label' => '"Alat Naik"',
-                        'range' => $alatNaikRange,
-                        'order' => [1],
-                    ],
-                    [
-                        'label' => '"Alat Turun"',
-                        'range' => $alatTurunRange,
-                        'order' => [2],
-                    ],
-                    [
-                        'label' => '"Standar Naik"',
-                        'range' => $standarNaikRange,
-                        'order' => [3],
-                    ],
-                    [
-                        'label' => '"Standar Turun"',
-                        'range' => $standarTurunRange,
-                        'order' => [4],
-                    ],
-                ];
+                if (!$isThermo) {
+                    // Temperature chart: 3 series (Titik Kalibrasi, Alat Ukur, Alat Standar)
+                    $titikKalibrasiRange = "Sertifikat!\$D\${$rowStart}:\$D\${$rowEnd}";
+                    $alatUkurRange       = "Sertifikat!\$L\${$rowStart}:\$L\${$rowEnd}";
+                    $alatStandarRange    = "Sertifikat!\$R\${$rowStart}:\$R\${$rowEnd}";
+
+                    $seriesList = [
+                        [
+                            'label' => '"Titik Kalibrasi"',
+                            'range' => $titikKalibrasiRange,
+                            'order' => [0],
+                        ],
+                        [
+                            'label' => '"Alat Ukur"',
+                            'range' => $alatUkurRange,
+                            'order' => [1],
+                        ],
+                        [
+                            'label' => '"Alat Standar"',
+                            'range' => $alatStandarRange,
+                            'order' => [2],
+                        ]
+                    ];
+                } else {
+                    // Thermohygrometer chart: 5 series
+                    $titikKalibrasiRange = "Sertifikat!\$H\${$rowStart}:\$H\${$rowEnd}";
+                    $alatNaikRange       = "Sertifikat!\$L\${$rowStart}:\$L\${$rowEnd}";
+                    $alatTurunRange      = "Sertifikat!\$O\${$rowStart}:\$O\${$rowEnd}";
+                    $standarNaikRange    = "Sertifikat!\$R\${$rowStart}:\$R\${$rowEnd}";
+                    $standarTurunRange   = "Sertifikat!\$U\${$rowStart}:\$U\${$rowEnd}";
+
+                    $seriesList = [
+                        [
+                            'label' => '"Titik Kalibrasi"',
+                            'range' => $titikKalibrasiRange,
+                            'order' => [0],
+                        ],
+                        [
+                            'label' => '"Alat Naik"',
+                            'range' => $alatNaikRange,
+                            'order' => [1],
+                        ],
+                        [
+                            'label' => '"Alat Turun"',
+                            'range' => $alatTurunRange,
+                            'order' => [2],
+                        ],
+                        [
+                            'label' => '"Standar Naik"',
+                            'range' => $standarNaikRange,
+                            'order' => [3],
+                        ],
+                        [
+                            'label' => '"Standar Turun"',
+                            'range' => $standarTurunRange,
+                            'order' => [4],
+                        ],
+                    ];
+                }
 
                 $newSeries = [];
                 foreach ($seriesList as $s) {
@@ -1327,7 +1401,8 @@ class KalibrasiCertificateController extends Controller
             ? \Carbon\Carbon::parse($sertifikat->issued_at)->format('d/m/Y')
             : '-';
 
-        $sheet->setCellValue('X61', "Diterbitkan tanggal : $issuedDate");
+        $dateCell = $isThermo ? 'X61' : 'X60';
+        $sheet->setCellValue($dateCell, "Diterbitkan tanggal : $issuedDate");
 
         return $spreadsheet;
     }

@@ -19,13 +19,13 @@ class KalibrasiThermohygrometerModel extends Model
 
         'avg_penunjuk_alat_suhu',
         'avg_tekanan_standar_suhu',
-        'avg_kor_alat_suhu',
+        'avg_koreksi_suhu',
         'std_deviasi_suhu',
         'ketidak_pastian_suhu',
 
         'avg_penunjuk_alat_rh',
         'avg_tekanan_standar_rh',
-        'avg_kor_alat_rh',
+        'avg_koreksi_rh',
         'std_deviasi_rh',
         'ketidak_pastian_rh',
     ];

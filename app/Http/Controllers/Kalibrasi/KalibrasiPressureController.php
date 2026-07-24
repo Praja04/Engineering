@@ -88,10 +88,10 @@ class KalibrasiPressureController extends Controller
                 $titik = $p['titik_kalibrasi'];
 
                 $alatNaik = collect($p['naik']['alat'])->map(fn($v) => (float)$v);
-                $standarNaik = collect($p['naik']['standar'])->map(fn($v) => (float)$v);
+                $standarNaik = collect($p['naik']['standar'])->map(fn($v) => (float)$v < 1 ? (float)$v * 10 : (float)$v);
 
                 $alatTurun = collect($p['turun']['alat'])->map(fn($v) => (float)$v);
-                $standarTurun = collect($p['turun']['standar'])->map(fn($v) => (float)$v);
+                $standarTurun = collect($p['turun']['standar'])->map(fn($v) => (float)$v < 1 ? (float)$v * 10 : (float)$v);
 
                 $avgAlatNaik = $alatNaik->avg();
                 $avgStandarNaik = $standarNaik->avg();
@@ -103,11 +103,11 @@ class KalibrasiPressureController extends Controller
 
                 $koreksiStandarNaik = 0;
                 $tekananStandarNaik = $avgStandarNaik;
-                $koreksiAlatNaik = $tekananStandarNaik - $avgAlatNaik;
+                $koreksiAlatNaik = $avgStandarNaik - $avgAlatNaik;
 
                 $koreksiStandarTurun = 0;
                 $tekananStandarTurun = $avgStandarTurun;
-                $koreksiAlatTurun = $tekananStandarTurun - $avgAlatTurun;
+                $koreksiAlatTurun = $avgStandarTurun - $avgAlatTurun;
 
                 $ketidakpastianNaik = $staticU['naik'][$index] ?? 0.059872897;
                 $ketidakpastianTurun = $staticU['turun'][$index] ?? 0.059872897;

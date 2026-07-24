@@ -78,8 +78,8 @@ class KalibrasiThermohygrometerController extends Controller
                     $tekananSuhu = ($standarSuhu !== null) ? ($standarSuhu + $koreksiStandarSuhu) : null;
                     $tekananRh   = ($standarRh !== null) ? ($standarRh + $koreksiStandarRh) : null;
 
-                    $koreksiAlatSuhu = ($tekananSuhu !== null && $alatSuhu !== null) ? ($tekananSuhu - $alatSuhu) : null;
-                    $koreksiAlatRh   = ($tekananRh !== null && $alatRh !== null) ? ($tekananRh - $alatRh) : null;
+                    $koreksiSuhu = ($tekananSuhu !== null && $alatSuhu !== null) ? ($tekananSuhu - $alatSuhu) : null;
+                    $koreksiRh   = ($tekananRh !== null && $alatRh !== null) ? ($tekananRh - $alatRh) : null;
 
                     KalibrasiThermohygrometerDetailModel::create([
                         'thermohygro_id' => $thermo->id,
@@ -89,13 +89,13 @@ class KalibrasiThermohygrometerController extends Controller
                         'penunjuk_alat_suhu' => $alatSuhu,
                         'koreksi_standar_suhu' => $koreksiStandarSuhu,
                         'tekanan_standar_suhu' => $tekananSuhu,
-                        'koreksi_alat_suhu' => $koreksiAlatSuhu,
+                        'koreksi_alat_suhu' => $koreksiSuhu,
 
                         'penunjuk_standar_rh' => $standarRh,
                         'penunjuk_alat_rh' => $alatRh,
                         'koreksi_standar_rh' => $koreksiStandarRh,
                         'tekanan_standar_rh' => $tekananRh,
-                        'koreksi_alat_rh' => $koreksiAlatRh,
+                        'koreksi_alat_rh' => $koreksiRh,
                     ]);
 
                     if ($alatSuhu !== null && $tekananSuhu !== null) {
@@ -145,19 +145,36 @@ class KalibrasiThermohygrometerController extends Controller
                     $referensi = round($avgSuhuTekanan); // atau bisa floor/ceil
                 }
 
-                $ketidakpastianSuhu = (count($suhuArr) > 0) ? ($defaultKetidakpastianSuhu[$referensi] ?? 0.44461) : null;
-                $ketidakpastianRh   = (count($rhArr) > 0) ? ($defaultKetidakpastianRh[$referensi] ?? 2.74458) : null;
+                $isThermo = count($rhArr) > 0;
+
+                if (!$isThermo) {
+                    $refFloat = ($referensi !== null) ? (float)$referensi : null;
+                    $ketidakpastianSuhu = null;
+                    if ($refFloat !== null) {
+                        $ketidakpastianSuhu = match ($refFloat) {
+                            30.0 => 1.28740,
+                            39.6, 39.8 => 1.18141,
+                            default => 1.15778,
+                        };
+                    } elseif (count($suhuArr) > 0) {
+                        $ketidakpastianSuhu = 1.15778;
+                    }
+                    $ketidakpastianRh = null;
+                } else {
+                    $ketidakpastianSuhu = (count($suhuArr) > 0) ? ($defaultKetidakpastianSuhu[$referensi] ?? 0.44461) : null;
+                    $ketidakpastianRh   = (count($rhArr) > 0) ? ($defaultKetidakpastianRh[$referensi] ?? 2.74458) : null;
+                }
 
                 $thermo->update([
                     'avg_penunjuk_alat_suhu' => $avgSuhuAlat,
                     'avg_tekanan_standar_suhu' => $avgSuhuTekanan,
-                    'avg_kor_alat_suhu' => ($avgSuhuTekanan !== null && $avgSuhuAlat !== null) ? ($avgSuhuTekanan - $avgSuhuAlat) : null,
+                    'avg_koreksi_suhu' => ($avgSuhuTekanan !== null && $avgSuhuAlat !== null) ? ($avgSuhuTekanan - $avgSuhuAlat) : null,
                     'std_deviasi_suhu' => $std($suhuArr, 'tekanan'),
                     'ketidak_pastian_suhu' => $ketidakpastianSuhu,
 
                     'avg_penunjuk_alat_rh' => $avgRhAlat,
                     'avg_tekanan_standar_rh' => $avgRhTekanan,
-                    'avg_kor_alat_rh' => ($avgRhTekanan !== null && $avgRhAlat !== null) ? ($avgRhTekanan - $avgRhAlat) : null,
+                    'avg_koreksi_rh' => ($avgRhTekanan !== null && $avgRhAlat !== null) ? ($avgRhTekanan - $avgRhAlat) : null,
                     'std_deviasi_rh' => $std($rhArr, 'tekanan'),
                     'ketidak_pastian_rh' => $ketidakpastianRh,
                 ]);
