@@ -66,6 +66,7 @@ Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
         Route::get('/approval/detail/{id}', [KalibrasiController::class, 'detail'])->name('kalibrasi.certificate.download');
         Route::post('/approval/approve/{id}', [KalibrasiCertificateController::class, 'approve'])->name('approval.approve');
         Route::post('/approval/mass-approve', [KalibrasiCertificateController::class, 'massApprove'])->name('approval.mass-approve');
+        Route::post('/approval/mass-reject', [KalibrasiCertificateController::class, 'massReject'])->name('approval.mass-reject');
         Route::post('/approval/reject/{id}', [KalibrasiCertificateController::class, 'reject'])->name('approval.reject');
 
         // Pressure Routes

@@ -98,7 +98,7 @@ class KalibrasiModel extends Model
             'pressure' => ['pressure'],
             'temperature' => ['temperature'],
             'volumetrik' => ['volumetrik'],
-            'thermohygrometer' => ['thermohygrometer'],
+            'thermohygrometer' => ['thermohygrometer', 'temperature'],
             'jangka_sorong' => ['jangkaSorong', 'jangkaSorongSummary'],
             'timbangan' => [
                 'kemampuanUlang',
@@ -127,14 +127,9 @@ class KalibrasiModel extends Model
         switch (strtolower($this->jenis_kalibrasi)) {
             case 'pressure':
                 if ($this->pressure->isNotEmpty()) {
-                    $naik = $this->pressure->max('avg_koreksi_alat_naik') ?? 0;
-                    $turun = $this->pressure->max('avg_koreksi_alat_turun') ?? 0;
-                    $maxKoreksi = max(abs($naik), abs($turun));
-                }
-                break;
-            case 'temperature':
-                if ($this->temperature->isNotEmpty()) {
-                    $maxKoreksi = $this->temperature->map(fn($i) => abs($i->avg_kor_alat))->max() ?? 0;
+                    $maxNaik = $this->pressure->map(fn($i) => abs($i->avg_koreksi_alat_naik))->max() ?? 0;
+                    $maxTurun = $this->pressure->map(fn($i) => abs($i->avg_koreksi_alat_turun))->max() ?? 0;
+                    $maxKoreksi = max($maxNaik, $maxTurun);
                 }
                 break;
             case 'volumetrik':
@@ -144,9 +139,18 @@ class KalibrasiModel extends Model
                 break;
             case 'thermohygrometer':
                 if ($this->thermohygrometer->isNotEmpty()) {
-                    $suhu = $this->thermohygrometer->map(fn($i) => abs($i->avg_kor_alat_suhu))->max() ?? 0;
-                    $rh = $this->thermohygrometer->map(fn($i) => abs($i->avg_kor_alat_rh))->max() ?? 0;
+                    $suhu = $this->thermohygrometer->map(fn($i) => abs($i->avg_koreksi_suhu))->max() ?? 0;
+                    $rh = $this->thermohygrometer->map(fn($i) => abs($i->avg_koreksi_rh))->max() ?? 0;
                     $maxKoreksi = max($suhu, $rh);
+                }
+                break;
+            case 'temperature':
+                if ($this->thermohygrometer->isNotEmpty()) {
+                    $suhu = $this->thermohygrometer->map(fn($i) => abs($i->avg_koreksi_suhu))->max() ?? 0;
+                    $rh = $this->thermohygrometer->map(fn($i) => abs($i->avg_koreksi_rh))->max() ?? 0;
+                    $maxKoreksi = max($suhu, $rh);
+                } elseif ($this->temperature->isNotEmpty()) {
+                    $maxKoreksi = $this->temperature->map(fn($i) => abs($i->avg_kor_alat))->max() ?? 0;
                 }
                 break;
             case 'jangka_sorong':

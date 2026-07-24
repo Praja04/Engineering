@@ -416,19 +416,23 @@
                 sertifikatId = $(this).data('id');
                 console.log(sertifikatId);
                 $('#sertifikatId').val(sertifikatId);
-                const $btn = $('.req-approval-btn');
+                const $btn = $(this);
 
                 $btn.prop('disabled', true)
                     .html(
                         '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Loading...'
                     );
 
+                loadApproverData(sertifikatId, $btn);
+            });
+
+            function loadApproverData(id, $btn) {
                 // load approver dari server
                 $.ajax({
                     url: `{{ url('api/kalibrasi/approvals/data') }}`, // endpoint untuk ambil daftar approver
                     type: 'GET',
                     data: {
-                        id: sertifikatId
+                        id: id
                     },
                     success: function(res) {
                         let managerOptions =
@@ -484,7 +488,7 @@
                             );
                     }
                 });
-            });
+            }
 
             // Submit form approval
             $('#approvalForm').on('submit', function(e) {
@@ -565,14 +569,34 @@
                             app.status === 'read' ? 'bg-info' :
                             'bg-warning';
 
+                        const formattedActionAt = app.action_at ? 
+                            new Date(app.action_at).toLocaleString('id-ID', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) : '-';
+
                         html += `
-                            <div class="border rounded p-3 mb-2">
-                                <div class="d-flex justify-content-between">
-                                    <strong>${app.approver?.username ?? app.approver_email}</strong>
-                                    <span class="badge ${badgeClass} text-uppercase">${app.status}</span>
+                            <div class="border rounded p-3 mb-2 shadow-sm bg-white">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold fs-6">${app.approver?.username ?? '-'}</span>
+                                    <span class="badge ${badgeClass} text-uppercase px-2 py-1">${app.status}</span>
                                 </div>
-                                <div class="text-muted small mt-1">
-                                    ${app.comment ?? 'No Comment'}
+                                <div class="row text-muted small mb-2">
+                                    <div class="col-6">
+                                        <div><span class="text-secondary">Level:</span> <strong class="text-dark">${app.level ?? '-'}</strong></div>
+                                        <div><span class="text-secondary">Role:</span> <strong class="text-dark">${app.role ?? '-'}</strong></div>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <div><span class="text-secondary">Action At:</span></div>
+                                        <div class="fw-semibold text-dark">${formattedActionAt}</div>
+                                    </div>
+                                </div>
+                                <div class="text-muted small pt-2 border-top">
+                                    <span class="text-secondary d-block">Catatan:</span>
+                                    <span class="text-dark">${app.catatan ?? '-'}</span>
                                 </div>
                             </div>
                         `;

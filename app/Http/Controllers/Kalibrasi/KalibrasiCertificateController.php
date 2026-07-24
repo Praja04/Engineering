@@ -402,11 +402,84 @@ class KalibrasiCertificateController extends Controller
         }
     }
 
+    public function massReject(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:cal_approvals,id',
+            'catatan' => 'nullable|string',
+        ]);
+
+        $ids = $request->ids;
+        $userId = Auth::id();
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($ids as $id) {
+                $approval = KalibrasiApprovalModel::findOrFail($id);
+
+                // Pastikan yang reject adalah approver yang benar
+                if ($approval->approver_id !== $userId) {
+                    continue;
+                }
+
+                // Cek apakah sudah pernah diproses
+                if ($approval->status !== 'pending') {
+                    continue;
+                }
+
+                // CEK LEVEL LOCKING
+                $lowerLevelPending = KalibrasiApprovalModel::where('sertifikat_id', $approval->sertifikat_id)
+                    ->where('level', '<', $approval->level)
+                    ->where('status', '!=', 'approved')
+                    ->exists();
+
+                if ($lowerLevelPending) {
+                    continue; // Skip jika level di bawahnya belum di-approve
+                }
+
+                // Update approval
+                $approval->update([
+                    'status'    => 'rejected',
+                    'catatan'   => $request->catatan ?? null,
+                    'action_at' => now(),
+                    'action_by' => $userId,
+                ]);
+
+                $sertifikat = $approval->sertifikat;
+
+                NotificationsModel::whereIn('notifiable_type', [KalibrasiSertifikatModel::class, KalibrasiApprovalModel::class])
+                    ->where('notifiable_id', $sertifikat->id)
+                    ->where('user_id', $userId)
+                    ->delete();
+
+                // Kalau ada yang reject → sertifikat langsung rejected
+                $sertifikat->update([
+                    'status' => 'rejected'
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Semua data terpilih berhasil ditolak.'
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function showApprovalPage()
     {
         $user = Auth::user();
 
-        $approvals = KalibrasiApprovalModel::with([
+        $query = KalibrasiApprovalModel::with([
             'sertifikat.kalibrasi.alat',
             'approver',
         ])
@@ -423,8 +496,15 @@ class KalibrasiCertificateController extends Controller
                     ->where('sub.status', '!=', 'approved');
             })
             ->orderBy('level')
-            ->orderBy('created_at')
-            ->get();
+            ->orderBy('created_at');
+
+        if ($user->departemen && !in_array(strtolower($user->departemen), ['engineering', 'admin'])) {
+            $query->whereHas('sertifikat.kalibrasi.alat', function ($q) use ($user) {
+                $q->where('departemen_pemilik', $user->departemen);
+            });
+        }
+
+        $approvals = $query->get();
 
         $ttdPath = $this->resolveTtdPath($user);
 
@@ -452,6 +532,13 @@ class KalibrasiCertificateController extends Controller
                         ->whereColumn('sub.level', '<', 'cal_approvals.level')
                         ->where('sub.status', '!=', 'approved');
                 });
+
+            $user = Auth::user();
+            if ($user->departemen && !in_array(strtolower($user->departemen), ['engineering', 'admin'])) {
+                $query->whereHas('sertifikat.kalibrasi.alat', function ($q) use ($user) {
+                    $q->where('departemen_pemilik', $user->departemen);
+                });
+            }
 
             // 🔹 Filter opsional dari frontend
             if ($request->filled('tanggal')) {
@@ -510,7 +597,7 @@ class KalibrasiCertificateController extends Controller
                 'jenis_kalibrasi'
             )
                 ->with([
-                    'alat:id,kode_alat,nama_alat',
+                    'alat:id,kode_alat,nama_alat,departemen_pemilik',
                     'certificate' => function ($q) {
                         $q->select('id', 'kalibrasi_id', 'status')
                             ->with([
@@ -521,13 +608,21 @@ class KalibrasiCertificateController extends Controller
                                         'approver_id',
                                         'status',
                                         'catatan',
-                                        'action_at'
+                                        'action_at',
+                                        'level',
+                                        'role'
                                     )->with(['approver:id,username']);
                                 }
                             ]);
                     },
                 ])
                 ->whereHas('certificate');
+
+            if ($user->departemen && !in_array(strtolower($user->departemen), ['engineering', 'admin'])) {
+                $query->whereHas('alat', function ($q) use ($user) {
+                    $q->where('departemen_pemilik', $user->departemen);
+                });
+            }
 
             if (!empty($tanggal)) {
                 $query->whereDate('tgl_kalibrasi', $tanggal);
@@ -2127,7 +2222,7 @@ class KalibrasiCertificateController extends Controller
 
                 $drawing = new Drawing();
                 $drawing->setPath($finalPath);
-                $drawing->setHeight($isDummy ? 70 : 100);
+                $drawing->setHeight($isDummy ? 70 : 70);
                 $drawing->setCoordinates($startColLetter . $baseRow);
                 $drawing->setOffsetX($isDummy ? 30 : 15);
                 $drawing->setOffsetY(5);
@@ -2139,7 +2234,7 @@ class KalibrasiCertificateController extends Controller
             // === Nama approver di bawah tanda tangan ===
             $approverName = strtoupper($approval['approver_name'] ?? '-'); // kapital semua
             $sheet->mergeCells($nameRange);
-            $sheet->setCellValue($col . $nameRow, '( ' . $approverName . ' )');
+            $sheet->setCellValue($col . $nameRow, $approverName);
             $sheet->getStyle($nameRange)->getAlignment()
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                 ->setVertical(Alignment::VERTICAL_CENTER);

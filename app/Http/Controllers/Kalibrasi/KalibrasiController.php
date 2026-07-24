@@ -618,8 +618,26 @@ class KalibrasiController extends Controller
 
     public function getDataSticker(Request $request)
     {
-        $query = KalibrasiSertifikatModel::with(['kalibrasi.alat', 'kalibrasi.user'])
+        $query = KalibrasiSertifikatModel::with([
+            'kalibrasi.alat',
+            'kalibrasi.user',
+            'kalibrasi.pressure',
+            'kalibrasi.temperature',
+            'kalibrasi.volumetrik',
+            'kalibrasi.thermohygrometer',
+            'kalibrasi.jangkaSorong',
+            'kalibrasi.instrumen',
+            'kalibrasi.dimensi',
+            'kalibrasi.keseragamanSkala'
+        ])
             ->where('status', '!=', 'rejected');
+
+        $user = Auth::user();
+        if ($user->departemen && !in_array(strtolower($user->departemen), ['engineering', 'admin'])) {
+            $query->whereHas('kalibrasi.alat', function ($q) use ($user) {
+                $q->where('departemen_pemilik', $user->departemen);
+            });
+        }
 
         // Filter kode alat
         if ($request->kode_alat) {
@@ -637,6 +655,12 @@ class KalibrasiController extends Controller
 
         $data = $query->orderBy('created_at', 'desc')
             ->paginate(15);
+
+        // Append max_koreksi to each item in collection
+        $data->getCollection()->transform(function ($item) {
+            $item->max_koreksi = $item->kalibrasi ? $item->kalibrasi->getMaxKoreksi() : 0;
+            return $item;
+        });
 
         return response()->json($data);
     }

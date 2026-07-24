@@ -4,22 +4,74 @@
 
 @section('styles')
     <style>
+        #btnSelectAll {
+            min-width: 180px;
+            transition: all 0.3s ease;
+        }
 
+        .btn-mass-action {
+            transition: opacity 0.3s ease, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease, margin 0.3s ease, border-color 0.3s ease;
+            opacity: 0;
+            max-width: 0;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            border-left-width: 0 !important;
+            border-right-width: 0 !important;
+            overflow: hidden;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-mass-action.show {
+            opacity: 1;
+            max-width: 180px;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            border-left-width: 1px !important;
+            border-right-width: 1px !important;
+        }
     </style>
 @endsection
 
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
-            <div class="card shadow-sm rounded-3 mb-4" data-aos="fade-up">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="fw-bold mb-0">Approval Kalibrasi</h4>
-                        <p class="card-subtitle mb-0">Approval untuk approver terkait data kalibrasi</p>
+            <!-- Page Header -->
+            <div class="row ">
+                <div class="col-12">
+                    <div class="page-title-box d-flex align-items-center justify-content-between">
+                        <h4 class="mb-0">Approval Kalibrasi</h4>
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="#">Kalibrasi</a></li>
+                                <li class="breadcrumb-item active">Approval Kalibrasi</li>
+                            </ol>
+                        </div>
                     </div>
-                    <button id="btnMassApprove" class="btn btn-success shadow-sm" style="display: none;">
-                        <i class="mdi mdi-check-all"></i> Approve Terpilih
-                    </button>
+                </div>
+            </div>
+
+            <div class="card shadow-sm rounded-3 mb-4" data-aos="fade-up">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h4 class="fw-bold mb-2">List Sertifikat Kalibrasi</h4>
+                        <p class="card-subtitle mb-0">Approval untuk approver terkait data sertifikat kalibrasi</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        @if ($approvals->isNotEmpty())
+                            <button id="btnSelectAll" class="btn btn-outline-primary shadow-sm" type="button">
+                                <i class="mdi mdi-checkbox-multiple-marked-outline me-1"></i> Pilih Semua
+                            </button>
+                            <button id="btnMassApprove" class="btn btn-success shadow-sm btn-mass-action" type="button">
+                                <i class="mdi mdi-check-all me-1"></i> Approve Terpilih
+                            </button>
+                            <button id="btnMassReject" class="btn btn-danger shadow-sm btn-mass-action" type="button">
+                                <i class="mdi mdi-close-box-multiple me-1"></i> Reject Terpilih
+                            </button>
+                        @endif
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -273,27 +325,64 @@
                 });
             }
 
+            // Toggle Select All
+            let allSelected = false;
+            $('#btnSelectAll').on('click', function() {
+                allSelected = !allSelected;
+                $('.checkItem').prop('checked', allSelected);
+                $('#checkAll').prop('checked', allSelected);
+
+                if (allSelected) {
+                    $(this).html(
+                        '<i class="mdi mdi-checkbox-multiple-blank-outline me-1"></i> Batal Pilih Semua'
+                    );
+                } else {
+                    $(this).html(
+                        '<i class="mdi mdi-checkbox-multiple-marked-outline me-1"></i> Pilih Semua');
+                }
+                toggleMassActions();
+            });
+
             // Checkbox logic
             $('#checkAll').on('change', function() {
                 $('.checkItem').prop('checked', this.checked);
-                toggleMassApproveButton();
+                allSelected = this.checked;
+                if (allSelected) {
+                    $('#btnSelectAll').html(
+                        '<i class="mdi mdi-checkbox-multiple-blank-outline me-1"></i> Batal Pilih Semua'
+                    );
+                } else {
+                    $('#btnSelectAll').html(
+                        '<i class="mdi mdi-checkbox-multiple-marked-outline me-1"></i> Pilih Semua');
+                }
+                toggleMassActions();
             });
 
             $(document).on('change', '.checkItem', function() {
-                if ($('.checkItem:checked').length === $('.checkItem').length) {
+                const checkedCount = $('.checkItem:checked').length;
+                const totalCount = $('.checkItem').length;
+
+                if (checkedCount === totalCount) {
                     $('#checkAll').prop('checked', true);
+                    allSelected = true;
+                    $('#btnSelectAll').html(
+                        '<i class="mdi mdi-checkbox-multiple-blank-outline me-1"></i> Batal Pilih Semua'
+                    );
                 } else {
                     $('#checkAll').prop('checked', false);
+                    allSelected = false;
+                    $('#btnSelectAll').html(
+                        '<i class="mdi mdi-checkbox-multiple-marked-outline me-1"></i> Pilih Semua');
                 }
-                toggleMassApproveButton();
+                toggleMassActions();
             });
 
-            function toggleMassApproveButton() {
+            function toggleMassActions() {
                 const checkedCount = $('.checkItem:checked').length;
                 if (checkedCount > 0) {
-                    $('#btnMassApprove').fadeIn();
+                    $('#btnMassApprove, #btnMassReject').addClass('show');
                 } else {
-                    $('#btnMassApprove').fadeOut();
+                    $('#btnMassApprove, #btnMassReject').removeClass('show');
                 }
             }
 
@@ -332,6 +421,59 @@
                         },
                         error: function(xhr) {
                             let errorMsg = 'Gagal memproses mass approval';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                            Swal.fire('Error', errorMsg, 'error');
+                        }
+                    });
+                });
+            });
+
+            $('#btnMassReject').on('click', function() {
+                const ids = $('.checkItem:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                Swal.fire({
+                    title: 'Reject semua data terpilih?',
+                    text: `Anda akan menolak ${ids.length} data kalibrasi sekaligus.`,
+                    input: 'textarea',
+                    inputLabel: 'Catatan penolakan massal',
+                    inputPlaceholder: 'Masukkan alasan reject terpilih...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Reject',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    preConfirm: (catatan) => {
+                        if (!catatan) {
+                            Swal.showValidationMessage('Catatan wajib diisi');
+                        }
+                        return catatan;
+                    }
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+
+                    $.ajax({
+                        url: "{{ route('approval.mass-reject') }}",
+                        type: 'POST',
+                        data: {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            ids: ids,
+                            catatan: result.value
+                        },
+                        success: function(res) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Selesai!',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        },
+                        error: function(xhr) {
+                            let errorMsg = 'Gagal memproses mass reject';
                             if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMsg = xhr.responseJSON.message;
                             }
