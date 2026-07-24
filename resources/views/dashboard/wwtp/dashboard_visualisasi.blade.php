@@ -223,6 +223,9 @@
                                         dan formula perhitungan removal.</p>
                                 </div>
                                 <div class="col-12 col-md-auto d-flex align-items-center gap-2">
+                                    <button id="btn-play-pause" class="btn btn-warning gap-1 d-flex align-items-center me-2">
+                                        <i class="mdi mdi-play"></i> <span>Auto Play</span>
+                                    </button>
                                     <label class="text-white small text-nowrap mb-0" for="filter_tanggal">Pilih
                                         Tanggal:</label>
                                     <input type="date" id="filter_tanggal" class="form-control custom-date-input"
@@ -700,6 +703,14 @@
 
                 let unit = $(this).data('unit');
                 showInspectionDetails(unit);
+
+                // Sync index with manual click
+                if (typeof unitSequence !== 'undefined') {
+                    let idx = unitSequence.indexOf(unit);
+                    if (idx !== -1) {
+                        currentRotationIndex = idx;
+                    }
+                }
             });
 
             // Show details in the right-side inspect panel
@@ -1173,6 +1184,62 @@
                 $('#inspect-title').html(title + " " + (badge ? "<br>" + badge : ""));
                 $('#inspect-content').html(html);
             }
+
+            // Auto Rotation Logic
+            const unitSequence = [
+                'pit_garam',
+                'buffer_pit_garam',
+                'pit_sparta',
+                'step3',
+                'equalisasi',
+                'anaerob',
+                'aerob',
+                'pit_domestik',
+                'lumpur_aktif',
+                'daf',
+                'sandfilter',
+                'outlet',
+                'drain_lumpur',
+                'screwpress',
+                'ibc_tank',
+                'pengangkutan_sludge'
+            ];
+
+            let rotationInterval = null;
+            let currentRotationIndex = 4; // Start at equalisasi
+
+            function startRotation() {
+                if (rotationInterval) clearInterval(rotationInterval);
+                $('#btn-play-pause').html('<i class="mdi mdi-pause"></i> <span>Pause Auto</span>');
+                $('#btn-play-pause').removeClass('btn-warning').addClass('btn-outline-warning');
+
+                rotationInterval = setInterval(function() {
+                    currentRotationIndex = (currentRotationIndex + 1) % unitSequence.length;
+                    let targetUnit = unitSequence[currentRotationIndex];
+                    let nodeEl = $('#node-' + targetUnit);
+                    if (nodeEl.length) {
+                        nodeEl.trigger('click');
+                    }
+                }, 10000); // 10 seconds
+            }
+
+            function stopRotation() {
+                if (rotationInterval) {
+                    clearInterval(rotationInterval);
+                    rotationInterval = null;
+                }
+                $('#btn-play-pause').html('<i class="mdi mdi-play"></i> <span>Auto Play</span>');
+                $('#btn-play-pause').removeClass('btn-outline-warning').addClass('btn-warning');
+            }
+
+            // Play / Pause button click
+            $('#btn-play-pause').click(function() {
+                if (rotationInterval) {
+                    stopRotation();
+                } else {
+                    startRotation();
+                }
+            });
 
             // Initially load data
             loadVisualData();
