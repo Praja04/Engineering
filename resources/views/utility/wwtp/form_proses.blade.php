@@ -144,7 +144,7 @@
                                                 <label for="daily_debit1" class="form-label fw-semibold">
                                                     Debit 1 <span class="text-danger">*</span>
                                                 </label>
-                                                <input type="number" class="form-control" id="daily_debit1" name="debit1"
+                                                <input type="number" step="0.01" class="form-control" id="daily_debit1" name="debit1"
                                                     required>
                                                 <div class="form-text">Debit air masuk (m³/h)</div>
                                             </div>
@@ -152,7 +152,7 @@
                                                 <label for="daily_debit2" class="form-label fw-semibold">
                                                     Debit 2 <span class="text-danger">*</span>
                                                 </label>
-                                                <input type="number" class="form-control" id="daily_debit2" name="debit2"
+                                                <input type="number" step="0.01" class="form-control" id="daily_debit2" name="debit2"
                                                     required>
                                                 <div class="form-text">Debit air masuk (m³/h)</div>
                                             </div>
