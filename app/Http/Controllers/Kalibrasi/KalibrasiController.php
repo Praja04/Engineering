@@ -633,7 +633,10 @@ class KalibrasiController extends Controller
             ->where('status', '!=', 'rejected');
 
         $user = Auth::user();
-        if ($user->departemen && !in_array(strtolower($user->departemen), ['engineering', 'admin'])) {
+        $isEngineeringOrAdmin = ($user->departemen && strtolower($user->departemen) === 'engineering')
+            || ($user->jabatan && in_array(strtolower($user->jabatan), ['admin', 'superadmin']));
+
+        if (!$isEngineeringOrAdmin) {
             $query->whereHas('kalibrasi.alat', function ($q) use ($user) {
                 $q->where('departemen_pemilik', $user->departemen);
             });
