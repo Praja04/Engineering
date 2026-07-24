@@ -158,8 +158,14 @@
                                         </div>
                                         <div style="width: 150px;">
                                             <div class="input-group input-group-sm">
-                                                <input type="number" step="0.01" class="form-control" name="' . $fieldName . '" id="edit_' . $fieldName . '" placeholder="0.00">
-                                                ' . $unitAddon . '
+                                                <input type="number" step="0.01" class="form-control" name="' .
+                                        $fieldName .
+                                        '" id="edit_' .
+                                        $fieldName .
+                                        '" placeholder="0.00">
+                                                ' .
+                                        $unitAddon .
+                                        '
                                             </div>
                                         </div>
                                     </div>
@@ -183,7 +189,6 @@
                                     {!! renderAnalisisEditChecklistItem('ph_depo_lt2', 'Masukkan pH Depo Lt.2', 'pH') !!}
                                     {!! renderAnalisisEditChecklistItem('ph_cooling_tower', 'Masukkan pH Cooling Tower', 'pH') !!}
                                     {!! renderAnalisisEditChecklistItem('ph_boiler', 'Masukkan pH Boiler', 'pH') !!}
-                                    {!! renderAnalisisEditChecklistItem('ph_outlet_ws_2', 'Masukkan pH Outlet WS (2)', 'pH') !!}
                                 </div>
 
                                 <div class="card border-0 bg-light p-3 mb-3">
@@ -195,7 +200,11 @@
                                     {!! renderAnalisisEditChecklistItem('chlorine_menara', 'Masukkan Chlorine Menara', 'ppm') !!}
                                     {!! renderAnalisisEditChecklistItem('chlorine_depo_lt1', 'Masukkan Chlorine Depo LT.1', 'ppm') !!}
                                     {!! renderAnalisisEditChecklistItem('chlorine_depo_lt2', 'Masukkan Chlorine Depo LT.2', 'ppm') !!}
-                                    {!! renderAnalisisEditChecklistItem('chlorine_daily_tank_dissolver', 'Masukkan Chlorine Daily Tank Dissolver', 'ppm') !!}
+                                    {!! renderAnalisisEditChecklistItem(
+                                        'chlorine_daily_tank_dissolver',
+                                        'Masukkan Chlorine Daily Tank Dissolver',
+                                        'ppm',
+                                    ) !!}
                                 </div>
                             </div>
 
@@ -296,7 +305,8 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title text-white"><i class="ri-file-excel-2-line me-1"></i> Export Excel Analisis Utility
+                    <h5 class="modal-title text-white"><i class="ri-file-excel-2-line me-1"></i> Export Excel Analisis
+                        Utility
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
@@ -338,53 +348,192 @@
         const API_URL = "{{ route('analisis-utility.get-data') }}";
         let currentPage = 1;
 
-        const FIELDS_PH = [
-            { field: 'ph_fw_storage', label: 'Masukkan pH FW Storage', unit: 'pH' },
-            { field: 'ph_ws_storage', label: 'Masukkan pH WS Storage', unit: 'pH' },
-            { field: 'ph_ro_storage', label: 'Masukkan pH RO Storage', unit: 'pH' },
-            { field: 'ph_in_mmf', label: 'Masukkan pH In MMF', unit: 'pH' },
-            { field: 'ph_buffer_tank_ws', label: 'Masukkan pH Buffer Tank WS', unit: 'pH' },
-            { field: 'ph_outlet_ws', label: 'Masukkan pH Outlet WS', unit: 'pH' },
-            { field: 'ph_menara_ws', label: 'Masukkan pH Menara WS', unit: 'pH' },
-            { field: 'ph_depo_lt1', label: 'Masukkan pH Depo Lt.1', unit: 'pH' },
-            { field: 'ph_depo_lt2', label: 'Masukkan pH Depo Lt.2', unit: 'pH' },
-            { field: 'ph_cooling_tower', label: 'Masukkan pH Cooling Tower', unit: 'pH' },
-            { field: 'ph_boiler', label: 'Masukkan pH Boiler', unit: 'pH' },
-            { field: 'ph_outlet_ws_2', label: 'Masukkan pH Outlet WS (2)', unit: 'pH' }
+        const FIELDS_PH = [{
+                field: 'ph_fw_storage',
+                label: 'Masukkan pH FW Storage',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_ws_storage',
+                label: 'Masukkan pH WS Storage',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_ro_storage',
+                label: 'Masukkan pH RO Storage',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_in_mmf',
+                label: 'Masukkan pH In MMF',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_buffer_tank_ws',
+                label: 'Masukkan pH Buffer Tank WS',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_outlet_ws',
+                label: 'Masukkan pH Outlet WS',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_menara_ws',
+                label: 'Masukkan pH Menara WS',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_depo_lt1',
+                label: 'Masukkan pH Depo Lt.1',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_depo_lt2',
+                label: 'Masukkan pH Depo Lt.2',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_cooling_tower',
+                label: 'Masukkan pH Cooling Tower',
+                unit: 'pH'
+            },
+            {
+                field: 'ph_boiler',
+                label: 'Masukkan pH Boiler',
+                unit: 'pH'
+            },
         ];
 
-        const FIELDS_TDS = [
-            { field: 'tds_fw_storage', label: 'Masukkan TDS FW Storage', unit: 'ppm' },
-            { field: 'tds_ws_storage', label: 'Masukkan TDS WS Storage', unit: 'ppm' },
-            { field: 'tds_ro_storage', label: 'Masukkan TDS RO Storage', unit: 'ppm' },
-            { field: 'tds_in_mmf', label: 'Masukkan TDS In MMF', unit: 'ppm' },
-            { field: 'tds_out_ro', label: 'Masukkan TDS Out RO', unit: 'ppm' },
-            { field: 'tds_menara_ws', label: 'Masukkan TDS menara WS', unit: 'ppm' },
-            { field: 'tds_daily_tank_dissolver', label: 'Masukkan TDS daily Tank dissolver', unit: 'ppm' },
-            { field: 'tds_depo_lt1', label: 'Masukkan TDS Depo Lt.1', unit: 'ppm' },
-            { field: 'tds_depo_lt2', label: 'Masukkan TDS Depo Lt.2', unit: 'ppm' },
-            { field: 'tds_cooling_tower', label: 'Masukkan TDS Cooling Tower', unit: 'ppm' },
-            { field: 'tds_boiler', label: 'Masukkan TDS Boiler', unit: 'ppm' }
+        const FIELDS_TDS = [{
+                field: 'tds_fw_storage',
+                label: 'Masukkan TDS FW Storage',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_ws_storage',
+                label: 'Masukkan TDS WS Storage',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_ro_storage',
+                label: 'Masukkan TDS RO Storage',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_in_mmf',
+                label: 'Masukkan TDS In MMF',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_out_ro',
+                label: 'Masukkan TDS Out RO',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_menara_ws',
+                label: 'Masukkan TDS menara WS',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_daily_tank_dissolver',
+                label: 'Masukkan TDS daily Tank dissolver',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_depo_lt1',
+                label: 'Masukkan TDS Depo Lt.1',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_depo_lt2',
+                label: 'Masukkan TDS Depo Lt.2',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_cooling_tower',
+                label: 'Masukkan TDS Cooling Tower',
+                unit: 'ppm'
+            },
+            {
+                field: 'tds_boiler',
+                label: 'Masukkan TDS Boiler',
+                unit: 'ppm'
+            }
         ];
 
-        const FIELDS_TURB_CHLOR = [
-            { field: 'turbidity_in_mmf', label: 'Masukkan Turbidity IN MMF', unit: 'NTU' },
-            { field: 'turbidity_out_mmf', label: 'Masukkan Turbidity Out MMF', unit: 'NTU' },
-            { field: 'turbidity_cooling_tower', label: 'Masukkan Turbidity Cooling Tower', unit: 'NTU' },
-            { field: 'chlorine_mmf', label: 'Masukkan Chlorine MMF', unit: 'ppm' },
-            { field: 'chlorine_menara', label: 'Masukkan Chlorine Menara', unit: 'ppm' },
-            { field: 'chlorine_depo_lt1', label: 'Masukkan Chlorine Depo LT.1', unit: 'ppm' },
-            { field: 'chlorine_depo_lt2', label: 'Masukkan Chlorine Depo LT.2', unit: 'ppm' },
-            { field: 'chlorine_daily_tank_dissolver', label: 'Masukkan Chlorine Daily Tank Dissolver', unit: 'ppm' }
+        const FIELDS_TURB_CHLOR = [{
+                field: 'turbidity_in_mmf',
+                label: 'Masukkan Turbidity IN MMF',
+                unit: 'NTU'
+            },
+            {
+                field: 'turbidity_out_mmf',
+                label: 'Masukkan Turbidity Out MMF',
+                unit: 'NTU'
+            },
+            {
+                field: 'turbidity_cooling_tower',
+                label: 'Masukkan Turbidity Cooling Tower',
+                unit: 'NTU'
+            },
+            {
+                field: 'chlorine_mmf',
+                label: 'Masukkan Chlorine MMF',
+                unit: 'ppm'
+            },
+            {
+                field: 'chlorine_menara',
+                label: 'Masukkan Chlorine Menara',
+                unit: 'ppm'
+            },
+            {
+                field: 'chlorine_depo_lt1',
+                label: 'Masukkan Chlorine Depo LT.1',
+                unit: 'ppm'
+            },
+            {
+                field: 'chlorine_depo_lt2',
+                label: 'Masukkan Chlorine Depo LT.2',
+                unit: 'ppm'
+            },
+            {
+                field: 'chlorine_daily_tank_dissolver',
+                label: 'Masukkan Chlorine Daily Tank Dissolver',
+                unit: 'ppm'
+            }
         ];
 
-        const FIELDS_HARDNESS = [
-            { field: 'hardness_inlet_ws', label: 'Masukkan hardness Inlet WS', unit: 'ppm' },
-            { field: 'hardness_outlet_ws', label: 'Masukkan hardness Outlet WS', unit: 'ppm' },
-            { field: 'hardness_ws_storage', label: 'Masukkan hardness WS Storage', unit: 'ppm' },
-            { field: 'hardness_ct', label: 'Masukkan hardness CT', unit: 'ppm' },
-            { field: 'hardness_ro', label: 'Masukkan hardness RO', unit: 'ppm' },
-            { field: 'hardness_boiler', label: 'Masukkan hardness Boiler', unit: 'ppm' }
+        const FIELDS_HARDNESS = [{
+                field: 'hardness_inlet_ws',
+                label: 'Masukkan hardness Inlet WS',
+                unit: 'ppm'
+            },
+            {
+                field: 'hardness_outlet_ws',
+                label: 'Masukkan hardness Outlet WS',
+                unit: 'ppm'
+            },
+            {
+                field: 'hardness_ws_storage',
+                label: 'Masukkan hardness WS Storage',
+                unit: 'ppm'
+            },
+            {
+                field: 'hardness_ct',
+                label: 'Masukkan hardness CT',
+                unit: 'ppm'
+            },
+            {
+                field: 'hardness_ro',
+                label: 'Masukkan hardness RO',
+                unit: 'ppm'
+            },
+            {
+                field: 'hardness_boiler',
+                label: 'Masukkan hardness Boiler',
+                unit: 'ppm'
+            }
         ];
 
         const ALL_FIELDS = [...FIELDS_PH, ...FIELDS_TDS, ...FIELDS_TURB_CHLOR, ...FIELDS_HARDNESS];
@@ -425,7 +574,7 @@
                             }
                         });
                         let countEmpty = ALL_FIELDS.length - countFilled;
- 
+
                         html += `
                             <tr>
                                 <td class="text-center fw-medium">${item.tanggal}</td>
@@ -529,9 +678,10 @@
                 let badge = '<span class="badge bg-secondary">-</span>';
                 let unit = f.unit || '';
                 if (val !== undefined && val !== null && val !== '') {
-                    badge = `<span class="badge bg-primary px-2 py-1">${Number(val)}${unit ? ' ' + unit : ''}</span>`;
+                    badge =
+                        `<span class="badge bg-primary px-2 py-1">${Number(val)}${unit ? ' ' + unit : ''}</span>`;
                 }
- 
+
                 listHtml += `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <span class="small fw-medium">${f.label}</span>
@@ -545,8 +695,10 @@
 
         function showCollectedDetail(index) {
             let item = window.collectedData[index];
-            $('#modalCollectedDetailTitle').text(`Detail Checklist Bulan ${moment().month(item.approval.bulan-1).format('MMMM')} - ${item.approval.tahun}`);
-            
+            $('#modalCollectedDetailTitle').text(
+                `Detail Checklist Bulan ${moment().month(item.approval.bulan-1).format('MMMM')} - ${item.approval.tahun}`
+                );
+
             let html = '';
             item.data.forEach(d => {
                 html += `

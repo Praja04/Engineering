@@ -112,7 +112,6 @@
                                 {!! renderAnalisisItem('ph_depo_lt2', 'Masukkan pH Depo Lt.2', 'pH') !!}
                                 {!! renderAnalisisItem('ph_cooling_tower', 'Masukkan pH Cooling Tower', 'pH') !!}
                                 {!! renderAnalisisItem('ph_boiler', 'Masukkan pH Boiler', 'pH') !!}
-                                {!! renderAnalisisItem('ph_outlet_ws_2', 'Masukkan pH Outlet WS (2)', 'pH') !!}
                             </div>
                         </div>
 
