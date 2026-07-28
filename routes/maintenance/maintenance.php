@@ -118,6 +118,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/detail/{main}', [MtcApprovalController::class, 'detail']);
             Route::post('/approve/{id}', [MtcApprovalController::class, 'approve'])->name('mtc.approval.approve');
             Route::post('/reject/{id}', [MtcApprovalController::class, 'reject'])->name('mtc.approval.reject');
+            Route::post('/mass-approve', [MtcApprovalController::class, 'massApprove'])->name('mtc.approval.mass-approve');
+            Route::post('/mass-reject', [MtcApprovalController::class, 'massReject'])->name('mtc.approval.mass-reject');
         });
 
         Route::prefix('master')->group(function () {

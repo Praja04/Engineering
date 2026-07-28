@@ -300,4 +300,177 @@ class MtcApprovalController extends Controller
             'message' => 'Data Mtc berhasil direject',
         ]);
     }
+
+    public function massApprove(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:mtc_approval,id'
+        ]);
+
+        $ids = $request->ids;
+        $user = Auth::user();
+        $ttdPath = $this->resolveTtdPath($user);
+
+        DB::beginTransaction();
+        try {
+            $approvals = MtcApprovalModel::whereIn('id', $ids)
+                ->where('status', 'pending')
+                ->where(function ($q) use ($user) {
+                    $q->where('approver_id', $user->id)
+                        ->orWhere('role', $user->role);
+                })
+                ->get();
+
+            $approvedCount = 0;
+
+            foreach ($approvals as $approval) {
+                // Validasi: harus approve sesuai urutan level
+                $hasPreviousPending = MtcApprovalModel::where('mtc_main_id', $approval->mtc_main_id)
+                    ->where('level', '<', $approval->level)
+                    ->where('status', '!=', 'approved')
+                    ->exists();
+
+                if ($hasPreviousPending) {
+                    continue; // Skip jika tidak berurutan
+                }
+
+                // approve current level
+                $approval->update([
+                    'status' => 'approved',
+                    'action_at' => now(),
+                    'action_by' => $user->id,
+                    'ttd' => $ttdPath,
+                ]);
+
+                NotificationsModel::where('user_id', $user->id)
+                    ->where('notifiable_type', MtcMainModel::class)
+                    ->where('notifiable_id', $approval->mtc_main_id)
+                    ->delete();
+
+                // cek level selanjutnya
+                $nextApproval = MtcApprovalModel::where('mtc_main_id', $approval->mtc_main_id)
+                    ->where('level', '>', $approval->level)
+                    ->where('status', 'pending')
+                    ->orderBy('level', 'asc')
+                    ->first();
+
+                if ($nextApproval) {
+                    MtcMainModel::where('id', $approval->mtc_main_id)->update(['status' => 'waiting']);
+
+                    $mainRecord = MtcMainModel::find($approval->mtc_main_id);
+                    $jenisMtc = $mainRecord ? $mainRecord->jenis_mtc : 'Maintenance';
+
+                    NotificationsModel::create([
+                        'user_id' => $nextApproval->approver_id,
+                        'notifiable_type' => MtcMainModel::class,
+                        'notifiable_id' => $approval->mtc_main_id,
+                        'title' => 'Approval Maintenance',
+                        'message' => 'Maintenance '.$jenisMtc.' tanggal '.date('d F Y', strtotime($mainRecord->tanggal)).' menunggu persetujuan Anda',
+                        'url' => route('mtc.approval.index'),
+                        'is_read' => false,
+                    ]);
+                } else {
+                    MtcMainModel::where('id', $approval->mtc_main_id)->update(['status' => 'approved']);
+                }
+
+                $approvedCount++;
+            }
+
+            DB::commit();
+
+            if ($approvedCount === 0) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Tidak ada laporan valid yang dapat di-approve sesuai urutan level.'
+                ], 422);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => $approvedCount . ' data berhasil di-approve.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function massReject(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:mtc_approval,id',
+            'catatan' => 'required|string'
+        ]);
+
+        $ids = $request->ids;
+        $catatan = $request->catatan;
+        $user = Auth::user();
+
+        DB::beginTransaction();
+        try {
+            $approvals = MtcApprovalModel::whereIn('id', $ids)
+                ->where('status', 'pending')
+                ->where(function ($q) use ($user) {
+                    $q->where('approver_id', $user->id)
+                        ->orWhere('role', $user->role);
+                })
+                ->get();
+
+            $rejectedCount = 0;
+
+            foreach ($approvals as $approval) {
+                // Validasi: harus reject sesuai urutan level
+                $hasPreviousPending = MtcApprovalModel::where('mtc_main_id', $approval->mtc_main_id)
+                    ->where('level', '<', $approval->level)
+                    ->where('status', '!=', 'approved')
+                    ->exists();
+
+                if ($hasPreviousPending) {
+                    continue; // Skip jika tidak berurutan
+                }
+
+                $approval->update([
+                    'status' => 'rejected',
+                    'action_at' => now(),
+                    'action_by' => $user->id,
+                    'catatan' => $catatan,
+                ]);
+
+                MtcMainModel::where('id', $approval->mtc_main_id)->update(['status' => 'rejected']);
+
+                NotificationsModel::where('notifiable_type', MtcMainModel::class)
+                    ->where('notifiable_id', $approval->mtc_main_id)
+                    ->delete();
+
+                $rejectedCount++;
+            }
+
+            DB::commit();
+
+            if ($rejectedCount === 0) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Tidak ada laporan valid yang dapat di-reject sesuai urutan level.'
+                ], 422);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => $rejectedCount . ' data berhasil direject.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
