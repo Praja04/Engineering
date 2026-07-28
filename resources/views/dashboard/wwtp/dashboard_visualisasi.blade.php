@@ -687,10 +687,10 @@
 
                 // Sludge Line
                 $('#val-dl-vol').text(fmt(res.sludge.drain_lumpur, 1, 'm³'));
-                $('#val-sp-rh').text(fmt(res.sludge.running_hour_scp, 1, 'hrs'));
+                $('#val-sp-rh').text(fmt(res.sludge.running_hour_scp, 1, 'jam'));
                 $('#val-sp-cnt').text(fmt(res.sludge.sludge_content, 1, '%'));
-                $('#val-it-vol').text(fmt(res.sludge.hasil_lumpur, 1, 'm³'));
-                $('#val-ps-qty').text(fmt(res.sludge.pengangkutan, 0, 'm³'));
+                $('#val-it-vol').text(fmt(res.sludge.hasil_lumpur, 1, 'ton'));
+                $('#val-ps-qty').text(fmt(res.sludge.pengangkutan, 0, 'ton'));
 
                 // Toggle active classes on nodes with values
                 $('.machine-node').each(function() {
