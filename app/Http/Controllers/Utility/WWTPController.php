@@ -1106,13 +1106,27 @@ class WWTPController extends Controller
         $proses = [
             'debit1' => $influentRecords->avg('debit1') ?? 0,
             'debit2' => $influentRecords->avg('debit2') ?? 0,
-            'pit_outlet' => $influentRecords->sum('pit_outlet') ?? 0,
-            'pit_produksi_step3' => $influentRecords->sum('pit_produksi_step3') ?? 0,
-            'pit_sparta' => $influentRecords->sum('pit_sparta') ?? 0,
-            'pit_garam' => $influentRecords->sum('pit_garam') ?? 0,
-            'pit_boiler' => $influentRecords->sum('pit_boiler') ?? 0,
-            'pit_domestik' => $influentRecords->sum('pit_domestik') ?? 0,
-            'pit_storage' => $influentRecords->sum('pit_storage') ?? 0,
+            'pit_outlet' => $influentRecords->reduce(function ($carry, $rec) {
+                return $carry + max(0, (float)$rec->pit_outlet - (float)($rec->pit_outlet_awal ?? 0));
+            }, 0),
+            'pit_produksi_step3' => $influentRecords->reduce(function ($carry, $rec) {
+                return $carry + max(0, (float)$rec->pit_produksi_step3 - (float)($rec->pit_produksi_step3_awal ?? 0));
+            }, 0),
+            'pit_sparta' => $influentRecords->reduce(function ($carry, $rec) {
+                return $carry + max(0, (float)$rec->pit_sparta - (float)($rec->pit_sparta_awal ?? 0));
+            }, 0),
+            'pit_garam' => $influentRecords->reduce(function ($carry, $rec) {
+                return $carry + max(0, (float)$rec->pit_garam - (float)($rec->pit_garam_awal ?? 0));
+            }, 0),
+            'pit_boiler' => $influentRecords->reduce(function ($carry, $rec) {
+                return $carry + max(0, (float)$rec->pit_boiler - (float)($rec->pit_boiler_awal ?? 0));
+            }, 0),
+            'pit_domestik' => $influentRecords->reduce(function ($carry, $rec) {
+                return $carry + max(0, (float)$rec->pit_domestik - (float)($rec->pit_domestik_awal ?? 0));
+            }, 0),
+            'pit_storage' => $influentRecords->reduce(function ($carry, $rec) {
+                return $carry + max(0, (float)$rec->pit_storage - (float)($rec->pit_storage_awal ?? 0));
+            }, 0),
         ];
 
         $analisaRecords = WwtpAnalisa::with('details')
