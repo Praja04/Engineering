@@ -77,6 +77,20 @@
                                     </div>
                                 </div>
 
+                                {{-- Filter Range Tanggal (Shift Report) --}}
+                                <div class="col-auto filter-tanggal-range-shift-wrapper" style="display:none;">
+                                    <label class="form-label mb-0 me-2 fs-13 text-muted">Range Tanggal</label>
+                                </div>
+                                <div class="col-auto filter-tanggal-range-shift-wrapper" style="display:none;">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <input type="date" class="form-control form-control-sm" id="filter-start-date-shift"
+                                            value="{{ date('Y-m-d', strtotime('-30 days')) }}">
+                                        <span class="text-muted fs-12">s/d</span>
+                                        <input type="date" class="form-control form-control-sm" id="filter-end-date-shift"
+                                            value="{{ date('Y-m-d') }}">
+                                    </div>
+                                </div>
+
                                 {{-- Filter Grup (hanya operational) --}}
                                 <div class="col-auto" id="filter-grup-wrapper">
                                     <select class="form-select form-select-sm" id="filter-grup" style="width:auto;">
@@ -274,13 +288,6 @@
                         </tbody>
                     </table>
                 </div>
-                @if (auth()->user()->jabatan !== 'operator')
-                    <div class="modal-footer border-top">
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn-edit-operational">
-                            <i class="ri-edit-line me-1"></i>Edit Data
-                        </button>
-                    </div>
-                @endif
             </div>
         </div>
     </div>
@@ -476,13 +483,7 @@
                         </div>
                     </div>
                 </div>
-                @if (auth()->user()->jabatan !== 'operator')
-                    <div class="modal-footer border-top">
-                        <button type="button" class="btn btn-outline-warning btn-sm text-dark" id="btn-edit-coal">
-                            <i class="ri-edit-line me-1"></i>Edit Data
-                        </button>
-                    </div>
-                @endif
+
             </div>
         </div>
     </div>
@@ -668,6 +669,7 @@
                 $('#filter-grup-wrapper').show();
                 $('.filter-tanggal-single-wrapper').show();
                 $('.filter-tanggal-range-wrapper').hide();
+                $('.filter-tanggal-range-shift-wrapper').hide();
                 $('#btn-export').show();
                 loadOperational();
             });
@@ -681,8 +683,9 @@
                 $('#section-tbl-shift').show();
                 $('#section-tbl-coal').hide();
                 $('#filter-grup-wrapper').hide();
-                $('.filter-tanggal-single-wrapper').show();
+                $('.filter-tanggal-single-wrapper').hide();
                 $('.filter-tanggal-range-wrapper').hide();
+                $('.filter-tanggal-range-shift-wrapper').show();
                 $('#btn-export').hide();
                 loadShift();
             });
@@ -698,6 +701,7 @@
                 $('#filter-grup-wrapper').hide();
                 $('.filter-tanggal-single-wrapper').hide();
                 $('.filter-tanggal-range-wrapper').show();
+                $('.filter-tanggal-range-shift-wrapper').hide();
                 $('#btn-export').hide();
                 loadCoal();
             });
@@ -705,7 +709,9 @@
             // ── FILTER & REFRESH ─────────────────────────────────────────────
             $('#filter-tanggal, #filter-grup').on('change', function() {
                 if (activeTab === 'operational') loadOperational();
-                else if (activeTab === 'shift') loadShift();
+            });
+            $('#filter-start-date-shift, #filter-end-date-shift').on('change', function() {
+                if (activeTab === 'shift') loadShift();
             });
             $('#filter-start-date, #filter-end-date').on('change', function() {
                 if (activeTab === 'coal') loadCoal();
@@ -760,8 +766,14 @@
                                 <td>${formatDecimalVal(r.suhu_thermal) || '—'}</td>
                                 <td>
                                     ${hasData
-                                        ? `<button class="btn btn-xs btn-outline-primary btn-detail-op py-0 px-2">
-                                                                <i class="ri-eye-line"></i></button>`
+                                        ? `<button class="btn btn-xs btn-outline-primary btn-detail-op py-0 px-2" title="Detail">
+                                                <i class="ri-eye-line"></i>
+                                            </button>
+                                            @if (auth()->user()->jabatan !== 'operator')
+                                                <button type="button" class="btn btn-xs btn-outline-primary btn-edit-op-row py-0 px-2" title="Edit">
+                                                    <i class="ri-edit-line"></i>
+                                                </button>
+                                            @endif`
                                         : '—'
                                     }
                                 </td>
@@ -790,12 +802,14 @@
             };
 
             function loadShift() {
-                const tanggal = $('#filter-tanggal').val();
+                const startDate = $('#filter-start-date-shift').val();
+                const endDate = $('#filter-end-date-shift').val();
                 $('#tbody-shift').html(
                     '<tr><td colspan="9" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
                 );
                 $.get('{{ route('esp-shift-report.json') }}', {
-                    tanggal
+                    start_date: startDate,
+                    end_date: endDate
                 }, function(data) {
                     if (!data.length) {
                         $('#tbody-shift').html(
@@ -866,9 +880,14 @@
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-xs btn-outline-warning btn-detail-coal py-0 px-2 text-dark">
+                        <button class="btn btn-xs btn-outline-warning btn-detail-coal py-0 px-2 text-dark" title="Detail">
                             <i class="ri-eye-line"></i>
                         </button>
+                        @if (auth()->user()->jabatan !== 'operator')
+                            <button type="button" class="btn btn-xs btn-outline-primary btn-edit-coal-row py-0 px-2" title="Edit">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                        @endif
                     </td>
                 </tr>`;
                     });
@@ -892,22 +911,21 @@
                 new bootstrap.Modal('#modal-operational').show();
             });
 
-            // Buka edit dari detail
-            $('#btn-edit-operational').on('click', function() {
-                const r = currentOpRow;
-                bootstrap.Modal.getInstance('#modal-operational').hide();
-                setTimeout(function() {
-                    $('#edit-op-jam-label').text(r.jam);
-                    $('#edit-op-jam').val(r.jam);
-                    $('#edit-op-tanggal').val($('#filter-tanggal').val());
-                    $('#edit-op-grup').val(r.grup);
-                    $('#edit-op-arus-primer').val(formatDecimalVal(r.arus_primer));
-                    $('#edit-op-arus-sekunder').val(formatDecimalVal(r.arus_sekunder));
-                    $('#edit-op-teg-primer').val(formatDecimalVal(r.tegangan_primer));
-                    $('#edit-op-teg-sekunder').val(formatDecimalVal(r.tegangan_sekunder));
-                    $('#edit-op-suhu').val(formatDecimalVal(r.suhu_thermal));
-                    new bootstrap.Modal('#modal-edit-operational').show();
-                }, 300);
+            // Buka edit operational langsung dari baris tabel
+            $(document).on('click', '.btn-edit-op-row', function(e) {
+                e.stopPropagation();
+                const r = $(this).closest('tr').data('row');
+                currentOpRow = r;
+                $('#edit-op-jam-label').text(r.jam);
+                $('#edit-op-jam').val(r.jam);
+                $('#edit-op-tanggal').val($('#filter-tanggal').val());
+                $('#edit-op-grup').val(r.grup);
+                $('#edit-op-arus-primer').val(formatDecimalVal(r.arus_primer));
+                $('#edit-op-arus-sekunder').val(formatDecimalVal(r.arus_sekunder));
+                $('#edit-op-teg-primer').val(formatDecimalVal(r.tegangan_primer));
+                $('#edit-op-teg-sekunder').val(formatDecimalVal(r.tegangan_sekunder));
+                $('#edit-op-suhu').val(formatDecimalVal(r.suhu_thermal));
+                new bootstrap.Modal('#modal-edit-operational').show();
             });
 
             // Submit edit operational (reuse route store — updateOrCreate)
@@ -1075,19 +1093,18 @@
                 new bootstrap.Modal('#modal-coal').show();
             });
 
-            // Buka edit coal
-            $('#btn-edit-coal').on('click', function() {
-                const r = currentCoalRow;
-                bootstrap.Modal.getInstance('#modal-coal').hide();
-                setTimeout(function() {
-                    $('#edit-coal-tgl-label').text(r.tanggal_laporan);
-                    $('#edit-coal-id').val(r.id);
-                    $('#edit-coal-penyuplai-qty').val(formatDecimalVal(r.penyuplai_qty));
-                    $('#edit-coal-penyuplai-name').val(r.penyuplai_nik_nama);
-                    $('#edit-coal-penerima-qty').val(formatDecimalVal(r.penerima_qty));
-                    $('#edit-coal-penerima-name').val(r.penerima_nik_nama);
-                    new bootstrap.Modal('#modal-edit-coal').show();
-                }, 300);
+            // Buka edit coal langsung dari baris tabel
+            $(document).on('click', '.btn-edit-coal-row', function(e) {
+                e.stopPropagation();
+                const r = $(this).closest('tr').data('row');
+                currentCoalRow = r;
+                $('#edit-coal-tgl-label').text(r.tanggal_laporan);
+                $('#edit-coal-id').val(r.id);
+                $('#edit-coal-penyuplai-qty').val(formatDecimalVal(r.penyuplai_qty));
+                $('#edit-coal-penyuplai-name').val(r.penyuplai_nik_nama);
+                $('#edit-coal-penerima-qty').val(formatDecimalVal(r.penerima_qty));
+                $('#edit-coal-penerima-name').val(r.penerima_nik_nama);
+                new bootstrap.Modal('#modal-edit-coal').show();
             });
 
             // Submit edit coal

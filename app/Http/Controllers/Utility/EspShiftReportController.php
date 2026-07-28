@@ -296,6 +296,13 @@ class EspShiftReportController extends Controller
 
         if ($request->tanggal) {
             $query->where('tanggal_laporan', $request->tanggal);
+        } elseif ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_laporan', [$request->start_date, $request->end_date]);
+        } else {
+            $query->whereBetween('tanggal_laporan', [
+                Carbon::now()->subDays(30)->toDateString(),
+                Carbon::now()->toDateString()
+            ]);
         }
 
         if ($request->status === 'pending') {
