@@ -691,6 +691,18 @@ class WWTPController extends Controller
             21 => ['Denfloc 260 PA'],
             22 => ['NaOH'],
             23 => ['NaOH step 2'],
+        ];
+
+        $chemicalKgHari = [
+            24 => ['PAC powder 1'],
+            25 => ['PAC powder 2'],
+            27 => ['BE-100'],
+            28 => ['C-204'],
+            29 => ['C-9040 step 1'],
+            30 => ['C-9040 step 2'],
+            32 => ['Denfloc 260 PA'],
+            33 => ['NaOH'],
+            34 => ['NaOH step 2'],
             36 => ['Denfloc 945'],
             37 => ['Enzim'],
             38 => ['NPK'],
@@ -908,6 +920,58 @@ class WWTPController extends Controller
                     });
                     $avgPemakaian = $values->average();
                     $setCell($colLetter . $row, round($avgPemakaian, 3));
+                } else {
+                    $setCell($colLetter . $row, 0);
+                }
+            }
+
+            // 2.1 Chemical (Kg/Hari)
+            foreach ($chemicalKgHari as $row => $possibleNames) {
+                $matchingChems = $dayChems->filter(function ($item) use ($possibleNames) {
+                    return in_array(strtolower(trim($item->jenis_pemakaian)), array_map('strtolower', $possibleNames));
+                });
+
+                if ($matchingChems->isNotEmpty()) {
+                    $totalPemakaian = 0;
+                    foreach ($matchingChems as $entry) {
+                        $nilai = is_numeric($entry->nilai_pemakaian)
+                            ? floatval($entry->nilai_pemakaian)
+                            : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
+
+                        $rh = $entry->running_hour ?? 1;
+                        $jenisAsli = trim($entry->jenis_pemakaian);
+
+                        switch ($jenisAsli) {
+                            case 'PAC powder 1':
+                                $totalPemakaian += $rh * ($nilai * 60 * 7.6 / 100) / 1000;
+                                break;
+                            case 'PAC powder 2':
+                                $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
+                                break;
+                            case 'BE-100':
+                                $totalPemakaian += $rh * ($nilai * 60 * 2.5 / 100) / 1000;
+                                break;
+                            case 'C-204':
+                                $totalPemakaian += $rh * ($nilai * 60 * 1 / 100) / 1000;
+                                break;
+                            case 'C-9040 step 1':
+                                $totalPemakaian += $rh * ($nilai * 60 * 0.11 / 100) / 1000;
+                                break;
+                            case 'C-9040 step 2':
+                                $totalPemakaian += $rh * ($nilai * 60 * 0.35 / 100) / 1000;
+                                break;
+                            case 'Denfloc 260 PA':
+                                $totalPemakaian += ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
+                                break;
+                            case 'NaOH':
+                                $totalPemakaian += $rh * ($nilai / 1000 * 60) * 1.5;
+                                break;
+                            default:
+                                $totalPemakaian += $nilai;
+                                break;
+                        }
+                    }
+                    $setCell($colLetter . $row, round($totalPemakaian, 3));
                 } else {
                     $setCell($colLetter . $row, 0);
                 }
