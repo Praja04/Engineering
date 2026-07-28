@@ -901,46 +901,13 @@ class WWTPController extends Controller
                 });
 
                 if ($matchingChems->isNotEmpty()) {
-                    $totalPemakaian = 0;
-                    foreach ($matchingChems as $entry) {
-                        $nilai = is_numeric($entry->nilai_pemakaian)
+                    $values = $matchingChems->map(function ($entry) {
+                        return is_numeric($entry->nilai_pemakaian)
                             ? floatval($entry->nilai_pemakaian)
                             : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
-
-                        $rh = $entry->running_hour ?? 1;
-                        $jenisAsli = trim($entry->jenis_pemakaian);
-
-                        switch ($jenisAsli) {
-                            case 'PAC powder 1':
-                                $totalPemakaian += $rh * ($nilai * 60 * 7.6 / 100) / 1000;
-                                break;
-                            case 'PAC powder 2':
-                                $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
-                                break;
-                            case 'BE-100':
-                                $totalPemakaian += $rh * ($nilai * 60 * 2.5 / 100) / 1000;
-                                break;
-                            case 'C-204':
-                                $totalPemakaian += $rh * ($nilai * 60 * 1 / 100) / 1000;
-                                break;
-                            case 'C-9040 step 1':
-                                $totalPemakaian += $rh * ($nilai * 60 * 0.11 / 100) / 1000;
-                                break;
-                            case 'C-9040 step 2':
-                                $totalPemakaian += $rh * ($nilai * 60 * 0.35 / 100) / 1000;
-                                break;
-                            case 'Denfloc 260 PA':
-                                $totalPemakaian += ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
-                                break;
-                            case 'NaOH':
-                                $totalPemakaian += $rh * ($nilai / 1000 * 60) * 1.5;
-                                break;
-                            default:
-                                $totalPemakaian += $nilai;
-                                break;
-                        }
-                    }
-                    $setCell($colLetter . $row, round($totalPemakaian, 3));
+                    });
+                    $avgPemakaian = $values->average();
+                    $setCell($colLetter . $row, round($avgPemakaian, 3));
                 } else {
                     $setCell($colLetter . $row, 0);
                 }
