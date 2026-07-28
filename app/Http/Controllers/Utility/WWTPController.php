@@ -1104,8 +1104,8 @@ class WWTPController extends Controller
 
         $influentRecords = WwtpInfluentHarian::whereDate('tanggal', $dateFormatted)->get();
         $proses = [
-            'debit1' => $influentRecords->avg('debit1') ?? 0,
-            'debit2' => $influentRecords->avg('debit2') ?? 0,
+            'debit1' => $influentRecords->sum('debit1') ?? 0,
+            'debit2' => $influentRecords->sum('debit2') ?? 0,
             'pit_outlet' => $influentRecords->reduce(function ($carry, $rec) {
                 return $carry + max(0, (float)$rec->pit_outlet - (float)($rec->pit_outlet_awal ?? 0));
             }, 0),
@@ -1139,23 +1139,24 @@ class WWTPController extends Controller
         $paramEC  = WwtpParameter::where('parameter_name', 'like', '%EC%')->first();
 
         $pointNamesMap = [
-            'Influent'           => ['Influent', 'Influent COD'],
+            'Influent'           => ['Influent'],
             'Outlet DAF'         => ['Outlet DAF', 'DAF pre', 'DAF post', 'DAF'],
-            'Equalisasi 2'       => ['Equalisasi 2', 'New Anaerob', 'Sparta', 'Equalisasi'],
+            'Equalisasi 2'       => ['Equalisasi 2', 'New Anaerob', 'Equalisasi'],
             'Inlet Anaerob'      => ['Inlet Anaerob'],
             'Outlet Anaerob'     => ['Outlet Anaerob', 'Anaerob'],
             'Aerasi-1'           => ['Aerasi-1'],
             'Aerasi-2'           => ['Aerasi-2'],
             'Aerasi-3'           => ['Aerasi-3'],
             'Aerasi-4'           => ['Aerasi-4'],
-            'Aerasi-5'           => ['Aerasi-5', 'Aerasi 6', 'Aerasi-6', 'Aerob'],
+            'Aerasi-5'           => ['Aerasi-5'],
+            'Aerasi-6'           => ['Aerasi-6'],
             'Lumpur Aktif'       => ['Lumpur Aktif'],
-            'Clarifier 1'        => ['Clarifier 1', 'Clarifier-1'],
-            'Clarifier 2'        => ['Clarifier 2', 'Clarifier-2'],
-            'SDM 1'              => ['SDM 1', 'Sedimen-1', 'Sedimen 1'],
-            'Filtrat SCP'        => ['Filtrat SCP', 'Fitrat SCP'],
+            'Clarifier 1'        => ['Clarifier 1'],
+            'Clarifier 2'        => ['Clarifier 2'],
+            'SDM 1'              => ['SDM 1'],
+            'Filtrat SCP'        => ['Filtrat SCP'],
             'Outlet Sand Filter' => ['Outlet Sand Filter', 'Sandfilter'],
-            'Effluent'           => ['Effluent', 'Pit Outlet (Effluent)', 'Effluent COD (max 300 ppm)', 'Outlet'],
+            'Effluent'           => ['Effluent'],
         ];
 
         $dbPoints = WwtpPoint::all();

@@ -6,17 +6,19 @@
     <style>
         .visualisasi-wrapper {
             width: 100%;
+            height: 100%;
             overflow-x: auto;
             background-color: #1a1e29;
             border-radius: 12px;
             box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.5);
             border: 1px solid #2d3748;
+            padding: 10px;
         }
 
         .visualisasi-container {
             position: relative;
-            width: 1550px;
-            height: 600px;
+            width: 1100px;
+            height: 620px;
             color: #e2e8f0;
         }
 
@@ -37,50 +39,83 @@
         }
 
         .header-main {
-            top: 150px;
+            top: 165px;
             left: 20px;
             color: #0dcaf0;
         }
 
         .header-sludge {
-            top: 420px;
+            top: 455px;
             left: 20px;
             color: #8b5cf6;
         }
 
         /* Machine Nodes absolute positioning */
+        /* Machine Nodes parent wrapper (invisible boundary) */
         .machine-node {
             position: absolute;
-            background: rgba(30, 41, 59, 0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 2px solid #475569;
-            border-radius: 10px;
-            width: 150px;
-            height: 70px;
-            padding: 8px 10px;
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 180px;
+            height: 90px;
             cursor: pointer;
             z-index: 10;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
         }
 
-        .machine-node:hover {
-            transform: translateY(-3px);
+        /* Card Background & Text (Sits behind the 3D image) */
+        .node-card {
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 135px;
+            height: 78px;
+            background: rgba(20, 26, 38, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 2px solid #475569;
+            border-radius: 10px;
+            padding: 8px 10px;
+            text-align: left;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        /* 3D Image (Sits in front, overlapping the card) */
+        .node-3d-img {
+            position: absolute;
+            right: 0px;
+            top: -30px;
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            z-index: 2;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
+        }
+
+        /* Hover animations */
+        .machine-node:hover .node-card {
             border-color: #3b82f6;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
         }
 
-        .machine-node.active-node {
+        .machine-node:hover .node-3d-img {
+            transform: translateY(-5px) scale(1.08);
+            filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.6));
+        }
+
+        /* Active / Selected states */
+        .machine-node.active-node .node-card {
             border-color: #10b981;
             box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
         }
 
-        .machine-node.selected-inspect {
+        .machine-node.selected-inspect .node-card {
             border-color: #f59e0b;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
-            background: rgba(245, 158, 11, 0.15);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+            background: rgba(245, 158, 11, 0.12);
         }
 
         .node-title {
@@ -90,23 +125,29 @@
             margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 2px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .node-value {
-            font-size: 9px;
+            font-size: 10px;
             color: #cbd5e1;
             text-align: left;
-            line-height: 1.3;
+            line-height: 1.4;
+            margin-top: 4px;
         }
 
         .node-value div {
             display: flex;
             justify-content: space-between;
+            gap: 12px;
+        }
+
+        .node-value strong {
+            color: #3b82f6;
         }
 
         /* Flow connector arrows using SVG */
@@ -117,7 +158,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 1;
+            z-index: 12;
         }
 
         /* Animate flowing dashes along lines */
@@ -223,7 +264,8 @@
                                         dan formula perhitungan removal.</p>
                                 </div>
                                 <div class="col-12 col-md-auto d-flex align-items-center gap-2">
-                                    <button id="btn-play-pause" class="btn btn-warning gap-1 d-flex align-items-center me-2">
+                                    <button id="btn-play-pause"
+                                        class="btn btn-warning gap-1 d-flex align-items-center me-2">
                                         <i class="mdi mdi-play"></i> <span>Auto Play</span>
                                     </button>
                                     <label class="text-white small text-nowrap mb-0" for="filter_tanggal">Pilih
@@ -287,158 +329,227 @@
 
                             <!-- === SALT LINE NODES === -->
                             <div class="machine-node" id="node-pit_garam" data-unit="pit_garam"
-                                style="left: 20px; top: 50px;">
-                                <div class="node-title">Pit Garam</div>
-                                <div class="node-value">
-                                    <div><span>Vol:</span> <strong id="val-pg-vol">-</strong></div>
-                                    <div><span>pH:</span> <strong id="val-pg-ph">-</strong></div>
-                                    <div><span>TSS:</span> <strong id="val-pg-tss">-</strong></div>
+                                style="left: 20px; top: 55px;">
+                                <div class="node-card">
+                                    <div class="node-title">Pit Garam</div>
+                                    <div class="node-value">
+                                        <div><span>Vol:</span> <strong id="val-pg-vol">-</strong></div>
+                                        <div><span>pH:</span> <strong id="val-pg-ph">-</strong></div>
+                                        <div><span>TSS:</span> <strong id="val-pg-tss">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/PIT GARAM.png') }}"
+                                    alt="Pit Garam">
                             </div>
 
                             <div class="machine-node" id="node-buffer_pit_garam" data-unit="buffer_pit_garam"
-                                style="left: 210px; top: 50px;">
-                                <div class="node-title">Buffer Pit Garam</div>
-                                <div class="node-value"
-                                    style="display: flex; flex-direction: column; justify-content: center; height: calc(100% - 15px);">
-                                    <div class="text-success text-center fw-bold" style="font-size: 10px;">Active / Ready
+                                style="left: 200px; top: 55px;">
+                                <div class="node-card">
+                                    <div class="node-title">Buffer Pit Garam</div>
+                                    <div class="node-value"
+                                        style="display: flex; flex-direction: column; justify-content: center; height: calc(100% - 15px);">
+                                        <div class="text-success text-center fw-bold" style="font-size: 10px;">Active /
+                                            Ready
+                                        </div>
                                     </div>
                                 </div>
+                                <img class="node-3d-img"
+                                    src="{{ asset('assets/images/wwtp/dashboard/BUFFER PIT GARAM.png') }}"
+                                    alt="Buffer Pit Garam">
                             </div>
 
 
                             <!-- === MAIN BIOLOGICAL TREATMENT LINE NODES === -->
                             <div class="machine-node" id="node-pit_sparta" data-unit="pit_sparta"
-                                style="left: 20px; top: 190px;">
-                                <div class="node-title">Pit Sparta</div>
-                                <div class="node-value">
-                                    <div><span>Vol:</span> <strong id="val-ps-vol">-</strong></div>
+                                style="left: 20px; top: 210px;">
+                                <div class="node-card">
+                                    <div class="node-title">Pit Sparta</div>
+                                    <div class="node-value">
+                                        <div><span>Vol:</span> <strong id="val-ps-vol">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/PIT SPARTA.png') }}"
+                                    alt="Pit Sparta">
                             </div>
 
                             <div class="machine-node" id="node-step3" data-unit="step3"
-                                style="left: 210px; top: 190px;">
-                                <div class="node-title">Step 3</div>
-                                <div class="node-value">
-                                    <div><span>Vol:</span> <strong id="val-s3-vol">-</strong></div>
+                                style="left: 200px; top: 210px;">
+                                <div class="node-card">
+                                    <div class="node-title">Step 3</div>
+                                    <div class="node-value">
+                                        <div><span>Vol:</span> <strong id="val-s3-vol">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/STEP 3.png') }}"
+                                    alt="Step 3">
                             </div>
 
                             <div class="machine-node" id="node-equalisasi" data-unit="equalisasi"
-                                style="left: 400px; top: 190px;">
-                                <div class="node-title">Equalisasi</div>
-                                <div class="node-value">
-                                    <div><span>pH:</span> <strong id="val-eq-ph">-</strong></div>
-                                    <div><span>TSS:</span> <strong id="val-eq-tss">-</strong></div>
-                                    <div><span>COD:</span> <strong id="val-eq-cod">-</strong></div>
+                                style="left: 380px; top: 210px;">
+                                <div class="node-card">
+                                    <div class="node-title">Equalisasi</div>
+                                    <div class="node-value">
+                                        <div><span>pH:</span> <strong id="val-eq-ph">-</strong></div>
+                                        <div><span>TSS:</span> <strong id="val-eq-tss">-</strong></div>
+                                        <div><span>COD:</span> <strong id="val-eq-cod">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/EQUALISASI.png') }}"
+                                    alt="Equalisasi">
                             </div>
 
                             <div class="machine-node" id="node-anaerob" data-unit="anaerob"
-                                style="left: 590px; top: 190px;">
-                                <div class="node-title">Anaerob</div>
-                                <div class="node-value">
-                                    <div><span>pH:</span> <strong id="val-an-ph">-</strong></div>
-                                    <div><span>TSS:</span> <strong id="val-an-tss">-</strong></div>
-                                    <div><span>COD:</span> <strong id="val-an-cod">-</strong></div>
+                                style="left: 560px; top: 210px;">
+                                <div class="node-card">
+                                    <div class="node-title">Anaerob</div>
+                                    <div class="node-value">
+                                        <div><span>pH:</span> <strong id="val-an-ph">-</strong></div>
+                                        <div><span>TSS:</span> <strong id="val-an-tss">-</strong></div>
+                                        <div><span>COD:</span> <strong id="val-an-cod">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/ANAEROB.png') }}"
+                                    alt="Anaerob">
                             </div>
 
-                            <!-- Aerob (Upper Column 5) -->
-                            <div class="machine-node" id="node-aerob" data-unit="aerob" style="left: 780px; top: 70px;">
-                                <div class="node-title">Aerob</div>
-                                <div class="node-value">
-                                    <div><span>pH:</span> <strong id="val-ae-ph">-</strong></div>
-                                    <div><span>TSS:</span> <strong id="val-ae-tss">-</strong></div>
-                                    <div><span>COD:</span> <strong id="val-ae-cod">-</strong></div>
+                            <!-- Aerob (Col 5, Row 2) -->
+                            <div class="machine-node" id="node-aerob" data-unit="aerob"
+                                style="left: 740px; top: 210px;">
+                                <div class="node-card">
+                                    <div class="node-title">Aerob</div>
+                                    <div class="node-value">
+                                        <div><span>pH:</span> <strong id="val-ae-ph">-</strong></div>
+                                        <div><span>TSS:</span> <strong id="val-ae-tss">-</strong></div>
+                                        <div><span>COD:</span> <strong id="val-ae-cod">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/AEROB.png') }}"
+                                    alt="Aerob">
                             </div>
 
-                            <!-- Pit Domestik (Row 3, Col 1) -->
+                            <!-- Pit Domestik (Col 1, Row 3) -->
                             <div class="machine-node" id="node-pit_domestik" data-unit="pit_domestik"
-                                style="left: 20px; top: 310px;">
-                                <div class="node-title">Pit Domestik</div>
-                                <div class="node-value">
-                                    <div><span>Vol:</span> <strong id="val-pd-vol">-</strong></div>
+                                style="left: 20px; top: 350px;">
+                                <div class="node-card">
+                                    <div class="node-title">Pit Domestik</div>
+                                    <div class="node-value">
+                                        <div><span>Vol:</span> <strong id="val-pd-vol">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/PIT SPARTA.png') }}"
+                                    alt="Pit Domestik">
                             </div>
 
-                            <!-- Lumpur Aktif (Lower Column 5) -->
+                            <!-- Lumpur Aktif (Col 4, Row 3) -->
                             <div class="machine-node" id="node-lumpur_aktif" data-unit="lumpur_aktif"
-                                style="left: 780px; top: 310px;">
-                                <div class="node-title">Lumpur Aktif</div>
-                                <div class="node-value">
-                                    <div><span>pH:</span> <strong id="val-la-ph">-</strong></div>
-                                    <div><span>TSS:</span> <strong id="val-la-tss">-</strong></div>
-                                    <div><span>COD:</span> <strong id="val-la-cod">-</strong></div>
+                                style="left: 560px; top: 350px;">
+                                <div class="node-card">
+                                    <div class="node-title">Lumpur Aktif</div>
+                                    <div class="node-value">
+                                        <div><span>pH:</span> <strong id="val-la-ph">-</strong></div>
+                                        <div><span>TSS:</span> <strong id="val-la-tss">-</strong></div>
+                                        <div><span>COD:</span> <strong id="val-la-cod">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img"
+                                    src="{{ asset('assets/images/wwtp/dashboard/LUMPUR AKTIF.png') }}" alt="Lumpur Aktif">
                             </div>
 
-                            <!-- DAF (Col 6, Row 2) -->
-                            <div class="machine-node" id="node-daf" data-unit="daf" style="left: 970px; top: 190px;">
-                                <div class="node-title">DAF</div>
-                                <div class="node-value">
-                                    <div><span>pH:</span> <strong id="val-df-ph">-</strong></div>
-                                    <div><span>TSS:</span> <strong id="val-df-tss">-</strong></div>
-                                    <div><span>COD:</span> <strong id="val-df-cod">-</strong></div>
+                            <!-- DAF (Col 5, Row 3) -->
+                            <div class="machine-node" id="node-daf" data-unit="daf" style="left: 740px; top: 350px;">
+                                <div class="node-card">
+                                    <div class="node-title">DAF</div>
+                                    <div class="node-value">
+                                        <div><span>pH:</span> <strong id="val-df-ph">-</strong></div>
+                                        <div><span>TSS:</span> <strong id="val-df-tss">-</strong></div>
+                                        <div><span>COD:</span> <strong id="val-df-cod">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/DAF.png') }}"
+                                    alt="DAF">
                             </div>
 
-                            <!-- Sand Filter (Col 7, Row 2) -->
+                            <!-- Sand Filter (Col 6, Row 3) -->
                             <div class="machine-node" id="node-sandfilter" data-unit="sandfilter"
-                                style="left: 1160px; top: 190px;">
-                                <div class="node-title">Sand Filter</div>
-                                <div class="node-value">
-                                    <div><span>pH:</span> <strong id="val-sf-ph">-</strong></div>
-                                    <div><span>TSS:</span> <strong id="val-sf-tss">-</strong></div>
-                                    <div><span>COD:</span> <strong id="val-sf-cod">-</strong></div>
+                                style="left: 920px; top: 350px;">
+                                <div class="node-card">
+                                    <div class="node-title">Sand Filter</div>
+                                    <div class="node-value">
+                                        <div><span>pH:</span> <strong id="val-sf-ph">-</strong></div>
+                                        <div><span>TSS:</span> <strong id="val-sf-tss">-</strong></div>
+                                        <div><span>COD:</span> <strong id="val-sf-cod">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img"
+                                    src="{{ asset('assets/images/wwtp/dashboard/SAND FILTER.png') }}" alt="Sand Filter">
                             </div>
 
-                            <!-- Outlet (Col 8, Row 2) -->
+                            <!-- Outlet (Col 6, Row 4) -->
                             <div class="machine-node" id="node-outlet" data-unit="outlet"
-                                style="left: 1350px; top: 190px;">
-                                <div class="node-title">Outlet</div>
-                                <div class="node-value">
-                                    <div><span>pH:</span> <strong id="val-ot-ph">-</strong></div>
-                                    <div><span>TSS:</span> <strong id="val-ot-tss">-</strong></div>
-                                    <div><span>COD:</span> <strong id="val-ot-cod">-</strong></div>
+                                style="left: 920px; top: 495px;">
+                                <div class="node-card">
+                                    <div class="node-title">Outlet</div>
+                                    <div class="node-value">
+                                        <div><span>pH:</span> <strong id="val-ot-ph">-</strong></div>
+                                        <div><span>TSS:</span> <strong id="val-ot-tss">-</strong></div>
+                                        <div><span>COD:</span> <strong id="val-ot-cod">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/OUTLET.png') }}"
+                                    alt="Outlet">
                             </div>
 
 
                             <!-- === SLUDGE LINE NODES === -->
                             <div class="machine-node" id="node-drain_lumpur" data-unit="drain_lumpur"
-                                style="left: 210px; top: 460px;">
-                                <div class="node-title">Drain Lumpur</div>
-                                <div class="node-value">
-                                    <div><span>Vol:</span> <strong id="val-dl-vol">-</strong></div>
+                                style="left: 20px; top: 495px;">
+                                <div class="node-card">
+                                    <div class="node-title">Drain Lumpur</div>
+                                    <div class="node-value">
+                                        <div><span>Vol:</span> <strong id="val-dl-vol">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img"
+                                    src="{{ asset('assets/images/wwtp/dashboard/DRAIN LUMPUR.png') }}"
+                                    alt="Drain Lumpur">
                             </div>
 
                             <div class="machine-node" id="node-screwpress" data-unit="screwpress"
-                                style="left: 400px; top: 460px;">
-                                <div class="node-title">Screwpress</div>
-                                <div class="node-value">
-                                    <div><span>RH:</span> <strong id="val-sp-rh">-</strong></div>
-                                    <div><span>Content:</span> <strong id="val-sp-cnt">-</strong></div>
+                                style="left: 200px; top: 495px;">
+                                <div class="node-card">
+                                    <div class="node-title">Screwpress</div>
+                                    <div class="node-value">
+                                        <div><span>RH:</span> <strong id="val-sp-rh">-</strong></div>
+                                        <div><span>Content:</span> <strong id="val-sp-cnt">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/SCREWPRESS.png') }}"
+                                    alt="Screwpress">
                             </div>
 
                             <div class="machine-node" id="node-ibc_tank" data-unit="ibc_tank"
-                                style="left: 590px; top: 460px;">
-                                <div class="node-title">IBC Tank</div>
-                                <div class="node-value">
-                                    <div><span>Hasil:</span> <strong id="val-it-vol">-</strong></div>
+                                style="left: 380px; top: 495px;">
+                                <div class="node-card">
+                                    <div class="node-title">IBC Tank</div>
+                                    <div class="node-value">
+                                        <div><span>Hasil:</span> <strong id="val-it-vol">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img" src="{{ asset('assets/images/wwtp/dashboard/IBC TANK.png') }}"
+                                    alt="IBC Tank">
                             </div>
 
                             <div class="machine-node" id="node-pengangkutan_sludge" data-unit="pengangkutan_sludge"
-                                style="left: 780px; top: 460px;">
-                                <div class="node-title">Pengangkutan Sludge</div>
-                                <div class="node-value">
-                                    <div><span>Jumlah:</span> <strong id="val-ps-qty">-</strong></div>
+                                style="left: 560px; top: 495px;">
+                                <div class="node-card">
+                                    <div class="node-title">Pengangkutan Sludge</div>
+                                    <div class="node-value">
+                                        <div><span>Jumlah:</span> <strong id="val-ps-qty">-</strong></div>
+                                    </div>
                                 </div>
+                                <img class="node-3d-img"
+                                    src="{{ asset('assets/images/wwtp/dashboard/PENGANGKUTAN SLUDGE.png') }}"
+                                    alt="Pengangkutan Sludge">
                             </div>
 
                         </div>
@@ -609,8 +720,10 @@
                         y: 0
                     };
                     let pos = el.position();
+                    // Use node-card width (135px) as right edge, not full node width (180px),
+                    // so horizontal lines are visible when nodes are directly adjacent
                     return {
-                        x: pos.left + el.outerWidth(),
+                        x: pos.left + 135,
                         y: pos.top + el.outerHeight() / 2
                     };
                 }
@@ -625,6 +738,32 @@
                     return {
                         x: pos.left,
                         y: pos.top + el.outerHeight() / 2
+                    };
+                }
+
+                function getBottomPos(elId) {
+                    let el = $('#' + elId);
+                    if (!el.length) return {
+                        x: 0,
+                        y: 0
+                    };
+                    let pos = el.position();
+                    return {
+                        x: pos.left + el.outerWidth() / 2,
+                        y: pos.top + el.outerHeight()
+                    };
+                }
+
+                function getTopPos(elId) {
+                    let el = $('#' + elId);
+                    if (!el.length) return {
+                        x: 0,
+                        y: 0
+                    };
+                    let pos = el.position();
+                    return {
+                        x: pos.left + el.outerWidth() / 2,
+                        y: pos.top
                     };
                 }
 
@@ -649,28 +788,23 @@
                 // Split Anaerob to Aerob & Lumpur Aktif
                 let p_an_r = getRightPos('node-anaerob');
                 let p_ae = getLeftPos('node-aerob');
-                let p_la = getLeftPos('node-lumpur_aktif');
-                let midX = p_an_r.x + (p_ae.x - p_an_r.x) / 2;
-                $('#line-anaerob-aerob').attr('d',
-                    `M ${p_an_r.x} ${p_an_r.y} L ${midX} ${p_an_r.y} L ${midX} ${p_ae.y} L ${p_ae.x} ${p_ae.y}`);
-                $('#line-anaerob-lumpur').attr('d',
-                    `M ${p_an_r.x} ${p_an_r.y} L ${midX} ${p_an_r.y} L ${midX} ${p_la.y} L ${p_la.x} ${p_la.y}`);
+                let p_la = getTopPos('node-lumpur_aktif');
+                let p_an_b = getBottomPos('node-anaerob');
+                $('#line-anaerob-aerob').attr('d', `M ${p_an_r.x} ${p_an_r.y} L ${p_ae.x} ${p_ae.y}`);
+                $('#line-anaerob-lumpur').attr('d', `M ${p_an_b.x} ${p_an_b.y} L ${p_la.x} ${p_la.y}`);
 
                 // Domestik to Lumpur Aktif
                 let p_dom = getRightPos('node-pit_domestik');
-                $('#line-domestik-lumpur').attr('d', `M ${p_dom.x} ${p_dom.y} L ${p_la.x} ${p_la.y}`);
+                let p_la_l = getLeftPos('node-lumpur_aktif');
+                $('#line-domestik-lumpur').attr('d', `M ${p_dom.x} ${p_dom.y} L ${p_la_l.x} ${p_la_l.y}`);
 
                 // Aerob & Lumpur Aktif merging to DAF
-                let p_ae_r = getRightPos('node-aerob');
+                let p_ae_b = getBottomPos('node-aerob');
+                let p_daf_t = getTopPos('node-daf');
                 let p_la_r = getRightPos('node-lumpur_aktif');
-                let p_daf = getLeftPos('node-daf');
-                let midX2 = p_ae_r.x + (p_daf.x - p_ae_r.x) / 2;
-                $('#line-aerob-daf').attr('d',
-                    `M ${p_ae_r.x} ${p_ae_r.y} L ${midX2} ${p_ae_r.y} L ${midX2} ${p_daf.y} L ${p_daf.x} ${p_daf.y}`
-                );
-                $('#line-lumpur-daf').attr('d',
-                    `M ${p_la_r.x} ${p_la_r.y} L ${midX2} ${p_la_r.y} L ${midX2} ${p_daf.y} L ${p_daf.x} ${p_daf.y}`
-                );
+                let p_daf_l = getLeftPos('node-daf');
+                $('#line-aerob-daf').attr('d', `M ${p_ae_b.x} ${p_ae_b.y} L ${p_daf_t.x} ${p_daf_t.y}`);
+                $('#line-lumpur-daf').attr('d', `M ${p_la_r.x} ${p_la_r.y} L ${p_daf_l.x} ${p_daf_l.y}`);
 
                 // DAF to Sand Filter
                 let p_daf_r = getRightPos('node-daf');
@@ -678,9 +812,9 @@
                 $('#line-daf-sand').attr('d', `M ${p_daf_r.x} ${p_daf_r.y} L ${p_sf.x} ${p_sf.y}`);
 
                 // Sand Filter to Outlet
-                let p_sf_r = getRightPos('node-sandfilter');
-                let p_ot = getLeftPos('node-outlet');
-                $('#line-sand-outlet').attr('d', `M ${p_sf_r.x} ${p_sf_r.y} L ${p_ot.x} ${p_ot.y}`);
+                let p_sf_b = getBottomPos('node-sandfilter');
+                let p_ot_t = getTopPos('node-outlet');
+                $('#line-sand-outlet').attr('d', `M ${p_sf_b.x} ${p_sf_b.y} L ${p_ot_t.x} ${p_ot_t.y}`);
 
                 // Sludge Line
                 let p_dl = getRightPos('node-drain_lumpur');
@@ -826,8 +960,12 @@
                             <div class="p-3 bg-dark-subtle rounded-3 border border-secondary">
                                 <span class="text-muted small d-block">DEBIT ALIRAN MASUK</span>
                                 <div class="d-flex justify-content-between mt-2">
-                                    <span>Debit 1 (Avg):</span>
+                                    <span>Debit 1 (Total):</span>
                                     <strong class="text-info">${rawFmt(res.proses.debit1, 1, 'm³')}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span>Debit 2 (Total):</span>
+                                    <strong class="text-info">${rawFmt(res.proses.debit2, 1, 'm³')}</strong>
                                 </div>
                             </div>
                             <div class="p-3 bg-dark-subtle rounded-3 border border-secondary">
@@ -882,9 +1020,9 @@
                                     <strong class="text-light">${rawFmt(res.analisa['Outlet Anaerob'].ec, 0, 'µS/cm')}</strong>
                                 </div>
                             </div>
-                            <div class="p-3 bg-info-subtle text-dark rounded-3 border border-info">
-                                <span class="fw-bold d-block text-uppercase small">Formula Efisiensi (Removal)</span>
-                                <code class="d-block mt-1 font-monospace text-dark" style="font-size: 10px;">((Influent - Outlet Anaerob) / Influent) * 100</code>
+                            <div class="p-3 rounded-3 border" style="background-color: rgba(13, 202, 240, 0.1); border-color: rgba(13, 202, 240, 0.35);">
+                                <span class="fw-bold d-block text-uppercase small text-info">Formula Efisiensi (Removal)</span>
+                                <code class="d-block mt-1 font-monospace text-light" style="font-size: 10px;">((Influent - Outlet Anaerob) / Influent) * 100</code>
                             </div>
                         </div>
                     `;
@@ -936,9 +1074,9 @@
                                     <strong class="text-light">${rawFmt(res.analisa['Aerasi-5'].ec, 0, 'µS/cm')}</strong>
                                 </div>
                             </div>
-                            <div class="p-3 bg-info-subtle text-dark rounded-3 border border-info">
-                                <span class="fw-bold d-block text-uppercase small">Formula Efisiensi (Removal)</span>
-                                <code class="d-block mt-1 font-monospace text-dark" style="font-size: 10px;">((Outlet Anaerob - Aerasi 6) / Outlet Anaerob) * 100</code>
+                            <div class="p-3 rounded-3 border" style="background-color: rgba(13, 202, 240, 0.1); border-color: rgba(13, 202, 240, 0.35);">
+                                <span class="fw-bold d-block text-uppercase small text-info">Formula Efisiensi (Removal)</span>
+                                <code class="d-block mt-1 font-monospace text-light" style="font-size: 10px;">((Outlet Anaerob - Aerasi 6) / Outlet Anaerob) * 100</code>
                             </div>
                         </div>
                     `;
@@ -973,9 +1111,9 @@
                                     <strong class="text-light">${rawFmt(res.analisa['Lumpur Aktif'].ec, 0, 'µS/cm')}</strong>
                                 </div>
                             </div>
-                            <div class="p-3 bg-info-subtle text-dark rounded-3 border border-info">
-                                <span class="fw-bold d-block text-uppercase small">Formula Efisiensi (Removal)</span>
-                                <code class="d-block mt-1 font-monospace text-dark" style="font-size: 10px;">((Outlet Anaerob - Lumpur Aktif) / Outlet Anaerob) * 100</code>
+                            <div class="p-3 rounded-3 border" style="background-color: rgba(13, 202, 240, 0.1); border-color: rgba(13, 202, 240, 0.35);">
+                                <span class="fw-bold d-block text-uppercase small text-info">Formula Efisiensi (Removal)</span>
+                                <code class="d-block mt-1 font-monospace text-light" style="font-size: 10px;">((Outlet Anaerob - Lumpur Aktif) / Outlet Anaerob) * 100</code>
                             </div>
                         </div>
                     `;
@@ -1010,9 +1148,9 @@
                                     <strong class="text-light">${rawFmt(res.analisa['Outlet DAF'].ec, 0, 'µS/cm')}</strong>
                                 </div>
                             </div>
-                            <div class="p-3 bg-info-subtle text-dark rounded-3 border border-info">
-                                <span class="fw-bold d-block text-uppercase small">Formula Efisiensi (Removal)</span>
-                                <div class="small mt-1 text-secondary" style="font-size: 9px; line-height: 1.2;">
+                            <div class="p-3 rounded-3 border" style="background-color: rgba(13, 202, 240, 0.1); border-color: rgba(13, 202, 240, 0.35);">
+                                <span class="fw-bold d-block text-uppercase small text-info">Formula Efisiensi (Removal)</span>
+                                <div class="small mt-1 text-light font-monospace" style="font-size: 9px; line-height: 1.2;">
                                     Clarifier Avg = (Clarifier 1 + Clarifier 2) / 2 <br>
                                     ((Clarifier Avg - DAF) / Clarifier Avg) * 100
                                 </div>
@@ -1050,9 +1188,9 @@
                                     <strong class="text-light">${rawFmt(res.analisa['Outlet Sand Filter'].ec, 0, 'µS/cm')}</strong>
                                 </div>
                             </div>
-                            <div class="p-3 bg-info-subtle text-dark rounded-3 border border-info">
-                                <span class="fw-bold d-block text-uppercase small">Formula Efisiensi (Removal)</span>
-                                <code class="d-block mt-1 font-monospace text-dark" style="font-size: 10px;">((DAF - Sandfilter) / DAF) * 100</code>
+                            <div class="p-3 rounded-3 border" style="background-color: rgba(13, 202, 240, 0.1); border-color: rgba(13, 202, 240, 0.35);">
+                                <span class="fw-bold d-block text-uppercase small text-info">Formula Efisiensi (Removal)</span>
+                                <code class="d-block mt-1 font-monospace text-light" style="font-size: 10px;">((DAF - Sandfilter) / DAF) * 100</code>
                             </div>
                         </div>
                     `;
@@ -1071,10 +1209,6 @@
                             <div class="p-3 bg-dark-subtle rounded-3 border border-secondary">
                                 <span class="text-muted small d-block">PROSES HARIAN</span>
                                 <div class="d-flex justify-content-between mt-2">
-                                    <span>Volume Debit 2:</span>
-                                    <strong class="text-info">${rawFmt(res.proses.debit2, 1, 'm³')}</strong>
-                                </div>
-                                <div class="d-flex justify-content-between mt-1">
                                     <span>Pit Outlet Sum:</span>
                                     <strong class="text-info">${rawFmt(res.proses.pit_outlet, 1, 'm³')}</strong>
                                 </div>
@@ -1098,9 +1232,9 @@
                                     <strong class="text-light">${rawFmt(res.analisa.Effluent.ec, 0, 'µS/cm')}</strong>
                                 </div>
                             </div>
-                            <div class="p-3 bg-info-subtle text-dark rounded-3 border border-info">
-                                <span class="fw-bold d-block text-uppercase small text-dark">Formula Total Removal</span>
-                                <code class="d-block mt-1 font-monospace text-dark" style="font-size: 10px;">((Influent - Outlet) / Influent) * 100</code>
+                            <div class="p-3 rounded-3 border" style="background-color: rgba(13, 202, 240, 0.1); border-color: rgba(13, 202, 240, 0.35);">
+                                <span class="fw-bold d-block text-uppercase small text-info">Formula Total Removal</span>
+                                <code class="d-block mt-1 font-monospace text-light" style="font-size: 10px;">((Influent - Outlet) / Influent) * 100</code>
                             </div>
                         </div>
                     `;
@@ -1156,8 +1290,8 @@
                         <div class="p-3 bg-dark-subtle rounded-3 border border-secondary">
                             <span class="text-muted small d-block">PROSES SLUDGE</span>
                             <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span class="text-white fw-semibold">Volume Hasil Lumpur:</span>
-                                <span class="fs-16 fw-bold text-info">${rawFmt(res.sludge.hasil_lumpur, 1, 'm³')}</span>
+                                <span class="text-white fw-semibold">Hasil Lumpur:</span>
+                                <span class="fs-16 fw-bold text-info">${rawFmt(res.sludge.hasil_lumpur, 1, 'ton')}</span>
                             </div>
                         </div>
                     `;
@@ -1174,7 +1308,7 @@
                             <span class="text-muted small d-block">DISPOSAL REKAP MINGGUAN</span>
                             <div class="d-flex justify-content-between align-items-center mt-2">
                                 <span class="text-white fw-semibold">Jumlah Pengangkutan:</span>
-                                <span class="fs-16 fw-bold text-info">${rawFmt(res.sludge.pengangkutan, 0, 'm³')}</span>
+                                <span class="fs-16 fw-bold text-info">${rawFmt(res.sludge.pengangkutan, 0, 'ton')}</span>
                             </div>
                         </div>
                     `;
