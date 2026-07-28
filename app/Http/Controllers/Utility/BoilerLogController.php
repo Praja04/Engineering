@@ -154,25 +154,10 @@ class BoilerLogController extends Controller
         $query = BoilerApproval::with(['foreman', 'supervisor'])
             ->orderBy('tanggal', 'desc');
 
-        $user = Auth::user();
-        $jabatan = $user->jabatan;
-
-        if ($request->mode === 'approval') {
-            $query->where(function ($q) use ($user, $jabatan) {
-                if ($jabatan === 'foreman') {
-                    $q->where('status', 'draft');
-                } elseif ($jabatan === 'supervisor') {
-                    $q->where('status', 'waiting_supervisor');
-                } else {
-                    $q->where('status', '!=', 'approved_supervisor');
-                }
-            });
-        }
-
         if ($request->filled('bulan')) {
             $bulan = $request->bulan; // Format: YYYY-MM
             $query->whereYear('tanggal', substr($bulan, 0, 4))
-                  ->whereMonth('tanggal', substr($bulan, 5, 2));
+                ->whereMonth('tanggal', substr($bulan, 5, 2));
         }
 
         if ($request->filled('status')) {
@@ -188,7 +173,71 @@ class BoilerLogController extends Controller
             $end = Carbon::parse($item->tanggal)->addDay()->setTime(6, 0, 0);
 
             $logs = BoilerLog::whereBetween('waktu', [$start, $end])->get();
-            
+
+            $item->total_logs = $logs->count();
+            $item->avg_steam = $logs->avg('PVSteam');
+            $item->avg_temp = $logs->avg('SuhuFeedTank');
+            return $item;
+        });
+
+        return response()->json([
+            'status' => 200,
+            'data' => $items,
+            'pagination' => [
+                'total' => $data->total(),
+                'per_page' => $data->perPage(),
+                'current_page' => $data->currentPage(),
+                'last_page' => $data->lastPage(),
+            ]
+        ]);
+    }
+
+    public function getApprovalData(Request $request)
+    {
+        $query = BoilerApproval::with(['foreman', 'supervisor'])
+            ->orderBy('tanggal', 'desc');
+
+        $user = Auth::user();
+        $jabatan = $user->jabatan;
+
+        $query->where(function ($q) use ($user, $jabatan) {
+            if ($jabatan === 'foreman') {
+                // Foreman hanya memantau data yang dia ajukan sendiri dan sedang menunggu approval
+                $q->where('foreman_id', $user->id)
+                  ->where('status', 'waiting_supervisor');
+            } elseif ($jabatan === 'supervisor') {
+                // Supervisor menyetujui data yang ditujukan untuk dirinya dan sedang menunggu approval
+                $q->where('supervisor_id', $user->id)
+                  ->where('status', 'waiting_supervisor');
+            } elseif ($jabatan === 'admin') {
+                // Admin bisa melihat semua data yang sedang menunggu approval
+                $q->where('status', 'waiting_supervisor');
+            } else {
+                // Role lain tidak melihat apa-apa di halaman approval
+                $q->whereRaw('1 = 0');
+            }
+        });
+
+        if ($request->filled('bulan')) {
+            $bulan = $request->bulan; // Format: YYYY-MM
+            $query->whereYear('tanggal', substr($bulan, 0, 4))
+                ->whereMonth('tanggal', substr($bulan, 5, 2));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $data = $query->paginate($request->get('per_page', 15));
+
+        // Hitung total log count dan rata-rata indikator
+        $items = collect($data->items())->map(function ($item) {
+            // Siklus Harian 06:00 s.d 06:00 hari berikutnya
+            $start = Carbon::parse($item->tanggal)->setTime(6, 0, 0);
+            $end = Carbon::parse($item->tanggal)->addDay()->setTime(6, 0, 0);
+
+            $logs = BoilerLog::whereBetween('waktu', [$start, $end])->get();
+
             $item->total_logs = $logs->count();
             $item->avg_steam = $logs->avg('PVSteam');
             $item->avg_temp = $logs->avg('SuhuFeedTank');
@@ -250,7 +299,6 @@ class BoilerLogController extends Controller
     public function submitDaily(Request $request, $id)
     {
         $request->validate([
-            'foreman_id' => 'required|exists:users,id',
             'supervisor_id' => 'required|exists:users,id',
         ]);
 
@@ -260,8 +308,9 @@ class BoilerLogController extends Controller
             return response()->json(['message' => 'Hanya laporan draft yang dapat di-submit'], 422);
         }
 
+        // Foreman diambil otomatis dari user yang sedang login
         $approval->update([
-            'foreman_id' => $request->foreman_id,
+            'foreman_id' => Auth::id(),
             'supervisor_id' => $request->supervisor_id,
             'status' => 'waiting_supervisor',
             'submitted_at' => now(),
@@ -287,6 +336,68 @@ class BoilerLogController extends Controller
             'status' => 200,
             'message' => 'Laporan berhasil di-submit untuk approval Supervisor.'
         ]);
+    }
+
+    public function massSubmitDaily(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:boiler_approvals,id',
+            'supervisor_id' => 'required|exists:users,id',
+        ]);
+
+        $ids = $request->ids;
+        $supervisorId = $request->supervisor_id;
+        $user = Auth::user();
+
+        if ($user->jabatan !== 'foreman' && $user->jabatan !== 'admin') {
+            return response()->json(['message' => 'Hanya foreman atau admin yang dapat mengajukan laporan harian.'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $approvals = BoilerApproval::whereIn('id', $ids)
+                ->where('status', 'draft')
+                ->get();
+
+            if ($approvals->isEmpty()) {
+                return response()->json(['message' => 'Tidak ada laporan draft valid yang dapat diajukan.'], 422);
+            }
+
+            foreach ($approvals as $approval) {
+                $approval->update([
+                    'foreman_id' => $user->id,
+                    'supervisor_id' => $supervisorId,
+                    'status' => 'waiting_supervisor',
+                    'submitted_at' => now(),
+                ]);
+
+                // Kirim notifikasi ke Supervisor
+                try {
+                    $dateFormatted = Carbon::parse($approval->tanggal)->translatedFormat('d F Y');
+                    NotificationsModel::create([
+                        'user_id' => $supervisorId,
+                        'title' => 'Approval Boiler Log Harian (Massal)',
+                        'message' => "Laporan Boiler Log tanggal {$dateFormatted} menunggu persetujuan Anda.",
+                        'url' => url('/utility/boiler-logs/approval'),
+                        'notifiable_type' => BoilerApproval::class,
+                        'notifiable_id' => $approval->id,
+                        'is_read' => 0,
+                    ]);
+                } catch (\Exception $ne) {
+                    Log::error('Notification Boiler Log (Mass) failed: ' . $ne->getMessage());
+                }
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $approvals->count() . ' laporan berhasil diajukan untuk approval Supervisor.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+        }
     }
 
     public function approveDaily(Request $request, $id)
@@ -382,7 +493,7 @@ class BoilerLogController extends Controller
         foreach ($logs as $item) {
             $logTime = Carbon::parse($item->waktu);
             $hour = $logTime->hour;
-            
+
             // Tentukan baris data berdasarkan jam log
             if ($logTime->isSameDay($start)) {
                 if ($hour >= 6) {
@@ -517,19 +628,8 @@ class BoilerLogController extends Controller
         $logTime = Carbon::parse($waktu);
         $operationalDate = $logTime->hour < 6 ? $logTime->copy()->subDay()->toDateString() : $logTime->toDateString();
 
+        // Form tetap bisa diisi oleh semua user meskipun status sudah approved_supervisor
         $approval = BoilerApproval::where('tanggal', $operationalDate)->first();
-        if ($approval) {
-            if ($approval->status === 'approved_supervisor') {
-                return response()->json(['message' => 'Laporan harian untuk tanggal operasional ini sudah disetujui, tidak dapat diisi.'], 422);
-            }
-            if ($approval->status === 'waiting_supervisor') {
-                // Hanya foreman, supervisor, dan admin yang boleh mengisi/mengedit jika status waiting_supervisor
-                $user = Auth::user();
-                if ($user && !in_array($user->jabatan, ['foreman', 'supervisor', 'admin'])) {
-                    return response()->json(['message' => 'Laporan harian ini sedang menunggu persetujuan supervisor. Hanya foreman atau supervisor yang dapat mengisi/mengubah.'], 422);
-                }
-            }
-        }
 
         // Cek apakah data waktu tersebut sudah ada di database (misal dari sync sensor)
         $existingLog = BoilerLog::where('waktu', $waktu)->first();
@@ -596,13 +696,8 @@ class BoilerLogController extends Controller
         $logTime = Carbon::parse($log->waktu);
         $operationalDate = $logTime->hour < 6 ? $logTime->copy()->subDay()->toDateString() : $logTime->toDateString();
 
-        $approval = BoilerApproval::where('tanggal', $operationalDate)->first();
-        if ($approval && $approval->status !== 'draft') {
-            // Jika sudah di-approve atau diajukan (selain draft), hanya foreman dan admin yang boleh mengedit
-            if (!in_array($user->jabatan, ['foreman', 'admin'])) {
-                return response()->json(['message' => 'Laporan sudah diajukan/disetujui. Hanya foreman yang dapat mengedit data manual.'], 422);
-            }
-        }
+        // Form tetap bisa diedit oleh semua user yang berwenang meskipun status sudah approved_supervisor
+        // (tidak ada pembatasan status untuk edit)
 
         $log->update([
             'PVSteam'             => $request->PVSteam,
@@ -637,5 +732,103 @@ class BoilerLogController extends Controller
             'status' => 200,
             'message' => 'Data log boiler berhasil diperbarui.'
         ]);
+    }
+
+    public function massApproveDaily(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:boiler_approvals,id'
+        ]);
+
+        $ids = $request->ids;
+        $user = Auth::user();
+
+        if ($user->jabatan !== 'supervisor' && $user->jabatan !== 'admin') {
+            return response()->json(['message' => 'Anda tidak berwenang melakukan tindakan ini.'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $approvals = BoilerApproval::whereIn('id', $ids)
+                ->where('status', 'waiting_supervisor')
+                ->get();
+
+            if ($approvals->isEmpty()) {
+                return response()->json(['message' => 'Tidak ada laporan valid yang dapat disetujui.'], 422);
+            }
+
+            foreach ($approvals as $approval) {
+                $approval->update([
+                    'status' => 'approved_supervisor',
+                    'approved_at' => now(),
+                    'supervisor_id' => $user->id,
+                ]);
+
+                // Hapus notifikasi untuk user ini
+                NotificationsModel::where('notifiable_type', BoilerApproval::class)
+                    ->where('notifiable_id', $approval->id)
+                    ->where('user_id', $user->id)
+                    ->delete();
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $approvals->count() . ' laporan berhasil disetujui.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function massRejectDaily(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:boiler_approvals,id'
+        ]);
+
+        $ids = $request->ids;
+        $user = Auth::user();
+
+        if ($user->jabatan !== 'supervisor' && $user->jabatan !== 'admin') {
+            return response()->json(['message' => 'Anda tidak berwenang melakukan tindakan ini.'], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $approvals = BoilerApproval::whereIn('id', $ids)
+                ->where('status', 'waiting_supervisor')
+                ->get();
+
+            if ($approvals->isEmpty()) {
+                return response()->json(['message' => 'Tidak ada laporan valid yang dapat ditolak.'], 422);
+            }
+
+            foreach ($approvals as $approval) {
+                $approval->update([
+                    'status' => 'draft',
+                    'foreman_id' => null,
+                    'submitted_at' => null,
+                    'approved_at' => null,
+                ]);
+
+                // Hapus notifikasi terkait
+                NotificationsModel::where('notifiable_type', BoilerApproval::class)
+                    ->where('notifiable_id', $approval->id)
+                    ->delete();
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $approvals->count() . ' laporan berhasil ditolak dan dikembalikan ke status draft.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+        }
     }
 }

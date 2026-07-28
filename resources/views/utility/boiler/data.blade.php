@@ -87,10 +87,24 @@
                         </div>
                     </div>
 
+                    @if(in_array(Auth::user()->jabatan, ['foreman', 'admin']))
+                    <div class="mb-3 d-flex gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" id="btnSelectAll">
+                            <i class="ri-checkbox-multiple-line me-1"></i> Pilih Semua Draft
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 d-none" id="btnMassSubmit">
+                            <i class="ri-send-plane-line me-1"></i> Ajukan Terpilih (<span id="checkedCount">0</span>)
+                        </button>
+                    </div>
+                    @endif
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead>
                                 <tr>
+                                    @if(in_array(Auth::user()->jabatan, ['foreman', 'admin']))
+                                    <th width="40"><input type="checkbox" id="checkAll" class="form-check-input"></th>
+                                    @endif
                                     <th>No</th>
                                     <th>Tanggal</th>
                                     <th>Foreman Pengaju</th>
@@ -104,7 +118,7 @@
                             </thead>
                             <tbody id="tableBody">
                                 <tr>
-                                    <td colspan="9" class="text-center py-5 text-muted">
+                                    <td colspan="{{ in_array(Auth::user()->jabatan, ['foreman', 'admin']) ? 10 : 9 }}" class="text-center py-5 text-muted">
                                         <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
                                         Memuat data...
                                     </td>
@@ -168,9 +182,8 @@
                         
                         <div class="mb-3">
                             <label class="form-label fw-bold">Foreman Pengaju</label>
-                            <select id="submit_foreman" name="foreman_id" class="form-select" required>
-                                <option value="">-- Pilih Foreman --</option>
-                            </select>
+                            <input type="text" class="form-control" value="{{ Auth::user()->username }}" disabled>
+                            <small class="text-muted">Foreman otomatis diisi dari akun Anda yang sedang login.</small>
                         </div>
                         
                         <div class="mb-3">
@@ -419,27 +432,13 @@
                 if (usersLoaded) return;
                 $.get("{{ route('boiler-logs.users') }}", function(res) {
                     if (res.status === 200) {
-                        let opForemen = '<option value="">-- Pilih Foreman --</option>';
                         let opSupervisors = '<option value="">-- Pilih Supervisor --</option>';
-                        
-                        res.foremen.forEach(user => {
-                            opForemen += `<option value="${user.id}">${user.username}</option>`;
-                        });
                         
                         res.supervisors.forEach(user => {
                             opSupervisors += `<option value="${user.id}">${user.username}</option>`;
                         });
 
-                        $('#submit_foreman').html(opForemen);
                         $('#submit_supervisor').html(opSupervisors);
-                        
-                        // Set default selection to logged-in user if foreman
-                        const currentUserId = "{{ Auth::user()->id }}";
-                        const currentUserJabatan = "{{ Auth::user()->jabatan }}";
-                        if (currentUserJabatan === 'foreman') {
-                            $('#submit_foreman').val(currentUserId);
-                        }
-
                         usersLoaded = true;
                     }
                 });
@@ -454,10 +453,16 @@
                 const perPage = 15;
                 const status = $('#filterStatus').val();
                 const bulan = $('#filterBulan').val();
+                const isForemanOrAdmin = "{{ in_array(Auth::user()->jabatan, ['foreman', 'admin']) }}";
+
+                // Reset mass action UI
+                $('#checkAll').prop('checked', false);
+                $('#btnMassSubmit').addClass('d-none');
+                $('#checkedCount').text('0');
 
                 $('#tableBody').html(`
                     <tr>
-                        <td colspan="9" class="text-center py-5 text-muted">
+                        <td colspan="${isForemanOrAdmin ? 10 : 9}" class="text-center py-5 text-muted">
                             <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
                             Memuat data...
                         </td>
@@ -474,15 +479,29 @@
                         renderTable(res.data, (page - 1) * perPage);
                         renderPagination(res.pagination);
                     }
+                }).fail(function(xhr) {
+                    console.error('Gagal memuat data rekap:', xhr);
+                    $('#tableBody').html(`
+                        <tr>
+                            <td colspan="${isForemanOrAdmin ? 10 : 9}" class="text-center py-5 text-danger">
+                                <i class="ri-error-warning-line fs-2 d-block mb-2"></i>
+                                Gagal mengambil data dari server (${xhr.status}: ${xhr.statusText})
+                            </td>
+                        </tr>
+                    `);
                 });
             }
 
             function renderTable(data, startNo) {
+                const items = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                const currentUserJabatan = "{{ Auth::user()->jabatan }}";
+                const isForemanOrAdmin = ['foreman', 'admin'].includes(currentUserJabatan);
+
                 let html = '';
-                if (data.length === 0) {
-                    html = '<tr><td colspan="9" class="text-center py-5 text-muted">Tidak ada data ditemukan.</td></tr>';
+                if (items.length === 0) {
+                    html = `<tr><td colspan="${isForemanOrAdmin ? 10 : 9}" class="text-center py-5 text-muted">Tidak ada data ditemukan.</td></tr>`;
                 } else {
-                    data.forEach((item, index) => {
+                    items.forEach((item, index) => {
                         let actionButtons = `
                             <button class="btn btn-sm btn-outline-info btn-detail"
                                 data-id="${item.id}" title="Detail">
@@ -506,8 +525,18 @@
                             `;
                         }
 
+                        let checkboxCol = '';
+                        if (isForemanOrAdmin) {
+                            if (item.status === 'draft') {
+                                checkboxCol = `<td><input type="checkbox" class="form-check-input row-checkbox" value="${item.id}"></td>`;
+                            } else {
+                                checkboxCol = `<td><input type="checkbox" class="form-check-input row-checkbox" disabled></td>`;
+                            }
+                        }
+
                         html += `
                             <tr>
+                                ${checkboxCol}
                                 <td>${startNo + index + 1}</td>
                                 <td>${formatDate(item.tanggal)}</td>
                                 <td>${item.foreman?.username || '-'}</td>
@@ -579,12 +608,9 @@
                         $('#detail_approved_at').text(app.approved_at ? `(${formatDateTime(app.approved_at)})` : '');
 
                         const userJabatan = "{{ Auth::user()->jabatan }}";
-                        let canEdit = false;
-                        if (app.status === 'draft') {
-                            canEdit = ['foreman', 'supervisor', 'admin'].includes(userJabatan);
-                        } else {
-                            canEdit = ['foreman', 'admin'].includes(userJabatan);
-                        }
+                        // Form selalu bisa diedit oleh foreman, supervisor, dan admin
+                        // tanpa memandang status approval (termasuk setelah approved)
+                        let canEdit = ['foreman', 'supervisor', 'admin'].includes(userJabatan);
 
                         let html = '';
                         logs.forEach((log, index) => {
@@ -643,33 +669,122 @@
                     }
                 });
             }
+            // State untuk pengajuan (bisa single maupun massal)
+            let isMassSubmit = false;
+            let currentSubmitIds = [];
 
-            // ── Trigger Submit Modal ──
+            // ── Checkbox Actions ──
+            $(document).on('change', '#checkAll', function() {
+                const checked = $(this).is(':checked');
+                // Hanya centang checkbox yang tidak disabled (status draft)
+                $('.row-checkbox:not(:disabled)').prop('checked', checked);
+                toggleMassSubmitButton();
+            });
+
+            $(document).on('change', '.row-checkbox', function() {
+                const totalChecked = $('.row-checkbox:checked').length;
+                const totalCheckboxes = $('.row-checkbox:not(:disabled)').length;
+                $('#checkAll').prop('checked', totalChecked === totalCheckboxes && totalCheckboxes > 0);
+                toggleMassSubmitButton();
+            });
+
+            // ── Button Pilih Semua Draft ──
+            $(document).on('click', '#btnSelectAll', function() {
+                const totalDrafts = $('.row-checkbox:not(:disabled)').length;
+                if (totalDrafts === 0) {
+                    Swal.fire('Info', 'Tidak ada data draft yang dapat dipilih.', 'info');
+                    return;
+                }
+
+                const totalChecked = $('.row-checkbox:checked').length;
+                const checkAllState = (totalChecked < totalDrafts);
+
+                $('.row-checkbox:not(:disabled)').prop('checked', checkAllState);
+                $('#checkAll').prop('checked', checkAllState);
+                toggleMassSubmitButton();
+            });
+
+            function toggleMassSubmitButton() {
+                const checkedIds = getCheckedIds();
+                const totalChecked = checkedIds.length;
+                const totalDrafts = $('.row-checkbox:not(:disabled)').length;
+
+                if (totalChecked > 0) {
+                    $('#checkedCount').text(totalChecked);
+                    $('#btnMassSubmit').removeClass('d-none');
+                } else {
+                    $('#btnMassSubmit').addClass('d-none');
+                }
+
+                // Update tombol Pilih Semua text/style
+                if (totalChecked === totalDrafts && totalDrafts > 0) {
+                    $('#btnSelectAll').html('<i class="ri-checkbox-multiple-blank-line me-1"></i> Batal Pilih Semua Draft')
+                                      .removeClass('btn-outline-primary')
+                                      .addClass('btn-outline-danger');
+                } else {
+                    $('#btnSelectAll').html('<i class="ri-checkbox-multiple-line me-1"></i> Pilih Semua Draft')
+                                      .removeClass('btn-outline-danger')
+                                      .addClass('btn-outline-primary');
+                }
+            }
+
+            function getCheckedIds() {
+                const ids = [];
+                $('.row-checkbox:checked').each(function() {
+                    ids.push($(this).val());
+                });
+                return ids;
+            }
+
+            // ── Trigger Single Submit Modal ──
             $(document).on('click', '.btn-submit-approval', function() {
                 const id = $(this).data('id');
-                $('#submit_id').val(id);
+                isMassSubmit = false;
+                currentSubmitIds = [id];
                 loadUsers();
                 $('#modalSubmit').modal('show');
             });
 
-            // ── Confirm Submit ──
+            // ── Trigger Mass Submit Modal ──
+            $(document).on('click', '#btnMassSubmit', function() {
+                const ids = getCheckedIds();
+                if (ids.length === 0) return;
+                
+                isMassSubmit = true;
+                currentSubmitIds = ids;
+                loadUsers();
+                $('#modalSubmit').modal('show');
+            });
+
+            // ── Confirm Submit (Single / Mass) ──
             $('#btnConfirmSubmit').click(function() {
-                const id = $('#submit_id').val();
-                const foreman_id = $('#submit_foreman').val();
                 const supervisor_id = $('#submit_supervisor').val();
 
-                if (!foreman_id || !supervisor_id) {
-                    Swal.fire('Validasi', 'Mohon pilih Foreman dan Supervisor.', 'warning');
+                if (!supervisor_id) {
+                    Swal.fire('Validasi', 'Mohon pilih Supervisor.', 'warning');
                     return;
                 }
 
+                const url = isMassSubmit 
+                    ? "{{ route('boiler-logs.mass-submit') }}"
+                    : "{{ url('utility/boiler-logs/submit') }}/" + currentSubmitIds[0];
+
+                const postData = isMassSubmit
+                    ? { ids: currentSubmitIds, supervisor_id: supervisor_id }
+                    : { supervisor_id: supervisor_id };
+
+                Swal.fire({
+                    title: 'Memproses...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
                 $.ajax({
-                    url: "{{ url('utility/boiler-logs/submit') }}/" + id,
+                    url: url,
                     method: 'POST',
-                    data: {
-                        foreman_id: foreman_id,
-                        supervisor_id: supervisor_id
-                    },
+                    data: postData,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
@@ -679,7 +794,7 @@
                         loadData(1);
                     },
                     error: function(xhr) {
-                        Swal.fire('Error', xhr.responseJSON.message || 'Gagal mengajukan approval.', 'error');
+                        Swal.fire('Error', xhr.responseJSON?.message || 'Gagal mengajukan approval.', 'error');
                     }
                 });
             });
