@@ -584,6 +584,7 @@
                 const tanggal = $('#tanggal_air').val();
                 const notes = $('textarea[name="notes"]').val();
                 const payload = [];
+                let localValidationFailed = false;
 
                 $('input[name="areas[]"]').each(function() {
                     const area = $(this).val();
@@ -593,13 +594,40 @@
 
                     // Pastikan nilai tidak kosong
                     if (awal !== '' && akhir !== '') {
+                        const valAwal = parseFloat(awal);
+                        const valAkhir = parseFloat(akhir);
+
+                        if (valAkhir < valAwal) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validasi Gagal',
+                                text: `Pemakaian akhir harus lebih besar atau sama dengan awal untuk area ${area}.`
+                            });
+                            localValidationFailed = true;
+                            return false; // break each
+                        }
+
+                        if ((valAkhir - valAwal) > 999) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validasi Gagal',
+                                text: `Total pemakaian untuk area ${area} tidak masuk akal (lebih dari 3 digit / > 999). Silakan cek kembali input pemakaian awal dan akhir.`
+                            });
+                            localValidationFailed = true;
+                            return false; // break each
+                        }
+
                         payload.push({
                             area: area,
-                            pemakaian_liter_awal: parseFloat(awal),
-                            pemakaian_liter_akhir: parseFloat(akhir)
+                            pemakaian_liter_awal: valAwal,
+                            pemakaian_liter_akhir: valAkhir
                         });
                     }
                 });
+
+                if (localValidationFailed) {
+                    return;
+                }
 
                 const finalData = {
                     tanggal: tanggal,

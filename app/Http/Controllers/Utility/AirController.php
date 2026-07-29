@@ -43,6 +43,9 @@ class AirController extends Controller
                         if ($value < $awal) {
                             $fail("Pemakaian akhir harus lebih besar atau sama dengan awal untuk area $areaName.");
                         }
+                        if (($value - $awal) > 999) {
+                            $fail("Total pemakaian untuk area $areaName tidak masuk akal (lebih dari 3 digit / > 999). Silakan cek kembali input pemakaian awal dan akhir.");
+                        }
                     }
                 }
             ],
@@ -509,7 +512,20 @@ class AirController extends Controller
             'tanggal' => 'required|date',
             'jenis_pemakaian' => 'required|string',
             'pemakaian_awal' => 'required|numeric',
-            'pemakaian_akhir' => 'required|numeric',
+            'pemakaian_akhir' => [
+                'required',
+                'numeric',
+                function ($attribute, $value, $fail) use ($request) {
+                    $awal = $request->input('pemakaian_awal');
+                    $areaName = $request->input('jenis_pemakaian');
+                    if ($value < $awal) {
+                        $fail("Pemakaian akhir harus lebih besar atau sama dengan awal untuk area $areaName.");
+                    }
+                    if (($value - $awal) > 999) {
+                        $fail("Total pemakaian untuk area $areaName tidak masuk akal (lebih dari 3 digit / > 999). Silakan cek kembali input pemakaian awal dan akhir.");
+                    }
+                }
+            ],
             'created_by' => 'nullable|string',
             'notes' => 'nullable|string'
         ]);

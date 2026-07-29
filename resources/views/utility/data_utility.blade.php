@@ -749,6 +749,31 @@
             $('#editPanelForm').on('submit', function(e) {
                 e.preventDefault();
 
+                // Validasi khusus untuk Air
+                if (currentUnit === 'Air') {
+                    const awal = parseFloat($('#editPanelFormBody').find('input[name="pemakaian_awal"]').val()) || 0;
+                    const akhir = parseFloat($('#editPanelFormBody').find('input[name="pemakaian_akhir"]').val()) || 0;
+                    const area = $('#editPanelFormBody').find('input[name="jenis_pemakaian"]').val();
+
+                    if (akhir < awal) {
+                        Swal.fire({
+                            title: 'Validasi Gagal!',
+                            text: `Pemakaian akhir harus lebih besar atau sama dengan awal untuk area ${area}.`,
+                            icon: 'error'
+                        });
+                        return;
+                    }
+
+                    if ((akhir - awal) > 999) {
+                        Swal.fire({
+                            title: 'Validasi Gagal!',
+                            text: `Total pemakaian untuk area ${area} tidak masuk akal (lebih dari 3 digit / > 999). Silakan cek kembali input pemakaian awal dan akhir.`,
+                            icon: 'error'
+                        });
+                        return;
+                    }
+                }
+
                 const formData = $(this).serialize();
                 let url = '';
 
