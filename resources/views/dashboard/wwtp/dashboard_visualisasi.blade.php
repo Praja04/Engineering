@@ -652,8 +652,8 @@
                 $('#val-pd-vol').text(fmt(res.proses.pit_domestik, 1, 'm³'));
 
                 // Analisa values
-                $('#val-pg-ph').text(fmt(res.analisa.Influent.ph, 1));
-                $('#val-pg-tss').text(fmt(res.analisa.Influent.tss, 0, 'ppm'));
+                $('#val-pg-ph').text(fmt(res.analisa['Pit Garam'].ph, 1));
+                $('#val-pg-tss').text(fmt(res.analisa['Pit Garam'].tss, 0, 'ppm'));
 
                 $('#val-eq-ph').text(fmt(res.analisa['Equalisasi 2'].ph, 1));
                 $('#val-eq-tss').text(fmt(res.analisa['Equalisasi 2'].tss, 0, 'ppm'));
@@ -664,9 +664,9 @@
                 $('#val-an-cod').text(fmt(res.analisa['Outlet Anaerob'].cod, 0, 'ppm'));
 
                 // Top/Bottom paths (Aerob / Lumpur Aktif)
-                $('#val-ae-ph').text(fmt(res.analisa['Aerasi-5'].ph, 1));
-                $('#val-ae-tss').text(fmt(res.analisa['Aerasi-5'].tss, 0, 'ppm'));
-                $('#val-ae-cod').text(fmt(res.analisa['Aerasi-5'].cod, 0, 'ppm'));
+                $('#val-ae-ph').text(fmt(res.analisa['Aerasi-6'].ph, 1));
+                $('#val-ae-tss').text(fmt(res.analisa['Aerasi-6'].tss, 0, 'ppm'));
+                $('#val-ae-cod').text(fmt(res.analisa['Aerasi-6'].cod, 0, 'ppm'));
 
                 $('#val-la-ph').text(fmt(res.analisa['Lumpur Aktif'].ph, 1));
                 $('#val-la-tss').text(fmt(res.analisa['Lumpur Aktif'].tss, 0, 'ppm'));
@@ -690,7 +690,7 @@
                 $('#val-sp-rh').text(fmt(res.sludge.running_hour_scp, 1, 'jam'));
                 $('#val-sp-cnt').text(fmt(res.sludge.sludge_content, 1, '%'));
                 $('#val-it-vol').text(fmt(res.sludge.hasil_lumpur, 1, 'ton'));
-                $('#val-ps-qty').text(fmt(res.sludge.pengangkutan, 0, 'ton'));
+                $('#val-ps-qty').text(fmt(parseFloat(res.sludge.pengangkutan), 1, 'ton'));
 
                 // Toggle active classes on nodes with values
                 $('.machine-node').each(function() {

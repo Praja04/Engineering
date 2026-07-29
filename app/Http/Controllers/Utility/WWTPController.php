@@ -1103,9 +1103,10 @@ class WWTPController extends Controller
         $dateFormatted = $date->toDateString();
 
         $influentRecords = WwtpInfluentHarian::whereDate('tanggal', $dateFormatted)->get();
+
         $proses = [
-            'debit1' => $influentRecords->sum('debit1') ?? 0,
-            'debit2' => $influentRecords->sum('debit2') ?? 0,
+            'debit1' => $influentRecords->avg('debit1') ?? 0,
+            'debit2' => $influentRecords->avg('debit2') ?? 0,
             'pit_outlet' => $influentRecords->reduce(function ($carry, $rec) {
                 return $carry + max(0, (float)$rec->pit_outlet - (float)($rec->pit_outlet_awal ?? 0));
             }, 0),
@@ -1140,7 +1141,7 @@ class WWTPController extends Controller
 
         $pointNamesMap = [
             'Influent'           => ['Influent'],
-            'Outlet DAF'         => ['Outlet DAF', 'DAF pre', 'DAF post', 'DAF'],
+            'Outlet DAF'         => ['Outlet DAF'],
             'Equalisasi 2'       => ['Influent'],
             'Inlet Anaerob'      => ['Inlet Anaerob'],
             'Outlet Anaerob'     => ['Outlet Anaerob', 'Anaerob'],
