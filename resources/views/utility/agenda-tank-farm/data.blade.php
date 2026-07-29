@@ -155,17 +155,18 @@
                                             <div class="fw-medium text-dark flex-grow-1 pe-2 mb-2 mb-sm-0 small">
                                                 ' . $labelText . '
                                             </div>
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_empty" value="" style="display: none;">
+                                             <div class="btn-group btn-group-sm" role="group">
+                                                 <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_ok" value="OK">
+                                                 <label class="btn btn-outline-success px-3 rounded-start" for="edit_' . $fieldName . '_ok">OK</label>
 
-                                                <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_ok" value="OK">
-                                                <label class="btn btn-outline-success px-3 rounded-start" for="edit_' . $fieldName . '_ok">OK</label>
+                                                 <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_nok" value="NOK">
+                                                 <label class="btn btn-outline-danger px-3" for="edit_' . $fieldName . '_nok">NOK</label>
 
-                                                <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_nok" value="NOK">
-                                                <label class="btn btn-outline-danger px-3 rounded-end" for="edit_' . $fieldName . '_nok">NOK</label>
-                                            </div>
-                                        </div>
-                                        <input type="text" class="form-control form-control-sm edit-input-description bg-soft-danger text-danger border-danger mt-2" name="keterangan_' . $fieldName . '" id="edit_keterangan_' . $fieldName . '" placeholder="Isi keterangan kerusakan / ketidaksesuaian..." style="display: none;">
+                                                 <input type="radio" class="btn-check edit-radio-checklist" name="' . $fieldName . '" id="edit_' . $fieldName . '_empty" value="">
+                                                 <label class="btn btn-outline-secondary px-3 rounded-end" for="edit_' . $fieldName . '_empty">Kosong</label>
+                                             </div>
+                                         </div>
+                                         <input type="text" class="form-control form-control-sm edit-input-description bg-soft-danger text-danger border-danger mt-2" name="keterangan_' . $fieldName . '" id="edit_keterangan_' . $fieldName . '" placeholder="Isi keterangan kerusakan / ketidaksesuaian..." style="display: none;">
                                     </div>
                                     ';
                                 }
