@@ -1059,19 +1059,19 @@
                                 <span class="text-muted small d-block">ANALISA PARAMETER AERASI</span>
                                 <div class="d-flex justify-content-between mt-2">
                                     <span>pH:</span>
-                                    <strong class="text-light">${rawFmt(res.analisa['Aerasi-5'].ph, 1)}</strong>
+                                    <strong class="text-light">${rawFmt(res.analisa['Aerasi-6'].ph, 1)}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
                                     <span>TSS:</span>
-                                    <strong class="text-light">${rawFmt(res.analisa['Aerasi-5'].tss, 0, 'ppm')}</strong>
+                                    <strong class="text-light">${rawFmt(res.analisa['Aerasi-6'].tss, 0, 'ppm')}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
                                     <span>COD:</span>
-                                    <strong class="text-light">${rawFmt(res.analisa['Aerasi-5'].cod, 0, 'ppm')}</strong>
+                                    <strong class="text-light">${rawFmt(res.analisa['Aerasi-6'].cod, 0, 'ppm')}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
                                     <span>EC:</span>
-                                    <strong class="text-light">${rawFmt(res.analisa['Aerasi-5'].ec, 0, 'µS/cm')}</strong>
+                                    <strong class="text-light">${rawFmt(res.analisa['Aerasi-6'].ec, 0, 'µS/cm')}</strong>
                                 </div>
                             </div>
                             <div class="p-3 rounded-3 border" style="background-color: rgba(13, 202, 240, 0.1); border-color: rgba(13, 202, 240, 0.35);">

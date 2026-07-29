@@ -1141,7 +1141,7 @@ class WWTPController extends Controller
         $pointNamesMap = [
             'Influent'           => ['Influent'],
             'Outlet DAF'         => ['Outlet DAF', 'DAF pre', 'DAF post', 'DAF'],
-            'Equalisasi 2'       => ['Equalisasi 2', 'New Anaerob', 'Equalisasi'],
+            'Equalisasi 2'       => ['Influent'],
             'Inlet Anaerob'      => ['Inlet Anaerob'],
             'Outlet Anaerob'     => ['Outlet Anaerob', 'Anaerob'],
             'Aerasi-1'           => ['Aerasi-1'],
@@ -1215,8 +1215,8 @@ class WWTPController extends Controller
             'cod' => $calcRemoval($analisaData['Influent']['cod'], $analisaData['Outlet Anaerob']['cod']),
         ];
 
-        $aerasiTSS = $analisaData['Aerasi-5']['tss'] > 0 ? $analisaData['Aerasi-5']['tss'] : $analisaData['Aerasi-1']['tss'];
-        $aerasiCOD = $analisaData['Aerasi-5']['cod'] > 0 ? $analisaData['Aerasi-5']['cod'] : $analisaData['Aerasi-1']['cod'];
+        $aerasiTSS = $analisaData['Aerasi-6']['tss'];
+        $aerasiCOD = $analisaData['Aerasi-6']['cod'];
         $removals['aerob'] = [
             'tss' => $calcRemoval($analisaData['Outlet Anaerob']['tss'], $aerasiTSS),
             'cod' => $calcRemoval($analisaData['Outlet Anaerob']['cod'], $aerasiCOD),
