@@ -690,7 +690,7 @@
                 $('#val-sp-rh').text(fmt(res.sludge.running_hour_scp, 1, 'jam'));
                 $('#val-sp-cnt').text(fmt(res.sludge.sludge_content, 1, '%'));
                 $('#val-it-vol').text(fmt(res.sludge.hasil_lumpur, 1, 'ton'));
-                $('#val-ps-qty').text(fmt(parseFloat(res.sludge.pengangkutan), 1, 'ton'));
+                $('#val-ps-qty').text(fmt(parseFloat(res.sludge.pengangkutan), 2, 'ton'));
 
                 // Toggle active classes on nodes with values
                 $('.machine-node').each(function() {
@@ -1308,7 +1308,7 @@
                             <span class="text-muted small d-block">DISPOSAL REKAP MINGGUAN</span>
                             <div class="d-flex justify-content-between align-items-center mt-2">
                                 <span class="text-white fw-semibold">Jumlah Pengangkutan:</span>
-                                <span class="fs-16 fw-bold text-info">${rawFmt(res.sludge.pengangkutan, 0, 'ton')}</span>
+                                <span class="fs-16 fw-bold text-info">${rawFmt(parseFloat(res.sludge.pengangkutan), 2, 'ton')}</span>
                             </div>
                         </div>
                     `;
