@@ -1157,6 +1157,7 @@ class WWTPController extends Controller
             'Filtrat SCP'        => ['Filtrat SCP'],
             'Outlet Sand Filter' => ['Outlet Sand Filter', 'Sandfilter'],
             'Effluent'           => ['Effluent'],
+            'Pit Garam'          => ['Pit Garam'],
         ];
 
         $dbPoints = WwtpPoint::all();

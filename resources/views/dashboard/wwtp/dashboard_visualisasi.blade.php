@@ -881,19 +881,19 @@
                                 <span class="text-muted small d-block">ANALISA PARAMETER</span>
                                 <div class="d-flex justify-content-between mt-2">
                                     <span>pH:</span>
-                                    <strong class="text-light">${rawFmt(res.analisa.Influent.ph, 1)}</strong>
+                                    <strong class="text-light">${rawFmt(res.analisa['Pit Garam'].ph, 1)}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
                                     <span>TSS:</span>
-                                    <strong class="text-light">${rawFmt(res.analisa.Influent.tss, 0, 'ppm')}</strong>
+                                    <strong class="text-light">${rawFmt(res.analisa['Pit Garam'].tss, 0, 'ppm')}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
                                     <span>COD:</span>
-                                    <strong class="text-light">${rawFmt(res.analisa.Influent.cod, 0, 'ppm')}</strong>
+                                    <strong class="text-light">${rawFmt(res.analisa['Pit Garam'].cod, 0, 'ppm')}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
                                     <span>EC:</span>
-                                    <strong class="text-light">${rawFmt(res.analisa.Influent.ec, 0, 'µS/cm')}</strong>
+                                    <strong class="text-light">${rawFmt(res.analisa['Pit Garam'].ec, 0, 'µS/cm')}</strong>
                                 </div>
                             </div>
                         </div>
