@@ -654,22 +654,26 @@
                                 <label class="form-label fw-bold text-muted small text-uppercase">Tipe Export</label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="export_type" id="export_type_daily" value="daily" checked>
+                                        <input class="form-check-input" type="radio" name="export_type"
+                                            id="export_type_daily" value="daily" checked>
                                         <label class="form-check-label" for="export_type_daily">Harian</label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="export_type" id="export_type_monthly" value="monthly">
+                                        <input class="form-check-input" type="radio" name="export_type"
+                                            id="export_type_monthly" value="monthly">
                                         <label class="form-check-label" for="export_type_monthly">Bulanan</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="mb-3" id="input_tanggal_container">
-                                <label class="form-label fw-bold text-muted small text-uppercase">Pilih Tanggal Laporan</label>
+                                <label class="form-label fw-bold text-muted small text-uppercase">Pilih Tanggal
+                                    Laporan</label>
                                 <input type="date" class="form-control form-control-lg" id="export_tanggal"
                                     value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}">
                             </div>
                             <div class="mb-3 d-none" id="input_bulan_container">
-                                <label class="form-label fw-bold text-muted small text-uppercase">Pilih Bulan Laporan</label>
+                                <label class="form-label fw-bold text-muted small text-uppercase">Pilih Bulan
+                                    Laporan</label>
                                 <input type="month" class="form-control form-control-lg" id="export_bulan"
                                     value="{{ date('Y-m') }}" max="{{ date('Y-m') }}">
                             </div>
@@ -751,7 +755,7 @@
         $(document).ready(function() {
 
             const PER_PAGE = 10;
-            const userJabatan = "{{ Auth::user()->jabatan }}";
+            const userJabatan = "{{ strtolower(Auth::user()?->jabatan ?? '') }}";
             const canEditDelete = userJabatan !== 'operator';
 
             function canEditDeleteDaily(approvalStatus) {
@@ -951,17 +955,17 @@
                                     <i class="mdi mdi-eye"></i>
                                 </button>
                                 ${canEditDelete ? `
-                                                    <button class="btn btn-sm btn-outline-warning me-1"
-                                                            onclick="editWeekly(${item.id})"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Data">
-                                                        <i class="mdi mdi-pencil"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger"
-                                                            onclick="confirmDelete(${item.id})"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus Data">
-                                                        <i class="mdi mdi-trash-can"></i>
-                                                    </button>
-                                                    ` : ''}
+                                                        <button class="btn btn-sm btn-outline-warning me-1"
+                                                                onclick="editWeekly(${item.id})"
+                                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Data">
+                                                            <i class="mdi mdi-pencil"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger"
+                                                                onclick="confirmDelete(${item.id})"
+                                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus Data">
+                                                            <i class="mdi mdi-trash-can"></i>
+                                                        </button>
+                                                        ` : ''}
                             </td>
                         </tr>
                     `);
@@ -1082,17 +1086,17 @@
                                     <i class="mdi mdi-eye"></i>
                                 </button>
                                 ${canEditDeleteDaily(item.approval_status) ? `
-                                                    <button class="btn btn-sm btn-outline-warning me-1"
-                                                            onclick="editHarian(${item.id})"
-                                                            data-bs-toggle="tooltip" title="Edit Data">
-                                                        <i class="mdi mdi-pencil"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger"
-                                                            onclick="confirmDeleteHarian(${item.id})"
-                                                            data-bs-toggle="tooltip" title="Hapus Data">
-                                                        <i class="mdi mdi-trash-can"></i>
-                                                    </button>
-                                                    ` : ''}
+                                                        <button class="btn btn-sm btn-outline-warning me-1"
+                                                                onclick="editHarian(${item.id})"
+                                                                data-bs-toggle="tooltip" title="Edit Data">
+                                                            <i class="mdi mdi-pencil"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger"
+                                                                onclick="confirmDeleteHarian(${item.id})"
+                                                                data-bs-toggle="tooltip" title="Hapus Data">
+                                                            <i class="mdi mdi-trash-can"></i>
+                                                        </button>
+                                                        ` : ''}
                             </td>
                         </tr>
                     `);
@@ -1552,18 +1556,57 @@
                DELETE
             ───────────────────────────────────────────── */
             $('#btnDelete').on('click', function() {
-                if (currentRecordId && confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-                    if (currentRecordType === 'daily') deleteHarian(currentRecordId);
-                    else deleteRecord(currentRecordId);
+                if (currentRecordId) {
+                    Swal.fire({
+                        title: 'Apakah Anda yakin?',
+                        text: 'Data ini akan dihapus secara permanen!',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Ya, hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (currentRecordType === 'daily') deleteHarian(currentRecordId);
+                            else deleteRecord(currentRecordId);
+                        }
+                    });
                 }
             });
 
             window.confirmDelete = function(id) {
-                if (confirm('Apakah Anda yakin ingin menghapus data ini?')) deleteRecord(id);
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: 'Data ini akan dihapus secara permanen!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        deleteRecord(id);
+                    }
+                });
             };
 
             window.confirmDeleteHarian = function(id) {
-                if (confirm('Apakah Anda yakin ingin menghapus data harian ini?')) deleteHarian(id);
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: 'Data harian ini akan dihapus secara permanen!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        deleteHarian(id);
+                    }
+                });
             };
 
             function deleteRecord(id) {
@@ -1672,7 +1715,7 @@
                 };
 
                 $.ajax({
-                    url: `/api/wwtp/influent-harian/${id}`,
+                    url: `wwtp/influent-harian/${id}`,
                     method: 'PUT',
                     data: formData,
                     success: function() {
@@ -1686,7 +1729,7 @@
                         if (error && error.message) message = error.message;
                         else if (error && error.errors) message = Object.values(error.errors)
                             .flat().join('\n');
-                        alert(message);
+                        showError(message);
                     }
                 });
             });
@@ -1766,7 +1809,7 @@
                         if (error && error.message) message = error.message;
                         else if (error && error.errors) message = Object.values(error.errors)
                             .flat().join('\n');
-                        alert(message);
+                        showError(message);
                     }
                 });
             });
@@ -1783,11 +1826,23 @@
             }
 
             function showSuccess(message) {
-                alert(message);
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: message,
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
             }
 
             function showError(message) {
-                alert(message);
+                Swal.fire({
+                    title: 'Gagal!',
+                    text: message,
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
             }
 
             /* ─────────────────────────────────────────────

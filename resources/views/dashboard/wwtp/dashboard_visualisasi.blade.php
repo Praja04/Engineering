@@ -960,11 +960,11 @@
                             <div class="p-3 bg-dark-subtle rounded-3 border border-secondary">
                                 <span class="text-muted small d-block">DEBIT ALIRAN MASUK</span>
                                 <div class="d-flex justify-content-between mt-2">
-                                    <span>Debit 1 (Total):</span>
+                                    <span>Debit 1 (Avg):</span>
                                     <strong class="text-info">${rawFmt(res.proses.debit1, 1, 'm³')}</strong>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
-                                    <span>Debit 2 (Total):</span>
+                                    <span>Debit 2 (Avg):</span>
                                     <strong class="text-info">${rawFmt(res.proses.debit2, 1, 'm³')}</strong>
                                 </div>
                             </div>

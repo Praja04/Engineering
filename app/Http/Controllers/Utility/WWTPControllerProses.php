@@ -251,7 +251,7 @@ class WWTPControllerProses extends Controller
     private function checkDailyApprovalPermission($tanggal, $action)
     {
         $user = Auth::user();
-        $jabatan = $user ? $user->jabatan : null;
+        $jabatan = $user ? strtolower($user->jabatan) : null;
 
         $approval = WwtpDailyApproval::where('tanggal', $tanggal)->first();
         if ($approval) {
