@@ -955,17 +955,17 @@
                                     <i class="mdi mdi-eye"></i>
                                 </button>
                                 ${canEditDelete ? `
-                                                            <button class="btn btn-sm btn-outline-warning me-1"
-                                                                    onclick="editWeekly(${item.id})"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Data">
-                                                                <i class="mdi mdi-pencil"></i>
-                                                            </button>
-                                                            <button class="btn btn-sm btn-outline-danger"
-                                                                    onclick="confirmDelete(${item.id})"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus Data">
-                                                                <i class="mdi mdi-trash-can"></i>
-                                                            </button>
-                                                            ` : ''}
+                                                                    <button class="btn btn-sm btn-outline-warning me-1"
+                                                                            onclick="editWeekly(${item.id})"
+                                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Data">
+                                                                        <i class="mdi mdi-pencil"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-outline-danger"
+                                                                            onclick="confirmDelete(${item.id})"
+                                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus Data">
+                                                                        <i class="mdi mdi-trash-can"></i>
+                                                                    </button>
+                                                                    ` : ''}
                             </td>
                         </tr>
                     `);
@@ -1086,17 +1086,17 @@
                                     <i class="mdi mdi-eye"></i>
                                 </button>
                                 ${canEditDeleteDaily(item.approval_status) ? `
-                                                            <button class="btn btn-sm btn-outline-warning me-1"
-                                                                    onclick="editHarian(${item.id})"
-                                                                    data-bs-toggle="tooltip" title="Edit Data">
-                                                                <i class="mdi mdi-pencil"></i>
-                                                            </button>
-                                                            <button class="btn btn-sm btn-outline-danger"
-                                                                    onclick="confirmDeleteHarian(${item.id})"
-                                                                    data-bs-toggle="tooltip" title="Hapus Data">
-                                                                <i class="mdi mdi-trash-can"></i>
-                                                            </button>
-                                                            ` : ''}
+                                                                    <button class="btn btn-sm btn-outline-warning me-1"
+                                                                            onclick="editHarian(${item.id})"
+                                                                            data-bs-toggle="tooltip" title="Edit Data">
+                                                                        <i class="mdi mdi-pencil"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-outline-danger"
+                                                                            onclick="confirmDeleteHarian(${item.id})"
+                                                                            data-bs-toggle="tooltip" title="Hapus Data">
+                                                                        <i class="mdi mdi-trash-can"></i>
+                                                                    </button>
+                                                                    ` : ''}
                             </td>
                         </tr>
                     `);
@@ -1627,8 +1627,11 @@
 
             function deleteHarian(id) {
                 $.ajax({
-                    url: `/api/wwtp/influent-harian/${id}`,
+                    url: `/wwtp/influent-harian/${id}`,
                     method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     success: function() {
                         $('#detailModal').modal('hide');
                         showSuccess('Data harian berhasil dihapus');
@@ -1717,6 +1720,9 @@
                 $.ajax({
                     url: `/wwtp/influent-harian/${id}`,
                     method: 'PUT',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     data: formData,
                     success: function() {
                         $('#editModal').modal('hide');

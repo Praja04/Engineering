@@ -13,6 +13,7 @@ Route::middleware('auth')->group(function () {
   Route::get('/wwtp/form_proses', [WWTPControllerProses::class, 'form_proses'])->name('wwtp.form_proses');
   Route::get('/wwtp/data_proses', [WWTPControllerProses::class, 'data_proses'])->name('wwtp.data_proses');
   Route::put('/wwtp/influent-harian/{id}', [WWTPControllerProses::class, 'updateHarian'])->name('wwtp.influent-harian.update');
+  Route::delete('/wwtp/influent-harian/{id}', [WWTPControllerProses::class, 'destroyHarian'])->name('wwtp.influent-harian.destroy');
   Route::get('/wwtp/performance', [WWTPControllerPerformance::class, 'performance'])->name('wwtp.performance');
   Route::get('wwtp/form_performance', [WWTPControllerPerformance::class, 'form_performance'])->name('wwtp.form_performance');
   Route::get('wwtp/data_performance', [WWTPControllerPerformance::class, 'data_performance'])->name('wwtp.data_performance');
