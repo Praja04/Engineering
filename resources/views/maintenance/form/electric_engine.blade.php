@@ -373,7 +373,8 @@
                                             <th>Deskripsi</th>
                                             <th style="width: 15%">Jumlah</th>
                                             <th class="text-center" style="width: 10%">
-                                                <button type="button" class="btn btn-sm btn-primary" id="addReplacementRow">
+                                                <button type="button" class="btn btn-sm btn-primary"
+                                                    id="addReplacementRow">
                                                     +
                                                 </button>
                                             </th>
@@ -566,7 +567,7 @@
 
                 if (details.length === 0) return '';
 
-                return details.join(", ");
+                return details.join(" | ");
             }
 
             function initMidSelect2(element) {
@@ -757,17 +758,19 @@
                 $('#materialTable tbody tr, #replacementTable tbody tr').each(function() {
                     const midSelect = $(this).find('.mid-select2');
                     const qtyInput = $(this).find('input[name*="[qty]"]');
-                    
+
                     if (midSelect.length > 0) {
                         const midVal = midSelect.val();
                         const qtyVal = qtyInput.val();
-                        
+
                         if (!midVal || !qtyVal || qtyVal <= 0) {
                             isValid = false;
-                            midSelect.next('.select2-container').find('.select2-selection').addClass('is-invalid');
+                            midSelect.next('.select2-container').find('.select2-selection')
+                                .addClass('is-invalid');
                             qtyInput.addClass('is-invalid');
                         } else {
-                            midSelect.next('.select2-container').find('.select2-selection').removeClass('is-invalid');
+                            midSelect.next('.select2-container').find('.select2-selection')
+                                .removeClass('is-invalid');
                             qtyInput.removeClass('is-invalid');
                         }
                     }
