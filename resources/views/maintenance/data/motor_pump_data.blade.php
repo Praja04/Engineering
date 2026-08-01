@@ -195,16 +195,23 @@
                                     <th>Waktu Mulai</th>
                                     <th>Waktu Selesai</th>
                                     <th>Paket</th>
-                                    <th>status</th>
-                                    <th style="width:180px;" class="text-center">Aksi</th>
+                                    <th>Status</th>
+                                    <th style="width:140px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="tbodyMotorPump">
                                 <tr>
-                                    <td colspan="8" class="text-center small-muted py-4">Memuat data...</td>
+                                    <td colspan="9" class="text-center small-muted py-4">Memuat data...</td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                        <div id="paginationInfo" class="small text-muted"></div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="paginationList">
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -289,7 +296,8 @@
                         <div class="row g-3 mt-1" id="editTanggalSelesaiRow" style="display:none;">
                             <div class="col-md-3">
                                 <label class="form-label">Tanggal Selesai <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="tanggal_selesai" id="editTanggalSelesai">
+                                <input type="date" class="form-control" name="tanggal_selesai"
+                                    id="editTanggalSelesai">
                             </div>
                         </div>
                         <div id="editSections"><!-- injected --></div>
@@ -530,11 +538,11 @@
                             <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
                         </div>
                         ${row.paket === 'Korektif' ? `
-                                                                                        <div class="col-md-3">
-                                                                                            <div class="meta-label">Tanggal Selesai</div>
-                                                                                            <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
-                                                                                        </div>
-                                                                                        ` : ''}
+                                                                                            <div class="col-md-3">
+                                                                                                <div class="meta-label">Tanggal Selesai</div>
+                                                                                                <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
+                                                                                            </div>
+                                                                                            ` : ''}
                         <div class="col-md-3">
                             <div class="meta-label">Paket</div>
                             <div class="meta-value">${row.paket ?? '-'}</div>
@@ -564,8 +572,8 @@
                            ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                                                                                    <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                                                `).join('')
+                                                                                                        <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
+                                                                                                    `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -574,8 +582,8 @@
                            ${
                                 row.penggantian_material && row.penggantian_material.length
                                 ? row.penggantian_material.map(m => `
-                                                                                                    <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                                                `).join('')
+                                                                                                        <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
+                                                                                                    `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -653,124 +661,162 @@
                 openTracking(id);
             });
 
-            const dtMotorPump = $('#tblMotorPump').DataTable({
-                processing: true,
-                serverSide: true,
-                searching: false,
-                pageLength: 10,
-                lengthMenu: [5, 10, 25, 50, 100],
-                order: [
-                    [0, 'asc']
-                ],
-                ajax: {
-                    url: API_URL,
-                    data: function(d) {
-                        d.date = $('#filterDate').val() || null;
-                        d.paket = $('#filterPaket').val() || null;
-                        d.nama_mesin = $('#filterNama').val() || null;
+            let currentPage = 1;
+            const pageSize = 10;
+            let totalRecords = 0;
 
-                        // penting untuk pagination
-                        d.start = d.start;
-                        d.length = d.length;
-                    },
-                    dataSrc: function(json) {
-                        // simpan untuk modal detail
-                        currentRows = json.data || [];
-                        return currentRows;
+            function loadTableData(page = 1) {
+                currentPage = page;
+                const start = (currentPage - 1) * pageSize;
+
+                $('#tbodyMotorPump').html(`
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span class="ms-2 text-muted">Memuat data...</span>
+                        </td>
+                    </tr>
+                `);
+
+                const filters = {
+                    date: $('#filterDate').val() || null,
+                    paket: $('#filterPaket').val() || null,
+                    nama_mesin: $('#filterNama').val() || null,
+                    start: start,
+                    length: pageSize
+                };
+
+                $.ajax({
+                    url: API_URL,
+                    type: 'GET',
+                    data: filters,
+                    dataType: 'json',
+                    success: function(res) {
+                        currentRows = res.data || [];
+                        totalRecords = res.recordsFiltered || 0;
+
+                        if (currentRows.length === 0) {
+                            $('#tbodyMotorPump').html(`
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-4">Tidak ada data ditemukan</td>
+                                </tr>
+                            `);
+                            $('#paginationInfo').text('Menampilkan 0 sampai 0 dari 0 data');
+                            $('#paginationList').empty();
+                            return;
+                        }
+
+                        let html = '';
+                        currentRows.forEach((row, index) => {
+                            const rowNum = start + index + 1;
+                            const motorPump = row.motor_pump || {};
+                            const machineName = motorPump.mesin?.nama_mesin || '-';
+                            const location = motorPump.mesin?.lokasi || '-';
+
+                            const showBtn =
+                                `<button class="btn btn-sm btn-primary btn-detail me-1" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>`;
+                            const editDisabled = row.status === 'rejected';
+                            const editBtn =
+                                `<button class="btn btn-sm btn-info btn-edit me-1" data-id="${row.id}" title="${editDisabled ? 'Silakan isi form kembali' : 'Edit'}" ${editDisabled ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>`;
+                            const delBtn =
+                                `<button class="btn btn-sm btn-danger btn-delete me-1" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>`;
+                            const printBtn =
+                                `<button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>`;
+
+                            html += `
+                                <tr>
+                                    <td class="text-center">${rowNum}</td>
+                                    <td>${machineName}</td>
+                                    <td>${location}</td>
+                                    <td>${fmtDate(row.tanggal)}</td>
+                                    <td>${row.waktu_mulai ?? '-'}</td>
+                                    <td>${row.waktu_selesai ?? '-'}</td>
+                                    <td>${row.paket ?? '-'}</td>
+                                    <td>
+                                        <span class="badge cursor-pointer badge-status" data-id="${row.id}">
+                                            ${statusBadge(row.status)}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-center">
+                                            ${showBtn}
+                                            ${editBtn}
+                                            ${delBtn}
+                                            ${printBtn}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        $('#tbodyMotorPump').html(html);
+
+                        // Render Pagination
+                        const totalPages = Math.ceil(totalRecords / pageSize);
+                        const endRow = Math.min(start + pageSize, totalRecords);
+                        $('#paginationInfo').text(
+                            `Menampilkan ${start + 1} sampai ${endRow} dari ${totalRecords} data`);
+
+                        let pagHtml = '';
+                        pagHtml += `
+                            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                                <a class="page-link" href="#" data-page="${currentPage - 1}">Sebelumnya</a>
+                            </li>
+                        `;
+
+                        for (let p = 1; p <= totalPages; p++) {
+                            pagHtml += `
+                                <li class="page-item ${currentPage === p ? 'active' : ''}">
+                                    <a class="page-link" href="#" data-page="${p}">${p}</a>
+                                </li>
+                            `;
+                        }
+
+                        pagHtml += `
+                            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                                <a class="page-link" href="#" data-page="${currentPage + 1}">Berikutnya</a>
+                            </li>
+                        `;
+
+                        $('#paginationList').html(pagHtml);
                     },
                     error: function() {
-                        // DataTables punya tampilan default "No data", tapi kalau mau custom:
-                        // (opsional) bisa pakai language.emptyTable
+                        $('#tbodyMotorPump').html(`
+                            <tr>
+                                <td colspan="9" class="text-center text-danger py-4">Gagal memuat data</td>
+                            </tr>
+                        `);
                     }
-                },
-                columns: [{
-                        data: null,
-                        className: 'text-center',
-                        orderable: false,
-                        render: function(data, type, row, meta) {
-                            return meta.row + meta.settings._iDisplayStart + 1;
-                        }
-                    },
-                    {
-                        data: 'motor_pump.mesin.nama_mesin',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'motor_pump.mesin.lokasi',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'tanggal',
-                        render: function(data, type) {
-                            if (type === 'display') return fmtDate(data);
-                            return data; // sorting pakai ISO
-                        }
-                    },
-                    {
-                        data: 'waktu_mulai',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'waktu_selesai',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'paket',
-                        defaultContent: '-',
-                        orderable: false,
-                    },
-                    {
-                        data: null,
-                        render: function(row) {
-                            return `
-                                <span class="badge cursor-pointer badge-status"
-                                    data-id="${row.id}">
-                                    ${statusBadge(row.status)}
-                                </span>
-                            `;
-                        }
+                });
+            }
 
-                    },
-                    {
-                        data: null,
-                        orderable: false,
-                        className: 'text-center text-nowrap',
-                        render: function(row) {
-                            return `
-                                <button class="btn btn-sm btn-primary btn-detail" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>
-                                <button class="btn btn-sm btn-info btn-edit" data-id="${row.id}" title="${row.status === 'rejected' ? 'Silakan isi form kembali' : 'Edit'}" ${row.status === 'rejected' ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>
-                                <button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>
-                            `;
-                        }
-                    }
-                ],
-                language: {
-                    emptyTable: `
-                        <div class="py-4 text-center text-muted">
-                        Tidak ada data
-                        </div>
-                    `,
-                    processing: "Memuat..."
+            // Init load
+            loadTableData(1);
+
+            // Handle Pagination click
+            $(document).on('click', '#paginationList .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (page && page !== currentPage) {
+                    loadTableData(page);
                 }
             });
 
             // apply/reset filter 
             $('#btnApply').on('click', function(e) {
                 e.preventDefault();
-                dtMotorPump.ajax.reload();
+                loadTableData(1);
             });
 
+            // reset
             $('#btnReset').on('click', function(e) {
                 e.preventDefault();
                 $('#filterDate').val('');
                 $('#filterPaket').val('');
                 $('#filterNama').val('');
-                dtMotorPump.ajax.reload();
+                loadTableData(1);
             });
 
             // Detail modal
@@ -854,7 +900,7 @@
                 `;
             }
 
-            
+
             function toggleEditTanggalSelesai(paket) {
                 const row = $('#editTanggalSelesaiRow');
                 const input = $('#editTanggalSelesai');
@@ -870,6 +916,7 @@
             $('#editPaket').on('change', function() {
                 toggleEditTanggalSelesai($(this).val());
             });
+
             function initMidSelect2Edit(element) {
                 $(element).select2({
                     theme: 'bootstrap-5',
@@ -1162,7 +1209,8 @@
                 $('#editWaktuMulai').val((row.waktu_mulai ?? '').toString().slice(0, 5));
                 $('#editWaktuSelesai').val((row.waktu_selesai ?? '').toString().slice(0, 5));
                 $('#editPaket').val(row.paket ?? '');
-                $('#editTanggalSelesai').val(row.tanggal_selesai ? row.tanggal_selesai.substring(0, 10) : '');
+                $('#editTanggalSelesai').val(row.tanggal_selesai ? row.tanggal_selesai.substring(0, 10) :
+                    '');
                 toggleEditTanggalSelesai(row.paket ?? '');
                 // $('#editKeterangan').val(row.keterangan ?? '');
                 $('#editKorektif').val(row.korektif ?? '');
@@ -1311,7 +1359,7 @@
                             .hide();
 
                         // reload datatable (stay page)
-                        $('#tblMotorPump').DataTable().ajax.reload(null, false);
+                        loadTableData(currentPage);
                     },
                     error: function(xhr) {
                         Swal.fire({
@@ -1355,8 +1403,7 @@
                                 timer: 1200,
                                 showConfirmButton: false
                             });
-                            dtMotorPump.ajax.reload(null,
-                                false);
+                            loadTableData(currentPage);
                         },
                         error: function(xhr) {
                             Swal.fire({

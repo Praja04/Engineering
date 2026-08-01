@@ -114,12 +114,23 @@
                                         <th>Battery Type</th>
                                         <th>No Unit</th>
                                         <th>No Seri</th>
-                                        <th>status</th>
-                                        <th>Aksi</th>
+                                        <th>Status</th>
+                                        <th style="width: 140px;" class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody></tbody>
+                                <tbody id="tbodyBattery">
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted py-4">Memuat data...</td>
+                                    </tr>
+                                </tbody>
                             </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                            <div id="paginationInfo" class="small text-muted"></div>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0" id="paginationList">
+                                </ul>
+                            </nav>
                         </div>
                     </div>
                 </div>
@@ -284,93 +295,141 @@
             const DELETE_URL = "{{ url('mtc/main/delete') }}";
             const UPDATE_URL = "{{ url('mtc/data/battery/update') }}";
 
-            // Inisialisasi DataTable
-            const table = $('#batteryTable').DataTable({
-                ajax: {
+            let currentPage = 1;
+            const pageSize = 10;
+            let totalRecords = 0;
+            let currentRows = [];
+
+            function loadTableData(page = 1) {
+                currentPage = page;
+                const start = (currentPage - 1) * pageSize;
+
+                $('#tbodyBattery').html(`
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span class="ms-2 text-muted">Memuat data...</span>
+                        </td>
+                    </tr>
+                `);
+
+                const filters = {
+                    date: $('#filterDate').val() || null,
+                    tipe_baterai: $('#filterTipeBaterai').val() || null,
+                    unit: $('#filterUnit').val() || null,
+                    start: start,
+                    length: pageSize
+                };
+
+                $.ajax({
                     url: API_URL,
-                    data: function(d) {
-                        d.date = $('#filterDate').val() || null;
-                        d.tipe_baterai = $('#filterTipeBaterai').val() || null;
-                        d.unit = $('#filterUnit').val() || null;
-                    },
-                    dataSrc: function(json) {
-                        return json.data || [];
-                    }
-                },
-                columns: [{
-                        data: null,
-                        className: 'text-center',
-                        orderable: false,
-                        render: function(data, type, row, meta) {
-                            return meta.row + meta.settings._iDisplayStart + 1;
+                    type: 'GET',
+                    data: filters,
+                    dataType: 'json',
+                    success: function(res) {
+                        currentRows = res.data || [];
+                        totalRecords = res.recordsFiltered || 0;
+
+                        if (currentRows.length === 0) {
+                            $('#tbodyBattery').html(`
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-4">Tidak ada data ditemukan</td>
+                                </tr>
+                            `);
+                            $('#paginationInfo').text('Menampilkan 0 sampai 0 dari 0 data');
+                            $('#paginationList').empty();
+                            return;
                         }
-                    }, {
-                        data: 'tanggal',
-                        className: 'text-start',
-                        orderable: false,
-                        render: function(data, type) {
-                            if (type === 'display') return fmtDate(data);
-                            return data; // sorting pakai ISO
-                        },
-                    },
-                    {
-                        data: 'waktu_mulai',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'waktu_selesai',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'battery.battery_type',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'battery.no_unit',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'battery.no_seri',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: null,
-                        render: function(row) {
-                            return `
-                                <span class="badge cursor-pointer badge-status"
-                                    data-id="${row.id}">
-                                    ${statusBadge(row.status)}
-                                </span>
+
+                        let html = '';
+                        currentRows.forEach((row, index) => {
+                            const rowNum = start + index + 1;
+                            const battery = row.battery || {};
+
+                            const showBtn = `<button class="btn btn-sm btn-primary btnDetail me-1" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>`;
+                            const editDisabled = row.status === 'rejected';
+                            const editBtn = `<button class="btn btn-sm btn-info btnEdit me-1" data-id="${row.id}" title="${editDisabled ? 'Silakan isi form kembali' : 'Edit'}" ${editDisabled ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>`;
+                            const delBtn = `<button class="btn btn-sm btn-danger btnDelete me-1" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>`;
+                            const printBtn = `<button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>`;
+
+                            html += `
+                                <tr>
+                                    <td class="text-center">${rowNum}</td>
+                                    <td>${fmtDate(row.tanggal)}</td>
+                                    <td>${row.waktu_mulai ?? '-'}</td>
+                                    <td>${row.waktu_selesai ?? '-'}</td>
+                                    <td>${battery.battery_type ?? '-'}</td>
+                                    <td>${battery.no_unit ?? '-'}</td>
+                                    <td>${battery.no_seri ?? '-'}</td>
+                                    <td>
+                                        <span class="badge cursor-pointer badge-status" data-id="${row.id}">
+                                            ${statusBadge(row.status)}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-center">
+                                            ${showBtn}
+                                            ${editBtn}
+                                            ${delBtn}
+                                            ${printBtn}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        $('#tbodyBattery').html(html);
+
+                        // Render Pagination
+                        const totalPages = Math.ceil(totalRecords / pageSize);
+                        const endRow = Math.min(start + pageSize, totalRecords);
+                        $('#paginationInfo').text(`Menampilkan ${start + 1} sampai ${endRow} dari ${totalRecords} data`);
+
+                        let pagHtml = '';
+                        pagHtml += `
+                            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                                <a class="page-link" href="#" data-page="${currentPage - 1}">Sebelumnya</a>
+                            </li>
+                        `;
+
+                        for (let p = 1; p <= totalPages; p++) {
+                            pagHtml += `
+                                <li class="page-item ${currentPage === p ? 'active' : ''}">
+                                    <a class="page-link" href="#" data-page="${p}">${p}</a>
+                                </li>
                             `;
                         }
 
+                        pagHtml += `
+                            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                                <a class="page-link" href="#" data-page="${currentPage + 1}">Berikutnya</a>
+                            </li>
+                        `;
+
+                        $('#paginationList').html(pagHtml);
                     },
-                    {
-                        data: null,
-                        className: 'text-center text-nowrap',
-                        render: function(data) {
-                            return `
-                                    <button class="btn btn-sm btn-primary btnDetail" data-id="${data.id}" title="Detail"><i class="mdi mdi-eye"></i></button>
-                                    <button class="btn btn-sm btn-info btnEdit" data-id="${data.id}" title="${data.status === 'rejected' ? 'Silakan isi form kembali' : 'Edit'}" ${data.status === 'rejected' ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>
-                                    <button class="btn btn-sm btn-danger btnDelete" data-id="${data.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>
-                                    <button class="btn btn-sm btn-warning btn-print" data-id="${data.id}" title="Download"><i class="mdi mdi-download"></i></button>
-                                `;
-                        }
+                    error: function() {
+                        $('#tbodyBattery').html(`
+                            <tr>
+                                <td colspan="9" class="text-center text-danger py-4">Gagal memuat data</td>
+                            </tr>
+                        `);
                     }
-                ],
-                processing: true,
-                serverSide: true,
-                searching: false,
-                pageLength: 10,
-                lengthMenu: [5, 10, 25, 50, 100],
-                order: [
-                    [0, 'asc']
-                ],
+                });
+            }
+
+            // Init load
+            loadTableData(1);
+
+            // Handle Pagination click
+            $(document).on('click', '#paginationList .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (page && page !== currentPage) {
+                    loadTableData(page);
+                }
             });
 
             function statusBadge(val) {
@@ -472,9 +531,9 @@
             });
 
             // Event tombol Detail
-            $('#batteryTable tbody').on('click', '.btnDetail', function() {
+            $(document).on('click', '.btnDetail', function() {
                 const id = $(this).data('id');
-                const rowData = table.row($(this).parents('tr')).data();
+                const rowData = currentRows.find(r => r.id == id);
 
                 // Data utama dari row (yang sudah di-flatten atau diambil dari API response)
                 $('#modalBatteryId').text(rowData.id);
@@ -563,7 +622,7 @@
             });
 
             // Event tombol Edit
-            $('#batteryTable tbody').on('click', '.btnEdit', function() {
+            $(document).on('click', '.btnEdit', function() {
                 const id = $(this).data('id');
                 editBattery(id);
             });
@@ -595,8 +654,7 @@
             }
 
             function editBattery(id) {
-                const row = table.row($(`tr:has(.btnEdit[data-id="${id}"])`));
-                const rowData = row.data();
+                const rowData = currentRows.find(r => r.id == id);
                 if (!rowData) return;
 
                 const battery = rowData.battery || {};
@@ -825,14 +883,14 @@
             $('.form-select').trigger('change');
 
             $('#filterDate, #filterTipeBaterai, #filterUnit').on('change keyup', function() {
-                table.ajax.reload();
+                loadTableData(1);
             });
 
-            $('#btnApply').on('click', () => table.ajax.reload());
+            $('#btnApply').on('click', () => loadTableData(1));
 
             $('#btnReset').on('click', () => {
                 $('#filterDate, #filterUnit, #filterTipeBaterai').val('');
-                table.ajax.reload();
+                loadTableData(1);
             });
 
             function collectNotOkDetailsEdit() {
@@ -894,7 +952,7 @@
                         if (res.status) {
                             Swal.fire('Berhasil', 'Data berhasil diperbarui', 'success');
                             $('#editModal').modal('hide');
-                            table.ajax.reload();
+                            loadTableData(currentPage);
                         } else {
                             Swal.fire('Gagal', res.message || 'Terjadi kesalahan', 'error');
                         }
@@ -914,7 +972,7 @@
             });
 
             // Event tombol Delete
-            $('#batteryTable tbody').on('click', '.btnDelete', function() {
+            $(document).on('click', '.btnDelete', function() {
                 const id = $(this).data('id');
 
                 Swal.fire({
@@ -943,7 +1001,7 @@
                                 timer: 1200,
                                 showConfirmButton: false
                             });
-                            table.ajax.reload();
+                            loadTableData(currentPage);
                         },
                         error: function(xhr) {
                             Swal.fire({
