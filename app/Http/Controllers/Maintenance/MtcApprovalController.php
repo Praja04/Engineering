@@ -10,6 +10,7 @@ use App\Models\Maintenance\MtcDieselP2hInspectionModel;
 use App\Models\Maintenance\MtcElectricalModel;
 use App\Models\Maintenance\MtcElectricEngineModel;
 use App\Models\Maintenance\MtcElectricP2hInspectionModel;
+use App\Models\Maintenance\MtcGensetP2hInspectionModel;
 use App\Models\Maintenance\MtcMainModel;
 use App\Models\Maintenance\MtcMotorPumpModel;
 use App\Models\Maintenance\MtcRefrigerasiModel;
@@ -159,6 +160,13 @@ class MtcApprovalController extends Controller
                     ->firstOrFail();
 
                 return view('maintenance.approval.partials.electric_p2h_partials', compact('data', 'main'));
+
+            case 'Genset P2H':
+                $data = MtcGensetP2hInspectionModel::with(['mesin'])
+                    ->where('mtc_main_id', $main->id)
+                    ->firstOrFail();
+
+                return view('maintenance.approval.partials.genset_p2h_partials', compact('data', 'main'));
 
             default:
                 abort(404);

@@ -985,12 +985,12 @@
                                 <option value="Refrigerasi">Refrigerasi</option>
                                 <option value="Sipil">Sipil</option>
                                 <option value="Utility">Utility</option>
-
                                 <option value="Motor Pompa">Motor Pump</option>
                                 <option value="Electrical">Electrical</option>
                                 <option value="Battery">Battery</option>
                                 <option value="Electric P2H">Electric P2H</option>
                                 <option value="Diesel P2H">Diesel P2H</option>
+                                <option value="Genset P2H">Genset P2H</option>
                                 <option value="Lainnya">Lainnya</option>
                             </select>
                             <select class="filter-select" id="filterAktif">
@@ -1071,12 +1071,12 @@
                                         <option value="Refrigerasi">Refrigerasi</option>
                                         <option value="Sipil">Sipil</option>
                                         <option value="Utility">Utility</option>
-
                                         <option value="Motor Pompa">Motor Pump</option>
                                         <option value="Electrical">Electrical</option>
                                         <option value="Battery">Battery</option>
                                         <option value="Electric P2H">Electric P2H</option>
                                         <option value="Diesel P2H">Diesel P2H</option>
+                                        <option value="Genset P2H">Genset P2H</option>
                                         <option value="others">Lainnya</option>
                                     </select>
                                 </div>
@@ -1251,22 +1251,31 @@
             /* ── Data ───────────────────────────────────────────────────────────────── */
             function loadData() {
                 $('#tableBody').html(`
-            <tr><td colspan="10">
-                <div class="table-empty">
-                    <i class="mdi mdi-loading spin" style="font-size:28px; color:var(--ink-muted)"></i>
-                    <div style="margin-top:8px; font-size:13px; color:var(--ink-muted)">Memuat data…</div>
-                </div>
-            </td></tr>`);
+                    <tr>
+                        <td colspan="10">
+                            <div class="table-empty">
+                                <i class="mdi mdi-loading spin" style="font-size:28px; color:var(--ink-muted)"></i>
+                                <div style="margin-top:8px; font-size:13px; color:var(--ink-muted)">Memuat data…</div>
+                            </div>
+                        </td>
+                    </tr>
+                `);
 
                 $.get(R.getData, function(res) {
                     allData = res.data ?? [];
                     updateStats();
                     applyFilter();
                 }).fail(function() {
-                    $('#tableBody').html(`<tr><td colspan="10"><div class="table-empty" style="color:var(--danger)">
-                <i class="mdi mdi-alert-outline" style="font-size:28px"></i>
-                <div style="margin-top:8px">Gagal memuat data.</div>
-            </div></td></tr>`);
+                    $('#tableBody').html(`
+                        <tr>
+                            <td colspan="10">
+                                <div class="table-empty" style="color:var(--danger)">
+                                    <i class="mdi mdi-alert-outline" style="font-size:28px"></i>
+                                    <div style="margin-top:8px">Gagal memuat data.</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
                 });
             }
 
@@ -1306,13 +1315,18 @@
                 $('#tableCount').text(`${total} data`);
 
                 if (!paged.length) {
-                    $('#tableBody').html(`<tr><td colspan="10">
-                <div class="table-empty">
-                    <i class="mdi mdi-magnify" style="font-size:28px; color:var(--ink-muted)"></i>
-                    <div style="margin-top:8px; font-size:13px; color:var(--ink-muted)">
-                        ${allData.length ? 'Tidak ada data yang cocok.' : 'Belum ada data mesin.'}
-                    </div>
-                </div></td></tr>`);
+                    $('#tableBody').html(`
+                        <tr>
+                            <td colspan="10">
+                                <div class="table-empty">
+                                    <i class="mdi mdi-magnify" style="font-size:28px; color:var(--ink-muted)"></i>
+                                    <div style="margin-top:8px; font-size:13px; color:var(--ink-muted)">
+                                        ${allData.length ? 'Tidak ada data yang cocok.' : 'Belum ada data mesin.'}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
                     $('#paginationInfo').text('—');
                     $('#paginationWrap').html('');
                     return;
@@ -1321,34 +1335,35 @@
                 let html = '';
                 paged.forEach((item, i) => {
                     html += `
-            <tr>
-                <td style="color:var(--ink-muted);font-size:12px">${start + i + 1}</td>
-                <td><span class="badge-jenis">${formatJenis(item.jenis_mtc)}</span></td>
-                <td class="td-primary">${item.nama_mesin ?? '—'}</td>
-                <td>${item.lokasi ?? '—'}</td>
-                <td>${item.dept ?? '<span style="color:var(--ink-muted)">—</span>'}</td>
-                <td style="font-family:monospace;font-size:12px">${item.kode_mesin ?? '—'}</td>
-                <td>${item.frekuensi_list && item.frekuensi_list.length
-                    ? item.frekuensi_list.map(f => `<span class="badge-frek">${f.label ?? (f.interval + ' ' + f.satuan)}</span>`).join('')
-                    : '<span style="color:var(--ink-muted)">—</span>'
-                }</td>
-                <td>
-                    <span class="badge-pill ${item.aktif ? 'badge-active' : 'badge-inactive'}">
-                        ${item.aktif ? 'Aktif' : 'Non-Aktif'}
-                    </span>
-                </td>
-                <td style="font-size:12px;color:var(--ink-muted)">${fmtDate(item.created_at)}</td>
-                <td style="text-align:center">
-                    <button class="btn-base btn-ghost-warning btn-sm-c btn-icon-only btnEdit"
-                            title="Edit" data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
-                        <i class="mdi mdi-pencil-outline"></i>
-                    </button>
-                    <button class="btn-base btn-ghost-danger btn-sm-c btn-icon-only btnDelete"
-                            title="Hapus" data-id="${item.id}">
-                        <i class="mdi mdi-trash-can-outline"></i>
-                    </button>
-                </td>
-            </tr>`;
+                        <tr>
+                            <td style="color:var(--ink-muted);font-size:12px">${start + i + 1}</td>
+                            <td><span class="badge-jenis">${formatJenis(item.jenis_mtc)}</span></td>
+                            <td class="td-primary">${item.nama_mesin ?? '—'}</td>
+                            <td>${item.lokasi ?? '—'}</td>
+                            <td>${item.dept ?? '<span style="color:var(--ink-muted)">—</span>'}</td>
+                            <td style="font-family:monospace;font-size:12px">${item.kode_mesin ?? '—'}</td>
+                            <td>${item.frekuensi_list && item.frekuensi_list.length
+                                ? item.frekuensi_list.map(f => `<span class="badge-frek">${f.label ?? (f.interval + ' ' + f.satuan)}</span>`).join('')
+                                : '<span style="color:var(--ink-muted)">—</span>'
+                            }</td>
+                            <td>
+                                <span class="badge-pill ${item.aktif ? 'badge-active' : 'badge-inactive'}">
+                                    ${item.aktif ? 'Aktif' : 'Non-Aktif'}
+                                </span>
+                            </td>
+                            <td style="font-size:12px;color:var(--ink-muted)">${fmtDate(item.created_at)}</td>
+                            <td style="text-align:center">
+                                <button class="btn-base btn-ghost-warning btn-sm-c btn-icon-only btnEdit"
+                                        title="Edit" data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+                                    <i class="mdi mdi-pencil-outline"></i>
+                                </button>
+                                <button class="btn-base btn-ghost-danger btn-sm-c btn-icon-only btnDelete"
+                                        title="Hapus" data-id="${item.id}">
+                                    <i class="mdi mdi-trash-can-outline"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
                 });
                 $('#tableBody').html(html);
 

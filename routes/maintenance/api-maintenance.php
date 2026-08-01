@@ -8,6 +8,7 @@ use App\Http\Controllers\Maintenance\MtcDieselP2hController;
 use App\Http\Controllers\Maintenance\MtcMotorPumpController;
 use App\Http\Controllers\Maintenance\MtcElectricalController;
 use App\Http\Controllers\Maintenance\MtcElectricP2hController;
+use App\Http\Controllers\Maintenance\MtcP2hController;
 use App\Http\Controllers\Maintenance\MtcRefrigerasiController;
 use App\Http\Controllers\Maintenance\MtcDieselEngineController;
 use App\Http\Controllers\Maintenance\MtcElectricEngineController;
@@ -26,6 +27,7 @@ Route::prefix('mtc')->group(function () {
     Route::get('/battery/get-data', [MtcBatteryController::class, 'getData']);
     Route::get('/electric-p2h/get-data', [MtcElectricP2hController::class, 'getData']);
     Route::get('/diesel-p2h/get-data', [MtcDieselP2hController::class, 'getData']);
+    Route::get('/p2h/get-data', [MtcP2hController::class, 'getData']);
     Route::get('/master/mesin/get-data', [MtcMasterMesinController::class, 'getData']);
     Route::get('/users/approvers', [MtcMainController::class, 'getApprovers']);
 });

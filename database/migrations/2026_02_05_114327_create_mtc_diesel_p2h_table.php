@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('mtc_main_id')->constrained('mtc_main')->onDelete('cascade');
             $table->integer('shift');
             $table->string('no_unit');
-            $table->text('catatan');
+            $table->text('catatan')->nullable();
 
             $table->boolean('klakson')->nullable();
             $table->boolean('buzzer_back')->nullable();

@@ -110,6 +110,9 @@ class MtcMainController extends Controller
                     return $this->exportElectricP2h($id);
                 case 'Diesel P2h':
                     return $this->exportDieselP2h($id);
+                case 'Genset P2h':
+                case 'Genset P2H':
+                    return response()->json(['message' => 'Export Excel untuk Genset P2H belum didukung'], 400);
                 default:
                     return response()->json(['message' => 'Jenis maintenance tidak valid'], 404);
             }

@@ -17,6 +17,7 @@ use App\Http\Controllers\Maintenance\MtcElectricEngineController;
 use App\Http\Controllers\Maintenance\MtcMainController;
 use App\Http\Controllers\Maintenance\MtcMasterMesinController;
 use App\Http\Controllers\Maintenance\MtcMaterialDashboardController;
+use App\Http\Controllers\Maintenance\MtcP2hController;
 
 Route::middleware(['auth'])->group(function () {
     Route::prefix('mtc')->group(function () {
@@ -141,6 +142,13 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/material', [MtcMaterialDashboardController::class, 'index'])->name('mtc.dashboard.material');
             Route::get('/material/charts', [MtcMaterialDashboardController::class, 'getDashboardCharts'])->name('mtc.dashboard.material.charts');
             Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMaterialList'])->name('mtc.dashboard.material.list');
+        });
+
+        Route::prefix('p2h')->group(function () {
+            Route::get('/form/index', [MtcP2hController::class, 'form'])->name('p2h.form.index');
+            Route::post('/form/store', [MtcP2hController::class, 'store'])->name('p2h.form.store');
+            Route::get('/data/index', [MtcP2hController::class, 'data'])->name('p2h.data.index');
+            Route::post('/data/update/{id}', [MtcP2hController::class, 'update'])->name('p2h.data.update');
         });
     });
 });

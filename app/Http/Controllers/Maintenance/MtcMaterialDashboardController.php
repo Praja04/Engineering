@@ -192,6 +192,7 @@ class MtcMaterialDashboardController extends Controller
             'main.dieselEngine.mesin',
             'main.electricP2h.mesin',
             'main.dieselP2h.mesin',
+            'main.gensetP2h.mesin',
             'main.battery',
         ]);
 
@@ -208,6 +209,8 @@ class MtcMaterialDashboardController extends Controller
                     'Diesel Engine' => 'dieselEngine',
                     'Electric P2h' => 'electricP2h',
                     'Diesel P2h' => 'dieselP2h',
+                    'Genset P2h' => 'gensetP2h',
+                    'Genset P2H' => 'gensetP2h',
                     default => null
                 };
                 if ($rel && $main->$rel && $main->$rel->mesin) {

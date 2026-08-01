@@ -15,6 +15,7 @@ use App\Models\Maintenance\MtcSipilInspectionModel;
 use App\Models\Maintenance\MtcBatteryMainModel;
 use App\Models\Maintenance\MtcElectricP2hInspectionModel;
 use App\Models\Maintenance\MtcDieselP2hInspectionModel;
+use App\Models\Maintenance\MtcGensetP2hInspectionModel;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
 use App\Models\Maintenance\MtcPenggantianMaterialModel;
 use App\Models\Maintenance\MtcApprovalModel;
@@ -125,6 +126,14 @@ class MtcMainModel extends Model
     {
         return $this->hasOne(
             MtcDieselP2hInspectionModel::class,
+            'mtc_main_id'
+        );
+    }
+
+    public function gensetP2h()
+    {
+        return $this->hasOne(
+            MtcGensetP2hInspectionModel::class,
             'mtc_main_id'
         );
     }
