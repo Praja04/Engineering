@@ -99,6 +99,10 @@ class AirController extends Controller
             $air->notes = $notes;
             $air->save();
 
+            if ($area === 'CT RO') {
+                $this->syncCoolingTowerFlowrate($tanggal, $entry['pemakaian_liter_awal'], $entry['pemakaian_liter_akhir']);
+            }
+
             $inserted[] = $area;
         }
 
@@ -553,6 +557,10 @@ class AirController extends Controller
             'notes' => $request->notes,
         ]);
 
+        if ($request->jenis_pemakaian === 'CT RO') {
+            $this->syncCoolingTowerFlowrate($request->tanggal, $request->pemakaian_awal, $request->pemakaian_akhir);
+        }
+
         // Check and transition status back to submitted if rejected
         \App\Models\Utility\UtilityMonthlyApproval::checkAndNotify(
             $bulan,
@@ -563,5 +571,44 @@ class AirController extends Controller
         );
 
         return response()->json(['message' => 'Data Air berhasil diperbarui.']);
+    }
+
+    private function syncCoolingTowerFlowrate($tanggal, $awal, $akhir)
+    {
+        $date = \Carbon\Carbon::parse($tanggal);
+        $month = $date->month;
+        $year = $date->year;
+
+        $main = \App\Models\Utility\CoolingTower::firstOrCreate(
+            [
+                'bulan' => $month,
+                'tahun' => $year,
+            ],
+            [
+                'operator_id' => auth()->id() ?? 1,
+                'status' => 'draft',
+                'submitted_at' => now(),
+            ]
+        );
+
+        $details = \App\Models\Utility\CoolingTowerDetails::where('tanggal', $tanggal)->get();
+
+        if ($details->count() > 0) {
+            foreach ($details as $detail) {
+                $detail->update([
+                    'flowrate_ro_awal' => $awal,
+                    'flowrate_ro_akhir' => $akhir,
+                ]);
+            }
+        } else {
+            \App\Models\Utility\CoolingTowerDetails::create([
+                'cooling_tower_id' => $main->id,
+                'tanggal' => $tanggal,
+                'jam' => '08:00',
+                'flowrate_ro_awal' => $awal,
+                'flowrate_ro_akhir' => $akhir,
+                'created_by' => auth()->id() ?? 1,
+            ]);
+        }
     }
 }

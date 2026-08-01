@@ -192,12 +192,14 @@
                             <div class="col-md-6">
                                 <label class="form-label">Flowrate RO Awal</label>
                                 <input type="number" step="0.01" name="flowrate_ro_awal" id="edit_flowrate_ro_awal"
-                                    class="form-control">
+                                    class="form-control" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                                <div class="form-text">Diisi otomatis dari Pemakaian Air (CT RO)</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Flowrate RO Akhir</label>
                                 <input type="number" step="0.01" name="flowrate_ro_akhir"
-                                    id="edit_flowrate_ro_akhir" class="form-control">
+                                    id="edit_flowrate_ro_akhir" class="form-control" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                                <div class="form-text">Diisi otomatis dari Pemakaian Air (CT RO)</div>
                             </div>
                         </div>
                     </form>
