@@ -1717,6 +1717,30 @@
                         '#edit_pit_boiler_awal').val() : null,
                 };
 
+                // Client-side validation: difference between sekarang and awal must be < 1000
+                const pits = [
+                    { id: 'sparta', label: 'Pit Sparta' },
+                    { id: 'garam', label: 'Pit Garam' },
+                    { id: 'domestik', label: 'Pit Domestik' },
+                    { id: 'produksi_step3', label: 'Pit Produksi Step 3' },
+                    { id: 'storage', label: 'Pit Storage' },
+                    { id: 'proses_wwtp2', label: 'Pit Proses WWTP 2' },
+                    { id: 'outlet', label: 'Pit Outlet' },
+                    { id: 'boiler', label: 'Pit Boiler' }
+                ];
+
+                for (let p of pits) {
+                    const sekarangVal = parseFloat($(`#edit_pit_${p.id}`).val());
+                    const awalVal = parseFloat($(`#edit_pit_${p.id}_awal`).val()) || 0;
+                    if (!isNaN(sekarangVal)) {
+                        const diff = Math.abs(sekarangVal - awalVal);
+                        if (diff >= 1000) {
+                            showError(`Selisih nilai sekarang dan awal untuk ${p.label} (${diff.toFixed(2)} m³) tidak masuk akal (lebih dari 3 digit).`);
+                            return;
+                        }
+                    }
+                }
+
                 $.ajax({
                     url: `/wwtp/influent-harian/${id}`,
                     method: 'PUT',

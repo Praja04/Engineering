@@ -358,6 +358,38 @@ class WWTPControllerProses extends Controller
                 ->first();
         }
 
+        // Validasi selisih nilai sekarang dan nilai awal tidak boleh >= 1000 (lebih dari 3 digit)
+        $fieldsToCheck = [
+            'pit_sparta' => 'Pit Sparta',
+            'pit_garam' => 'Pit Garam',
+            'pit_domestik' => 'Pit Domestik',
+            'pit_produksi_step3' => 'Pit Produksi Step 3',
+            'pit_storage' => 'Pit Storage',
+            'pit_proses_wwtp2' => 'Pit Proses WWTP 2',
+            'pit_outlet' => 'Pit Outlet',
+            'pit_boiler' => 'Pit Boiler',
+        ];
+
+        foreach ($fieldsToCheck as $field => $label) {
+            if ($request->has($field) && $request->$field !== null) {
+                $sekarang = (float) $request->$field;
+                $awalField = $field . '_awal';
+                
+                if ($request->has($awalField) && $request->$awalField !== null) {
+                    $awal = (float) $request->$awalField;
+                } else {
+                    $awal = $preceding ? ($preceding->$field !== null ? (float) $preceding->$field : ($preceding->$awalField !== null ? (float) $preceding->$awalField : 0)) : $sekarang;
+                }
+
+                $diff = abs($sekarang - $awal);
+                if ($diff >= 1000) {
+                    return response()->json([
+                        'message' => "Selisih nilai sekarang dan awal untuk {$label} (" . number_format($diff, 2, ',', '.') . " m³) tidak masuk akal (lebih dari 3 digit)."
+                    ], 422);
+                }
+            }
+        }
+
         // Simpan data harian
         $harian = WwtpInfluentHarian::create([
             'tanggal' => $request->tanggal,
@@ -679,6 +711,33 @@ class WWTPControllerProses extends Controller
                 $data[$awalField] = (float) $request->$awalField;
             } else {
                 $data[$awalField] = $preceding ? ($preceding->$field !== null ? (float) $preceding->$field : ($preceding->$awalField !== null ? (float) $preceding->$awalField : 0)) : 0;
+            }
+        }
+
+        // Validasi selisih nilai sekarang dan nilai awal tidak boleh >= 1000 (lebih dari 3 digit)
+        $fieldsToCheck = [
+            'pit_sparta' => 'Pit Sparta',
+            'pit_garam' => 'Pit Garam',
+            'pit_domestik' => 'Pit Domestik',
+            'pit_produksi_step3' => 'Pit Produksi Step 3',
+            'pit_storage' => 'Pit Storage',
+            'pit_proses_wwtp2' => 'Pit Proses WWTP 2',
+            'pit_outlet' => 'Pit Outlet',
+            'pit_boiler' => 'Pit Boiler',
+        ];
+
+        foreach ($fieldsToCheck as $field => $label) {
+            if ($request->has($field) && $request->$field !== null) {
+                $sekarang = (float) $request->$field;
+                $awalField = $field . '_awal';
+                $awal = isset($data[$awalField]) ? (float) $data[$awalField] : 0;
+
+                $diff = abs($sekarang - $awal);
+                if ($diff >= 1000) {
+                    return response()->json([
+                        'message' => "Selisih nilai sekarang dan awal untuk {$label} (" . number_format($diff, 2, ',', '.') . " m³) tidak masuk akal (lebih dari 3 digit)."
+                    ], 422);
+                }
             }
         }
 
