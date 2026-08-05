@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Utility\PemakaianAirModel;
 use App\Models\Utility\AirArea;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Session;
+use App\Models\Utility\CoolingTower;
+use App\Models\Utility\CoolingTowerDetails;
+use App\Models\Utility\PemakaianAirModel;
+use App\Models\Utility\UtilityMonthlyApproval;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -579,7 +583,7 @@ class AirController extends Controller
         $month = $date->month;
         $year = $date->year;
 
-        $main = \App\Models\Utility\CoolingTower::firstOrCreate(
+        $main = CoolingTower::firstOrCreate(
             [
                 'bulan' => $month,
                 'tahun' => $year,
@@ -591,7 +595,7 @@ class AirController extends Controller
             ]
         );
 
-        $details = \App\Models\Utility\CoolingTowerDetails::where('tanggal', $tanggal)->get();
+        $details = CoolingTowerDetails::where('tanggal', $tanggal)->get();
 
         if ($details->count() > 0) {
             foreach ($details as $detail) {
@@ -601,7 +605,7 @@ class AirController extends Controller
                 ]);
             }
         } else {
-            \App\Models\Utility\CoolingTowerDetails::create([
+            CoolingTowerDetails::create([
                 'cooling_tower_id' => $main->id,
                 'tanggal' => $tanggal,
                 'jam' => '08:00',
