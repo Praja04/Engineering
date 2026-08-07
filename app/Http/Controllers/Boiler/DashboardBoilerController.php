@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Boiler;
 
 use Illuminate\Http\Request;
 use App\Models\Utility\KpiModel;
-use App\Models\Boiler\BoilerModel;
+use App\Models\Utility\EspShiftReport;
 use App\Http\Controllers\Controller;
 
 class DashboardBoilerController extends Controller
@@ -25,18 +25,18 @@ class DashboardBoilerController extends Controller
 
     public function getBatuBaraSteam(Request $request)
     {
-        $query = BoilerModel::orderBy('date', 'asc');
+        $query = EspShiftReport::orderBy('tanggal_laporan', 'asc');
 
         if ($request->start_date && $request->end_date) {
-            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+            $query->whereBetween('tanggal_laporan', [$request->start_date, $request->end_date]);
         }
 
         $data = $query->get()->map(function ($item) {
-            $steam = (float) $item->steam;
-            $bb = (float) $item->batu_bara;
+            $steam = (float) $item->pemakaian_steam;
+            $bb = (float) $item->pemakaian_batubara;
 
             return [
-                'date' => $item->date,
+                'date' => $item->tanggal_laporan,
                 'steam' => $steam,
                 'batu_bara' => $bb,
                 'rasio' => $steam > 0 ? ($bb / $steam) * 1000 : 0
@@ -51,15 +51,15 @@ class DashboardBoilerController extends Controller
 
     public function getKondensat(Request $request)
     {
-        $query = BoilerModel::orderBy('date', 'asc');
+        $query = EspShiftReport::orderBy('tanggal_laporan', 'asc');
 
         if ($request->start_date && $request->end_date) {
-            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+            $query->whereBetween('tanggal_laporan', [$request->start_date, $request->end_date]);
         }
 
         $data = $query->get()->map(function ($item) {
             return [
-                'date' => $item->date,
+                'date' => $item->tanggal_laporan,
                 'kondensat' => (float) $item->kondensat,
             ];
         });
@@ -75,24 +75,24 @@ class DashboardBoilerController extends Controller
         $start = $request->start_date;
         $end   = $request->end_date;
 
-        $dailyQuery = BoilerModel::query();
+        $dailyQuery = EspShiftReport::query();
 
         if ($start) {
-            $dailyQuery->whereDate('date', '>=', $start);
+            $dailyQuery->whereDate('tanggal_laporan', '>=', $start);
         }
 
         if ($end) {
-            $dailyQuery->whereDate('date', '<=', $end);
+            $dailyQuery->whereDate('tanggal_laporan', '<=', $end);
         }
 
         // Jika tidak ada filter, ambil hanya 30 data terakhir
         if (!$start && !$end) {
-            $dailyQuery->orderBy('date', 'asc')->limit(20);
+            $dailyQuery->orderBy('tanggal_laporan', 'asc')->limit(20);
         } else {
-            $dailyQuery->orderBy('date', 'asc');
+            $dailyQuery->orderBy('tanggal_laporan', 'asc');
         }
 
-        $dailySteamData = $dailyQuery->get(['date', 'steam']);
+        $dailySteamData = $dailyQuery->get(['tanggal_laporan as date', 'pemakaian_steam as steam']);
 
         if ($dailySteamData->isEmpty()) {
             return response()->json([
@@ -169,23 +169,23 @@ class DashboardBoilerController extends Controller
         $end   = $request->end_date;
 
         // 1. Ambil data harian batu bara (fallback)
-        $dailyQuery = BoilerModel::query();
+        $dailyQuery = EspShiftReport::query();
         if ($start) {
-            $dailyQuery->whereDate('date', '>=', $start);
+            $dailyQuery->whereDate('tanggal_laporan', '>=', $start);
         }
 
         if ($end) {
-            $dailyQuery->whereDate('date', '<=', $end);
+            $dailyQuery->whereDate('tanggal_laporan', '<=', $end);
         }
 
         // Default load hanya 30 data terakhir
         if (!$start && !$end) {
-            $dailyQuery->orderBy('date', 'asc')->limit(20);
+            $dailyQuery->orderBy('tanggal_laporan', 'asc')->limit(20);
         } else {
-            $dailyQuery->orderBy('date', 'asc');
+            $dailyQuery->orderBy('tanggal_laporan', 'asc');
         }
 
-        $dailyBbData = $dailyQuery->get(['date', 'batu_bara']);
+        $dailyBbData = $dailyQuery->get(['tanggal_laporan as date', 'pemakaian_batubara as batu_bara']);
 
         if ($dailyBbData->isEmpty() && !$request->has('start_date')) {
             return response()->json([
@@ -264,22 +264,22 @@ class DashboardBoilerController extends Controller
         $endMonth   = $end   ? substr($end,   0, 7) : null;
 
         // 1. Ambil data harian steam (selalu siapkan sebagai fallback)
-        $dailyQuery = BoilerModel::query();
+        $dailyQuery = EspShiftReport::query();
         if ($start) {
-            $dailyQuery->whereDate('date', '>=', $start);
+            $dailyQuery->whereDate('tanggal_laporan', '>=', $start);
         }
 
         if ($end) {
-            $dailyQuery->whereDate('date', '<=', $end);
+            $dailyQuery->whereDate('tanggal_laporan', '<=', $end);
         }
 
         if (!$start && !$end) {
-            $dailyQuery->orderBy('date', 'asc')->limit(365); // cukup 1 tahun
+            $dailyQuery->orderBy('tanggal_laporan', 'asc')->limit(365); // cukup 1 tahun
         } else {
-            $dailyQuery->orderBy('date', 'asc');
+            $dailyQuery->orderBy('tanggal_laporan', 'asc');
         }
 
-        $dailyData = $dailyQuery->get(['date', 'steam']);
+        $dailyData = $dailyQuery->get(['tanggal_laporan as date', 'pemakaian_steam as steam']);
 
         if ($dailyData->isEmpty() && !$request->has('start_date')) {
             return response()->json([
@@ -380,22 +380,22 @@ class DashboardBoilerController extends Controller
         $endMonth   = $end   ? substr($end,   0, 7) : null;
 
         // Data harian batu bara (fallback)
-        $dailyQuery = BoilerModel::query();
+        $dailyQuery = EspShiftReport::query();
         if ($start) {
-            $dailyQuery->whereDate('date', '>=', $start);
+            $dailyQuery->whereDate('tanggal_laporan', '>=', $start);
         }
 
         if ($end) {
-            $dailyQuery->whereDate('date', '<=', $end);
+            $dailyQuery->whereDate('tanggal_laporan', '<=', $end);
         }
 
         if (!$start && !$end) {
-            $dailyQuery->orderBy('date', 'asc')->limit(365);
+            $dailyQuery->orderBy('tanggal_laporan', 'asc')->limit(365);
         } else {
-            $dailyQuery->orderBy('date', 'asc');
+            $dailyQuery->orderBy('tanggal_laporan', 'asc');
         }
 
-        $dailyData = $dailyQuery->get(['date', 'batu_bara']);
+        $dailyData = $dailyQuery->get(['tanggal_laporan as date', 'pemakaian_batubara as batu_bara']);
 
         if ($dailyData->isEmpty() && !$request->has('start_date')) {
             return response()->json([

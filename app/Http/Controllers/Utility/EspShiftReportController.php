@@ -46,6 +46,15 @@ class EspShiftReportController extends Controller
         //     ], 422);
         // }
 
+        // 🔥 Hitung Kondensat
+        $kondensat = null;
+        if (!is_null($request->feed_tank_akhir) && 
+            !is_null($request->feed_tank_awal) && 
+            !is_null($request->pemakaian_air) && 
+            $request->pemakaian_air != 0) {
+            $kondensat = abs((($request->feed_tank_akhir - $request->feed_tank_awal) / $request->pemakaian_air) * 100 - 100);
+        }
+
         // 🔥 Simpan (auto approve operator)
         $data = EspShiftReport::updateOrCreate(
             [
@@ -64,6 +73,7 @@ class EspShiftReportController extends Controller
                 'chemical_scf'          => $request->chemical_scf,
                 'chemical_srtf'         => $request->chemical_srtf,
                 'dosis'                 => $request->dosis,
+                'kondensat'             => $kondensat,
 
                 'operator_id'    => auth()->id(),
                 'foreman_id'     => $request->foreman_id,
@@ -324,7 +334,19 @@ class EspShiftReportController extends Controller
     {
         $data = EspShiftReport::findOrFail($id);
 
-        $data->update($request->only([
+        $feedTankAkhir = $request->has('feed_tank_akhir') ? $request->feed_tank_akhir : $data->feed_tank_akhir;
+        $feedTankAwal = $request->has('feed_tank_awal') ? $request->feed_tank_awal : $data->feed_tank_awal;
+        $pemakaianAir = $request->has('pemakaian_air') ? $request->pemakaian_air : $data->pemakaian_air;
+
+        $kondensat = null;
+        if (!is_null($feedTankAkhir) && 
+            !is_null($feedTankAwal) && 
+            !is_null($pemakaianAir) && 
+            $pemakaianAir != 0) {
+            $kondensat = abs((($feedTankAkhir - $feedTankAwal) / $pemakaianAir) * 100 - 100);
+        }
+
+        $updateData = $request->only([
             'pemakaian_air',
             'pemakaian_steam',
             'pemakaian_batubara',
@@ -337,7 +359,10 @@ class EspShiftReportController extends Controller
             'chemical_scf',
             'chemical_srtf',
             'dosis',
-        ]));
+        ]);
+        $updateData['kondensat'] = $kondensat;
+
+        $data->update($updateData);
 
         return response()->json(['message' => 'Data berhasil diperbarui', 'data' => $data]);
     }

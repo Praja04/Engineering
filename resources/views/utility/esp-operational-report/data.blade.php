@@ -83,11 +83,11 @@
                                 </div>
                                 <div class="col-auto filter-tanggal-range-shift-wrapper" style="display:none;">
                                     <div class="d-flex align-items-center gap-1">
-                                        <input type="date" class="form-control form-control-sm" id="filter-start-date-shift"
-                                            value="{{ date('Y-m-d', strtotime('-30 days')) }}">
+                                        <input type="date" class="form-control form-control-sm"
+                                            id="filter-start-date-shift" value="{{ date('Y-m-d', strtotime('-30 days')) }}">
                                         <span class="text-muted fs-12">s/d</span>
-                                        <input type="date" class="form-control form-control-sm" id="filter-end-date-shift"
-                                            value="{{ date('Y-m-d') }}">
+                                        <input type="date" class="form-control form-control-sm"
+                                            id="filter-end-date-shift" value="{{ date('Y-m-d') }}">
                                     </div>
                                 </div>
 
@@ -179,6 +179,7 @@
                                                 <th>Steam (ton)</th>
                                                 <th>Batubara (ton)</th>
                                                 <th>Efisiensi (%)</th>
+                                                <th>Kondensat (%)</th>
                                                 <th>RH Awal</th>
                                                 <th>RH Akhir</th>
                                                 <th>Status</th>
@@ -767,13 +768,13 @@
                                 <td>
                                     ${hasData
                                         ? `<button class="btn btn-xs btn-outline-primary btn-detail-op py-0 px-2" title="Detail">
-                                                <i class="ri-eye-line"></i>
-                                            </button>
-                                            @if (auth()->user()->jabatan !== 'operator')
-                                                <button type="button" class="btn btn-xs btn-outline-primary btn-edit-op-row py-0 px-2" title="Edit">
-                                                    <i class="ri-edit-line"></i>
-                                                </button>
-                                            @endif`
+                                                        <i class="ri-eye-line"></i>
+                                                    </button>
+                                                    @if (auth()->user()->jabatan !== 'operator')
+                                                        <button type="button" class="btn btn-xs btn-outline-primary btn-edit-op-row py-0 px-2" title="Edit">
+                                                            <i class="ri-edit-line"></i>
+                                                        </button>
+                                                    @endif`
                                         : '—'
                                     }
                                 </td>
@@ -824,25 +825,26 @@
                             cls: 'bg-secondary text-white'
                         };
                         html += `<tr style="cursor:pointer;" data-row='${JSON.stringify(r)}'>
-                    <td class="fw-medium">${r.tanggal_laporan}</td>
-                    <td>${formatDecimalVal(r.pemakaian_air) || '—'}</td>
-                    <td>${formatDecimalVal(r.pemakaian_steam) || '—'}</td>
-                    <td>${formatDecimalVal(r.pemakaian_batubara) || '—'}</td>
-                    <td>${formatDecimalVal(r.efisiensi_batubara) || '—'}</td>
-                    <td>${formatDecimalVal(r.running_hour_awal) || '—'}</td>
-                    <td>${formatDecimalVal(r.running_hour_akhir) || '—'}</td>
-                    <td><span class="badge ${s.cls}">${s.label}</span></td>
-                    <td>
-                        <button class="btn btn-xs btn-outline-danger btn-detail-shift py-0 px-2" title="Detail">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        @if (auth()->user()->jabatan !== 'operator')
-                            <button type="button" class="btn btn-xs btn-outline-primary btn-edit-shift-row py-0 px-2" title="Edit">
-                                <i class="ri-edit-line"></i>
-                            </button>
-                        @endif
-                    </td>
-                </tr>`;
+                            <td class="fw-medium">${r.tanggal_laporan}</td>
+                            <td>${formatDecimalVal(r.pemakaian_air) || '—'}</td>
+                            <td>${formatDecimalVal(r.pemakaian_steam) || '—'}</td>
+                            <td>${formatDecimalVal(r.pemakaian_batubara) || '—'}</td>
+                            <td>${formatDecimalVal(r.efisiensi_batubara) || '—'}</td>
+                            <td>${formatDecimalVal(r.kondensat) || '—'}</td>
+                            <td>${formatDecimalVal(r.running_hour_awal) || '—'}</td>
+                            <td>${formatDecimalVal(r.running_hour_akhir) || '—'}</td>
+                            <td><span class="badge ${s.cls}">${s.label}</span></td>
+                            <td>
+                                <button class="btn btn-xs btn-outline-danger btn-detail-shift py-0 px-2" title="Detail">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                                @if (auth()->user()->jabatan !== 'operator')
+                                    <button type="button" class="btn btn-xs btn-outline-primary btn-edit-shift-row py-0 px-2" title="Edit">
+                                        <i class="ri-edit-line"></i>
+                                    </button>
+                                @endif
+                            </td>
+                        </tr>`;
                     });
                     $('#tbody-shift').html(html);
                 });

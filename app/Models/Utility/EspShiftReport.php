@@ -20,6 +20,7 @@ class EspShiftReport extends Model
         'chemical_scf',
         'chemical_srtf',
         'dosis',
+        'kondensat',
         'operator_id',
         'foreman_id',
         'supervisor_id',
@@ -27,6 +28,21 @@ class EspShiftReport extends Model
         'supervisor_approved_at',   
         'status'
     ];
+
+    protected static function booted()
+    {
+        static::saving(function ($report) {
+            if (!is_null($report->feed_tank_akhir) && 
+                !is_null($report->feed_tank_awal) && 
+                !is_null($report->pemakaian_air) && 
+                $report->pemakaian_air != 0) {
+                
+                $report->kondensat = abs((($report->feed_tank_akhir - $report->feed_tank_awal) / $report->pemakaian_air) * 100 - 100);
+            } else {
+                $report->kondensat = null;
+            }
+        });
+    }
 
     public function operator()
     {

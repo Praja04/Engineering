@@ -13,11 +13,11 @@ in_array($bagian, ['IT','Engineering', 'Engineering Utility', 'Engineering WWTP'
     </a>
     <div class="collapse menu-dropdown {{ request()->routeIs('boiler.*') ? 'show' : '' }}" id="sideBarBoiler">
         <ul class="nav nav-sm flex-column">
-            <li class="nav-item">
+            {{-- <li class="nav-item">
                 <a href="{{ route('boiler.form') }}"
                     class="nav-link {{ request()->routeIs('boiler.form') ? 'active' : '' }}">
                     <i class="mdi mdi-file-document"></i>Form Boiler</a>
-            </li>
+            </li> --}}
         </ul>
     </div>
 </li>

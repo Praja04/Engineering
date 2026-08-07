@@ -6,6 +6,30 @@
     <div class="page-content">
         <div class="container-fluid">
             <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body text-center py-5">
+                    <div class="avatar-lg mx-auto mb-4">
+                        <div class="avatar-title bg-warning-subtle text-warning rounded-circle fs-24" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                            <i class="mdi mdi-alert-circle-outline" style="font-size: 40px;"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-semibold">Form Boiler Dinonaktifkan</h4>
+                    <p class="text-muted">Input data Boiler (Batu Bara, Steam, dan Kondensat) kini digabungkan ke dalam <strong>Form Operasional ESP</strong>.</p>
+                    <a href="{{ route('esp-operational-report.index') }}" class="btn btn-primary mt-2">
+                        <i class="ri-arrow-right-line me-1"></i> Buka Form Operasional ESP
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{--
+    ============================================================================
+    KODE ASLI FORM BOILER SEBELUMNYA DIBAWAH INI DINONAKTIFKAN (DICOMMENT)
+    ============================================================================
+
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Form Boiler</h5>
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalBoiler">
@@ -35,7 +59,6 @@
                 </div>
             </div>
 
-            {{-- Table Data --}}
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Data Boiler</h5>
@@ -55,7 +78,6 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {{-- Data akan diisi melalui AJAX --}}
                             </tbody>
                         </table>
                         <div id="pagination-container" class="mt-3"></div>
@@ -65,7 +87,6 @@
         </div>
     </div>
 
-    {{-- Modal Tambah/Edit --}}
     <div class="modal fade" id="modalBoiler" tabindex="-1" aria-labelledby="modalBoilerLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3">
@@ -106,15 +127,19 @@
             </div>
         </div>
     </div>
+    --}}
 @endsection
 
 @section('scripts')
+    {{--
+    ============================================================================
+    SCRIPT ASLI FORM BOILER DINONAKTIFKAN (DICOMMENT)
+    ============================================================================
     <script>
         $(document).ready(function() {
             const formBoiler = $('#formBoiler');
             let currentPage = 1;
 
-            // Submit form
             formBoiler.on('submit', function(e) {
                 e.preventDefault();
 
@@ -168,7 +193,6 @@
                         }
                     },
                     error: function(xhr) {
-                        // console.error(xhr.responseText);
                         let message = 'Terjadi kesalahan saat menyimpan data!';
 
                         if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -197,7 +221,6 @@
                     const tableBody = $('#boilerTable tbody');
                     tableBody.empty();
 
-                    // Tampilkan data
                     if (response.data.length === 0) {
                         tableBody.append(`
                             <tr>
@@ -242,21 +265,18 @@
             }
 
             function renderPagination(data) {
-                const pagination = $(
-                    '#pagination-container');
+                const pagination = $('#pagination-container');
                 pagination.empty();
 
                 if (data.last_page <= 1) return;
 
                 let html = '<nav><ul class="pagination justify-content-center">';
 
-                // Previous
                 html += `<li class="page-item ${data.current_page === 1 ? 'disabled' : ''}">
                         <a class="page-link" href="#" data-page="${data.current_page - 1}">Previous</a>
                     </li>
                 `;
 
-                // Nomor halaman (simple: tampilkan 5 halaman sekitar current)
                 const startPage = Math.max(1, data.current_page - 2);
                 const endPage = Math.min(data.last_page, data.current_page + 2);
 
@@ -267,7 +287,6 @@
                     `;
                 }
 
-                // Next
                 html += `<li class="page-item ${data.current_page === data.last_page ? 'disabled' : ''}">
                         <a class="page-link" href="#" data-page="${data.current_page + 1}">Next</a>
                     </li>
@@ -277,13 +296,11 @@
                 pagination.html(html);
             }
 
-            // Event listener untuk klik pagination
             $(document).on('click', '.pagination a[data-page]', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
                 if (page) {
-                    loadData($('#startDate').val(), $('#endDate').val(),
-                        page);
+                    loadData($('#startDate').val(), $('#endDate').val(), page);
                 }
             });
 
@@ -297,7 +314,6 @@
                 const id = $(this).data('id');
 
                 $.get("{{ url('boiler/show') }}/" + id, function(res) {
-
                     if (!res.success) {
                         return Swal.fire({
                             icon: 'error',
@@ -311,7 +327,6 @@
                     $('#modalBoilerLabel').text('Edit Data Boiler');
                     $('#boilerId').val(data.id);
 
-                    // SET VALUE NORMAL
                     $('#date').val(data.date);
                     $('#batuBara').val(formatNumber(data.batu_bara));
                     $('#steam').val(formatNumber(data.steam));
@@ -327,7 +342,6 @@
                 $('#formBoiler')[0].reset();
             });
 
-            // Hapus data pakai SweetAlert2
             $(document).on('click', '.btnDelete', function() {
                 const id = $(this).data('id');
 
@@ -393,4 +407,5 @@
             });
         });
     </script>
+    --}}
 @endsection
