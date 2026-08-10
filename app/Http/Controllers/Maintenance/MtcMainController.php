@@ -1232,7 +1232,7 @@ class MtcMainController extends Controller
                     $col = $columns[($cell - 1) % 6];
 
                     $group = floor(($cell - 1) / 6);
-                    $startRow = 10 + ($group * 7);
+                    $startRow = 10 + ($group * 3);
 
                     foreach ($fieldOffset as $field => $offset) {
 
