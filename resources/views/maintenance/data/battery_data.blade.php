@@ -158,7 +158,13 @@
                         <div class="col-md-3"><strong>Battery Type:</strong> <span id="modalType"></span></div>
                         <div class="col-md-3"><strong>No Unit:</strong> <span id="modalUnit"></span></div>
                         <div class="col-md-3"><strong>No Seri:</strong> <span id="modalSeri"></span></div>
+                        <div class="col-md-3"><strong>Total Voltase:</strong> <span id="modalTotalVoltase"></span></div>
+                    </div>
+                    <div class="row mb-3">
                         <div class="col-md-3"><strong>Grounding:</strong> <span id="modalGrounding"></span></div>
+                        <div class="col-md-3"><strong>Intercell:</strong> <span id="modalIntercell"></span></div>
+                        <div class="col-md-3"><strong>Kondisi Skun:</strong> <span id="modalKondisiSkun"></span></div>
+                        <div class="col-md-3"><strong>Kondisi Unit:</strong> <span id="modalKondisiUnit"></span></div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-12"><strong>Catatan:</strong> <span id="modalCatatan"></span></div>
@@ -175,9 +181,6 @@
                                 <th>Cell</th>
                                 <th>Voltase</th>
                                 <th>Level Air Aki</th>
-                                <th>Intercell</th>
-                                <th>Kondisi Skun</th>
-                                <th>Kondisi Unit</th>
                                 <th>Grounding</th>
                             </tr>
                         </thead>
@@ -214,20 +217,32 @@
                             <div class="col-md-3">
                                 <label>Waktu Mulai</label>
                                 <input type="time" name="waktu_mulai" id="editWaktuMulai" class="form-control"
-                                    step="60" value="{{ old('waktu_mulai', now()->format('H:i')) }}" required>
+                                    step="60" required>
                             </div>
                             <div class="col-md-3">
                                 <label>Waktu Selesai</label>
                                 <input type="time" name="waktu_selesai" id="editWaktuSelesai" class="form-control"
-                                    step="60" value="{{ old('waktu_selesai', now()->format('H:i')) }}" required>
+                                    step="60" required>
                             </div>
                             <div class="col-md-3">
                                 <label>Battery Type</label>
                                 <input type="text" name="battery_type" id="editBatteryType" class="form-control">
                             </div>
+                        </div>
+
+                        <div class="row mb-3">
                             <div class="col-md-3">
                                 <label>No Unit</label>
                                 <input type="text" name="no_unit" id="editNoUnit" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label>No Seri</label>
+                                <input type="text" name="no_seri" id="editNoSeri" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Total Voltase</label>
+                                <input type="number" name="total_voltase" id="editTotalVoltase" class="form-control"
+                                    step="0.01" min="0">
                             </div>
                             <div class="col-md-3">
                                 <label>Grounding</label>
@@ -237,14 +252,42 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label>No Seri</label>
-                                <input type="text" name="no_seri" id="editNoSeri" class="form-control">
+                            <div class="col-md-4 check-wrapper">
+                                <label>Intercell</label>
+                                <select class="form-select status-select mb-1" name="intercell" id="editIntercell">
+                                    <option value="1">OK</option>
+                                    <option value="0">NG</option>
+                                </select>
+                                <input type="text" name="keterangan_intercell" id="editKeteranganIntercell"
+                                    class="form-control form-control-sm keterangan-input d-none"
+                                    placeholder="Keterangan (Wajib)">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4 check-wrapper">
+                                <label>Kondisi Skun</label>
+                                <select class="form-select status-select mb-1" name="kondisi_skun" id="editKondisiSkun">
+                                    <option value="1">OK</option>
+                                    <option value="0">NG</option>
+                                </select>
+                                <input type="text" name="keterangan_kondisi_skun" id="editKeteranganKondisiSkun"
+                                    class="form-control form-control-sm keterangan-input d-none"
+                                    placeholder="Keterangan (Wajib)">
+                            </div>
+                            <div class="col-md-4 check-wrapper">
+                                <label>Kondisi Unit</label>
+                                <select class="form-select status-select mb-1" name="kondisi_unit" id="editKondisiUnit">
+                                    <option value="1">OK</option>
+                                    <option value="0">NG</option>
+                                </select>
+                                <input type="text" name="keterangan_kondisi_unit" id="editKeteranganKondisiUnit"
+                                    class="form-control form-control-sm keterangan-input d-none"
+                                    placeholder="Keterangan (Wajib)">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
                                 <label>Catatan</label>
                                 <textarea class="form-control" name="catatan" id="editCatatan" rows="3"></textarea>
-                                {{-- <input type="text" name="catatan" id="editCatatan" class="form-control"> --}}
                             </div>
                         </div>
 
@@ -394,13 +437,39 @@
                             </li>
                         `;
 
-                        for (let p = 1; p <= totalPages; p++) {
-                            pagHtml += `
-                                <li class="page-item ${currentPage === p ? 'active' : ''}">
-                                    <a class="page-link" href="#" data-page="${p}">${p}</a>
-                                </li>
-                            `;
+                        const pages = [];
+                        if (totalPages <= 5) {
+                            for (let i = 1; i <= totalPages; i++) pages.push(i);
+                        } else {
+                            pages.push(1);
+                            let start = Math.max(2, currentPage - 1);
+                            let end = Math.min(totalPages - 1, currentPage + 1);
+                            if (currentPage <= 3) {
+                                end = 3;
+                            } else if (currentPage >= totalPages - 2) {
+                                start = totalPages - 2;
+                            }
+                            if (start > 2) pages.push('...');
+                            for (let i = start; i <= end; i++) pages.push(i);
+                            if (end < totalPages - 1) pages.push('...');
+                            pages.push(totalPages);
                         }
+
+                        pages.forEach(p => {
+                            if (p === '...') {
+                                pagHtml += `
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                `;
+                            } else {
+                                pagHtml += `
+                                    <li class="page-item ${currentPage === p ? 'active' : ''}">
+                                        <a class="page-link" href="#" data-page="${p}">${p}</a>
+                                    </li>
+                                `;
+                            }
+                        });
 
                         pagHtml += `
                             <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
@@ -544,14 +613,19 @@
 
                 // Ambil dari object battery
                 const battery = rowData.battery || {};
+
                 $('#modalType').text(battery.battery_type || '-');
                 $('#modalUnit').text(battery.no_unit || '-');
                 $('#modalSeri').text(battery.no_seri || '-');
+                $('#modalTotalVoltase').text(battery.total_voltase || '-');
 
                 // Keterangan ada di level utama (bukan di battery)
                 $('#modalKeterangan').text(rowData.keterangan || '-');
                 $('#modalCatatan').text(battery.catatan || '-');
                 $('#modalGrounding').text(battery.grounding || '-');
+                $('#modalIntercell').html(statusBadge(battery.intercell));
+                $('#modalKondisiSkun').html(statusBadge(battery.kondisi_skun));
+                $('#modalKondisiUnit').html(statusBadge(battery.kondisi_unit));
 
                 // User yang create
                 $('#modalUser').text(rowData.created_by?.username || 'Unknown');
@@ -568,7 +642,6 @@
                     sortedDetails.forEach((detail, index) => {
                         // Helper untuk menentukan status OK / Tidak OK + class
                         const getStatus = (val) => {
-                            // API mengirim true/false untuk beberapa field, string voltase/grounding
                             if (val === true || val === 1 || val === '1') {
                                 return {
                                     text: 'OK',
@@ -580,7 +653,6 @@
                                     class: 'status-ng'
                                 };
                             } else {
-                                // Untuk voltase & grounding yang berupa string angka
                                 return {
                                     text: val || '-',
                                     class: ''
@@ -590,9 +662,6 @@
 
                         const voltaseStatus = getStatus(detail.voltase);
                         const airAkiStatus = getStatus(detail.level_air_aki);
-                        const intercellStatus = getStatus(detail.intercell);
-                        const skunStatus = getStatus(detail.kondisi_skun);
-                        const unitStatus = getStatus(detail.kondisi_unit);
 
                         let groundingTd = '';
                         if (index === 0) {
@@ -605,19 +674,17 @@
                                 <td>${detail.cell || '-'}</td>
                                 <td class="${voltaseStatus.class}">${voltaseStatus.text}</td>
                                 <td class="${airAkiStatus.class}">${airAkiStatus.text}</td>
-                                <td class="${intercellStatus.class}">${intercellStatus.text}</td>
-                                <td class="${skunStatus.class}">${skunStatus.text}</td>
-                                <td class="${unitStatus.class}">${unitStatus.text}</td>
                                 ${groundingTd}
                             </tr>
                         `;
                     });
                 } else {
                     detailHtml =
-                        '<tr><td colspan="7" class="text-center">Tidak ada data detail cell</td></tr>';
+                        '<tr><td colspan="4" class="text-center">Tidak ada data detail cell</td></tr>';
                 }
 
                 $('#modalDetailBody').html(detailHtml);
+
                 $('#detailModal').modal('show');
             });
 
@@ -671,6 +738,12 @@
                 $('#editNoSeri').val(battery.no_seri || '');
                 $('#editCatatan').val(battery.catatan || '');
                 $('#editGrounding').val(battery.grounding || '');
+                $('#editTotalVoltase').val(battery.total_voltase || '');
+                
+                const valToRadio = (v) => (v === true || v === 1 || v === '1') ? '1' : '0';
+                $('#editIntercell').val(valToRadio(battery.intercell)).trigger('change');
+                $('#editKondisiSkun').val(valToRadio(battery.kondisi_skun)).trigger('change');
+                $('#editKondisiUnit').val(valToRadio(battery.kondisi_unit)).trigger('change');
 
                 const keteranganMap = parseKeteranganPairs(rowData.keterangan || '');
 
@@ -698,9 +771,6 @@
                                             </div>
 
                                             ${buildCheckField(index, 'level_air_aki', 'Level Air Aki', detail.level_air_aki)}
-                                            ${buildCheckField(index, 'intercell', 'Intercell', detail.intercell)}
-                                            ${buildCheckField(index, 'kondisi_skun', 'Kondisi Skun', detail.kondisi_skun)}
-                                            ${buildCheckField(index, 'kondisi_unit', 'Kondisi Unit', detail.kondisi_unit)}
                                         </div>
                                     </div>
                                 </div>
@@ -714,6 +784,21 @@
                 $('#editDetailsContainer').html(detailHtml);
 
                 // ===== PREFILL KETERANGAN DARI BACKEND =====
+                // Prefill overall checks
+                if (keteranganMap['Intercell']) {
+                    $('#editIntercell').val('0').trigger('change');
+                    $('#editKeteranganIntercell').val(keteranganMap['Intercell']).removeClass('d-none');
+                }
+                if (keteranganMap['Kondisi Skun']) {
+                    $('#editKondisiSkun').val('0').trigger('change');
+                    $('#editKeteranganKondisiSkun').val(keteranganMap['Kondisi Skun']).removeClass('d-none');
+                }
+                if (keteranganMap['Kondisi Unit']) {
+                    $('#editKondisiUnit').val('0').trigger('change');
+                    $('#editKeteranganKondisiUnit').val(keteranganMap['Kondisi Unit']).removeClass('d-none');
+                }
+
+                // Prefill cell level checks
                 Object.entries(keteranganMap).forEach(([key, value]) => {
                     const cell = key.match(/(\d+)$/)?.[1];
                     if (!cell) return;
@@ -722,9 +807,6 @@
 
                     let field = '';
                     if (lowerKey.includes('level air')) field = 'level_air_aki';
-                    else if (lowerKey.includes('intercell')) field = 'intercell';
-                    else if (lowerKey.includes('skun')) field = 'kondisi_skun';
-                    else if (lowerKey.includes('unit')) field = 'kondisi_unit';
 
                     if (!field) return;
 
@@ -813,9 +895,6 @@
                                     </div>
 
                                     ${buildCheckField(index, 'level_air_aki', 'Level Air Aki')}
-                                    ${buildCheckField(index, 'intercell', 'Intercell')}
-                                    ${buildCheckField(index, 'kondisi_skun', 'Kondisi Skun')}
-                                    ${buildCheckField(index, 'kondisi_unit', 'Kondisi Unit')}
                                 </div>
                             </div>
                         </div>
@@ -910,9 +989,19 @@
                         const noteInput = wrapper.find('.keterangan-input');
                         const note = noteInput.val()?.trim() || '(tidak ada keterangan)';
 
-                        // Format: Kondisi Skun 12: Miring
                         list.push(`${label} ${cell}: ${note}`);
                     });
+                });
+
+                // Overall NGs (Intercell, Kondisi Skun, Kondisi Unit)
+                ['Intercell', 'Kondisi Skun', 'Kondisi Unit'].forEach(name => {
+                    const selectId = '#edit' + name.replace(/\s+/g, '');
+                    const inputId = '#editKeterangan' + name.replace(/\s+/g, '');
+                    
+                    if ($(selectId).val() === '0') {
+                        const note = $(inputId).val()?.trim() || '(tidak ada keterangan)';
+                        list.push(`${name}: ${note}`);
+                    }
                 });
 
                 return list.join(' | ');

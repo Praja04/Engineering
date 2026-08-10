@@ -65,9 +65,6 @@ class MtcBatteryController extends Controller
                     'cell'              => $detail['cell'],
                     'voltase'           => $detail['voltase']         ?? null,
                     'level_air_aki'     => isset($detail['level_air_aki']) ? (bool) $detail['level_air_aki'] : false,
-                    'intercell'         => isset($detail['intercell'])     ? (bool) $detail['intercell']     : false,
-                    'kondisi_skun'      => isset($detail['kondisi_skun'])  ? (bool) $detail['kondisi_skun']  : false,
-                    'kondisi_unit'      => isset($detail['kondisi_unit'])  ? (bool) $detail['kondisi_unit']  : false,
                 ]);
             }
 
@@ -223,9 +220,6 @@ class MtcBatteryController extends Controller
                 $payload = [
                     'voltase'       => $detail['voltase']   ?? null,
                     'level_air_aki' => isset($detail['level_air_aki']) ? (bool)$detail['level_air_aki'] : false,
-                    'intercell'     => isset($detail['intercell'])     ? (bool)$detail['intercell']     : false,
-                    'kondisi_skun'  => isset($detail['kondisi_skun'])  ? (bool)$detail['kondisi_skun']  : false,
-                    'kondisi_unit'  => isset($detail['kondisi_unit'])  ? (bool)$detail['kondisi_unit']  : false,
                 ];
 
                 if ($existingCells->has($cell)) {

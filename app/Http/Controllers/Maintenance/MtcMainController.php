@@ -1200,18 +1200,14 @@ class MtcMainController extends Controller
         $fieldOffset = [
             'voltase' => 0,
             'level_air_aki' => 1,
-            'intercell' => 2,
-            'kondisi_skun' => 3,
-            'kondisi_unit' => 4,
-            'grounding' => 5,
         ];
 
         foreach ($data as $main) {
 
-            $batteries = $main->battery;
-            if (!$batteries || $batteries->isEmpty()) continue;
+            $battery = $main->battery;
+            if (!$battery) continue;
 
-            $first = $batteries->first();
+            $first = $battery;
 
             $sheet->setCellValue('C4', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
             $sheet->setCellValue('C6', $main->waktu_mulai ?? '-');
@@ -1220,28 +1216,41 @@ class MtcMainController extends Controller
             $sheet->setCellValue('R4', $first->no_unit ?? '-');
             $sheet->setCellValue('R39', ': ' . ($first->total_voltase ?? '-'));
             $sheet->setCellValue('R40', ': ' . ($first->kondisi_plug_battery ?? '-'));
-            $sheet->setCellValue('A43', 'Catatan : ' . ($first->catatan ?? ''));
+            $sheet->setCellValue('H41', 'Hasil: ' . ($first->grounding ?? '-') . ' V');
+            
+            $sheet->setCellValue('N41', 'Intercell');
+            $sheet->setCellValue('R41', ': ' . ($first->intercell === true ? 'OK' : ($first->intercell === false ? 'NG' : '-')));
+            
+            $sheet->setCellValue('N42', 'Kondisi Skun');
+            $sheet->setCellValue('R42', ': ' . ($first->kondisi_skun === true ? 'OK' : ($first->kondisi_skun === false ? 'NG' : '-')));
+            
+            $sheet->setCellValue('N43', 'Kondisi Unit');
+            $sheet->setCellValue('R43', ': ' . ($first->kondisi_unit === true ? 'OK' : ($first->kondisi_unit === false ? 'NG' : '-')));
+            
+            $sheet->setCellValue('A45', 'Catatan : ' . ($first->catatan ?? ''));
 
-            foreach ($batteries as $inspection) {
+            if ($first->details) {
+                foreach ($first->details as $inspection) {
 
-                $cell = (int) $inspection->cell;
-                if ($cell < 1 || $cell > 24) continue;
+                    $cell = (int) $inspection->cell;
+                    if ($cell < 1 || $cell > 24) continue;
 
-                $col = $columns[($cell - 1) % 6];
+                    $col = $columns[($cell - 1) % 6];
 
-                $group = floor(($cell - 1) / 6);
-                $startRow = 10 + ($group * 7);
+                    $group = floor(($cell - 1) / 6);
+                    $startRow = 10 + ($group * 7);
 
-                foreach ($fieldOffset as $field => $offset) {
+                    foreach ($fieldOffset as $field => $offset) {
 
-                    $row = $startRow + $offset;
-                    $value = $inspection->{$field};
+                        $row = $startRow + $offset;
+                        $value = $inspection->{$field};
 
-                    if (in_array($field, ['voltase', 'grounding'])) {
-                        $sheet->setCellValue($col . $row, $value ?? '');
-                    } else {
-                        $kondisi = ($value === true) ? '✓' : (($value === false) ? '✗' : '');
-                        $sheet->setCellValue($col . $row, $kondisi);
+                        if (in_array($field, ['voltase'])) {
+                            $sheet->setCellValue($col . $row, $value ?? '');
+                        } else {
+                            $kondisi = ($value === true) ? '✓' : (($value === false) ? '✗' : '');
+                            $sheet->setCellValue($col . $row, $kondisi);
+                        }
                     }
                 }
             }

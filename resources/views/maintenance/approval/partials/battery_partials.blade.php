@@ -3,10 +3,6 @@
  $batteryItems = [
  'voltase' => 'Voltase',
  'level_air_aki' => 'Level Air Aki',
- 'intercell' => 'Intercell',
- 'kondisi_skun' => 'Kondisi Skun',
- 'kondisi_unit' => 'Kondisi Unit',
- 'grounding' => 'Grounding',
  ];
 
  function badge($v)
@@ -24,7 +20,7 @@
  <table class="table table-sm table-borderless mb-4">
 
      <tr>
-         <th>Tanggal</th>
+         <th width="150">Tanggal</th>
          <td>: {{ $main->tanggal ?? '-' }}</td>
      </tr>
      <tr>
@@ -46,6 +42,26 @@
      <tr>
          <th>No Seri</th>
          <td>: {{ $data->no_seri ?? '-' }}</td>
+     </tr>
+     <tr>
+         <th>Total Voltase</th>
+         <td>: {{ $data->total_voltase ?? '-' }} V</td>
+     </tr>
+     <tr>
+         <th>Grounding</th>
+         <td>: {{ $data->grounding ?? '-' }} V</td>
+     </tr>
+     <tr>
+         <th>Intercell</th>
+         <td>: {!! badge($data->intercell) !!}</td>
+     </tr>
+     <tr>
+         <th>Kondisi Skun</th>
+         <td>: {!! badge($data->kondisi_skun) !!}</td>
+     </tr>
+     <tr>
+         <th>Kondisi Unit</th>
+         <td>: {!! badge($data->kondisi_unit) !!}</td>
      </tr>
      <tr>
          <th>Catatan</th>

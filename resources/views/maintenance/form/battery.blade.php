@@ -63,6 +63,58 @@
                             <label>No Seri</label>
                             <input type="text" name="no_seri" class="form-control">
                         </div>
+                        <div class="col-md-3">
+                            <label>Total Voltase</label>
+                            <input type="number" name="total_voltase" class="form-control" step="0.01" min="0" placeholder="Masukkan total voltase">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    {{-- OVERALL BATTERY CHECKLISTS --}}
+                    <div class="card p-3 mb-3 shadow-sm border-light">
+                        <h6 class="fw-bold mb-3 text-primary">Kondisi Keseluruhan Baterai</h6>
+                        <div class="row g-3">
+                            <!-- Intercell -->
+                            <div class="col-md-4 col-12">
+                                <div class="card shadow-sm item-card p-3 item-row-main">
+                                    <label class="form-label fw-semibold">Intercell</label>
+                                    <div class="btn-group btn-group-sm w-100">
+                                        <input type="radio" class="btn-check status-radio" name="intercell" value="1" id="intercell_ok">
+                                        <label class="btn btn-outline-success" for="intercell_ok">OK</label>
+                                        <input type="radio" class="btn-check status-radio" name="intercell" value="0" id="intercell_ng">
+                                        <label class="btn btn-outline-danger" for="intercell_ng">Tidak OK</label>
+                                    </div>
+                                    <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
+                                </div>
+                            </div>
+                            <!-- Kondisi Skun -->
+                            <div class="col-md-4 col-12">
+                                <div class="card shadow-sm item-card p-3 item-row-main">
+                                    <label class="form-label fw-semibold">Kondisi Skun</label>
+                                    <div class="btn-group btn-group-sm w-100">
+                                        <input type="radio" class="btn-check status-radio" name="kondisi_skun" value="1" id="kondisi_skun_ok">
+                                        <label class="btn btn-outline-success" for="kondisi_skun_ok">OK</label>
+                                        <input type="radio" class="btn-check status-radio" name="kondisi_skun" value="0" id="kondisi_skun_ng">
+                                        <label class="btn btn-outline-danger" for="kondisi_skun_ng">Tidak OK</label>
+                                    </div>
+                                    <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
+                                </div>
+                            </div>
+                            <!-- Kondisi Unit -->
+                            <div class="col-md-4 col-12">
+                                <div class="card shadow-sm item-card p-3 item-row-main">
+                                    <label class="form-label fw-semibold">Kondisi Unit</label>
+                                    <div class="btn-group btn-group-sm w-100">
+                                        <input type="radio" class="btn-check status-radio" name="kondisi_unit" value="1" id="kondisi_unit_ok">
+                                        <label class="btn btn-outline-success" for="kondisi_unit_ok">OK</label>
+                                        <input type="radio" class="btn-check status-radio" name="kondisi_unit" value="0" id="kondisi_unit_ng">
+                                        <label class="btn btn-outline-danger" for="kondisi_unit_ng">Tidak OK</label>
+                                    </div>
+                                    <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <hr>
@@ -178,9 +230,6 @@
         const batteryFields = {
             voltase: 'Voltase',
             level_air_aki: 'Level Air Aki',
-            intercell: 'Intercell',
-            kondisi_skun: 'Kondisi Skun',
-            kondisi_unit: 'Kondisi Unit',
         };
 
         function renderCellCard(isDefault = false) {
@@ -401,18 +450,20 @@
                 const label = $item.find('label.form-label.fw-semibold').text().trim();
 
                 // Ambil nomor cell dari hidden input di parent .cell-card
-                const cellNumber = $item
-                    .closest('.cell-card')
-                    .find('input[name$="[cell]"]')
-                    .val();
+                const cellCard = $item.closest('.cell-card');
+                const cellNumber = cellCard.length ? cellCard.find('input[name$="[cell]"]').val() : null;
 
                 // Ambil catatan NG
                 const note =
                     $item.find('.note-input').val()?.trim() ||
                     '(tidak ada keterangan)';
 
-                // Format: Kondisi Skun 12: Miring
-                notOkList.push(`${label} ${cellNumber}: ${note}`);
+                // Format: Kondisi Skun 12: Miring atau Kondisi Skun (Overall): Miring
+                if (cellNumber) {
+                    notOkList.push(`${label} ${cellNumber}: ${note}`);
+                } else {
+                    notOkList.push(`${label} (Overall): ${note}`);
+                }
             });
 
             return notOkList.join(' | ');

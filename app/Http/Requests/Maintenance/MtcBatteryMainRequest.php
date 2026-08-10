@@ -29,6 +29,9 @@ class MtcBatteryMainRequest extends FormRequest
             'total_voltase'     => ['nullable', 'numeric', 'min:0'],
             'grounding'         => ['nullable', 'numeric', 'min:0'],
             'catatan'        => 'nullable|string|max:100',
+            'intercell'      => 'nullable|boolean',
+            'kondisi_skun'   => 'nullable|boolean',
+            'kondisi_unit'   => 'nullable|boolean',
         ];
     }
 }

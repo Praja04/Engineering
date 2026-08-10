@@ -19,7 +19,16 @@ class MtcBatteryMainModel extends Model
         'kondisi_plug_battery',
         'total_voltase',
         'grounding',
-        'catatan'
+        'catatan',
+        'intercell',
+        'kondisi_skun',
+        'kondisi_unit',
+    ];
+
+    protected $casts = [
+        'intercell' => 'boolean',
+        'kondisi_skun' => 'boolean',
+        'kondisi_unit' => 'boolean',
     ];
 
     public function main()
