@@ -830,13 +830,39 @@
                             </li>
                         `;
 
-                        for (let p = 1; p <= totalPages; p++) {
-                            pagHtml += `
-                                <li class="page-item ${currentPage === p ? 'active' : ''}">
-                                    <a class="page-link" href="#" data-page="${p}">${p}</a>
-                                </li>
-                            `;
+                        const pages = [];
+                        if (totalPages <= 5) {
+                            for (let i = 1; i <= totalPages; i++) pages.push(i);
+                        } else {
+                            pages.push(1);
+                            let start = Math.max(2, currentPage - 1);
+                            let end = Math.min(totalPages - 1, currentPage + 1);
+                            if (currentPage <= 3) {
+                                end = 3;
+                            } else if (currentPage >= totalPages - 2) {
+                                start = totalPages - 2;
+                            }
+                            if (start > 2) pages.push('...');
+                            for (let i = start; i <= end; i++) pages.push(i);
+                            if (end < totalPages - 1) pages.push('...');
+                            pages.push(totalPages);
                         }
+
+                        pages.forEach(p => {
+                            if (p === '...') {
+                                pagHtml += `
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                `;
+                            } else {
+                                pagHtml += `
+                                    <li class="page-item ${currentPage === p ? 'active' : ''}">
+                                        <a class="page-link" href="#" data-page="${p}">${p}</a>
+                                    </li>
+                                `;
+                            }
+                        });
 
                         pagHtml += `
                             <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
