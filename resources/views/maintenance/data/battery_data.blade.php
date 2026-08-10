@@ -24,9 +24,9 @@
         }
 
         /*
-                #detailModal .modal-dialog {
-                    max-width: 90%;
-                } */
+                    #detailModal .modal-dialog {
+                        max-width: 90%;
+                    } */
 
         /* BORDER MERAH SAAT NG */
         .check-wrapper.ng-active {
@@ -103,7 +103,7 @@
 
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table id="batteryTable" class="table table-bordered table-hover table-striped">
+                            <table id="batteryTable" class="table table-hover table-striped">
                                 <thead class="table-light text-nowrap">
                                     <tr>
                                         <th>No</th>
@@ -175,7 +175,7 @@
 
                     <hr>
                     <h6>Hasil Inspeksi Cell</h6>
-                    <table class="table table-bordered detail-table">
+                    <table class="table detail-table">
                         <thead class="table-light text-nowrap">
                             <tr>
                                 <th>Cell</th>
@@ -391,11 +391,15 @@
                             const rowNum = start + index + 1;
                             const battery = row.battery || {};
 
-                            const showBtn = `<button class="btn btn-sm btn-primary btnDetail me-1" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>`;
+                            const showBtn =
+                                `<button class="btn btn-sm btn-primary btnDetail me-1" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>`;
                             const editDisabled = row.status === 'rejected';
-                            const editBtn = `<button class="btn btn-sm btn-info btnEdit me-1" data-id="${row.id}" title="${editDisabled ? 'Silakan isi form kembali' : 'Edit'}" ${editDisabled ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>`;
-                            const delBtn = `<button class="btn btn-sm btn-danger btnDelete me-1" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>`;
-                            const printBtn = `<button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>`;
+                            const editBtn =
+                                `<button class="btn btn-sm btn-info btnEdit me-1" data-id="${row.id}" title="${editDisabled ? 'Silakan isi form kembali' : 'Edit'}" ${editDisabled ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>`;
+                            const delBtn =
+                                `<button class="btn btn-sm btn-danger btnDelete me-1" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>`;
+                            const printBtn =
+                                `<button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>`;
 
                             html += `
                                 <tr>
@@ -428,7 +432,8 @@
                         // Render Pagination
                         const totalPages = Math.ceil(totalRecords / pageSize);
                         const endRow = Math.min(start + pageSize, totalRecords);
-                        $('#paginationInfo').text(`Menampilkan ${start + 1} sampai ${endRow} dari ${totalRecords} data`);
+                        $('#paginationInfo').text(
+                            `Menampilkan ${start + 1} sampai ${endRow} dari ${totalRecords} data`);
 
                         let pagHtml = '';
                         pagHtml += `
@@ -741,7 +746,7 @@
                 $('#editCatatan').val(battery.catatan || '');
                 $('#editGrounding').val(battery.grounding || '');
                 $('#editTotalVoltase').val(battery.total_voltase || '');
-                
+
                 const valToRadio = (v) => (v === true || v === 1 || v === '1') ? '1' : '0';
                 $('#editIntercell').val(valToRadio(battery.intercell)).trigger('change');
                 $('#editKondisiSkun').val(valToRadio(battery.kondisi_skun)).trigger('change');
@@ -999,7 +1004,7 @@
                 ['Intercell', 'Kondisi Skun', 'Kondisi Unit'].forEach(name => {
                     const selectId = '#edit' + name.replace(/\s+/g, '');
                     const inputId = '#editKeterangan' + name.replace(/\s+/g, '');
-                    
+
                     if ($(selectId).val() === '0') {
                         const note = $(inputId).val()?.trim() || '(tidak ada keterangan)';
                         list.push(`${name}: ${note}`);

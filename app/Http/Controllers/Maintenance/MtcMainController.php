@@ -122,16 +122,16 @@ class MtcMainController extends Controller
         }
     }
 
-    private function insertApprovalSticker($sheet, $cell)
+    private function insertApprovalSticker($sheet, $cell, $height = 20, $offsetX = 20, $offsetY = 2)
     {
         $drawing = new Drawing();
         $drawing->setName('Approved');
         $drawing->setDescription('Approved Sticker');
         $drawing->setPath(public_path('storage/mtc/ttd/utility_approved_sticker.png'));
-        $drawing->setHeight(20);
+        $drawing->setHeight($height);
         $drawing->setCoordinates($cell);
-        $drawing->setOffsetX(20);
-        $drawing->setOffsetY(2);
+        $drawing->setOffsetX($offsetX);
+        $drawing->setOffsetY($offsetY);
         $drawing->setWorksheet($sheet);
     }
 
@@ -1259,15 +1259,15 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $this->insertApprovalSticker($sheet, 'A37');
+                            $this->insertApprovalSticker($sheet, 'B37', 50, 10, 0);
                             break;
 
                         case 'staff':
-                            $this->insertApprovalSticker($sheet, 'J37');
+                            $this->insertApprovalSticker($sheet, 'K37', 50, 10, 0);
                             break;
 
                         case 'user':
-                            $this->insertApprovalSticker($sheet, 'R37');
+                            $this->insertApprovalSticker($sheet, 'S37', 50, 10, 0);
                             break;
                     }
                 }
