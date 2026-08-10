@@ -1216,9 +1216,9 @@ class MtcMainController extends Controller
             $sheet->setCellValue('R4', $first->no_unit ?? '-');
             $sheet->setCellValue('R23', ': ' . ($first->total_voltase ?? '-'));
             $sheet->setCellValue('R24', ': ' . ($first->kondisi_plug_battery ?? '-'));
-            $sheet->setCellValue('R25', ': ' . ($first->kondisi_skun === true ? 'OK' : ($first->kondisi_skun === false ? 'NOK' : '-')));
-            $sheet->setCellValue('R26', ': ' . ($first->intercell === true ? 'OK' : ($first->intercell === false ? 'NOK' : '-')));
-            $sheet->setCellValue('R27', ': ' . ($first->kondisi_unit === true ? 'OK' : ($first->kondisi_unit === false ? 'NOK' : '-')));
+            $sheet->setCellValue('R25', ': ' . ($first->kondisi_skun === true ? '✓' : ($first->kondisi_skun === false ? '✗' : '-')));
+            $sheet->setCellValue('R26', ': ' . ($first->intercell === true ? '✓' : ($first->intercell === false ? '✗' : '-')));
+            $sheet->setCellValue('R27', ': ' . ($first->kondisi_unit === true ? '✓' : ($first->kondisi_unit === false ? '✗' : '-')));
             $sheet->setCellValue('H28', ': ' . ($first->grounding ?? '-') . ' V');
 
             $sheet->setCellValue('A30', 'Catatan : ' . ($first->catatan ?? ''));
