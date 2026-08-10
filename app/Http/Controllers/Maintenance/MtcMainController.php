@@ -1219,7 +1219,7 @@ class MtcMainController extends Controller
             $sheet->setCellValue('R25', ': ' . ($first->kondisi_skun === true ? '✓' : ($first->kondisi_skun === false ? '✗' : '-')));
             $sheet->setCellValue('R26', ': ' . ($first->intercell === true ? '✓' : ($first->intercell === false ? '✗' : '-')));
             $sheet->setCellValue('R27', ': ' . ($first->kondisi_unit === true ? '✓' : ($first->kondisi_unit === false ? '✗' : '-')));
-            $sheet->setCellValue('H28', ': ' . ($first->grounding ?? '-') . ' V');
+            $sheet->setCellValue('R28', ': ' . ($first->grounding ?? '-') . ' V');
 
             $sheet->setCellValue('A30', 'Catatan : ' . ($first->catatan ?? ''));
 
