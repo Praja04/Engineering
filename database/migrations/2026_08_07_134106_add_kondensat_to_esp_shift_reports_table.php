@@ -25,7 +25,7 @@ return new class extends Migration
                 $report->pemakaian_air != 0
             ) {
 
-                $val = abs((($report->feed_tank_akhir - $report->feed_tank_awal) / $report->pemakaian_air) * 100 - 100);
+                $val = abs(100 - ((($report->feed_tank_akhir - $report->feed_tank_awal) / $report->pemakaian_air) * 100));
                 Illuminate\Support\Facades\DB::table('esp_shift_reports')
                     ->where('id', $report->id)
                     ->update(['kondensat' => $val]);
