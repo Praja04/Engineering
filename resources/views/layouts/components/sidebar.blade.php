@@ -56,7 +56,7 @@
                     @include('layouts.components.sidebar-utility.utility')
                     @include('layouts.components.sidebar-epr.menu-epr')
                     @include('layouts.components.sidebar-utility.wwtp')
-                    {{-- @include('layouts.components.sidebar-boiler.menu-boiler') --}}
+                    @include('layouts.components.sidebar-boiler.menu-boiler')
                     @include('layouts.components.sidebar-kalibrasi.menu-kalibrasi')
                     @include('layouts.components.sidebar-scoring.menu-scoring-input')
                     @include('layouts.components.sidebar-maintenance.menu-maintenance')
