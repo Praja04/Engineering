@@ -831,16 +831,18 @@
                         `;
 
                         const pages = [];
-                        if (totalPages <= 5) {
+                        if (totalPages <= 7) {
                             for (let i = 1; i <= totalPages; i++) pages.push(i);
                         } else {
                             pages.push(1);
-                            let start = Math.max(2, currentPage - 1);
-                            let end = Math.min(totalPages - 1, currentPage + 1);
-                            if (currentPage <= 3) {
-                                end = 3;
-                            } else if (currentPage >= totalPages - 2) {
-                                start = totalPages - 2;
+                            let start = Math.max(2, currentPage - 2);
+                            let end = Math.min(totalPages - 1, currentPage + 2);
+                            if (currentPage <= 4) {
+                                start = 2;
+                                end = 5;
+                            } else if (currentPage >= totalPages - 3) {
+                                start = totalPages - 4;
+                                end = totalPages - 1;
                             }
                             if (start > 2) pages.push('...');
                             for (let i = start; i <= end; i++) pages.push(i);
