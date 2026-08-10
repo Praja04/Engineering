@@ -1214,20 +1214,14 @@ class MtcMainController extends Controller
             $sheet->setCellValue('K4', $first->battery_type ?? '-');
             $sheet->setCellValue('K6', $first->no_seri ?? '-');
             $sheet->setCellValue('R4', $first->no_unit ?? '-');
-            $sheet->setCellValue('R39', ': ' . ($first->total_voltase ?? '-'));
-            $sheet->setCellValue('R40', ': ' . ($first->kondisi_plug_battery ?? '-'));
-            $sheet->setCellValue('H41', 'Hasil: ' . ($first->grounding ?? '-') . ' V');
-            
-            $sheet->setCellValue('N41', 'Intercell');
-            $sheet->setCellValue('R41', ': ' . ($first->intercell === true ? 'OK' : ($first->intercell === false ? 'NG' : '-')));
-            
-            $sheet->setCellValue('N42', 'Kondisi Skun');
-            $sheet->setCellValue('R42', ': ' . ($first->kondisi_skun === true ? 'OK' : ($first->kondisi_skun === false ? 'NG' : '-')));
-            
-            $sheet->setCellValue('N43', 'Kondisi Unit');
-            $sheet->setCellValue('R43', ': ' . ($first->kondisi_unit === true ? 'OK' : ($first->kondisi_unit === false ? 'NG' : '-')));
-            
-            $sheet->setCellValue('A45', 'Catatan : ' . ($first->catatan ?? ''));
+            $sheet->setCellValue('R23', ': ' . ($first->total_voltase ?? '-'));
+            $sheet->setCellValue('R24', ': ' . ($first->kondisi_plug_battery ?? '-'));
+            $sheet->setCellValue('R25', ': ' . ($first->kondisi_skun === true ? 'OK' : ($first->kondisi_skun === false ? 'NOK' : '-')));
+            $sheet->setCellValue('R26', ': ' . ($first->intercell === true ? 'OK' : ($first->intercell === false ? 'NOK' : '-')));
+            $sheet->setCellValue('R27', ': ' . ($first->kondisi_unit === true ? 'OK' : ($first->kondisi_unit === false ? 'NOK' : '-')));
+            $sheet->setCellValue('H28', ': ' . ($first->grounding ?? '-') . ' V');
+
+            $sheet->setCellValue('A30', 'Catatan : ' . ($first->catatan ?? ''));
 
             if ($first->details) {
                 foreach ($first->details as $inspection) {
@@ -1265,15 +1259,15 @@ class MtcMainController extends Controller
                     switch (strtolower($item->role)) {
 
                         case 'teknisi':
-                            $this->insertApprovalSticker($sheet, 'A50');
+                            $this->insertApprovalSticker($sheet, 'A37');
                             break;
 
                         case 'staff':
-                            $this->insertApprovalSticker($sheet, 'J50');
+                            $this->insertApprovalSticker($sheet, 'J37');
                             break;
 
                         case 'user':
-                            $this->insertApprovalSticker($sheet, 'R50');
+                            $this->insertApprovalSticker($sheet, 'R37');
                             break;
                     }
                 }
