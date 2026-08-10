@@ -166,6 +166,8 @@
                                 'check_axle' => 'Check Axle',
                                 'check_greasing_point' => 'Check Greasing Point',
                                 'check_air_spring' => 'Check Air Spring',
+                                'check_boot_steering' => 'Check Boot Steering',
+                                'check_wheel_chain' => 'Check Wheel Chain',
                             ];
 
                             $oil = [

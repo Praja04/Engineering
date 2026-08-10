@@ -71,6 +71,8 @@ class MtcElectricEngineRequest extends FormRequest
             'check_axle' => ['nullable', 'boolean'],
             'check_greasing_point' => ['nullable', 'boolean'],
             'check_air_spring' => ['nullable', 'boolean'],
+            'check_boot_steering' => ['nullable', 'boolean'],
+            'check_wheel_chain' => ['nullable', 'boolean'],
 
             // Oil
             'ganti_gear_oil' => ['nullable', 'boolean'],
@@ -135,6 +137,8 @@ class MtcElectricEngineRequest extends FormRequest
                 'check_axle',
                 'check_greasing_point',
                 'check_air_spring',
+                'check_boot_steering',
+                'check_wheel_chain',
 
                 // Oil
                 'ganti_gear_oil',

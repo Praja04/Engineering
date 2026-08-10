@@ -867,10 +867,12 @@ class MtcMainController extends Controller
             'check_overhead_guard' => 47,
             'check_all_bolt_nut' => 48,
             'check_power_steering' => 49,
-            'check_brake_cam_adjust_bolt' => 51,
+            'check_brake_cam_adjust_bolt' => 50,
             'check_axle' => 51,
             'check_greasing_point' => 52,
             'check_air_spring' => 53,
+            'check_boot_steering' => 54,
+            'check_wheel_chain' => 55,
 
             // Oil
             'ganti_gear_oil' => 56,
