@@ -793,26 +793,17 @@ class MtcAgendaController extends Controller
                 }
 
                 $mesin = null;
-                // 1. Cari berdasarkan kode DAN nama untuk keakuratan tinggi
-                if ($kodeMesinVal !== '' && $namaMesinVal !== '') {
+                // Prioritas utama: kode mesin (nama tidak perlu cocok)
+                // Jika kode mesin ada di Excel → cari berdasarkan kode saja
+                if ($kodeMesinVal !== '') {
                     $mesin = MtcMasterMesinModel::where('kode_mesin', $kodeMesinVal)
-                        ->where('nama_mesin', $namaMesinVal)
                         ->where('jenis_mtc', $jenisMtc)
                         ->first();
                 }
 
-                // 2. Jika kode mesin TIDAK ada di Excel, fallback ke nama saja
-                // CATATAN: Jika kode mesin ADA di Excel tapi tidak cocok, JANGAN fallback ke nama
-                // karena bisa resolve ke mesin yang sama walaupun kode berbeda → false duplicate!
+                // Fallback: jika kode mesin tidak ada di Excel → cari berdasarkan nama saja
                 if (!$mesin && $kodeMesinVal === '' && $namaMesinVal !== '') {
                     $mesin = MtcMasterMesinModel::where('nama_mesin', $namaMesinVal)
-                        ->where('jenis_mtc', $jenisMtc)
-                        ->first();
-                }
-
-                // 3. Jika nama mesin TIDAK ada di Excel, fallback ke kode saja
-                if (!$mesin && $namaMesinVal === '' && $kodeMesinVal !== '') {
-                    $mesin = MtcMasterMesinModel::where('kode_mesin', $kodeMesinVal)
                         ->where('jenis_mtc', $jenisMtc)
                         ->first();
                 }
