@@ -801,15 +801,17 @@ class MtcAgendaController extends Controller
                         ->first();
                 }
 
-                // 2. Jika tidak ketemu, cari berdasarkan nama saja (nama biasanya unik per jenis MTC)
-                if (!$mesin && $namaMesinVal !== '') {
+                // 2. Jika kode mesin TIDAK ada di Excel, fallback ke nama saja
+                // CATATAN: Jika kode mesin ADA di Excel tapi tidak cocok, JANGAN fallback ke nama
+                // karena bisa resolve ke mesin yang sama walaupun kode berbeda → false duplicate!
+                if (!$mesin && $kodeMesinVal === '' && $namaMesinVal !== '') {
                     $mesin = MtcMasterMesinModel::where('nama_mesin', $namaMesinVal)
                         ->where('jenis_mtc', $jenisMtc)
                         ->first();
                 }
 
-                // 3. Jika tidak ketemu, cari berdasarkan kode saja
-                if (!$mesin && $kodeMesinVal !== '') {
+                // 3. Jika nama mesin TIDAK ada di Excel, fallback ke kode saja
+                if (!$mesin && $namaMesinVal === '' && $kodeMesinVal !== '') {
                     $mesin = MtcMasterMesinModel::where('kode_mesin', $kodeMesinVal)
                         ->where('jenis_mtc', $jenisMtc)
                         ->first();
