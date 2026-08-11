@@ -794,9 +794,10 @@ class MtcAgendaController extends Controller
 
                 $mesin = null;
                 // Prioritas utama: kode mesin (nama tidak perlu cocok)
-                // kode_mesin bersifat unik, tidak perlu filter jenis_mtc
+                // Jika kode mesin ada di Excel → cari berdasarkan kode saja
                 if ($kodeMesinVal !== '') {
                     $mesin = MtcMasterMesinModel::where('kode_mesin', $kodeMesinVal)
+                        ->where('jenis_mtc', $jenisMtc)
                         ->first();
                 }
 
