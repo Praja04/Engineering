@@ -238,14 +238,16 @@
             <div class="modal-content shadow-lg rounded-3">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title text-white"><i class="mdi mdi-eye-outline me-2"></i>Preview Sertifikat</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-0" style="background-color: #f8f9fa;">
                     <div id="previewSpinner" class="text-center py-5">
                         <div class="spinner-border text-primary" role="status"></div>
                         <p class="mt-2 text-muted">Sedang menyiapkan preview...</p>
                     </div>
-                    <iframe id="previewFrame" src="" style="width: 100%; height: 75vh; border: none; display: none;"></iframe>
+                    <iframe id="previewFrame" src=""
+                        style="width: 100%; height: 75vh; border: none; display: none;"></iframe>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
@@ -355,12 +357,12 @@
 
                                 // Kalau sudah approved, tampilkan tombol Download Sertifikat
                                 sertifButtons += `
-                                        <button class="btn btn-outline-primary btn-sm btn-preview" data-id="${item.certificate?.id}">
-                                            <i class="mdi mdi-eye-outline me-1"></i> Preview
+                                        <button class="btn btn-outline-primary btn-sm btn-preview" data-id="${item.certificate?.id}" title="Preview">
+                                            <i class="mdi mdi-eye-outline me-1"></i>
                                         </button>
                                         <a href="/kalibrasi/certificate/download/${item.certificate?.id}" 
-                                            target="_blank" class="btn btn-outline-info btn-sm">
-                                            <i class="mdi mdi-file-download-outline me-1"></i> Download
+                                            target="_blank" class="btn btn-outline-info btn-sm" title="Download">
+                                            <i class="mdi mdi-file-download-outline me-1"></i>
                                         </a>
                                     `;
 
@@ -368,8 +370,8 @@
                                     statusSertifikat === 'draft') {
                                     actionButtons += `
                                        <button class="btn btn-outline-primary btn-sm req-approval-btn" 
-                                            data-id="${item.certificate?.id}">
-                                            <i class="mdi mdi-send-check-outline me-1"></i>Request Approval
+                                            data-id="${item.certificate?.id}" title="Request Approval">
+                                            <i class="mdi mdi-send-check-outline me-1"></i>
                                         </button>
 
                                     `;
@@ -378,8 +380,8 @@
                                 if (['foreman', 'supervisor', 'dept_head'].includes(userRole)) {
                                     deleteButtons += `
                                         <button class="btn btn-outline-danger btn-sm delete-btn" 
-                                            data-id="${item.certificate?.id}">
-                                            <i class="mdi mdi-delete me-1"></i>Hapus
+                                            data-id="${item.certificate?.id}" title="Hapus">
+                                            <i class="mdi mdi-delete me-1"></i>
                                         </button>
                                     `;
                                 }
@@ -582,13 +584,13 @@
                 const id = $(this).data('id');
                 const previewUrl = `/kalibrasi/certificate/preview/${id}`;
                 const downloadUrl = `/kalibrasi/certificate/download/${id}`;
-                
+
                 $('#previewFrame').hide();
                 $('#previewSpinner').show();
                 $('#btnDownloadFromPreview').attr('href', downloadUrl);
-                
+
                 $('#previewModal').modal('show');
-                
+
                 $('#previewFrame').attr('src', previewUrl).off('load').on('load', function() {
                     $('#previewSpinner').hide();
                     $(this).show();
@@ -612,7 +614,7 @@
                             app.status === 'read' ? 'bg-info' :
                             'bg-warning';
 
-                        const formattedActionAt = app.action_at ? 
+                        const formattedActionAt = app.action_at ?
                             new Date(app.action_at).toLocaleString('id-ID', {
                                 day: '2-digit',
                                 month: '2-digit',

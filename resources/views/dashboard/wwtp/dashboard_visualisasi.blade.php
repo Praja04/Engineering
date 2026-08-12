@@ -2,6 +2,8 @@
 
 @section('title', 'Visualisasi WWTP')
 
+@section('sidebar-size', 'sm')
+
 @section('styles')
     <style>
         .visualisasi-wrapper {
