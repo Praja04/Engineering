@@ -231,6 +231,31 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Preview Sertifikat --}}
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content shadow-lg rounded-3">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white"><i class="mdi mdi-eye-outline me-2"></i>Preview Sertifikat</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0" style="background-color: #f8f9fa;">
+                    <div id="previewSpinner" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">Sedang menyiapkan preview...</p>
+                    </div>
+                    <iframe id="previewFrame" src="" style="width: 100%; height: 75vh; border: none; display: none;"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <a id="btnDownloadFromPreview" href="#" target="_blank" class="btn btn-primary">
+                        <i class="mdi mdi-file-download-outline me-1"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -329,14 +354,15 @@
                                         'approved');
 
                                 // Kalau sudah approved, tampilkan tombol Download Sertifikat
-                                // if (allApproved) {
                                 sertifButtons += `
+                                        <button class="btn btn-outline-primary btn-sm btn-preview" data-id="${item.certificate?.id}">
+                                            <i class="mdi mdi-eye-outline me-1"></i> Preview
+                                        </button>
                                         <a href="/kalibrasi/certificate/download/${item.certificate?.id}" 
                                             target="_blank" class="btn btn-outline-info btn-sm">
                                             <i class="mdi mdi-file-download-outline me-1"></i> Download
                                         </a>
                                     `;
-                                // }
 
                                 if (userRole === 'foreman' && !allApproved &&
                                     statusSertifikat === 'draft') {
@@ -550,6 +576,23 @@
                 $('#filterTanggal').val('');
                 $('#filterJenis').val('');
                 loadData(); // refresh data setelah reset
+            });
+
+            $(document).on('click', '.btn-preview', function() {
+                const id = $(this).data('id');
+                const previewUrl = `/kalibrasi/certificate/preview/${id}`;
+                const downloadUrl = `/kalibrasi/certificate/download/${id}`;
+                
+                $('#previewFrame').hide();
+                $('#previewSpinner').show();
+                $('#btnDownloadFromPreview').attr('href', downloadUrl);
+                
+                $('#previewModal').modal('show');
+                
+                $('#previewFrame').attr('src', previewUrl).off('load').on('load', function() {
+                    $('#previewSpinner').hide();
+                    $(this).show();
+                });
             });
 
             $(document).on('click', '.tracking-badge', function() {

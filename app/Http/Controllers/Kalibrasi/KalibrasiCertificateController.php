@@ -791,120 +791,123 @@ class KalibrasiCertificateController extends Controller
         ]);
     }
 
+    private function _buildSpreadsheet($id)
+    {
+        // Ambil data sertifikat dan relasinya
+        $sertifikat = KalibrasiSertifikatModel::with('kalibrasi.alat')->findOrFail($id);
+        $kalibrasi = $sertifikat->kalibrasi;
+        $alat = $kalibrasi->alat;
+        $jenis = strtolower($kalibrasi->jenis_kalibrasi);
+
+        $approvals = KalibrasiApprovalModel::where('sertifikat_id', $sertifikat->id)
+            ->with('approver')
+            ->get()
+            ->map(function ($a) {
+                return [
+                    'id' => $a->id,
+                    'approver_id' => $a->approver_id,
+                    'status' => $a->status,
+                    'approver_name' => optional($a->approver)->username ?? '-',
+                    'jabatan' => $a->role ?? '-', // Gunakan Role dari tabel approval (Foreman, Supervisor, Manager, User)
+                    'departemen' => optional($a->approver)->departemen ?? '-',
+                    'comment' => $a->catatan,
+                    'ttd' => $a->ttd
+                ];
+            });
+
+        // If jenis is thermohygrometer, pre-load to check if it's actually temperature (no RH)
+        $isThermo = true;
+        if ($jenis === 'thermohygrometer') {
+            $kalibrasi->load(['thermohygrometer']);
+            $first = $kalibrasi->thermohygrometer->first();
+            if ($first) {
+                $valStd = $first->avg_tekanan_standar_rh;
+                $valAlat = $first->avg_penunjuk_alat_rh;
+                if (($valStd === null || $valStd == 0 || $valStd === '') && ($valAlat === null || $valAlat == 0 || $valAlat === '')) {
+                    $isThermo = false;
+                }
+            }
+        }
+
+        // Tentukan path template Excel
+        $templateJenis = $jenis;
+        if ($jenis === 'thermohygrometer' && !$isThermo) {
+            $templateJenis = 'temperature';
+        }
+
+        $templatePath = public_path("assets/templates/template_kalibrasi_{$templateJenis}_sertifikat.xlsx");
+        if (!file_exists($templatePath)) {
+            throw new \Exception("Template sertifikat untuk {$templateJenis} tidak ditemukan.");
+        }
+
+        // Load template Excel dengan chart aktif
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+        $reader->setIncludeCharts(true);
+        $spreadsheet = $reader->load($templatePath);
+
+        // Load relasi sesuai jenis kalibrasi dan isi data ke template
+        switch ($jenis) {
+            case 'pressure':
+                $kalibrasi->load(['pressure.details']);
+                $this->_fillPressure($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
+                break;
+
+            case 'volumetrik':
+                $kalibrasi->load(['volumetrik']);
+                $this->_fillVolumetrik($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
+                break;
+
+            case 'temperature':
+                $kalibrasi->load(['temperature']);
+                $this->_fillTemperature($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
+                break;
+
+            case 'thermohygrometer':
+                $kalibrasi->load(['thermohygrometer']);
+                $this->_fillThermo($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
+                break;
+
+            case 'jangka_sorong':
+                $kalibrasi->load(['jangkaSorong.master', 'jangkaSorong.details', 'jangkaSorongSummary']);
+                $this->_fillJangkaSorong($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
+                break;
+
+            case 'timbangan':
+                $this->_fillTimbangan($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
+                break;
+
+            case 'instrumen':
+                $kalibrasi->load(['instrumen', 'keypad']);
+                $this->_fillInstrumen(
+                    $spreadsheet,
+                    $kalibrasi,
+                    $alat,
+                    $approvals,
+                    $sertifikat
+                );
+                break;
+
+            case 'dimensi':
+                $kalibrasi->load(['dimensi']);
+                $this->_fillDimensi($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
+                break;
+
+            case 'flowmeter':
+                $kalibrasi->load(['flowmeter']);
+                $this->_fillFlowmeter($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
+                break;
+
+            default:
+                throw new \Exception("Jenis kalibrasi tidak dikenali.");
+        }
+
+        return [$spreadsheet, $jenis];
+    }
+
     public function downloadSertifikat($id)
     {
         try {
-            // Ambil data sertifikat dan relasinya
-            $sertifikat = KalibrasiSertifikatModel::with('kalibrasi.alat')->findOrFail($id);
-            $kalibrasi = $sertifikat->kalibrasi;
-            $alat = $kalibrasi->alat;
-            $jenis = strtolower($kalibrasi->jenis_kalibrasi);
-
-            $approvals = KalibrasiApprovalModel::where('sertifikat_id', $sertifikat->id)
-                ->with('approver')
-                ->get()
-                ->map(function ($a) {
-                    return [
-                        'id' => $a->id,
-                        'approver_id' => $a->approver_id,
-                        'status' => $a->status,
-                        'approver_name' => optional($a->approver)->username ?? '-',
-                        'jabatan' => $a->role ?? '-', // Gunakan Role dari tabel approval (Foreman, Supervisor, Manager, User)
-                        'departemen' => optional($a->approver)->departemen ?? '-',
-                        'comment' => $a->catatan,
-                        'ttd' => $a->ttd
-                    ];
-                });
-
-            // If jenis is thermohygrometer, pre-load to check if it's actually temperature (no RH)
-            $isThermo = true;
-            if ($jenis === 'thermohygrometer') {
-                $kalibrasi->load(['thermohygrometer']);
-                $first = $kalibrasi->thermohygrometer->first();
-                if ($first) {
-                    $valStd = $first->avg_tekanan_standar_rh;
-                    $valAlat = $first->avg_penunjuk_alat_rh;
-                    if (($valStd === null || $valStd == 0 || $valStd === '') && ($valAlat === null || $valAlat == 0 || $valAlat === '')) {
-                        $isThermo = false;
-                    }
-                }
-            }
-
-            // Tentukan path template Excel
-            $templateJenis = $jenis;
-            if ($jenis === 'thermohygrometer' && !$isThermo) {
-                $templateJenis = 'temperature';
-            }
-
-            $templatePath = public_path("assets/templates/template_kalibrasi_{$templateJenis}_sertifikat.xlsx");
-            if (!file_exists($templatePath)) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => "Template sertifikat untuk {$templateJenis} tidak ditemukan."
-                ], 404);
-            }
-
-            // Load template Excel dengan chart aktif
-            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
-            $reader->setIncludeCharts(true);
-            $spreadsheet = $reader->load($templatePath);
-
-            // Load relasi sesuai jenis kalibrasi dan isi data ke template
-            switch ($jenis) {
-                case 'pressure':
-                    $kalibrasi->load(['pressure.details']);
-                    $this->_fillPressure($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
-                    break;
-
-                case 'volumetrik':
-                    $kalibrasi->load(['volumetrik']);
-                    $this->_fillVolumetrik($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
-                    break;
-
-                case 'temperature':
-                    $kalibrasi->load(['temperature']);
-                    $this->_fillTemperature($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
-                    break;
-
-                case 'thermohygrometer':
-                    $kalibrasi->load(['thermohygrometer']);
-                    $this->_fillThermo($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
-                    break;
-
-                case 'jangka_sorong':
-                    $kalibrasi->load(['jangkaSorong.master', 'jangkaSorong.details', 'jangkaSorongSummary']);
-                    $this->_fillJangkaSorong($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
-                    break;
-
-                case 'timbangan':
-                    $this->_fillTimbangan($spreadsheet, $approvals, $kalibrasi, $alat, $sertifikat);
-                    break;
-
-                case 'instrumen':
-                    $kalibrasi->load(['instrumen', 'keypad']);
-
-                    $this->_fillInstrumen(
-                        $spreadsheet,
-                        $kalibrasi,
-                        $alat,
-                        $approvals,
-                        $sertifikat
-                    );
-                    break;
-
-                case 'dimensi':
-                    $kalibrasi->load(['dimensi']);
-                    $this->_fillDimensi($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
-                    break;
-
-                case 'flowmeter':
-                    $kalibrasi->load(['flowmeter']);
-                    $this->_fillFlowmeter($spreadsheet, $kalibrasi, $alat, $approvals, $sertifikat);
-                    break;
-
-                default:
-                    return response()->json(['message' => 'Jenis kalibrasi tidak dikenali.'], 400);
-            }
+            list($spreadsheet, $jenis) = $this->_buildSpreadsheet($id);
 
             // Siapkan lokasi penyimpanan
             $savePath = storage_path('sertifikat/sertifikat_kalibrasi');
@@ -926,6 +929,132 @@ class KalibrasiCertificateController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal membuat file sertifikat: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function previewSertifikat($id)
+    {
+        try {
+            list($spreadsheet, $jenis) = $this->_buildSpreadsheet($id);
+
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $logoPath = public_path('assets/images/logo/logo.png');
+
+            $logoBase64 = null;
+
+            if (file_exists($logoPath)) {
+                $mime = mime_content_type($logoPath);
+                $logoBase64 = 'data:' . $mime . ';base64,' .
+                    base64_encode(file_get_contents($logoPath));
+            }
+
+            // Matikan gridlines agar sel kosong di luar area tabel tidak memiliki border abu-abu default
+            $sheet->setShowGridlines(false);
+
+            // Render spreadsheet ke HTML
+            $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Html');
+            $writer->setEmbedImages(true);
+            $html = $writer->generateHtmlAll();
+
+            if ($logoBase64) {
+                $html = preg_replace(
+                    '/<img[^>]+src="[^"]*image1\.png[^"]*"[^>]*>/i',
+                    '<img src="' . $logoBase64 . '" alt="Logo">',
+                    $html
+                );
+            }
+
+            // Ubah semua path gambar lokal (seperti ttd / logo) yang tersisa menjadi inline base64 agar tampil di iframe
+            $html = preg_replace_callback('/<img\s[^>]*src="([^"]+)"[^>]*>/i', function ($matches) {
+                $imgPath = $matches[1];
+
+                // Jika ini adalah zip wrapper (gambar dari dalam template Excel .xlsx)
+                if (strpos($imgPath, 'zip://') === 0) {
+                    $data = @file_get_contents($imgPath);
+                    if ($data !== false) {
+                        $parts = explode('#', $imgPath);
+                        $innerPath = end($parts);
+                        $type = pathinfo($innerPath, PATHINFO_EXTENSION);
+
+                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                        return str_replace($matches[1], $base64, $matches[0]);
+                    }
+                } else {
+                    // Normalisasi path windows/linux untuk gambar biasa
+                    $imgPathNormalized = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $imgPath);
+
+                    if (file_exists($imgPathNormalized)) {
+                        $type = pathinfo($imgPathNormalized, PATHINFO_EXTENSION);
+                        $data = file_get_contents($imgPathNormalized);
+                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                        return str_replace($matches[1], $base64, $matches[0]);
+                    }
+                }
+
+                return $matches[0];
+            }, $html);
+
+            // Kustomisasi layout agar rapi dan terpusat (seperti kertas)
+            $customStyles = "
+                <style>
+                    body {
+                        margin: 0 !important;
+                        padding: 30px !important;
+                        background: #eef2f6 !important;
+                    }
+                    .spreadsheet-container {
+                        width: 297mm;
+                        min-height: 210mm;
+                        height: auto;
+
+                        background: #fff !important;
+                        margin: 0 auto !important;
+                        padding: 0 !important;
+
+                        box-sizing: border-box;
+
+                        box-shadow: 0 5px 20px rgba(0,0,0,.15);
+                    }
+                    .spreadsheet-container table {
+                        width: 100%;
+                        height: 100%;
+                        border-collapse: collapse;
+                    }
+                    table {
+                        border-collapse: collapse !important;
+                        margin: 0 auto !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                    }
+                    /* Override gridlines border dari PhpSpreadsheet */
+                    .gridlines td, .gridlines th {
+                        border: none !important;
+                    }
+                    /* Jadikan posisi image di dalam td static agar tampil dan rapi (tidak bertumpuk/terpotong) */
+                    td img {
+                        max-width: 100%;
+                        height: auto;
+                    }
+                    tr {
+                        page-break-inside: avoid;
+                    }
+                </style>
+            ";
+
+            // Masukkan customStyles sebelum tag </head>
+            $html = str_replace('</head>', $customStyles . '</head>', $html);
+
+            // Bungkus konten body dengan spreadsheet-container
+            $html = str_replace('<body>', '<body><div class="spreadsheet-container">', $html);
+            $html = str_replace('</body>', '</div></body>', $html);
+
+            return response($html)->header('Content-Type', 'text/html');
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menampilkan preview sertifikat: ' . $e->getMessage(),
             ], 500);
         }
     }
