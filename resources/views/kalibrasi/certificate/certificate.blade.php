@@ -358,11 +358,11 @@
                                 // Kalau sudah approved, tampilkan tombol Download Sertifikat
                                 sertifButtons += `
                                         <button class="btn btn-outline-primary btn-sm btn-preview" data-id="${item.certificate?.id}" title="Preview">
-                                            <i class="mdi mdi-eye-outline me-1"></i>
+                                            <i class="mdi mdi-eye-outline"></i>
                                         </button>
                                         <a href="/kalibrasi/certificate/download/${item.certificate?.id}" 
                                             target="_blank" class="btn btn-outline-info btn-sm" title="Download">
-                                            <i class="mdi mdi-file-download-outline me-1"></i>
+                                            <i class="mdi mdi-file-download-outline"></i>
                                         </a>
                                     `;
 
@@ -371,7 +371,7 @@
                                     actionButtons += `
                                        <button class="btn btn-outline-primary btn-sm req-approval-btn" 
                                             data-id="${item.certificate?.id}" title="Request Approval">
-                                            <i class="mdi mdi-send-check-outline me-1"></i>
+                                            <i class="mdi mdi-send-check-outline"></i>
                                         </button>
 
                                     `;
@@ -381,7 +381,7 @@
                                     deleteButtons += `
                                         <button class="btn btn-outline-danger btn-sm delete-btn" 
                                             data-id="${item.certificate?.id}" title="Hapus">
-                                            <i class="mdi mdi-delete me-1"></i>
+                                            <i class="mdi mdi-delete"></i>
                                         </button>
                                     `;
                                 }
@@ -403,13 +403,9 @@
                                         <td>${statusBadge}</td>
                                         <td class="text-center">
                                             <div class="d-flex flex-nowrap justify-content-end gap-2"> 
-                                                @if (Auth::user()->jabatan === 'foreman')
-                                                    ${actionButtons}
-                                                @endif
+                                                ${actionButtons}
                                                 ${sertifButtons}
-                                                @if (Auth::user()->jabatan === 'foreman')
-                                                    ${deleteButtons}
-                                                @endif
+                                                ${deleteButtons}
                                             </div>
                                         </td>
                                     </tr>
