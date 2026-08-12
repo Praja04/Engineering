@@ -142,12 +142,13 @@
                                                 <th>Teg. Primer (V)</th>
                                                 <th>Teg. Sekunder (kV)</th>
                                                 <th>Suhu Thermal (°C)</th>
+                                                <th>Dibuat Oleh</th>
                                                 <th>Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tbody-operational">
                                             <tr>
-                                                <td colspan="8" class="py-4 text-muted">Memuat data...</td>
+                                                <td colspan="9" class="py-4 text-muted">Memuat data...</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -285,6 +286,10 @@
                             <tr>
                                 <th class="text-muted">Suhu Thermal</th>
                                 <td id="d-op-suhu">—</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Dibuat Oleh</th>
+                                <td id="d-op-created-by">—</td>
                             </tr>
                         </tbody>
                     </table>
@@ -744,7 +749,7 @@
                 const tanggal = $('#filter-tanggal').val();
                 const grup = $('#filter-grup').val();
                 $('#tbody-operational').html(
-                    '<tr><td colspan="8" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
+                    '<tr><td colspan="9" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
                 );
                 $.get('{{ route('esp-operational-report.json') }}', {
                     tanggal,
@@ -766,6 +771,9 @@
                                 <td>${formatDecimalVal(r.tegangan_sekunder) || '—'}</td>
                                 <td>${formatDecimalVal(r.suhu_thermal) || '—'}</td>
                                 <td>
+                                    ${r.created_by ? `<span class="badge bg-light text-dark"><i class="ri-user-line me-1"></i>${r.created_by}</span>` : '—'}
+                                </td>
+                                <td>
                                     ${hasData
                                         ? `<button class="btn btn-xs btn-outline-primary btn-detail-op py-0 px-2" title="Detail">
                                                         <i class="ri-eye-line"></i>
@@ -781,7 +789,7 @@
                             </tr>`;
                     });
                     $('#tbody-operational').html(html ||
-                        '<tr><td colspan="8" class="text-center py-4 text-muted">Belum ada data</td></tr>'
+                        '<tr><td colspan="9" class="text-center py-4 text-muted">Belum ada data</td></tr>'
                     );
                 });
             }
@@ -910,6 +918,7 @@
                 $('#d-op-teg-primer').text(formatDecimalDisplay(r.tegangan_primer, 'V'));
                 $('#d-op-teg-sekunder').text(formatDecimalDisplay(r.tegangan_sekunder, 'kV'));
                 $('#d-op-suhu').text(formatDecimalDisplay(r.suhu_thermal, '°C'));
+                $('#d-op-created-by').text(r.created_by ?? '—');
                 new bootstrap.Modal('#modal-operational').show();
             });
 
