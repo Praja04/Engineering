@@ -966,6 +966,11 @@ class KalibrasiCertificateController extends Controller
                 );
             }
 
+            file_put_contents(
+                storage_path('app/manometer-preview.html'),
+                $html
+            );
+
             // Ubah semua path gambar lokal (seperti ttd / logo) yang tersisa menjadi inline base64 agar tampil di iframe
             $html = preg_replace_callback('/<img\s[^>]*src="([^"]+)"[^>]*>/i', function ($matches) {
                 $imgPath = $matches[1];
@@ -1018,9 +1023,10 @@ class KalibrasiCertificateController extends Controller
                         box-shadow: 0 5px 20px rgba(0,0,0,.15);
                     }
                     .spreadsheet-container table {
-                        width: 100%;
-                        height: 100%;
-                        border-collapse: collapse;
+                        width: 100% !important;
+                        height: 100% !important;
+                        border-collapse: collapse !important;
+                        margin: 0 auto !important;
                     }
                     table {
                         border-collapse: collapse !important;
