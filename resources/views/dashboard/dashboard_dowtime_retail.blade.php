@@ -827,11 +827,14 @@
                     dbTableBody.innerHTML = '';
                     data.history.forEach(row => {
                         const tr = document.createElement('tr');
+                        const oeeVal = row.oee !== undefined ? row.oee : (row.oee_d1 !== undefined ? row.oee_d1 : 0);
+                        const prodVal = row.ct_product !== undefined ? row.ct_product : (row.ct_productd1 !== undefined ? row.ct_productd1 : 0);
+                        const stopBadge = row.is_stop_shift ? ' <span class="badge bg-warning text-dark fs-10 ms-1">STOP SHIFT</span>' : '';
                         tr.innerHTML = `
                             <td>${row.id}</td>
-                            <td><span class="oee-jam-badge">${row.jam}</span></td>
-                            <td class="fw-bold text-info">${row.oee_d1} min</td>
-                            <td class="text-success">${Number(row.ct_productd1).toLocaleString('id-ID')} pcs</td>
+                            <td><span class="oee-jam-badge">${row.jam}</span>${stopBadge}</td>
+                            <td class="fw-bold text-info">${oeeVal} min</td>
+                            <td class="text-success">${Number(prodVal).toLocaleString('id-ID')} pcs</td>
                         `;
                         dbTableBody.appendChild(tr);
                     });
