@@ -514,7 +514,7 @@
                 <th>Operator</th>
                 ${headers.map(p => {
                     const operatorName = entry.operator?.[p] ?? '-';
-                    const editButton = (userJabatan === 'super admin' && !isMonthLocked) ? `
+                    const editButton = (userJabatan !== 'operator' && !isMonthLocked) ? `
                                                 <button class="btn btn-sm btn-warning btn-edit-panel mt-1" 
                                                         data-panel="${p}" 
                                                         data-entry='${JSON.stringify(entry)}'>
