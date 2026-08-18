@@ -691,25 +691,51 @@
             const minute = now.getMinutes();
             const totalCurrentMinutes = (hour * 60) + minute;
 
-            const SPEED_DEFAULT = (apiData && apiData.speed_standard_ppm) ? apiData.speed_standard_ppm : 42;
-            let shiftName = (apiData && apiData.shift_name) ? apiData.shift_name : '';
-            let oeeShiftPct = (apiData && apiData.oee_shift_pct !== undefined) ? Number(apiData.oee_shift_pct).toFixed(1) : null;
-
-            if (!shiftName || oeeShiftPct === null) {
-                let shiftDurationMin = isSaturday ? 300 : 480;
-                if (isSaturday) {
-                    if (totalCurrentMinutes >= 360 && totalCurrentMinutes < 660) shiftName = 'Shift 1 (Sabtu: 06.00 - 11.00)';
-                    else if (totalCurrentMinutes >= 660 && totalCurrentMinutes < 960) shiftName = 'Shift 2 (Sabtu: 11.00 - 16.00)';
-                    else if (totalCurrentMinutes >= 960 && totalCurrentMinutes < 1260) shiftName = 'Shift 3 (Sabtu: 16.00 - 21.00)';
-                    else shiftName = 'Luar Jam Kerja (Sabtu)';
+            // Calculate Shift Elapsed & Shift Uptime / Downtime
+            let shiftStartMin = 360;
+            if (isSaturday) {
+                if (totalCurrentMinutes >= 360 && totalCurrentMinutes < 660) {
+                    shiftName = 'Shift 1 (Sabtu: 06.00 - 11.00)';
+                    shiftStartMin = 360;
+                } else if (totalCurrentMinutes >= 660 && totalCurrentMinutes < 960) {
+                    shiftName = 'Shift 2 (Sabtu: 11.00 - 16.00)';
+                    shiftStartMin = 660;
+                } else if (totalCurrentMinutes >= 960 && totalCurrentMinutes < 1260) {
+                    shiftName = 'Shift 3 (Sabtu: 16.00 - 21.00)';
+                    shiftStartMin = 960;
                 } else {
-                    if (totalCurrentMinutes >= 360 && totalCurrentMinutes < 840) shiftName = 'Shift 1 (06.00 - 14.00)';
-                    else if (totalCurrentMinutes >= 840 && totalCurrentMinutes < 1320) shiftName = 'Shift 2 (14.00 - 22.00)';
-                    else shiftName = 'Shift 3 (22.00 - 06.00)';
+                    shiftName = 'Luar Jam Kerja (Sabtu)';
+                    shiftStartMin = totalCurrentMinutes;
                 }
-                const maxShiftCapacity = SPEED_DEFAULT * shiftDurationMin;
-                oeeShiftPct = maxShiftCapacity > 0 ? Math.min(100, (productVal / maxShiftCapacity) * 100).toFixed(1) : '0.0';
+            } else {
+                if (totalCurrentMinutes >= 360 && totalCurrentMinutes < 840) {
+                    shiftName = 'Shift 1 (06.00 - 14.00)';
+                    shiftStartMin = 360;
+                } else if (totalCurrentMinutes >= 840 && totalCurrentMinutes < 1320) {
+                    shiftName = 'Shift 2 (14.00 - 22.00)';
+                    shiftStartMin = 840;
+                } else {
+                    shiftName = 'Shift 3 (22.00 - 06.00)';
+                    if (totalCurrentMinutes >= 1320) shiftStartMin = 1320;
+                    else shiftStartMin = -120;
+                }
             }
+
+            const elapsedShiftMin = Math.max(1, totalCurrentMinutes - shiftStartMin);
+            let currentShiftUptime = window.currentOeeVal || 0;
+            if (window.lastHistoryRows && Array.isArray(window.lastHistoryRows)) {
+                window.lastHistoryRows.forEach(r => {
+                    const rowVal = r.oee !== undefined ? r.oee : (r.oee_d1 || 0);
+                    currentShiftUptime += Number(rowVal) || 0;
+                });
+            }
+            const currentShiftDowntime = Math.max(0, elapsedShiftMin - currentShiftUptime);
+
+            // True OEE Shift % = Availability (Uptime / Elapsed) * Performance (Output / (Uptime * 42))
+            const availabilityRatio = Math.min(1.0, currentShiftUptime / elapsedShiftMin);
+            const maxUptimeCapacity = currentShiftUptime * SPEED_DEFAULT;
+            const performanceRatio = maxUptimeCapacity > 0 ? Math.min(1.0, productVal / maxUptimeCapacity) : 1.0;
+            const oeeShiftPct = (availabilityRatio * performanceRatio * 100).toFixed(1);
 
             const currentShiftNameEl = document.getElementById('current-shift-name');
             const valOeeShiftPctEl = document.getElementById('val-oee-shift-pct');
@@ -720,31 +746,6 @@
             if (valOeeShiftPctEl) valOeeShiftPctEl.innerHTML = `${oeeShiftPct}<span class="kpi-unit">%</span>`;
             if (shiftOeeBarEl) shiftOeeBarEl.style.width = `${Math.min(100, parseFloat(oeeShiftPct))}%`;
             if (valTargetPctEl) valTargetPctEl.textContent = `${oeeShiftPct}% Target Shift`;
-
-            // Calculate Shift Elapsed & Shift Uptime / Downtime
-            let shiftStartMin = 360;
-            if (isSaturday) {
-                if (totalCurrentMinutes >= 360 && totalCurrentMinutes < 660) shiftStartMin = 360;
-                else if (totalCurrentMinutes >= 660 && totalCurrentMinutes < 960) shiftStartMin = 660;
-                else if (totalCurrentMinutes >= 960 && totalCurrentMinutes < 1260) shiftStartMin = 960;
-                else shiftStartMin = totalCurrentMinutes;
-            } else {
-                if (totalCurrentMinutes >= 360 && totalCurrentMinutes < 840) shiftStartMin = 360;
-                else if (totalCurrentMinutes >= 840 && totalCurrentMinutes < 1320) shiftStartMin = 840;
-                else {
-                    if (totalCurrentMinutes >= 1320) shiftStartMin = 1320;
-                    else shiftStartMin = -120;
-                }
-            }
-
-            const elapsedShiftMin = Math.max(1, totalCurrentMinutes - shiftStartMin);
-            let currentShiftUptime = window.currentOeeVal || 0;
-            if (window.lastHistoryRows && Array.isArray(window.lastHistoryRows)) {
-                window.lastHistoryRows.forEach(r => {
-                    currentShiftUptime += (r.oee_d1 || 0);
-                });
-            }
-            const currentShiftDowntime = Math.max(0, elapsedShiftMin - currentShiftUptime);
 
             const valUptimeShiftEl = document.getElementById('val-uptime-shift');
             const valDowntimeShiftEl = document.getElementById('val-downtime-shift');
