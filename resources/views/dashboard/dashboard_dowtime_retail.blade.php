@@ -1,177 +1,342 @@
 @extends('layouts.app')
 
-@section('title', 'Machine Downtime Dashboard')
+@section('title', 'OEE Mesin Retail D1')
+
 @section('styles')
 <style>
-    .card-stats {
-        transition: transform 0.2s, box-shadow 0.2s;
+    /* Dynamic Dual-Theme Variables (Velzon Light & Dark Mode Compatible) */
+    :root {
+        --oee-card-bg: #ffffff;
+        --oee-card-border: rgba(0, 0, 0, 0.08);
+        --oee-text-main: #212529;
+        --oee-text-muted: #6c757d;
+        --oee-stage-bg: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%);
+        --oee-clock-bg: #f1f5f9;
+        --oee-table-th: #f8fafc;
+        --oee-table-border: #e2e8f0;
+        --oee-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     }
 
-    .card-stats:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    [data-layout-mode="dark"] {
+        --oee-card-bg: rgba(21, 30, 47, 0.9);
+        --oee-card-border: rgba(255, 255, 255, 0.08);
+        --oee-text-main: #f9fafb;
+        --oee-text-muted: #9ca3af;
+        --oee-stage-bg: radial-gradient(circle at center, rgba(15, 23, 42, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);
+        --oee-clock-bg: rgba(17, 24, 39, 0.9);
+        --oee-table-th: rgba(255, 255, 255, 0.04);
+        --oee-table-border: rgba(255, 255, 255, 0.06);
+        --oee-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
     }
 
-    .status-badge {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
+    /* Remove outer space constraints & match Velzon layout */
+    .oee-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--oee-card-border);
+        margin-bottom: 1.5rem;
     }
 
-    .status-running {
-        background-color: #28a745;
-        color: white;
-    }
-
-    .status-warning {
-        background-color: #ffc107;
-        color: #212529;
-    }
-
-    .status-danger {
-        background-color: #dc3545;
-        color: white;
-    }
-
-    .machine-name {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #495057;
-    }
-
-    .downtime-percent {
+    .oee-title {
         font-size: 1.5rem;
         font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0;
+        color: var(--oee-text-main);
     }
 
-    .table-responsive {
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-        border-radius: 0.5rem;
-        overflow: hidden;
-    }
-
-    .shift-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
+    .oee-badge {
         font-size: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
         font-weight: 600;
-        border-radius: 0.25rem;
-        margin: 2px;
+        background: rgba(6, 182, 212, 0.15);
+        color: #06b6d4;
+        border: 1px solid rgba(6, 182, 212, 0.3);
     }
 
-    .shift-1 {
-        background-color: #e3f2fd;
-        color: #1976d2;
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 30px;
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        font-weight: 600;
+        font-size: 0.85rem;
     }
 
-    .shift-2 {
-        background-color: #fff3e0;
-        color: #f57c00;
-    }
-
-    .shift-3 {
-        background-color: #f3e5f5;
-        color: #7b1fa2;
-    }
-
-    /* Highlight untuk shift yang sedang aktif */
-    .active-shift-badge {
-        position: relative;
-        border: 2px solid #28a745;
-        box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-
-        0%,
-        100% {
-            box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
-        }
-
-        50% {
-            box-shadow: 0 0 15px rgba(40, 167, 69, 0.8);
-        }
-    }
-
-    .active-indicator {
-        display: inline-block;
+    .pulse-dot {
         width: 8px;
         height: 8px;
-        background-color: #28a745;
         border-radius: 50%;
-        margin-right: 5px;
-        animation: blink 1.5s infinite;
+        background-color: #10b981;
+        box-shadow: 0 0 10px #10b981;
+        animation: pulseAnimation 1.8s infinite;
     }
 
-    @keyframes blink {
-
-        0%,
-        100% {
-            opacity: 1;
-        }
-
-        50% {
-            opacity: 0.3;
-        }
+    @keyframes pulseAnimation {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(1.3); }
     }
 
-    .loading-spinner {
-        display: inline-block;
-        width: 2rem;
-        height: 2rem;
-        border: 0.25rem solid #f3f3f3;
-        border-top: 0.25rem solid #3498db;
+    .server-clock {
+        font-family: 'JetBrains Mono', monospace, monospace;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #06b6d4;
+        background: var(--oee-clock-bg);
+        padding: 6px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--oee-card-border);
+    }
+
+    .btn-reset-pulse {
+        background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-reset-pulse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+    }
+
+    /* Adaptive Cards */
+    .oee-card {
+        background: var(--oee-card-bg);
+        border: 1px solid var(--oee-card-border);
+        border-radius: 14px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--oee-shadow);
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .kpi-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--oee-text-muted);
+    }
+
+    .kpi-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin: 8px 0;
+        color: var(--oee-text-main);
+    }
+
+    .kpi-unit {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-left: 4px;
+        color: var(--oee-text-muted);
+    }
+
+    /* Gauge Ring */
+    .oee-ring-container {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .oee-ring-svg {
+        transform: rotate(-90deg);
+    }
+
+    .oee-ring-bg {
+        fill: none;
+        stroke: rgba(150, 150, 150, 0.2);
+        stroke-width: 7;
+    }
+
+    .oee-ring-bar {
+        fill: none;
+        stroke: url(#cyan-gradient);
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-dasharray: 238;
+        stroke-dashoffset: 238;
+        transition: stroke-dashoffset 0.8s ease;
+    }
+
+    .oee-ring-text {
+        position: absolute;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--oee-text-main);
+    }
+
+    /* Countdown Bar */
+    .countdown-bar-bg {
+        width: 100%;
+        height: 8px;
+        background: rgba(150, 150, 150, 0.2);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .countdown-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #8b5cf6, #c084fc);
+        border-radius: 10px;
+        transition: width 1s linear;
+    }
+
+    /* Machine Stage & Hotspots */
+    .machine-stage {
+        position: relative;
+        width: 100%;
+        height: 280px;
+        background: var(--oee-stage-bg);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 1px solid var(--oee-card-border);
+        margin-bottom: 1rem;
+    }
+
+    .machine-img {
+        max-height: 88%;
+        max-width: 88%;
+        object-fit: contain;
+        filter: drop-shadow(0 10px 25px rgba(6, 182, 212, 0.25));
+    }
+
+    .hotspot {
+        position: absolute;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        background: rgba(6, 182, 212, 0.4);
+        border: 2px solid #06b6d4;
+        cursor: pointer;
+        box-shadow: 0 0 12px #06b6d4;
+        animation: pulseAnimation 2s infinite;
+        z-index: 10;
     }
 
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
+    .hotspot:hover .hotspot-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
     }
 
-    .progress {
-        height: 1rem;
-        margin: 2px 0;
+    .hotspot-1 { top: 38%; left: 18%; }
+    .hotspot-2 { top: 48%; left: 42%; }
+    .hotspot-3 { top: 30%; left: 52%; }
+    .hotspot-4 { top: 62%; left: 74%; }
+    .hotspot-5 { top: 26%; left: 68%; }
+
+    .hotspot-tooltip {
+        position: absolute;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(6, 182, 212, 0.4);
+        color: #ffffff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.2s ease;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        pointer-events: none;
     }
 
-    .progress-bar {
+    .telemetry-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 10px;
+    }
+
+    .telemetry-box {
+        background: rgba(150, 150, 150, 0.05);
+        border: 1px solid var(--oee-card-border);
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .telemetry-label {
         font-size: 0.7rem;
+        color: var(--oee-text-muted);
+        text-transform: uppercase;
         font-weight: 600;
     }
 
-    /* Group styling untuk setiap mesin */
-    .machine-row {
-        border-bottom: 2px solid #e9ecef;
+    .telemetry-val {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-top: 2px;
     }
 
-    .machine-row:last-child {
-        border-bottom: none;
+    /* Table styling */
+    .table-dark-custom {
+        width: 100%;
+        color: var(--oee-text-main);
+        border-collapse: collapse;
     }
 
-    .shift-details {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
+    .table-dark-custom th {
+        background: var(--oee-table-th);
+        padding: 10px 14px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--oee-text-muted);
+        border-bottom: 1px solid var(--oee-table-border);
     }
 
-    .shift-item {
-        display: flex;
-        align-items: center;
-        padding: 5px;
-        border-radius: 4px;
-        background-color: #f8f9fa;
+    .table-dark-custom td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--oee-table-border);
+        font-size: 0.88rem;
     }
 
-    .shift-item.active {
-        background-color: #fff3cd;
-        border-left: 3px solid #ffc107;
+    .oee-jam-badge {
+        background: rgba(124, 58, 237, 0.12);
+        color: #7c3aed !important;
+        border: 1px solid rgba(124, 58, 237, 0.3);
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.78rem;
+        display: inline-block;
+    }
+
+    [data-layout-mode="dark"] .oee-jam-badge {
+        background: rgba(139, 92, 246, 0.25);
+        color: #c084fc !important;
+        border-color: rgba(139, 92, 246, 0.4);
     }
 </style>
 @endsection
@@ -179,127 +344,283 @@
 @section('content')
 <div class="page-content">
     <div class="container-fluid">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="mb-1">Machine Monitoring Dashboard</h4>
-                        <p class="text-muted mb-0">Real-time downtime monitoring untuk semua mesin (3 shift)</p>
+
+        <!-- Header Bar -->
+        <div class="oee-header">
+            <div>
+                <h1 class="oee-title">OEE MESIN RETAIL <span style="font-weight: 400; opacity: 0.7;">| D1</span></h1>
+                <div class="mt-1">
+                    <span class="fs-13" style="color: var(--oee-text-muted);">Mesin Rotary Packaging Pouch</span>
+                    <span class="oee-badge ms-2">Daemon Active</span>
+                    <span class="oee-badge ms-1" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border-color: rgba(139, 92, 246, 0.3);">Topic: OEE_D1</span>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <div class="status-pill">
+                    <span class="pulse-dot"></span>
+                    <span id="mqtt-status">MQTT ONLINE</span>
+                </div>
+
+                <div class="server-clock" id="clock-wib">
+                    --:--:-- WIB
+                </div>
+
+                <button class="btn-reset-pulse" id="btn-manual-reset" title="Kirim Sinyal Reset RST_D1 (1 -> 500ms -> 0)">
+                    <i class="ri-restart-line"></i>
+                    <span>TRIGGER RESET</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Top Grid: Visualizer & KPI Cards -->
+        <div class="row">
+            <!-- Left: Visualizer Card -->
+            <div class="col-lg-5 col-xl-4">
+                <div class="oee-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold fs-14" style="color: var(--oee-text-main);"><i class="ri-box-3-line me-1 text-info"></i> Visualisasi Mesin D1</span>
+                        <span class="fs-11" style="color: var(--oee-text-muted);">Rotary Packaging</span>
                     </div>
-                    <div class="d-flex gap-2">
-                        <input type="date" id="filterDate" class="form-control" value="{{ date('Y-m-d') }}">
-                        <button class="btn btn-primary" onclick="loadDashboard()">
-                            <i class="fas fa-sync-alt me-1"></i> Refresh
+
+                    <div class="machine-stage">
+                        <!-- User Machine Image D1 -->
+                        <img src="{{ asset('assets/machine.png') }}" alt="Mesin Rotary Packaging D1" class="machine-img">
+
+                        <!-- Hotspots -->
+                        <div class="hotspot hotspot-1">
+                            <div class="hotspot-tooltip">
+                                <strong>Pouch Feeder Station</strong><br>
+                                Kecepatan: 45 pouch/min<br>
+                                Status: Operational
+                            </div>
+                        </div>
+                        <div class="hotspot hotspot-2">
+                            <div class="hotspot-tooltip">
+                                <strong>Rotary Indexing Carousel</strong><br>
+                                Posisi: Station 4 (Fill)<br>
+                                RPM: 1800 RPM
+                            </div>
+                        </div>
+                        <div class="hotspot hotspot-3">
+                            <div class="hotspot-tooltip">
+                                <strong>Liquid/Powder Filling Nozzle</strong><br>
+                                Volume Target: 250 ml<br>
+                                Akurasi: ±0.5g
+                            </div>
+                        </div>
+                        <div class="hotspot hotspot-4">
+                            <div class="hotspot-tooltip">
+                                <strong>HMI Touch Panel PLC</strong><br>
+                                Pub: RST_D1 (Reset Pulsa)<br>
+                                Sub: OEE_D1
+                            </div>
+                        </div>
+                        <div class="hotspot hotspot-5">
+                            <div class="hotspot-tooltip">
+                                <strong>Top Heat Sealing Bar</strong><br>
+                                Temperatur: 185°C<br>
+                                Pressure: 6.2 Bar
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="telemetry-row">
+                        <div class="telemetry-box">
+                            <div class="telemetry-label">SPEED RATE</div>
+                            <div class="telemetry-val" style="color: #10b981;">42 ppm</div>
+                        </div>
+                        <div class="telemetry-box">
+                            <div class="telemetry-label">UPTIME SHIFT</div>
+                            <div class="telemetry-val" style="color: #06b6d4;" id="val-uptime-shift">0 min</div>
+                        </div>
+                        <div class="telemetry-box">
+                            <div class="telemetry-label">DOWNTIME SHIFT</div>
+                            <div class="telemetry-val" style="color: #ef4444;" id="val-downtime-shift">0 min</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: KPI Cards Grid -->
+            <div class="col-lg-7 col-xl-8">
+                <div class="row">
+                    <!-- Card 1: OEE Uptime -->
+                    <div class="col-md-6">
+                        <div class="oee-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="kpi-title">OEE UPTIME (OEE_D1)</div>
+                                    <div class="fs-12" style="color: var(--oee-text-muted);" id="oee-interval-subtitle">--.00 - --.00</div>
+                                </div>
+                                <div class="avatar-xs">
+                                    <span class="avatar-title bg-soft-info text-info rounded-circle">
+                                        <i class="ri-timer-flash-line fs-16"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between my-3">
+                                <div>
+                                    <div class="kpi-value" id="val-oee">0<span class="kpi-unit">min</span></div>
+                                    <div class="fs-12 text-success mt-1" id="val-efficiency">
+                                        <i class="ri-line-chart-line"></i> 100% Efficiency
+                                    </div>
+                                </div>
+
+                                <div class="oee-ring-container">
+                                    <svg class="oee-ring-svg" width="80" height="80" viewBox="0 0 90 90">
+                                        <defs>
+                                            <linearGradient id="cyan-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stop-color="#06b6d4" />
+                                                <stop offset="100%" stop-color="#3b82f6" />
+                                            </linearGradient>
+                                        </defs>
+                                        <circle class="oee-ring-bg" cx="45" cy="45" r="38"></circle>
+                                        <circle class="oee-ring-bar" id="oee-gauge-bar" cx="45" cy="45" r="38"></circle>
+                                    </svg>
+                                    <div class="oee-ring-text" id="oee-pct">0%</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between fs-12 pt-2" style="border-top: 1px solid var(--oee-card-border); color: var(--oee-text-muted);">
+                                <span>Target Max: 60 min/jam</span>
+                                <span style="color: #06b6d4;" id="oee-status-badge">Normal</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Total Product Counter -->
+                    <div class="col-md-6">
+                        <div class="oee-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="kpi-title">TOTAL COUNTER (CT_PRODUCTD1)</div>
+                                    <div class="fs-12" style="color: var(--oee-text-muted);">Output Pouch Terkemas</div>
+                                </div>
+                                <div class="avatar-xs">
+                                    <span class="avatar-title bg-soft-success text-success rounded-circle">
+                                        <i class="ri-checkbox-circle-line fs-16"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="my-3">
+                                <div class="kpi-value" id="val-product" style="color: #10b981;">0<span class="kpi-unit">pcs</span></div>
+                                <div class="fs-12 mt-1" style="color: var(--oee-text-muted);" id="val-speed">
+                                    Kecepatan: ~0.0 pcs / min
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between fs-12 pt-2" style="border-top: 1px solid var(--oee-card-border); color: var(--oee-text-muted);">
+                                <span>Target Shift: 30,000 pcs</span>
+                                <span style="color: #10b981;" id="val-target-pct">0.0% Target</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Downtime Card -->
+                    <div class="col-md-6">
+                        <div class="oee-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="kpi-title">DOWNTIME (MENIT)</div>
+                                    <div class="fs-12" style="color: var(--oee-text-muted);" id="downtime-interval-subtitle">--.00 - --.00</div>
+                                </div>
+                                <div class="avatar-xs">
+                                    <span class="avatar-title bg-soft-warning text-warning rounded-circle">
+                                        <i class="ri-error-warning-line fs-16"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="my-3">
+                                <div class="kpi-value" id="val-stop" style="color: #10b981;">0<span class="kpi-unit">min</span></div>
+                                <div class="fs-12 text-success mt-1" id="downtime-status-text">
+                                    <i class="ri-check-double-line"></i> Tidak ada Downtime
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between fs-12 pt-2" style="border-top: 1px solid var(--oee-card-border); color: var(--oee-text-muted);">
+                                <span>Status Shift: Berjalan</span>
+                                <span style="color: #10b981;" id="downtime-operation-badge">Smooth Operation</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: OEE Shift Performance (%) -->
+                    <div class="col-md-6">
+                        <div class="oee-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="kpi-title">OEE SHIFT PERFORMANCE (%)</div>
+                                    <div class="fs-12" style="color: var(--oee-text-muted);" id="current-shift-name">Shift 1 (06.00 - 14.00)</div>
+                                </div>
+                                <div class="avatar-xs">
+                                    <span class="avatar-title bg-soft-purple text-purple rounded-circle">
+                                        <i class="ri-pie-chart-2-line fs-16"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="my-3">
+                                <div class="kpi-value" id="val-oee-shift-pct" style="color: #8b5cf6;">0.0<span class="kpi-unit">%</span></div>
+                                <div class="countdown-bar-bg">
+                                    <div class="countdown-bar-fill" id="shift-oee-bar" style="background: linear-gradient(90deg, #8b5cf6, #c084fc); width: 0%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="fs-11 pt-2" style="border-top: 1px solid var(--oee-card-border); color: var(--oee-text-muted);">
+                                <span id="oee-formula-text">OEE = Counter / (42 × Uptime × 2)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Grid: Chart & Database History Table -->
+        <div class="row">
+            <!-- Left: 8-Hour OEE Chart -->
+            <div class="col-lg-7">
+                <div class="oee-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold fs-14" style="color: var(--oee-text-main);"><i class="ri-bar-chart-fill me-1 text-primary"></i> Grafik Performa Hourly OEE (8 Jam Terakhir)</span>
+                        <span class="fs-11" style="color: var(--oee-text-muted);">Menit Hidup vs Output Produksi</span>
+                    </div>
+                    <div style="height: 260px; position: relative;">
+                        <canvas id="oeeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Shift OEE History Table -->
+            <div class="col-lg-5">
+                <div class="oee-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold fs-14" style="color: var(--oee-text-main);"><i class="ri-pie-chart-2-line me-1 text-purple"></i> Riwayat OEE Per Shift</span>
+                        <button id="btn-refresh-db" class="btn btn-sm btn-soft-info fs-11">
+                            <i class="ri-refresh-line me-1"></i> Refresh
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Summary Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card card-stats">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <p class="text-muted mb-1">Total Mesin</p>
-                                <h3 class="mb-0" id="totalMachines">11</h3>
-                            </div>
-                            <div class="text-primary">
-                                <i class="fas fa-industry fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stats">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <p class="text-muted mb-1">Shift Aktif</p>
-                                <h3 class="mb-0" id="currentShift">-</h3>
-                            </div>
-                            <div class="text-success">
-                                <i class="fas fa-clock fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stats">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <p class="text-muted mb-1">Avg Downtime (Shift Aktif)</p>
-                                <h3 class="mb-0" id="avgDowntime">0%</h3>
-                            </div>
-                            <div class="text-warning">
-                                <i class="fas fa-chart-line fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stats">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <p class="text-muted mb-1">Mesin Bermasalah</p>
-                                <h3 class="mb-0 text-danger" id="problematicMachines">0</h3>
-                            </div>
-                            <div class="text-danger">
-                                <i class="fas fa-exclamation-triangle fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center py-5" style="display: none;">
-            <div class="loading-spinner mx-auto mb-3"></div>
-            <p class="text-muted">Memuat data mesin...</p>
-        </div>
-
-        <!-- Main Table -->
-        <div class="row" id="mainContent">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">Downtime Ranking - Per Mesin (3 Shift)</h5>
-                        <small class="text-muted">Diurutkan berdasarkan rata-rata downtime tertinggi |
-                            <span class="active-indicator"></span> <strong>Shift sedang berjalan</strong>
-                        </small>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="text-center" width="60">Rank</th>
-                                        <th width="120">Mesin</th>
-                                        <th width="200">Shift 1</th>
-                                        <th width="200">Shift 2</th>
-                                        <th width="200">Shift 3</th>
-                                        <th class="text-center" width="120">Avg Downtime</th>
-                                        <th class="text-center" width="100">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="machineTableBody">
-                                    <tr>
-                                        <td colspan="7" class="text-center py-5">
-                                            <p class="text-muted mb-0">Klik tombol Refresh untuk memuat data</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+                        <table class="table-dark-custom">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Shift</th>
+                                    <th>Uptime</th>
+                                    <th>Product</th>
+                                    <th>OEE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="db-table-body">
+                                <tr>
+                                    <td colspan="5" class="text-center py-3" style="color: var(--oee-text-muted);">Memuat data shift...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -307,202 +628,390 @@
 
     </div>
 </div>
+@endsection
 
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const machines = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10', 'd14'];
-    const API_BASE_URL = 'http://10.11.11.200:8080/api/retail';
-
-    // Load dashboard on page load
     document.addEventListener('DOMContentLoaded', function() {
-        loadDashboard();
-        // Auto refresh setiap 5 menit
-        setInterval(loadDashboard, 300000);
-    });
+        const API_BASE = 'http://10.11.11.200:3000';
+        let oeeChartInstance = null;
 
-    async function loadDashboard() {
-        const date = document.getElementById('filterDate').value;
-        const loadingState = document.getElementById('loadingState');
-        const mainContent = document.getElementById('mainContent');
+        // Elements
+        const clockEl = document.getElementById('clock-wib');
+        const mqttStatusEl = document.getElementById('mqtt-status');
+        const valOeeEl = document.getElementById('val-oee');
+        const valProductEl = document.getElementById('val-product');
+        const valStopEl = document.getElementById('val-stop');
+        const valSpeedEl = document.getElementById('val-speed');
+        const valTargetPctEl = document.getElementById('val-target-pct');
+        const oeeGaugeBar = document.getElementById('oee-gauge-bar');
+        const oeePctText = document.getElementById('oee-pct');
+        const countdownText = document.getElementById('countdown-text');
+        const countdownBar = document.getElementById('countdown-bar');
+        const nextResetLabel = document.getElementById('next-reset-time-label');
+        const currentJamBadge = document.getElementById('current-jam-badge');
+        const btnManualReset = document.getElementById('btn-manual-reset');
+        const btnRefreshDb = document.getElementById('btn-refresh-db');
+        const dbTableBody = document.getElementById('db-table-body');
+        const downtimeStatusText = document.getElementById('downtime-status-text');
 
-        loadingState.style.display = 'block';
-        mainContent.style.opacity = '0.5';
+        // WIB Clock Loop & Downtime Interval Subtitle
+        function updateWibClock() {
+            const now = new Date();
+            const wibString = now.toLocaleTimeString('id-ID', {
+                timeZone: 'Asia/Jakarta',
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }) + ' WIB';
+            
+            if (clockEl) clockEl.textContent = wibString;
 
-        try {
-            const allData = await fetchAllMachinesData(date);
-            processAndDisplayData(allData);
-        } catch (error) {
-            console.error('Error loading dashboard:', error);
-            alert('Gagal memuat data. Silakan coba lagi.');
-        } finally {
-            loadingState.style.display = 'none';
-            mainContent.style.opacity = '1';
-        }
-    }
+            const currentHourStr = String(now.getHours()).padStart(2, '0');
+            const currentMinStr = String(now.getMinutes()).padStart(2, '0');
+            const intervalText = `${currentHourStr}.00 - ${currentHourStr}.${currentMinStr}`;
 
-    async function fetchAllMachinesData(date) {
-        const promises = machines.map(machine =>
-            fetch(`${API_BASE_URL}/${machine}/durasi/stop?date=${date}`)
-            .then(res => res.json())
-            .then(data => ({
-                machine: machine.toUpperCase(),
-                ...data
-            }))
-            .catch(err => {
-                console.error(`Error fetching ${machine}:`, err);
-                return null;
-            })
-        );
+            const downtimeSubEl = document.getElementById('downtime-interval-subtitle');
+            if (downtimeSubEl) downtimeSubEl.textContent = intervalText;
 
-        const results = await Promise.all(promises);
-        return results.filter(data => data !== null);
-    }
-
-    function processAndDisplayData(allData) {
-        if (allData.length === 0) {
-            document.getElementById('machineTableBody').innerHTML =
-                '<tr><td colspan="7" class="text-center py-4 text-danger">Tidak ada data tersedia</td></tr>';
-            return;
+            const oeeSubEl = document.getElementById('oee-interval-subtitle');
+            if (oeeSubEl) oeeSubEl.textContent = intervalText;
         }
 
-        // Ambil current shift dari data pertama
-        const currentShift = allData[0].current_shift || 1;
-        document.getElementById('currentShift').textContent = `Shift ${currentShift}`;
+        setInterval(updateWibClock, 1000);
+        updateWibClock();
 
-        // Proses data per mesin
-        const machineData = allData.map(machine => {
-            const shifts = {};
-            let totalDowntime = 0;
-            let shiftCount = 0;
+        // Helper function: Calculate OEE Shift Performance (%) based on Shift & Day rules
+        function updateShiftPerformance(productVal, apiData = null) {
+            const SPEED_DEFAULT = (apiData && apiData.speed_standard_ppm) ? apiData.speed_standard_ppm : 42;
+            let shiftName = (apiData && apiData.shift_name) ? apiData.shift_name : '';
+            let oeeShiftPct = (apiData && apiData.oee_shift_pct !== undefined) ? Number(apiData.oee_shift_pct).toFixed(1) : null;
+            let currentShiftUptime = (apiData && apiData.shift_uptime_min !== undefined) ? Number(apiData.shift_uptime_min) : null;
+            let currentShiftDowntime = (apiData && apiData.shift_downtime_min !== undefined) ? Number(apiData.shift_downtime_min) : null;
 
-            // Ambil data untuk setiap shift
-            for (let i = 1; i <= 3; i++) {
-                const shiftData = machine.shifts.find(s => s.shift === i);
-                if (shiftData) {
-                    shifts[`shift${i}`] = {
-                        downtime: shiftData.downtime || 0,
-                        downtime_total_minutes: shiftData.downtime_total_minutes || 0,
-                        actual_shift_minutes: shiftData.actual_shift_minutes || 0,
-                        is_active: i === currentShift
-                    };
-                    totalDowntime += (shiftData.downtime || 0);
-                    shiftCount++;
+            if (!shiftName || oeeShiftPct === null || currentShiftUptime === null || currentShiftDowntime === null) {
+                const now = new Date();
+                const day = now.getDay();
+                const isSaturday = (day === 6);
+                const hour = now.getHours();
+                const minute = now.getMinutes();
+                const totalCurrentMinutes = (hour * 60) + minute;
+
+                let shiftStartMin = 360;
+                if (isSaturday) {
+                    if (totalCurrentMinutes >= 360 && totalCurrentMinutes < 660) {
+                        shiftName = 'Shift 1 (Sabtu: 06.00 - 11.00)';
+                        shiftStartMin = 360;
+                    } else if (totalCurrentMinutes >= 660 && totalCurrentMinutes < 960) {
+                        shiftName = 'Shift 2 (Sabtu: 11.00 - 16.00)';
+                        shiftStartMin = 660;
+                    } else if (totalCurrentMinutes >= 960 && totalCurrentMinutes < 1260) {
+                        shiftName = 'Shift 3 (Sabtu: 16.00 - 21.00)';
+                        shiftStartMin = 960;
+                    } else {
+                        shiftName = 'Luar Jam Kerja (Sabtu)';
+                        shiftStartMin = totalCurrentMinutes;
+                    }
+                } else {
+                    if (totalCurrentMinutes >= 360 && totalCurrentMinutes < 840) {
+                        shiftName = 'Shift 1 (06.00 - 14.00)';
+                        shiftStartMin = 360;
+                    } else if (totalCurrentMinutes >= 840 && totalCurrentMinutes < 1320) {
+                        shiftName = 'Shift 2 (14.00 - 22.00)';
+                        shiftStartMin = 840;
+                    } else {
+                        shiftName = 'Shift 3 (22.00 - 06.00)';
+                        if (totalCurrentMinutes >= 1320) shiftStartMin = 1320;
+                        else shiftStartMin = -120;
+                    }
                 }
+
+                const elapsedShiftMin = Math.max(1, totalCurrentMinutes - shiftStartMin);
+                currentShiftUptime = window.currentOeeVal || 0;
+                if (window.lastHistoryRows && Array.isArray(window.lastHistoryRows)) {
+                    window.lastHistoryRows.forEach(r => {
+                        const rowVal = r.oee !== undefined ? r.oee : (r.oee_d1 || 0);
+                        currentShiftUptime += Number(rowVal) || 0;
+                    });
+                }
+                currentShiftDowntime = Math.max(0, elapsedShiftMin - currentShiftUptime);
+
+                // OEE% = Total Counter / (Speed × Uptime × 2 jalur) × 100
+                const LANE_MULTIPLIER = 2;
+                const maxUptimeCapacity = currentShiftUptime * SPEED_DEFAULT * LANE_MULTIPLIER;
+                oeeShiftPct = maxUptimeCapacity > 0
+                    ? ((productVal / maxUptimeCapacity) * 100).toFixed(1)
+                    : '0.0';
             }
 
-            return {
-                machine: machine.machine,
-                shifts: shifts,
-                avgDowntime: shiftCount > 0 ? totalDowntime / shiftCount : 0,
-                currentShiftDowntime: shifts[`shift${currentShift}`]?.downtime || 0
-            };
-        });
+            const currentShiftNameEl = document.getElementById('current-shift-name');
+            const valOeeShiftPctEl = document.getElementById('val-oee-shift-pct');
+            const shiftOeeBarEl = document.getElementById('shift-oee-bar');
+            const valTargetPctEl = document.getElementById('val-target-pct');
 
-        // Sort berdasarkan avgDowntime descending
-        machineData.sort((a, b) => b.avgDowntime - a.avgDowntime);
+            if (currentShiftNameEl) currentShiftNameEl.textContent = shiftName;
+            if (valOeeShiftPctEl) valOeeShiftPctEl.innerHTML = `${oeeShiftPct}<span class="kpi-unit">%</span>`;
+            if (shiftOeeBarEl) shiftOeeBarEl.style.width = `${Math.min(100, parseFloat(oeeShiftPct))}%`;
+            if (valTargetPctEl) valTargetPctEl.textContent = `${oeeShiftPct}% Target Shift`;
 
-        // Update summary statistics
-        updateSummaryStats(machineData, currentShift);
+            const valUptimeShiftEl = document.getElementById('val-uptime-shift');
+            const valDowntimeShiftEl = document.getElementById('val-downtime-shift');
 
-        // Render table
-        renderTable(machineData);
-    }
+            if (valUptimeShiftEl) valUptimeShiftEl.innerHTML = `${currentShiftUptime}<span class="kpi-unit">min</span>`;
+            if (valDowntimeShiftEl) valDowntimeShiftEl.innerHTML = `${currentShiftDowntime}<span class="kpi-unit">min</span>`;
 
-    function updateSummaryStats(data, currentShift) {
-        const currentShiftKey = `shift${currentShift}`;
-        const activeDowntimes = data
-            .map(m => m.shifts[currentShiftKey]?.downtime || 0)
-            .filter(d => d > 0);
-
-        const avgDowntime = activeDowntimes.length > 0 ?
-            (activeDowntimes.reduce((sum, d) => sum + d, 0) / activeDowntimes.length).toFixed(2) :
-            0;
-
-        const problematic = activeDowntimes.filter(d => d > 10).length;
-
-        document.getElementById('avgDowntime').textContent = `${avgDowntime}%`;
-        document.getElementById('problematicMachines').textContent = problematic;
-    }
-
-    function renderTable(data) {
-        const tbody = document.getElementById('machineTableBody');
-        tbody.innerHTML = '';
-
-        data.forEach((machine, index) => {
-            const rank = index + 1;
-            const avgStatusClass = getStatusClass(machine.avgDowntime);
-            const avgStatusText = getStatusText(machine.avgDowntime);
-
-            const row = `
-                <tr class="machine-row">
-                    <td class="text-center">
-                        <span class="badge bg-secondary">${rank}</span>
-                    </td>
-                    <td>
-                        <strong class="machine-name">${machine.machine}</strong>
-                    </td>
-                    ${renderShiftCell(machine.shifts.shift1, 1)}
-                    ${renderShiftCell(machine.shifts.shift2, 2)}
-                    ${renderShiftCell(machine.shifts.shift3, 3)}
-                    <td class="text-center">
-                        <div class="downtime-percent text-${getProgressClass(machine.avgDowntime)}">
-                            ${machine.avgDowntime.toFixed(2)}%
-                        </div>
-                    </td>
-                    <td class="text-center">
-                        <span class="status-badge status-${avgStatusClass}">${avgStatusText}</span>
-                    </td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    }
-
-    function renderShiftCell(shiftData, shiftNum) {
-        if (!shiftData) {
-            return '<td class="text-center"><small class="text-muted">-</small></td>';
+            // Update formula display with actual values
+            const formulaEl = document.getElementById('oee-formula-text');
+            if (formulaEl) {
+                const capacity = currentShiftUptime * SPEED_DEFAULT * 2;
+                formulaEl.innerHTML = `OEE = <b style="color:#10b981;">${Number(productVal).toLocaleString('id-ID')}</b> / (<b>42</b> × <b style="color:#06b6d4;">${currentShiftUptime}</b> × <b>2</b>) = <b style="color:#8b5cf6;">${oeeShiftPct}%</b>`;
+            }
         }
 
-        const progressClass = getProgressClass(shiftData.downtime);
-        const activeClass = shiftData.is_active ? 'active-shift-badge' : '';
-        const activeIndicator = shiftData.is_active ? '<span class="active-indicator"></span>' : '';
+        // Fetch Live Status from Node.js Daemon
+        async function fetchStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/api/status`);
+                if (!res.ok) throw new Error('Status endpoint offline');
+                const data = await res.json();
 
-        return `
-            <td>
-                <div class="shift-item ${shiftData.is_active ? 'active' : ''}">
-                    <div style="width: 100%;">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="shift-badge shift-${shiftNum} ${activeClass}">
-                                ${activeIndicator}${shiftData.downtime.toFixed(1)}%
-                            </span>
-                            <small class="text-muted">${shiftData.downtime_total_minutes}m / ${shiftData.actual_shift_minutes}m</small>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-${progressClass}" 
-                                 style="width: ${Math.min(shiftData.downtime, 100)}%">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </td>
-        `;
-    }
+                if (mqttStatusEl) {
+                    mqttStatusEl.textContent = 'MQTT ONLINE';
+                    mqttStatusEl.parentElement.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                    mqttStatusEl.parentElement.style.color = '#10b981';
+                }
 
-    function getStatusClass(downtime) {
-        if (downtime < 5) return 'running';
-        if (downtime < 10) return 'warning';
-        return 'danger';
-    }
+                const oeeVal = (data.oee_d1 !== null && data.oee_d1 !== undefined) ? data.oee_d1 : 0;
+                const productVal = (data.ct_productd1 !== null && data.ct_productd1 !== undefined) ? data.ct_productd1 : 0;
+                window.currentOeeVal = oeeVal;
 
-    function getStatusText(downtime) {
-        if (downtime < 5) return 'Normal';
-        if (downtime < 10) return 'Warning';
-        return 'Critical';
-    }
+                valOeeEl.innerHTML = `${oeeVal}<span class="kpi-unit">min</span>`;
+                valProductEl.innerHTML = `${productVal.toLocaleString('id-ID')}<span class="kpi-unit">pcs</span>`;
 
-    function getProgressClass(downtime) {
-        if (downtime < 5) return 'success';
-        if (downtime < 10) return 'warning';
-        return 'danger';
-    }
+                const maxHourMinutes = 60;
+                const oeePct = Math.min(Math.round((oeeVal / maxHourMinutes) * 100), 100);
+                if (oeePctText) oeePctText.textContent = `${oeePct}%`;
+                
+                const circumference = 238;
+                const dashoffset = circumference - (circumference * oeePct / 100);
+                if (oeeGaugeBar) oeeGaugeBar.style.strokeDashoffset = dashoffset;
+
+                const now = new Date();
+                const elapsedMin = now.getMinutes() || 1;
+                const calculatedDowntime = Math.max(0, elapsedMin - oeeVal);
+
+                valStopEl.innerHTML = `${calculatedDowntime}<span class="kpi-unit">min</span>`;
+
+                if (calculatedDowntime === 0) {
+                    valStopEl.style.color = '#10b981';
+                    downtimeStatusText.innerHTML = `<i class="ri-check-double-line"></i> Tidak ada Downtime`;
+                    downtimeStatusText.className = 'fs-12 text-success mt-1';
+                } else {
+                    valStopEl.style.color = '#ef4444';
+                    downtimeStatusText.innerHTML = `<i class="ri-alert-line"></i> Downtime ${calculatedDowntime} menit`;
+                    downtimeStatusText.className = 'fs-12 text-danger mt-1';
+                }
+
+                const speed = (oeeVal > 0) ? (productVal / oeeVal).toFixed(1) : (productVal / elapsedMin).toFixed(1);
+                valSpeedEl.textContent = `Kecepatan: ~${speed} pcs / min`;
+
+                // Calculate OEE Shift Performance % (Using API Data or Client Fallback)
+                updateShiftPerformance(productVal, data);
+
+            } catch (err) {
+                if (mqttStatusEl) {
+                    mqttStatusEl.textContent = 'DAEMON CONNECTING...';
+                    mqttStatusEl.parentElement.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                    mqttStatusEl.parentElement.style.color = '#f59e0b';
+                }
+            }
+        }
+
+        setInterval(fetchStatus, 10000);
+        fetchStatus();
+
+        // Fetch Chart Data from /api/history
+        async function fetchChartData() {
+            try {
+                const res = await fetch(`${API_BASE}/api/history`);
+                if (!res.ok) return;
+                const data = await res.json();
+                window.lastHistoryRows = data.history || [];
+
+                if (data.chart) {
+                    renderChart(data.chart.labels, data.chart.oeeValues, data.chart.productValues);
+                }
+            } catch (err) {
+                console.error('Error fetching chart:', err);
+            }
+        }
+
+        // Fetch Shift OEE History from /api/shifts
+        async function fetchShiftHistory() {
+            try {
+                const res = await fetch(`${API_BASE}/api/shifts`);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                if (data.shifts && data.shifts.length > 0) {
+                    dbTableBody.innerHTML = '';
+                    data.shifts.forEach(shift => {
+                        const tr = document.createElement('tr');
+                        const oee = shift.oee_pct;
+
+                        // Color-coded OEE badge
+                        let oeeColor, oeeBg;
+                        if (oee >= 85) {
+                            oeeColor = '#10b981'; oeeBg = 'rgba(16, 185, 129, 0.15)';
+                        } else if (oee >= 60) {
+                            oeeColor = '#f59e0b'; oeeBg = 'rgba(245, 158, 11, 0.15)';
+                        } else {
+                            oeeColor = '#ef4444'; oeeBg = 'rgba(239, 68, 68, 0.15)';
+                        }
+
+                        // Format tanggal singkat: 19 Ags
+                        const dateObj = new Date(shift.shift_date + 'T00:00:00');
+                        const dateStr = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+
+                        tr.innerHTML = `
+                            <td>${dateStr}</td>
+                            <td><span class="oee-jam-badge">${shift.shift_label}</span></td>
+                            <td class="fw-bold text-info">${shift.total_uptime_min} min</td>
+                            <td class="text-success">${Number(shift.total_product).toLocaleString('id-ID')}</td>
+                            <td>
+                                <span style="background: ${oeeBg}; color: ${oeeColor}; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem;">
+                                    ${oee}%
+                                </span>
+                            </td>
+                        `;
+                        dbTableBody.appendChild(tr);
+                    });
+                } else {
+                    dbTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-3" style="color: var(--oee-text-muted);">Belum ada data shift tersimpan</td></tr>`;
+                }
+            } catch (err) {
+                console.error('Error fetching shifts:', err);
+            }
+        }
+
+        // Combined fetch
+        async function fetchHistoryAndRender() {
+            await Promise.all([fetchChartData(), fetchShiftHistory()]);
+        }
+
+        function renderChart(labels, oeeData, productData) {
+            const ctx = document.getElementById('oeeChart');
+            if (!ctx) return;
+
+            const isDark = document.documentElement.getAttribute('data-layout-mode') === 'dark';
+            const textColor = isDark ? '#9ca3af' : '#6c757d';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+
+            if (oeeChartInstance) {
+                oeeChartInstance.destroy();
+            }
+
+            oeeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'OEE Uptime (Min)',
+                            data: oeeData,
+                            backgroundColor: 'rgba(6, 182, 212, 0.7)',
+                            borderColor: '#06b6d4',
+                            borderWidth: 1.5,
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Product Output (Pcs)',
+                            data: productData,
+                            type: 'line',
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#10b981',
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            max: 60,
+                            title: { display: true, text: 'Uptime (Menit)', color: '#06b6d4' },
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: 'Product (Pcs)', color: '#10b981' },
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: textColor }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: textColor } }
+                    }
+                }
+            });
+        }
+
+        fetchHistoryAndRender();
+        if (btnRefreshDb) btnRefreshDb.addEventListener('click', fetchHistoryAndRender);
+
+        // Listen to Theme Toggle (Dark/Light mode switch)
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'data-layout-mode') {
+                    fetchHistoryAndRender();
+                }
+            });
+        });
+        observer.observe(document.documentElement, { attributes: true });
+
+        // Manual Trigger Reset Button
+        if (btnManualReset) {
+            btnManualReset.addEventListener('click', async function() {
+                if (!confirm('Apakah Anda yakin ingin mengirim sinyal RESET PULSE (RST_D1) ke mesin?')) return;
+                
+                try {
+                    btnManualReset.disabled = true;
+                    btnManualReset.innerHTML = `<i class="ri-loader-4-line spin"></i> SENDING PULSE...`;
+
+                    const res = await fetch(`${API_BASE}/api/reset`, { method: 'POST' });
+                    const result = await res.json();
+
+                    if (result.success) {
+                        alert('✅ Reset Pulse RST_D1 berhasil terkirim ke mesin!');
+                    } else {
+                        alert('❌ Gagal mengirim reset pulse: ' + (result.reason || result.message));
+                    }
+                } catch (e) {
+                    alert('❌ Gagal terhubung ke daemon server OEE');
+                } finally {
+                    btnManualReset.disabled = false;
+                    btnManualReset.innerHTML = `<i class="ri-restart-line"></i> TRIGGER RESET`;
+                    fetchStatus();
+                }
+            });
+        }
+    });
 </script>
 @endsection

@@ -23,7 +23,7 @@ $bagian = Auth::user()->bagian;
             </li>
             <li class="nav-item">
                 <a href="{{ url('dashboard/mesin/downtime') }}" class="nav-link" data-key="t-analytics">
-                    <i class="mdi mdi-timer-sand-empty me-2"></i> Dashboard Downtime Mesin
+                    <i class="ri-pulse-line me-2"></i> OEE Mesin Retail
                 </a>
             </li>
         </ul>
