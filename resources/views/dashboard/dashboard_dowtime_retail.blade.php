@@ -338,6 +338,14 @@
         color: #c084fc !important;
         border-color: rgba(139, 92, 246, 0.4);
     }
+
+    .table-dark-custom tr.shift-row-item {
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+    .table-dark-custom tr.shift-row-item:hover {
+        background: rgba(139, 92, 246, 0.12) !important;
+    }
 </style>
 @endsection
 
@@ -351,8 +359,8 @@
                 <h1 class="oee-title">OEE MESIN RETAIL <span style="font-weight: 400; opacity: 0.7;">| D1</span></h1>
                 <div class="mt-1">
                     <span class="fs-13" style="color: var(--oee-text-muted);">Mesin Rotary Packaging Pouch</span>
-                    <span class="oee-badge ms-2">Daemon Active</span>
-                    <span class="oee-badge ms-1" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border-color: rgba(139, 92, 246, 0.3);">Topic: OEE_D1</span>
+                    <!-- <span class="oee-badge ms-2">Daemon Active</span> -->
+                    <!-- <span class="oee-badge ms-1" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border-color: rgba(139, 92, 246, 0.3);">Topic: OEE_D1</span> -->
                 </div>
             </div>
 
@@ -366,10 +374,10 @@
                     --:--:-- WIB
                 </div>
 
-                <button class="btn-reset-pulse" id="btn-manual-reset" title="Kirim Sinyal Reset RST_D1 (1 -> 500ms -> 0)">
+                <!-- <button class="btn-reset-pulse" id="btn-manual-reset" title="Kirim Sinyal Reset RST_D1 (1 -> 500ms -> 0)">
                     <i class="ri-restart-line"></i>
                     <span>TRIGGER RESET</span>
-                </button>
+                </button> -->
             </div>
         </div>
 
@@ -628,6 +636,58 @@
 
     </div>
 </div>
+
+<!-- Modal Detail Log Shift -->
+<div class="modal fade" id="modalShiftDetail" tabindex="-1" aria-labelledby="modalShiftDetailLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="background: #1e222d; border: 1px solid #2e3545; color: #f3f4f6; border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+            <div class="modal-header border-0 pb-2 pt-4 px-4">
+                <div>
+                    <h5 class="modal-title fw-bold fs-16 text-white" id="modalShiftDetailLabel">
+                        <i class="ri-history-line text-purple me-2"></i>Detail Log Jam-Jam Shift
+                    </h5>
+                    <div id="modal-shift-subtitle" class="fs-12 text-muted mt-1">--</div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+                    <div class="text-center">
+                        <div class="fs-11 text-muted fw-semibold">TOTAL UPTIME</div>
+                        <div class="fs-15 fw-bold text-info" id="modal-shift-uptime">-</div>
+                    </div>
+                    <div class="text-center" style="border-left: 1px solid rgba(255,255,255,0.08); border-right: 1px solid rgba(255,255,255,0.08); padding: 0 20px;">
+                        <div class="fs-11 text-muted fw-semibold">TOTAL PRODUCT</div>
+                        <div class="fs-15 fw-bold text-success" id="modal-shift-product">-</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="fs-11 text-muted fw-semibold">OEE SHIFT</div>
+                        <div class="fs-15 fw-bold text-purple" id="modal-shift-oee">-</div>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                    <table class="table-dark-custom">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Jam Log</th>
+                                <th>Uptime (Min)</th>
+                                <th>CT Product</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-table-body">
+                            <tr>
+                                <td colspan="5" class="text-center py-3" style="color: var(--oee-text-muted);">Memuat data log jam...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -859,6 +919,8 @@
                     dbTableBody.innerHTML = '';
                     data.shifts.forEach(shift => {
                         const tr = document.createElement('tr');
+                        tr.className = 'shift-row-item';
+                        tr.title = 'Klik untuk melihat detail log jam shift ini';
                         const oee = shift.oee_pct;
 
                         // Color-coded OEE badge
@@ -886,6 +948,11 @@
                                 </span>
                             </td>
                         `;
+
+                        tr.addEventListener('click', function() {
+                            openShiftDetailModal(shift);
+                        });
+
                         dbTableBody.appendChild(tr);
                     });
                 } else {
@@ -893,6 +960,53 @@
                 }
             } catch (err) {
                 console.error('Error fetching shifts:', err);
+            }
+        }
+
+        // Open Shift Detail Modal
+        function openShiftDetailModal(shift) {
+            const subtitleEl = document.getElementById('modal-shift-subtitle');
+            const uptimeEl = document.getElementById('modal-shift-uptime');
+            const productEl = document.getElementById('modal-shift-product');
+            const oeeEl = document.getElementById('modal-shift-oee');
+            const modalTableBody = document.getElementById('modal-table-body');
+
+            const dateObj = new Date(shift.shift_date + 'T00:00:00');
+            const dateStr = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            if (subtitleEl) subtitleEl.textContent = `${dateStr} • ${shift.shift_label}`;
+            if (uptimeEl) uptimeEl.textContent = `${shift.total_uptime_min} min`;
+            if (productEl) productEl.textContent = `${Number(shift.total_product).toLocaleString('id-ID')} pcs`;
+            if (oeeEl) oeeEl.textContent = `${shift.oee_pct}%`;
+
+            if (modalTableBody) {
+                modalTableBody.innerHTML = '';
+                const hourlyRows = shift.hourly_rows || [];
+                if (hourlyRows.length > 0) {
+                    hourlyRows.forEach(row => {
+                        const tr = document.createElement('tr');
+                        const stopBadge = row.is_stop_shift 
+                            ? '<span class="badge bg-warning text-dark fs-10">STOP SHIFT</span>' 
+                            : '<span class="badge bg-success-subtle text-success fs-10">NORMAL</span>';
+                        
+                        tr.innerHTML = `
+                            <td>${row.id}</td>
+                            <td><span class="oee-jam-badge">${row.jam}</span></td>
+                            <td class="fw-bold text-info">${row.oee} min</td>
+                            <td class="text-success">${Number(row.ct_product).toLocaleString('id-ID')} pcs</td>
+                            <td>${stopBadge}</td>
+                        `;
+                        modalTableBody.appendChild(tr);
+                    });
+                } else {
+                    modalTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-3" style="color: var(--oee-text-muted);">Tidak ada detail log jam untuk shift ini</td></tr>`;
+                }
+            }
+
+            const modalEl = document.getElementById('modalShiftDetail');
+            if (modalEl) {
+                const bsModal = new bootstrap.Modal(modalEl);
+                bsModal.show();
             }
         }
 
