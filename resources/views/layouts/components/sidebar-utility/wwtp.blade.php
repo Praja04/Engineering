@@ -170,6 +170,46 @@
                         </ul>
                     </div>
                 </li>
+
+                <!-- Koloni WWTP -->
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->is('wwtp/form_koloni') || request()->is('wwtp/data_koloni') || request()->is('wwtp/master_koloni') ? '' : 'collapsed' }}"
+                        href="#sidebarKoloniWWTP" data-bs-toggle="collapse" role="button"
+                        aria-expanded="{{ request()->is('wwtp/form_koloni') || request()->is('wwtp/data_koloni') || request()->is('wwtp/master_koloni') ? 'true' : 'false' }}"
+                        aria-controls="sidebarKoloniWWTP">
+                        <i class="mdi mdi-calculator-variant-outline"></i>
+                        <span data-key="t-widgets">Koloni</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ request()->is('wwtp/form_koloni') || request()->is('wwtp/data_koloni') || request()->is('wwtp/master_koloni') ? 'show' : '' }}"
+                        id="sidebarKoloniWWTP">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('wwtp/form_koloni') ? 'active' : '' }}"
+                                    href="{{ url('wwtp/form_koloni') }}">
+                                    <i class="mdi mdi-file-document-edit-outline"></i>
+                                    <span data-key="t-widgets">Form Koloni</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('wwtp/data_koloni') ? 'active' : '' }}"
+                                    href="{{ url('wwtp/data_koloni') }}">
+                                    <i class="mdi mdi-database"></i>
+                                    <span data-key="t-widgets">Data Koloni</span>
+                                </a>
+                            </li>
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('wwtp/master_koloni') ? 'active' : '' }}"
+                                        href="{{ url('wwtp/master_koloni') }}">
+                                        <i class="mdi mdi-database-cog-outline"></i>
+                                        <span data-key="t-widgets">Master Sample</span>
+                                    </a>
+                                </li>
+                            @endif
+                        </ul>
+                    </div>
+                </li>
             </ul>
         </div>
     </li>

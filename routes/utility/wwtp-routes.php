@@ -7,6 +7,7 @@ use App\Http\Controllers\Utility\WWTPControllerSludge;
 use App\Http\Controllers\Utility\WWTPControllerAnalisa;
 use App\Http\Controllers\Utility\WWTPController;
 use App\Http\Controllers\Utility\WWTPControllerApproval;
+use App\Http\Controllers\Utility\WWTPControllerKoloni;
 
 Route::middleware('auth')->group(function () {
   Route::get('/wwtp/proses', [WWTPControllerProses::class, 'proses'])->name('wwtp.proses');
@@ -80,4 +81,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [WWTPControllerAnalisa::class, 'index']);
     Route::get('/{id}', [WWTPControllerAnalisa::class, 'show']);
   });
+
+  // WWTP Koloni Routes
+  Route::get('/wwtp/form_koloni', [WWTPControllerKoloni::class, 'form_koloni'])->name('wwtp.form_koloni');
+  Route::get('/wwtp/data_koloni', [WWTPControllerKoloni::class, 'data_koloni'])->name('wwtp.data_koloni');
+  Route::get('/wwtp/master_koloni', [WWTPControllerKoloni::class, 'master_koloni'])->name('wwtp.master_koloni')->middleware('access');
+  Route::post('/wwtp/koloni', [WWTPControllerKoloni::class, 'store'])->name('wwtp.koloni.store');
+  Route::put('/wwtp/koloni/{id}', [WWTPControllerKoloni::class, 'update'])->name('wwtp.koloni.update');
+  Route::post('/wwtp/koloni-master/store', [WWTPControllerKoloni::class, 'storeMaster'])->name('wwtp.master.store');
+  Route::put('/wwtp/koloni-master/update/{id}', [WWTPControllerKoloni::class, 'updateMaster'])->name('wwtp.master.update');
 });

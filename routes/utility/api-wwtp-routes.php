@@ -7,6 +7,7 @@ use App\Http\Controllers\Utility\WWTPControllerSludge;
 use App\Http\Controllers\Utility\WWTPControllerAnalisa;
 use App\Http\Controllers\Utility\WWTPController;
 use App\Http\Controllers\Utility\WWTPControllerApproval;
+use App\Http\Controllers\Utility\WWTPControllerKoloni;
 
 // WWTP Proses Routes
 Route::prefix('wwtp')->group(function () {
@@ -152,7 +153,20 @@ Route::prefix('wwtp-sludge')->group(function () {
     Route::get('/filled-shifts', [WWTPControllerSludge::class, 'getFilledShifts']);
     Route::post('/', [WWTPControllerSludge::class, 'store']);
     Route::delete('/{id}', [WWTPControllerSludge::class, 'destroy']);
-    Route::post('/{id}', [WWTPControllerSludge::class, 'update']);
     Route::get('/', [WWTPControllerSludge::class, 'index']);
     Route::get('/{id}', [WWTPControllerSludge::class, 'show']);
+});
+
+// WWTP Koloni API Routes
+Route::prefix('wwtp-koloni')->group(function () {
+    // Master samples routes
+    Route::get('/master', [WWTPControllerKoloni::class, 'indexMaster']);
+    Route::get('/master/{id}', [WWTPControllerKoloni::class, 'showMaster']);
+    Route::delete('/master/{id}', [WWTPControllerKoloni::class, 'destroyMaster']);
+
+    // Records routes (Store & Update moved to web routes)
+    Route::get('/check-filled', [WWTPControllerKoloni::class, 'checkFilled']);
+    Route::get('/', [WWTPControllerKoloni::class, 'index']);
+    Route::get('/{id}', [WWTPControllerKoloni::class, 'show']);
+    Route::delete('/{id}', [WWTPControllerKoloni::class, 'destroy']);
 });
