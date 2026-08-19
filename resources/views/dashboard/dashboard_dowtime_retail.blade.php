@@ -570,8 +570,8 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex justify-content-between fs-12 pt-2" style="border-top: 1px solid var(--oee-card-border); color: var(--oee-text-muted);">
-                                <span>Speed Standard: 42 ppm</span>
+                            <div class="fs-11 pt-2" style="border-top: 1px solid var(--oee-card-border); color: var(--oee-text-muted);">
+                                <span id="oee-formula-text">OEE = Counter / (42 × Uptime × 2)</span>
                             </div>
                         </div>
                     </div>
@@ -594,11 +594,11 @@
                 </div>
             </div>
 
-            <!-- Right: Database Log Table -->
+            <!-- Right: Shift OEE History Table -->
             <div class="col-lg-5">
                 <div class="oee-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold fs-14" style="color: var(--oee-text-main);"><i class="ri-database-2-line me-1 text-success"></i> Log Database (`oee_d1` - 8 Jam Terakhir)</span>
+                        <span class="fw-bold fs-14" style="color: var(--oee-text-main);"><i class="ri-pie-chart-2-line me-1 text-purple"></i> Riwayat OEE Per Shift</span>
                         <button id="btn-refresh-db" class="btn btn-sm btn-soft-info fs-11">
                             <i class="ri-refresh-line me-1"></i> Refresh
                         </button>
@@ -608,15 +608,16 @@
                         <table class="table-dark-custom">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Jam</th>
-                                    <th>OEE (Min)</th>
-                                    <th>CT Product</th>
+                                    <th>Tanggal</th>
+                                    <th>Shift</th>
+                                    <th>Uptime</th>
+                                    <th>Product</th>
+                                    <th>OEE</th>
                                 </tr>
                             </thead>
                             <tbody id="db-table-body">
                                 <tr>
-                                    <td colspan="4" class="text-center py-3" style="color: var(--oee-text-muted);">Memuat data log database...</td>
+                                    <td colspan="5" class="text-center py-3" style="color: var(--oee-text-muted);">Memuat data shift...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -737,10 +738,12 @@
                 }
                 currentShiftDowntime = Math.max(0, elapsedShiftMin - currentShiftUptime);
 
-                const availabilityRatio = Math.min(1.0, currentShiftUptime / elapsedShiftMin);
-                const maxUptimeCapacity = currentShiftUptime * SPEED_DEFAULT;
-                const performanceRatio = maxUptimeCapacity > 0 ? Math.min(1.0, productVal / maxUptimeCapacity) : 1.0;
-                oeeShiftPct = (availabilityRatio * performanceRatio * 100).toFixed(1);
+                // OEE% = Total Counter / (Speed × Uptime × 2 jalur) × 100
+                const LANE_MULTIPLIER = 2;
+                const maxUptimeCapacity = currentShiftUptime * SPEED_DEFAULT * LANE_MULTIPLIER;
+                oeeShiftPct = maxUptimeCapacity > 0
+                    ? ((productVal / maxUptimeCapacity) * 100).toFixed(1)
+                    : '0.0';
             }
 
             const currentShiftNameEl = document.getElementById('current-shift-name');
@@ -758,6 +761,13 @@
 
             if (valUptimeShiftEl) valUptimeShiftEl.innerHTML = `${currentShiftUptime}<span class="kpi-unit">min</span>`;
             if (valDowntimeShiftEl) valDowntimeShiftEl.innerHTML = `${currentShiftDowntime}<span class="kpi-unit">min</span>`;
+
+            // Update formula display with actual values
+            const formulaEl = document.getElementById('oee-formula-text');
+            if (formulaEl) {
+                const capacity = currentShiftUptime * SPEED_DEFAULT * 2;
+                formulaEl.innerHTML = `OEE = <b style="color:#10b981;">${Number(productVal).toLocaleString('id-ID')}</b> / (<b>42</b> × <b style="color:#06b6d4;">${currentShiftUptime}</b> × <b>2</b>) = <b style="color:#8b5cf6;">${oeeShiftPct}%</b>`;
+            }
         }
 
         // Fetch Live Status from Node.js Daemon
@@ -822,39 +832,73 @@
         setInterval(fetchStatus, 10000);
         fetchStatus();
 
-        // Fetch History & Chart Data
-        async function fetchHistoryAndRender() {
+        // Fetch Chart Data from /api/history
+        async function fetchChartData() {
             try {
                 const res = await fetch(`${API_BASE}/api/history`);
                 if (!res.ok) return;
                 const data = await res.json();
                 window.lastHistoryRows = data.history || [];
 
-                if (data.history && data.history.length > 0) {
-                    dbTableBody.innerHTML = '';
-                    data.history.forEach(row => {
-                        const tr = document.createElement('tr');
-                        const oeeVal = row.oee !== undefined ? row.oee : (row.oee_d1 !== undefined ? row.oee_d1 : 0);
-                        const prodVal = row.ct_product !== undefined ? row.ct_product : (row.ct_productd1 !== undefined ? row.ct_productd1 : 0);
-                        const stopBadge = row.is_stop_shift ? ' <span class="badge bg-warning text-dark fs-10 ms-1">STOP SHIFT</span>' : '';
-                        tr.innerHTML = `
-                            <td>${row.id}</td>
-                            <td><span class="oee-jam-badge">${row.jam}</span>${stopBadge}</td>
-                            <td class="fw-bold text-info">${oeeVal} min</td>
-                            <td class="text-success">${Number(prodVal).toLocaleString('id-ID')} pcs</td>
-                        `;
-                        dbTableBody.appendChild(tr);
-                    });
-                } else {
-                    dbTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-3" style="color: var(--oee-text-muted);">Belum ada data log tersimpan</td></tr>`;
-                }
-
                 if (data.chart) {
                     renderChart(data.chart.labels, data.chart.oeeValues, data.chart.productValues);
                 }
             } catch (err) {
-                console.error('Error fetching history:', err);
+                console.error('Error fetching chart:', err);
             }
+        }
+
+        // Fetch Shift OEE History from /api/shifts
+        async function fetchShiftHistory() {
+            try {
+                const res = await fetch(`${API_BASE}/api/shifts`);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                if (data.shifts && data.shifts.length > 0) {
+                    dbTableBody.innerHTML = '';
+                    data.shifts.forEach(shift => {
+                        const tr = document.createElement('tr');
+                        const oee = shift.oee_pct;
+
+                        // Color-coded OEE badge
+                        let oeeColor, oeeBg;
+                        if (oee >= 85) {
+                            oeeColor = '#10b981'; oeeBg = 'rgba(16, 185, 129, 0.15)';
+                        } else if (oee >= 60) {
+                            oeeColor = '#f59e0b'; oeeBg = 'rgba(245, 158, 11, 0.15)';
+                        } else {
+                            oeeColor = '#ef4444'; oeeBg = 'rgba(239, 68, 68, 0.15)';
+                        }
+
+                        // Format tanggal singkat: 19 Ags
+                        const dateObj = new Date(shift.shift_date + 'T00:00:00');
+                        const dateStr = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+
+                        tr.innerHTML = `
+                            <td>${dateStr}</td>
+                            <td><span class="oee-jam-badge">${shift.shift_label}</span></td>
+                            <td class="fw-bold text-info">${shift.total_uptime_min} min</td>
+                            <td class="text-success">${Number(shift.total_product).toLocaleString('id-ID')}</td>
+                            <td>
+                                <span style="background: ${oeeBg}; color: ${oeeColor}; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem;">
+                                    ${oee}%
+                                </span>
+                            </td>
+                        `;
+                        dbTableBody.appendChild(tr);
+                    });
+                } else {
+                    dbTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-3" style="color: var(--oee-text-muted);">Belum ada data shift tersimpan</td></tr>`;
+                }
+            } catch (err) {
+                console.error('Error fetching shifts:', err);
+            }
+        }
+
+        // Combined fetch
+        async function fetchHistoryAndRender() {
+            await Promise.all([fetchChartData(), fetchShiftHistory()]);
         }
 
         function renderChart(labels, oeeData, productData) {
