@@ -934,9 +934,14 @@
 
             const valUptimeShiftEl = document.getElementById('val-uptime-shift');
             const valDowntimeShiftEl = document.getElementById('val-downtime-shift');
+            const valSpeedEl = document.getElementById('val-speed');
 
             if (valUptimeShiftEl) valUptimeShiftEl.innerHTML = `${currentShiftUptime}<span class="kpi-unit">min</span>`;
             if (valDowntimeShiftEl) valDowntimeShiftEl.innerHTML = `${currentShiftDowntime}<span class="kpi-unit">min</span>`;
+
+            // Calculate actual average machine speed (pcs / uptime minute)
+            const speedPpm = (productVal > 0 && currentShiftUptime > 0) ? (productVal / currentShiftUptime).toFixed(1) : '0.0';
+            if (valSpeedEl) valSpeedEl.textContent = `Kecepatan: ~${speedPpm} pcs / min`;
 
             // Update formula display with actual values
             const formulaEl = document.getElementById('oee-formula-text');
@@ -986,10 +991,7 @@
                     downtimeStatusText.className = 'fs-12 text-danger mt-1';
                 }
 
-                const speed = (oeeVal > 0) ? (productVal / oeeVal).toFixed(1) : (productVal / elapsedMin).toFixed(1);
-                valSpeedEl.textContent = `Kecepatan: ~${speed} pcs / min`;
-
-                // Calculate OEE Shift Performance % (Using API Data or Client Fallback)
+                // Calculate OEE Shift Performance % and actual speed
                 updateShiftPerformance(productVal, data);
 
             } catch (err) {
