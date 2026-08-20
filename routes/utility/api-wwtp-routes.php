@@ -166,6 +166,7 @@ Route::prefix('wwtp-koloni')->group(function () {
 
     // Records routes (Store & Update moved to web routes)
     Route::get('/check-filled', [WWTPControllerKoloni::class, 'checkFilled']);
+    Route::get('/chart-data', [WWTPControllerKoloni::class, 'getChartData']);
     Route::get('/', [WWTPControllerKoloni::class, 'index']);
     Route::get('/{id}', [WWTPControllerKoloni::class, 'show']);
     Route::delete('/{id}', [WWTPControllerKoloni::class, 'destroy']);

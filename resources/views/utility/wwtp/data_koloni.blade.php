@@ -18,6 +18,15 @@
             font-size: 1rem;
             letter-spacing: 0.5px;
         }
+
+        /* Chart sample check-pills styling */
+        .sample-chart-checkbox + label {
+            transition: all 0.2s ease-in-out;
+            font-weight: 500;
+        }
+        .sample-chart-checkbox:checked + label {
+            box-shadow: 0 4px 6px rgba(41, 156, 219, 0.25);
+        }
     </style>
 @endsection
 
@@ -36,6 +45,59 @@
                             <a href="{{ url('/wwtp/form_koloni') }}" class="btn btn-primary">
                                 <i class="mdi mdi-plus-circle-outline me-1"></i> Tambah Data Koloni
                             </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div>
+                                <h5 class="card-title mb-0 text-dark fw-bold">
+                                    <i class="mdi mdi-chart-line text-primary me-1"></i> Grafik Hasil Angka Lempeng Total (koloni/ml)
+                                </h5>
+                                <p class="text-muted small mb-0">Visualisasi data pertumbuhan koloni mingguan secara logaritmik.</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <label for="chartStdLimit" class="form-label mb-0 small text-muted fw-semibold text-nowrap">Std EZ Aerob:</label>
+                                <div class="input-group input-group-sm" style="width: 140px;">
+                                    <input type="number" id="chartStdLimit" class="form-control text-center fw-bold" value="100000" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body border-top">
+                            <!-- Dynamic Chart Controls -->
+                            <div class="row g-3 mb-4 align-items-end">
+                                <div class="col-md-3">
+                                    <label for="chartStartWeek" class="form-label small text-muted fw-semibold">Dari Minggu</label>
+                                    <select id="chartStartWeek" class="form-select form-select-sm">
+                                        <option value="">-- Pilih Minggu Awal --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="chartEndWeek" class="form-label small text-muted fw-semibold">Sampai Minggu</label>
+                                    <select id="chartEndWeek" class="form-select form-select-sm">
+                                        <option value="">-- Pilih Minggu Akhir --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label small text-muted fw-semibold mb-0">Filter Titik Sampel</label>
+                                        <div>
+                                            <button type="button" id="btnSelectAllSamples" class="btn btn-link btn-sm p-0 me-2 text-decoration-none small text-primary fw-semibold">Pilih Semua</button>
+                                            <button type="button" id="btnDeselectAllSamples" class="btn btn-link btn-sm p-0 text-decoration-none small text-muted fw-semibold">Hapus Semua</button>
+                                        </div>
+                                    </div>
+                                    <div id="chartSamplesList" class="d-flex flex-wrap gap-2 pt-1">
+                                        <!-- Will be populated dynamically with sample checkbox pills -->
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- ApexCharts Container -->
+                            <div id="wwtpKoloniChart" style="min-height: 380px;"></div>
                         </div>
                     </div>
                 </div>
@@ -232,6 +294,308 @@
             let currentDataList = [];
             let activeWeekHeaderId = null;
 
+            // --- Chart Variables ---
+            let chartInstance = null;
+            let chartRawData = [];
+            let allSampleNames = [];
+            let allWeekStarts = [];
+
+            // Helper: format YYYY-MM-DD to W[num]-[month]-[yearShort]
+            function formatWeekLabel(dateStr) {
+                const date = new Date(dateStr);
+                const day = date.getDate();
+                const wNum = Math.ceil(day / 7);
+                const months = [
+                    "januari", "februari", "maret", "april", "mei", "juni",
+                    "juli", "agustus", "september", "oktober", "november", "desember"
+                ];
+                const monthName = months[date.getMonth()];
+                const yearShort = date.getFullYear().toString().substr(-2);
+                return `W${wNum}-${monthName}-${yearShort}`;
+            }
+
+            // --- Chart Initialization ---
+            function initChart() {
+                const options = {
+                    series: [],
+                    chart: {
+                        type: 'line',
+                        height: 380,
+                        toolbar: {
+                            show: true
+                        },
+                        animations: {
+                            enabled: true,
+                            easing: 'easeinout',
+                            speed: 800
+                        }
+                    },
+                    colors: ['#299cdb', '#6f42c1', '#fd7e14', '#e83e8c', '#20c997', '#ffc107', '#198754', '#0dcaf0', '#878a99', '#6610f2'],
+                    stroke: {
+                        curve: 'straight',
+                        width: 3
+                    },
+                    markers: {
+                        size: 5,
+                        hover: {
+                            size: 7
+                        }
+                    },
+                    grid: {
+                        borderColor: '#e9ebec',
+                        strokeDashArray: 4
+                    },
+                    xaxis: {
+                        categories: [],
+                        title: {
+                            text: 'Periode Minggu',
+                            style: {
+                                fontWeight: 600,
+                                color: '#878a99'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        logarithmic: true,
+                        forceNiceScale: true,
+                        labels: {
+                            formatter: function (value) {
+                                if (value === 0 || value === null || value === undefined) return '0';
+                                return Number(value).toExponential(2).toUpperCase();
+                            }
+                        },
+                        title: {
+                            text: 'koloni/ml',
+                            style: {
+                                fontWeight: 600,
+                                color: '#878a99'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function (value) {
+                                if (value === 0 || value === null || value === undefined) return '0';
+                                return Number(value).toExponential(2).toUpperCase() + ' koloni/ml';
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        horizontalAlign: 'center',
+                    },
+                    annotations: {
+                        yaxis: []
+                    }
+                };
+
+                chartInstance = new ApexCharts(document.querySelector("#wwtpKoloniChart"), options);
+                chartInstance.render();
+            }
+
+            // --- Load Chart Data ---
+            function loadChartData() {
+                $.ajax({
+                    url: "{{ url('api/wwtp-koloni/chart-data') }}",
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            chartRawData = response.data;
+                            processChartData();
+                        }
+                    },
+                    error: function() {
+                        console.error('Gagal memuat data chart');
+                    }
+                });
+            }
+
+            // --- Process Raw Data for Select Options ---
+            function processChartData() {
+                if (!chartRawData || chartRawData.length === 0) {
+                    if (chartInstance) {
+                        chartInstance.updateOptions({
+                            series: [],
+                            xaxis: { categories: [] }
+                        });
+                    }
+                    return;
+                }
+
+                allWeekStarts = chartRawData.map(item => item.week_start);
+                
+                const prevStartVal = $('#chartStartWeek').val();
+                const prevEndVal = $('#chartEndWeek').val();
+
+                $('#chartStartWeek').html('<option value="">-- Pilih Minggu Awal --</option>');
+                $('#chartEndWeek').html('<option value="">-- Pilih Minggu Akhir --</option>');
+                
+                let optionsHtml = '';
+                chartRawData.forEach(item => {
+                    const label = formatWeekLabel(item.week_start);
+                    optionsHtml += `<option value="${item.week_start}">${label}</option>`;
+                });
+                $('#chartStartWeek').append(optionsHtml);
+                $('#chartEndWeek').append(optionsHtml);
+
+                if (prevStartVal && allWeekStarts.includes(prevStartVal)) {
+                    $('#chartStartWeek').val(prevStartVal);
+                } else if (chartRawData.length > 0) {
+                    $('#chartStartWeek').val(chartRawData[0].week_start);
+                }
+
+                if (prevEndVal && allWeekStarts.includes(prevEndVal)) {
+                    $('#chartEndWeek').val(prevEndVal);
+                } else if (chartRawData.length > 0) {
+                    $('#chartEndWeek').val(chartRawData[chartRawData.length - 1].week_start);
+                }
+
+                const sampleSet = new Set();
+                chartRawData.forEach(item => {
+                    item.details.forEach(det => {
+                        if (det.master_koloni && det.master_koloni.nama_sample) {
+                            sampleSet.add(det.master_koloni.nama_sample);
+                        }
+                    });
+                });
+                
+                const newSampleNames = Array.from(sampleSet).sort();
+                
+                const checkedSamples = [];
+                $('.sample-chart-checkbox:checked').each(function() {
+                    checkedSamples.push($(this).val());
+                });
+                
+                const isFirstTime = $('#chartSamplesList').children().length === 0;
+                const sampleNamesChanged = JSON.stringify(newSampleNames) !== JSON.stringify(allSampleNames);
+                
+                if (isFirstTime || sampleNamesChanged) {
+                    allSampleNames = newSampleNames;
+                    let pillsHtml = '';
+                    allSampleNames.forEach((sampleName, idx) => {
+                        const isChecked = isFirstTime || checkedSamples.includes(sampleName);
+                        pillsHtml += `
+                            <div>
+                                <input type="checkbox" class="btn-check sample-chart-checkbox" id="chk_chart_sample_${idx}" value="${sampleName}" ${isChecked ? 'checked' : ''} autocomplete="off">
+                                <label class="btn btn-sm btn-outline-primary rounded-pill px-3" for="chk_chart_sample_${idx}">
+                                    ${sampleName}
+                                </label>
+                            </div>
+                        `;
+                    });
+                    $('#chartSamplesList').html(pillsHtml);
+                }
+
+                updateChartDisplay();
+            }
+
+            // --- Update/Redraw Chart ---
+            function updateChartDisplay() {
+                if (!chartInstance) return;
+
+                const startWeek = $('#chartStartWeek').val();
+                const endWeek = $('#chartEndWeek').val();
+                
+                if (!startWeek || !endWeek) return;
+
+                const filteredWeeks = chartRawData.filter(item => {
+                    return item.week_start >= startWeek && item.week_start <= endWeek;
+                });
+
+                const checkedSamples = [];
+                $('.sample-chart-checkbox:checked').each(function() {
+                    checkedSamples.push($(this).val());
+                });
+
+                const categories = filteredWeeks.map(item => formatWeekLabel(item.week_start));
+
+                const series = [];
+                checkedSamples.forEach(sampleName => {
+                    const dataPoints = filteredWeeks.map(weekItem => {
+                        const detail = weekItem.details.find(det => det.master_koloni && det.master_koloni.nama_sample === sampleName);
+                        if (detail) {
+                            let val = detail.nilai_base * Math.pow(10, detail.nilai_pangkat);
+                            return val <= 0 ? null : val;
+                        }
+                        return null;
+                    });
+                    series.push({
+                        name: sampleName,
+                        data: dataPoints
+                    });
+                });
+
+                const standardValue = parseFloat($('#chartStdLimit').val()) || 100000;
+
+                chartInstance.updateOptions({
+                    xaxis: {
+                        categories: categories
+                    },
+                    annotations: {
+                        yaxis: [{
+                            y: standardValue,
+                            borderColor: '#d33',
+                            strokeDashArray: 4,
+                            label: {
+                                borderColor: '#d33',
+                                style: {
+                                    color: '#fff',
+                                    background: '#d33',
+                                    fontWeight: 'bold'
+                                },
+                                text: 'Std EZ Aerob: ' + Number(standardValue).toExponential(2).toUpperCase()
+                            }
+                        }]
+                    }
+                });
+
+                chartInstance.updateSeries(series);
+            }
+
+            // Init Chart
+            initChart();
+
+            // --- Chart Filter Events ---
+            $('#chartStartWeek').on('change', function() {
+                const startVal = $(this).val();
+                const endVal = $('#chartEndWeek').val();
+                if (startVal && endVal && startVal > endVal) {
+                    $('#chartEndWeek').val(startVal);
+                }
+                updateChartDisplay();
+            });
+
+            $('#chartEndWeek').on('change', function() {
+                const startVal = $('#chartStartWeek').val();
+                const endVal = $(this).val();
+                if (startVal && endVal && endVal < startVal) {
+                    $('#chartStartWeek').val(endVal);
+                }
+                updateChartDisplay();
+            });
+
+            $(document).on('change', '.sample-chart-checkbox', function() {
+                updateChartDisplay();
+            });
+
+            $('#btnSelectAllSamples').on('click', function() {
+                $('.sample-chart-checkbox').prop('checked', true);
+                updateChartDisplay();
+            });
+
+            $('#btnDeselectAllSamples').on('click', function() {
+                $('.sample-chart-checkbox').prop('checked', false);
+                updateChartDisplay();
+            });
+
+            let stdLimitTimer;
+            $('#chartStdLimit').on('input', function() {
+                clearTimeout(stdLimitTimer);
+                stdLimitTimer = setTimeout(() => {
+                    updateChartDisplay();
+                }, 300);
+            });
+
             // Load Data function
             function loadData(page = 1, callback = null) {
                 currentPage = page;
@@ -253,6 +617,10 @@
                         currentDataList = response.data;
                         renderTable(response.data, response.from);
                         renderPagination(response);
+                        
+                        // Load chart data
+                        loadChartData();
+
                         if (callback) callback();
                     },
                     error: function() {

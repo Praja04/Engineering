@@ -284,4 +284,24 @@ class WWTPControllerKoloni extends Controller
             'week_range' => "{$startWeek} s/d {$endWeek}"
         ]);
     }
+
+    public function getChartData(Request $request)
+    {
+        $query = WwtpKoloni::with(['details.masterKoloni'])
+            ->orderBy('week_start', 'asc');
+
+        if ($request->filled('start_date')) {
+            $query->where('week_start', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->where('week_start', '<=', $request->end_date);
+        }
+
+        $data = $query->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $data
+        ]);
+    }
 }
