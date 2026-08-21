@@ -210,6 +210,46 @@
                         </ul>
                     </div>
                 </li>
+
+                <!-- Biaya Chemical WWTP -->
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->is('wwtp/form_biaya_chemical') || request()->is('wwtp/data_biaya_chemical') || request()->is('wwtp/master_biaya_chemical') ? '' : 'collapsed' }}"
+                        href="#sidebarBiayaChemicalWWTP" data-bs-toggle="collapse" role="button"
+                        aria-expanded="{{ request()->is('wwtp/form_biaya_chemical') || request()->is('wwtp/data_biaya_chemical') || request()->is('wwtp/master_biaya_chemical') ? 'true' : 'false' }}"
+                        aria-controls="sidebarBiayaChemicalWWTP">
+                        <i class="mdi mdi-cash-multiple"></i>
+                        <span data-key="t-widgets">Biaya Chemical</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ request()->is('wwtp/form_biaya_chemical') || request()->is('wwtp/data_biaya_chemical') || request()->is('wwtp/master_biaya_chemical') ? 'show' : '' }}"
+                        id="sidebarBiayaChemicalWWTP">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('wwtp/form_biaya_chemical') ? 'active' : '' }}"
+                                    href="{{ url('wwtp/form_biaya_chemical') }}">
+                                    <i class="mdi mdi-file-document-edit-outline"></i>
+                                    <span data-key="t-widgets">Form Biaya</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('wwtp/data_biaya_chemical') ? 'active' : '' }}"
+                                    href="{{ url('wwtp/data_biaya_chemical') }}">
+                                    <i class="mdi mdi-database"></i>
+                                    <span data-key="t-widgets">Data Biaya</span>
+                                </a>
+                            </li>
+                            @if ($jabatan != 'operator')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->is('wwtp/master_biaya_chemical') ? 'active' : '' }}"
+                                        href="{{ url('wwtp/master_biaya_chemical') }}">
+                                        <i class="mdi mdi-database-cog-outline"></i>
+                                        <span data-key="t-widgets">Master Harga</span>
+                                    </a>
+                                </li>
+                            @endif
+                        </ul>
+                    </div>
+                </li>
             </ul>
         </div>
     </li>

@@ -8,6 +8,7 @@ use App\Http\Controllers\Utility\WWTPControllerAnalisa;
 use App\Http\Controllers\Utility\WWTPController;
 use App\Http\Controllers\Utility\WWTPControllerApproval;
 use App\Http\Controllers\Utility\WWTPControllerKoloni;
+use App\Http\Controllers\Utility\WWTPControllerBiayaChemical;
 
 Route::middleware('auth')->group(function () {
   Route::get('/wwtp/proses', [WWTPControllerProses::class, 'proses'])->name('wwtp.proses');
@@ -90,4 +91,19 @@ Route::middleware('auth')->group(function () {
   Route::put('/wwtp/koloni/{id}', [WWTPControllerKoloni::class, 'update'])->name('wwtp.koloni.update');
   Route::post('/wwtp/koloni-master/store', [WWTPControllerKoloni::class, 'storeMaster'])->name('wwtp.master.store');
   Route::put('/wwtp/koloni-master/update/{id}', [WWTPControllerKoloni::class, 'updateMaster'])->name('wwtp.master.update');
+
+  // WWTP Biaya Chemical Routes
+  Route::get('/wwtp/form_biaya_chemical', [WWTPControllerBiayaChemical::class, 'form_biaya_chemical'])->name('wwtp.form_biaya_chemical');
+  Route::get('/wwtp/data_biaya_chemical', [WWTPControllerBiayaChemical::class, 'data_biaya_chemical'])->name('wwtp.data_biaya_chemical');
+  Route::get('/wwtp/master_biaya_chemical', [WWTPControllerBiayaChemical::class, 'master_biaya_chemical'])->name('wwtp.master_biaya_chemical')->middleware('access');
+  Route::post('/wwtp/biaya-chemical', [WWTPControllerBiayaChemical::class, 'store'])->name('wwtp.biaya-chemical.store');
+  Route::put('/wwtp/biaya-chemical/{id}', [WWTPControllerBiayaChemical::class, 'update'])->name('wwtp.biaya-chemical.update');
+  Route::delete('/wwtp/biaya-chemical/{id}', [WWTPControllerBiayaChemical::class, 'destroy'])->name('wwtp.biaya-chemical.destroy');
+  
+  Route::get('/api/wwtp-biaya-chemical', [WWTPControllerBiayaChemical::class, 'index'])->name('api.wwtp-biaya-chemical.index');
+  Route::get('/api/wwtp-biaya-chemical/check-filled', [WWTPControllerBiayaChemical::class, 'checkFilled'])->name('api.wwtp-biaya-chemical.check-filled');
+  Route::get('/api/wwtp-biaya-chemical/standards', [WWTPControllerBiayaChemical::class, 'indexStandards'])->name('api.wwtp-biaya-chemical.standards.index');
+  Route::post('/api/wwtp-biaya-chemical/standards', [WWTPControllerBiayaChemical::class, 'storeStandard'])->name('api.wwtp-biaya-chemical.standards.store');
+  Route::put('/api/wwtp-biaya-chemical/standards/{id}', [WWTPControllerBiayaChemical::class, 'updateStandard'])->name('api.wwtp-biaya-chemical.standards.update');
+  Route::delete('/api/wwtp-biaya-chemical/standards/{id}', [WWTPControllerBiayaChemical::class, 'destroyStandard'])->name('api.wwtp-biaya-chemical.standards.destroy');
 });
