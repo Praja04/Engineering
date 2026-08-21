@@ -406,6 +406,79 @@
                             actionButtons + '</tr>';
                         tbBiayaM3 += actionButtons + '</tr>';
                     });
+
+                    // Hitung total untuk baris Total (Column 4 dst, 1-3 colspan Total)
+                    let totalLimbah = 0;
+                    let totalCost = 0;
+                    let totalCostM3 = 0;
+                    let totalChemicalsQty = {};
+                    let totalChemicalsCost = {};
+                    let totalChemicalsCostM3 = {};
+
+                    standards.forEach(std => {
+                        totalChemicalsQty[std.chemical_name] = 0;
+                        totalChemicalsCost[std.chemical_name] = 0;
+                        totalChemicalsCostM3[std.chemical_name] = 0;
+                    });
+
+                    records.forEach(item => {
+                        totalLimbah += parseFloat(item.limbah_di_olah) || 0;
+                        totalCost += parseFloat(item.total_cost) || 0;
+                        totalCostM3 += parseFloat(item.total_cost_m3) || 0;
+
+                        standards.forEach(std => {
+                            const chem = item.chemicals[std.chemical_name] || {
+                                qty: 0,
+                                cost: 0,
+                                cost_m3: 0
+                            };
+                            totalChemicalsQty[std.chemical_name] += parseFloat(chem.qty) || 0;
+                            totalChemicalsCost[std.chemical_name] += parseFloat(chem.cost) || 0;
+                            totalChemicalsCostM3[std.chemical_name] += parseFloat(chem.cost_m3) ||
+                                0;
+                        });
+                    });
+
+                    // Build total rows
+                    let trTotalPemakaian = `
+                        <tr class="table-light fw-bold border-top border-dark">
+                            <td colspan="3" class="text-center text-dark fw-bold">Total: </td>
+                            <td class="number-cell text-info">${formatRupiah(totalLimbah)}</td>
+                    `;
+                    standards.forEach(std => {
+                        trTotalPemakaian +=
+                            `<td class="number-cell">${formatRupiah(totalChemicalsQty[std.chemical_name])}</td>`;
+                    });
+                    trTotalPemakaian += `<td class="text-center">-</td></tr>`;
+
+                    let trTotalBiaya = `
+                        <tr class="table-light fw-bold border-top border-dark">
+                            <td colspan="3" class="text-center text-dark fw-bold">Total:</td>
+                    `;
+                    standards.forEach(std => {
+                        trTotalBiaya +=
+                            `<td class="number-cell">${formatRupiah(totalChemicalsCost[std.chemical_name])}</td>`;
+                    });
+                    trTotalBiaya += `
+                            <td class="number-cell table-info text-primary">${formatRupiah(totalCost)}</td>
+                            <td class="text-center">-</td>
+                        </tr>
+                    `;
+
+                    let trTotalBiayaM3 = `
+                        <tr class="table-light fw-bold border-top border-dark">
+                            <td colspan="3" class="text-center text-dark fw-bold">Total:</td>
+                            <td class="number-cell table-success text-success">${formatRupiah(totalCostM3)}</td>
+                    `;
+                    standards.forEach(std => {
+                        trTotalBiayaM3 +=
+                            `<td class="number-cell">${formatRupiah(totalChemicalsCostM3[std.chemical_name])}</td>`;
+                    });
+                    trTotalBiayaM3 += `<td class="text-center">-</td></tr>`;
+
+                    tbPemakaian += trTotalPemakaian;
+                    tbBiaya += trTotalBiaya;
+                    tbBiayaM3 += trTotalBiayaM3;
                 }
 
                 tbPemakaian += '</tbody>';
