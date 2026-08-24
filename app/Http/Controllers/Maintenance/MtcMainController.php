@@ -1210,16 +1210,33 @@ class MtcMainController extends Controller
             $first = $battery;
 
             $sheet->setCellValue('C4', $main->tanggal ? \Carbon\Carbon::parse($main->tanggal)->format('d-m-Y') : '-');
-            $sheet->setCellValue('C6', $main->waktu_mulai ?? '-');
+            $waktu = '-';
+            if ($main->waktu_mulai && $main->waktu_selesai) {
+                $waktu = $main->waktu_mulai . ' - ' . $main->waktu_selesai;
+            } elseif ($main->waktu_mulai) {
+                $waktu = $main->waktu_mulai;
+            } elseif ($main->waktu_selesai) {
+                $waktu = $main->waktu_selesai;
+            }
+            $sheet->setCellValue('C6', $waktu);
             $sheet->setCellValue('K4', $first->battery_type ?? '-');
             $sheet->setCellValue('K6', $first->no_seri ?? '-');
             $sheet->setCellValue('R4', $first->no_unit ?? '-');
             $sheet->setCellValue('R23', ': ' . ($first->total_voltase ?? '-'));
-            $sheet->setCellValue('R24', ': ' . ($first->kondisi_plug_battery ?? '-'));
+            $sheet->setCellValue('R24', ': ' . ($first->kondisi_plug_battery === 1 ? '✓' : ($first->kondisi_plug_battery === 0 ? '✗' : '-')));
             $sheet->setCellValue('R25', ': ' . ($first->kondisi_skun === true ? '✓' : ($first->kondisi_skun === false ? '✗' : '-')));
             $sheet->setCellValue('R26', ': ' . ($first->intercell === true ? '✓' : ($first->intercell === false ? '✗' : '-')));
             $sheet->setCellValue('R27', ': ' . ($first->kondisi_unit === true ? '✓' : ($first->kondisi_unit === false ? '✗' : '-')));
-            $sheet->setCellValue('R28', ': ' . ($first->grounding ?? '-') . ' V');
+            $groundingVal = '-';
+            if (!empty($first->grounding)) {
+                $parts = explode('/', $first->grounding);
+                if (count($parts) === 2) {
+                    $groundingVal = '(-) ' . trim($parts[0]) . ' V / (+) ' . trim($parts[1]) . ' V';
+                } else {
+                    $groundingVal = '(-) ' . trim($first->grounding) . ' V';
+                }
+            }
+            $sheet->setCellValue('R28', ': ' . $groundingVal);
 
             $sheet->setCellValue('A30', 'Catatan : ' . ($first->catatan ?? ''));
 

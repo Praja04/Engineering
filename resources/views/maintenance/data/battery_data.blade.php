@@ -24,9 +24,9 @@
         }
 
         /*
-                    #detailModal .modal-dialog {
-                        max-width: 90%;
-                    } */
+                                                                                    #detailModal .modal-dialog {
+                                                                                        max-width: 90%;
+                                                                                    } */
 
         /* BORDER MERAH SAAT NG */
         .check-wrapper.ng-active {
@@ -110,7 +110,6 @@
                                         <th>Tanggal</th>
                                         <th>Waktu Mulai</th>
                                         <th>Waktu Selesai</th>
-
                                         <th>Battery Type</th>
                                         <th>No Unit</th>
                                         <th>No Seri</th>
@@ -167,7 +166,9 @@
                         <div class="col-md-3"><strong>Kondisi Unit:</strong> <span id="modalKondisiUnit"></span></div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-12"><strong>Catatan:</strong> <span id="modalCatatan"></span></div>
+                        <div class="col-md-3"><strong>Kondisi Plug Battery:</strong> <span
+                                id="modalKondisiPlugBattery"></span></div>
+                        <div class="col-md-9"><strong>Catatan:</strong> <span id="modalCatatan"></span></div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-12"><strong>Keterangan NOK:</strong> <span id="modalKeterangan"></span></div>
@@ -178,10 +179,9 @@
                     <table class="table detail-table">
                         <thead class="table-light text-nowrap">
                             <tr>
-                                <th>Cell</th>
+                                <th class="text-center">Cell</th>
                                 <th>Voltase</th>
-                                <th>Level Air Aki</th>
-                                <th>Grounding</th>
+                                <th class="text-center">Level Air Aki</th>
                             </tr>
                         </thead>
                         <tbody id="modalDetailBody"></tbody>
@@ -246,13 +246,22 @@
                             </div>
                             <div class="col-md-3">
                                 <label>Grounding</label>
-                                <input type="number" name="grounding" id="editGrounding" class="form-control"
-                                    step="0.01" min="0">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light fw-medium p-3 text-xs"
+                                        style="font-size: 10px;"> - </span>
+                                    <input type="number" id="editGroundingNeg" class="form-control px-1" step="0.01"
+                                        min="0" placeholder="Neg V" style="font-size: 12px;">
+                                    <span class="input-group-text bg-light fw-medium p-3 text-xs"
+                                        style="font-size: 10px;"> + </span>
+                                    <input type="number" id="editGroundingPos" class="form-control px-1" step="0.01"
+                                        min="0" placeholder="Pos V" style="font-size: 12px;">
+                                </div>
+                                <input type="hidden" name="grounding" id="editGrounding">
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-4 check-wrapper">
+                            <div class="col-md-3 check-wrapper">
                                 <label>Intercell</label>
                                 <select class="form-select status-select mb-1" name="intercell" id="editIntercell">
                                     <option value="1">OK</option>
@@ -262,7 +271,7 @@
                                     class="form-control form-control-sm keterangan-input d-none"
                                     placeholder="Keterangan (Wajib)">
                             </div>
-                            <div class="col-md-4 check-wrapper">
+                            <div class="col-md-3 check-wrapper">
                                 <label>Kondisi Skun</label>
                                 <select class="form-select status-select mb-1" name="kondisi_skun" id="editKondisiSkun">
                                     <option value="1">OK</option>
@@ -272,13 +281,25 @@
                                     class="form-control form-control-sm keterangan-input d-none"
                                     placeholder="Keterangan (Wajib)">
                             </div>
-                            <div class="col-md-4 check-wrapper">
+                            <div class="col-md-3 check-wrapper">
                                 <label>Kondisi Unit</label>
                                 <select class="form-select status-select mb-1" name="kondisi_unit" id="editKondisiUnit">
                                     <option value="1">OK</option>
                                     <option value="0">NG</option>
                                 </select>
                                 <input type="text" name="keterangan_kondisi_unit" id="editKeteranganKondisiUnit"
+                                    class="form-control form-control-sm keterangan-input d-none"
+                                    placeholder="Keterangan (Wajib)">
+                            </div>
+                            <div class="col-md-3 check-wrapper">
+                                <label>Kondisi Plug Battery</label>
+                                <select class="form-select status-select mb-1" name="kondisi_plug_battery"
+                                    id="editKondisiPlugBattery">
+                                    <option value="1">OK</option>
+                                    <option value="0">NG</option>
+                                </select>
+                                <input type="text" name="keterangan_kondisi_plug_battery"
+                                    id="editKeteranganKondisiPlugBattery"
                                     class="form-control form-control-sm keterangan-input d-none"
                                     placeholder="Keterangan (Wajib)">
                             </div>
@@ -509,8 +530,10 @@
             });
 
             function statusBadge(val) {
-                if (val === true || val === 1 || val === "1") return `<span class="badge bg-success">OK</span>`;
-                if (val === false || val === 0 || val === "0") return `<span class="badge bg-danger">No OK</span>`;
+                if (val === true || val === 1 || val === "1" || val === "OK")
+                    return `<span class="badge bg-success">OK</span>`;
+                if (val === false || val === 0 || val === "0" || val === "Tidak OK")
+                    return `<span class="badge bg-danger">No OK</span>`;
 
                 if (val === 'pending') {
                     return `<span class="badge bg-warning">${val}</span>`
@@ -613,7 +636,7 @@
 
                 // Data utama dari row (yang sudah di-flatten atau diambil dari API response)
                 $('#modalBatteryId').text(rowData.id);
-                $('#modalTanggal').text(rowData.tanggal);
+                $('#modalTanggal').text(fmtDate(rowData.tanggal));
                 $('#modalWaktuMulai').text(rowData.waktu_mulai || '-');
                 $('#modalWaktuSelesai').text(rowData.waktu_selesai || '-');
 
@@ -629,10 +652,21 @@
                 // Keterangan ada di level utama (bukan di battery)
                 $('#modalKeterangan').text(rowData.keterangan || '-');
                 $('#modalCatatan').text(battery.catatan || '-');
-                $('#modalGrounding').text(battery.grounding || '-');
+
+                // Split grounding value (e.g. "1.5 / 2.3") into Neg and Pos with signs
+                const groundingVal = battery.grounding || '';
+                const parts = groundingVal.split('/');
+                if (parts.length === 2) {
+                    $('#modalGrounding').html(
+                        `(-) ${parts[0].trim()} V &nbsp;/&nbsp; (+) ${parts[1].trim()} V`);
+                } else {
+                    $('#modalGrounding').text(groundingVal ? `(-) ${groundingVal} V` : '-');
+                }
+
                 $('#modalIntercell').html(statusBadge(battery.intercell));
                 $('#modalKondisiSkun').html(statusBadge(battery.kondisi_skun));
                 $('#modalKondisiUnit').html(statusBadge(battery.kondisi_unit));
+                $('#modalKondisiPlugBattery').html(statusBadge(battery.kondisi_plug_battery));
 
                 // User yang create
                 $('#modalUser').text(rowData.created_by?.username || 'Unknown');
@@ -641,10 +675,8 @@
                 let detailHtml = '';
 
                 if (battery.details && Array.isArray(battery.details) && battery.details.length > 0) {
-                    // Sort berdasarkan nomor cell (aman kalau urutannya dari DB sudah benar, tapi sort tetap lebih aman)
+                    // Sort berdasarkan nomor cell
                     const sortedDetails = [...battery.details].sort((a, b) => a.cell - b.cell);
-                    const totalCells = sortedDetails.length;
-                    const groundingValue = battery.grounding || '-';
 
                     sortedDetails.forEach((detail, index) => {
                         // Helper untuk menentukan status OK / Tidak OK + class
@@ -670,24 +702,17 @@
                         const voltaseStatus = getStatus(detail.voltase);
                         const airAkiStatus = getStatus(detail.level_air_aki);
 
-                        let groundingTd = '';
-                        if (index === 0) {
-                            groundingTd =
-                                `<td rowspan="${totalCells}" class="align-middle text-center fw-bold bg-light" style="font-size: 1.1rem;">${groundingValue}</td>`;
-                        }
-
                         detailHtml += `
                             <tr>
-                                <td>${detail.cell || '-'}</td>
+                                <td class="text-center">${detail.cell || '-'}</td>
                                 <td class="${voltaseStatus.class}">${voltaseStatus.text}</td>
-                                <td class="${airAkiStatus.class}">${airAkiStatus.text}</td>
-                                ${groundingTd}
+                                <td class="text-center ${airAkiStatus.class}">${airAkiStatus.text}</td>
                             </tr>
                         `;
                     });
                 } else {
                     detailHtml =
-                        '<tr><td colspan="4" class="text-center">Tidak ada data detail cell</td></tr>';
+                        '<tr><td colspan="3" class="text-center">Tidak ada data detail cell</td></tr>';
                 }
 
                 $('#modalDetailBody').html(detailHtml);
@@ -736,7 +761,7 @@
                 // ===== FIELD UTAMA =====
                 $('#editId').val(rowData.id);
                 $('#editBatteryId').text(rowData.id);
-                $('#editTanggal').val(rowData.tanggal);
+                $('#editTanggal').val(rowData.tanggal ? rowData.tanggal.split('T')[0] : '');
                 $('#editWaktuMulai').val(rowData.waktu_mulai);
                 $('#editWaktuSelesai').val(rowData.waktu_selesai);
 
@@ -747,10 +772,22 @@
                 $('#editGrounding').val(battery.grounding || '');
                 $('#editTotalVoltase').val(battery.total_voltase || '');
 
+                // Split grounding value (e.g. "1.5 / 2.3") into Neg and Pos
+                const groundingVal = battery.grounding || '';
+                const parts = groundingVal.split('/');
+                if (parts.length === 2) {
+                    $('#editGroundingNeg').val(parts[0].trim());
+                    $('#editGroundingPos').val(parts[1].trim());
+                } else {
+                    $('#editGroundingNeg').val(groundingVal);
+                    $('#editGroundingPos').val('');
+                }
+
                 const valToRadio = (v) => (v === true || v === 1 || v === '1') ? '1' : '0';
                 $('#editIntercell').val(valToRadio(battery.intercell)).trigger('change');
                 $('#editKondisiSkun').val(valToRadio(battery.kondisi_skun)).trigger('change');
                 $('#editKondisiUnit').val(valToRadio(battery.kondisi_unit)).trigger('change');
+                $('#editKondisiPlugBattery').val(valToRadio(battery.kondisi_plug_battery)).trigger('change');
 
                 const keteranganMap = parseKeteranganPairs(rowData.keterangan || '');
 
@@ -804,6 +841,11 @@
                     $('#editKondisiUnit').val('0').trigger('change');
                     $('#editKeteranganKondisiUnit').val(keteranganMap['Kondisi Unit']).removeClass('d-none');
                 }
+                if (keteranganMap['Kondisi Plug Battery']) {
+                    $('#editKondisiPlugBattery').val('0').trigger('change');
+                    $('#editKeteranganKondisiPlugBattery').val(keteranganMap['Kondisi Plug Battery']).removeClass(
+                        'd-none');
+                }
 
                 // Prefill cell level checks
                 Object.entries(keteranganMap).forEach(([key, value]) => {
@@ -830,7 +872,7 @@
                     const card = $(this).closest('.card');
                     const input = wrapper.find('.keterangan-input');
 
-                    if ($(this).val() === '0') { // NG
+                    if ($(this).val() === '0' || $(this).val() === 'Tidak OK') { // NG
                         wrapper.addClass('ng-active');
                         card.addClass('cell-ng');
                         input.removeClass('d-none');
@@ -839,7 +881,9 @@
                         input.addClass('d-none').val('');
 
                         // cek: masih ada NG lain di card?
-                        if (card.find('.status-select[value="0"]:selected').length === 0) {
+                        if (card.find('.status-select').filter(function() {
+                                return $(this).val() === '0' || $(this).val() === 'Tidak OK';
+                            }).length === 0) {
                             card.removeClass('cell-ng');
                         }
                     }
@@ -1000,12 +1044,13 @@
                     });
                 });
 
-                // Overall NGs (Intercell, Kondisi Skun, Kondisi Unit)
-                ['Intercell', 'Kondisi Skun', 'Kondisi Unit'].forEach(name => {
+                // Overall NGs (Intercell, Kondisi Skun, Kondisi Unit, Kondisi Plug Battery)
+                ['Intercell', 'Kondisi Skun', 'Kondisi Unit', 'Kondisi Plug Battery'].forEach(name => {
                     const selectId = '#edit' + name.replace(/\s+/g, '');
                     const inputId = '#editKeterangan' + name.replace(/\s+/g, '');
+                    const val = $(selectId).val();
 
-                    if ($(selectId).val() === '0') {
+                    if (val === '0' || val === 'Tidak OK') {
                         const note = $(inputId).val()?.trim() || '(tidak ada keterangan)';
                         list.push(`${name}: ${note}`);
                     }
@@ -1018,6 +1063,11 @@
             $('#editFormBattery').on('submit', function(e) {
                 e.preventDefault();
                 const id = $('#editId').val();
+
+                // Join Negative V and Positive V grounding values before serialization
+                const neg = $('#editGroundingNeg').val();
+                const pos = $('#editGroundingPos').val();
+                $('#editGrounding').val(neg || pos ? `${neg || '0'} / ${pos || '0'}` : '');
 
                 // ambil keterangan hasil formatting
                 const keteranganFormatted = collectNotOkDetailsEdit();

@@ -64,6 +64,18 @@
          <td>: {!! badge($data->kondisi_unit) !!}</td>
      </tr>
      <tr>
+         <th>Kondisi Plug Battery</th>
+         <td>: 
+             @if(($data->kondisi_plug_battery ?? '') == 'OK')
+                 <span class="badge bg-success">OK</span>
+             @elseif(($data->kondisi_plug_battery ?? '') == 'Tidak OK')
+                 <span class="badge bg-danger">Tidak OK</span>
+             @else
+                 <span class="badge bg-secondary">No Check</span>
+             @endif
+         </td>
+     </tr>
+     <tr>
          <th>Catatan</th>
          <td>: {{ $data->catatan ?? '-' }}</td>
      </tr>
