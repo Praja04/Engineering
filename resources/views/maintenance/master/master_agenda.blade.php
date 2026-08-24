@@ -251,6 +251,10 @@
                                 <strong id="badgeJenis">{{ $selectedJenis }}</strong> &nbsp;|&nbsp; Tahun: <strong
                                     id="badgeTahun">{{ $selectedYear }}</strong>
                             </span>
+                            <span class="badge badge-soft-success border border-success-subtle px-2 py-1"
+                                style="font-size: 11px;">
+                                Total Agenda: <strong id="badgeTotalAgenda">0</strong>
+                            </span>
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
@@ -651,7 +655,22 @@
                     // Reset manual weeks
                     updateManualFormWeeks();
 
+                    // Calculate total agenda count from loaded plans
+                    let totalAgendaCount = 0;
+                    if (res.plans) {
+                        Object.keys(res.plans).forEach(machineId => {
+                            Object.keys(res.plans[machineId]).forEach(monthNum => {
+                                const monthPlans = res.plans[machineId][monthNum];
+                                if (monthPlans) {
+                                    totalAgendaCount += monthPlans.length;
+                                }
+                            });
+                        });
+                    }
+                    $('#badgeTotalAgenda').text(totalAgendaCount);
+
                     if (!res.status || !res.machines || res.machines.length === 0) {
+                        $('#badgeTotalAgenda').text('0');
                         wrapper.html(`
                             <div class="text-center py-5">
                                 <div class="fs-1 mb-3 opacity-40">📅</div>

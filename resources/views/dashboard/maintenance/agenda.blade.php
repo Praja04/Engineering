@@ -541,12 +541,21 @@
             transition: background 0.15s;
         }
 
-        .cal-cell:hover {
+        .cal-cell:not(.other-month) {
+            cursor: pointer;
+        }
+
+        .cal-cell:not(.other-month):hover {
             background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
         }
 
         .cal-cell.today {
             box-shadow: inset 0 0 0 2px #3b82f6;
+        }
+
+        .cal-cell.active-cell {
+            background: rgba(99, 102, 241, 0.08) !important;
+            box-shadow: inset 0 0 0 2px #6366f1 !important;
         }
 
         .cal-day-num {
@@ -855,9 +864,10 @@
                                     style="font-size:10.5px;letter-spacing:.06em;white-space:nowrap;">Bulan:</span>
                                 <select id="filterBulan" class="form-select form-select-sm"
                                     style="border-radius:8px;width:150px;font-weight:600;">
-                                    <option value="all" selected>Semua Bulan</option>
+                                    <option value="all">Semua Bulan</option>
                                     @foreach (['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bi => $bname)
-                                        <option value="{{ $bi + 1 }}">{{ $bname }}</option>
+                                        <option value="{{ $bi + 1 }}" {{ ($bi + 1) == date('n') ? 'selected' : '' }}>
+                                            {{ $bname }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -981,10 +991,13 @@
                     <div class="col-xl-4">
                         <div class="card shadow-sm border-0" style="border-radius:14px;overflow:hidden;">
                             <div class="card-body p-0">
-                                <div class="px-4 py-3 border-bottom">
-                                    <span class="fw-bold text-dark" style="font-size:13px;">Daftar Agenda</span>
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border ms-2"
-                                        id="calListCount" style="font-size:11px;">—</span>
+                                <div class="px-4 py-3 border-bottom d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span class="fw-bold text-dark" style="font-size:13px;">Daftar Agenda</span>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border ms-2"
+                                            id="calListCount" style="font-size:11px;">—</span>
+                                    </div>
+                                    <button class="btn btn-link btn-sm p-0 d-none" id="btnResetCalFilter" onclick="resetCalendarFilter()" style="font-size:11px;text-decoration:none;font-weight:600;color:var(--vz-link-color, #3b82f6);">Lihat Semua</button>
                                 </div>
                                 <div style="max-height:600px;overflow-y:auto;" id="calList">
                                     <div class="p-4 text-center text-secondary" style="font-size:13px;">Belum ada data.
@@ -1011,11 +1024,12 @@
 
         let currentJenis = @json($jenisMtcList->first() ?? '');
         let currentTahun = {{ date('Y') }};
-        let currentBulan = 'all';
+        let currentBulan = '{{ date("n") }}';
 
         // Calendar state
         let calTahun = {{ date('Y') }};
         let calBulan = {{ date('n') }};
+        let allCalendarEvents = [];
 
         // ── Tab Switch ──
         function switchView(view, btn) {
@@ -1078,7 +1092,13 @@
 
             for (let d = 1; d <= days; d++) {
                 const isToday = d === todayD;
-                html += `<div class="cal-cell ${isToday ? 'today' : ''}">`;
+                let startDay = 1;
+                if (d >= 8 && d <= 14) startDay = 8;
+                else if (d >= 15 && d <= 21) startDay = 15;
+                else if (d >= 22 && d <= 28) startDay = 22;
+                else if (d >= 29) startDay = 29;
+
+                html += `<div class="cal-cell ${isToday ? 'today' : ''}" data-day="${d}" data-start-day="${startDay}" onclick="filterCalListByDay(${d}, ${startDay}, this)">`;
                 html += `<div class="cal-day-num">${d}</div>`;
 
                 // Events that start on this day
@@ -1131,6 +1151,29 @@
             $('#calListCount').text(list.length);
         }
 
+        // ── Filter Calendar List by Clicked Day ──
+        function filterCalListByDay(day, startDay, elem) {
+            // 1. Highlight clicked cell
+            $('.cal-cell').removeClass('active-cell');
+            $(elem).addClass('active-cell');
+
+            // 2. Filter events of that week
+            const filtered = allCalendarEvents.filter(item => item.day_start === startDay);
+
+            // 3. Render list
+            renderCalList(filtered);
+
+            // 4. Show "Lihat Semua" button
+            $('#btnResetCalFilter').removeClass('d-none');
+        }
+
+        // ── Reset Calendar List Filter ──
+        function resetCalendarFilter() {
+            $('.cal-cell').removeClass('active-cell');
+            renderCalList(allCalendarEvents);
+            $('#btnResetCalFilter').addClass('d-none');
+        }
+
         // ── Calendar AJAX ──
         function loadCalendarData() {
             $('#calLoading').show();
@@ -1150,8 +1193,10 @@
                 success: function(res) {
                     $('#calLoading').hide();
                     if (!res.status) return;
+                    allCalendarEvents = res.list || [];
+                    $('#btnResetCalFilter').addClass('d-none');
                     renderCalendar(res);
-                    renderCalList(res.list);
+                    renderCalList(allCalendarEvents);
                     const s = res.summary || {};
                     $('#calKpiDone').text(s.done ?? 0);
                     $('#calKpiToday').text(s.today ?? 0);
