@@ -249,9 +249,9 @@
             background: var(--vz-card-bg, #fff);
         }
 
-        .dash-table tbody tr:hover td {
-            background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
-        }
+        /* .dash-table tbody tr:hover td {
+                                background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
+                            } */
 
         /* Sticky columns */
         .dash-table td.sticky-col,
@@ -291,9 +291,9 @@
 
         .dash-table tbody tr:hover td.sticky-col,
         .dash-table tbody tr:hover td.sticky-selesai,
-        .dash-table tbody tr:hover td.sticky-tipe {
-            background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
-        }
+        /* .dash-table tbody tr:hover td.sticky-tipe {
+                            background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
+                        } */
 
         .dash-table tbody tr:last-child td {
             border-bottom: none;
@@ -633,9 +633,9 @@
             transition: background 0.15s;
         }
 
-        .agenda-list-item:hover {
-            background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
-        }
+        /* .agenda-list-item:hover {
+                                    background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
+                                } */
 
         .agenda-list-item:last-child {
             border-bottom: none;
@@ -1266,7 +1266,8 @@
                                 '"><span class="wk-chip unplanned">&mdash;</span></td>';
                         } else {
                             var p = a.plan;
-                            var tip = 'Rencana: Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' + p.tanggal_aktual : '');
+                            var tip = 'Rencana: Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' +
+                                p.tanggal_aktual : '');
                             tdsPlan += '<td style="text-align:center;' + bl + '">' +
                                 '<span class="wk-chip pending" title="' + tip + '">' + p.paket + '</span>' +
                                 '</td>';
@@ -1309,11 +1310,11 @@
                     '</td>' +
                     '<td class="sticky-selesai" style="text-align:center; vertical-align: middle; width:80px; min-width:80px; max-width:80px;" rowspan="2">' +
                     ringHtml + '</td>' +
-                    '<td class="sticky-tipe" style="text-align:center; vertical-align: middle; width:70px; min-width:70px; max-width:70px;"><span class="badge bg-primary-subtle text-primary fw-bold" style="font-size:10px; padding: 4px 6px;">PLAN</span></td>' +
+                    '<td class="sticky-tipe" style="text-align:center; vertical-align: middle; width:70px; min-width:70px; max-width:70px;"><span class="badge badge-soft-warning fw-bold" style="font-size:10px; padding: 4px 6px;">PLAN</span></td>' +
                     tdsPlan +
                     '</tr>' +
                     '<tr data-search="' + search + '">' +
-                    '<td class="sticky-tipe" style="text-align:center; vertical-align: middle; width:70px; min-width:70px; max-width:70px;"><span class="badge bg-success-subtle text-success fw-bold" style="font-size:10px; padding: 4px 6px;">ACTUAL</span></td>' +
+                    '<td class="sticky-tipe" style="text-align:center; vertical-align: middle; width:70px; min-width:70px; max-width:70px;"><span class="badge badge-soft-success text-success fw-bold" style="font-size:10px; padding: 4px 6px;">ACTUAL</span></td>' +
                     tdsActual +
                     '</tr>';
                 count++;
