@@ -13,7 +13,9 @@ use App\Http\Controllers\ScoringMesin\DashboardController;
 
 Route::prefix('dashboard')->name('dashboard.')->middleware(['auth'])->group(function () {
     Route::get('/mesin/scoring', [DashboardController::class, 'dashboard_scoring_retail'])->name('scoringmesin');
-    Route::get('/mesin/downtime', [DashboardController::class, 'dashboard_downtime'])->name('downtimemesin');
+    Route::get('/mesin/downtime', [DashboardController::class, 'dashboard_downtime_all'])->name('downtimemesin');
+    Route::get('/mesin/downtime/all', [DashboardController::class, 'dashboard_downtime_all'])->name('downtimemesin.all');
+    Route::get('/mesin/downtime/detail/{machine?}', [DashboardController::class, 'dashboard_downtime_detail'])->name('downtimemesin.detail');
 });
 
 Route::prefix('scoring-mesin')->name('scoring-mesin.')->group(function () {
