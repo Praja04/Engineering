@@ -63,6 +63,7 @@
         .kpi-card {
             border-radius: 16px;
             padding: 18px 20px;
+            overflow: hidden;
         }
 
         .kpi-card:hover {
@@ -252,22 +253,45 @@
             background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
         }
 
-        /* Sticky first column (Mesin) */
+        /* Sticky columns */
+        .dash-table td.sticky-col,
+        .dash-table th.sticky-col,
+        .dash-table td.sticky-selesai,
+        .dash-table th.sticky-selesai,
+        .dash-table td.sticky-tipe,
+        .dash-table th.sticky-tipe {
+            position: sticky;
+            background: var(--vz-card-bg, #fff);
+        }
+
         .dash-table td.sticky-col,
         .dash-table th.sticky-col {
-            position: sticky;
             left: 0;
             z-index: 3;
-            background: var(--vz-card-bg, #fff);
+        }
+
+        .dash-table td.sticky-selesai,
+        .dash-table th.sticky-selesai {
+            left: 190px;
+            z-index: 3;
+        }
+
+        .dash-table td.sticky-tipe,
+        .dash-table th.sticky-tipe {
+            left: 270px;
+            z-index: 3;
             box-shadow: 2px 0 6px -2px rgba(0, 0, 0, .08);
         }
 
-        .dash-table th.sticky-col {
+        .dash-table th.sticky-col,
+        .dash-table th.sticky-selesai,
+        .dash-table th.sticky-tipe {
             z-index: 6;
-            background: var(--vz-card-bg, #fff);
         }
 
-        .dash-table tbody tr:hover td.sticky-col {
+        .dash-table tbody tr:hover td.sticky-col,
+        .dash-table tbody tr:hover td.sticky-selesai,
+        .dash-table tbody tr:hover td.sticky-tipe {
             background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
         }
 
@@ -745,7 +769,7 @@
             <div id="panelMatrix">
 
                 {{-- KPI CARDS --}}
-                <div class="kpi-grid mb-4 animate-fade-in-up" style="animation-delay:.05s;">
+                <div class="kpi-grid animate-fade-in-up" style="animation-delay:.05s;">
                     <div class="card kpi-card kc-total">
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="kpi-label">Total Rencana</span>
@@ -803,66 +827,40 @@
                 <div id="filterBarWrap" class="card shadow-sm border-0 mb-4 animate-fade-in-up"
                     style="animation-delay:.1s;border-radius:16px;">
                     <div class="card-body py-3 px-4">
-                        <div class="d-flex align-items-start flex-wrap gap-3">
-                            <div class="d-flex align-items-center gap-2 me-1">
+                        <div class="d-flex align-items-center flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-2">
                                 <span class="text-secondary fw-bold text-uppercase"
                                     style="font-size:10.5px;letter-spacing:.06em;white-space:nowrap;">Tahun:</span>
                                 <select id="filterTahun" class="form-select form-select-sm"
-                                    style="border-radius:8px;width:100px;font-weight:600;">
-                                    @for ($y = date('Y') - 1; $y <= date('Y') + 1; $y++)
+                                    style="border-radius:8px;width:120px;font-weight:600;">
+                                    @for ($y = date('Y') - 3; $y <= date('Y') + 3; $y++)
                                         <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>
                                             {{ $y }}</option>
                                     @endfor
                                 </select>
                             </div>
-                            <div class="d-flex align-items-start gap-2 flex-wrap">
+                            <div class="d-flex align-items-center gap-2">
                                 <span class="text-secondary fw-bold text-uppercase"
-                                    style="font-size:10.5px;letter-spacing:.06em;white-space:nowrap;padding-top:7px;">Jenis:</span>
-                                <div class="chip-group" id="filterJenis">
+                                    style="font-size:10.5px;letter-spacing:.06em;white-space:nowrap;">Jenis:</span>
+                                <select id="filterJenis" class="form-select form-select-sm"
+                                    style="border-radius:8px;width:180px;font-weight:600;">
                                     @foreach ($jenisMtcList as $jenis)
-                                        <button type="button"
-                                            class="btn btn-outline-dark chip jenis-chip {{ $loop->first ? 'active' : '' }}"
-                                            data-jenis="{{ $jenis }}">{{ $jenis }}</button>
+                                        <option value="{{ $jenis }}" {{ $loop->first ? 'selected' : '' }}>
+                                            {{ $jenis }}</option>
                                     @endforeach
-                                </div>
+                                </select>
                             </div>
-                            <div class="d-flex align-items-start gap-2 flex-wrap">
+                            <div class="d-flex align-items-center gap-2">
                                 <span class="text-secondary fw-bold text-uppercase"
-                                    style="font-size:10.5px;letter-spacing:.06em;white-space:nowrap;padding-top:7px;">Bulan:</span>
-                                <div class="chip-group" id="filterBulan">
-                                    <button type="button" class="btn btn-outline-dark chip bulan-chip active"
-                                        data-bulan="all">Semua</button>
-                                    @foreach (['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'] as $bi => $bname)
-                                        <button type="button" class="btn btn-outline-dark chip bulan-chip"
-                                            data-bulan="{{ $bi + 1 }}">{{ $bname }}</button>
+                                    style="font-size:10.5px;letter-spacing:.06em;white-space:nowrap;">Bulan:</span>
+                                <select id="filterBulan" class="form-select form-select-sm"
+                                    style="border-radius:8px;width:150px;font-weight:600;">
+                                    <option value="all" selected>Semua Bulan</option>
+                                    @foreach (['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bi => $bname)
+                                        <option value="{{ $bi + 1 }}">{{ $bname }}</option>
                                     @endforeach
-                                </div>
+                                </select>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- PROGRESS BAR --}}
-                <div class="card shadow-sm border-0 mb-3 animate-fade-in-up"
-                    style="animation-delay:.14s;border-radius:14px;">
-                    <div class="card-body py-3 px-4">
-                        <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                            <div>
-                                <span class="fw-bold text-dark" style="font-size:13px;">Completion Rate</span>
-                                <span class="text-secondary ms-2" style="font-size:12px;"
-                                    id="progressLabel">Memuat…</span>
-                            </div>
-                            <span class="fw-bold fs-5" id="progressPct" style="color:#22c55e;">—</span>
-                        </div>
-                        <div class="big-prog-wrap">
-                            <div class="big-prog-fill" id="progressFill" style="width:0%;background:#22c55e;"></div>
-                        </div>
-                        <div class="legend mt-3">
-                            <span><span class="legend-dot done"></span>Terlaksana</span>
-                            <span><span class="legend-dot today"></span>Minggu Ini</span>
-                            <span><span class="legend-dot overdue"></span>Terlewat</span>
-                            <span><span class="legend-dot pending"></span>Menunggu</span>
-                            <span><span class="legend-dot unplanned"></span>Tidak Terjadwal</span>
                         </div>
                     </div>
                 </div>
@@ -887,6 +885,16 @@
                                 </svg>
                                 <input type="text" class="search-box" id="tblSearch" placeholder="Cari mesin…">
                             </div>
+                        </div>
+
+                        <!-- Legend Bar -->
+                        <div class="legend d-flex align-items-center flex-wrap gap-3 px-4 py-2 border-bottom"
+                            style="background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc)); font-size: 11px;">
+                            <div><span class="legend-dot done"></span>Terlaksana</div>
+                            <div><span class="legend-dot today"></span>Minggu Ini</div>
+                            <div><span class="legend-dot overdue"></span>Terlewat</div>
+                            <div><span class="legend-dot pending"></span>Menunggu</div>
+                            <div><span class="legend-dot unplanned"></span>Tidak Terjadwal</div>
                         </div>
 
                         <div id="tableLoading" class="p-5 text-center text-secondary" style="display:none;">
@@ -935,7 +943,7 @@
                                     style="font-size:10.5px;letter-spacing:.06em;">Tahun:</span>
                                 <select id="calFilterTahun" class="form-select form-select-sm"
                                     style="border-radius:8px;width:100px;font-weight:600;">
-                                    @for ($y = date('Y') - 1; $y <= date('Y') + 1; $y++)
+                                    @for ($y = date('Y') - 3; $y <= date('Y') + 3; $y++)
                                         <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>
                                             {{ $y }}</option>
                                     @endfor
@@ -1212,8 +1220,9 @@
 
             // thead
             var row1 = '<tr class="month-hdr">' +
-                '<th rowspan="2" class="sticky-col" style="min-width:190px;text-align:left;color:#64748b!important;font-size:10.5px!important;">Mesin</th>' +
-                '<th rowspan="2" style="width:80px;text-align:center;font-size:10.5px!important;">Selesai</th>';
+                '<th rowspan="2" class="sticky-col" style="width:190px;min-width:190px;max-width:190px;text-align:left;color:#64748b!important;font-size:10.5px!important;">Mesin</th>' +
+                '<th rowspan="2" class="sticky-selesai" style="width:80px;min-width:80px;max-width:80px;text-align:center;font-size:10.5px!important;">Selesai</th>' +
+                '<th rowspan="2" class="sticky-tipe" style="width:70px;min-width:70px;max-width:70px;text-align:center;font-size:10.5px!important;">Tipe</th>';
             months.forEach(function(m) {
                 row1 += '<th colspan="5" class="mlabel">' + MONTHS_SHORT[m] + '</th>';
             });
@@ -1245,21 +1254,40 @@
                     agMap[a.bulan + '_' + a.minggu_ke] = a;
                 });
 
-                var tds = '';
+                var tdsPlan = '';
+                var tdsActual = '';
+
                 months.forEach(function(bln) {
                     for (var wk = 1; wk <= 5; wk++) {
                         var a = agMap[bln + '_' + wk];
                         var bl = wk === 1 ? 'border-left:1px solid var(--vz-border-color, #f1f5f9);' : '';
-                        if (!a || a.status === 'unplanned') {
-                            tds += '<td style="text-align:center;' + bl +
+
+                        // Render Plan
+                        if (!a || !a.plan) {
+                            tdsPlan += '<td style="text-align:center;' + bl +
                                 '"><span class="wk-chip unplanned">&mdash;</span></td>';
                         } else {
-                            var tip = a.tanggal_aktual ?
-                                statusLabel(a.status) + ' · Paket ' + a.paket + ' · ' + a.tanggal_aktual :
-                                statusLabel(a.status) + ' · Paket ' + a.paket;
-                            tds += '<td style="text-align:center;' + bl + '">' +
-                                '<span class="wk-chip ' + a.status + '" title="' + tip + '">' + statusIcon(a
-                                    .status) + ' ' + a.paket + '</span>' +
+                            var p = a.plan;
+                            var tip = p.tanggal_aktual ?
+                                statusLabel(p.status) + ' · Paket ' + p.paket + ' · ' + p.tanggal_aktual :
+                                statusLabel(p.status) + ' · Paket ' + p.paket;
+                            tdsPlan += '<td style="text-align:center;' + bl + '">' +
+                                '<span class="wk-chip ' + p.status + '" title="' + tip + '">' + statusIcon(p
+                                    .status) + ' ' + p.paket + '</span>' +
+                                '</td>';
+                        }
+
+                        // Render Actual
+                        if (!a || !a.actual) {
+                            tdsActual += '<td style="text-align:center;' + bl +
+                                '"><span class="wk-chip unplanned">&mdash;</span></td>';
+                        } else {
+                            var act = a.actual;
+                            var tip = 'Realisasi: ' + act.tanggal + (act.paket ? ' · Paket ' + act.paket :
+                                '');
+                            tdsActual += '<td style="text-align:center;' + bl + '">' +
+                                '<span class="wk-chip done" title="' + tip + '">✓ ' + (act.paket || 'Mtc') +
+                                '</span>' +
                                 '</td>';
                         }
                     }
@@ -1279,13 +1307,19 @@
                     '<span class="text-secondary" style="font-size:12px;">&mdash;</span>';
 
                 bodyHtml += '<tr data-search="' + search + '">' +
-                    '<td class="sticky-col">' +
+                    '<td class="sticky-col" rowspan="2" style="width:190px;min-width:190px;max-width:190px;">' +
                     (m.kode_mesin ? '<div><span class="mcode">' + m.kode_mesin + '</span></div>' : '') +
                     '<div class="mname">' + m.nama_mesin + '</div>' +
                     (m.lokasi ? '<div class="mloc">📍 ' + m.lokasi + '</div>' : '') +
                     '</td>' +
-                    '<td style="text-align:center;">' + ringHtml + '</td>' +
-                    tds +
+                    '<td class="sticky-selesai" style="text-align:center; vertical-align: middle; width:80px; min-width:80px; max-width:80px;" rowspan="2">' +
+                    ringHtml + '</td>' +
+                    '<td class="sticky-tipe" style="text-align:center; vertical-align: middle; width:70px; min-width:70px; max-width:70px;"><span class="badge bg-primary-subtle text-primary fw-bold" style="font-size:10px; padding: 4px 6px;">PLAN</span></td>' +
+                    tdsPlan +
+                    '</tr>' +
+                    '<tr data-search="' + search + '">' +
+                    '<td class="sticky-tipe" style="text-align:center; vertical-align: middle; width:70px; min-width:70px; max-width:70px;"><span class="badge bg-success-subtle text-success fw-bold" style="font-size:10px; padding: 4px 6px;">ACTUAL</span></td>' +
+                    tdsActual +
                     '</tr>';
                 count++;
             });
@@ -1355,17 +1389,13 @@
             });
         }
 
-        $(document).on('click', '.jenis-chip', function() {
-            $('.jenis-chip').removeClass('active');
-            $(this).addClass('active');
-            currentJenis = $(this).data('jenis');
+        $('#filterJenis').on('change', function() {
+            currentJenis = $(this).val();
             loadDashboardData();
         });
 
-        $(document).on('click', '.bulan-chip', function() {
-            $('.bulan-chip').removeClass('active');
-            $(this).addClass('active');
-            currentBulan = $(this).data('bulan').toString();
+        $('#filterBulan').on('change', function() {
+            currentBulan = $(this).val().toString();
             loadDashboardData();
         });
 

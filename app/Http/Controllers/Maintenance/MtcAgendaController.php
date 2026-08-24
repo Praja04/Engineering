@@ -321,17 +321,22 @@ class MtcAgendaController extends Controller
             $totalPlanned = 0;
             $totalDone    = 0;
 
-            // Get all actual inspection dates for this machine (from inspection table)
-            $actualDates = [];
+            // Get all actual inspections for this machine (from inspection table)
+            $actualInspections = [];
             if ($inspTable) {
-                $rows = DB::table($inspTable)
+                $actualInspections = DB::table($inspTable)
                     ->join('mtc_main', 'mtc_main.id', '=', "{$inspTable}.mtc_main_id")
                     ->where("{$inspTable}.mesin_id", $mesin->id)
                     ->whereYear('mtc_main.tanggal', $tahun)
-                    ->pluck('mtc_main.tanggal')
-                    ->map(fn($d) => Carbon::parse($d))
+                    ->select('mtc_main.tanggal', 'mtc_main.paket')
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'tanggal' => Carbon::parse($row->tanggal),
+                            'paket'   => $row->paket,
+                        ];
+                    })
                     ->toArray();
-                $actualDates = $rows;
             }
 
             $bulanFilter = ($bulan !== 'all' && is_numeric($bulan)) ? [(int)$bulan] : range(1, 12);
@@ -339,58 +344,107 @@ class MtcAgendaController extends Controller
             foreach ($bulanFilter as $bln) {
                 $weekPlans = $mesinPlans[$bln] ?? [];
 
+                // Filter actual inspections for this month
+                $monthActuals = array_filter($actualInspections, function ($act) use ($bln) {
+                    return $act['tanggal']->month === $bln;
+                });
+
+                // Pair month plans with month actual inspections
+                $usedActualKeys = [];
+                $planPairing = [];
+
+                // First pass: exact packet match
                 for ($wk = 1; $wk <= 5; $wk++) {
                     $paket = $weekPlans[$wk] ?? null;
-                    if ($paket === null) {
-                        // No plan for this week — skip
-                        $agendaItems[] = [
-                            'bulan'         => $bln,
-                            'minggu_ke'     => $wk,
-                            'paket'         => null,
-                            'status'        => 'unplanned',
-                            'tanggal_aktual' => null,
+                    if ($paket === null) continue;
+
+                    foreach ($monthActuals as $key => $act) {
+                        if (in_array($key, $usedActualKeys)) continue;
+
+                        if (strcasecmp(trim($act['paket']), trim($paket)) === 0) {
+                            $planPairing[$wk] = $act;
+                            $usedActualKeys[] = $key;
+                            break;
+                        }
+                    }
+                }
+
+                // Second pass: fallback to any unused actual in the same month
+                for ($wk = 1; $wk <= 5; $wk++) {
+                    $paket = $weekPlans[$wk] ?? null;
+                    if ($paket === null) continue;
+                    if (isset($planPairing[$wk])) continue;
+
+                    foreach ($monthActuals as $key => $act) {
+                        if (in_array($key, $usedActualKeys)) continue;
+
+                        $planPairing[$wk] = $act;
+                        $usedActualKeys[] = $key;
+                        break;
+                    }
+                }
+
+                for ($wk = 1; $wk <= 5; $wk++) {
+                    $paket = $weekPlans[$wk] ?? null;
+
+                    // 1. Calculate Plan Item
+                    $planItem = null;
+                    if ($paket !== null) {
+                        $totalPlanned++;
+                        $summaryTotal++;
+
+                        $wRange   = $weekRanges[$bln][$wk];
+                        $wkStart  = Carbon::createFromDate($tahun, $bln, $wRange['start']);
+                        $wkEnd    = Carbon::createFromDate($tahun, $bln, $wRange['end']);
+
+                        $pairedActual = $planPairing[$wk] ?? null;
+                        if ($pairedActual) {
+                            $status = 'done';
+                            $totalDone++;
+                            $summaryDone++;
+                            $doneDate = $pairedActual['tanggal']->format('Y-m-d');
+                        } else {
+                            $doneDate = null;
+                            if ($today->between($wkStart, $wkEnd)) {
+                                $status = 'today';
+                                $summaryToday++;
+                            } elseif ($today->gt($wkEnd)) {
+                                $status = 'overdue';
+                                $summaryOverdue++;
+                            } else {
+                                $status = 'pending';
+                                $summaryPending++;
+                            }
+                        }
+
+                        $planItem = [
+                            'paket'          => $paket,
+                            'status'         => $status,
+                            'tanggal_aktual' => $doneDate,
                         ];
-                        continue;
                     }
 
-                    $totalPlanned++;
-                    $summaryTotal++;
+                    // 2. Calculate Actual Item (first inspection in this week range, if any)
+                    $actualItem = null;
+                    $wRange = $weekRanges[$bln][$wk];
+                    $wkStart = Carbon::createFromDate($tahun, $bln, $wRange['start']);
+                    $wkEnd = Carbon::createFromDate($tahun, $bln, $wRange['end']);
 
-                    // Week date range
-                    $wRange   = $weekRanges[$bln][$wk];
-                    $wkStart  = Carbon::createFromDate($tahun, $bln, $wRange['start']);
-                    $wkEnd    = Carbon::createFromDate($tahun, $bln, $wRange['end']);
-
-                    // Check if there's an actual inspection in this week range
-                    $doneDate = null;
-                    foreach ($actualDates as $ad) {
-                        if ($ad->between($wkStart, $wkEnd)) {
-                            $doneDate = $ad->format('Y-m-d');
+                    foreach ($monthActuals as $act) {
+                        if ($act['tanggal']->between($wkStart, $wkEnd)) {
+                            $actualItem = [
+                                'tanggal' => $act['tanggal']->format('Y-m-d'),
+                                'paket'   => $act['paket'],
+                            ];
                             break;
                         }
                     }
 
-                    if ($doneDate) {
-                        $status = 'done';
-                        $totalDone++;
-                        $summaryDone++;
-                    } elseif ($today->between($wkStart, $wkEnd)) {
-                        $status = 'today';
-                        $summaryToday++;
-                    } elseif ($today->gt($wkEnd)) {
-                        $status = 'overdue';
-                        $summaryOverdue++;
-                    } else {
-                        $status = 'pending';
-                        $summaryPending++;
-                    }
-
                     $agendaItems[] = [
-                        'bulan'         => $bln,
-                        'minggu_ke'     => $wk,
-                        'paket'         => $paket,
-                        'status'        => $status,
-                        'tanggal_aktual' => $doneDate,
+                        'bulan'     => $bln,
+                        'minggu_ke' => $wk,
+                        'plan'      => $planItem,
+                        'actual'    => $actualItem,
                     ];
                 }
             }
@@ -449,74 +503,109 @@ class MtcAgendaController extends Controller
             ->where('bulan', $bulan)
             ->get();
 
-        // Events grouped by day-of-month (start of week)
-        // Also build list grouped by mesin for the side list
+        // Group plans by machine_id
+        $plansByMachine = [];
+        foreach ($plans as $plan) {
+            if ($plan->mesin) {
+                $plansByMachine[$plan->mesin_id][] = $plan;
+            }
+        }
+
         $events    = [];  // day => [event, ...]
         $listItems = [];  // flat list for the agenda list panel
 
-        foreach ($plans as $plan) {
-            $mesin = $plan->mesin;
-            if (!$mesin) continue;
-
+        foreach ($plansByMachine as $mesinId => $machinePlans) {
+            $firstPlan = $machinePlans[0];
+            $mesin = $firstPlan->mesin;
             $jenisMtc = $mesin->jenis_mtc;
             $inspTable = $this->inspectionTables[$jenisMtc] ?? null;
 
-            // Get actual inspection dates for this machine in this month
-            $actualDates = [];
+            // Get actual inspections for this machine in this month
+            $actualInspections = [];
             if ($inspTable) {
-                $rows = DB::table($inspTable)
+                $actualInspections = DB::table($inspTable)
                     ->join('mtc_main', 'mtc_main.id', '=', "{$inspTable}.mtc_main_id")
-                    ->where("{$inspTable}.mesin_id", $mesin->id)
+                    ->where("{$inspTable}.mesin_id", $mesinId)
                     ->whereYear('mtc_main.tanggal', $tahun)
                     ->whereMonth('mtc_main.tanggal', $bulan)
-                    ->pluck('mtc_main.tanggal')
-                    ->map(fn($d) => Carbon::parse($d))
+                    ->select('mtc_main.tanggal', 'mtc_main.paket')
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'tanggal' => Carbon::parse($row->tanggal),
+                            'paket'   => $row->paket,
+                        ];
+                    })
                     ->toArray();
-                $actualDates = $rows;
             }
 
-            $wk      = $plan->minggu_ke;
-            $wRange  = $weekRanges[$wk] ?? null;
-            if (!$wRange) continue;
+            // Pair machine plans with actual inspections
+            $usedActualKeys = [];
+            $planPairing = [];
 
-            $wkStart = Carbon::createFromDate($tahun, $bulan, $wRange['start']);
-            $wkEnd   = Carbon::createFromDate($tahun, $bulan, $wRange['end']);
+            // First pass: exact packet match
+            foreach ($machinePlans as $idx => $plan) {
+                foreach ($actualInspections as $key => $act) {
+                    if (in_array($key, $usedActualKeys)) continue;
+                    if (strcasecmp(trim($act['paket']), trim($plan->paket)) === 0) {
+                        $planPairing[$idx] = $act;
+                        $usedActualKeys[] = $key;
+                        break;
+                    }
+                }
+            }
 
-            // Determine status
-            $doneDate = null;
-            foreach ($actualDates as $ad) {
-                if ($ad->between($wkStart, $wkEnd)) {
-                    $doneDate = $ad->format('Y-m-d');
+            // Second pass: fallback to any unused actual in the same month
+            foreach ($machinePlans as $idx => $plan) {
+                if (isset($planPairing[$idx])) continue;
+                foreach ($actualInspections as $key => $act) {
+                    if (in_array($key, $usedActualKeys)) continue;
+                    $planPairing[$idx] = $act;
+                    $usedActualKeys[] = $key;
                     break;
                 }
             }
 
-            if ($doneDate) {
-                $status = 'done';
-            } elseif ($today->between($wkStart, $wkEnd)) {
-                $status = 'today';
-            } elseif ($today->gt($wkEnd)) {
-                $status = 'overdue';
-            } else {
-                $status = 'pending';
+            // Construct events & list items
+            foreach ($machinePlans as $idx => $plan) {
+                $wk      = $plan->minggu_ke;
+                $wRange  = $weekRanges[$wk] ?? null;
+                if (!$wRange) continue;
+
+                $wkStart = Carbon::createFromDate($tahun, $bulan, $wRange['start']);
+                $wkEnd   = Carbon::createFromDate($tahun, $bulan, $wRange['end']);
+
+                $pairedActual = $planPairing[$idx] ?? null;
+                if ($pairedActual) {
+                    $status = 'done';
+                    $doneDate = $pairedActual['tanggal']->format('Y-m-d');
+                } else {
+                    $doneDate = null;
+                    if ($today->between($wkStart, $wkEnd)) {
+                        $status = 'today';
+                    } elseif ($today->gt($wkEnd)) {
+                        $status = 'overdue';
+                    } else {
+                        $status = 'pending';
+                    }
+                }
+
+                $event = [
+                    'mesin_id'       => $mesin->id,
+                    'kode_mesin'     => $mesin->kode_mesin,
+                    'nama_mesin'     => $mesin->nama_mesin,
+                    'jenis_mtc'      => $jenisMtc,
+                    'paket'          => $plan->paket,
+                    'minggu_ke'      => $wk,
+                    'day_start'      => $wRange['start'],
+                    'day_end'        => $wRange['end'],
+                    'status'         => $status,
+                    'tanggal_aktual' => $doneDate,
+                ];
+
+                $events[$wRange['start']][] = $event;
+                $listItems[] = $event;
             }
-
-            $event = [
-                'mesin_id'       => $mesin->id,
-                'kode_mesin'     => $mesin->kode_mesin,
-                'nama_mesin'     => $mesin->nama_mesin,
-                'jenis_mtc'      => $jenisMtc,
-                'paket'          => $plan->paket,
-                'minggu_ke'      => $wk,
-                'day_start'      => $wRange['start'],
-                'day_end'        => $wRange['end'],
-                'status'         => $status,
-                'tanggal_aktual' => $doneDate,
-            ];
-
-            // Add to events keyed by start day
-            $events[$wRange['start']][] = $event;
-            $listItems[] = $event;
         }
 
         // Sort list by minggu_ke then nama_mesin
