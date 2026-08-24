@@ -890,10 +890,8 @@
                         <!-- Legend Bar -->
                         <div class="legend d-flex align-items-center flex-wrap gap-3 px-4 py-2 border-bottom"
                             style="background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc)); font-size: 11px;">
-                            <div><span class="legend-dot done"></span>Terlaksana</div>
-                            <div><span class="legend-dot today"></span>Minggu Ini</div>
-                            <div><span class="legend-dot overdue"></span>Terlewat</div>
-                            <div><span class="legend-dot pending"></span>Menunggu</div>
+                            <div><span class="legend-dot pending"></span>Rencana (Plan)</div>
+                            <div><span class="legend-dot done"></span>Terlaksana (Actual)</div>
                             <div><span class="legend-dot unplanned"></span>Tidak Terjadwal</div>
                         </div>
 
@@ -1268,12 +1266,9 @@
                                 '"><span class="wk-chip unplanned">&mdash;</span></td>';
                         } else {
                             var p = a.plan;
-                            var tip = p.tanggal_aktual ?
-                                statusLabel(p.status) + ' · Paket ' + p.paket + ' · ' + p.tanggal_aktual :
-                                statusLabel(p.status) + ' · Paket ' + p.paket;
+                            var tip = 'Rencana: Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' + p.tanggal_aktual : '');
                             tdsPlan += '<td style="text-align:center;' + bl + '">' +
-                                '<span class="wk-chip ' + p.status + '" title="' + tip + '">' + statusIcon(p
-                                    .status) + ' ' + p.paket + '</span>' +
+                                '<span class="wk-chip pending" title="' + tip + '">' + p.paket + '</span>' +
                                 '</td>';
                         }
 
