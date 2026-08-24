@@ -740,11 +740,12 @@
                                 <th>Jam Log</th>
                                 <th>Uptime (Min)</th>
                                 <th>CT Product</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="modal-table-body">
                             <tr>
-                                <td colspan="4" class="text-center py-3" style="color: var(--oee-text-muted);">Memuat data log jam...</td>
+                                <td colspan="5" class="text-center py-3" style="color: var(--oee-text-muted);">Memuat data log jam...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1102,10 +1103,10 @@
                     total_product: prod1,
                     oee_pct: oee1,
                     hourly_rows: [
-                        { id: 1, jam: '06.00-07.00', oee: 55, ct_product: 4620, is_stop_shift: false },
-                        { id: 2, jam: '07.00-08.00', oee: 58, ct_product: 4872, is_stop_shift: false },
-                        { id: 3, jam: '08.00-09.00', oee: 60, ct_product: 5040, is_stop_shift: false },
-                        { id: 4, jam: '09.00-10.00', oee: 52, ct_product: 4368, is_stop_shift: false }
+                        { id: 1, jam: '06.00', oee: 55, ct_product: 4620, is_stop_shift: false, status: 'NORMAL' },
+                        { id: 2, jam: '07.00', oee: 58, ct_product: 4872, is_stop_shift: false, status: 'NORMAL' },
+                        { id: 3, jam: '08.00', oee: 60, ct_product: 5040, is_stop_shift: false, status: 'NORMAL' },
+                        { id: 4, jam: '09.00', oee: 52, ct_product: 4368, is_stop_shift: false, status: 'NORMAL' }
                     ]
                 });
 
@@ -1121,8 +1122,8 @@
                     total_product: prod2,
                     oee_pct: oee2,
                     hourly_rows: [
-                        { id: 5, jam: '14.00-15.00', oee: 57, ct_product: 4788, is_stop_shift: false },
-                        { id: 6, jam: '15.00-16.00', oee: 59, ct_product: 4956, is_stop_shift: false }
+                        { id: 5, jam: '14.00', oee: 57, ct_product: 4788, is_stop_shift: false, status: 'NORMAL' },
+                        { id: 6, jam: '15.00', oee: 59, ct_product: 4956, is_stop_shift: false, status: 'NORMAL' }
                     ]
                 });
             }
@@ -1162,6 +1163,18 @@
             renderShiftRows(generateFallbackShifts(startVal, endVal));
         }
 
+        function formatJamRange(jamStr) {
+            if (!jamStr) return '-';
+            if (jamStr.includes('-')) return jamStr;
+            const parts = jamStr.split('.');
+            const hourInt = parseInt(parts[0], 10);
+            if (isNaN(hourInt)) return jamStr;
+            const prevHour = (hourInt + 23) % 24;
+            const prevStr = String(prevHour).padStart(2, '0') + '.00';
+            const currStr = String(hourInt).padStart(2, '0') + '.00';
+            return `${prevStr}-${currStr}`;
+        }
+
         // Open Shift Detail Modal
         function openShiftDetailModal(shift) {
             const subtitleEl = document.getElementById('modal-shift-subtitle');
@@ -1182,18 +1195,52 @@
                 modalTableBody.innerHTML = '';
                 const hourlyRows = shift.hourly_rows || [];
                 if (hourlyRows.length > 0) {
-                    hourlyRows.forEach(row => {
+                    // Sort rows chronologically for calculation
+                    const sortedRows = [...hourlyRows].sort((a, b) => new Date(a.machine_ts || 0) - new Date(b.machine_ts || 0) || a.id - b.id);
+
+                    let prevCumulative = 0;
+                    sortedRows.forEach(row => {
+                        const rawProd = Number(row.ct_product || 0);
+                        let netProd = 0;
+
+                        if (row.net_ct_product !== undefined) {
+                            netProd = row.net_ct_product;
+                        } else if (rawProd < prevCumulative) {
+                            netProd = rawProd;
+                        } else {
+                            netProd = rawProd - prevCumulative;
+                        }
+                        prevCumulative = rawProd;
+
+                        const displayJam = formatJamRange(row.jam);
+                        const statusStr = row.status || 'NORMAL';
+                        const upperStatus = statusStr.toUpperCase();
+
+                        let statusBadgeHtml = '';
+                        if (upperStatus.includes('NORMAL')) {
+                            statusBadgeHtml = `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem;">NORMAL</span>`;
+                        } else if (upperStatus.includes('OFF') || upperStatus.includes('IDLE')) {
+                            statusBadgeHtml = `<span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem;">${statusStr}</span>`;
+                        } else if (upperStatus.includes('TIDAK ADA DATA') || upperStatus.includes('OFFLINE')) {
+                            statusBadgeHtml = `<span style="background: rgba(107, 114, 128, 0.2); color: #9ca3af; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem;">${statusStr}</span>`;
+                        } else if (upperStatus.includes('STOP SHIFT')) {
+                            statusBadgeHtml = `<span style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem;">${statusStr}</span>`;
+                        } else {
+                            statusBadgeHtml = `<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.78rem;">${statusStr}</span>`;
+                        }
+
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>${row.id}</td>
-                            <td><span class="oee-jam-badge">${row.jam}</span></td>
+                            <td><span class="oee-jam-badge">${displayJam}</span></td>
                             <td class="fw-bold text-info">${row.oee} min</td>
-                            <td class="text-success">${Number(row.ct_product).toLocaleString('id-ID')} pcs</td>
+                            <td class="text-success">${Number(netProd).toLocaleString('id-ID')} pcs</td>
+                            <td>${statusBadgeHtml}</td>
                         `;
                         modalTableBody.appendChild(tr);
                     });
                 } else {
-                    modalTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-3" style="color: var(--oee-text-muted);">Tidak ada detail log jam untuk shift ini</td></tr>`;
+                    modalTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-3" style="color: var(--oee-text-muted);">Tidak ada detail log jam untuk shift ini</td></tr>`;
                 }
             }
 
