@@ -306,32 +306,45 @@
                                     </div>
                                 </div>
 
-                                <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3 small text-uppercase"
-                                    style="letter-spacing: .05em;">Rencana Mingguan</h6>
+                                <div id="weeklyEditContainer">
+                                    <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3 small text-uppercase"
+                                        style="letter-spacing: .05em;">Rencana Mingguan</h6>
 
-                                @for ($w = 1; $w <= 5; $w++)
-                                    <div class="row align-items-center mb-3">
-                                        <div class="col-4">
-                                            <label for="editWeek{{ $w }}"
-                                                class="small fw-semibold text-secondary mb-0">Minggu
-                                                Ke-{{ $w }}</label>
+                                    @for ($w = 1; $w <= 5; $w++)
+                                        <div class="row align-items-center mb-3">
+                                            <div class="col-4">
+                                                <label for="editWeek{{ $w }}"
+                                                    class="small fw-semibold text-secondary mb-0">Minggu
+                                                    Ke-{{ $w }}</label>
+                                            </div>
+                                            <div class="col-8">
+                                                <select name="weeks[{{ $w }}]" id="editWeek{{ $w }}"
+                                                    class="form-select form-select-sm week-select"
+                                                    style="border-radius: 8px; padding: 6px 12px;">
+                                                    <option value="none">(Kosong / Hapus)</option>
+                                                    <option value="Z">Paket Z</option>
+                                                    <option value="A">Paket A</option>
+                                                    <option value="B">Paket B</option>
+                                                    <option value="C">Paket C</option>
+                                                    <option value="D">Paket D</option>
+                                                    <option value="Checkpoint">Checkpoint</option>
+                                                    <option value="Korektif">Korektif</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div class="col-8">
-                                            <select name="weeks[{{ $w }}]" id="editWeek{{ $w }}"
-                                                class="form-select form-select-sm week-select"
-                                                style="border-radius: 8px; padding: 6px 12px;">
-                                                <option value="none">(Kosong / Hapus)</option>
-                                                <option value="Z">Paket Z</option>
-                                                <option value="A">Paket A</option>
-                                                <option value="B">Paket B</option>
-                                                <option value="C">Paket C</option>
-                                                <option value="D">Paket D</option>
-                                                <option value="Checkpoint">Checkpoint</option>
-                                                <option value="Korektif">Korektif</option>
-                                            </select>
-                                        </div>
+                                    @endfor
+                                </div>
+
+                                <div id="dateEditContainer" class="d-none">
+                                    <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3 small text-uppercase"
+                                        style="letter-spacing: .05em;">Rencana Harian (Tanggal)</h6>
+                                    <div id="dynamicDateRows" style="max-height: 250px; overflow-y: auto; padding-right: 4px;" class="mb-3">
+                                        <!-- dynamic rows -->
                                     </div>
-                                @endfor
+                                    <button type="button" class="btn btn-outline-dark btn-sm fw-bold mt-2" id="btnAddDateRow" style="border-radius: 8px;">
+                                        <i class="mdi mdi-plus"></i> Tambah Tanggal
+                                    </button>
+                                </div>
 
                                 <!-- Alert feedback inside modal -->
                                 <div id="editFeedback" class="alert d-none py-2 small mb-0 mt-3"
@@ -514,34 +527,48 @@
                                     </div>
                                 </div>
 
-                                <h6 class="fw-bold text-secondary border-bottom pb-1 mb-2 small text-uppercase"
-                                    style="letter-spacing: .05em; font-size: 11px;">Rencana Mingguan</h6>
+                                <div id="manualWeeklyContainer">
+                                    <h6 class="fw-bold text-secondary border-bottom pb-1 mb-2 small text-uppercase"
+                                        style="letter-spacing: .05em; font-size: 11px;">Rencana Mingguan</h6>
 
-                                <div style="max-height: 220px; overflow-y: auto; padding-right: 4px;" class="mb-3">
-                                    @for ($w = 1; $w <= 5; $w++)
-                                        <div class="row align-items-center mb-2">
-                                            <div class="col-4">
-                                                <label for="manualWeek{{ $w }}"
-                                                    class="small fw-semibold text-secondary mb-0"
-                                                    style="font-size: 12px;">Minggu {{ $w }}</label>
+                                    <div style="max-height: 220px; overflow-y: auto; padding-right: 4px;" class="mb-3">
+                                        @for ($w = 1; $w <= 5; $w++)
+                                            <div class="row align-items-center mb-2">
+                                                <div class="col-4">
+                                                    <label for="manualWeek{{ $w }}"
+                                                        class="small fw-semibold text-secondary mb-0"
+                                                        style="font-size: 12px;">Minggu {{ $w }}</label>
+                                                </div>
+                                                <div class="col-8">
+                                                    <select name="weeks[{{ $w }}]"
+                                                        id="manualWeek{{ $w }}"
+                                                        class="form-select form-select-sm manual-week-select"
+                                                        style="border-radius: 8px; padding: 5px 10px; font-size: 12px;">
+                                                        <option value="none">(Kosong / Hapus)</option>
+                                                        <option value="Z">Paket Z</option>
+                                                        <option value="A">Paket A</option>
+                                                        <option value="B">Paket B</option>
+                                                        <option value="C">Paket C</option>
+                                                        <option value="D">Paket D</option>
+                                                        <option value="Checkpoint">Checkpoint</option>
+                                                        <option value="Korektif">Korektif</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div class="col-8">
-                                                <select name="weeks[{{ $w }}]"
-                                                    id="manualWeek{{ $w }}"
-                                                    class="form-select form-select-sm manual-week-select"
-                                                    style="border-radius: 8px; padding: 5px 10px; font-size: 12px;">
-                                                    <option value="none">(Kosong / Hapus)</option>
-                                                    <option value="Z">Paket Z</option>
-                                                    <option value="A">Paket A</option>
-                                                    <option value="B">Paket B</option>
-                                                    <option value="C">Paket C</option>
-                                                    <option value="D">Paket D</option>
-                                                    <option value="Checkpoint">Checkpoint</option>
-                                                    <option value="Korektif">Korektif</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    @endfor
+                                        @endfor
+                                    </div>
+                                </div>
+
+                                <div id="manualDateContainer" class="d-none">
+                                    <h6 class="fw-bold text-secondary border-bottom pb-1 mb-2 small text-uppercase"
+                                        style="letter-spacing: .05em; font-size: 11px;">Rencana Harian (Tanggal)</h6>
+
+                                    <div id="manualDynamicDateRows" style="max-height: 220px; overflow-y: auto; padding-right: 4px;" class="mb-3">
+                                        <!-- dynamic rows -->
+                                    </div>
+                                    <button type="button" class="btn btn-outline-dark btn-sm fw-bold mb-3" id="btnManualAddDateRow" style="border-radius: 8px;">
+                                        <i class="mdi mdi-plus"></i> Tambah Tanggal
+                                    </button>
                                 </div>
 
                                 <div id="manualFeedback" class="alert d-none py-2 small mb-0"
@@ -590,19 +617,117 @@
             }
         }
 
-        /* Update manual form weekly select boxes based on cached plans */
-        function updateManualFormWeeks() {
+        function addManualDateRow(dateVal = '', packageVal = 'A') {
+            const yearStr = $('#manualTahun').val() || currentTahun;
+            const monthStr = String($('#manualBulan').val() || 1).padStart(2, '0');
+            
+            const lastDay = new Date(yearStr, monthStr, 0).getDate();
+            const minDate = `${yearStr}-${monthStr}-01`;
+            const maxDate = `${yearStr}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
+            
+            const rowHtml = `
+                <div class="row align-items-center mb-2 manual-date-row">
+                    <div class="col-6">
+                        <input type="date" name="dates[]" class="form-control form-control-sm" 
+                               value="${dateVal}" min="${minDate}" max="${maxDate}" required 
+                               style="border-radius: 8px;">
+                    </div>
+                    <div class="col-4">
+                        <select name="date_packages[]" class="form-select form-select-sm" style="border-radius: 8px;">
+                            <option value="Z" ${packageVal === 'Z' ? 'selected' : ''}>Paket Z</option>
+                            <option value="A" ${packageVal === 'A' ? 'selected' : ''}>Paket A</option>
+                            <option value="B" ${packageVal === 'B' ? 'selected' : ''}>Paket B</option>
+                            <option value="C" ${packageVal === 'C' ? 'selected' : ''}>Paket C</option>
+                            <option value="D" ${packageVal === 'D' ? 'selected' : ''}>Paket D</option>
+                            <option value="Checkpoint" ${packageVal === 'Checkpoint' ? 'selected' : ''}>Checkpoint</option>
+                            <option value="Korektif" ${packageVal === 'Korektif' ? 'selected' : ''}>Korektif</option>
+                        </select>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button type="button" class="btn btn-outline-danger btn-sm btn-remove-manual-date" style="border-radius: 8px; padding: 4px 8px;">
+                            <i class="mdi mdi-delete-outline"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            $('#manualDynamicDateRows').append(rowHtml);
+        }
+
+        function addDateRow(dateVal = '', packageVal = 'A') {
+            const yearStr = currentTahun;
+            const monthStr = String($('#editBulan').val() || 1).padStart(2, '0');
+            
+            const lastDay = new Date(yearStr, monthStr, 0).getDate();
+            const minDate = `${yearStr}-${monthStr}-01`;
+            const maxDate = `${yearStr}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
+            
+            const rowHtml = `
+                <div class="row align-items-center mb-2 date-row">
+                    <div class="col-6">
+                        <input type="date" name="dates[]" class="form-control form-control-sm" 
+                               value="${dateVal}" min="${minDate}" max="${maxDate}" required 
+                               style="border-radius: 8px;">
+                    </div>
+                    <div class="col-4">
+                        <select name="date_packages[]" class="form-select form-select-sm" style="border-radius: 8px;">
+                            <option value="Z" ${packageVal === 'Z' ? 'selected' : ''}>Paket Z</option>
+                            <option value="A" ${packageVal === 'A' ? 'selected' : ''}>Paket A</option>
+                            <option value="B" ${packageVal === 'B' ? 'selected' : ''}>Paket B</option>
+                            <option value="C" ${packageVal === 'C' ? 'selected' : ''}>Paket C</option>
+                            <option value="D" ${packageVal === 'D' ? 'selected' : ''}>Paket D</option>
+                            <option value="Checkpoint" ${packageVal === 'Checkpoint' ? 'selected' : ''}>Checkpoint</option>
+                            <option value="Korektif" ${packageVal === 'Korektif' ? 'selected' : ''}>Korektif</option>
+                        </select>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button type="button" class="btn btn-outline-danger btn-sm btn-remove-date" style="border-radius: 8px; padding: 4px 8px;">
+                            <i class="mdi mdi-delete-outline"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            $('#dynamicDateRows').append(rowHtml);
+        }
+
+        /* Update manual form plans based on cached plans */
+        function updateManualFormPlans() {
             const mesinId = $('#manualMesinId').val();
             const bulanNum = $('#manualBulan').val();
+            const isDateBased = (currentJenis === 'Electric Engine' || currentJenis === 'Diesel Engine');
 
-            // Reset all to none
-            $('.manual-week-select').val('none');
+            if (isDateBased) {
+                $('#manualWeeklyContainer').addClass('d-none');
+                $('#manualDateContainer').removeClass('d-none');
+                $('#manualDynamicDateRows').empty();
 
-            if (mesinId && bulanNum && loadedPlans[mesinId] && loadedPlans[mesinId][bulanNum]) {
-                const plans = loadedPlans[mesinId][bulanNum];
-                plans.forEach(plan => {
-                    $(`#manualWeek${plan.minggu_ke}`).val(plan.paket.toUpperCase().trim());
-                });
+                if (mesinId && bulanNum && loadedPlans[mesinId] && loadedPlans[mesinId][bulanNum]) {
+                    const plans = loadedPlans[mesinId][bulanNum];
+                    let count = 0;
+                    plans.forEach(plan => {
+                        if (plan.tanggal) {
+                            addManualDateRow(plan.tanggal, plan.paket);
+                            count++;
+                        }
+                    });
+                    if (count === 0) {
+                        addManualDateRow('', 'A');
+                    }
+                } else {
+                    addManualDateRow('', 'A');
+                }
+            } else {
+                $('#manualWeeklyContainer').removeClass('d-none');
+                $('#manualDateContainer').addClass('d-none');
+                
+                // Reset all to none
+                $('.manual-week-select').val('none');
+
+                if (mesinId && bulanNum && loadedPlans[mesinId] && loadedPlans[mesinId][bulanNum]) {
+                    const plans = loadedPlans[mesinId][bulanNum];
+                    plans.forEach(plan => {
+                        $(`#manualWeek${plan.minggu_ke}`).val(plan.paket.toUpperCase().trim());
+                    });
+                }
             }
         }
 
@@ -652,8 +777,8 @@
                         });
                     }
 
-                    // Reset manual weeks
-                    updateManualFormWeeks();
+                    // Reset manual plans
+                    updateManualFormPlans();
 
                     // Calculate total agenda count from loaded plans
                     let totalAgendaCount = 0;
@@ -741,9 +866,17 @@
                                     else if (cleanPkg === 'C') pkgClass = 'pkg-c';
                                     else if (cleanPkg === 'D') pkgClass = 'pkg-d';
 
+                                    let labelText = '';
+                                    if (plan.tanggal) {
+                                        const dayNum = plan.tanggal.substring(8, 10);
+                                        labelText = `Tgl ${dayNum}`;
+                                    } else {
+                                        labelText = `M${plan.minggu_ke}`;
+                                    }
+
                                     html += `
                                         <span class="planner-badge ${pkgClass} px-2 py-1">
-                                            <span class="me-3">M${plan.minggu_ke}</span>
+                                            <span class="me-3">${labelText}</span>
                                             <span class="fw-bold fs-7">${plan.paket}</span>
                                         </span>
                                     `;
@@ -858,9 +991,9 @@
                 loadMatrixData();
             });
 
-            // Manual form listeners to auto-fill existing weeks
-            $('#manualMesinId, #manualBulan').on('change', function() {
-                updateManualFormWeeks();
+            // Manual form listeners to auto-fill existing weeks/dates
+            $('#manualMesinId, #manualBulan, #manualTahun, #manualJenisMtc').on('change', function() {
+                updateManualFormPlans();
             });
 
             // Sync manual jenis MTC change back to global filters and matrix
@@ -956,13 +1089,33 @@
                 $('#editMesinNamaText').text(mesinNama);
                 $('#editPeriodeText').text(bulanNama + ' ' + currentTahun);
 
-                // Reset selectors to none
-                $('.week-select').val('none');
+                const isDateBased = (currentJenis === 'Electric Engine' || currentJenis === 'Diesel Engine');
+                if (isDateBased) {
+                    $('#weeklyEditContainer').addClass('d-none');
+                    $('#dateEditContainer').removeClass('d-none');
+                    $('#dynamicDateRows').empty();
 
-                // Map database values back to selectors
-                plans.forEach(plan => {
-                    $(`#editWeek${plan.minggu_ke}`).val(plan.paket.toUpperCase().trim());
-                });
+                    if (plans && plans.length > 0) {
+                        plans.forEach(plan => {
+                            if (plan.tanggal) {
+                                addDateRow(plan.tanggal, plan.paket);
+                            }
+                        });
+                    } else {
+                        addDateRow('', 'A');
+                    }
+                } else {
+                    $('#weeklyEditContainer').removeClass('d-none');
+                    $('#dateEditContainer').addClass('d-none');
+
+                    // Reset selectors to none
+                    $('.week-select').val('none');
+
+                    // Map database values back to selectors
+                    plans.forEach(plan => {
+                        $(`#editWeek${plan.minggu_ke}`).val(plan.paket.toUpperCase().trim());
+                    });
+                }
 
                 // Clear alerts
                 $('#editFeedback').addClass('d-none').html('');
@@ -971,14 +1124,32 @@
                 $('#editAgendaModal').modal('show');
             });
 
-            // Hapus Semua weekly plans handler
+            // Hapus Semua weekly/date plans handler
             $('#btnHapusSemua').on('click', function() {
                 if (confirm(
                         'Apakah Anda yakin ingin menghapus semua agenda perawatan untuk mesin ini di bulan tersebut?'
                     )) {
                     $('.week-select').val('none');
+                    $('#dynamicDateRows').empty();
                     $('#editAgendaForm').trigger('submit');
                 }
+            });
+
+            // Dynamic date row events
+            $(document).on('click', '#btnAddDateRow', function() {
+                addDateRow('', 'A');
+            });
+
+            $(document).on('click', '.btn-remove-date', function() {
+                $(this).closest('.date-row').remove();
+            });
+
+            $(document).on('click', '#btnManualAddDateRow', function() {
+                addManualDateRow('', 'A');
+            });
+
+            $(document).on('click', '.btn-remove-manual-date', function() {
+                $(this).closest('.manual-date-row').remove();
             });
 
             // Submit Edit Form via AJAX

@@ -142,14 +142,15 @@ class MtcAgendaController extends Controller
             $q->where('jenis_mtc', $jenisMtc);
         })
             ->where('tahun', $tahun)
-            ->get(['id', 'mesin_id', 'bulan', 'minggu_ke', 'paket']);
+            ->get(['id', 'mesin_id', 'bulan', 'minggu_ke', 'paket', 'tanggal']);
 
         // Group plans by machine_id -> bulan
         $groupedPlans = [];
         foreach ($plans as $p) {
             $groupedPlans[$p->mesin_id][$p->bulan][] = [
                 'minggu_ke' => $p->minggu_ke,
-                'paket' => $p->paket
+                'paket' => $p->paket,
+                'tanggal' => $p->tanggal ? $p->tanggal->format('Y-m-d') : null
             ];
         }
 
@@ -169,41 +170,76 @@ class MtcAgendaController extends Controller
             'mesin_id' => 'required|exists:mtc_master_mesin,id',
             'tahun' => 'required|integer',
             'bulan' => 'required|integer|between:1,12',
-            'weeks' => 'array',
+            'weeks' => 'nullable|array',
+            'dates' => 'nullable|array',
+            'date_packages' => 'nullable|array',
         ]);
 
         $mesinId = $request->mesin_id;
         $tahun = (int) $request->tahun;
         $bulan = (int) $request->bulan;
-        $weeks = $request->get('weeks', []); // array of week_num => paket
+
+        $mesin = MtcMasterMesinModel::findOrFail($mesinId);
+        $isDateBased = in_array($mesin->jenis_mtc, ['Electric Engine', 'Diesel Engine']);
 
         DB::beginTransaction();
         try {
-            for ($weekNum = 1; $weekNum <= 5; $weekNum++) {
-                $paket = isset($weeks[$weekNum]) ? trim($weeks[$weekNum]) : '';
+            if ($isDateBased) {
+                // Delete existing records for this machine, year, month
+                MtcAgendaModel::where([
+                    'mesin_id' => $mesinId,
+                    'tahun' => $tahun,
+                    'bulan' => $bulan
+                ])->delete();
 
-                if (empty($paket) || $paket === 'none') {
-                    // Delete if exists
-                    MtcAgendaModel::where([
+                $dates = $request->get('dates', []);
+                $packages = $request->get('date_packages', []);
+
+                foreach ($dates as $idx => $dateStr) {
+                    if (empty($dateStr)) continue;
+                    $paket = isset($packages[$idx]) ? trim($packages[$idx]) : '';
+                    if (empty($paket) || $paket === 'none') continue;
+
+                    MtcAgendaModel::create([
                         'mesin_id' => $mesinId,
                         'tahun' => $tahun,
                         'bulan' => $bulan,
-                        'minggu_ke' => $weekNum
-                    ])->delete();
-                } else {
-                    // Update or create
-                    MtcAgendaModel::updateOrCreate(
-                        [
+                        'minggu_ke' => null, // NULL for date-based
+                        'tanggal' => $dateStr,
+                        'paket' => strtoupper($paket),
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            } else {
+                $weeks = $request->get('weeks', []); // array of week_num => paket
+                for ($weekNum = 1; $weekNum <= 5; $weekNum++) {
+                    $paket = isset($weeks[$weekNum]) ? trim($weeks[$weekNum]) : '';
+
+                    if (empty($paket) || $paket === 'none') {
+                        // Delete if exists
+                        MtcAgendaModel::where([
                             'mesin_id' => $mesinId,
                             'tahun' => $tahun,
                             'bulan' => $bulan,
                             'minggu_ke' => $weekNum
-                        ],
-                        [
-                            'paket' => strtoupper($paket),
-                            'updated_by' => Auth::id()
-                        ]
-                    );
+                        ])->delete();
+                    } else {
+                        // Update or create
+                        MtcAgendaModel::updateOrCreate(
+                            [
+                                'mesin_id' => $mesinId,
+                                'tahun' => $tahun,
+                                'bulan' => $bulan,
+                                'minggu_ke' => $weekNum
+                            ],
+                            [
+                                'paket' => strtoupper($paket),
+                                'tanggal' => null, // NULL for week-based
+                                'updated_by' => Auth::id()
+                            ]
+                        );
+                    }
                 }
             }
             DB::commit();
@@ -280,12 +316,25 @@ class MtcAgendaController extends Controller
             $agendaQuery->where('bulan', (int)$bulan);
         }
 
-        $agendaPlans = $agendaQuery->get(['mesin_id', 'bulan', 'minggu_ke', 'paket']);
+        $agendaPlans = $agendaQuery->get(['mesin_id', 'bulan', 'minggu_ke', 'paket', 'tanggal']);
 
-        // Group plans by mesin_id -> bulan -> minggu_ke
+        // Group plans by mesin_id -> bulan -> minggu_ke (or computed week if date-based)
         $plansByMachine = [];
         foreach ($agendaPlans as $plan) {
-            $plansByMachine[$plan->mesin_id][$plan->bulan][$plan->minggu_ke] = $plan->paket;
+            if ($plan->tanggal) {
+                // Compute minggu_ke dynamically from date day
+                $day = Carbon::parse($plan->tanggal)->day;
+                $computedWk = ($day <= 7) ? 1 : (($day <= 14) ? 2 : (($day <= 21) ? 3 : (($day <= 28) ? 4 : 5)));
+                $plansByMachine[$plan->mesin_id][$plan->bulan][$computedWk] = [
+                    'paket' => $plan->paket,
+                    'tanggal' => $plan->tanggal->format('Y-m-d')
+                ];
+            } else {
+                $plansByMachine[$plan->mesin_id][$plan->bulan][$plan->minggu_ke] = [
+                    'paket' => $plan->paket,
+                    'tanggal' => null
+                ];
+            }
         }
 
         // Get inspection table for this jenis_mtc
@@ -355,8 +404,9 @@ class MtcAgendaController extends Controller
 
                 // First pass: exact packet match
                 for ($wk = 1; $wk <= 5; $wk++) {
-                    $paket = $weekPlans[$wk] ?? null;
-                    if ($paket === null) continue;
+                    $planData = $weekPlans[$wk] ?? null;
+                    if ($planData === null) continue;
+                    $paket = $planData['paket'];
 
                     foreach ($monthActuals as $key => $act) {
                         if (in_array($key, $usedActualKeys)) continue;
@@ -371,8 +421,8 @@ class MtcAgendaController extends Controller
 
                 // Second pass: fallback to any unused actual in the same month
                 for ($wk = 1; $wk <= 5; $wk++) {
-                    $paket = $weekPlans[$wk] ?? null;
-                    if ($paket === null) continue;
+                    $planData = $weekPlans[$wk] ?? null;
+                    if ($planData === null) continue;
                     if (isset($planPairing[$wk])) continue;
 
                     foreach ($monthActuals as $key => $act) {
@@ -385,11 +435,13 @@ class MtcAgendaController extends Controller
                 }
 
                 for ($wk = 1; $wk <= 5; $wk++) {
-                    $paket = $weekPlans[$wk] ?? null;
+                    $planData = $weekPlans[$wk] ?? null;
 
                     // 1. Calculate Plan Item
                     $planItem = null;
-                    if ($paket !== null) {
+                    if ($planData !== null) {
+                        $paket = $planData['paket'];
+                        $planTanggal = $planData['tanggal'];
                         $totalPlanned++;
                         $summaryTotal++;
 
@@ -405,15 +457,29 @@ class MtcAgendaController extends Controller
                             $doneDate = $pairedActual['tanggal']->format('Y-m-d');
                         } else {
                             $doneDate = null;
-                            if ($today->between($wkStart, $wkEnd)) {
-                                $status = 'today';
-                                $summaryToday++;
-                            } elseif ($today->gt($wkEnd)) {
-                                $status = 'overdue';
-                                $summaryOverdue++;
+                            if ($planTanggal) {
+                                $planDateObj = Carbon::parse($planTanggal);
+                                if ($today->format('Y-m-d') === $planDateObj->format('Y-m-d')) {
+                                    $status = 'today';
+                                    $summaryToday++;
+                                } elseif ($today->gt($planDateObj)) {
+                                    $status = 'overdue';
+                                    $summaryOverdue++;
+                                } else {
+                                    $status = 'pending';
+                                    $summaryPending++;
+                                }
                             } else {
-                                $status = 'pending';
-                                $summaryPending++;
+                                if ($today->between($wkStart, $wkEnd)) {
+                                    $status = 'today';
+                                    $summaryToday++;
+                                } elseif ($today->gt($wkEnd)) {
+                                    $status = 'overdue';
+                                    $summaryOverdue++;
+                                } else {
+                                    $status = 'pending';
+                                    $summaryPending++;
+                                }
                             }
                         }
 
@@ -421,6 +487,7 @@ class MtcAgendaController extends Controller
                             'paket'          => $paket,
                             'status'         => $status,
                             'tanggal_aktual' => $doneDate,
+                            'tanggal'        => $planTanggal,
                         ];
                     }
 
@@ -568,43 +635,79 @@ class MtcAgendaController extends Controller
 
             // Construct events & list items
             foreach ($machinePlans as $idx => $plan) {
-                $wk      = $plan->minggu_ke;
-                $wRange  = $weekRanges[$wk] ?? null;
-                if (!$wRange) continue;
+                if ($plan->tanggal) {
+                    $dateObj = Carbon::parse($plan->tanggal);
+                    $day = $dateObj->day;
 
-                $wkStart = Carbon::createFromDate($tahun, $bulan, $wRange['start']);
-                $wkEnd   = Carbon::createFromDate($tahun, $bulan, $wRange['end']);
-
-                $pairedActual = $planPairing[$idx] ?? null;
-                if ($pairedActual) {
-                    $status = 'done';
-                    $doneDate = $pairedActual['tanggal']->format('Y-m-d');
-                } else {
-                    $doneDate = null;
-                    if ($today->between($wkStart, $wkEnd)) {
-                        $status = 'today';
-                    } elseif ($today->gt($wkEnd)) {
-                        $status = 'overdue';
+                    $pairedActual = $planPairing[$idx] ?? null;
+                    if ($pairedActual) {
+                        $status = 'done';
+                        $doneDate = $pairedActual['tanggal']->format('Y-m-d');
                     } else {
-                        $status = 'pending';
+                        $doneDate = null;
+                        if ($today->format('Y-m-d') === $dateObj->format('Y-m-d')) {
+                            $status = 'today';
+                        } elseif ($today->gt($dateObj)) {
+                            $status = 'overdue';
+                        } else {
+                            $status = 'pending';
+                        }
                     }
+
+                    $event = [
+                        'mesin_id'       => $mesin->id,
+                        'kode_mesin'     => $mesin->kode_mesin,
+                        'nama_mesin'     => $mesin->nama_mesin,
+                        'jenis_mtc'      => $jenisMtc,
+                        'paket'          => $plan->paket,
+                        'minggu_ke'      => $dateObj->weekOfMonth,
+                        'day_start'      => $day,
+                        'day_end'        => $day,
+                        'status'         => $status,
+                        'tanggal_aktual' => $doneDate,
+                    ];
+
+                    $events[$day][] = $event;
+                    $listItems[] = $event;
+                } else {
+                    $wk      = $plan->minggu_ke;
+                    $wRange  = $weekRanges[$wk] ?? null;
+                    if (!$wRange) continue;
+
+                    $wkStart = Carbon::createFromDate($tahun, $bulan, $wRange['start']);
+                    $wkEnd   = Carbon::createFromDate($tahun, $bulan, $wRange['end']);
+
+                    $pairedActual = $planPairing[$idx] ?? null;
+                    if ($pairedActual) {
+                        $status = 'done';
+                        $doneDate = $pairedActual['tanggal']->format('Y-m-d');
+                    } else {
+                        $doneDate = null;
+                        if ($today->between($wkStart, $wkEnd)) {
+                            $status = 'today';
+                        } elseif ($today->gt($wkEnd)) {
+                            $status = 'overdue';
+                        } else {
+                            $status = 'pending';
+                        }
+                    }
+
+                    $event = [
+                        'mesin_id'       => $mesin->id,
+                        'kode_mesin'     => $mesin->kode_mesin,
+                        'nama_mesin'     => $mesin->nama_mesin,
+                        'jenis_mtc'      => $jenisMtc,
+                        'paket'          => $plan->paket,
+                        'minggu_ke'      => $wk,
+                        'day_start'      => $wRange['start'],
+                        'day_end'        => $wRange['end'],
+                        'status'         => $status,
+                        'tanggal_aktual' => $doneDate,
+                    ];
+
+                    $events[$wRange['start']][] = $event;
+                    $listItems[] = $event;
                 }
-
-                $event = [
-                    'mesin_id'       => $mesin->id,
-                    'kode_mesin'     => $mesin->kode_mesin,
-                    'nama_mesin'     => $mesin->nama_mesin,
-                    'jenis_mtc'      => $jenisMtc,
-                    'paket'          => $plan->paket,
-                    'minggu_ke'      => $wk,
-                    'day_start'      => $wRange['start'],
-                    'day_end'        => $wRange['end'],
-                    'status'         => $status,
-                    'tanggal_aktual' => $doneDate,
-                ];
-
-                $events[$wRange['start']][] = $event;
-                $listItems[] = $event;
             }
         }
 
@@ -903,6 +1006,8 @@ class MtcAgendaController extends Controller
                 }
 
                 $hasSchedule = false;
+                $isDateBased = in_array($jenisMtc, ['Electric Engine', 'Diesel Engine']);
+
                 foreach ($colMap['months'] as $mNum => $cfg) {
                     $weekCol = $cfg['week_col'];
                     $paketCol = $cfg['paket_col'];
@@ -910,24 +1015,50 @@ class MtcAgendaController extends Controller
                     $weeksRaw = $row[$weekCol] ?? '';
                     $packagesRaw = $row[$paketCol] ?? '';
 
-                    $parsedList = $this->parseWeeksAndPackages($weeksRaw, $packagesRaw);
+                    if ($isDateBased) {
+                        $parsedList = $this->parseDaysAndPackages($weeksRaw, $packagesRaw, $tahun, $mNum);
 
-                    foreach ($parsedList as $parsed) {
-                        try {
-                            MtcAgendaModel::create([
-                                'mesin_id' => $mesin->id,
-                                'tahun' => $tahun,
-                                'bulan' => $mNum,
-                                'minggu_ke' => $parsed['minggu_ke'],
-                                'paket' => $parsed['paket'],
-                                'created_by' => $userId,
-                            ]);
-                            $hasSchedule = true;
-                        } catch (\Illuminate\Database\QueryException $ex) {
-                            if ($ex->getCode() == 23000) {
-                                $rowErrors[] = "Baris {$rowNum}: Jadwal ganda terdeteksi untuk Mesin '{$mesin->nama_mesin}' pada Bulan {$mNum} Minggu {$parsed['minggu_ke']}.";
-                            } else {
-                                $rowErrors[] = "Baris {$rowNum}: Database error pada Bulan {$mNum} Minggu {$parsed['minggu_ke']} - " . $ex->getMessage();
+                        foreach ($parsedList as $parsed) {
+                            try {
+                                MtcAgendaModel::create([
+                                    'mesin_id' => $mesin->id,
+                                    'tahun' => $tahun,
+                                    'bulan' => $mNum,
+                                    'minggu_ke' => null, // NULL for date-based
+                                    'tanggal' => $parsed['tanggal'],
+                                    'paket' => $parsed['paket'],
+                                    'created_by' => $userId,
+                                ]);
+                                $hasSchedule = true;
+                            } catch (\Illuminate\Database\QueryException $ex) {
+                                if ($ex->getCode() == 23000) {
+                                    $rowErrors[] = "Baris {$rowNum}: Jadwal ganda terdeteksi untuk Mesin '{$mesin->nama_mesin}' pada Tanggal {$parsed['tanggal']}.";
+                                } else {
+                                    $rowErrors[] = "Baris {$rowNum}: Database error pada Tanggal {$parsed['tanggal']} - " . $ex->getMessage();
+                                }
+                            }
+                        }
+                    } else {
+                        $parsedList = $this->parseWeeksAndPackages($weeksRaw, $packagesRaw);
+
+                        foreach ($parsedList as $parsed) {
+                            try {
+                                MtcAgendaModel::create([
+                                    'mesin_id' => $mesin->id,
+                                    'tahun' => $tahun,
+                                    'bulan' => $mNum,
+                                    'minggu_ke' => $parsed['minggu_ke'],
+                                    'tanggal' => null,
+                                    'paket' => $parsed['paket'],
+                                    'created_by' => $userId,
+                                ]);
+                                $hasSchedule = true;
+                            } catch (\Illuminate\Database\QueryException $ex) {
+                                if ($ex->getCode() == 23000) {
+                                    $rowErrors[] = "Baris {$rowNum}: Jadwal ganda terdeteksi untuk Mesin '{$mesin->nama_mesin}' pada Bulan {$mNum} Minggu {$parsed['minggu_ke']}.";
+                                } else {
+                                    $rowErrors[] = "Baris {$rowNum}: Database error pada Bulan {$mNum} Minggu {$parsed['minggu_ke']} - " . $ex->getMessage();
+                                }
                             }
                         }
                     }
@@ -999,6 +1130,62 @@ class MtcAgendaController extends Controller
                 if ($pkg !== '') {
                     $results[] = [
                         'minggu_ke' => $weekNum,
+                        'paket' => $pkg
+                    ];
+                }
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Helper parser to parse days and packages from Excel cell values for date-based engines.
+     */
+    private function parseDaysAndPackages($daysRaw, $packagesRaw, $tahun, $bulan): array
+    {
+        if (empty($daysRaw) || trim((string)$daysRaw) === '') {
+            return [];
+        }
+
+        $cleanDays = str_replace([';', '/', '|', ' '], ',', (string)$daysRaw);
+        $days = array_filter(explode(',', $cleanDays), 'strlen');
+
+        $cleanPackages = str_replace([';', '/', '|', ' '], ',', (string)$packagesRaw);
+        $packages = array_filter(explode(',', $cleanPackages), 'strlen');
+
+        $days = array_values($days);
+        $packages = array_values($packages);
+
+        $results = [];
+        $numDays = count($days);
+        $numPackages = count($packages);
+
+        if ($numDays > 0) {
+            for ($i = 0; $i < $numDays; $i++) {
+                $dayNum = intval(trim($days[$i]));
+                if ($dayNum < 1 || $dayNum > 31) continue;
+
+                // Validate if day exists in that month/year
+                try {
+                    $dateObj = Carbon::createFromDate($tahun, $bulan, $dayNum);
+                    $dateStr = $dateObj->format('Y-m-d');
+                } catch (\Exception $e) {
+                    continue; // Skip invalid date
+                }
+
+                $pkg = '';
+                if ($numPackages > 0) {
+                    if (isset($packages[$i])) {
+                        $pkg = strtoupper(trim($packages[$i]));
+                    } else {
+                        $pkg = strtoupper(trim($packages[$numPackages - 1]));
+                    }
+                }
+
+                if ($pkg !== '') {
+                    $results[] = [
+                        'tanggal' => $dateStr,
                         'paket' => $pkg
                     ];
                 }

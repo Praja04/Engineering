@@ -18,6 +18,7 @@ class MtcAgendaModel extends Model
         'bulan',
         'minggu_ke',
         'paket',
+        'tanggal',
         'created_by',
         'updated_by',
     ];
@@ -26,6 +27,7 @@ class MtcAgendaModel extends Model
         'tahun' => 'integer',
         'bulan' => 'integer',
         'minggu_ke' => 'integer',
+        'tanggal' => 'date',
     ];
 
     public function mesin()

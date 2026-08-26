@@ -20,7 +20,6 @@
         <div class="collapse menu-dropdown {{ request()->is('mtc/dashboard/*') || request()->is('mtc/dashboard/agenda') ? 'show' : '' }}"
             id="sidebarMtcDashboard">
             <ul class="nav nav-sm flex-column">
-
                 <li class="nav-item">
                     <a href="{{ url('mtc/dashboard/agenda') }}"
                         class="nav-link {{ request()->is('mtc/dashboard/agenda') ? 'active' : '' }}"
@@ -32,11 +31,10 @@
                 <li class="nav-item">
                     <a href="{{ route('mtc.dashboard.material') }}"
                         class="nav-link {{ request()->routeIs('mtc.dashboard.material') ? 'active' : '' }}"
-                        data-key="t-materials">
-                        <i class="mdi mdi-cube-outline me-2"></i> Kebutuhan Material
+                        data-key="t-machine-ledger">
+                        <i class="mdi mdi-file-cog-outline me-2"></i> Machine Ledger
                     </a>
                 </li>
-
             </ul>
         </div>
     </li>

@@ -1105,8 +1105,11 @@
                 const dayEvents = events[d] || [];
                 const MAX_SHOW = 3;
                 dayEvents.slice(0, MAX_SHOW).forEach(ev => {
+                    const dateDesc = ev.day_start === ev.day_end 
+                        ? `${ev.day_start} ${MONTHS_FULL[calBulan]}`
+                        : `Minggu ${ev.minggu_ke}`;
                     const tip =
-                        `${ev.nama_mesin} (${ev.jenis_mtc}) · Paket ${ev.paket} · ${statusLabel(ev.status)}`;
+                        `${ev.nama_mesin} (${ev.jenis_mtc}) · Paket ${ev.paket} · ${dateDesc} · ${statusLabel(ev.status)}`;
                     html +=
                         `<span class="cal-event ${ev.status}" title="${tip}">${statusIcon(ev.status)} ${ev.kode_mesin||ev.nama_mesin.substring(0,8)}</span>`;
                 });
@@ -1136,9 +1139,14 @@
             }
             let html = '';
             list.forEach(item => {
-                const wkLabel = `W${item.minggu_ke} (${item.day_start}–${item.day_end})`;
+                const isDateBasedObj = item.day_start === item.day_end;
+                const wkLabel = isDateBasedObj 
+                    ? `${item.day_start} ${MONTHS_FULL[calBulan]}`
+                    : `W${item.minggu_ke} (${item.day_start}–${item.day_end})`;
+                const weekBadge = isDateBasedObj ? item.day_start : `W${item.minggu_ke}`;
+
                 html += `<div class="agenda-list-item">
-                    <div class="ali-week">W${item.minggu_ke}</div>
+                    <div class="ali-week">${weekBadge}</div>
                     <div class="ali-body">
                         <div class="ali-machine">${item.nama_mesin} ${item.kode_mesin ? '<span style="font-size:10px;color:#94a3b8;">('+item.kode_mesin+')</span>' : ''}</div>
                         <div class="ali-meta">${item.jenis_mtc} · Paket ${item.paket} · ${wkLabel}</div>
@@ -1311,10 +1319,20 @@
                                 '"><span class="wk-chip unplanned">&mdash;</span></td>';
                         } else {
                             var p = a.plan;
-                            var tip = 'Rencana: Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' +
-                                p.tanggal_aktual : '');
+                            var tip = '';
+                            var labelText = p.paket;
+
+                            if (p.tanggal) {
+                                var pDate = new Date(p.tanggal);
+                                var formattedDate = pDate.getDate() + ' ' + MONTHS_FULL[pDate.getMonth() + 1] + ' ' + pDate.getFullYear();
+                                tip = 'Rencana Tanggal: ' + formattedDate + ' · Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' + p.tanggal_aktual : '');
+                                labelText = pDate.getDate() + ': ' + p.paket;
+                            } else {
+                                tip = 'Rencana: Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' + p.tanggal_aktual : '');
+                            }
+
                             tdsPlan += '<td style="text-align:center;' + bl + '">' +
-                                '<span class="wk-chip pending" title="' + tip + '">' + p.paket + '</span>' +
+                                '<span class="wk-chip pending" title="' + tip + '">' + labelText + '</span>' +
                                 '</td>';
                         }
 
