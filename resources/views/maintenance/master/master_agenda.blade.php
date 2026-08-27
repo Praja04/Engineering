@@ -210,6 +210,11 @@
                     </p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url('mtc/dashboard/agenda') }}"
+                        class="btn btn-outline-dark shadow-sm d-flex align-items-center gap-2" style="border-radius: 8px;">
+                        <i class="mdi mdi-chart-line"></i>
+                        Dashboard Agenda
+                    </a>
                     <button type="button" class="btn btn-outline-dark shadow-sm d-flex align-items-center gap-2"
                         data-bs-toggle="modal" data-bs-target="#manualAgendaModal" style="border-radius: 8px;">
                         <i class="mdi mdi-plus-circle-outline"></i>
@@ -222,8 +227,6 @@
                     </button>
                 </div>
             </div>
-
-
 
             {{-- ═══════════════════════════════════ JENIS FILTER ══ --}}
             <div class="d-flex align-items-center flex-wrap gap-3 mb-4 animate-fade-in-up" style="animation-delay: 0.15s;">
@@ -338,10 +341,12 @@
                                 <div id="dateEditContainer" class="d-none">
                                     <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3 small text-uppercase"
                                         style="letter-spacing: .05em;">Rencana Harian (Tanggal)</h6>
-                                    <div id="dynamicDateRows" style="max-height: 250px; overflow-y: auto; padding-right: 4px;" class="mb-3">
+                                    <div id="dynamicDateRows"
+                                        style="max-height: 250px; overflow-y: auto; padding-right: 4px;" class="mb-3">
                                         <!-- dynamic rows -->
                                     </div>
-                                    <button type="button" class="btn btn-outline-dark btn-sm fw-bold mt-2" id="btnAddDateRow" style="border-radius: 8px;">
+                                    <button type="button" class="btn btn-outline-dark btn-sm fw-bold mt-2"
+                                        id="btnAddDateRow" style="border-radius: 8px;">
                                         <i class="mdi mdi-plus"></i> Tambah Tanggal
                                     </button>
                                 </div>
@@ -563,10 +568,12 @@
                                     <h6 class="fw-bold text-secondary border-bottom pb-1 mb-2 small text-uppercase"
                                         style="letter-spacing: .05em; font-size: 11px;">Rencana Harian (Tanggal)</h6>
 
-                                    <div id="manualDynamicDateRows" style="max-height: 220px; overflow-y: auto; padding-right: 4px;" class="mb-3">
+                                    <div id="manualDynamicDateRows"
+                                        style="max-height: 220px; overflow-y: auto; padding-right: 4px;" class="mb-3">
                                         <!-- dynamic rows -->
                                     </div>
-                                    <button type="button" class="btn btn-outline-dark btn-sm fw-bold mb-3" id="btnManualAddDateRow" style="border-radius: 8px;">
+                                    <button type="button" class="btn btn-outline-dark btn-sm fw-bold mb-3"
+                                        id="btnManualAddDateRow" style="border-radius: 8px;">
                                         <i class="mdi mdi-plus"></i> Tambah Tanggal
                                     </button>
                                 </div>
@@ -586,7 +593,7 @@
             </div>
 
         </div>{{-- /container-fluid --}}
-    </div>{{-- /page-content --}}
+    </div>
 @endsection
 
 @section('scripts')
@@ -620,11 +627,11 @@
         function addManualDateRow(dateVal = '', packageVal = 'A') {
             const yearStr = $('#manualTahun').val() || currentTahun;
             const monthStr = String($('#manualBulan').val() || 1).padStart(2, '0');
-            
+
             const lastDay = new Date(yearStr, monthStr, 0).getDate();
             const minDate = `${yearStr}-${monthStr}-01`;
             const maxDate = `${yearStr}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
-            
+
             const rowHtml = `
                 <div class="row align-items-center mb-2 manual-date-row">
                     <div class="col-6">
@@ -656,11 +663,11 @@
         function addDateRow(dateVal = '', packageVal = 'A') {
             const yearStr = currentTahun;
             const monthStr = String($('#editBulan').val() || 1).padStart(2, '0');
-            
+
             const lastDay = new Date(yearStr, monthStr, 0).getDate();
             const minDate = `${yearStr}-${monthStr}-01`;
             const maxDate = `${yearStr}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
-            
+
             const rowHtml = `
                 <div class="row align-items-center mb-2 date-row">
                     <div class="col-6">
@@ -718,7 +725,7 @@
             } else {
                 $('#manualWeeklyContainer').removeClass('d-none');
                 $('#manualDateContainer').addClass('d-none');
-                
+
                 // Reset all to none
                 $('.manual-week-select').val('none');
 
@@ -1089,7 +1096,8 @@
                 $('#editMesinNamaText').text(mesinNama);
                 $('#editPeriodeText').text(bulanNama + ' ' + currentTahun);
 
-                const isDateBased = (currentJenis === 'Electric Engine' || currentJenis === 'Diesel Engine');
+                const isDateBased = (currentJenis === 'Electric Engine' || currentJenis ===
+                    'Diesel Engine');
                 if (isDateBased) {
                     $('#weeklyEditContainer').addClass('d-none');
                     $('#dateEditContainer').removeClass('d-none');

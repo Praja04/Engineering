@@ -249,10 +249,6 @@
             background: var(--vz-card-bg, #fff);
         }
 
-        /* .dash-table tbody tr:hover td {
-                                background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
-                            } */
-
         /* Sticky columns */
         .dash-table td.sticky-col,
         .dash-table th.sticky-col,
@@ -291,10 +287,6 @@
 
         .dash-table tbody tr:hover td.sticky-col,
         .dash-table tbody tr:hover td.sticky-selesai,
-        /* .dash-table tbody tr:hover td.sticky-tipe {
-                            background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
-                        } */
-
         .dash-table tbody tr:last-child td {
             border-bottom: none;
         }
@@ -643,8 +635,8 @@
         }
 
         /* .agenda-list-item:hover {
-                                    background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
-                                } */
+                                                background: var(--vz-table-hover-bg, var(--vz-body-bg, #f8fafc));
+                                            } */
 
         .agenda-list-item:last-child {
             border-bottom: none;
@@ -866,7 +858,7 @@
                                     style="border-radius:8px;width:150px;font-weight:600;">
                                     <option value="all">Semua Bulan</option>
                                     @foreach (['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bi => $bname)
-                                        <option value="{{ $bi + 1 }}" {{ ($bi + 1) == date('n') ? 'selected' : '' }}>
+                                        <option value="{{ $bi + 1 }}" {{ $bi + 1 == date('n') ? 'selected' : '' }}>
                                             {{ $bname }}</option>
                                     @endforeach
                                 </select>
@@ -997,7 +989,10 @@
                                         <span class="badge bg-secondary bg-opacity-10 text-secondary border ms-2"
                                             id="calListCount" style="font-size:11px;">—</span>
                                     </div>
-                                    <button class="btn btn-link btn-sm p-0 d-none" id="btnResetCalFilter" onclick="resetCalendarFilter()" style="font-size:11px;text-decoration:none;font-weight:600;color:var(--vz-link-color, #3b82f6);">Lihat Semua</button>
+                                    <button class="btn btn-link btn-sm p-0 d-none" id="btnResetCalFilter"
+                                        onclick="resetCalendarFilter()"
+                                        style="font-size:11px;text-decoration:none;font-weight:600;color:var(--vz-link-color, #3b82f6);">Lihat
+                                        Semua</button>
                                 </div>
                                 <div style="max-height:600px;overflow-y:auto;" id="calList">
                                     <div class="p-4 text-center text-secondary" style="font-size:13px;">Belum ada data.
@@ -1024,7 +1019,7 @@
 
         let currentJenis = @json($jenisMtcList->first() ?? '');
         let currentTahun = {{ date('Y') }};
-        let currentBulan = '{{ date("n") }}';
+        let currentBulan = '{{ date('n') }}';
 
         // Calendar state
         let calTahun = {{ date('Y') }};
@@ -1098,16 +1093,17 @@
                 else if (d >= 22 && d <= 28) startDay = 22;
                 else if (d >= 29) startDay = 29;
 
-                html += `<div class="cal-cell ${isToday ? 'today' : ''}" data-day="${d}" data-start-day="${startDay}" onclick="filterCalListByDay(${d}, ${startDay}, this)">`;
+                html +=
+                    `<div class="cal-cell ${isToday ? 'today' : ''}" data-day="${d}" data-start-day="${startDay}" onclick="filterCalListByDay(${d}, ${startDay}, this)">`;
                 html += `<div class="cal-day-num">${d}</div>`;
 
                 // Events that start on this day
                 const dayEvents = events[d] || [];
                 const MAX_SHOW = 3;
                 dayEvents.slice(0, MAX_SHOW).forEach(ev => {
-                    const dateDesc = ev.day_start === ev.day_end 
-                        ? `${ev.day_start} ${MONTHS_FULL[calBulan]}`
-                        : `Minggu ${ev.minggu_ke}`;
+                    const dateDesc = ev.day_start === ev.day_end ?
+                        `${ev.day_start} ${MONTHS_FULL[calBulan]}` :
+                        `Minggu ${ev.minggu_ke}`;
                     const tip =
                         `${ev.nama_mesin} (${ev.jenis_mtc}) · Paket ${ev.paket} · ${dateDesc} · ${statusLabel(ev.status)}`;
                     html +=
@@ -1140,9 +1136,9 @@
             let html = '';
             list.forEach(item => {
                 const isDateBasedObj = item.day_start === item.day_end;
-                const wkLabel = isDateBasedObj 
-                    ? `${item.day_start} ${MONTHS_FULL[calBulan]}`
-                    : `W${item.minggu_ke} (${item.day_start}–${item.day_end})`;
+                const wkLabel = isDateBasedObj ?
+                    `${item.day_start} ${MONTHS_FULL[calBulan]}` :
+                    `W${item.minggu_ke} (${item.day_start}–${item.day_end})`;
                 const weekBadge = isDateBasedObj ? item.day_start : `W${item.minggu_ke}`;
 
                 html += `<div class="agenda-list-item">
@@ -1227,6 +1223,7 @@
             $('#calFilterTahun').val(calTahun);
             loadCalendarData();
         });
+
         $('#calNextBtn').on('click', function() {
             calBulan++;
             if (calBulan > 12) {
@@ -1236,11 +1233,11 @@
             $('#calFilterTahun').val(calTahun);
             loadCalendarData();
         });
+
         $('#calFilterTahun').on('change', function() {
             calTahun = parseInt($(this).val());
             loadCalendarData();
         });
-
 
         function renderKpi(summary) {
             const total = summary.total_planned || 0;
@@ -1324,15 +1321,19 @@
 
                             if (p.tanggal) {
                                 var pDate = new Date(p.tanggal);
-                                var formattedDate = pDate.getDate() + ' ' + MONTHS_FULL[pDate.getMonth() + 1] + ' ' + pDate.getFullYear();
-                                tip = 'Rencana Tanggal: ' + formattedDate + ' · Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' + p.tanggal_aktual : '');
+                                var formattedDate = pDate.getDate() + ' ' + MONTHS_FULL[pDate.getMonth() +
+                                    1] + ' ' + pDate.getFullYear();
+                                tip = 'Rencana Tanggal: ' + formattedDate + ' · Paket ' + p.paket + (p
+                                    .tanggal_aktual ? ' · Terlaksana: ' + p.tanggal_aktual : '');
                                 labelText = pDate.getDate() + ': ' + p.paket;
                             } else {
-                                tip = 'Rencana: Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' + p.tanggal_aktual : '');
+                                tip = 'Rencana: Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' +
+                                    p.tanggal_aktual : '');
                             }
 
                             tdsPlan += '<td style="text-align:center;' + bl + '">' +
-                                '<span class="wk-chip pending" title="' + tip + '">' + labelText + '</span>' +
+                                '<span class="wk-chip pending" title="' + tip + '">' + labelText +
+                                '</span>' +
                                 '</td>';
                         }
 
