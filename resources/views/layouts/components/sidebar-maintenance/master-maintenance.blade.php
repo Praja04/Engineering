@@ -7,8 +7,10 @@
     $jabatan === 'admin' ||
         $jabatan === 'dept_head' ||
         $jabatan === 'supervisor' ||
-        ($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement'])) ||
-        ($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement'])))
+        ($jabatan === 'operator' &&
+            in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement', 'Engineering Kalibrasi'])) ||
+        ($jabatan === 'foreman' &&
+            in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement', 'Engineering Kalibrasi'])))
     <li class="nav-item">
         <a class="nav-link menu-link {{ request()->routeIs('master.mtc.*') ? '' : 'collapsed' }}" href="#sidebarMasterMtc"
             data-bs-toggle="collapse" role="button"

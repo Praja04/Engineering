@@ -176,6 +176,14 @@
                                 }
                             });
 
+                            // Broadcast cross-tab logout event
+                            try {
+                                localStorage.setItem('ptbas_logout_event', Date.now().toString());
+                                localStorage.removeItem("PTBAS_USER");
+                                localStorage.removeItem("EJO_GREETING_DISMISSED");
+                                sessionStorage.clear();
+                            } catch(e) {}
+
                             $.ajax({
                                 url: "{{ route('logout') }}",
                                 type: "POST",
@@ -195,11 +203,7 @@
                                     });
                                 },
                                 error: function(xhr, status, error) {
-                                    Swal.fire(
-                                        'Error!',
-                                        'There was an error logging you out.',
-                                        'error'
-                                    );
+                                    window.location.href = "{{ url('/') }}";
                                 }
                             });
                         }
@@ -274,12 +278,53 @@
                 // Input type number di mobile agar trigger buka numeric keyboard
                 $('input[type="number"]').attr('inputmode', 'numeric');
 
-                // Handle AJAX errors globally
-                $(document).ajaxError(function(event, xhr) {
-                    if (xhr.status === 401 || xhr.status === 419) {
+                // Synchronize logout across browser tabs
+                window.addEventListener('storage', function(e) {
+                    if (e.key === 'ptbas_logout_event') {
                         window.location.href = "{{ route('login') }}";
                     }
                 });
+
+                function checkCrossTabLogout() {
+                    if (localStorage.getItem('ptbas_logout_event')) {
+                        window.location.href = "{{ route('login') }}";
+                    }
+                }
+                $(window).on('focus pageshow', checkCrossTabLogout);
+                document.addEventListener('visibilitychange', function() {
+                    if (document.visibilityState === 'visible') {
+                        checkCrossTabLogout();
+                    }
+                });
+
+                // Handle AJAX errors globally (jQuery)
+                $(document).ajaxError(function(event, xhr) {
+                    if (xhr.status === 401 || xhr.status === 419) {
+                        try {
+                            localStorage.setItem('ptbas_logout_event', Date.now().toString());
+                        } catch(e) {}
+                        window.location.href = "{{ route('login') }}";
+                    }
+                });
+
+                // Intercept native fetch calls for 401 / 419 session expiry
+                (function() {
+                    const originalFetch = window.fetch;
+                    window.fetch = async function(...args) {
+                        try {
+                            const response = await originalFetch.apply(this, args);
+                            if (response.status === 401 || response.status === 419) {
+                                try {
+                                    localStorage.setItem('ptbas_logout_event', Date.now().toString());
+                                } catch(e) {}
+                                window.location.href = "{{ route('login') }}";
+                            }
+                            return response;
+                        } catch (err) {
+                            throw err;
+                        }
+                    };
+                })();
 
                 let seenNotifications = new Set();
 

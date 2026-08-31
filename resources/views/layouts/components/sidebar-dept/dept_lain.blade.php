@@ -34,3 +34,9 @@
          </ul>
      </div>
  </li>
+ <li class="nav-item">
+     <a class="nav-link menu-link" href="{{ url('/ejo-engineer') }}">
+         <i class="mdi mdi-cogs"></i>
+         <span data-key="t-ejo-engineer">EJO Portal</span>
+     </a>
+ </li>
