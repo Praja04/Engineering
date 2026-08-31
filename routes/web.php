@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/ejo/{id}', function ($id) {
         return view('ejo.detail', compact('id'));
     });
+
     Route::middleware(['auth', 'access'])->group(function () {
         Route::prefix('users')->as('users.')->group(function () {
             Route::get('/index', [AuthController::class, 'manage_user'])->name('users.index');
@@ -87,8 +88,8 @@ Route::middleware('auth')->group(function () {
     //////////    End View Routes   ///////////
 
     @include('boiler/boiler.php');
-
     @include 'epr/epr-routes.php';
-
     @include('maintenance/maintenance.php');
 });
+
+@include 'ejo/ejo-engineer-routes.php';
