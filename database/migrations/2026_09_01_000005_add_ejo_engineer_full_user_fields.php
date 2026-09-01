@@ -26,7 +26,7 @@ return new class extends Migration
                 $table->string('avatar')->nullable();
             }
             if (! Schema::hasColumn('users', 'signature')) {
-                $table->string('signature')->nullable();
+                $table->longText('signature')->nullable();
             }
             if (! Schema::hasColumn('users', 'show_status_prop')) {
                 $table->boolean('show_status_prop')->default(true);

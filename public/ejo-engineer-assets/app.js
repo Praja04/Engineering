@@ -5167,7 +5167,7 @@ function initEventListeners() {
                 // Update local session storage and state.currentUser
                 state.currentUser.fullname = fullname;
                 state.currentUser.avatar = relativeAvatarUrl;
-                state.currentUser.signature = signatureUrl;
+                state.currentUser.signature = (data.user && data.user.signature) ? data.user.signature : signatureUrl;
 
                 safeSessionStorage.setItem('PTBAS_USER', JSON.stringify(state.currentUser));
 
