@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class EjoEngineerController extends Controller
@@ -320,6 +321,7 @@ class EjoEngineerController extends Controller
         if (!isset($data['password']) || trim($data['password']) === '') {
             $data['password'] = strtolower(trim($data['username']));
         }
+        $data['password'] = Hash::make($data['password']);
 
         User::create($data);
         return response()->json(['status' => 'success', 'username' => $data['username']], 201);
@@ -335,6 +337,8 @@ class EjoEngineerController extends Controller
         $data = $request->all();
         if (isset($data['password']) && trim($data['password']) === '') {
             unset($data['password']);
+        } elseif (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
         }
         $user->update($data);
 
