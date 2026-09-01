@@ -340,98 +340,65 @@
 
     <!-- 20 Machine Cards TV Grid Container (No Scroll) -->
     <div class="tv-grid-container" id="machine-grid">
-        @php
-            $machines = [];
-            for ($i = 1; $i <= 20; $i++) {
-                $code = 'D' . $i;
-                $hasData = in_array($code, ['D1', 'D10']); // D1 & D10 active cards, others coming soon
-                $group = ($i <= 10) ? 'd1-d10' : 'd11-d20';
-                $machines[] = [
-                    'code' => $code,
-                    'name' => 'Mesin ' . $code,
-                    'group' => $group,
-                    'has_data' => $hasData,
-                    'default_oee' => $hasData ? 0 : 0,
-                    'default_status' => $hasData ? 'running' : 'coming_soon',
-                    'uptime' => 0,
-                    'counter' => 0,
-                    'downtime' => 0
-                ];
-            }
-        @endphp
-
-        @foreach($machines as $m)
+        @for($i = 1; $i <= 20; $i++)
             @php
-                $hasData = $m['has_data'];
-                $oee = $m['default_oee'];
-                $isRun = ($m['default_status'] === 'running');
-                $oeeColor = ($oee >= 85) ? '#10b981' : (($oee >= 60) ? '#f59e0b' : '#ef4444');
+                $code = 'D' . $i;
+                $group = ($i <= 10) ? 'd1-d10' : 'd11-d20';
             @endphp
-            <div class="machine-card-col" data-group="{{ $m['group'] }}" data-name="{{ strtolower($m['name'] . ' ' . $m['code']) }}">
-                <a href="{{ route('dashboard.downtimemesin.detail', ['machine' => $m['code']]) }}" class="machine-card">
+            <div class="machine-card-col" data-group="{{ $group }}" data-name="mesin {{ strtolower($code) }} {{ strtolower($code) }}">
+                <a href="javascript:void(0);" id="card-link-{{ $code }}" class="machine-card coming-soon-card" style="cursor: not-allowed; opacity: 0.85;">
                     <div>
                         <!-- Header status & tag -->
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="machine-tag">{{ $m['code'] }}</span>
-                            @if($hasData)
-                                <div class="d-flex align-items-center gap-1">
-                                    <span class="status-dot {{ $isRun ? 'running' : 'stop' }}" id="status-dot-{{ $m['code'] }}"></span>
-                                    <span class="fs-12 fw-extrabold {{ $isRun ? 'text-success' : 'text-danger' }}" id="status-label-{{ $m['code'] }}">
-                                        {{ $isRun ? 'RUNNING' : 'STOP' }}
-                                    </span>
-                                </div>
-                            @else
+                            <span class="machine-tag">{{ $code }}</span>
+                            <div id="status-badge-container-{{ $code }}">
                                 <span class="badge bg-soft-warning text-warning fw-extrabold px-2 py-1 fs-10" style="letter-spacing: 0.05em; border: 1px solid rgba(245, 158, 11, 0.3);">
                                     <i class="ri-time-line me-1"></i>COMING SOON
                                 </span>
-                            @endif
+                            </div>
                         </div>
 
                         <!-- Machine title -->
-                        <h6 class="fw-extrabold mb-1" style="color: var(--oee-text-main); font-size: 1.05rem;">{{ $m['name'] }}</h6>
+                        <h6 class="fw-extrabold mb-1" style="color: var(--oee-text-main); font-size: 1.05rem;">Mesin {{ $code }}</h6>
 
-                        @if($hasData)
-                            <!-- OEE gauge performance -->
-                            <div class="mb-1">
-                                <div class="d-flex justify-content-between align-items-baseline mb-1">
-                                    <span class="fs-11 text-muted fw-bold">OEE SHIFT</span>
-                                    <span class="fs-16 fw-extrabold" style="color: {{ $oeeColor }};" id="oee-val-{{ $m['code'] }}">{{ $oee }}%</span>
-                                </div>
-                                <div class="progress-bar-custom">
-                                    <div id="oee-bar-{{ $m['code'] }}" style="width: {{ $oee }}%; height: 100%; background: {{ $oeeColor }}; transition: width 0.5s ease;"></div>
-                                </div>
-                            </div>
-                        @else
-                            <!-- Coming Soon Full Card Placeholder Box -->
-                            <div class="d-flex flex-column align-items-center justify-content-center my-2 py-3" style="background: rgba(245, 158, 11, 0.05); border-radius: 10px; border: 1px dashed rgba(245, 158, 11, 0.3); min-height: 80px;">
-                                <i class="ri-time-line mb-1" style="font-size: 1.3rem; color: #f59e0b;"></i>
-                                <span class="fs-12 fw-extrabold" style="color: #f59e0b; letter-spacing: 0.08em;">COMING SOON</span>
-                            </div>
-                        @endif
-                    </div>
+                        <!-- Coming Soon Full Card Placeholder Box -->
+                        <div id="coming-soon-box-{{ $code }}" class="flex-column align-items-center justify-content-center my-2 py-3" style="display: flex; background: rgba(245, 158, 11, 0.05); border-radius: 10px; border: 1px dashed rgba(245, 158, 11, 0.3); min-height: 80px;">
+                            <i class="ri-time-line mb-1" style="font-size: 1.3rem; color: #f59e0b;"></i>
+                            <span class="fs-12 fw-extrabold" style="color: #f59e0b; letter-spacing: 0.08em;">COMING SOON</span>
+                        </div>
 
-                    @if($hasData)
-                        <!-- Footer stats (Larger font, high contrast) -->
-                        <div class="pt-1 border-top border-secondary border-opacity-10">
-                            <div class="row text-center g-0">
-                                <div class="col-4">
-                                    <div class="stat-number-uptime" id="uptime-val-{{ $m['code'] }}">{{ $m['uptime'] }}m</div>
-                                    <div class="stat-label-title">UPTIME</div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="stat-number-counter" id="counter-val-{{ $m['code'] }}">{{ number_format($m['counter'], 0, ',', '.') }}</div>
-                                    <div class="stat-label-title">COUNTER</div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="stat-number-downtime" id="downtime-val-{{ $m['code'] }}">{{ $m['downtime'] }}m</div>
-                                    <div class="stat-label-title">DOWNTIME</div>
-                                </div>
+                        <!-- Active OEE gauge performance -->
+                        <div id="active-gauge-box-{{ $code }}" class="mb-1" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                <span class="fs-11 text-muted fw-bold">OEE SHIFT</span>
+                                <span class="fs-16 fw-extrabold" style="color: #10b981;" id="oee-val-{{ $code }}">0%</span>
+                            </div>
+                            <div class="progress-bar-custom">
+                                <div id="oee-bar-{{ $code }}" style="width: 0%; height: 100%; background: #10b981; transition: width 0.5s ease;"></div>
                             </div>
                         </div>
-                    @endif
+                    </div>
+
+                    <!-- Footer stats -->
+                    <div id="active-footer-box-{{ $code }}" class="pt-1 border-top border-secondary border-opacity-10" style="display: none;">
+                        <div class="row text-center g-0">
+                            <div class="col-4">
+                                <div class="stat-number-uptime" id="uptime-val-{{ $code }}">0m</div>
+                                <div class="stat-label-title">UPTIME</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-number-counter" id="counter-val-{{ $code }}">0</div>
+                                <div class="stat-label-title">COUNTER</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-number-downtime" id="downtime-val-{{ $code }}">0m</div>
+                                <div class="stat-label-title">DOWNTIME</div>
+                            </div>
+                        </div>
+                    </div>
                 </a>
             </div>
-        @endforeach
+        @endfor
     </div>
 
 </div>
@@ -519,25 +486,82 @@
         }
 
         function updateMachineCardUI(code, m) {
-            const oeeValEl = document.getElementById(`oee-val-${code}`);
-            const oeeBarEl = document.getElementById(`oee-bar-${code}`);
-            const uptimeValEl = document.getElementById(`uptime-val-${code}`);
-            const counterValEl = document.getElementById(`counter-val-${code}`);
-            const downtimeValEl = document.getElementById(`downtime-val-${code}`);
+            const cardLinkEl = document.getElementById(`card-link-${code}`);
+            const comingSoonBox = document.getElementById(`coming-soon-box-${code}`);
+            const activeGaugeBox = document.getElementById(`active-gauge-box-${code}`);
+            const activeFooterBox = document.getElementById(`active-footer-box-${code}`);
+            const statusBadgeContainer = document.getElementById(`status-badge-container-${code}`);
 
-            const oeeShift = m.oee_shift_pct !== undefined ? m.oee_shift_pct : (m.oee !== undefined ? m.oee : 0);
-            const uptime = m.shift_uptime_min !== undefined ? m.shift_uptime_min : 0;
-            const product = m.product !== undefined ? m.product : 0;
-            const downtime = m.shift_downtime_min !== undefined ? m.shift_downtime_min : 0;
+            const hasData = m && (m.has_data === true);
 
-            if (oeeValEl) oeeValEl.textContent = `${oeeShift}%`;
-            if (oeeBarEl) oeeBarEl.style.width = `${Math.min(100, oeeShift)}%`;
-            if (uptimeValEl) uptimeValEl.textContent = `${uptime}m`;
-            if (counterValEl) counterValEl.textContent = Number(product).toLocaleString('id-ID');
-            if (downtimeValEl) downtimeValEl.textContent = `${downtime}m`;
+            if (hasData) {
+                if (cardLinkEl) {
+                    cardLinkEl.href = `{{ url('/dashboard/mesin/downtime/detail') }}/${code}`;
+                    cardLinkEl.style.cursor = 'pointer';
+                    cardLinkEl.style.opacity = '1';
+                    cardLinkEl.classList.remove('coming-soon-card');
+                }
+                if (comingSoonBox) comingSoonBox.style.display = 'none';
+                if (activeGaugeBox) activeGaugeBox.style.display = 'block';
+                if (activeFooterBox) activeFooterBox.style.display = 'block';
+
+                const oeeShift = m.oee_shift_pct !== undefined ? Number(m.oee_shift_pct) : (m.oee !== undefined ? Number(m.oee) : 0);
+                const uptime = m.shift_uptime_min !== undefined ? Number(m.shift_uptime_min) : 0;
+                const product = m.product !== undefined ? Number(m.product) : 0;
+                const downtime = m.shift_downtime_min !== undefined ? Number(m.shift_downtime_min) : 0;
+
+                const isRun = (downtime === 0 && (uptime > 0 || product > 0));
+                if (statusBadgeContainer) {
+                    statusBadgeContainer.innerHTML = `
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="status-dot ${isRun ? 'running' : 'stop'}"></span>
+                            <span class="fs-12 fw-extrabold ${isRun ? 'text-success' : 'text-danger'}">
+                                ${isRun ? 'RUNNING' : 'STOP'}
+                            </span>
+                        </div>
+                    `;
+                }
+
+                const oeeColor = (oeeShift >= 85) ? '#10b981' : ((oeeShift >= 60) ? '#f59e0b' : '#ef4444');
+                const oeeValEl = document.getElementById(`oee-val-${code}`);
+                const oeeBarEl = document.getElementById(`oee-bar-${code}`);
+                const uptimeValEl = document.getElementById(`uptime-val-${code}`);
+                const counterValEl = document.getElementById(`counter-val-${code}`);
+                const downtimeValEl = document.getElementById(`downtime-val-${code}`);
+
+                if (oeeValEl) {
+                    oeeValEl.textContent = `${oeeShift}%`;
+                    oeeValEl.style.color = oeeColor;
+                }
+                if (oeeBarEl) {
+                    oeeBarEl.style.width = `${Math.min(100, oeeShift)}%`;
+                    oeeBarEl.style.background = oeeColor;
+                }
+                if (uptimeValEl) uptimeValEl.textContent = `${uptime}m`;
+                if (counterValEl) counterValEl.textContent = Number(product).toLocaleString('id-ID');
+                if (downtimeValEl) downtimeValEl.textContent = `${downtime}m`;
+
+            } else {
+                if (cardLinkEl) {
+                    cardLinkEl.removeAttribute('href');
+                    cardLinkEl.style.cursor = 'not-allowed';
+                    cardLinkEl.style.opacity = '0.85';
+                    cardLinkEl.classList.add('coming-soon-card');
+                }
+                if (comingSoonBox) comingSoonBox.style.display = 'flex';
+                if (activeGaugeBox) activeGaugeBox.style.display = 'none';
+                if (activeFooterBox) activeFooterBox.style.display = 'none';
+                if (statusBadgeContainer) {
+                    statusBadgeContainer.innerHTML = `
+                        <span class="badge bg-soft-warning text-warning fw-extrabold px-2 py-1 fs-10" style="letter-spacing: 0.05em; border: 1px solid rgba(245, 158, 11, 0.3);">
+                            <i class="ri-time-line me-1"></i>COMING SOON
+                        </span>
+                    `;
+                }
+            }
         }
 
-        // Calculate and update top 4 summary KPI cards dynamically
+        // Calculate and update top 4 summary KPI cards dynamically based on API response
         function updateSummaryKPIs(machines) {
             let activeCount = 0;
             let totalOutput = 0;
@@ -548,14 +572,14 @@
             Object.keys(machines).forEach(code => {
                 const m = machines[code];
                 if (!m) return;
-                const oeeShift = m.oee_shift_pct !== undefined ? Number(m.oee_shift_pct) : (m.oee !== undefined ? Number(m.oee) : 0);
-                const uptime = m.shift_uptime_min !== undefined ? Number(m.shift_uptime_min) : 0;
-                const product = m.product !== undefined ? Number(m.product) : 0;
-                const downtime = m.shift_downtime_min !== undefined ? Number(m.shift_downtime_min) : 0;
 
-                const isActive = m.has_data || (product > 0) || (uptime > 0) || (oeeShift > 0);
-                if (isActive) {
+                if (m.has_data === true) {
                     activeCount++;
+                    const oeeShift = m.oee_shift_pct !== undefined ? Number(m.oee_shift_pct) : (m.oee !== undefined ? Number(m.oee) : 0);
+                    const uptime = m.shift_uptime_min !== undefined ? Number(m.shift_uptime_min) : 0;
+                    const product = m.product !== undefined ? Number(m.product) : 0;
+                    const downtime = m.shift_downtime_min !== undefined ? Number(m.shift_downtime_min) : 0;
+
                     totalOutput += product;
                     totalDowntime += downtime;
                     sumOee += oeeShift;
@@ -590,7 +614,7 @@
             }
         }
 
-        // Modular live status fetch for all machines from /api/all-status (with D1 & D10 fallback)
+        // Modular live status fetch for all machines from /api/all-status
         async function fetchAllMachinesStatus() {
             try {
                 const res = await fetch(`${API_BASE}/api/all-status`);
@@ -606,7 +630,7 @@
                 }
             } catch (err) {}
 
-            // Fallback: fetch individual machine status endpoints for D1 and D10 if /api/all-status returns 404
+            // Fallback: fetch individual machine status endpoints for D1 and D10
             const fallbackStore = {};
             const activeList = ['D1', 'D10'];
             for (const code of activeList) {

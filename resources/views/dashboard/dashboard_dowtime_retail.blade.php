@@ -442,13 +442,13 @@
             <div class="col-lg-5 col-xl-4">
                 <div class="oee-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold fs-14" style="color: var(--oee-text-main);"><i class="ri-box-3-line me-1 text-info"></i> Visualisasi Mesin D1</span>
+                        <span class="fw-bold fs-14" style="color: var(--oee-text-main);"><i class="ri-box-3-line me-1 text-info"></i> Visualisasi Mesin {{ $machine ?? 'D1' }}</span>
                         <span class="fs-11" style="color: var(--oee-text-muted);">Rotary Packaging</span>
                     </div>
 
                     <div class="machine-stage">
-                        <!-- User Machine Image D1 -->
-                        <img src="{{ asset('assets/machine.png') }}" alt="Mesin Rotary Packaging D1" class="machine-img">
+                        <!-- User Machine Image -->
+                        <img src="{{ asset('assets/machine.png') }}" alt="Mesin Rotary Packaging {{ $machine ?? 'D1' }}" class="machine-img">
 
                         <!-- Hotspots -->
                         <div class="hotspot hotspot-1">
@@ -475,8 +475,8 @@
                         <div class="hotspot hotspot-4">
                             <div class="hotspot-tooltip">
                                 <strong>HMI Touch Panel PLC</strong><br>
-                                Pub: RST_D1 (Reset Pulsa)<br>
-                                Sub: OEE_D1
+                                Pub: RST_{{ $machine ?? 'D1' }} (Reset Pulsa)<br>
+                                Sub: OEE_{{ $machine ?? 'D1' }}
                             </div>
                         </div>
                         <div class="hotspot hotspot-5">
@@ -513,7 +513,7 @@
                         <div class="oee-card">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="kpi-title">OEE UPTIME (OEE_D1)</div>
+                                    <div class="kpi-title">OEE UPTIME (OEE_{{ $machine ?? 'D1' }})</div>
                                     <div class="fs-12" style="color: var(--oee-text-muted);" id="oee-interval-subtitle">--.00 - --.00</div>
                                 </div>
                                 <div class="avatar-xs">
@@ -558,7 +558,7 @@
                         <div class="oee-card">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <div class="kpi-title">TOTAL COUNTER (CT_PRODUCTD1)</div>
+                                    <div class="kpi-title">TOTAL COUNTER (CT_PRODUCT{{ $machine ?? 'D1' }})</div>
                                     <div class="fs-12" style="color: var(--oee-text-muted);">Output Pouch Terkemas</div>
                                 </div>
                                 <div class="avatar-xs">
@@ -1344,7 +1344,7 @@
         // Manual Trigger Reset Button
         if (btnManualReset) {
             btnManualReset.addEventListener('click', async function() {
-                if (!confirm('Apakah Anda yakin ingin mengirim sinyal RESET PULSE (RST_D1) ke mesin?')) return;
+                if (!confirm(`Apakah Anda yakin ingin mengirim sinyal RESET PULSE (RST_${CURRENT_MACHINE}) ke mesin?`)) return;
                 
                 try {
                     btnManualReset.disabled = true;
@@ -1354,7 +1354,7 @@
                     const result = await res.json();
 
                     if (result.success) {
-                        alert('✅ Reset Pulse RST_D1 berhasil terkirim ke mesin!');
+                        alert(`✅ Reset Pulse RST_${CURRENT_MACHINE} berhasil terkirim ke mesin!`);
                     } else {
                         alert('❌ Gagal mengirim reset pulse: ' + (result.reason || result.message));
                     }
