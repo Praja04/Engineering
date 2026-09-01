@@ -366,6 +366,29 @@ class EjoEngineerController extends Controller
             $data['password'] = Hash::make($data['password']);
         }
 
+        // Auto save base64 canvas signature as PNG image file in storage
+        if (isset($data['signature']) && is_string($data['signature']) && str_starts_with($data['signature'], 'data:image/')) {
+            $base64Str = $data['signature'];
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Str, $type)) {
+                $imageData = substr($base64Str, strpos($base64Str, ',') + 1);
+                $imageData = base64_decode($imageData);
+                if ($imageData !== false) {
+                    $ext = strtolower($type[1] ?? 'png');
+                    if ($ext === 'jpeg') {
+                        $ext = 'jpg';
+                    }
+                    $filename = 'sig_' . strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '', $username)) . '_' . Str::random(6) . '.' . $ext;
+                    $destDir = storage_path('app/public/uploads/signatures');
+                    if (! File::isDirectory($destDir)) {
+                        File::makeDirectory($destDir, 0777, true, true);
+                    }
+                    $filePath = $destDir . '/' . $filename;
+                    File::put($filePath, $imageData);
+                    $data['signature'] = '/storage/uploads/signatures/' . $filename;
+                }
+            }
+        }
+
         $user->update($data);
 
         return response()->json(['status' => 'success', 'username' => $username, 'user' => $user]);
