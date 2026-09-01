@@ -6968,12 +6968,17 @@ function checkIsRequesterOrRole(d) {
         return true;
     }
 
-    // 1. Direct identity match on requester or uploader
-    if (checkIsRequester(d.requester) || checkIsRequester(d.uploader)) {
+    // Drafter and Engineering technical execution roles are NOT Requester/Staff approval authorities
+    if (isDrafterRole(userRole) || userRole.toLowerCase().includes('drafter')) {
+        return false;
+    }
+
+    // 1. Direct identity match on requester ONLY (not uploader)
+    if (checkIsRequester(d.requester)) {
         return true;
     }
 
-    // 2. Dynamic Jabatan / Otoritas & Department match for ANY department (EPR, PRD, QA, QC, LOG, WH, HRD, FIN, MKT, ENG, etc.)
+    // 2. Dynamic Jabatan / Otoritas & Department match for ANY department (EPR, PRD, QA, QC, LOG, WH, HRD, FIN, MKT, etc.)
     if (drawDept) {
         if (userRoleUpper === `USER_${drawDept}` || userRoleUpper === `STAFF_${drawDept}` || userRoleUpper.endsWith(`_${drawDept}`) || userRoleUpper.includes(drawDept)) {
             return true;
@@ -6981,7 +6986,7 @@ function checkIsRequesterOrRole(d) {
     }
 
     // 3. Same department staff/user fallback
-    const isSameDeptStaff = (userDept && drawDept && userDept === drawDept) && (userRole.toLowerCase().includes('user') || userRole.toLowerCase().includes('staff') || userRole === 'User');
+    const isSameDeptStaff = (userDept && drawDept && userDept === drawDept) && (userRole.toLowerCase().includes('user') || userRole.toLowerCase().includes('staff') || userRole === 'User' || userRole === 'Staff');
 
     if (isSameDeptStaff) {
         return true;
