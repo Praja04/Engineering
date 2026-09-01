@@ -12229,7 +12229,7 @@ async function uploadDrawing() {
                 fd.append("ejo_id", ejoId);
 
                 res = await fetch(`/api/ejo-engineer/drawings/${state.editingDrawingId}`, {
-                    method: "PUT",
+                    method: "POST",
                     body: fd
                 });
             } else {
@@ -18812,7 +18812,7 @@ async function triggerCardDrawingCompleteUpload(drawingId) {
 
             try {
                 const res = await fetch(`/api/ejo-engineer/drawings/${drawingId}`, {
-                    method: "PUT",
+                    method: "POST",
                     body: fd
                 });
                 if (!res.ok) {
@@ -18876,7 +18876,7 @@ async function triggerCardDrawingUpload(drawingId) {
 
         try {
             const res = await fetch(`/api/ejo-engineer/drawings/${drawingId}`, {
-                method: "PUT",
+                method: "POST",
                 body: fd
             });
             if (!res.ok) throw new Error("Gagal mengunggah file drawing");
