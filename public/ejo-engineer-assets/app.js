@@ -18525,8 +18525,8 @@ function updateEtiketModalPreviews() {
     if (badge) badge.textContent = cat;
 
     const isSipil = cat.toLowerCase().includes('sipil');
-    const landscapeImg = isSipil ? '/etiket/pak diki etiket landscape.png' : '/etiket/pak rifan etiket landscape.png';
-    const portraitImg = isSipil ? '/etiket/pak diki etiket potrait.png' : '/etiket/pak rifan etiket potrait.png';
+    const landscapeImg = isSipil ? '/storage/etiket/pak diki etiket landscape.png' : '/storage/etiket/pak rifan etiket landscape.png';
+    const portraitImg = isSipil ? '/storage/etiket/pak diki etiket potrait.png' : '/storage/etiket/pak rifan etiket potrait.png';
 
     const landscapeBox = document.getElementById("etiket-sample-landscape-preview");
     const portraitBox = document.getElementById("etiket-sample-portrait-preview");
@@ -18553,11 +18553,11 @@ function openEtiketZoomModal(orientation) {
 
     const isSipil = cat.toLowerCase().includes('sipil');
     const imgPath = isSipil
-        ? (orientation === 'landscape' ? '/etiket/pak diki etiket landscape.png' : '/etiket/pak diki etiket potrait.png')
-        : (orientation === 'landscape' ? '/etiket/pak rifan etiket landscape.png' : '/etiket/pak rifan etiket potrait.png');
+        ? (orientation === 'landscape' ? '/storage/etiket/pak diki etiket landscape.png' : '/storage/etiket/pak diki etiket potrait.png')
+        : (orientation === 'landscape' ? '/storage/etiket/pak rifan etiket landscape.png' : '/storage/etiket/pak rifan etiket potrait.png');
     const pdfPath = isSipil
-        ? (orientation === 'landscape' ? '/etiket/pak diki etiket landscape.pdf' : '/etiket/pak diki etiket potrait.pdf')
-        : (orientation === 'landscape' ? '/etiket/pak rifan etiket landscape.pdf' : '/etiket/pak rifan etiket potrait.pdf');
+        ? (orientation === 'landscape' ? '/storage/etiket/pak diki etiket landscape.pdf' : '/storage/etiket/pak diki etiket potrait.pdf')
+        : (orientation === 'landscape' ? '/storage/etiket/pak rifan etiket landscape.pdf' : '/storage/etiket/pak rifan etiket potrait.pdf');
     const authorName = isSipil ? 'Diki (Sipil)' : 'Rifan (Mekanik)';
 
     const orientName = orientation === 'landscape' ? 'Landscape (Horizontal)' : 'Portrait (Vertikal)';
