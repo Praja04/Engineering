@@ -61,19 +61,68 @@ def format_and_fit_signer_name(name, box_len, max_fontsize=5.7, min_fontsize=4.8
     fit_fs = safe_w / w_at_1
     return name_str, min(max_fontsize, max(min_fontsize, fit_fs))
 
+def load_signature_bytes(sig_input, pdf_file_path=None):
+    if not sig_input or not isinstance(sig_input, str):
+        return None
+    
+    sig_str = sig_input.strip()
+    if not sig_str:
+        return None
+        
+    # Case 1: Base64 data URI (e.g. data:image/png;base64,iVBORw...)
+    if sig_str.startswith('data:image/') or ',' in sig_str:
+        try:
+            base64_data = sig_str.split(',', 1)[1]
+            return base64.b64decode(base64_data)
+        except Exception as e:
+            print(f"Error decoding base64 signature: {e}")
+
+    # Case 2: Pure Base64 string
+    if len(sig_str) > 200 and not sig_str.startswith('/') and not sig_str.startswith('http') and not os.path.exists(sig_str):
+        try:
+            return base64.b64decode(sig_str)
+        except Exception:
+            pass
+
+    # Case 3: Local file path or relative URL (e.g. /storage/uploads/signatures/sig_xxx.png)
+    clean_path = sig_str.split('?')[0].lstrip('/')
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+
+    possible_paths = []
+    if os.path.isabs(sig_str) and os.path.exists(sig_str):
+        possible_paths.append(sig_str)
+
+    possible_paths.append(os.path.join(project_root, clean_path))
+    if clean_path.startswith('storage/'):
+        sub_path = clean_path[len('storage/'):]
+        possible_paths.append(os.path.join(project_root, 'storage', 'app', 'public', sub_path))
+        possible_paths.append(os.path.join(project_root, 'public', 'storage', sub_path))
+
+    possible_paths.append(os.path.join(project_root, 'public', clean_path))
+    possible_paths.append(os.path.join(project_root, 'storage', 'app', 'public', 'uploads', 'signatures', os.path.basename(clean_path)))
+
+    if pdf_file_path:
+        pdf_dir = os.path.dirname(os.path.abspath(pdf_file_path))
+        possible_paths.append(os.path.join(pdf_dir, os.path.basename(clean_path)))
+
+    for path in possible_paths:
+        if os.path.exists(path) and os.path.isfile(path):
+            try:
+                with open(path, 'rb') as f:
+                    return f.read()
+            except Exception as fe:
+                print(f"Error reading signature file {path}: {fe}")
+
+    return None
+
 def apply_pdf_signature(file_path, role, signature_base64, signer_name, etiket_category='Sipil', etiket_orientation='landscape'):
     if not os.path.exists(file_path) or not file_path.lower().endswith('.pdf'):
         print(f"Warning: PDF file not found: {file_path}")
         return
 
     try:
-        img_bytes = None
-        if signature_base64 and isinstance(signature_base64, str):
-            try:
-                base64_str = signature_base64.split(",", 1)[1] if ',' in signature_base64 else signature_base64
-                img_bytes = base64.b64decode(base64_str)
-            except Exception as e:
-                print(f"Error decoding signature base64: {e}")
+        img_bytes = load_signature_bytes(signature_base64, pdf_file_path=file_path)
 
         doc = fitz.open(file_path)
         page = doc[0]
@@ -321,10 +370,10 @@ def apply_project_handover_pdf_signatures(file_path, handover_approvals_dict):
             sig_rect = fitz.Rect(x0, 362.0, x1, 414.0)
             if sig_data:
                 try:
-                    base64_str = sig_data.split(",", 1)[1] if ',' in sig_data else sig_data
-                    img_bytes = base64.b64decode(base64_str)
-                    page.insert_image(sig_rect, stream=img_bytes, keep_proportion=True)
-                    stamped = True
+                    img_bytes = load_signature_bytes(sig_data, pdf_file_path=file_path)
+                    if img_bytes:
+                        page.insert_image(sig_rect, stream=img_bytes, keep_proportion=True)
+                        stamped = True
                 except Exception as ie:
                     print(f"Error inserting signature for {role_key}: {ie}")
 

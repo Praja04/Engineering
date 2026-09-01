@@ -50,8 +50,13 @@ class PdfSignerService
                 escapeshellarg($orientation)
             );
 
-            @exec($cmd, $output, $exitCode);
+            $output = [];
+            exec($cmd, $output, $exitCode);
             @unlink($approvalsFile);
+
+            if ($exitCode !== 0) {
+                \Log::warning('signDrawing execution warning/error (Exit code ' . $exitCode . '): ' . implode("\n", $output));
+            }
 
             return $exitCode === 0;
         } catch (\Throwable $e) {
@@ -84,8 +89,13 @@ class PdfSignerService
                 escapeshellarg($approvalsFile)
             );
 
-            @exec($cmd, $output, $exitCode);
+            $output = [];
+            exec($cmd, $output, $exitCode);
             @unlink($approvalsFile);
+
+            if ($exitCode !== 0) {
+                \Log::warning('signHandover execution warning/error (Exit code ' . $exitCode . '): ' . implode("\n", $output));
+            }
 
             return $exitCode === 0;
         } catch (\Throwable $e) {
