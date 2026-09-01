@@ -345,16 +345,18 @@ class EjoEngineerController extends Controller
 
         $data = $request->all();
 
-        if (isset($data['old_password']) && $data['old_password'] !== '') {
-            $oldPass = (string) $data['old_password'];
-            $isValidOldPass = password_verify($oldPass, $user->password) || $oldPass === $user->password || Hash::check($oldPass, $user->password);
-            if (! $isValidOldPass) {
-                return response()->json(['status' => 'error', 'message' => 'Password lama yang Anda masukkan tidak cocok!'], 400);
+        if (array_key_exists('old_password', $data)) {
+            if (! empty($data['old_password'])) {
+                $oldPass = (string) $data['old_password'];
+                $isValidOldPass = password_verify($oldPass, $user->password) || $oldPass === $user->password || Hash::check($oldPass, $user->password);
+                if (! $isValidOldPass) {
+                    return response()->json(['status' => 'error', 'message' => 'Password lama yang Anda masukkan tidak cocok!'], 400);
+                }
             }
             unset($data['old_password']);
         }
 
-        if (isset($data['creator_username'])) {
+        if (array_key_exists('creator_username', $data)) {
             unset($data['creator_username']);
         }
 
