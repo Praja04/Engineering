@@ -21,7 +21,7 @@ class UsersSeeder extends Seeder
                 'jabatan'    => 'dept_head',
                 'image'      => null,
                 'email'      => 'admin123@gmail.com',
-                'departemen' => null,
+                'departemen' => 'Engineering',
                 'bagian'     => null,
                 'nik'        => null,
                 'created_at' => now(),

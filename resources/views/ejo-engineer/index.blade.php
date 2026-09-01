@@ -69,6 +69,7 @@
                         <input type="text" id="login-totp-code" placeholder="123456" maxlength="6"
                             pattern="[0-9]{6}" autocomplete="one-time-code"
                             style="letter-spacing: 4px; font-size: 1.1rem; text-align: center; font-weight: bold;">
+                        <small id="totp-server-hint" style="display:none; color: var(--color-cyan, #06b6d4); font-size: 0.75rem; margin-top: 4px;">Khusus Akun Server: Masukkan kode 6-digit TOTP Authenticator.</small>
                     </div>
 
                     <div id="login-error-msg" class="login-error-msg"

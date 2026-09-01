@@ -22,17 +22,17 @@ Route::view('/home', 'home')->name('home');
 
 Route::middleware('auth')->group(function () {
     Route::get('/ejo', function () {
-        return view('ejo.index');
-    });
+        return redirect()->to('/ejo-engineer');
+    })->name('ejo.index');
     Route::get('/ejo/dashboard', function () {
-        return view('dashboard.ejo.dashboard');
+        return redirect()->to('/ejo-engineer');
     })->name('ejo.dashboard');
     Route::get('/ejo/create', function () {
-        return view('ejo.create');
+        return redirect()->to('/ejo-engineer');
     });
 
     Route::get('/ejo/{id}', function ($id) {
-        return view('ejo.detail', compact('id'));
+        return redirect()->to('/ejo-engineer');
     });
 
     Route::middleware(['auth', 'access'])->group(function () {
