@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (! Schema::hasColumn('users', 'section')) {
-                $table->string('section')->nullable()->after('dept');
+                $table->string('section')->nullable()->after('nik');
             }
             if (! Schema::hasColumn('users', 'totp_secret')) {
                 $table->string('totp_secret')->nullable();
