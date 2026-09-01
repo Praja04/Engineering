@@ -25,7 +25,7 @@ class EjoEngineerController extends Controller
     private function resolvePublicOrStoragePath(string $urlOrPath): string
     {
         $cleanPath = ltrim(explode('?', $urlOrPath)[0], '/');
-        
+
         // Cek file di storage/app/public/...
         if (str_starts_with($cleanPath, 'storage/')) {
             $subPath = substr($cleanPath, strlen('storage/'));
@@ -327,6 +327,15 @@ class EjoEngineerController extends Controller
         return response()->json(['status' => 'success', 'username' => $data['username']], 201);
     }
 
+    public function getUserByUsername(string $username): JsonResponse
+    {
+        $user = User::where('username', $username)->first();
+        if (! $user) {
+            return response()->json(['status' => 'error', 'message' => 'User tidak ditemukan'], 404);
+        }
+        return response()->json($user);
+    }
+
     public function updateUser(Request $request, string $username): JsonResponse
     {
         $user = User::where('username', $username)->first();
@@ -335,14 +344,29 @@ class EjoEngineerController extends Controller
         }
 
         $data = $request->all();
+
+        if (isset($data['old_password']) && $data['old_password'] !== '') {
+            $oldPass = (string) $data['old_password'];
+            $isValidOldPass = password_verify($oldPass, $user->password) || $oldPass === $user->password || Hash::check($oldPass, $user->password);
+            if (! $isValidOldPass) {
+                return response()->json(['status' => 'error', 'message' => 'Password lama yang Anda masukkan tidak cocok!'], 400);
+            }
+            unset($data['old_password']);
+        }
+
+        if (isset($data['creator_username'])) {
+            unset($data['creator_username']);
+        }
+
         if (isset($data['password']) && trim($data['password']) === '') {
             unset($data['password']);
         } elseif (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
+
         $user->update($data);
 
-        return response()->json(['status' => 'success', 'username' => $username]);
+        return response()->json(['status' => 'success', 'username' => $username, 'user' => $user]);
     }
 
     public function updateUserLayoutSettings(Request $request, string $username): JsonResponse
@@ -501,7 +525,8 @@ class EjoEngineerController extends Controller
                 try {
                     $cleanDone = str_replace(['Z', 'T'], ['', ' '], substr($gejo->qty_work_done_date, 0, 19));
                     $compDate = \Carbon\Carbon::parse($cleanDone);
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                }
             }
 
             $logs = is_array($gejo->logs) ? $gejo->logs : [];
@@ -513,7 +538,8 @@ class EjoEngineerController extends Controller
                         try {
                             $compDate = \Carbon\Carbon::parse($dtStr);
                             break;
-                        } catch (\Throwable $e) {}
+                        } catch (\Throwable $e) {
+                        }
                     }
                 }
             }
@@ -521,7 +547,8 @@ class EjoEngineerController extends Controller
             if (! $compDate && ! empty($gejo->createdDate)) {
                 try {
                     $compDate = \Carbon\Carbon::parse($gejo->createdDate);
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                }
             }
 
             if ($compDate && $compDate->lte($threeDaysAgo)) {
@@ -733,6 +760,10 @@ class EjoEngineerController extends Controller
         $drawingId = $data['drawing_id'] ?? ($data['id'] ?? ('DRW' . Str::random(8)));
         $data['id'] = $drawingId;
         $data['uploaded_at'] = $data['uploaded_at'] ?? now()->toIso8601String();
+
+        if (empty($data['status'])) {
+            $data['status'] = 'Pending Foreman Approval';
+        }
 
         $drawing = Drawing::create($data);
 
@@ -1164,4 +1195,3 @@ class EjoEngineerController extends Controller
         return response()->json(['status' => 'success', 'module' => $module, 'message' => $msg]);
     }
 }
-

@@ -70,6 +70,7 @@ Route::prefix('api/ejo-engineer')->group(function () {
 
     // Users & Permissions
     Route::get('/users', [EjoEngineerController::class, 'getUsers']);
+    Route::get('/users/{username}', [EjoEngineerController::class, 'getUserByUsername']);
     Route::post('/users', [EjoEngineerController::class, 'createUser']);
     Route::post('/users/force-logout', [EjoEngineerController::class, 'forceLogoutUser']);
     Route::put('/users/bulk-reset-access', [EjoEngineerController::class, 'bulkResetUserAccess']);
