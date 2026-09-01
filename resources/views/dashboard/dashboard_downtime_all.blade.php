@@ -336,7 +336,9 @@
         <div class="fs-11 text-muted fw-bold">
             <i class="ri-tv-2-line me-1"></i> Mode TV 43" Auto Refresh
         </div>
-    </di    <!-- 20 Machine Cards TV Grid Container (No Scroll) -->
+    </div>
+
+    <!-- 20 Machine Cards TV Grid Container (No Scroll) -->
     <div class="tv-grid-container" id="machine-grid">
         @for($i = 1; $i <= 20; $i++)
             @php
@@ -360,7 +362,7 @@
                         <h6 class="fw-extrabold mb-1" style="color: var(--oee-text-main); font-size: 1.05rem;">Mesin {{ $code }}</h6>
 
                         <!-- Coming Soon Full Card Placeholder Box -->
-                        <div id="coming-soon-box-{{ $code }}" class="d-flex flex-column align-items-center justify-content-center my-2 py-3" style="background: rgba(245, 158, 11, 0.05); border-radius: 10px; border: 1px dashed rgba(245, 158, 11, 0.3); min-height: 80px;">
+                        <div id="coming-soon-box-{{ $code }}" class="flex-column align-items-center justify-content-center my-2 py-3" style="display: flex; background: rgba(245, 158, 11, 0.05); border-radius: 10px; border: 1px dashed rgba(245, 158, 11, 0.3); min-height: 80px;">
                             <i class="ri-time-line mb-1" style="font-size: 1.3rem; color: #f59e0b;"></i>
                             <span class="fs-12 fw-extrabold" style="color: #f59e0b; letter-spacing: 0.08em;">COMING SOON</span>
                         </div>
@@ -397,7 +399,7 @@
                 </a>
             </div>
         @endfor
-    </div>v>
+    </div>
 
 </div>
 @endsection
@@ -494,7 +496,7 @@
 
             if (hasData) {
                 if (cardLinkEl) {
-                    cardLinkEl.href = `{{ url('/dashboard/mesin/downtime/detail') }}?machine=${code}`;
+                    cardLinkEl.href = `{{ url('/dashboard/mesin/downtime/detail') }}/${code}`;
                     cardLinkEl.style.cursor = 'pointer';
                     cardLinkEl.style.opacity = '1';
                     cardLinkEl.classList.remove('coming-soon-card');

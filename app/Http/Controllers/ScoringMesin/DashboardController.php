@@ -20,9 +20,10 @@ class DashboardController extends Controller
     }
 
     // Detail Machine Downtime & OEE
-    public function dashboard_downtime_detail($machine = 'D1')
+    public function dashboard_downtime_detail(Request $request, $machine = null)
     {
-        $machine = strtoupper($machine);
+        $machineCode = $request->query('machine', $machine ?? 'D1');
+        $machine = strtoupper($machineCode);
         return view('dashboard.dashboard_dowtime_retail', compact('machine'));
     }
 
