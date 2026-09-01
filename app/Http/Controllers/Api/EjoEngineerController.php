@@ -21,6 +21,34 @@ use Illuminate\Support\Str;
 
 class EjoEngineerController extends Controller
 {
+    private function resolvePublicOrStoragePath(string $urlOrPath): string
+    {
+        $cleanPath = ltrim(explode('?', $urlOrPath)[0], '/');
+        
+        // Cek file di storage/app/public/...
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $subPath = substr($cleanPath, strlen('storage/'));
+            $storageAbs = storage_path('app/public/' . $subPath);
+            if (File::exists($storageAbs)) {
+                return $storageAbs;
+            }
+        }
+
+        // Cek default public_path
+        $publicAbs = public_path($cleanPath);
+        if (File::exists($publicAbs)) {
+            return $publicAbs;
+        }
+
+        // Fallback jika path tersimpan sebagai /uploads/...
+        $storageUploadsAbs = storage_path('app/public/' . $cleanPath);
+        if (File::exists($storageUploadsAbs)) {
+            return $storageUploadsAbs;
+        }
+
+        return $publicAbs;
+    }
+
     private function isServerAdmin(?User $user, ?string $username = null): bool
     {
         if ($user) {
@@ -396,13 +424,13 @@ class EjoEngineerController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Format file avatar tidak diizinkan! Wajib format gambar (PNG/JPG/WEBP)'], 400);
         }
         $filename = 'avatar_' . strtolower($username) . '_' . Str::random(6) . '.' . $ext;
-        $destPath = public_path('ejo-engineer-assets/uploads/avatars');
+        $destPath = storage_path('app/public/uploads/avatars');
         if (! File::isDirectory($destPath)) {
             File::makeDirectory($destPath, 0777, true, true);
         }
 
         $file->move($destPath, $filename);
-        $avatarUrl = '/ejo-engineer-assets/uploads/avatars/' . $filename;
+        $avatarUrl = '/storage/uploads/avatars/' . $filename;
         $user->update(['avatar' => $avatarUrl]);
 
         return response()->json([
@@ -577,7 +605,7 @@ class EjoEngineerController extends Controller
                 foreach ($hDocs as $hDoc) {
                     $docUrl = is_string($hDoc) ? $hDoc : ($hDoc['path'] ?? $hDoc['url'] ?? '');
                     if ($docUrl && str_ends_with(strtolower(explode('?', $docUrl)[0]), '.pdf')) {
-                        $pdfAbsPath = public_path(ltrim(explode('?', $docUrl)[0], '/'));
+                        $pdfAbsPath = $this->resolvePublicOrStoragePath($docUrl);
                         if (File::exists($pdfAbsPath)) {
                             $signerService->signHandover($pdfAbsPath, $hApprovals);
                         }
@@ -618,13 +646,13 @@ class EjoEngineerController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Format file dokumen project tidak diizinkan!'], 400);
         }
         $filename = 'proj_' . Str::random(8) . '.' . $ext;
-        $destPath = public_path('ejo-engineer-assets/uploads/projects');
+        $destPath = storage_path('app/public/uploads/projects');
         if (! File::isDirectory($destPath)) {
             File::makeDirectory($destPath, 0777, true, true);
         }
 
         $file->move($destPath, $filename);
-        $fileUrl = '/ejo-engineer-assets/uploads/projects/' . $filename;
+        $fileUrl = '/storage/uploads/projects/' . $filename;
 
         $colName = $request->input('category', 'docs');
         $currentDocs = $project->{$colName} ?: [];
@@ -690,12 +718,12 @@ class EjoEngineerController extends Controller
             }
             $drawingId = $data['drawing_id'] ?? ($data['id'] ?? ('DRW' . Str::random(8)));
             $filename = strtolower($drawingId) . '_' . Str::random(8) . '.' . $ext;
-            $destPath = public_path('ejo-engineer-assets/uploads/drawings');
+            $destPath = storage_path('app/public/uploads/drawings');
             if (! File::isDirectory($destPath)) {
                 File::makeDirectory($destPath, 0777, true, true);
             }
             $file->move($destPath, $filename);
-            $data['file_path'] = '/ejo-engineer-assets/uploads/drawings/' . $filename;
+            $data['file_path'] = '/storage/uploads/drawings/' . $filename;
         }
 
         $drawingId = $data['drawing_id'] ?? ($data['id'] ?? ('DRW' . Str::random(8)));
@@ -708,7 +736,7 @@ class EjoEngineerController extends Controller
         if (! empty($drawing->file_path) && str_ends_with(strtolower(explode('?', $drawing->file_path)[0]), '.pdf')) {
             $approvals = $drawing->approvals ?: [];
             if (! empty($approvals)) {
-                $pdfAbsPath = public_path(ltrim(explode('?', $drawing->file_path)[0], '/'));
+                $pdfAbsPath = $this->resolvePublicOrStoragePath($drawing->file_path);
                 $cat = $drawing->etiket_category ?: ($drawing->category ?: 'Sipil');
                 $orient = $drawing->etiket_orientation ?: 'landscape';
 
@@ -741,12 +769,12 @@ class EjoEngineerController extends Controller
                     return response()->json(['status' => 'error', 'message' => 'Format file drawing tidak diizinkan! (Hanya PDF/Gambar/CAD)'], 400);
                 }
                 $filename = strtolower($id) . '_' . Str::random(8) . '.' . $ext;
-                $destPath = public_path('ejo-engineer-assets/uploads/drawings');
+                $destPath = storage_path('app/public/uploads/drawings');
                 if (! File::isDirectory($destPath)) {
                     File::makeDirectory($destPath, 0777, true, true);
                 }
                 $file->move($destPath, $filename);
-                $data['file_path'] = '/ejo-engineer-assets/uploads/drawings/' . $filename;
+                $data['file_path'] = '/storage/uploads/drawings/' . $filename;
             } elseif (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
                 $tmpName = $_FILES['file']['tmp_name'];
                 $origName = $_FILES['file']['name'];
@@ -755,12 +783,12 @@ class EjoEngineerController extends Controller
                     return response()->json(['status' => 'error', 'message' => 'Format file drawing tidak diizinkan! (Hanya PDF/Gambar/CAD)'], 400);
                 }
                 $filename = strtolower($id) . '_' . Str::random(8) . '.' . $ext;
-                $destPath = public_path('ejo-engineer-assets/uploads/drawings');
+                $destPath = storage_path('app/public/uploads/drawings');
                 if (! File::isDirectory($destPath)) {
                     File::makeDirectory($destPath, 0777, true, true);
                 }
                 move_uploaded_file($tmpName, $destPath . '/' . $filename);
-                $data['file_path'] = '/ejo-engineer-assets/uploads/drawings/' . $filename;
+                $data['file_path'] = '/storage/uploads/drawings/' . $filename;
             }
         }
 
@@ -770,7 +798,7 @@ class EjoEngineerController extends Controller
         if (! empty($drawing->file_path) && str_ends_with(strtolower(explode('?', $drawing->file_path)[0]), '.pdf')) {
             $approvals = $drawing->approvals ?: [];
             if (! empty($approvals)) {
-                $pdfAbsPath = public_path(ltrim(explode('?', $drawing->file_path)[0], '/'));
+                $pdfAbsPath = $this->resolvePublicOrStoragePath($drawing->file_path);
                 $cat = $drawing->etiket_category ?: 'Sipil';
                 $orient = $drawing->etiket_orientation ?: 'landscape';
 
@@ -917,13 +945,13 @@ class EjoEngineerController extends Controller
         }
         $filename = 'rev_' . Str::random(8) . '.' . $ext;
 
-        $destPath = public_path('ejo-engineer-assets/uploads');
+        $destPath = storage_path('app/public/uploads');
         if (! File::isDirectory($destPath)) {
             File::makeDirectory($destPath, 0777, true, true);
         }
 
         $file->move($destPath, $filename);
-        $fileUrl = '/ejo-engineer-assets/uploads/' . $filename;
+        $fileUrl = '/storage/uploads/' . $filename;
 
         return response()->json([
             'status'    => 'success',
