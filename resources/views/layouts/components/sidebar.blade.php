@@ -2,7 +2,8 @@
     @php
         $jabatan = Auth::user()->jabatan;
         $bagian = Auth::user()->bagian;
-        $departement = Auth::user()->departemen;
+        $departement = strtolower(Auth::user()->departemen ?? '');
+        $isAdmin = Auth::user()->username === 'admin' || $departement === 'engineering' || $departement === 'it';
     @endphp
 
     <!-- LOGO -->
@@ -35,7 +36,7 @@
 
             <ul class="navbar-nav" id="navbar-nav">
                 <!-- /////////////////////Dashboard/////////////// -->
-                @if ($departement === 'engineering' || $departement === 'IT')
+                @if ($isAdmin)
                     <li class="menu-title"><span data-key="t-dashboard">Dashboard</span></li>
 
                     @include('layouts.components.sidebar-scoring.dashboard-scoring')
@@ -48,7 +49,7 @@
                 @endif
 
 
-                @if ($departement === 'engineering' || $departement === 'IT')
+                @if ($isAdmin)
 
                     <!-- /////////////////////menu/////////////// -->
                     <li class="menu-title"><span data-key="t-menu">Engineering Menu</span></li>
@@ -64,7 +65,7 @@
 
 
                     <!-- /////////////////////Data Master/////////////// -->
-                    @if (in_array($jabatan, ['admin', 'dept_head', 'supervisor', 'foreman']))
+                    @if ($isAdmin || in_array($jabatan, ['admin', 'dept_head', 'supervisor', 'foreman']))
                         <li class="menu-title"><span data-key="t-menu">Data Master</span></li>
 
                         @include('layouts.components.sidebar-kalibrasi.data-master')
@@ -74,7 +75,7 @@
                     @endif
 
                     <!-- /////////////////////Manage User/////////////// -->
-                    @if (in_array($jabatan, ['admin', 'dept_head', 'foreman', 'supervisor']))
+                    @if ($isAdmin || in_array($jabatan, ['admin', 'dept_head', 'foreman', 'supervisor']))
                         <li class="nav-item">
                             <a href="{{ url('users/index') }}"
                                 class="nav-link menu-link  {{ request()->routeIs('users.*') ? 'active' : '' }}">

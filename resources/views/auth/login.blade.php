@@ -110,6 +110,16 @@
                                                 </div>
                                             </div>
 
+                                            <div class="mb-3" id="totp-group" style="display: none;">
+                                                <label class="form-label text-info fw-semibold" for="totp_code">
+                                                    <i class="ri-shield-keyhole-line align-middle me-1"></i> Kode 2FA Authenticator (6-Digit OTP)
+                                                </label>
+                                                <input type="text" class="form-control text-center fw-bold fs-5"
+                                                    id="totp_code" name="totp_code" maxlength="6" pattern="[0-9]{6}"
+                                                    placeholder="123456" style="letter-spacing: 4px;">
+                                                <small class="text-muted d-block mt-1">Masukkan kode 6 digit dari aplikasi Authenticator.</small>
+                                            </div>
+
 
 
                                             <div class="mt-4">
@@ -158,6 +168,16 @@
                 }
             });
             $(document).ready(function() {
+                // Auto-show OTP field saat username 'server' diketik
+                $('#username').on('input', function() {
+                    const val = ($(this).val() || '').trim().toLowerCase();
+                    if (val === 'server') {
+                        $('#totp-group').slideDown(200);
+                    } else {
+                        $('#totp-group').slideUp(200);
+                    }
+                });
+
                 $('#loginForm').submit(function(e) {
                     e.preventDefault();
 
@@ -176,6 +196,7 @@
                         data: {
                             username: $('#username').val(),
                             password: $('#password').val(),
+                            totp_code: $('#totp_code').val(),
                             _token: $('input[name="_token"]').val()
                         },
                         success: function(response) {

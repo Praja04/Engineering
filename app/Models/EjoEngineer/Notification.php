@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-    protected $table = 'notifications';
+    protected $table = 'ejo_engineer_notifications';
     protected $primaryKey = 'id';
-    protected $keyType = 'string';
     public $incrementing = false;
+    protected $keyType = 'string';
     public $timestamps = false;
 
     protected $fillable = [
@@ -22,6 +22,6 @@ class Notification extends Model
     ];
 
     protected $casts = [
-        'is_read' => 'integer',
+        'is_read' => 'boolean',
     ];
 }

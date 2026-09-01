@@ -2086,66 +2086,73 @@ function checkAuth() {
         setupWelcomeGreeting();
 
         // ponytail: Fetch latest user details from server to sync role/permissions dynamically
-        fetch("/api/ejo-engineer/users")
-            .then(res => {
-                if (res.ok) return res.json();
-            })
-            .then(users => {
-                // ponytail: sync all user details including role, fullname, avatar, and signature dynamically
-                if (users && state.currentUser) {
-                    const freshUser = users.find(u => u.username === state.currentUser.username);
-                    if (freshUser) {
-                        let hasChanges = false;
-                        if (state.currentUser.role !== freshUser.role) {
-                            state.currentUser.role = freshUser.role;
-                            hasChanges = true;
-                        }
-                        if (state.currentUser.fullname !== freshUser.fullname) {
-                            state.currentUser.fullname = freshUser.fullname;
-                            hasChanges = true;
-                        }
-                        if (state.currentUser.avatar !== freshUser.avatar) {
-                            state.currentUser.avatar = freshUser.avatar;
-                            hasChanges = true;
-                        }
-                        if (state.currentUser.signature !== freshUser.signature) {
-                            state.currentUser.signature = freshUser.signature;
-                            hasChanges = true;
-                        }
-                        if (state.currentUser.dept !== freshUser.dept) {
-                            state.currentUser.dept = freshUser.dept;
-                            hasChanges = true;
-                        }
-
-                        if (hasChanges) {
-                            safeSessionStorage.setItem("PTBAS_USER", JSON.stringify(state.currentUser));
-
-                            // Update UI elements instantly
-                            document.getElementById("sidebar-avatar").src = state.currentUser.avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=80";
-                            document.getElementById("sidebar-fullname").textContent = state.currentUser.fullname;
-                            document.getElementById("sidebar-role").textContent = state.currentUser.role;
-                            const currentRole = state.currentUser.role;
-                            const isTechNonDrafterUser = isDrafterRole(currentRole) && currentRole !== 'Drafter';
-                            if (currentRole === 'Drafter') {
-                                if (!state.activeTab || state.activeTab === 'overview' || state.activeTab === 'admin' || state.activeTab === 'general-ejo' || state.activeTab === 'projects') {
-                                    state.activeTab = 'drawing';
-                                }
-                            } else if (isTechNonDrafterUser) {
-                                if (!state.activeTab || state.activeTab === 'overview' || state.activeTab === 'drawing' || state.activeTab === 'projects' || state.activeTab === 'partlist' || state.activeTab === 'admin') {
-                                    state.activeTab = 'general-ejo';
-                                }
-                            } else if (!canAccessAdminPanel(state.currentUser) && state.activeTab === 'admin') {
-                                state.activeTab = 'overview';
+        if (state.currentUser && state.currentUser.role === 'Server') {
+            // Khusus Akun Server: Role & identitas Server dikunci permanen (Level 100 System Root)
+            document.getElementById("sidebar-fullname").textContent = state.currentUser.fullname || "Root Administrator";
+            document.getElementById("sidebar-role").textContent = "Server (System Root)";
+        } else {
+            fetch("/api/ejo-engineer/users")
+                .then(res => {
+                    if (res.ok) return res.json();
+                })
+                .then(users => {
+                    // ponytail: sync all user details including role, fullname, avatar, and signature dynamically
+                    if (users && state.currentUser) {
+                        const freshUser = users.find(u => u.username === state.currentUser.username);
+                        if (freshUser) {
+                            let hasChanges = false;
+                            if (state.currentUser.role !== freshUser.role) {
+                                state.currentUser.role = freshUser.role;
+                                hasChanges = true;
                             }
-                            applySidebarRoleRestrictions();
+                            if (state.currentUser.fullname !== freshUser.fullname) {
+                                state.currentUser.fullname = freshUser.fullname;
+                                hasChanges = true;
+                            }
+                            if (state.currentUser.avatar !== freshUser.avatar) {
+                                state.currentUser.avatar = freshUser.avatar;
+                                hasChanges = true;
+                            }
+                            if (state.currentUser.signature !== freshUser.signature) {
+                                state.currentUser.signature = freshUser.signature;
+                                hasChanges = true;
+                            }
+                            if (state.currentUser.dept !== freshUser.dept) {
+                                state.currentUser.dept = freshUser.dept;
+                                hasChanges = true;
+                            }
 
-                            // ponytail: force active tab sync if role changed
-                            switchTab(state.activeTab || 'general-ejo');
+                            if (hasChanges) {
+                                safeSessionStorage.setItem("PTBAS_USER", JSON.stringify(state.currentUser));
+
+                                // Update UI elements instantly
+                                document.getElementById("sidebar-avatar").src = state.currentUser.avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=80";
+                                document.getElementById("sidebar-fullname").textContent = state.currentUser.fullname;
+                                document.getElementById("sidebar-role").textContent = state.currentUser.role;
+
+                                const currentRole = state.currentUser.role;
+                                const isTechNonDrafterUser = isDrafterRole(currentRole) && currentRole !== 'Drafter';
+                                if (currentRole === 'Drafter') {
+                                    if (!state.activeTab || state.activeTab === 'overview' || state.activeTab === 'admin' || state.activeTab === 'general-ejo' || state.activeTab === 'projects') {
+                                        state.activeTab = 'drawing';
+                                    }
+                                } else if (isTechNonDrafterUser) {
+                                    if (!state.activeTab || state.activeTab === 'overview' || state.activeTab === 'drawing' || state.activeTab === 'projects' || state.activeTab === 'partlist' || state.activeTab === 'admin') {
+                                        state.activeTab = 'general-ejo';
+                                    }
+                                } else if (!canAccessAdminPanel(state.currentUser) && state.activeTab === 'admin') {
+                                    state.activeTab = 'overview';
+                                }
+                                applySidebarRoleRestrictions();
+
+                                // ponytail: force active tab sync if role changed
+                                switchTab(state.activeTab || 'general-ejo');
+                            }
                         }
                     }
-                }
-            })
-            .catch(err => console.error("Failed to sync user role from server:", err));
+                })
+                .catch(err => console.error("Failed to sync user role from server:", err));
+        }
 
         // ponytail: Show/hide server database management block & Server role option
         const isServerUser = state.currentUser && (
@@ -4484,6 +4491,25 @@ function initEventListeners() {
         }
         return false;
     };
+
+    // Inisialisasi event input username pada modal login agar kolom OTP otomatis tampil untuk akun Server
+    const loginUserEl = document.getElementById("login-username");
+    if (loginUserEl) {
+        loginUserEl.addEventListener("input", function (e) {
+            const val = (e.target.value || "").trim().toLowerCase();
+            const totpField = document.getElementById("login-totp-field");
+            const serverHint = document.getElementById("totp-server-hint");
+            if (val === "server") {
+                if (totpField) totpField.style.display = "block";
+                if (serverHint) serverHint.style.display = "block";
+            } else {
+                if (totpField && !totpField.dataset.forced) {
+                    totpField.style.display = "none";
+                }
+                if (serverHint) serverHint.style.display = "none";
+            }
+        });
+    }
 
     const loginForm = document.getElementById("login-form");
     if (loginForm) {

