@@ -8171,7 +8171,7 @@ function renderDrawings() {
     const tableBody = document.getElementById("drawing-table-body");
     if (tableBody) {
         tableBody.innerHTML = drawings.map(d => {
-            const uploaderRaw = d.uploader || d.requester || '';
+            const uploaderRaw = d.requester || d.uploader || '';
             const uploaderUser = (state.users || []).find(u =>
                 (u.username && u.username.toLowerCase() === uploaderRaw.toLowerCase()) ||
                 (u.fullname && u.fullname.toLowerCase() === uploaderRaw.toLowerCase())
@@ -8279,7 +8279,7 @@ function renderDrawings() {
             }
         }
         const prioInfo = getPriorityInfo(d.priority);
-        const reqRaw = d.uploader || d.requester || '';
+        const reqRaw = d.requester || d.uploader || '';
         const reqUser = (state.users || []).find(u =>
             (u.username && u.username.toLowerCase() === reqRaw.toLowerCase()) ||
             (u.fullname && u.fullname.toLowerCase() === reqRaw.toLowerCase())
@@ -12574,8 +12574,9 @@ function openDrawingDetails(drawingId, fromNotification = false) {
     }
 
     document.getElementById("modal-drawing-title").textContent = drawing.title;
-    document.getElementById("modal-drawing-uploader").textContent = drawing.uploader
-        ? `${drawing.uploader} (${drawing.dept || '-'})`
+    const modalRequester = drawing.requester || drawing.uploader || '-';
+    document.getElementById("modal-drawing-uploader").textContent = modalRequester !== '-'
+        ? `${modalRequester} (${drawing.dept || '-'})`
         : '-';
     document.getElementById("modal-drawing-date").textContent = drawing.uploaded_at || '-';
     const targetDateEl = document.getElementById("modal-drawing-target-date");
@@ -16055,12 +16056,16 @@ function renderProjects() {
                     </div>
                 </div>
             `;
-        }
-
         // ponytail: Timeline group for Phase 3 ONLY
         let timelinePreviewHtml = "";
         if (p.phase === 3) {
-            const timelineList = (p.timeline || []);
+            let timelineList = p.timeline || [];
+            if (typeof timelineList === 'string') {
+                try { timelineList = JSON.parse(timelineList); } catch (e) { timelineList = []; }
+            }
+            if (!Array.isArray(timelineList)) {
+                timelineList = (timelineList && typeof timelineList === 'object') ? Object.values(timelineList) : [];
+            }
             let optionsHtml = "";
             let initialDesc = "Belum ada data timeline untuk proyek ini.";
 
@@ -21847,7 +21852,13 @@ function openProjectDetails(event, projId) {
                 `;
             }
 
-            const timelineList = (proj.timeline || []);
+            let timelineList = proj.timeline || [];
+            if (typeof timelineList === 'string') {
+                try { timelineList = JSON.parse(timelineList); } catch (e) { timelineList = []; }
+            }
+            if (!Array.isArray(timelineList)) {
+                timelineList = (timelineList && typeof timelineList === 'object') ? Object.values(timelineList) : [];
+            }
             let optionsHtml = "";
             let initialDesc = "Belum ada data timeline untuk proyek ini.";
 
@@ -25258,7 +25269,13 @@ window.updateProjectTimelineDesc = function updateProjectTimelineDesc(selectedIn
     const proj = state.projects.find(p => p.id === projId);
     if (!proj) return;
 
-    const timelineList = proj.timeline || [];
+    let timelineList = proj.timeline || [];
+    if (typeof timelineList === 'string') {
+        try { timelineList = JSON.parse(timelineList); } catch (e) { timelineList = []; }
+    }
+    if (!Array.isArray(timelineList)) {
+        timelineList = (timelineList && typeof timelineList === 'object') ? Object.values(timelineList) : [];
+    }
     let descText = "Belum ada data timeline untuk proyek ini.";
 
     if (selectedIndex !== "" && selectedIndex !== null && selectedIndex !== undefined) {
@@ -25280,7 +25297,14 @@ window.openEditProjectTimelineModal = function openEditProjectTimelineModal(proj
     if (!proj) return;
 
     state._currentTimelineProjId = proj.id;
-    state._editingTimeline = JSON.parse(JSON.stringify(proj.timeline || []));
+    let currentTimeline = proj.timeline || [];
+    if (typeof currentTimeline === 'string') {
+        try { currentTimeline = JSON.parse(currentTimeline); } catch (e) { currentTimeline = []; }
+    }
+    if (!Array.isArray(currentTimeline)) {
+        currentTimeline = (currentTimeline && typeof currentTimeline === 'object') ? Object.values(currentTimeline) : [];
+    }
+    state._editingTimeline = JSON.parse(JSON.stringify(currentTimeline));
 
     const modalIdEl = document.getElementById("proj-timeline-modal-project-id");
     if (modalIdEl) modalIdEl.textContent = proj.id;

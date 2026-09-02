@@ -56,5 +56,6 @@ class Project extends Model
         'pr_total_items'     => 'integer',
         'pr_ready_stock'     => 'integer',
         'pr_all_material'    => 'integer',
+        'timeline'           => 'array',
     ];
 }
