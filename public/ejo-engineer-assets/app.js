@@ -16056,6 +16056,8 @@ function renderProjects() {
                     </div>
                 </div>
             `;
+        }
+
         // ponytail: Timeline group for Phase 3 ONLY
         let timelinePreviewHtml = "";
         if (p.phase === 3) {
