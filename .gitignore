@@ -27,3 +27,6 @@ storage/framework/sessions/*
 storage/framework/views/*
 __pycache__/
 *.pyc
+/Dockerfile
+/Dockerfile V2
+/docker-compose.yml

@@ -29,64 +29,6 @@
     </head>
 
     <body>
-        <!-- Login Screen Container (Hidden when logged in via Engineering) -->
-        <div class="login-wrapper" id="login-container" style="display: none;">
-            <!-- Background Video -->
-            <video id="login-bg-video" autoplay loop muted="muted" playsinline webkit-playsinline defaultMuted
-                class="login-bg-video" src="/ejo-engineer-assets/202607301136.mp4">
-                <source src="/ejo-engineer-assets/202607301136.mp4" type="video/mp4">
-            </video>
-            <div class="login-bg-overlay"></div>
-
-            <div class="login-box card-glass animate-in">
-                <div class="login-logo">
-                    <div class="login-logo-subtitle" style="margin-top: 0.5rem;">
-                        <span class="sub-line-top">ENGINEERING JOB ORDER</span>
-                        <span class="sub-line-bottom">PORTAL SYSTEM</span>
-                    </div>
-                </div>
-
-                <form id="login-form" class="login-form">
-                    <div class="form-field">
-                        <label for="login-username">Username <span class="required">*</span></label>
-                        <input type="text" id="login-username" placeholder="Masukkan Username" required>
-                    </div>
-
-                    <div class="form-field">
-                        <label for="login-password">Password <span class="required">*</span></label>
-                        <div class="password-input-wrapper">
-                            <input type="password" id="login-password" placeholder="Masukkan Password" required>
-                            <button type="button" class="btn-toggle-password" id="btn-toggle-pass"
-                                title="Tampilkan Password">
-                                <i data-lucide="eye" id="pass-eye-icon" style="width: 16px; height: 16px;"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-field" id="login-totp-field" style="display: none;">
-                        <label for="login-totp-code" style="color: var(--color-cyan, #06b6d4); font-weight: 600;">Kode
-                            2FA Authenticator (6-Digit) <span class="required">*</span></label>
-                        <input type="text" id="login-totp-code" placeholder="123456" maxlength="6"
-                            pattern="[0-9]{6}" autocomplete="one-time-code"
-                            style="letter-spacing: 4px; font-size: 1.1rem; text-align: center; font-weight: bold;">
-                        <small id="totp-server-hint" style="display:none; color: var(--color-cyan, #06b6d4); font-size: 0.75rem; margin-top: 4px;">Khusus Akun Server: Masukkan kode 6-digit TOTP Authenticator.</small>
-                    </div>
-
-                    <div id="login-error-msg" class="login-error-msg"
-                        style="display: none; color: var(--color-rose); font-size: 0.8rem; margin-top: 0.5rem; text-align: left;">
-                        <i data-lucide="alert-circle"
-                            style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
-                        <span>Username atau password salah!</span>
-                    </div>
-
-                    <button type="submit" id="btn-login-submit" class="btn btn-primary glow-button full-width"
-                        style="margin-top: 1.5rem;">
-                        <i data-lucide="log-in"></i> Masuk Ke Dashboard
-                    </button>
-                </form>
-            </div>
-        </div>
-
         <!-- Fullscreen Welcome Greeting Overlay (Layar Sambutan Putih/Bersih) -->
         <div id="welcome-greeting-screen" class="welcome-fullscreen-overlay" style="display: none;">
             <div class="welcome-fullscreen-card">
