@@ -21,7 +21,7 @@
         <!-- Chart.js -->
         <script src="/ejo-engineer-assets/chart.js"></script>
         <!-- Stylesheet -->
-        <link rel="stylesheet" href="/ejo-engineer-assets/style.css?v=24.3">
+        <link rel="stylesheet" href="/ejo-engineer-assets/style.css?v=24.4">
         <!-- Authenticated User Data from Engineering -->
         <script>
             window.ENGINEERING_AUTH_USER = @json(auth()->user());
@@ -299,10 +299,16 @@
                                     style="font-size:0.7rem; color:var(--text-secondary);">Role</span>
                             </div>
                         </div>
-                        <button class="btn-logout" id="btn-logout" title="Keluar dari Akun"
-                            style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: var(--border-radius-sm); transition: var(--transition-smooth);">
-                            <i data-lucide="log-out" style="width: 18px; height: 18px;"></i>
-                        </button>
+                        <div class="sidebar-footer-actions" style="display: flex; align-items: center; gap: 4px;">
+                            <a href="/home" class="btn-sidebar-home" title="Kembali ke Portal Home Utama"
+                                style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: var(--border-radius-sm); transition: var(--transition-smooth); text-decoration: none;">
+                                <i data-lucide="home" style="width: 18px; height: 18px;"></i>
+                            </a>
+                            <button class="btn-logout" id="btn-logout" title="Keluar dari Akun"
+                                style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: var(--border-radius-sm); transition: var(--transition-smooth);">
+                                <i data-lucide="log-out" style="width: 18px; height: 18px;"></i>
+                            </button>
+                        </div>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                             @csrf
                         </form>
@@ -325,6 +331,11 @@
                         </div>
                     </div>
                     <div class="header-right">
+                        <a href="/home" class="btn-back-home card-glass" title="Kembali ke Portal Home Utama"
+                            style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px; font-weight: 600; color: var(--text-primary); border: 1px solid var(--card-border); transition: var(--transition-smooth);">
+                            <i data-lucide="home" style="width: 16px; height: 16px; color: var(--color-cyan);"></i>
+                            <span>Home</span>
+                        </a>
                         <div class="time-widget card-glass">
                             <i data-lucide="clock"></i>
                             <span id="live-clock">23 Jun 2026, 09:30 WIB</span>
