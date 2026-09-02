@@ -79,8 +79,36 @@ class PdfSignerService
         return [$displayName, $fs];
     }
 
+    private function getPythonBinary(): string
+    {
+        $custom = env('PYTHON_PATH') ?: env('PYTHON_BINARY');
+        if (!empty($custom)) {
+            return $custom;
+        }
+
+        $candidates = [
+            '/opt/pymupdf-env/bin/python',
+            '/opt/pymupdf-env/bin/python3',
+            base_path('pymupdf-env/bin/python'),
+            base_path('venv/bin/python'),
+            base_path('env/bin/python'),
+            base_path('venv/Scripts/python.exe'),
+            '/usr/bin/python3',
+            '/usr/local/bin/python3',
+            '/usr/bin/python',
+        ];
+
+        foreach ($candidates as $bin) {
+            if (file_exists($bin) && is_file($bin)) {
+                return $bin;
+            }
+        }
+
+        return 'python';
+    }
+
     /**
-     * Stamping signatures on Technical Drawing PDF using 100% Native PHP FPDI.
+     * Stamping signatures on Technical Drawing PDF using PyMuPDF (with FPDI fallback).
      */
     public function signDrawing(string $pdfPath, array $approvals, string $category = 'Sipil', string $orientation = 'landscape'): bool
     {
@@ -94,8 +122,10 @@ class PdfSignerService
             $tmpJson = tempnam(sys_get_temp_dir(), 'sig_app_') . '.json';
             File::put($tmpJson, json_encode($approvals));
 
+            $pyBin = $this->getPythonBinary();
             $cmd = sprintf(
-                'python %s drawing %s %s %s %s 2>&1',
+                '%s %s drawing %s %s %s %s 2>&1',
+                escapeshellcmd($pyBin),
                 escapeshellarg($scriptPath),
                 escapeshellarg($pdfPath),
                 escapeshellarg($tmpJson),
@@ -288,8 +318,10 @@ class PdfSignerService
             $tmpJson = tempnam(sys_get_temp_dir(), 'sig_ho_') . '.json';
             File::put($tmpJson, json_encode($approvals));
 
+            $pyBin = $this->getPythonBinary();
             $cmd = sprintf(
-                'python %s handover %s %s 2>&1',
+                '%s %s handover %s %s 2>&1',
+                escapeshellcmd($pyBin),
                 escapeshellarg($scriptPath),
                 escapeshellarg($pdfPath),
                 escapeshellarg($tmpJson)
