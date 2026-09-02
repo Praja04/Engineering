@@ -88,6 +88,30 @@ class PdfSignerService
             return false;
         }
 
+        // 1. Try Python PyMuPDF script (supports compressed PDF 1.5+ streams & object streams)
+        $scriptPath = base_path('scripts/pdf_signer.py');
+        if (File::exists($scriptPath)) {
+            $tmpJson = tempnam(sys_get_temp_dir(), 'sig_app_') . '.json';
+            File::put($tmpJson, json_encode($approvals));
+
+            $cmd = sprintf(
+                'python %s drawing %s %s %s %s 2>&1',
+                escapeshellarg($scriptPath),
+                escapeshellarg($pdfPath),
+                escapeshellarg($tmpJson),
+                escapeshellarg($category),
+                escapeshellarg($orientation)
+            );
+
+            exec($cmd, $output, $returnCode);
+            @unlink($tmpJson);
+
+            if ($returnCode === 0) {
+                return true;
+            }
+            Log::warning("signDrawing python signer warning (code $returnCode): " . implode("\n", $output));
+        }
+
         try {
             $catLower = strtolower($category);
             $orientLower = strtolower($orientation);
@@ -181,7 +205,7 @@ class PdfSignerService
 
             $selectedMap = $coordMaps[$mapKey] ?? $coordMaps['diki_landscape'];
 
-            $pdf = new Fpdi('pt');
+            $pdf = new Fpdi('P', 'pt');
             $pageCount = $pdf->setSourceFile($pdfPath);
 
             $tempFilesCreated = [];
@@ -258,6 +282,28 @@ class PdfSignerService
             return false;
         }
 
+        // 1. Try Python PyMuPDF script
+        $scriptPath = base_path('scripts/pdf_signer.py');
+        if (File::exists($scriptPath)) {
+            $tmpJson = tempnam(sys_get_temp_dir(), 'sig_ho_') . '.json';
+            File::put($tmpJson, json_encode($approvals));
+
+            $cmd = sprintf(
+                'python %s handover %s %s 2>&1',
+                escapeshellarg($scriptPath),
+                escapeshellarg($pdfPath),
+                escapeshellarg($tmpJson)
+            );
+
+            exec($cmd, $output, $returnCode);
+            @unlink($tmpJson);
+
+            if ($returnCode === 0) {
+                return true;
+            }
+            Log::warning("signHandover python signer warning (code $returnCode): " . implode("\n", $output));
+        }
+
         try {
             $roleCols = [
                 'staff_eng'   => ['x' => [55, 132],  'header' => 'Dibuat oleh,',  'role' => 'Staff ENG'],
@@ -268,7 +314,7 @@ class PdfSignerService
                 'staff_user'  => ['x' => [455, 532], 'header' => 'Diterima oleh,',  'role' => 'Staff User'],
             ];
 
-            $pdf = new Fpdi('pt');
+            $pdf = new Fpdi('P', 'pt');
             $pageCount = $pdf->setSourceFile($pdfPath);
             $tempFilesCreated = [];
 

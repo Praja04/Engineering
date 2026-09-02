@@ -859,7 +859,7 @@ class EjoEngineerController extends Controller
             $approvals = $drawing->approvals ?: [];
             if (! empty($approvals)) {
                 $pdfAbsPath = $this->resolvePublicOrStoragePath($drawing->file_path);
-                $cat = $drawing->etiket_category ?: 'Sipil';
+                $cat = $drawing->etiket_category ?: ($drawing->category ?: 'Sipil');
                 $orient = $drawing->etiket_orientation ?: 'landscape';
 
                 if (File::exists($pdfAbsPath)) {
