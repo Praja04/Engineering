@@ -855,13 +855,19 @@ class DashboardBoilerController extends Controller
         $totalCols = count($headers);
         $lastColLetter = Coordinate::stringFromColumnIndex($totalCols);
 
-        // Title Block (Row 1)
+        // Title Block (Row 1) - Merged across table columns so it does not widen Column A
         $sheet->setCellValue('A1', $reportTitle);
+        $sheet->mergeCells("A1:{$lastColLetter}1");
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF1D3557'));
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getRowDimension(1)->setRowHeight(24);
 
-        // Subtitle Block (Row 2)
+        // Subtitle Block (Row 2) - Merged across table columns
         $sheet->setCellValue('A2', $subtitle . ' | Tanggal Unduh: ' . Carbon::now()->translatedFormat('d F Y H:i') . ' WIB');
+        $sheet->mergeCells("A2:{$lastColLetter}2");
         $sheet->getStyle('A2')->getFont()->setItalic(true)->setSize(10)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF555555'));
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getRowDimension(2)->setRowHeight(18);
 
         // Header Row (Row 4)
         $headerRow = 4;
@@ -927,10 +933,22 @@ class DashboardBoilerController extends Controller
             $currentRow++;
         }
 
-        // Auto-fit column widths
+        // Set optimal column widths based only on table header and data rows
         for ($i = 1; $i <= $totalCols; $i++) {
             $colLetter = Coordinate::stringFromColumnIndex($i);
-            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+            $headerText = $headers[$i - 1] ?? '';
+            $maxLen = mb_strlen($headerText);
+
+            foreach ($dataRows as $row) {
+                $val = $row[$i - 1] ?? '';
+                $len = mb_strlen((string)$val);
+                if ($len > $maxLen) {
+                    $maxLen = $len;
+                }
+            }
+
+            $sheet->getColumnDimension($colLetter)->setAutoSize(false);
+            $sheet->getColumnDimension($colLetter)->setWidth(max($maxLen + 5, 16));
         }
     }
 }
