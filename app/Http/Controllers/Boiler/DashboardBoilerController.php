@@ -553,12 +553,10 @@ class DashboardBoilerController extends Controller
 
             $bbSteamData = $this->queryBatuBaraSteam($startBBSteam, $endBBSteam);
             $rows = [];
-            $no = 1;
             foreach ($bbSteamData as $item) {
                 $rasio = (float) $item['rasio'];
                 $status = $rasio > 175 ? 'Melebihi Ambang' : 'Normal';
                 $rows[] = [
-                    $no++,
                     $item['date'],
                     (float) $item['batu_bara'],
                     (float) $item['steam'],
@@ -573,10 +571,9 @@ class DashboardBoilerController extends Controller
                 'Batu Bara - Steam',
                 'DASHBOARD KPI BOILER - BATU BARA / STEAM',
                 $makeSubtitle($startBBSteam, $endBBSteam),
-                ['No', 'Tanggal', 'Batu Bara (Ton)', 'Steam (m³)', 'Rasio (BB/Steam x 1000)', 'Batas Ambang', 'Status Ambang'],
+                ['Tanggal', 'Batu Bara (Ton)', 'Steam (m³)', 'Rasio (BB/Steam x 1000)', 'Batas Ambang', 'Status Ambang'],
                 $rows,
                 [
-                    Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_RIGHT,
                     Alignment::HORIZONTAL_RIGHT,
@@ -585,7 +582,6 @@ class DashboardBoilerController extends Controller
                     Alignment::HORIZONTAL_CENTER
                 ],
                 [
-                    '#,##0',
                     null,
                     '#,##0.00',
                     '#,##0.00',
@@ -606,10 +602,8 @@ class DashboardBoilerController extends Controller
 
             $kondensatData = $this->queryKondensat($startKondensat, $endKondensat);
             $rows = [];
-            $no = 1;
             foreach ($kondensatData as $item) {
                 $rows[] = [
-                    $no++,
                     $item['date'],
                     (float) $item['pemakaian_air'],
                     (float) $item['feed_tank_awal'],
@@ -623,10 +617,9 @@ class DashboardBoilerController extends Controller
                 'Kondensat',
                 'DASHBOARD KPI BOILER - KONDENSAT',
                 $makeSubtitle($startKondensat, $endKondensat),
-                ['No', 'Tanggal', 'Pemakaian Air (m³)', 'Feed Tank Awal (cm)', 'Feed Tank Akhir (cm)', 'Kondensat (%)'],
+                ['Tanggal', 'Pemakaian Air (m³)', 'Feed Tank Awal (cm)', 'Feed Tank Akhir (cm)', 'Kondensat (%)'],
                 $rows,
                 [
-                    Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_RIGHT,
                     Alignment::HORIZONTAL_RIGHT,
@@ -634,7 +627,6 @@ class DashboardBoilerController extends Controller
                     Alignment::HORIZONTAL_RIGHT
                 ],
                 [
-                    '#,##0',
                     null,
                     '#,##0.00',
                     '#,##0.00',
@@ -654,10 +646,8 @@ class DashboardBoilerController extends Controller
 
             $steamWeeklyData = $this->querySteamFgWeekly($startSteamWeekly, $endSteamWeekly, false);
             $rows = [];
-            $no = 1;
             foreach ($steamWeeklyData as $item) {
                 $rows[] = [
-                    $no++,
                     $item['week_start'],
                     $item['week_end'],
                     (float) $item['steam'],
@@ -672,10 +662,9 @@ class DashboardBoilerController extends Controller
                 'Steam - FG (Weekly)',
                 'DASHBOARD KPI BOILER - STEAM / FINISH GOODS (WEEKLY)',
                 $makeSubtitle($startSteamWeekly, $endSteamWeekly),
-                ['No', 'Periode Awal', 'Periode Akhir', 'Steam (m³)', 'Finish Goods (Ton)', 'Rasio (Steam/FG x 10)', 'Sumber Data'],
+                ['Periode Awal', 'Periode Akhir', 'Steam (m³)', 'Finish Goods (Ton)', 'Rasio (Steam/FG x 10)', 'Sumber Data'],
                 $rows,
                 [
-                    Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_RIGHT,
@@ -684,7 +673,6 @@ class DashboardBoilerController extends Controller
                     Alignment::HORIZONTAL_CENTER
                 ],
                 [
-                    '#,##0',
                     null,
                     null,
                     '#,##0.00',
@@ -705,10 +693,8 @@ class DashboardBoilerController extends Controller
 
             $steamMonthlyData = $this->querySteamFgMonthly($startSteamMonthly, $endSteamMonthly, false);
             $rows = [];
-            $no = 1;
             foreach ($steamMonthlyData as $item) {
                 $rows[] = [
-                    $no++,
                     $item['month'],
                     (float) $item['steam'],
                     (float) $item['finish_goods'],
@@ -723,10 +709,9 @@ class DashboardBoilerController extends Controller
                 'Steam - FG (Monthly)',
                 'DASHBOARD KPI BOILER - STEAM / FINISH GOODS (MONTHLY)',
                 $makeSubtitle($startSteamMonthly, $endSteamMonthly),
-                ['No', 'Bulan', 'Steam (m³)', 'Finish Goods (Ton)', 'Rasio (Steam/FG x 10)', 'Sumber Steam', 'Sumber FG'],
+                ['Bulan', 'Steam (m³)', 'Finish Goods (Ton)', 'Rasio (Steam/FG x 10)', 'Sumber Steam', 'Sumber FG'],
                 $rows,
                 [
-                    Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_RIGHT,
                     Alignment::HORIZONTAL_RIGHT,
@@ -735,7 +720,6 @@ class DashboardBoilerController extends Controller
                     Alignment::HORIZONTAL_CENTER
                 ],
                 [
-                    '#,##0',
                     null,
                     '#,##0.00',
                     '#,##0.00',
@@ -756,10 +740,8 @@ class DashboardBoilerController extends Controller
 
             $bbWeeklyData = $this->queryBatuBaraFgWeekly($startBbWeekly, $endBbWeekly, false);
             $rows = [];
-            $no = 1;
             foreach ($bbWeeklyData as $item) {
                 $rows[] = [
-                    $no++,
                     $item['week_start'],
                     $item['week_end'],
                     (float) $item['batu_bara'],
@@ -774,10 +756,9 @@ class DashboardBoilerController extends Controller
                 'BB - FG (Weekly)',
                 'DASHBOARD KPI BOILER - BATU BARA / FINISH GOODS (WEEKLY)',
                 $makeSubtitle($startBbWeekly, $endBbWeekly),
-                ['No', 'Periode Awal', 'Periode Akhir', 'Batu Bara (Ton)', 'Finish Goods (Ton)', 'Rasio (BB/FG x 1000)', 'Sumber Data'],
+                ['Periode Awal', 'Periode Akhir', 'Batu Bara (Ton)', 'Finish Goods (Ton)', 'Rasio (BB/FG x 1000)', 'Sumber Data'],
                 $rows,
                 [
-                    Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_RIGHT,
@@ -786,7 +767,6 @@ class DashboardBoilerController extends Controller
                     Alignment::HORIZONTAL_CENTER
                 ],
                 [
-                    '#,##0',
                     null,
                     null,
                     '#,##0.00',
@@ -807,10 +787,8 @@ class DashboardBoilerController extends Controller
 
             $bbMonthlyData = $this->queryBatuBaraFgMonthly($startBbMonthly, $endBbMonthly, false);
             $rows = [];
-            $no = 1;
             foreach ($bbMonthlyData as $item) {
                 $rows[] = [
-                    $no++,
                     $item['month'],
                     (float) $item['batu_bara'],
                     (float) $item['finish_goods'],
@@ -825,10 +803,9 @@ class DashboardBoilerController extends Controller
                 'BB - FG (Monthly)',
                 'DASHBOARD KPI BOILER - BATU BARA / FINISH GOODS (MONTHLY)',
                 $makeSubtitle($startBbMonthly, $endBbMonthly),
-                ['No', 'Bulan', 'Batu Bara (Ton)', 'Finish Goods (Ton)', 'Rasio (BB/FG x 1000)', 'Sumber Batu Bara', 'Sumber FG'],
+                ['Bulan', 'Batu Bara (Ton)', 'Finish Goods (Ton)', 'Rasio (BB/FG x 1000)', 'Sumber Batu Bara', 'Sumber FG'],
                 $rows,
                 [
-                    Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_CENTER,
                     Alignment::HORIZONTAL_RIGHT,
                     Alignment::HORIZONTAL_RIGHT,
@@ -837,7 +814,6 @@ class DashboardBoilerController extends Controller
                     Alignment::HORIZONTAL_CENTER
                 ],
                 [
-                    '#,##0',
                     null,
                     '#,##0.00',
                     '#,##0.00',
