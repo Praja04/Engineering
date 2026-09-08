@@ -8,10 +8,48 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0">Engineering</h4>
+                        <h4 class="mb-sm-0">Engineering - Dashboard KPI Boiler</h4>
 
-                        <div class="page-title-right">
-                            <ol class="breadcrumb m-0">
+                        <div class="page-title-right d-flex align-items-center gap-2">
+                            <!-- Dropdown Export Excel -->
+                            <div class="dropdown">
+                                <button class="btn btn-success dropdown-toggle d-flex align-items-center gap-2 shadow-sm"
+                                    type="button" id="dropdownExportExcel" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ri-file-excel-2-line fs-5"></i>
+                                    <span>Download Excel</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-2 rounded-3"
+                                    aria-labelledby="dropdownExportExcel" style="min-width: 280px;">
+                                    <li>
+                                        <h6 class="dropdown-header text-uppercase fw-bold text-muted px-2 py-1">Opsi Export Excel</h6>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2 p-2 rounded-2"
+                                            href="javascript:void(0);" id="btnExportAllData">
+                                            <i class="ri-file-download-line fs-4 text-success"></i>
+                                            <div>
+                                                <div class="fw-semibold text-dark">Semua Data (Semua Chart)</div>
+                                                <small class="text-muted">Export seluruh riwayat data 6 sheet</small>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider my-1">
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2 p-2 rounded-2"
+                                            href="javascript:void(0);" id="btnExportFilteredData">
+                                            <i class="ri-filter-3-line fs-4 text-primary"></i>
+                                            <div>
+                                                <div class="fw-semibold text-dark">Data Sesuai Filter Aktif</div>
+                                                <small class="text-muted">Export data berdasarkan filter di layar</small>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <ol class="breadcrumb m-0 ms-2">
                                 <li class="breadcrumb-item">
                                     <a href="javascript: void(0);">Dashboards</a>
                                 </li>
@@ -30,6 +68,9 @@
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0">Batu Bara / Steam</h5>
                             <div class="d-flex gap-2">
+                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportBBSteam" title="Download Excel Batu Bara / Steam">
+                                    <i class="ri-file-excel-2-line"></i> <span>Excel</span>
+                                </button>
                                 <button class="btn btn-outline-danger d-flex" id="resetBBSteam">Reset</button>
                                 <div class="dropdown">
 
@@ -76,6 +117,9 @@
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0">Kondensat</h5>
                             <div class="d-flex gap-2">
+                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportKondensat" title="Download Excel Kondensat">
+                                    <i class="ri-file-excel-2-line"></i> <span>Excel</span>
+                                </button>
                                 <button class="btn btn-outline-danger d-flex" id="resetKondensat">Reset</button>
                                 <div class="dropdown">
                                     <a href="#"
@@ -123,6 +167,9 @@
                             <h5 class="card-title mb-0" id="steam-card-title">Steam / Finish Goods <span
                                     class="d-none accounting">Accounting</span></h5>
                             <div class="d-flex gap-2">
+                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportSteamFg" title="Download Excel Steam / Finish Goods">
+                                    <i class="ri-file-excel-2-line"></i> <span>Excel</span>
+                                </button>
                                 <button class="btn btn-outline-danger d-flex" id="resetSteamFg">Reset</button>
                                 <div class="d-flex align-items-center gap-3">
                                     <!-- Tabs -->
@@ -214,6 +261,9 @@
                             <h5 class="card-title mb-0" id="bb-card-title">Batu Bara / Finish Goods <span
                                     class="d-none accounting">Accounting</span></h5>
                             <div class="d-flex gap-2">
+                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportBBFg" title="Download Excel Batu Bara / Finish Goods">
+                                    <i class="ri-file-excel-2-line"></i> <span>Excel</span>
+                                </button>
                                 <button class="btn btn-outline-danger d-flex" id="resetBBFg">Reset</button>
                                 <div class="d-flex align-items-center gap-3">
                                     <ul class="nav nav-tabs nav-tabs-custom nav-tabs-small" role="tablist">
@@ -983,6 +1033,85 @@
 
             setupTabFilterSwitch('steam');
             setupTabFilterSwitch('bb');
+
+            // ==========================================
+            // Export Excel Handlers
+            // ==========================================
+            const exportBaseUrl = "{{ route('dashboard.boiler.kpi.export') }}";
+
+            // Export Semua Data (Semua Chart)
+            $('#btnExportAllData').on('click', function() {
+                window.location.href = `${exportBaseUrl}?scope=all&filtered=0`;
+            });
+
+            // Export Data Sesuai Filter Aktif (Semua Chart)
+            $('#btnExportFilteredData').on('click', function() {
+                const params = new URLSearchParams({
+                    scope: 'all',
+                    filtered: '1',
+                    start_bb_steam: $('#startDateBBSteam').val() || '',
+                    end_bb_steam: $('#endDateBBSteam').val() || '',
+                    start_kondensat: $('#startKondensat').val() || '',
+                    end_kondensat: $('#endKondensat').val() || '',
+                    start_steam_weekly: $('#startSteamWeekly').val() || '',
+                    end_steam_weekly: $('#endSteamWeekly').val() || '',
+                    year_steam_monthly: $('#yearSteamMonthly').val() || '',
+                    month_steam_monthly: $('#monthSteamMonthly').val() || '',
+                    start_bb_weekly: $('#startBBWeekly').val() || '',
+                    end_bb_weekly: $('#endBBWeekly').val() || '',
+                    year_bb_monthly: $('#yearBBMonthly').val() || '',
+                    month_bb_monthly: $('#monthBBMonthly').val() || ''
+                });
+                window.location.href = `${exportBaseUrl}?` + params.toString();
+            });
+
+            // Export Per-Card: Batu Bara / Steam
+            $('#exportBBSteam').on('click', function() {
+                const params = new URLSearchParams({
+                    scope: 'bb_steam',
+                    filtered: '1',
+                    start_bb_steam: $('#startDateBBSteam').val() || '',
+                    end_bb_steam: $('#endDateBBSteam').val() || ''
+                });
+                window.location.href = `${exportBaseUrl}?` + params.toString();
+            });
+
+            // Export Per-Card: Kondensat
+            $('#exportKondensat').on('click', function() {
+                const params = new URLSearchParams({
+                    scope: 'kondensat',
+                    filtered: '1',
+                    start_kondensat: $('#startKondensat').val() || '',
+                    end_kondensat: $('#endKondensat').val() || ''
+                });
+                window.location.href = `${exportBaseUrl}?` + params.toString();
+            });
+
+            // Export Per-Card: Steam / Finish Goods
+            $('#exportSteamFg').on('click', function() {
+                const params = new URLSearchParams({
+                    scope: 'steam_fg',
+                    filtered: '1',
+                    start_steam_weekly: $('#startSteamWeekly').val() || '',
+                    end_steam_weekly: $('#endSteamWeekly').val() || '',
+                    year_steam_monthly: $('#yearSteamMonthly').val() || '',
+                    month_steam_monthly: $('#monthSteamMonthly').val() || ''
+                });
+                window.location.href = `${exportBaseUrl}?` + params.toString();
+            });
+
+            // Export Per-Card: Batu Bara / Finish Goods
+            $('#exportBBFg').on('click', function() {
+                const params = new URLSearchParams({
+                    scope: 'bb_fg',
+                    filtered: '1',
+                    start_bb_weekly: $('#startBBWeekly').val() || '',
+                    end_bb_weekly: $('#endBBWeekly').val() || '',
+                    year_bb_monthly: $('#yearBBMonthly').val() || '',
+                    month_bb_monthly: $('#monthBBMonthly').val() || ''
+                });
+                window.location.href = `${exportBaseUrl}?` + params.toString();
+            });
         });
     </script>
 @endsection
