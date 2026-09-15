@@ -521,7 +521,24 @@
                                 formatter: function() {
                                     return Highcharts.numberFormat(this.value, 0) + ' %';
                                 }
-                            }
+                            },
+                            plotLines: [{
+                                value: 85,
+                                color: '#e63946',
+                                width: 2,
+                                dashStyle: 'Dash',
+                                zIndex: 5,
+                                label: {
+                                    text: 'Batas Ambang: 85%',
+                                    align: 'right',
+                                    x: -10,
+                                    style: {
+                                        color: '#e63946',
+                                        fontWeight: 'bold',
+                                        fontSize: '12px'
+                                    }
+                                }
+                            }]
                         },
                         tooltip: {
                             shared: false,
@@ -533,7 +550,8 @@
 
                                 return `
                                     <b>${tanggal}</b><br/>
-                                    Kondensat: <b>${Highcharts.numberFormat(nilai, 2, '.', ',')} %</b>
+                                    Kondensat: <b>${Highcharts.numberFormat(nilai, 2, '.', ',')} %</b><br/>
+                                    Batas Ambang: <b>85%</b>
                                 `;
                             }
                         },
@@ -624,7 +642,24 @@
                                 formatter: function() {
                                     return Highcharts.numberFormat(this.value, 2, '.', ',');
                                 }
-                            }
+                            },
+                            plotLines: [{
+                                value: 2.8,
+                                color: '#e63946',
+                                width: 2,
+                                dashStyle: 'Dash',
+                                zIndex: 5,
+                                label: {
+                                    text: 'Batas Ambang: 2.8',
+                                    align: 'right',
+                                    x: -10,
+                                    style: {
+                                        color: '#e63946',
+                                        fontWeight: 'bold',
+                                        fontSize: '12px'
+                                    }
+                                }
+                            }]
                         },
                         tooltip: {
                             shared: true,
@@ -636,7 +671,8 @@
                                     <b>${row.week_start} s/d ${row.week_end}</b><br/>
                                     Steam: <b>${Highcharts.numberFormat(row.steam, 2, '.', ',')}</b><br/>
                                     Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 2, '.', ',')}</b><br/>
-                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
+                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b><br/>
+                                    Batas Ambang: <b>2.8</b>
                                 `;
                             }
                         },
@@ -696,7 +732,24 @@
                                 formatter: function() {
                                     return Highcharts.numberFormat(this.value, 2, '.', ',');
                                 }
-                            }
+                            },
+                            plotLines: [{
+                                value: 2.8,
+                                color: '#e63946',
+                                width: 2,
+                                dashStyle: 'Dash',
+                                zIndex: 5,
+                                label: {
+                                    text: 'Batas Ambang: 2.8',
+                                    align: 'right',
+                                    x: -10,
+                                    style: {
+                                        color: '#e63946',
+                                        fontWeight: 'bold',
+                                        fontSize: '12px'
+                                    }
+                                }
+                            }]
                         },
                         tooltip: {
                             shared: true,
@@ -708,7 +761,8 @@
                                     <b>${formatMonthLabel(row.month)}</b><br/>
                                     Steam: <b>${Highcharts.numberFormat(row.steam, 2, '.', ',')}</b><br/>
                                     Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 2, '.', ',')}</b><br/>
-                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
+                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b><br/>
+                                    Batas Ambang: <b>2.8</b>
                                 `;
                             }
                         },
@@ -774,7 +828,24 @@
                                 formatter: function() {
                                     return Highcharts.numberFormat(this.value, 2, '.', ',');
                                 }
-                            }
+                            },
+                            plotLines: [{
+                                value: 51.2,
+                                color: '#e63946',
+                                width: 2,
+                                dashStyle: 'Dash',
+                                zIndex: 5,
+                                label: {
+                                    text: 'Batas Ambang: 51.2',
+                                    align: 'right',
+                                    x: -10,
+                                    style: {
+                                        color: '#e63946',
+                                        fontWeight: 'bold',
+                                        fontSize: '12px'
+                                    }
+                                }
+                            }]
                         },
                         tooltip: {
                             shared: true,
@@ -786,7 +857,8 @@
                                 <b>${row.week_start} s/d ${row.week_end}</b><br/>
                                 Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 2, '.', ',')}</b><br/>
                                 Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 2, '.', ',')}</b><br/>
-                                Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
+                                Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b><br/>
+                                Batas Ambang: <b>51.2</b>
                             `;
                             }
                         },
@@ -845,7 +917,24 @@
                                 formatter: function() {
                                     return Highcharts.numberFormat(this.value, 2, '.', ',');
                                 }
-                            }
+                            },
+                            plotLines: [{
+                                value: 51.2,
+                                color: '#e63946',
+                                width: 2,
+                                dashStyle: 'Dash',
+                                zIndex: 5,
+                                label: {
+                                    text: 'Batas Ambang: 51.2',
+                                    align: 'right',
+                                    x: -10,
+                                    style: {
+                                        color: '#e63946',
+                                        fontWeight: 'bold',
+                                        fontSize: '12px'
+                                    }
+                                }
+                            }]
                         },
                         tooltip: {
                             shared: true,
@@ -857,7 +946,8 @@
                                     <b>${formatMonthLabel(row.month)}</b><br/>
                                     Batu Bara: <b>${Highcharts.numberFormat(row.batu_bara, 2, '.', ',')}</b><br/>
                                     Finish Goods: <b>${Highcharts.numberFormat(row.finish_goods, 2, '.', ',')}</b><br/>
-                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b>
+                                    Rasio: <b>${Highcharts.numberFormat(row.rasio, 2, '.', ',')} Kg/Ton Kecap</b><br/>
+                                    Batas Ambang: <b>51.2</b>
                                 `;
                             }
                         },

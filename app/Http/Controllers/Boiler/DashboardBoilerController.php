@@ -377,7 +377,7 @@ class DashboardBoilerController extends Controller
                 $sourceFg = 'KPI Monthly';
             }
 
-            $rasio = $fgValue > 0 ? ($totalSteam / $fgValue) * 1000 : 0;
+            $rasio = $fgValue > 0 ? ($totalSteam / $fgValue) * 10 : 0;
 
             $result[] = [
                 'month'         => $month,
