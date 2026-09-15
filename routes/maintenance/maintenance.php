@@ -142,7 +142,9 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('dashboard')->group(function () {
             Route::get('/material', [MtcMaterialDashboardController::class, 'index'])->name('mtc.dashboard.material');
             Route::get('/material/charts', [MtcMaterialDashboardController::class, 'getDashboardCharts'])->name('mtc.dashboard.material.charts');
-            Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMaterialList'])->name('mtc.dashboard.material.list');
+            Route::get('/material/ledger', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.ledger');
+            Route::get('/material/machine-details', [MtcMaterialDashboardController::class, 'getMachineDetails'])->name('mtc.dashboard.material.machine-details');
+            Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.list');
 
             Route::get('/agenda', [MtcAgendaController::class, 'index'])->name('agenda.index');
             Route::get('/agenda/master/data', [MtcAgendaController::class, 'getMasterData'])->name('agenda.master.data');
