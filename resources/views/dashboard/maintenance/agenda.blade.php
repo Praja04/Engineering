@@ -1311,43 +1311,68 @@
                         var bl = wk === 1 ? 'border-left:1px solid var(--vz-border-color, #f1f5f9);' : '';
 
                         // Render Plan
-                        if (!a || !a.plan) {
+                        var plans = (a && a.plans && a.plans.length > 0) ? a.plans : (a && a.plan ? [a.plan] : []);
+                        if (plans.length === 0) {
                             tdsPlan += '<td style="text-align:center;' + bl +
                                 '"><span class="wk-chip unplanned">&mdash;</span></td>';
                         } else {
-                            var p = a.plan;
-                            var tip = '';
-                            var labelText = p.paket;
+                            var planChips = plans.map(function(p) {
+                                var tip = '';
+                                var labelText = p.paket;
 
-                            if (p.tanggal) {
-                                var pDate = new Date(p.tanggal);
-                                var formattedDate = pDate.getDate() + ' ' + MONTHS_FULL[pDate.getMonth() +
-                                    1] + ' ' + pDate.getFullYear();
-                                tip = 'Rencana Tanggal: ' + formattedDate + ' · Paket ' + p.paket + (p
-                                    .tanggal_aktual ? ' · Terlaksana: ' + p.tanggal_aktual : '');
-                                labelText = pDate.getDate() + ': ' + p.paket;
-                            } else {
-                                tip = 'Rencana: Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' +
-                                    p.tanggal_aktual : '');
-                            }
+                                if (p.tanggal) {
+                                    var pDate = new Date(p.tanggal);
+                                    var formattedDate = pDate.getDate() + ' ' + MONTHS_FULL[pDate.getMonth() +
+                                        1] + ' ' + pDate.getFullYear();
+                                    tip = 'Rencana Tanggal: ' + formattedDate + ' · Paket ' + p.paket + (p
+                                        .tanggal_aktual ? ' · Terlaksana: ' + p.tanggal_aktual : '');
+                                    labelText = pDate.getDate() + ': ' + p.paket;
+                                } else {
+                                    tip = 'Rencana: Paket ' + p.paket + (p.tanggal_aktual ? ' · Terlaksana: ' +
+                                        p.tanggal_aktual : '');
+                                }
+
+                                var chipStatus = p.status || 'pending';
+                                return '<span class="wk-chip ' + chipStatus + '" title="' + tip + '">' + labelText +
+                                    '</span>';
+                            }).join('');
 
                             tdsPlan += '<td style="text-align:center;' + bl + '">' +
-                                '<span class="wk-chip pending" title="' + tip + '">' + labelText +
-                                '</span>' +
+                                '<div style="display:inline-flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;">' +
+                                planChips +
+                                '</div>' +
                                 '</td>';
                         }
 
                         // Render Actual
-                        if (!a || !a.actual) {
+                        var actuals = (a && a.actuals && a.actuals.length > 0) ? a.actuals : (a && a.actual ? [a.actual] : []);
+                        if (actuals.length === 0) {
                             tdsActual += '<td style="text-align:center;' + bl +
                                 '"><span class="wk-chip unplanned">&mdash;</span></td>';
                         } else {
-                            var act = a.actual;
-                            var tip = 'Realisasi: ' + act.tanggal + (act.paket ? ' · Paket ' + act.paket :
-                                '');
+                            var actualChips = actuals.map(function(act) {
+                                var tip = '';
+                                var labelText = '✓ ' + (act.paket || 'Mtc');
+
+                                if (act.tanggal) {
+                                    var aDate = new Date(act.tanggal);
+                                    var formattedDate = aDate.getDate() + ' ' + MONTHS_FULL[aDate.getMonth() +
+                                        1] + ' ' + aDate.getFullYear();
+                                    tip = 'Realisasi Tanggal: ' + formattedDate + (act.paket ? ' · Paket ' + act.paket :
+                                        '');
+                                    labelText = aDate.getDate() + ': ' + (act.paket || 'Mtc');
+                                } else {
+                                    tip = 'Realisasi: ' + (act.paket ? 'Paket ' + act.paket : 'Mtc');
+                                }
+
+                                return '<span class="wk-chip done" title="' + tip + '">' + labelText +
+                                    '</span>';
+                            }).join('');
+
                             tdsActual += '<td style="text-align:center;' + bl + '">' +
-                                '<span class="wk-chip done" title="' + tip + '">✓ ' + (act.paket || 'Mtc') +
-                                '</span>' +
+                                '<div style="display:inline-flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;">' +
+                                actualChips +
+                                '</div>' +
                                 '</td>';
                         }
                     }

@@ -325,12 +325,12 @@ class MtcAgendaController extends Controller
                 // Compute minggu_ke dynamically from date day
                 $day = Carbon::parse($plan->tanggal)->day;
                 $computedWk = ($day <= 7) ? 1 : (($day <= 14) ? 2 : (($day <= 21) ? 3 : (($day <= 28) ? 4 : 5)));
-                $plansByMachine[$plan->mesin_id][$plan->bulan][$computedWk] = [
+                $plansByMachine[$plan->mesin_id][$plan->bulan][$computedWk][] = [
                     'paket' => $plan->paket,
                     'tanggal' => $plan->tanggal->format('Y-m-d')
                 ];
             } else {
-                $plansByMachine[$plan->mesin_id][$plan->bulan][$plan->minggu_ke] = [
+                $plansByMachine[$plan->mesin_id][$plan->bulan][$plan->minggu_ke][] = [
                     'paket' => $plan->paket,
                     'tanggal' => null
                 ];
@@ -391,7 +391,7 @@ class MtcAgendaController extends Controller
             $bulanFilter = ($bulan !== 'all' && is_numeric($bulan)) ? [(int)$bulan] : range(1, 12);
 
             foreach ($bulanFilter as $bln) {
-                $weekPlans = $mesinPlans[$bln] ?? [];
+                $monthPlans = $mesinPlans[$bln] ?? [];
 
                 // Filter actual inspections for this month
                 $monthActuals = array_filter($actualInspections, function ($act) use ($bln) {
@@ -404,52 +404,53 @@ class MtcAgendaController extends Controller
 
                 // First pass: exact packet match
                 for ($wk = 1; $wk <= 5; $wk++) {
-                    $planData = $weekPlans[$wk] ?? null;
-                    if ($planData === null) continue;
-                    $paket = $planData['paket'];
+                    $weekPlansList = $monthPlans[$wk] ?? [];
+                    foreach ($weekPlansList as $pIdx => $planData) {
+                        $paket = $planData['paket'];
 
-                    foreach ($monthActuals as $key => $act) {
-                        if (in_array($key, $usedActualKeys)) continue;
+                        foreach ($monthActuals as $key => $act) {
+                            if (in_array($key, $usedActualKeys)) continue;
 
-                        if (strcasecmp(trim($act['paket']), trim($paket)) === 0) {
-                            $planPairing[$wk] = $act;
-                            $usedActualKeys[] = $key;
-                            break;
+                            if (strcasecmp(trim($act['paket']), trim($paket)) === 0) {
+                                $planPairing["{$wk}_{$pIdx}"] = $act;
+                                $usedActualKeys[] = $key;
+                                break;
+                            }
                         }
                     }
                 }
 
                 // Second pass: fallback to any unused actual in the same month
                 for ($wk = 1; $wk <= 5; $wk++) {
-                    $planData = $weekPlans[$wk] ?? null;
-                    if ($planData === null) continue;
-                    if (isset($planPairing[$wk])) continue;
+                    $weekPlansList = $monthPlans[$wk] ?? [];
+                    foreach ($weekPlansList as $pIdx => $planData) {
+                        if (isset($planPairing["{$wk}_{$pIdx}"])) continue;
 
-                    foreach ($monthActuals as $key => $act) {
-                        if (in_array($key, $usedActualKeys)) continue;
+                        foreach ($monthActuals as $key => $act) {
+                            if (in_array($key, $usedActualKeys)) continue;
 
-                        $planPairing[$wk] = $act;
-                        $usedActualKeys[] = $key;
-                        break;
+                            $planPairing["{$wk}_{$pIdx}"] = $act;
+                            $usedActualKeys[] = $key;
+                            break;
+                        }
                     }
                 }
 
                 for ($wk = 1; $wk <= 5; $wk++) {
-                    $planData = $weekPlans[$wk] ?? null;
+                    $weekPlansList = $monthPlans[$wk] ?? [];
+                    $planItemsList = [];
 
-                    // 1. Calculate Plan Item
-                    $planItem = null;
-                    if ($planData !== null) {
+                    $wRange   = $weekRanges[$bln][$wk];
+                    $wkStart  = Carbon::createFromDate($tahun, $bln, $wRange['start']);
+                    $wkEnd    = Carbon::createFromDate($tahun, $bln, $wRange['end']);
+
+                    foreach ($weekPlansList as $pIdx => $planData) {
                         $paket = $planData['paket'];
                         $planTanggal = $planData['tanggal'];
                         $totalPlanned++;
                         $summaryTotal++;
 
-                        $wRange   = $weekRanges[$bln][$wk];
-                        $wkStart  = Carbon::createFromDate($tahun, $bln, $wRange['start']);
-                        $wkEnd    = Carbon::createFromDate($tahun, $bln, $wRange['end']);
-
-                        $pairedActual = $planPairing[$wk] ?? null;
+                        $pairedActual = $planPairing["{$wk}_{$pIdx}"] ?? null;
                         if ($pairedActual) {
                             $status = 'done';
                             $totalDone++;
@@ -483,7 +484,7 @@ class MtcAgendaController extends Controller
                             }
                         }
 
-                        $planItem = [
+                        $planItemsList[] = [
                             'paket'          => $paket,
                             'status'         => $status,
                             'tanggal_aktual' => $doneDate,
@@ -491,27 +492,24 @@ class MtcAgendaController extends Controller
                         ];
                     }
 
-                    // 2. Calculate Actual Item (first inspection in this week range, if any)
-                    $actualItem = null;
-                    $wRange = $weekRanges[$bln][$wk];
-                    $wkStart = Carbon::createFromDate($tahun, $bln, $wRange['start']);
-                    $wkEnd = Carbon::createFromDate($tahun, $bln, $wRange['end']);
-
+                    // 2. Calculate Actual Items (all inspections in this week range, if any)
+                    $actualItemsList = [];
                     foreach ($monthActuals as $act) {
                         if ($act['tanggal']->between($wkStart, $wkEnd)) {
-                            $actualItem = [
+                            $actualItemsList[] = [
                                 'tanggal' => $act['tanggal']->format('Y-m-d'),
                                 'paket'   => $act['paket'],
                             ];
-                            break;
                         }
                     }
 
                     $agendaItems[] = [
                         'bulan'     => $bln,
                         'minggu_ke' => $wk,
-                        'plan'      => $planItem,
-                        'actual'    => $actualItem,
+                        'plans'     => $planItemsList,
+                        'plan'      => count($planItemsList) > 0 ? $planItemsList[0] : null,
+                        'actuals'   => $actualItemsList,
+                        'actual'    => count($actualItemsList) > 0 ? $actualItemsList[0] : null,
                     ];
                 }
             }
