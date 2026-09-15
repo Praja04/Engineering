@@ -57,12 +57,12 @@
                         <input type="number" step="0.01" id="kecap_matang" name="kecap_matang" class="form-control" placeholder="Contoh: 85.75" required>
                     </div>
 
-                    <div class="mb-3 monthly-only">
+                    <div class="mb-3">
                         <label for="listrik_prd" class="form-label fw-semibold accounting-label">Listrik PRD
                             (KWH)</label>
                         <input type="number" step="0.01" id="listrik_prd" name="listrik_prd" class="form-control" placeholder="Contoh: 1500000">
                     </div>
-                    <div class="mb-3 monthly-only">
+                    <div class="mb-3">
                         <label for="listrik_bas" class="form-label fw-semibold accounting-label">Listrik BAS
                             (KWH)</label>
                         <input type="number" step="0.01" id="listrik_bas" name="listrik_bas" class="form-control" placeholder="Contoh: 1500000">
@@ -100,7 +100,6 @@
 <script>
     $(document).ready(function() {
         const $periodeTipe = $('#periode_tipe');
-        const $invoiceListrik = $('#listrik_prd');
 
         // Simpan label asli saat load pertama kali
         const originalLabels = {};
@@ -116,8 +115,6 @@
             // Reset dulu
             $('#formWeekly').addClass('d-none');
             $('#formMonthly').addClass('d-none');
-            $('.monthly-only').addClass('d-none');
-            $invoiceListrik.prop('required', false);
 
             // Reset semua label ke asli dulu
             $('.accounting-label').each(function() {
@@ -132,8 +129,6 @@
                 $('#formWeekly').removeClass('d-none');
             } else if (val === 'monthly') {
                 $('#formMonthly').removeClass('d-none');
-                $('.monthly-only').removeClass('d-none');
-                $invoiceListrik.prop('required', true);
 
                 // Tambahkan "accounting" ke label yang punya class accounting-label
                 $('.accounting-label').each(function() {

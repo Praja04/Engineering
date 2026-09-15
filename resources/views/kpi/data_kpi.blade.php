@@ -85,7 +85,8 @@
                                     <th>Tgl Akhir</th>
                                     <th>Finish Goods (Ton)</th>
                                     <th>Kecap Matang (Ton)</th>
-                                    {{-- <th>Invoice Listrik</th> --}}
+                                    <th>Listrik PRD (Kwh)</th>
+                                    <th>Listrik BAS (Kwh)</th>
                                     <th>Steam</th>
                                     <th>Batubara</th>
                                     <th>Aksi</th>
@@ -170,11 +171,11 @@
                         <label for="kecap_matang" class="form-label">Kecap Matang (Ton)</label>
                         <input type="number" id="kecap_matang" class="form-control" step="0.01" min="0" required>
                     </div>
-                    <div class="mb-3 monthly-only">
+                    <div class="mb-3">
                         <label for="listrik_prd" class="form-label">Listrik PRD</label>
                         <input type="number" id="listrik_prd" class="form-control" step="0.01" min="0">
                     </div>
-                    <div class="mb-3 monthly-only">
+                    <div class="mb-3">
                         <label for="listrik_bas" class="form-label">Listrik BAS</label>
                         <input type="number" id="listrik_bas" class="form-control" step="0.01" min="0">
                     </div>
@@ -325,6 +326,8 @@
                                 <td>${item.end_date || '-'}</td>
                                 <td>${finishGoods}</td>
                                 <td>${kecapMatang}</td>
+                                <td>${ListrikPrd}</td>
+                                <td>${ListrikBas}</td>
                                 <td>${steam}</td>
                                 <td>${batubara}</td>
                             `;
@@ -491,7 +494,6 @@
         const periodeTipe = $('#periodeTipe');
         const groupWeeklyEdit = $('#groupWeeklyEdit');
         const groupMonthlyEdit = $('#groupMonthlyEdit');
-        const monthlyOnlyFields = $('.monthly-only');
         const ListrikPrd = $('#listrik_prd');
         const ListrikBas = $('#listrik_bas');
 
@@ -502,16 +504,13 @@
             // Reset dulu
             groupWeeklyEdit.addClass('d-none');
             groupMonthlyEdit.addClass('d-none');
-            monthlyOnlyFields.addClass('d-none');
             ListrikPrd.prop('required', false);
+            ListrikBas.prop('required', false);
 
             if (tipe === 'weekly') {
                 groupWeeklyEdit.removeClass('d-none');
             } else if (tipe === 'monthly') {
                 groupMonthlyEdit.removeClass('d-none');
-                monthlyOnlyFields.removeClass('d-none');
-                ListrikPrd.prop('required', true); // wajib hanya di monthly
-                ListrikBas.prop('required', true); // wajib hanya di monthly
             }
         }
 

@@ -617,7 +617,7 @@ class DashboardBoilerController extends Controller
                 'Kondensat',
                 'DASHBOARD KPI BOILER - KONDENSAT',
                 $makeSubtitle($startKondensat, $endKondensat),
-                ['Tanggal', 'Pemakaian Air (m³)', 'Feed Tank Awal (cm)', 'Feed Tank Akhir (cm)', 'Kondensat (%)'],
+                ['Tanggal', 'Pemakaian Air (m³)', 'Feed Tank Awal (m³)', 'Feed Tank Akhir (m³)', 'Kondensat (%)'],
                 $rows,
                 [
                     Alignment::HORIZONTAL_CENTER,
