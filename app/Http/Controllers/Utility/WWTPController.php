@@ -1093,45 +1093,60 @@ class WWTPController extends Controller
     // Dashboard WWTP
     public function wwtp_visualisasi_data(Request $request)
     {
-        $dateStr = $request->query('tanggal');
-        if (!$dateStr) {
+        $startDateStr = $request->query('start_date') ?? $request->query('tanggal');
+        $endDateStr   = $request->query('end_date') ?? $request->query('tanggal');
+
+        if (!$startDateStr || !$endDateStr) {
             $latestInfluent = WwtpInfluentHarian::orderBy('tanggal', 'desc')->first();
-            $dateStr = $latestInfluent ? $latestInfluent->tanggal : Carbon::today()->toDateString();
+            if ($latestInfluent) {
+                $latestDate = Carbon::parse($latestInfluent->tanggal);
+                $startDateStr = $startDateStr ?? $latestDate->copy()->startOfMonth()->toDateString();
+                $endDateStr   = $endDateStr ?? $latestDate->toDateString();
+            } else {
+                $startDateStr = $startDateStr ?? Carbon::today()->startOfMonth()->toDateString();
+                $endDateStr   = $endDateStr ?? Carbon::today()->toDateString();
+            }
         }
 
-        $date = \Carbon\Carbon::parse($dateStr);
-        $dateFormatted = $date->toDateString();
+        $startDate = Carbon::parse($startDateStr)->toDateString();
+        $endDate   = Carbon::parse($endDateStr)->toDateString();
 
-        $influentRecords = WwtpInfluentHarian::whereDate('tanggal', $dateFormatted)->get();
+        if ($startDate > $endDate) {
+            $temp = $startDate;
+            $startDate = $endDate;
+            $endDate = $temp;
+        }
+
+        $influentRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])->get();
 
         $proses = [
-            'debit1' => $influentRecords->avg('debit1') ?? 0,
-            'debit2' => $influentRecords->avg('debit2') ?? 0,
-            'pit_outlet' => $influentRecords->reduce(function ($carry, $rec) {
+            'debit1' => (float) ($influentRecords->avg('debit1') ?? 0),
+            'debit2' => (float) ($influentRecords->avg('debit2') ?? 0),
+            'pit_outlet' => (float) $influentRecords->reduce(function ($carry, $rec) {
                 return $carry + max(0, (float)$rec->pit_outlet - (float)($rec->pit_outlet_awal ?? 0));
             }, 0),
-            'pit_produksi_step3' => $influentRecords->reduce(function ($carry, $rec) {
+            'pit_produksi_step3' => (float) $influentRecords->reduce(function ($carry, $rec) {
                 return $carry + max(0, (float)$rec->pit_produksi_step3 - (float)($rec->pit_produksi_step3_awal ?? 0));
             }, 0),
-            'pit_sparta' => $influentRecords->reduce(function ($carry, $rec) {
+            'pit_sparta' => (float) $influentRecords->reduce(function ($carry, $rec) {
                 return $carry + max(0, (float)$rec->pit_sparta - (float)($rec->pit_sparta_awal ?? 0));
             }, 0),
-            'pit_garam' => $influentRecords->reduce(function ($carry, $rec) {
+            'pit_garam' => (float) $influentRecords->reduce(function ($carry, $rec) {
                 return $carry + max(0, (float)$rec->pit_garam - (float)($rec->pit_garam_awal ?? 0));
             }, 0),
-            'pit_boiler' => $influentRecords->reduce(function ($carry, $rec) {
+            'pit_boiler' => (float) $influentRecords->reduce(function ($carry, $rec) {
                 return $carry + max(0, (float)$rec->pit_boiler - (float)($rec->pit_boiler_awal ?? 0));
             }, 0),
-            'pit_domestik' => $influentRecords->reduce(function ($carry, $rec) {
+            'pit_domestik' => (float) $influentRecords->reduce(function ($carry, $rec) {
                 return $carry + max(0, (float)$rec->pit_domestik - (float)($rec->pit_domestik_awal ?? 0));
             }, 0),
-            'pit_storage' => $influentRecords->reduce(function ($carry, $rec) {
+            'pit_storage' => (float) $influentRecords->reduce(function ($carry, $rec) {
                 return $carry + max(0, (float)$rec->pit_storage - (float)($rec->pit_storage_awal ?? 0));
             }, 0),
         ];
 
         $analisaRecords = WwtpAnalisa::with('details')
-            ->whereDate('analisa_date', $dateFormatted)
+            ->whereBetween('analisa_date', [$startDate, $endDate])
             ->get();
 
         $paramCOD = WwtpParameter::where('parameter_name', 'like', '%COD%')->first();
@@ -1251,22 +1266,45 @@ class WWTPController extends Controller
             'cod' => $calcRemoval($analisaData['Influent']['cod'], $analisaData['Effluent']['cod']),
         ];
 
-        $sludgeRecords = WwtpSludge::whereDate('tanggal', $dateFormatted)->get();
-        $pengangkutan = WwtpPengangkutanSludge::where('week_start', '<=', $dateFormatted)
-            ->where('week_end', '>=', $dateFormatted)
-            ->first();
+        $sludgeRecords = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])->get();
+        $pengangkutanList = WwtpPengangkutanSludge::where('week_start', '<=', $endDate)
+            ->where('week_end', '>=', $startDate)
+            ->orderBy('week_start', 'asc')
+            ->get();
+
+        if ($pengangkutanList->isEmpty()) {
+            $latest = WwtpPengangkutanSludge::where('week_start', '<=', $endDate)->orderBy('week_start', 'desc')->first();
+            if ($latest) {
+                $pengangkutanList = collect([$latest]);
+            }
+        }
+
+        $totalPengangkutan = $pengangkutanList->sum('jumlah_pengangkutan');
 
         $sludge = [
-            'drain_lumpur' => $sludgeRecords->sum('drain_lumpur') ?? 0,
-            'running_hour_scp' => $sludgeRecords->sum('running_hour_scp') ?? 0,
-            'hasil_lumpur' => $sludgeRecords->sum('hasil_lumpur') ?? 0,
-            'sludge_content' => $sludgeRecords->avg('sludge_content') ?? 0,
-            'pengangkutan' => $pengangkutan ? $pengangkutan->jumlah_pengangkutan : 0,
+            'drain_lumpur' => (float) ($sludgeRecords->sum('drain_lumpur') ?? 0),
+            'running_hour_scp' => (float) ($sludgeRecords->sum('running_hour_scp') ?? 0),
+            'hasil_lumpur' => (float) ($sludgeRecords->sum('hasil_lumpur') ?? 0),
+            'sludge_content' => (float) ($sludgeRecords->avg('sludge_content') ?? 0),
+            'pengangkutan' => (float) $totalPengangkutan,
+            'pengangkutan_list' => $pengangkutanList->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'week_start' => $item->week_start,
+                    'week_end' => $item->week_end,
+                    'jumlah_pengangkutan' => (float) $item->jumlah_pengangkutan,
+                ];
+            })->values(),
+            'week_start' => $pengangkutanList->isNotEmpty() ? $pengangkutanList->first()->week_start : null,
+            'week_end' => $pengangkutanList->isNotEmpty() ? $pengangkutanList->last()->week_end : null,
         ];
 
         return response()->json([
             'status' => 'success',
-            'tanggal' => $dateFormatted,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'tanggal' => $startDate,
+            'total_days' => Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) + 1,
             'proses' => $proses,
             'analisa' => $analisaData,
             'removals' => $removals,

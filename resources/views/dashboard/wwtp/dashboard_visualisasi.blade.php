@@ -265,16 +265,23 @@
                                     <p class="text-muted mb-0">Klik pada salah satu unit/mesin untuk melihat analisis detail
                                         dan formula perhitungan removal.</p>
                                 </div>
-                                <div class="col-12 col-md-auto d-flex align-items-center gap-2">
+                                <div class="col-12 col-md-auto d-flex align-items-center gap-2 flex-wrap">
                                     <button id="btn-play-pause"
-                                        class="btn btn-warning gap-1 d-flex align-items-center me-2">
+                                        class="btn btn-warning gap-1 d-flex align-items-center me-1">
                                         <i class="mdi mdi-play"></i> <span>Auto Play</span>
                                     </button>
-                                    <label class="text-white small text-nowrap mb-0" for="filter_tanggal">Pilih
-                                        Tanggal:</label>
-                                    <input type="date" id="filter_tanggal" class="form-control custom-date-input"
-                                        style="width: 170px;">
-                                    <button id="btn-refresh" class="btn btn-outline-info">
+                                    <div class="d-flex align-items-center gap-2 bg-dark-subtle p-1 px-2 rounded border border-secondary">
+                                        <label class="text-white small text-nowrap mb-0" for="filter_start_date">Dari:</label>
+                                        <input type="date" id="filter_start_date" class="form-control form-control-sm custom-date-input"
+                                            style="width: 135px;">
+                                        <label class="text-white small text-nowrap mb-0" for="filter_end_date">Sampai:</label>
+                                        <input type="date" id="filter_end_date" class="form-control form-control-sm custom-date-input"
+                                            style="width: 135px;">
+                                        <button id="btn-apply-filter" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
+                                            <i class="mdi mdi-filter"></i> <span>Terapkan</span>
+                                        </button>
+                                    </div>
+                                    <button id="btn-refresh" class="btn btn-outline-info" title="Refresh Data">
                                         <i class="mdi mdi-refresh"></i>
                                     </button>
                                 </div>
@@ -543,10 +550,13 @@
 
                             <div class="machine-node" id="node-pengangkutan_sludge" data-unit="pengangkutan_sludge"
                                 style="left: 560px; top: 495px;">
-                                <div class="node-card">
+                                <div class="node-card" style="width: 145px;">
                                     <div class="node-title">Pengangkutan Sludge</div>
                                     <div class="node-value">
                                         <div><span>Jumlah:</span> <strong id="val-ps-qty">-</strong></div>
+                                        <div style="font-size: 8.5px; color: #94a3b8; white-space: nowrap; margin-top: 2px;">
+                                            <i class="mdi mdi-calendar-range me-1 text-info"></i><span id="val-ps-date">-</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <img class="node-3d-img"
@@ -596,15 +606,17 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            let loadedDate = "";
+            let currentStartDate = "";
+            let currentEndDate = "";
 
             // Function to load all visual data from API
-            function loadVisualData(date = "") {
+            function loadVisualData(startDate = "", endDate = "") {
                 $.ajax({
                     url: "{{ route('wwtp.dashboard_visualisasi_data') }}",
                     type: "GET",
                     data: {
-                        tanggal: date
+                        start_date: startDate,
+                        end_date: endDate
                     },
                     beforeSend: function() {
                         $('#btn-refresh').html(
@@ -614,8 +626,10 @@
                     success: function(response) {
                         $('#btn-refresh').html('<i class="mdi mdi-refresh"></i>');
                         if (response.status === 'success') {
-                            loadedDate = response.tanggal;
-                            $('#filter_tanggal').val(loadedDate);
+                            currentStartDate = response.start_date;
+                            currentEndDate = response.end_date;
+                            $('#filter_start_date').val(currentStartDate);
+                            $('#filter_end_date').val(currentEndDate);
 
                             // Update UI Node values
                             updateUIValues(response);
@@ -692,7 +706,24 @@
                 $('#val-sp-rh').text(fmt(res.sludge.running_hour_scp, 1, 'jam'));
                 $('#val-sp-cnt').text(fmt(res.sludge.sludge_content, 1, '%'));
                 $('#val-it-vol').text(fmt(res.sludge.hasil_lumpur, 1, 'ton'));
-                $('#val-ps-qty').text(fmt(parseFloat(res.sludge.pengangkutan), 2, 'ton'));
+
+                const pList = res.sludge.pengangkutan_list || [];
+                if (pList.length === 0) {
+                    $('#val-ps-qty').text('-');
+                    $('#val-ps-date').text('Tidak ada data');
+                } else if (pList.length === 1) {
+                    const item = pList[0];
+                    let s = new Date(item.week_start);
+                    let e = new Date(item.week_end);
+                    let sStr = s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                    let eStr = e.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                    $('#val-ps-qty').text(fmt(parseFloat(item.jumlah_pengangkutan), 2, 'ton'));
+                    $('#val-ps-date').text(`${sStr} - ${eStr}`);
+                } else {
+                    let totalTon = pList.reduce((acc, it) => acc + (parseFloat(it.jumlah_pengangkutan) || 0), 0);
+                    $('#val-ps-qty').text(fmt(totalTon, 2, 'ton'));
+                    $('#val-ps-date').text(`${pList.length} Periode (Total)`);
+                }
 
                 // Toggle active classes on nodes with values
                 $('.machine-node').each(function() {
@@ -1301,19 +1332,62 @@
 
                     case 'pengangkutan_sludge':
                         title = "Pengangkutan Sludge";
+                        const pListInspect = res.sludge.pengangkutan_list || [];
+                        let listHtml = '';
+
+                        if (pListInspect.length === 0) {
+                            listHtml = `
+                                <div class="text-center text-muted p-3">
+                                    <i class="mdi mdi-alert-circle-outline fs-3 mb-1 d-block text-secondary"></i>
+                                    Tidak ada data pengangkutan pada rentang tanggal ini.
+                                </div>
+                            `;
+                        } else {
+                            let totalTon = pListInspect.reduce((acc, it) => acc + (parseFloat(it.jumlah_pengangkutan) || 0), 0);
+                            listHtml = `
+                                <div class="d-flex flex-column gap-2 mt-2">
+                                    ${pListInspect.map((item, idx) => {
+                                        let s = new Date(item.week_start);
+                                        let e = new Date(item.week_end);
+                                        let sStr = s.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                                        let eStr = e.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                                        return `
+                                            <div class="d-flex justify-content-between align-items-center p-2 rounded bg-dark border border-secondary">
+                                                <div>
+                                                    <div class="text-white fw-semibold fs-12">
+                                                        <i class="mdi mdi-calendar-range me-1 text-info"></i> ${sStr} s/d ${eStr}
+                                                    </div>
+                                                    <small class="text-muted">Minggu ke-${idx + 1}</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="fs-14 fw-bold text-info">${rawFmt(parseFloat(item.jumlah_pengangkutan), 2, 'ton')}</span>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                                ${pListInspect.length > 1 ? `
+                                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
+                                        <span class="text-white fw-bold">Total (${pListInspect.length} Periode):</span>
+                                        <span class="fs-16 fw-bold text-warning">${rawFmt(totalTon, 2, 'ton')}</span>
+                                    </div>
+                                ` : ''}
+                            `;
+                        }
+
                         html = `
-                        <div class="mb-4">
-                            <span class="text-muted small">KATEGORI</span>
-                            <h6 class="text-white fw-bold">Sludge Disposal (Weekly)</h6>
-                        </div>
-                        <div class="p-3 bg-dark-subtle rounded-3 border border-secondary">
-                            <span class="text-muted small d-block">DISPOSAL REKAP MINGGUAN</span>
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span class="text-white fw-semibold">Jumlah Pengangkutan:</span>
-                                <span class="fs-16 fw-bold text-info">${rawFmt(parseFloat(res.sludge.pengangkutan), 2, 'ton')}</span>
+                            <div class="mb-3">
+                                <span class="text-muted small">KATEGORI</span>
+                                <h6 class="text-white fw-bold">Sludge Disposal (Rekap Mingguan)</h6>
                             </div>
-                        </div>
-                    `;
+                            <div class="p-3 bg-dark-subtle rounded-3 border border-secondary">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted small d-block">DAFTAR PENGANGKUTAN SLUDGE</span>
+                                    <span class="badge bg-primary-subtle text-primary">${pListInspect.length} Periode</span>
+                                </div>
+                                ${listHtml}
+                            </div>
+                        `;
                         break;
                 }
 
@@ -1380,14 +1454,21 @@
             // Initially load data
             loadVisualData();
 
-            // Listen for filter date changes
-            $('#filter_tanggal').change(function() {
-                loadVisualData($(this).val());
+            // Apply filter button click
+            $('#btn-apply-filter').click(function() {
+                loadVisualData($('#filter_start_date').val(), $('#filter_end_date').val());
+            });
+
+            // Enter key on date inputs
+            $('#filter_start_date, #filter_end_date').keypress(function(e) {
+                if (e.which === 13) {
+                    loadVisualData($('#filter_start_date').val(), $('#filter_end_date').val());
+                }
             });
 
             // Manual refresh button click
             $('#btn-refresh').click(function() {
-                loadVisualData($('#filter_tanggal').val());
+                loadVisualData($('#filter_start_date').val(), $('#filter_end_date').val());
             });
 
             // Trigger redrawing connection lines on page load and window resizing
