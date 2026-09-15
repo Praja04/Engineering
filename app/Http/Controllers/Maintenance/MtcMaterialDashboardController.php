@@ -52,13 +52,21 @@ class MtcMaterialDashboardController extends Controller
             $paket = trim($request->paket);
             if (strcasecmp($paket, 'Korektif') === 0) {
                 $query->where(function ($q) {
-                    $q->where('mtc_main.paket', 'like', '%Korektif%')
-                      ->orWhereNotNull('mtc_main.korektif');
+                    $q->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) LIKE '%korektif%'")
+                      ->orWhere(function($sub) {
+                          $sub->whereNotNull('mtc_main.korektif')
+                              ->where('mtc_main.korektif', '!=', '');
+                      });
                 });
             } elseif (strcasecmp($paket, 'Maintenance') === 0) {
                 $query->where(function ($q) {
-                    $q->where('mtc_main.paket', 'not like', '%Korektif%')
-                      ->orWhereNull('mtc_main.paket');
+                    $q->where(function($sub) {
+                        $sub->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) NOT LIKE '%korektif%'")
+                            ->orWhereNull('mtc_main.paket');
+                    })->where(function($sub) {
+                        $sub->whereNull('mtc_main.korektif')
+                            ->orWhere('mtc_main.korektif', '=', '');
+                    });
                 });
             }
         }
@@ -196,13 +204,21 @@ class MtcMaterialDashboardController extends Controller
             $paket = trim($request->paket);
             if (strcasecmp($paket, 'Korektif') === 0) {
                 $mainQuery->where(function ($q) {
-                    $q->where('paket', 'like', '%Korektif%')
-                      ->orWhereNotNull('korektif');
+                    $q->whereRaw("LOWER(COALESCE(paket, '')) LIKE '%korektif%'")
+                      ->orWhere(function($sub) {
+                          $sub->whereNotNull('korektif')
+                              ->where('korektif', '!=', '');
+                      });
                 });
             } elseif (strcasecmp($paket, 'Maintenance') === 0) {
                 $mainQuery->where(function ($q) {
-                    $q->where('paket', 'not like', '%Korektif%')
-                      ->orWhereNull('paket');
+                    $q->where(function($sub) {
+                        $sub->whereRaw("LOWER(COALESCE(paket, '')) NOT LIKE '%korektif%'")
+                            ->orWhereNull('paket');
+                    })->where(function($sub) {
+                        $sub->whereNull('korektif')
+                            ->orWhere('korektif', '=', '');
+                    });
                 });
             }
         }

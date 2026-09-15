@@ -328,11 +328,25 @@
             // Init Flatpickr Date Pickers
             flatpickr("#startDate", {
                 dateFormat: "Y-m-d",
-                defaultDate: new Date(new Date().setDate(new Date().getDate() - 30))
+                defaultDate: new Date(new Date().setDate(new Date().getDate() - 30)),
+                onChange: function() {
+                    loadDashboardCharts();
+                    loadMachineLedgerData();
+                }
             });
             flatpickr("#endDate", {
                 dateFormat: "Y-m-d",
-                defaultDate: new Date()
+                defaultDate: new Date(),
+                onChange: function() {
+                    loadDashboardCharts();
+                    loadMachineLedgerData();
+                }
+            });
+
+            // Instant filter on select change
+            $('#filterJenisMtc, #filterPaket').on('change', function() {
+                loadDashboardCharts();
+                loadMachineLedgerData();
             });
 
             let chartKebutuhan = null;
