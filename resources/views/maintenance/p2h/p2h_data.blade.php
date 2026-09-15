@@ -56,24 +56,6 @@
             line-height: 1.4;
         }
 
-        .status-3 .btn {
-            white-space: nowrap;
-            font-size: .85rem;
-            padding: .4rem .6rem;
-        }
-
-        .item-edit {
-            border: 1px solid #eee;
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-
-        .item-edit .item-label {
-            font-weight: 600;
-            font-size: .95rem;
-        }
-
         .checklist-edit-row {
             display: flex;
             justify-content: space-between;
@@ -89,14 +71,17 @@
         <div class="container-fluid">
 
             <div class="card card-soft shadow-sm">
-                <div class="card-header d-flex align-items-center justify-content-between">
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div>
-                        <h4 class="fw-bold">Data Maintenance P2H (Electric & Diesel)</h4>
-                        <div class="small-muted">List inspeksi + detail hasil pengecekan P2H</div>
+                        <h4 class="fw-bold mb-1">Data Maintenance P2H (Warehouse)</h4>
+                        <div class="small-muted">Data pemeriksaan Forklift & Pallet Mover yang disinkronkan dari sistem Warehouse</div>
                     </div>
                     <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-success" id="btnSyncWarehouse">
+                            <i class="ri-refresh-line me-1"></i> Sync Data Warehouse
+                        </button>
                         <a href="{{ route('p2h.form.index') }}" class="btn btn-primary">
-                            + Input Baru
+                            <i class="ri-add-line me-1"></i> + Input Genset P2H
                         </a>
                     </div>
                 </div>
@@ -110,20 +95,27 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Nama Unit / Mesin</label>
-                            <input type="text" class="form-control" id="filterNoUnit" placeholder="Contoh: FORKLIFT">
+                            <input type="text" class="form-control" id="filterNoUnit" placeholder="Contoh: F16, PM01, Forklift">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label class="form-label">Jenis P2H</label>
+                            <select class="form-select" id="filterJenisP2h">
+                                <option value="">Semua Jenis</option>
+                                <option value="Forklift">Forklift</option>
+                                <option value="Pallet Mover">Pallet Mover</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label">Departemen</label>
-                            <input type="text" class="form-control" id="filterDepartemen"
-                                placeholder="Contoh: Warehouse">
+                            <input type="text" class="form-control" id="filterDepartemen" placeholder="Warehouse">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label d-block">&nbsp;</label>
                             <div class="d-flex gap-2 text-nowrap">
                                 <button type="button" class="btn btn-outline-primary w-100" id="btnApply">
-                                    <i class="mdi mdi-filter me-2"></i> Terapkan</button>
+                                    <i class="mdi mdi-filter me-1"></i> Terapkan</button>
                                 <button type="button" class="btn btn-outline-secondary w-100" id="btnReset">
-                                    <i class="mdi mdi-restart"></i> Reset</button>
+                                    <i class="mdi mdi-restart me-1"></i> Reset</button>
                             </div>
                         </div>
                     </div>
@@ -133,22 +125,23 @@
                         <table class="table table-hover align-middle" id="tabelP2h" style="width: 100%;">
                             <thead class="table-light">
                                 <tr>
-                                    <th>No</th>
+                                    <th class="text-center" style="width: 50px;">No</th>
                                     <th>Tanggal</th>
-                                    <th>Jenis P2H</th>
-                                    <th>Unit/Mesin</th>
-                                    <th>No Unit (Code)</th>
-                                    <th>Departemen</th>
-                                    <th>Shift</th>
+                                    <th>Jenis</th>
+                                    <th>No Unit</th>
+                                    <th>Master Mesin</th>
+                                    <th>Dept</th>
+                                    <th class="text-center">Shift</th>
+                                    <th>Operator</th>
                                     <th>Hours Meter</th>
                                     <th>Score (%)</th>
-                                    <th>Status</th>
-                                    <th style="width:140px;" class="text-center">Aksi</th>
+                                    <th>Kelayakan</th>
+                                    <th style="width:120px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyP2h">
                                 <tr>
-                                    <td colspan="11" class="text-center text-muted py-4">Memuat data...</td>
+                                    <td colspan="12" class="text-center text-muted py-4">Memuat data...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -156,8 +149,7 @@
                     <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
                         <div id="paginationInfo" class="small text-muted"></div>
                         <nav>
-                            <ul class="pagination pagination-sm mb-0" id="paginationList">
-                            </ul>
+                            <ul class="pagination pagination-sm mb-0" id="paginationList"></ul>
                         </nav>
                     </div>
                 </div>
@@ -171,7 +163,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <div>
-                        <div class="fw-bold" id="detailTitle">Detail Inspeksi P2H</div>
+                        <div class="fw-bold fs-5" id="detailTitle">Detail Inspeksi P2H</div>
                         <div class="small-muted" id="detailSub"></div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -196,7 +188,7 @@
 
                     <div class="modal-header">
                         <div>
-                            <div class="fw-bold">Edit Inspeksi Mtc P2H</div>
+                            <div class="fw-bold fs-5">Edit Data P2H</div>
                             <div class="text-muted small" id="editSub"></div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -210,85 +202,45 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Departemen</label>
-                                <input type="text" class="form-control" name="departemen" id="editDepartemen" required>
+                                <input type="text" class="form-control" name="departemen" id="editDepartemen">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Unit/Mesin</label>
-                                <input type="text" class="form-control" id="editMesinName" readonly>
-                            </div>
-                            <div class="col-md-3" id="editNoUnitWrapper">
                                 <label class="form-label">No Unit / Code</label>
-                                <input type="text" class="form-control" name="no_unit" id="editNoUnit">
+                                <input type="text" class="form-control" name="nomor_unit" id="editNomorUnit" readonly>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Waktu Mulai <span class="text-danger">*</span></label>
-                                <input type="time" class="form-control" name="waktu_mulai" id="editWaktuMulai"
-                                    required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Waktu Selesai <span class="text-danger">*</span></label>
-                                <input type="time" class="form-control" name="waktu_selesai" id="editWaktuSelesai"
-                                    required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Shift</label>
+                                <label class="form-label">Shift *</label>
                                 <select name="shift" class="form-select" id="editShift" required>
                                     <option value="1">Shift 1</option>
                                     <option value="2">Shift 2</option>
                                     <option value="3">Shift 3</option>
                                 </select>
                             </div>
-                            <div class="col-md-3" id="editHourMeterWrapper">
-                                <label class="form-label">Hours Meter (Jam Operasional) <span
-                                        class="text-danger">*</span></label>
-                                <input type="number" class="form-control" name="hours_meter" id="editHourMeter"
-                                    required>
+                            <div class="col-md-3">
+                                <label class="form-label">Hours Meter (Jam Operasional)</label>
+                                <input type="number" step="any" class="form-control" name="hours_meter" id="editHourMeter">
                             </div>
-                        </div>
-
-                        <div class="card shadow-sm category-card mt-4 mb-3">
-                            <div class="card-header bg-soft-primary border-0">
-                                <h6 class="card-title text-primary fw-bold mb-0">Checklist Items</h6>
-                            </div>
-                            <div class="card-body py-2" id="editChecklistContainer">
-                                {{-- Checklist rows will be dynamically injected --}}
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mt-3">
-                            <div class="col-md-12">
+                            <div class="col-md-9">
                                 <label class="form-label">Catatan</label>
-                                <textarea class="form-control" name="catatan" id="editCatatan" rows="2"></textarea>
+                                <input type="text" class="form-control" name="catatan" id="editCatatan">
+                            </div>
+                        </div>
+
+                        <div class="card shadow-sm mt-3 mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="fw-bold mb-0">Checklist Pemeriksaan Warehouse</h6>
+                            </div>
+                            <div class="card-body" id="editChecklistContainer">
+                                {{-- Dynamically populated based on available checklist --}}
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary" id="btnSaveEdit">
-                            <span class="spinner-border spinner-border-sm me-2 d-none" id="spinEdit"></span>
-                            Simpan Perubahan
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="btnSaveEdit">Simpan Perubahan</button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-
-    {{-- MODAL TRACKING --}}
-    <div class="modal fade" id="modalTracking" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-md modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="trackingTitle">Tracking Approval</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="trackingBody">
-                    {{-- Injected dynamically --}}
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
             </div>
         </div>
     </div>
@@ -298,312 +250,36 @@
     <script>
         $(document).ready(function() {
             const API_URL = "{{ url('api/mtc/p2h/get-data') }}";
-            const DELETE_URL = "{{ url('mtc/main/delete') }}";
+            const SYNC_URL = "{{ route('p2h.sync.warehouse') }}";
             const UPDATE_URL = "{{ url('mtc/p2h/data/update') }}";
+            const DELETE_URL = "{{ url('mtc/p2h/data/delete') }}";
 
             let currentRows = [];
 
-            const electricP2h = {
-                level_minyak_rem: {
-                    label: 'Check Level Minyak Rem',
-                    standar: 'Berada di level max',
-                    type: 'forklift'
-                },
-                level_oli_hydraulic: {
-                    label: 'Check Level Oli Hydraulic',
-                    standar: 'Berada di level max',
-                    type: 'forklift'
-                },
-                isi_air_aki: {
-                    label: 'Check Isi Air Aki',
-                    standar: 'Berada di level standar',
-                    type: 'all'
-                },
-                baterai: {
-                    label: 'Check Baterai',
-                    standar: 'Tidak kurang dari 30%',
-                    type: 'all'
-                },
-                hydraulic_system: {
-                    label: 'Hydraulic System',
-                    standar: 'Berfungsi dengan baik and terlubrikasi',
-                    type: 'all'
-                },
-                selang_hydraulic: {
-                    label: 'Selang Hydraulic',
-                    standar: 'Tidak ada kebocoran oli',
-                    type: 'forklift'
-                },
-                lift_chains: {
-                    label: 'Lift Chains',
-                    standar: 'Kekencangan kanan dan kiri sama serta terlubrikasi',
-                    type: 'forklift_es'
-                },
-                fork: {
-                    label: 'Pengecekan Fork',
-                    standar: 'Tidak bengkok dan tidak patah',
-                    type: 'all'
-                },
-                body_unit: {
-                    label: 'Check Body Unit',
-                    standar: 'Tidak lecet dan tidak penyok',
-                    type: 'all'
-                },
-                lampu_kombinasi_kiri: {
-                    label: 'Check Lampu Kombinasi Kiri',
-                    standar: 'Menyala normal dan tidak pecah',
-                    type: 'forklift'
-                },
-                lampu_kombinasi_kanan: {
-                    label: 'Check Lampu Kombinasi Kanan',
-                    standar: 'Menyala normal dan tidak pecah',
-                    type: 'forklift'
-                },
-                lampu_sorot: {
-                    label: 'Check Lampu Sorot / Head Lamp',
-                    standar: 'Menyala normal dan tidak pecah',
-                    type: 'forklift'
-                },
-                lampu_sign_depan_kanan: {
-                    label: 'Check Lampu Sign Depan Kanan',
-                    standar: 'Menyala normal dan tidak pecah',
-                    type: 'forklift'
-                },
-                lampu_sign_depan_kiri: {
-                    label: 'Check Lampu Sign Depan Kiri',
-                    standar: 'Menyala normal dan tidak pecah',
-                    type: 'forklift'
-                },
-                klakson: {
-                    label: 'Check Klakson / Horn',
-                    standar: 'Bunyi saat tombol ditekan',
-                    type: 'all'
-                },
-                buzzer_back: {
-                    label: 'Check Buzzer Back',
-                    standar: 'Berbunyi normal saat maju dan mundur',
-                    type: 'forklift'
-                },
-                kaca_spion: {
-                    label: 'Check Kaca Spion',
-                    standar: 'Terpasang dengan baik dan tidak pecah',
-                    type: 'forklift'
-                },
-                baut_roda: {
-                    label: 'Check Kekencangan Baut Roda',
-                    standar: 'Kencang dan tidak patah',
-                    type: 'all'
-                },
-                ban: {
-                    label: 'Check Ban',
-                    standar: 'Masih bagus dan layak pakai',
-                    type: 'all'
-                },
-                kebersihan_unit: {
-                    label: 'Check Kebersihan Unit',
-                    standar: 'Bersih dari kotoran dan debu',
-                    type: 'all'
-                },
-                panel_display: {
-                    label: 'Check Panel Display',
-                    standar: 'Berfungsi normal, tidak pecah, dan tidak ada alarm',
-                    type: 'all'
-                },
-                sistem_kemudi: {
-                    label: 'Sistem Kemudi',
-                    standar: 'Tidak berat dan bergerak lancar',
-                    type: 'all'
-                }
-            };
-
-            const dieselP2h = {
-                klakson: {
-                    label: 'Check Klakson',
-                    standar: 'Bunyi ketika tombol ditekan'
-                },
-                buzzer_back: {
-                    label: 'Check Buzzer Back',
-                    standar: 'Berbunyi normal saat maju dan mundur'
-                },
-                oli_mesin: {
-                    label: 'Check Kondisi & Level Oli Mesin',
-                    standar: 'Berada di level max dan tidak ada kebocoran'
-                },
-                radiator_hose: {
-                    label: 'Check Kondisi Level Radiator & Hose',
-                    standar: 'Berada di level max dan tidak ada kebocoran'
-                },
-                water_pump: {
-                    label: 'Check Water Pump',
-                    standar: 'Tidak ada kebocoran'
-                },
-                injection_system: {
-                    label: 'Check Injection Pump, Injector & Piping',
-                    standar: 'Tidak ada kebocoran'
-                },
-                fan_vbelt: {
-                    label: 'Check Fan & V-Belt',
-                    standar: 'Berfungsi baik dan V-belt tidak retak atau putus'
-                },
-                turbocharger_manifold: {
-                    label: 'Check Turbocharger & Manifold',
-                    standar: 'Berfungsi baik dan terlubrikasi'
-                },
-                tensioner_belt: {
-                    label: 'Check Automatic Tensioner Belt',
-                    standar: 'Berfungsi dengan baik'
-                },
-                starting_motor: {
-                    label: 'Check Fungsi Starting Motor',
-                    standar: 'Berfungsi dengan baik'
-                },
-                alternator: {
-                    label: 'Check Fungsi Alternator',
-                    standar: 'Berfungsi dengan baik'
-                },
-                control_display: {
-                    label: 'Check Control Display',
-                    standar: 'Berfungsi normal, tidak pecah, dan tidak ada alarm'
-                },
-                oli_transmisi: {
-                    label: 'Check Kondisi & Level Oli Transmisi',
-                    standar: 'Berada di level max dan tidak ada kebocoran'
-                },
-                aki: {
-                    label: 'Check Kondisi Aki & Level Air Aki',
-                    standar: 'Level max, aki tidak drop, dan bersih'
-                },
-                engine_mounting: {
-                    label: 'Check Engine Mounting',
-                    standar: 'Berfungsi dengan baik'
-                },
-                filter_oli_transmisi: {
-                    label: 'Check Filter Oli Transmisi',
-                    standar: 'Tidak ada kebocoran oli'
-                },
-                fungsi_rem: {
-                    label: 'Check Fungsi Rem',
-                    standar: 'Berfungsi dengan baik dan tidak blong'
-                },
-                fungsi_kopling: {
-                    label: 'Check Fungsi Kopling',
-                    standar: 'Berfungsi dengan baik dan tidak macet'
-                },
-                oli_hydraulic: {
-                    label: 'Check Kondisi & Level Oli Hydraulic',
-                    standar: 'Berada di level max dan tidak ada kebocoran'
-                },
-                hydraulic_system: {
-                    label: 'Check Fungsi Hydraulic System',
-                    standar: 'Berfungsi dengan baik dan terlubrikasi'
-                },
-                steering_system: {
-                    label: 'Check Fungsi Steering System',
-                    standar: 'Tidak berat dan bergerak lancar'
-                },
-                body_back_rest: {
-                    label: 'Check Kondisi Back Rest & Body',
-                    standar: 'Tidak ada cacat atau penyok'
-                },
-                kaca_spion: {
-                    label: 'Check Kaca Spion',
-                    standar: 'Terpasang lengkap dan tidak pecah'
-                },
-                bucket_pin: {
-                    label: 'Check Kondisi Bucket & Pin Bucket',
-                    standar: 'Berfungsi baik dan tidak retak atau hilang'
-                },
-                dump_pin_bushing: {
-                    label: 'Check Kondisi Dump, Pin & Bushing',
-                    standar: 'Berfungsi dan tidak retak atau hilang'
-                },
-                seal_hydraulic: {
-                    label: 'Check Kondisi Seal Hydraulic',
-                    standar: 'Tidak ada kebocoran oli'
-                },
-                roda_ban_baut: {
-                    label: 'Check Kondisi Roda, Ban & Baut',
-                    standar: 'Ban layak pakai dan baut terpasang kencang'
-                },
-                lampu_unit: {
-                    label: 'Check Lampu Depan & Belakang (Kanan & Kiri)',
-                    standar: 'Menyala normal dan tidak pecah'
-                },
-                baut_bearing_molen: {
-                    label: 'Check Baut Bearing Molen & Gandengan',
-                    standar: 'Baut terpasang utuh dan kencang'
-                },
-                baut_hanger_as: {
-                    label: 'Check Baut Hanger As Roda',
-                    standar: 'Baut terpasang utuh dan kencang'
-                },
-                baut_grease: {
-                    label: 'Check Kondisi Baut Grease',
-                    standar: 'Baut tidak aus dan terlumasi grease'
-                },
-                katup_pembuangan_angin: {
-                    label: 'Check Katup Pembuangan Angin',
-                    standar: 'Berfungsi dengan baik'
-                }
-            };
-
-            const gensetP2h = {
-                level_oli_mesin: {
-                    label: 'Level Oli Mesin',
-                    standar: 'Berada dilevel Max'
-                },
-                kebocoran_oli_mesin: {
-                    label: 'Kebocoran Oli Mesin',
-                    standar: 'Tidak ada kebocoran'
-                },
-                level_coolant_radiator: {
-                    label: 'Level Coolant/Radiator',
-                    standar: 'Berada dilevel Max'
-                },
-                kebocoran_coolant: {
-                    label: 'Kebocoran Coolant',
-                    standar: 'Tidak ada kebocoran'
-                },
-                level_bahan_bakar: {
-                    label: 'Level Bahan Bakar',
-                    standar: 'Berada dilevel Max'
-                },
-                kebocoran_bahan_bakar: {
-                    label: 'Kebocoran Bahan Bakar',
-                    standar: 'Tidak ada kebocoran'
-                },
-                kondisi_aki_baterai: {
-                    label: 'Kondisi Aki/Baterai',
-                    standar: 'Terminal bersih , tidak korosi'
-                },
-                tegangan_baterai: {
-                    label: 'Tegangan Baterai',
-                    standar: 'Normal'
-                },
-                filter_udara: {
-                    label: 'Filter Udara',
-                    standar: 'Bersih'
-                },
-                kondisi_panel_genset: {
-                    label: 'Kondisi Panel Genset',
-                    standar: 'Bersih, Indicator Normal'
-                },
-                emergency_stop: {
-                    label: 'Emergency Stop',
-                    standar: 'Tidak ada alarm'
-                },
-                suara_mesin_running: {
-                    label: 'Suara Mesin Saat Running',
-                    standar: 'Halus , Tidak Kasar'
-                },
-                kebersihan_area_genset: {
-                    label: 'Kebersihan Area Genset',
-                    standar: 'Bersih'
-                },
-                kondisi_knalpot_exhaust: {
-                    label: 'Kondisi Knalpot/Exhaust',
-                    standar: 'Tidak bocor'
-                }
+            // Master metadata checklist sesuai API Warehouse
+            const checklistDict = {
+                cek_baterai: { label: 'Baterai / Battery', standar: 'Kondisi baik, daya >= 30%' },
+                air_aki: { label: 'Air Aki / Level Accu', standar: 'Berada di level standar/normal' },
+                cek_fork: { label: 'Cek Fork', standar: 'Tidak bengkok, tidak retak/patah' },
+                kondisi_body_kebersihan: { label: 'Body Unit & Kebersihan', standar: 'Bersih, tidak lecet/penyok parah' },
+                rantai_lift: { label: 'Rantai Lift', standar: 'Kekencangan seimbang, terlubrikasi' },
+                sistem_hidrolik: { label: 'Sistem Hidrolik', standar: 'Berfungsi normal, tidak ada kebocoran' },
+                sistem_kemudi: { label: 'Sistem Kemudi', standar: 'Tidak berat, bergerak lancar' },
+                panel_display: { label: 'Panel Display & Indikator', standar: 'Berfungsi normal, tidak ada alarm error' },
+                klakson: { label: 'Klakson', standar: 'Berbunyi nyaring saat ditekan' },
+                buzzer_mundur: { label: 'Buzzer Mundur', standar: 'Berbunyi saat unit mundur' },
+                kaca_spion: { label: 'Kaca Spion', standar: 'Terpasang lengkap, tidak pecah' },
+                kondisi_ban: { label: 'Kondisi Ban / Roda', standar: 'Layak pakai, tidak aus berlebih' },
+                fungsi_rem: { label: 'Fungsi Rem', standar: 'Berfungsi baik, tidak blong' },
+                lampu_kiri: { label: 'Lampu Kiri', standar: 'Menyala normal' },
+                lampu_kanan: { label: 'Lampu Kanan', standar: 'Menyala normal' },
+                lampu_sorot: { label: 'Lampu Sorot', standar: 'Menyala normal, tidak pecah' },
+                lampu_sign_depan_kanan: { label: 'Sign Depan Kanan', standar: 'Menyala berkedip' },
+                lampu_sign_depan_kiri: { label: 'Sign Depan Kiri', standar: 'Menyala berkedip' },
+                kipas_belakang: { label: 'Kipas Belakang', standar: 'Berputar normal' },
+                kondisi_axle: { label: 'Kondisi Axle', standar: 'Normal, tidak goyang' },
+                check_kunci_pm: { label: 'Kunci Pallet Mover', standar: 'Berfungsi baik dan lengkap' },
+                check_kebersihan_unit: { label: 'Kebersihan Unit PM', standar: 'Bersih dari kotoran' }
             };
 
             function fmtDate(iso) {
@@ -620,138 +296,115 @@
             function statusBadge(val) {
                 if (val === true || val === 1 || val === "1") return `<span class="badge bg-success">OK</span>`;
                 if (val === false || val === 0 || val === "0") return `<span class="badge bg-danger">NOK</span>`;
-                return `<span class="badge bg-secondary">Kosong</span>`;
+                return `<span class="badge bg-secondary">Tidak Diisi</span>`;
             }
 
-            function approvalBadge(status, id) {
-                let badgeClass = 'bg-secondary';
-                let label = status;
-                if (status === 'pending') {
-                    badgeClass = 'bg-warning text-dark';
-                    label = 'Pending';
-                } else if (status === 'waiting') {
-                    badgeClass = 'bg-info text-white';
-                    label = 'Waiting';
-                } else if (status === 'approved') {
-                    badgeClass = 'bg-success text-white';
-                    label = 'Approved';
-                } else if (status === 'rejected') {
-                    badgeClass = 'bg-danger text-white';
-                    label = 'Rejected';
+            function kelayakanBadge(status) {
+                if (!status) return '-';
+                let s = status.toLowerCase();
+                if (s === 'layak') {
+                    return `<span class="badge bg-success">${status}</span>`;
+                } else if (s.includes('perhatian')) {
+                    return `<span class="badge bg-warning text-dark">${status}</span>`;
+                } else {
+                    return `<span class="badge bg-danger">${status}</span>`;
                 }
-                return `<span class="badge ${badgeClass} btn-tracking" data-id="${id}" style="cursor: pointer;" title="Klik untuk melacak approval">${label}</span>`;
             }
 
             function buildDetailHTML(row) {
-                const isElectric = row.jenis_mtc === 'Electric P2H' || row.jenis_mtc === 'Electrical P2H';
-                const isDiesel = row.jenis_mtc === 'Diesel P2H';
-                const isGenset = row.jenis_mtc === 'Genset P2H';
+                const mesinInfo = row.mesin ? `${row.mesin.nama_mesin} (${row.mesin.kode_mesin || '-'})` : 'Belum Terhubung ke Master';
+                const scoreDisplay = row.persentase !== null ? `<b>${row.persentase}%</b>` : '-';
+                const jamOp = row.jam_operasional !== null ? `${row.jam_operasional}` : '-';
 
-                let detailsData = null;
-                let metadata = null;
+                let cells = '';
+                let countItems = 0;
 
-                if (isElectric) {
-                    detailsData = row.electric_p2h;
-                    metadata = electricP2h;
-                } else if (isDiesel) {
-                    detailsData = row.diesel_p2h;
-                    metadata = dieselP2h;
-                } else if (isGenset) {
-                    detailsData = row.genset_p2h;
-                    metadata = gensetP2h;
-                }
-
-                const namaMesin = (detailsData?.mesin?.nama_mesin || '').toUpperCase();
-
-                let activeType = '';
-                if (isElectric) {
-                    if (namaMesin.includes('FORKLIFT')) activeType = 'forklift';
-                    else if (namaMesin.includes('PALLET MOVER') || namaMesin.includes('PM')) activeType = 'pm';
-                    else if (namaMesin.includes('STACKER') || namaMesin.includes('STEKER') || namaMesin.includes(
-                            'ES')) activeType = 'es';
-                }
-
-                // Filter visible electric fields
-                const visibleMetadata = {};
-                Object.entries(metadata).forEach(([key, item]) => {
-                    let visible = true;
-                    if (isElectric && activeType) {
-                        if (item.type !== 'all' && activeType !== 'forklift') {
-                            if (activeType === 'es' && item.type !== 'forklift_es') {
-                                visible = false;
-                            } else if (activeType === 'pm') {
-                                visible = false;
-                            }
-                        }
-                    }
-                    if (visible) {
-                        visibleMetadata[key] = item;
+                Object.keys(checklistDict).forEach(k => {
+                    if (row[k] !== undefined && row[k] !== null) {
+                        countItems++;
+                        const meta = checklistDict[k];
+                        cells += `
+                            <div class="item-cell">
+                                <div class="item-info">
+                                    <div class="item-label fw-semibold">${meta.label}</div>
+                                    <div class="text-muted small">${meta.standar}</div>
+                                </div>
+                                <div class="item-status">${statusBadge(row[k])}</div>
+                            </div>
+                        `;
                     }
                 });
 
-                const cells = Object.entries(visibleMetadata).map(([key, item]) => `
-                    <div class="item-cell">
-                        <div class="item-info">
-                            <div class="item-label fw-semibold">${item.label}</div>
-                            <div class="text-muted small">${item.standar ?? ''}</div>
+                let fotoAccuHtml = '';
+                if (row.foto_kondisi_accu) {
+                    fotoAccuHtml = `
+                        <div class="col-md-12 mt-2">
+                            <div class="fw-semibold text-muted small mb-1">Foto Kondisi Accu:</div>
+                            <div>
+                                <a href="${row.foto_kondisi_accu}" target="_blank" class="btn btn-sm btn-outline-info">
+                                    <i class="ri-image-line me-1"></i> Lihat Foto Accu
+                                </a>
+                            </div>
                         </div>
-                        <div class="item-status">${statusBadge(detailsData?.[key])}</div>
-                    </div>
-                `).join('');
+                    `;
+                }
 
                 return `
-                    <div class="detail-meta row g-3 mb-4">
-                        <div class="col-md-4">
-                            <div class="text-muted small">Tanggal</div>
-                            <div class="fw-bold">${fmtDate(row.tanggal)}</div>
+                    <div class="row g-3 p-3 bg-light rounded mb-3">
+                        <div class="col-md-3">
+                            <div class="text-muted small">Nomor Unit</div>
+                            <div class="fw-bold fs-6 text-primary">${row.nomor_unit || '-'}</div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="text-muted small">Waktu</div>
-                            <div class="fw-bold">${row.waktu_mulai ?? '-'} s/d ${row.waktu_selesai ?? '-'}</div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">Jenis P2H</div>
+                            <div class="fw-bold">${row.jenis_p2h || '-'}</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="text-muted small">Departemen</div>
-                            <div class="fw-bold">${row.departemen ?? '-'}</div>
+                            <div class="fw-bold">${row.dept || '-'}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">Tanggal / Shift</div>
+                            <div class="fw-bold">${fmtDate(row.tanggal)} (Shift ${row.shift || '-'})</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="text-muted small">Koneksi Master Mesin</div>
+                            <div class="fw-bold text-dark">${mesinInfo}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">Operator</div>
+                            <div class="fw-bold">${row.operator_name || '-'}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">Jam Operasional (HM)</div>
+                            <div class="fw-bold">${jamOp}</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="text-muted small">Skor Kelayakan</div>
+                            <div class="fw-bold fs-6 text-success">${scoreDisplay}</div>
                         </div>
                         <div class="col-md-4">
-                            <div class="text-muted small">Unit/Mesin</div>
-                            <div class="fw-bold">${namaMesin || detailsData?.no_unit || '-'}</div>
+                            <div class="text-muted small">Status Kelayakan</div>
+                            <div>${kelayakanBadge(row.status_kelayakan)}</div>
                         </div>
                         <div class="col-md-4">
-                            <div class="text-muted small">No Unit (Code)</div>
-                            <div class="fw-bold">${isElectric ? '-' : (detailsData?.no_unit || '-')}</div>
+                            <div class="text-muted small">ID Sync Warehouse</div>
+                            <div><span class="badge bg-info">#${row.warehouse_id || '-'}</span></div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="text-muted small">Shift</div>
-                            <div class="fw-bold">Shift ${detailsData?.shift ?? '-'}</div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-muted small">Hours Meter</div>
-                            <div class="fw-bold">${detailsData?.hours_meter ?? '-'}</div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-muted small">Dibuat Oleh</div>
-                            <div class="fw-bold">${row.created_by?.username ?? '-'}</div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-muted small">Score Persentase</div>
-                            <div class="fw-bold text-primary">${isElectric && detailsData?.persentase ? detailsData.persentase + '%' : '-'}</div>
-                        </div>
+                        ${fotoAccuHtml}
                     </div>
 
-                    <div class="mb-4">
-                        <div class="group-title mb-3">Hasil Checklist</div>
-                        <div class="items-grid">${cells}</div>
+                    <div class="mb-3">
+                        <div class="group-title mb-2">Hasil Checklist (${countItems} Item)</div>
+                        <div class="items-grid">${cells || '<div class="text-muted">Tidak ada item checklist yang terisi.</div>'}</div>
                     </div>
 
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="group-title">Keterangan Kerusakan (NOK)</div>
-                            <div class="border p-2 rounded bg-light">${row.keterangan || '-'}</div>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <div class="group-title">Catatan</div>
-                            <div class="border p-2 rounded bg-light">${detailsData?.catatan || '-'}</div>
+                            <div class="border p-2 rounded bg-light">${row.catatan || '-'}</div>
                         </div>
                     </div>
                 `;
@@ -767,10 +420,8 @@
 
                 $('#tbodyP2h').html(`
                     <tr>
-                        <td colspan="11" class="text-center py-4">
-                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
+                        <td colspan="12" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                             <span class="ms-2 text-muted">Memuat data...</span>
                         </td>
                     </tr>
@@ -779,6 +430,7 @@
                 const filters = {
                     date: $('#filterDate').val() || null,
                     no_unit: $('#filterNoUnit').val() || null,
+                    jenis_p2h: $('#filterJenisP2h').val() || null,
                     departemen: $('#filterDepartemen').val() || null,
                     start: start,
                     length: pageSize
@@ -796,7 +448,7 @@
                         if (currentRows.length === 0) {
                             $('#tbodyP2h').html(`
                                 <tr>
-                                    <td colspan="11" class="text-center text-muted py-4">Tidak ada data ditemukan</td>
+                                    <td colspan="12" class="text-center text-muted py-4">Tidak ada data ditemukan</td>
                                 </tr>
                             `);
                             $('#paginationInfo').text('Menampilkan 0 sampai 0 dari 0 data');
@@ -807,65 +459,37 @@
                         let html = '';
                         currentRows.forEach((row, index) => {
                             const rowNum = start + index + 1;
-                            const isElectric = row.jenis_mtc === 'Electric P2H' || row.jenis_mtc === 'Electrical P2H';
-                            const isDiesel = row.jenis_mtc === 'Diesel P2H';
-                            const isGenset = row.jenis_mtc === 'Genset P2H';
+                            const machineName = row.mesin ? `${row.mesin.nama_mesin}` : `<span class="text-muted fst-italic">Belum cocok</span>`;
+                            const shiftVal = row.shift ? `Shift ${row.shift}` : '-';
+                            const hoursVal = row.jam_operasional !== null ? row.jam_operasional : '-';
+                            const percentageVal = row.persentase !== null ? `<b>${row.persentase}%</b>` : '-';
 
                             let typeBadge = '';
-                            if (isElectric) {
-                                typeBadge = `<span class="badge bg-soft-primary text-primary">Electric</span>`;
-                            } else if (isDiesel) {
-                                typeBadge = `<span class="badge bg-soft-danger text-danger">Diesel</span>`;
-                            } else if (isGenset) {
-                                typeBadge = `<span class="badge bg-soft-warning text-warning">Genset</span>`;
+                            if (row.jenis_p2h === 'Forklift') {
+                                typeBadge = `<span class="badge bg-soft-primary text-primary">Forklift</span>`;
+                            } else if (row.jenis_p2h === 'Pallet Mover') {
+                                typeBadge = `<span class="badge bg-soft-info text-info">Pallet Mover</span>`;
                             } else {
-                                typeBadge = `<span class="badge bg-soft-secondary text-secondary">${row.jenis_mtc}</span>`;
-                            }
-
-                            let machineName = '-';
-                            let unitCode = '-';
-                            let shiftVal = '-';
-                            let hoursVal = '-';
-                            let percentageVal = '-';
-
-                            if (isElectric) {
-                                machineName = row.electric_p2h?.mesin?.nama_mesin || '-';
-                                shiftVal = row.electric_p2h?.shift || '-';
-                                hoursVal = row.electric_p2h?.hours_meter || '-';
-                                percentageVal = row.electric_p2h?.persentase ? `<b>${row.electric_p2h.persentase}%</b>` : '-';
-                            } else if (isDiesel) {
-                                machineName = row.diesel_p2h?.mesin?.nama_mesin || '-';
-                                unitCode = row.diesel_p2h?.no_unit || '-';
-                                shiftVal = row.diesel_p2h?.shift || '-';
-                                hoursVal = row.diesel_p2h?.hours_meter || '-';
-                            } else if (isGenset) {
-                                machineName = row.genset_p2h?.mesin?.nama_mesin || '-';
-                                unitCode = row.genset_p2h?.no_unit || '-';
-                                shiftVal = row.genset_p2h?.shift || '-';
-                                hoursVal = row.genset_p2h?.hours_meter || '-';
+                                typeBadge = `<span class="badge bg-soft-secondary text-secondary">${row.jenis_p2h || 'P2H'}</span>`;
                             }
 
                             const showBtn = `<button class="btn btn-sm btn-info btn-detail me-1" data-id="${row.id}" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
-                            let editBtn = '';
-                            let delBtn = '';
-
-                            if (row.status !== 'approved') {
-                                editBtn = `<button class="btn btn-sm btn-primary btn-edit me-1" data-id="${row.id}" title="Edit"><i class="mdi mdi-pencil"></i></button>`;
-                                delBtn = `<button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
-                            }
+                            const editBtn = `<button class="btn btn-sm btn-primary btn-edit me-1" data-id="${row.id}" title="Edit"><i class="mdi mdi-pencil"></i></button>`;
+                            const delBtn = `<button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
 
                             html += `
                                 <tr>
                                     <td class="text-center">${rowNum}</td>
                                     <td>${fmtDate(row.tanggal)}</td>
                                     <td>${typeBadge}</td>
+                                    <td><span class="fw-semibold text-primary">${row.nomor_unit || '-'}</span></td>
                                     <td>${machineName}</td>
-                                    <td>${unitCode}</td>
-                                    <td>${row.departemen ?? '-'}</td>
+                                    <td>${row.dept || '-'}</td>
                                     <td class="text-center">${shiftVal}</td>
+                                    <td>${row.operator_name || '-'}</td>
                                     <td>${hoursVal}</td>
                                     <td>${percentageVal}</td>
-                                    <td>${approvalBadge(row.status, row.id)}</td>
+                                    <td>${kelayakanBadge(row.status_kelayakan)}</td>
                                     <td>
                                         <div class="d-flex justify-content-center">
                                             ${showBtn}
@@ -879,360 +503,309 @@
 
                         $('#tbodyP2h').html(html);
 
-                        // Render Pagination
+                        // Pagination
                         const totalPages = Math.ceil(totalRecords / pageSize);
                         const endRow = Math.min(start + pageSize, totalRecords);
                         $('#paginationInfo').text(`Menampilkan ${start + 1} sampai ${endRow} dari ${totalRecords} data`);
 
                         let pagHtml = '';
-                        // Previous button
                         pagHtml += `
                             <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
                                 <a class="page-link" href="#" data-page="${currentPage - 1}">Sebelumnya</a>
                             </li>
                         `;
 
-                        for (let p = 1; p <= totalPages; p++) {
-                            pagHtml += `
-                                <li class="page-item ${currentPage === p ? 'active' : ''}">
-                                    <a class="page-link" href="#" data-page="${p}">${p}</a>
-                                </li>
-                            `;
+                        const pages = [];
+                        if (totalPages <= 7) {
+                            for (let i = 1; i <= totalPages; i++) pages.push(i);
+                        } else {
+                            pages.push(1);
+                            let pStart = Math.max(2, currentPage - 1);
+                            let pEnd = Math.min(totalPages - 1, currentPage + 1);
+
+                            if (currentPage <= 3) {
+                                pStart = 2;
+                                pEnd = 4;
+                            } else if (currentPage >= totalPages - 2) {
+                                pStart = totalPages - 3;
+                                pEnd = totalPages - 1;
+                            }
+
+                            if (pStart > 2) {
+                                if (pStart === 3) {
+                                    pages.push(2);
+                                } else {
+                                    pages.push('...');
+                                }
+                            }
+
+                            for (let i = pStart; i <= pEnd; i++) {
+                                pages.push(i);
+                            }
+
+                            if (pEnd < totalPages - 1) {
+                                if (pEnd === totalPages - 2) {
+                                    pages.push(totalPages - 1);
+                                } else {
+                                    pages.push('...');
+                                }
+                            }
+
+                            pages.push(totalPages);
                         }
 
-                        // Next button
+                        pages.forEach(p => {
+                            if (p === '...') {
+                                pagHtml += `
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                `;
+                            } else {
+                                pagHtml += `
+                                    <li class="page-item ${currentPage === p ? 'active' : ''}">
+                                        <a class="page-link" href="#" data-page="${p}">${p}</a>
+                                    </li>
+                                `;
+                            }
+                        });
+
                         pagHtml += `
-                            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                            <li class="page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}">
                                 <a class="page-link" href="#" data-page="${currentPage + 1}">Berikutnya</a>
                             </li>
                         `;
-
                         $('#paginationList').html(pagHtml);
                     },
                     error: function() {
                         $('#tbodyP2h').html(`
                             <tr>
-                                <td colspan="11" class="text-center text-danger py-4">Gagal memuat data</td>
+                                <td colspan="12" class="text-center text-danger py-4">Gagal memuat data P2H.</td>
                             </tr>
                         `);
                     }
                 });
             }
 
-            // Init load
+            // Inisialisasi data tabel pertama kali
             loadTableData(1);
 
-            // Handle Pagination click
-            $(document).on('click', '#paginationList .page-link', function(e) {
+            // Filter button events
+            $('#btnApply').on('click', function() { loadTableData(1); });
+            $('#btnReset').on('click', function() {
+                $('#filterDate').val('');
+                $('#filterNoUnit').val('');
+                $('#filterJenisP2h').val('');
+                $('#filterDepartemen').val('');
+                loadTableData(1);
+            });
+
+            // Pagination click
+            $(document).on('click', '#paginationList a', function(e) {
                 e.preventDefault();
-                const page = $(this).data('page');
+                if ($(this).parent().hasClass('disabled')) return;
+                const page = parseInt($(this).data('page'));
                 if (page && page !== currentPage) {
                     loadTableData(page);
                 }
             });
 
-            $('#btnApply').on('click', function() {
-                loadTableData(1);
-            });
-
-            $('#btnReset').on('click', function() {
-                $('#filterDate').val('');
-                $('#filterNoUnit').val('');
-                $('#filterDepartemen').val('');
-                loadTableData(1);
-            });
-
-            // DETAIL MODAL
+            // Detail modal
             $(document).on('click', '.btn-detail', function() {
                 const id = $(this).data('id');
                 const row = currentRows.find(r => r.id == id);
                 if (!row) return;
 
-                $('#detailTitle').text(`Detail P2H - ${row.jenis_mtc}`);
-                $('#detailSub').text(
-                    `Tanggal: ${fmtDate(row.tanggal)} | Status: ${row.status.toUpperCase()}`);
-
-                const html = buildDetailHTML(row);
-                $('#detailBody').html(html);
+                $('#detailTitle').text(`P2H ${row.jenis_p2h} - Unit ${row.nomor_unit}`);
+                $('#detailSub').text(`Inspeksi tanggal ${fmtDate(row.tanggal)} (Shift ${row.shift || '-'})`);
+                $('#detailBody').html(buildDetailHTML(row));
                 $('#modalDetail').modal('show');
             });
 
-            // TRACKING MODAL
-            $(document).on('click', '.btn-tracking', function() {
-                const id = $(this).data('id');
-                const row = currentRows.find(r => r.id == id);
-                if (!row) return;
-
-                $('#trackingTitle').text(`Tracking Approval - ${row.jenis_mtc}`);
-
-                $.get(`/mtc/main/tracking/${id}`, function(res) {
-                    if (res.status && res.data.length) {
-                        let html = '<div class="vertical-timeline">';
-                        res.data.forEach(item => {
-                            let badge = '';
-                            if (item.status === 'approved') badge = 'text-success';
-                            else if (item.status === 'rejected') badge = 'text-danger';
-                            else badge = 'text-warning';
-
-                            html += `
-                                    <div class="timeline-item pb-3 border-start ps-3 position-relative">
-                                        <div class="fw-bold">${item.role} (${item.approver})</div>
-                                        <div class="${badge} fw-semibold small">${item.status.toUpperCase()}</div>
-                                        <div class="text-muted small">${item.action_at ? fmtDate(item.action_at) : 'Belum diproses'}</div>
-                                        ${item.catatan ? `<div class="fst-italic text-muted small">Catatan: "${item.catatan}"</div>` : ''}
-                                    </div>
-                                `;
-                        });
-                        html += '</div>';
-                        $('#trackingBody').html(html);
-                    } else {
-                        $('#trackingBody').html(
-                            '<div class="text-center text-muted">Belum ada data tracking approval.</div>'
-                        );
-                    }
-                    $('#modalTracking').modal('show');
-                });
-            });
-
-            // DELETE ACTION
-            $(document).on('click', '.btn-delete', function() {
-                const id = $(this).data('id');
-                Swal.fire({
-                    title: 'Hapus data?',
-                    text: 'Data yang dihapus tidak dapat dikembalikan!',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Hapus',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: '#d33'
-                }).then(res => {
-                    if (!res.isConfirmed) return;
-                    $.ajax({
-                        url: `${DELETE_URL}/${id}`,
-                        type: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(resp) {
-                            Swal.fire('Berhasil', resp.message, 'success');
-                            loadTableData(currentPage);
-                        },
-                        error: function(xhr) {
-                            Swal.fire('Gagal', xhr.responseJSON?.message ||
-                                'Terjadi kesalahan', 'error');
-                        }
-                    });
-                });
-            });
-
-            // EDIT MODAL & FORM INJECTION
+            // Edit modal
             $(document).on('click', '.btn-edit', function() {
                 const id = $(this).data('id');
                 const row = currentRows.find(r => r.id == id);
                 if (!row) return;
 
-                const isElectric = row.jenis_mtc === 'Electric P2H' || row.jenis_mtc === 'Electrical P2H';
-                const isDiesel = row.jenis_mtc === 'Diesel P2H';
-                const isGenset = row.jenis_mtc === 'Genset P2H';
-
-                let details = null;
-                let metadata = null;
-                if (isElectric) {
-                    details = row.electric_p2h;
-                    metadata = electricP2h;
-                } else if (isDiesel) {
-                    details = row.diesel_p2h;
-                    metadata = dieselP2h;
-                } else if (isGenset) {
-                    details = row.genset_p2h;
-                    metadata = gensetP2h;
-                }
-
-                // Parse existing keterangan into a key-value map
-                const nokMap = {};
-                if (row.keterangan) {
-                    row.keterangan.split(' | ').forEach(part => {
-                        const idx = part.indexOf(':');
-                        if (idx !== -1) {
-                            const label = part.substring(0, idx).trim();
-                            const val = part.substring(idx + 1).trim();
-                            nokMap[label] = val;
-                        }
-                    });
-                }
-
                 $('#editId').val(row.id);
-                $('#editTanggal').val(row.tanggal.split('T')[0]);
-                $('#editDepartemen').val(row.departemen);
-                $('#editMesinName').val(details?.mesin?.nama_mesin || '-');
-                $('#editWaktuMulai').val(row.waktu_mulai ? row.waktu_mulai.substring(0, 5) : '');
-                $('#editWaktuSelesai').val(row.waktu_selesai ? row.waktu_selesai.substring(0, 5) : '');
-                $('#editShift').val(details?.shift);
-                $('#editHourMeter').val(details?.hours_meter);
-                $('#editCatatan').val(details?.catatan);
+                $('#editTanggal').val(row.tanggal ? row.tanggal.split('T')[0] : '');
+                $('#editDepartemen').val(row.dept || '');
+                $('#editNomorUnit').val(row.nomor_unit || '');
+                $('#editShift').val(row.shift || '1');
+                $('#editHourMeter').val(row.jam_operasional || '');
+                $('#editCatatan').val(row.catatan || '');
+                $('#editSub').text(`Unit ${row.nomor_unit} (${row.jenis_p2h})`);
 
-                // Sub-filtering logic for Electric P2H checklist rows
-                const namaMesin = (details?.mesin?.nama_mesin || '').toUpperCase();
-                let activeType = '';
-                if (isElectric) {
-                    if (namaMesin.includes('FORKLIFT')) activeType = 'forklift';
-                    else if (namaMesin.includes('PALLET MOVER') || namaMesin.includes('PM')) activeType =
-                        'pm';
-                    else if (namaMesin.includes('STACKER') || namaMesin.includes('STEKER') || namaMesin
-                        .includes('ES')) activeType = 'es';
-                }
+                // Bangun checklist editor
+                let editHtml = '<div class="row g-2">';
+                Object.keys(checklistDict).forEach(k => {
+                    if (row[k] !== undefined) {
+                        const meta = checklistDict[k];
+                        const val = row[k];
+                        const isOk = val === true || val === 1 || val === "1";
+                        const isNok = val === false || val === 0 || val === "0";
+                        const isNull = val === null || val === undefined;
 
-                // no_unit is always shown and required for all types
-                $('#editNoUnitWrapper').show();
-                $('#editNoUnit').attr('required', true).val(details?.no_unit || '');
-
-                if (isElectric) {
-                    if (activeType === 'forklift' || activeType === 'pm' || activeType === 'es') {
-                        $('#editHourMeterWrapper').show();
-                        $('#editHourMeter').attr('required', true);
-                    } else {
-                        $('#editHourMeterWrapper').hide();
-                        $('#editHourMeter').removeAttr('required').val('');
-                    }
-                } else if (isDiesel) {
-                    $('#editHourMeterWrapper').show();
-                    $('#editHourMeter').attr('required', true);
-                } else if (isGenset) {
-                    // Genset does not have hours meter
-                    $('#editHourMeterWrapper').hide();
-                    $('#editHourMeter').removeAttr('required').val('');
-                }
-
-                // Inject checklist items dynamically
-                let html = '';
-                Object.entries(metadata).forEach(([key, item]) => {
-                    let visible = true;
-                    if (isElectric && activeType) {
-                        if (item.type !== 'all' && activeType !== 'forklift') {
-                            if (activeType === 'es' && item.type !== 'forklift_es') {
-                                visible = false;
-                            } else if (activeType === 'pm') {
-                                visible = false;
-                            }
-                        }
-                    }
-
-                    if (!visible) return;
-
-                    const curVal = details?.[key];
-                    const isOk = curVal == 1 || curVal === true;
-                    const isNok = curVal == 0 || curVal === false;
-                    const isEmpty = curVal === null || curVal === undefined || curVal === '';
-                    
-                    const nokValue = isNok ? (nokMap[item.label] || 'NOK') : '';
-
-                    html += `
-                            <div class="checklist-edit-row item-row pb-2 flex-column align-items-start" data-field="${key}">
-                                <div class="d-flex justify-content-between align-items-center w-100 flex-wrap">
-                                    <div class="flex-grow-1 pe-2">
-                                        <div class="fw-semibold text-dark" style="font-size: 0.9rem;">${item.label}</div>
-                                        <div class="text-muted small" style="font-size: 0.8rem;">${item.standar ?? ''}</div>
+                        editHtml += `
+                            <div class="col-md-6 col-12">
+                                <div class="checklist-edit-row">
+                                    <div class="pe-2">
+                                        <div class="fw-semibold text-dark small">${meta.label}</div>
+                                        <div class="text-muted" style="font-size:0.75rem;">${meta.standar}</div>
                                     </div>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <input type="radio" class="btn-check edit-radio" name="${key}" id="edit_${key}_ok" value="1" ${isOk ? 'checked' : ''}>
-                                        <label class="btn btn-outline-success px-3 rounded-start" for="edit_${key}_ok">OK</label>
+                                        <input type="radio" class="btn-check" name="${k}" id="${k}_ok" value="1" ${isOk ? 'checked' : ''}>
+                                        <label class="btn btn-outline-success px-2" for="${k}_ok">OK</label>
 
-                                        <input type="radio" class="btn-check edit-radio" name="${key}" id="edit_${key}_nok" value="0" ${isNok ? 'checked' : ''}>
-                                        <label class="btn btn-outline-danger px-3" for="edit_${key}_nok">NOK</label>
+                                        <input type="radio" class="btn-check" name="${k}" id="${k}_nok" value="0" ${isNok ? 'checked' : ''}>
+                                        <label class="btn btn-outline-danger px-2" for="${k}_nok">NOK</label>
 
-                                        <input type="radio" class="btn-check edit-radio" name="${key}" id="edit_${key}_empty" value="" ${isEmpty ? 'checked' : ''}>
-                                        <label class="btn btn-outline-secondary px-3 rounded-end" for="edit_${key}_empty">Kosong</label>
+                                        <input type="radio" class="btn-check" name="${k}" id="${k}_null" value="" ${isNull ? 'checked' : ''}>
+                                        <label class="btn btn-outline-secondary px-2" for="${k}_null">-</label>
                                     </div>
-                                </div>
-                                <div class="keterangan-wrapper mt-2 w-100 ${isNok ? '' : 'd-none'}">
-                                    <input type="text" class="form-control form-control-sm bg-soft-danger text-danger border-danger edit-keterangan-input"
-                                        name="keterangan_${key}" id="edit_keterangan_${key}" placeholder="Keterangan wajib diisi jika NOK..."
-                                        value="${nokValue}" ${isNok ? 'required' : ''}>
                                 </div>
                             </div>
                         `;
+                    }
                 });
+                editHtml += '</div>';
 
-                $('#editChecklistContainer').html(html);
+                $('#editChecklistContainer').html(editHtml);
                 $('#modalEdit').modal('show');
             });
 
-            // Handle edit radio change
-            $(document).on('change', '.edit-radio', function() {
-                const $row = $(this).closest('.item-row');
-                const val = $row.find('input[type="radio"]:checked').val();
-                const $wrapper = $row.find('.keterangan-wrapper');
-                const $input = $wrapper.find('input');
-
-                if (val === '0') { // NOK
-                    $wrapper.removeClass('d-none');
-                    $input.attr('required', true);
-                } else {
-                    $wrapper.addClass('d-none');
-                    $input.val('').removeAttr('required');
-                }
-            });
-
-            // Handle edit form submit
+            // Submit Edit Form
             $('#formEditP2h').on('submit', function(e) {
                 e.preventDefault();
                 const id = $('#editId').val();
+                const formData = $(this).serialize();
+                const $btn = $('#btnSaveEdit');
 
-                // Collect NOK details for keterangan update
-                const row = currentRows.find(r => r.id == id);
-                const isElectric = row.jenis_mtc === 'Electric P2H' || row.jenis_mtc === 'Electrical P2H';
-                const isDiesel = row.jenis_mtc === 'Diesel P2H';
-                const isGenset = row.jenis_mtc === 'Genset P2H';
-
-                let metadata = null;
-                if (isElectric) {
-                    metadata = electricP2h;
-                } else if (isDiesel) {
-                    metadata = dieselP2h;
-                } else if (isGenset) {
-                    metadata = gensetP2h;
-                }
-                const details = [];
-
-                $('#editChecklistContainer .item-row').each(function() {
-                    const $el = $(this);
-                    const key = $el.data('field');
-                    const isNg = $el.find('input[type="radio"]:checked').val() === '0';
-                    if (isNg) {
-                        const itemMeta = metadata[key];
-                        const val = $el.find('input[name="keterangan_' + key + '"]').val().trim() || 'NOK';
-                        details.push(`${itemMeta.label}: ${val}`);
-                    }
-                });
-
-                const fd = new FormData(this);
-                if (details.length) {
-                    fd.set('keterangan', details.join(" | "));
-                } else {
-                    fd.set('keterangan', '');
-                }
-
-                $('#spinEdit').removeClass('d-none');
-                $('#btnSaveEdit').prop('disabled', true);
+                $btn.prop('disabled', true).text('Menyimpan...');
 
                 $.ajax({
                     url: `${UPDATE_URL}/${id}`,
                     type: 'POST',
-                    data: fd,
-                    processData: false,
-                    contentType: false,
-                    success: function(resp) {
-                        Swal.fire('Berhasil', resp.message, 'success');
+                    data: formData,
+                    dataType: 'json',
+                    success: function(res) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: res.message || 'Data P2H berhasil diperbarui.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
                         $('#modalEdit').modal('hide');
                         loadTableData(currentPage);
                     },
                     error: function(xhr) {
-                        Swal.fire('Gagal', xhr.responseJSON?.message || 'Terjadi kesalahan',
-                            'error');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memperbarui data.'
+                        });
                     },
                     complete: function() {
-                        $('#spinEdit').addClass('d-none');
-                        $('#btnSaveEdit').prop('disabled', false);
+                        $btn.prop('disabled', false).text('Simpan Perubahan');
+                    }
+                });
+            });
+
+            // Delete Record
+            $(document).on('click', '.btn-delete', function() {
+                const id = $(this).data('id');
+                const row = currentRows.find(r => r.id == id);
+                const unitName = row ? `unit ${row.nomor_unit}` : 'data ini';
+
+                Swal.fire({
+                    title: 'Hapus data P2H?',
+                    text: `Apakah Anda yakin ingin menghapus pemeriksaan ${unitName}?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        $.ajax({
+                            url: `${DELETE_URL}/${id}`,
+                            type: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            dataType: 'json',
+                            success: function(r) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Terhapus',
+                                    text: r.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                                loadTableData(currentPage);
+                            },
+                            error: function() {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal',
+                                    text: 'Gagal menghapus data P2H.'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Sync Data Warehouse (Direct confirm without modal)
+            $('#btnSyncWarehouse').on('click', function() {
+                Swal.fire({
+                    title: 'Sync Data Warehouse?',
+                    text: 'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Warehouse.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="ri-refresh-line me-1"></i> Ya, Sync Sekarang',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Menyinkronkan Data...',
+                            text: 'Sedang menghubungi API Warehouse & menyinkronkan data P2H...',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                            url: SYNC_URL,
+                            type: 'POST',
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content')
+                            },
+                            dataType: 'json',
+                            success: function(res) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Sync Berhasil',
+                                    text: res.message,
+                                    confirmButtonText: 'Tutup'
+                                });
+                                loadTableData(1);
+                            },
+                            error: function(xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Sync Gagal',
+                                    text: xhr.responseJSON?.message || 'Tidak dapat menghubungi server warehouse. Pastikan server aktif di port yang sesuai.'
+                                });
+                            }
+                        });
                     }
                 });
             });

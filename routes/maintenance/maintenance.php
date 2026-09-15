@@ -158,6 +158,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/form/store', [MtcP2hController::class, 'store'])->name('p2h.form.store');
             Route::get('/data/index', [MtcP2hController::class, 'data'])->name('p2h.data.index');
             Route::post('/data/update/{id}', [MtcP2hController::class, 'update'])->name('p2h.data.update');
+            Route::delete('/data/delete/{id}', [MtcP2hController::class, 'destroy'])->name('p2h.data.delete');
+            Route::post('/sync-warehouse', [MtcP2hController::class, 'syncWarehouse'])->name('p2h.sync.warehouse');
         });
     });
 });

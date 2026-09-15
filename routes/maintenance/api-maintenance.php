@@ -28,6 +28,7 @@ Route::prefix('mtc')->group(function () {
     Route::get('/electric-p2h/get-data', [MtcElectricP2hController::class, 'getData']);
     Route::get('/diesel-p2h/get-data', [MtcDieselP2hController::class, 'getData']);
     Route::get('/p2h/get-data', [MtcP2hController::class, 'getData']);
+    Route::post('/p2h/sync-warehouse', [MtcP2hController::class, 'syncWarehouse']);
     Route::get('/master/mesin/get-data', [MtcMasterMesinController::class, 'getData']);
     Route::get('/users/approvers', [MtcMainController::class, 'getApprovers']);
 });
