@@ -64,11 +64,45 @@
             border-radius: 16px;
             padding: 18px 20px;
             overflow: hidden;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
         }
 
         .kpi-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, .07);
+        }
+
+        .kpi-card.active-kpi {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .1);
+        }
+
+        .kpi-card.kc-total.active-kpi {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, .03);
+        }
+
+        .kpi-card.kc-done.active-kpi {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, .03);
+        }
+
+        .kpi-card.kc-today.active-kpi {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, .03);
+        }
+
+        .kpi-card.kc-overdue.active-kpi {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, .03);
+        }
+
+        .kpi-card.kc-pending.active-kpi {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, .03);
         }
 
         .kpi-card::before {
@@ -771,7 +805,7 @@
 
                 {{-- KPI CARDS --}}
                 <div class="kpi-grid animate-fade-in-up" style="animation-delay:.05s;">
-                    <div class="card kpi-card kc-total">
+                    <div class="card kpi-card kc-total active-kpi" data-filter="all" title="Klik untuk menampilkan seluruh data">
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="kpi-label">Total Rencana</span>
                             <div class="kpi-icon"><i class="mdi mdi-calendar-check-outline" style="font-size:18px;"></i>
@@ -782,7 +816,7 @@
                         </div>
                         <div class="kpi-label" style="margin-top:5px;">agenda minggu terjadwal</div>
                     </div>
-                    <div class="card kpi-card kc-done">
+                    <div class="card kpi-card kc-done" data-filter="done" title="Klik untuk memfilter mesin yang sudah terlaksana">
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="kpi-label">Terlaksana</span>
                             <div class="kpi-icon"><i class="mdi mdi-check-circle-outline" style="font-size:18px;"></i></div>
@@ -792,7 +826,7 @@
                         </div>
                         <span class="kpi-sub green" id="kpiDonePct">—</span>
                     </div>
-                    <div class="card kpi-card kc-today">
+                    <div class="card kpi-card kc-today" data-filter="today" title="Klik untuk memfilter mesin dengan agenda minggu ini">
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="kpi-label">Minggu Ini</span>
                             <div class="kpi-icon"><i class="mdi mdi-calendar-today" style="font-size:18px;"></i></div>
@@ -802,7 +836,7 @@
                         </div>
                         <div class="kpi-label" style="margin-top:5px;">jatuh di minggu berjalan</div>
                     </div>
-                    <div class="card kpi-card kc-overdue">
+                    <div class="card kpi-card kc-overdue" data-filter="overdue" title="Klik untuk memfilter mesin dengan agenda terlewat">
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="kpi-label">Terlewat</span>
                             <div class="kpi-icon"><i class="mdi mdi-alert-circle-outline" style="font-size:18px;"></i></div>
@@ -812,7 +846,7 @@
                         </div>
                         <span class="kpi-sub red" id="kpiOverduePct">—</span>
                     </div>
-                    <div class="card kpi-card kc-pending">
+                    <div class="card kpi-card kc-pending" data-filter="pending" title="Klik untuk memfilter mesin dengan agenda menunggu">
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="kpi-label">Menunggu</span>
                             <div class="kpi-icon"><i class="mdi mdi-clock-outline" style="font-size:18px;"></i></div>
@@ -1332,8 +1366,7 @@
                                         p.tanggal_aktual : '');
                                 }
 
-                                var chipStatus = p.status || 'pending';
-                                return '<span class="wk-chip ' + chipStatus + '" title="' + tip + '">' + labelText +
+                                return '<span class="wk-chip pending" title="' + tip + '">' + labelText +
                                     '</span>';
                             }).join('');
 
@@ -1421,6 +1454,53 @@
             $('#tableEmpty').hide();
         }
 
+        var currentKpiFilter = 'all';
+        var allMachinesData = [];
+
+        function applyFilterAndRender() {
+            if (!allMachinesData || allMachinesData.length === 0) {
+                renderTable([]);
+                return;
+            }
+
+            if (currentKpiFilter === 'all') {
+                renderTable(allMachinesData);
+            } else {
+                var filtered = allMachinesData.filter(function(m) {
+                    return (m.agenda || []).some(function(a) {
+                        if (currentKpiFilter === 'done') {
+                            var planDone = (a.plans || []).some(function(p) { return p.status === 'done'; }) || (a.plan && a.plan.status === 'done');
+                            var actualDone = (a.actuals && a.actuals.length > 0) || (a.actual !== null && a.actual !== undefined);
+                            return planDone || actualDone;
+                        } else {
+                            return (a.plans || []).some(function(p) { return p.status === currentKpiFilter; }) || (a.plan && a.plan.status === currentKpiFilter);
+                        }
+                    });
+                });
+                renderTable(filtered);
+            }
+
+            var q = $('#tblSearch').val().trim().toLowerCase();
+            if (q) {
+                $('#tblSearch').trigger('input');
+            }
+        }
+
+        // Click KPI Card to filter
+        $(document).on('click', '.kpi-card', function() {
+            var filter = $(this).data('filter') || 'all';
+            if (currentKpiFilter === filter && filter !== 'all') {
+                currentKpiFilter = 'all';
+            } else {
+                currentKpiFilter = filter;
+            }
+
+            $('.kpi-card').removeClass('active-kpi');
+            $('.kpi-card[data-filter="' + currentKpiFilter + '"]').addClass('active-kpi');
+
+            applyFilterAndRender();
+        });
+
         $('#tblSearch').on('input', function() {
             var q = $(this).val().trim().toLowerCase();
             $('#tableBody tr[data-search]').each(function() {
@@ -1457,12 +1537,13 @@
                         return;
                     }
                     renderKpi(res.summary || {});
+                    allMachinesData = res.machines || [];
                     if (!res.machines || res.machines.length === 0 || (res.summary.total_planned || 0) === 0) {
                         $('#tableLoading').hide();
                         $('#tableEmpty').show();
                         return;
                     }
-                    renderTable(res.machines);
+                    applyFilterAndRender();
                 },
                 error: function() {
                     $('#tableLoading').hide();
