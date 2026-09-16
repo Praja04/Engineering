@@ -62,10 +62,25 @@
             flex-shrink: 0;
         }
 
-        .stat-icon.blue { background: var(--accent-bg); color: var(--accent); }
-        .stat-icon.green { background: var(--success-bg); color: var(--success); }
-        .stat-icon.amber { background: var(--warning-bg); color: var(--warning); }
-        .stat-icon.purple { background: #f3e8ff; color: #7e22ce; }
+        .stat-icon.blue {
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+
+        .stat-icon.green {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .stat-icon.amber {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .stat-icon.purple {
+            background: #f3e8ff;
+            color: #7e22ce;
+        }
 
         .stat-value {
             font-size: 24px;
@@ -97,7 +112,8 @@
             {{-- HEADER --}}
             <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
                 <div>
-                    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:4px 12px;border-radius:20px;background:rgba(37,99,235,.08);color:#2563eb;border:1px solid rgba(37,99,235,.15);display:inline-block;">
+                    <span
+                        style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:4px 12px;border-radius:20px;background:rgba(37,99,235,.08);color:#2563eb;border:1px solid rgba(37,99,235,.15);display:inline-block;">
                         Master Maintenance &amp; Cost
                     </span>
                     <h3 class="fw-bold fs-3 mb-1 mt-2" style="letter-spacing:-0.5px;">Master Material &amp; Harga</h3>
@@ -107,13 +123,15 @@
                     </p>
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <button type="button" class="btn btn-outline-info btn-sm px-3 py-2 fw-semibold" id="btnSyncWarehouse">
+                    {{-- <button type="button" class="btn btn-outline-info btn-sm px-3 py-2 fw-semibold" id="btnSyncWarehouse">
                         <i class="ri-refresh-line me-1"></i> Sync Warehouse API
-                    </button>
-                    <a href="{{ route('master.mtc.material.downloadTemplate') }}" class="btn btn-outline-secondary btn-sm px-3 py-2 fw-semibold">
+                    </button> --}}
+                    <a href="{{ route('master.mtc.material.downloadTemplate') }}"
+                        class="btn btn-outline-secondary btn-sm px-3 py-2 fw-semibold">
                         <i class="ri-download-2-line me-1"></i> Download Template
                     </a>
-                    <button type="button" class="btn btn-outline-success btn-sm px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalImportExcel">
+                    <button type="button" class="btn btn-outline-success btn-sm px-3 py-2 fw-semibold"
+                        data-bs-toggle="modal" data-bs-target="#modalImportExcel">
                         <i class="ri-file-excel-2-line me-1"></i> Import Excel
                     </button>
                     <button type="button" class="btn btn-primary btn-sm px-3 py-2 fw-semibold" id="btnOpenAddModal">
@@ -169,7 +187,8 @@
                         <div class="col-lg-4 col-md-6 col-12">
                             <div class="input-group">
                                 <span class="input-group-text bg-light border"><i class="ri-search-line"></i></span>
-                                <input type="text" id="searchInput" class="form-control border" placeholder="Cari MID, Nama Material, Kategori...">
+                                <input type="text" id="searchInput" class="form-control border"
+                                    placeholder="Cari MID, Nama Material, Kategori...">
                             </div>
                         </div>
                         <div class="col-lg-8 col-md-6 col-12 d-flex justify-content-md-end gap-2 flex-wrap">
@@ -185,7 +204,8 @@
                                     <option value="no_price">Belum Ada Harga (Rp 0)</option>
                                 </select>
                             </div>
-                            <button type="button" class="btn btn-light btn-sm border px-3" id="btnResetFilter" title="Reset Filter">
+                            <button type="button" class="btn btn-light btn-sm border px-3" id="btnResetFilter"
+                                title="Reset Filter">
                                 <i class="ri-refresh-line"></i> Reset
                             </button>
                         </div>
@@ -250,32 +270,40 @@
                                         <option value="">Pilih / Cari MID dari Warehouse</option>
                                     </select>
                                 </div>
-                                <small class="text-muted" style="font-size: 11px;">Pilih MID untuk mengisi deskripsi & UoM otomatis dari API Warehouse</small>
+                                <small class="text-muted" style="font-size: 11px;">Pilih MID untuk mengisi deskripsi & UoM
+                                    otomatis dari API Warehouse</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold small">Input MID Manual (Opsional)</label>
-                                <input type="text" class="form-control" id="inputMid" name="mid" placeholder="Contoh: 60021589">
+                                <input type="text" class="form-control" id="inputMid" name="mid"
+                                    placeholder="Contoh: 60021589">
                             </div>
 
                             <div class="col-md-8">
-                                <label class="form-label fw-semibold small">Nama / Deskripsi Material <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="inputDeskripsi" name="deskripsi" required placeholder="Contoh: Filter Oli Forklift">
+                                <label class="form-label fw-semibold small">Nama / Deskripsi Material <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="inputDeskripsi" name="deskripsi" required
+                                    placeholder="Contoh: Filter Oli Forklift">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold small">Satuan Unit (UOM)</label>
-                                <input type="text" class="form-control" id="inputUom" name="uom" placeholder="PCS / UN / SET / LTR">
+                                <input type="text" class="form-control" id="inputUom" name="uom"
+                                    placeholder="PCS / UN / SET / LTR">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">Harga Satuan (Rp) <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold small">Harga Satuan (Rp) <span
+                                        class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border">Rp</span>
-                                    <input type="number" step="0.01" min="0" class="form-control" id="inputHarga" name="harga" required placeholder="0">
+                                    <input type="number" step="0.01" min="0" class="form-control"
+                                        id="inputHarga" name="harga" required placeholder="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold small">Kategori Material</label>
-                                <input type="text" class="form-control" id="inputKategori" name="kategori" list="kategoriOptions" placeholder="Pilih atau ketik kategori...">
+                                <input type="text" class="form-control" id="inputKategori" name="kategori"
+                                    list="kategoriOptions" placeholder="Pilih atau ketik kategori...">
                                 <datalist id="kategoriOptions">
                                     <option value="Forklift Part">
                                     <option value="Electrical">
@@ -291,12 +319,14 @@
 
                             <div class="col-12">
                                 <label class="form-label fw-semibold small">Keterangan / Catatan</label>
-                                <textarea class="form-control" id="inputKeterangan" name="keterangan" rows="2" placeholder="Catatan tambahan spesifikasi atau peruntukan unit"></textarea>
+                                <textarea class="form-control" id="inputKeterangan" name="keterangan" rows="2"
+                                    placeholder="Catatan tambahan spesifikasi atau peruntukan unit"></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer bg-light py-3 px-4 border-top">
-                        <button type="button" class="btn btn-secondary btn-sm px-4 fw-semibold" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-secondary btn-sm px-4 fw-semibold"
+                            data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold" id="btnSaveMaterial">
                             <i class="ri-save-line me-1"></i> Simpan Data
                         </button>
@@ -307,7 +337,8 @@
     </div>
 
     {{-- ════════════════════ MODAL IMPORT EXCEL ════════════════════ --}}
-    <div class="modal fade" id="modalImportExcel" tabindex="-1" aria-labelledby="modalImportExcelTitle" aria-hidden="true">
+    <div class="modal fade" id="modalImportExcel" tabindex="-1" aria-labelledby="modalImportExcelTitle"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
                 <div class="modal-header bg-light border-bottom py-3 px-4">
@@ -319,24 +350,30 @@
                 <form id="formImportExcel" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body p-4">
-                        <div class="alert alert-info border-0 d-flex align-items-start gap-2 mb-3" style="font-size: 12.5px;">
+                        <div class="alert alert-info border-0 d-flex align-items-start gap-2 mb-3"
+                            style="font-size: 12.5px;">
                             <i class="ri-information-line fs-5"></i>
                             <div>
-                                Gunakan template excel yang telah disediakan agar format kolom sesuai. Jika baris memiliki <strong>MID</strong> yang telah terdaftar, harga dan data akan otomatis diperbarui.
+                                Gunakan template excel yang telah disediakan agar format kolom sesuai. Jika baris memiliki
+                                <strong>MID</strong> yang telah terdaftar, harga dan data akan otomatis diperbarui.
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small">Pilih File Excel (.xlsx, .xls, .csv) <span class="text-danger">*</span></label>
-                            <input type="file" class="form-control" name="file_excel" id="fileExcelInput" accept=".xlsx,.xls,.csv" required>
+                            <label class="form-label fw-semibold small">Pilih File Excel (.xlsx, .xls, .csv) <span
+                                    class="text-danger">*</span></label>
+                            <input type="file" class="form-control" name="file_excel" id="fileExcelInput"
+                                accept=".xlsx,.xls,.csv" required>
                         </div>
                         <div class="d-flex justify-content-between align-items-center pt-2">
-                            <a href="{{ route('master.mtc.material.downloadTemplate') }}" class="btn btn-link btn-sm text-decoration-none p-0 text-primary fw-semibold">
+                            <a href="{{ route('master.mtc.material.downloadTemplate') }}"
+                                class="btn btn-link btn-sm text-decoration-none p-0 text-primary fw-semibold">
                                 <i class="ri-download-line me-1"></i> Download Format Template Excel
                             </a>
                         </div>
                     </div>
                     <div class="modal-footer bg-light py-3 px-4 border-top">
-                        <button type="button" class="btn btn-secondary btn-sm px-4 fw-semibold" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-secondary btn-sm px-4 fw-semibold"
+                            data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-success btn-sm px-4 fw-semibold" id="btnSubmitImport">
                             <i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses
                         </button>
@@ -372,18 +409,23 @@
                     success: function(res) {
                         if (res.status) {
                             allMaterials = res.data || [];
-                            
+
                             // Render KPI cards
-                            $('#cardTotalItems').text((res.summary.total_items || 0).toLocaleString('id-ID'));
-                            $('#cardItemsWithPrice').text((res.summary.items_with_price || 0).toLocaleString('id-ID'));
-                            $('#cardItemsNoPrice').text((res.summary.items_no_price || 0).toLocaleString('id-ID'));
-                            $('#cardAvgPrice').text('Rp ' + Math.round(res.summary.avg_price || 0).toLocaleString('id-ID'));
+                            $('#cardTotalItems').text((res.summary.total_items || 0).toLocaleString(
+                                'id-ID'));
+                            $('#cardItemsWithPrice').text((res.summary.items_with_price || 0)
+                                .toLocaleString('id-ID'));
+                            $('#cardItemsNoPrice').text((res.summary.items_no_price || 0)
+                                .toLocaleString('id-ID'));
+                            $('#cardAvgPrice').text('Rp ' + Math.round(res.summary.avg_price || 0)
+                                .toLocaleString('id-ID'));
 
                             // Populate Kategori dropdown filter
                             const currentCat = $('#filterKategori').val();
                             let catOptions = '<option value="">Semua Kategori</option>';
                             (res.summary.categories || []).forEach(cat => {
-                                catOptions += `<option value="${cat}" ${currentCat === cat ? 'selected' : ''}>${cat}</option>`;
+                                catOptions +=
+                                    `<option value="${cat}" ${currentCat === cat ? 'selected' : ''}>${cat}</option>`;
                             });
                             $('#filterKategori').html(catOptions);
 
@@ -391,7 +433,9 @@
                         }
                     },
                     error: function() {
-                        $('#tableBody').html('<tr><td colspan="9" class="text-center py-5 text-danger">Gagal memuat data material.</td></tr>');
+                        $('#tableBody').html(
+                            '<tr><td colspan="9" class="text-center py-5 text-danger">Gagal memuat data material.</td></tr>'
+                            );
                     }
                 });
             }
@@ -408,7 +452,9 @@
                     if (statusHarga === 'no_price' && item.harga > 0) return false;
 
                     if (q) {
-                        const searchStr = `${item.mid || ''} ${item.deskripsi || ''} ${item.kategori || ''} ${item.keterangan || ''}`.toLowerCase();
+                        const searchStr =
+                            `${item.mid || ''} ${item.deskripsi || ''} ${item.kategori || ''} ${item.keterangan || ''}`
+                            .toLowerCase();
                         if (!searchStr.includes(q)) return false;
                     }
                     return true;
@@ -441,7 +487,9 @@
                 const pageItems = filteredMaterials.slice(startIdx, endIdx);
 
                 if (total === 0) {
-                    $('#tableBody').html('<tr><td colspan="9" class="text-center py-5 text-muted">Tidak ada data material yang sesuai.</td></tr>');
+                    $('#tableBody').html(
+                        '<tr><td colspan="9" class="text-center py-5 text-muted">Tidak ada data material yang sesuai.</td></tr>'
+                        );
                     $('#paginationInfo').text('Menampilkan 0 data');
                     $('#paginationList').empty();
                     return;
@@ -450,13 +498,13 @@
                 let html = '';
                 pageItems.forEach((item, idx) => {
                     const no = startIdx + idx + 1;
-                    const priceBadge = item.harga > 0 
-                        ? `<span class="fw-bold text-success">${item.harga_fmt}</span>`
-                        : `<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Rp 0 (Belum diisi)</span>`;
-                    
-                    const midBadge = item.mid && item.mid !== '-' 
-                        ? `<span class="badge bg-light text-dark font-monospace border">${item.mid}</span>`
-                        : `<span class="text-muted">—</span>`;
+                    const priceBadge = item.harga > 0 ?
+                        `<span class="fw-bold text-success">${item.harga_fmt}</span>` :
+                        `<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Rp 0 (Belum diisi)</span>`;
+
+                    const midBadge = item.mid && item.mid !== '-' ?
+                        `<span class="badge bg-light text-dark font-monospace border">${item.mid}</span>` :
+                        `<span class="text-muted">—</span>`;
 
                     html += `
                         <tr>
@@ -526,7 +574,9 @@
                     dataType: 'json',
                     delay: 250,
                     data: function(params) {
-                        return { q: params.term };
+                        return {
+                            q: params.term
+                        };
                     },
                     processResults: function(response) {
                         return {
@@ -585,7 +635,7 @@
                 $('#inputHarga').val(item.harga);
                 $('#inputKategori').val(item.kategori !== '-' ? item.kategori : '');
                 $('#inputKeterangan').val(item.keterangan !== '-' ? item.keterangan : '');
-                
+
                 $('#selectMid').val(null).trigger('change');
                 $('#modalMaterialTitle').text('Edit Material: ' + item.deskripsi);
                 $('#modalMaterial').modal('show');
@@ -596,16 +646,19 @@
                 e.preventDefault();
                 const id = $('#materialId').val();
                 const isEdit = Boolean(id);
-                const url = isEdit ? `{{ url('mtc/master/material/update') }}/${id}` : "{{ route('master.mtc.material.store') }}";
+                const url = isEdit ? `{{ url('mtc/master/material/update') }}/${id}` :
+                    "{{ route('master.mtc.material.store') }}";
 
-                $('#btnSaveMaterial').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
+                $('#btnSaveMaterial').prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
 
                 $.ajax({
                     url: url,
                     type: "POST",
                     data: $(this).serialize(),
                     success: function(res) {
-                        $('#btnSaveMaterial').prop('disabled', false).html('<i class="ri-save-line me-1"></i> Simpan Data');
+                        $('#btnSaveMaterial').prop('disabled', false).html(
+                            '<i class="ri-save-line me-1"></i> Simpan Data');
                         if (res.status) {
                             $('#modalMaterial').modal('hide');
                             Swal.fire({
@@ -621,8 +674,10 @@
                         }
                     },
                     error: function(xhr) {
-                        $('#btnSaveMaterial').prop('disabled', false).html('<i class="ri-save-line me-1"></i> Simpan Data');
-                        const msg = xhr.responseJSON?.message || 'Terjadi kesalahan saat menyimpan data.';
+                        $('#btnSaveMaterial').prop('disabled', false).html(
+                            '<i class="ri-save-line me-1"></i> Simpan Data');
+                        const msg = xhr.responseJSON?.message ||
+                            'Terjadi kesalahan saat menyimpan data.';
                         Swal.fire('Error', msg, 'error');
                     }
                 });
@@ -647,7 +702,9 @@
                         $.ajax({
                             url: `{{ url('mtc/master/material/delete') }}/${id}`,
                             type: "DELETE",
-                            data: { _token: "{{ csrf_token() }}" },
+                            data: {
+                                _token: "{{ csrf_token() }}"
+                            },
                             success: function(res) {
                                 if (res.status) {
                                     Swal.fire({
@@ -663,7 +720,8 @@
                                 }
                             },
                             error: function() {
-                                Swal.fire('Error', 'Gagal menghapus material.', 'error');
+                                Swal.fire('Error', 'Gagal menghapus material.',
+                                'error');
                             }
                         });
                     }
@@ -675,7 +733,8 @@
                 e.preventDefault();
                 const formData = new FormData(this);
 
-                $('#btnSubmitImport').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Mengimpor data...');
+                $('#btnSubmitImport').prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-1"></span> Mengimpor data...');
 
                 $.ajax({
                     url: "{{ route('master.mtc.material.uploadExcel') }}",
@@ -684,7 +743,9 @@
                     processData: false,
                     contentType: false,
                     success: function(res) {
-                        $('#btnSubmitImport').prop('disabled', false).html('<i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses');
+                        $('#btnSubmitImport').prop('disabled', false).html(
+                            '<i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses'
+                            );
                         if (res.status) {
                             $('#modalImportExcel').modal('hide');
                             $('#formImportExcel')[0].reset();
@@ -699,8 +760,11 @@
                         }
                     },
                     error: function(xhr) {
-                        $('#btnSubmitImport').prop('disabled', false).html('<i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses');
-                        const msg = xhr.responseJSON?.message || 'Terjadi kesalahan saat mengunggah file.';
+                        $('#btnSubmitImport').prop('disabled', false).html(
+                            '<i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses'
+                            );
+                        const msg = xhr.responseJSON?.message ||
+                            'Terjadi kesalahan saat mengunggah file.';
                         Swal.fire('Error', msg, 'error');
                     }
                 });
@@ -721,13 +785,17 @@
                             title: 'Sinkronisasi...',
                             text: 'Sedang mengambil data barang dari Warehouse...',
                             allowOutsideClick: false,
-                            didOpen: () => { Swal.showLoading(); }
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
                         });
 
                         $.ajax({
                             url: "{{ route('master.mtc.material.syncWarehouse') }}",
                             type: "POST",
-                            data: { _token: "{{ csrf_token() }}" },
+                            data: {
+                                _token: "{{ csrf_token() }}"
+                            },
                             success: function(res) {
                                 if (res.status) {
                                     Swal.fire('Sukses', res.message, 'success');
@@ -737,7 +805,8 @@
                                 }
                             },
                             error: function(xhr) {
-                                const msg = xhr.responseJSON?.message || 'Gagal sinkronisasi data Warehouse.';
+                                const msg = xhr.responseJSON?.message ||
+                                    'Gagal sinkronisasi data Warehouse.';
                                 Swal.fire('Error', msg, 'error');
                             }
                         });
