@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
 use App\Http\Requests\Maintenance\MtcMainRequest;
 use App\Http\Requests\Maintenance\MtcSipilRequest;
+use App\Models\Maintenance\MtcMasterMaterialModel;
 use App\Models\Maintenance\MtcApprovalModel;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
 use App\Models\Maintenance\MtcPenggantianMaterialModel;
@@ -57,23 +58,31 @@ class MtcSipilController extends Controller
             ]);
 
             foreach ($materials->materials ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid' => $item['mid'] ?? null,
-                    'deskripsi' => $item['desc'] ?? null,
+                    'deskripsi' => $item['desc'] ?? ($item['deskripsi'] ?? null),
                     'qty' => $item['qty'] ?? 0,
-                    'uom' => $item['uom'] ?? null,
+                    'uom' => $uom,
                     'created_by' => $userId,
                 ]);
             }
 
             foreach ($replacements->replacements ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
                 MtcPenggantianMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid' => $item['mid'] ?? null,
-                    'deskripsi' => $item['desc'] ?? null,
+                    'deskripsi' => $item['desc'] ?? ($item['deskripsi'] ?? null),
                     'qty' => $item['qty'] ?? 0,
-                    'uom' => $item['uom'] ?? null,
+                    'uom' => $uom,
                     'created_by' => $userId,
                 ]);
             }
@@ -215,6 +224,10 @@ class MtcSipilController extends Controller
             $incomingIds = [];
 
             foreach ($materials['materials'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
 
                 if (! empty($item['id'])) {
 
@@ -223,9 +236,9 @@ class MtcSipilController extends Controller
                     MtcKebutuhanMaterialModel::where('id', $item['id'])
                         ->update([
                             'mid' => $item['mid'] ?? null,
-                            'deskripsi' => $item['deskripsi'] ?? null,
+                            'deskripsi' => $item['deskripsi'] ?? ($item['desc'] ?? null),
                             'qty' => $item['qty'] ?? 0,
-                            'uom' => $item['uom'] ?? null,
+                            'uom' => $uom,
                             'updated_by' => $userId,
                         ]);
                 } else {
@@ -233,9 +246,9 @@ class MtcSipilController extends Controller
                     $new = MtcKebutuhanMaterialModel::create([
                         'mtc_main_id' => $main->id,
                         'mid' => $item['mid'] ?? null,
-                        'deskripsi' => $item['deskripsi'] ?? null,
+                        'deskripsi' => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty' => $item['qty'] ?? 0,
-                        'uom' => $item['uom'] ?? null,
+                        'uom' => $uom,
                         'created_by' => $userId,
                     ]);
 
@@ -253,6 +266,10 @@ class MtcSipilController extends Controller
             $incomingReplIds = [];
 
             foreach ($replacements['replacements'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
 
                 if (! empty($item['id'])) {
 
@@ -261,9 +278,9 @@ class MtcSipilController extends Controller
                     MtcPenggantianMaterialModel::where('id', $item['id'])
                         ->update([
                             'mid' => $item['mid'] ?? null,
-                            'deskripsi' => $item['deskripsi'] ?? null,
+                            'deskripsi' => $item['deskripsi'] ?? ($item['desc'] ?? null),
                             'qty' => $item['qty'] ?? 0,
-                            'uom' => $item['uom'] ?? null,
+                            'uom' => $uom,
                             'updated_by' => $userId,
                         ]);
                 } else {
@@ -271,9 +288,9 @@ class MtcSipilController extends Controller
                     $new = MtcPenggantianMaterialModel::create([
                         'mtc_main_id' => $main->id,
                         'mid' => $item['mid'] ?? null,
-                        'deskripsi' => $item['deskripsi'] ?? null,
+                        'deskripsi' => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty' => $item['qty'] ?? 0,
-                        'uom' => $item['uom'] ?? null,
+                        'uom' => $uom,
                         'created_by' => $userId,
                     ]);
 

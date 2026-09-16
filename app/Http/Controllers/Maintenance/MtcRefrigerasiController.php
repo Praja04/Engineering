@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Maintenance\MtcMasterMaterialModel;
 use App\Models\Maintenance\MtcMainModel;
 use App\Models\Maintenance\MtcApprovalModel;
 use App\Models\Maintenance\MtcMasterMesinModel;
@@ -82,21 +83,31 @@ class MtcRefrigerasiController extends Controller
             ]);
 
             foreach ($materials->materials ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid'         => $item['mid'] ?? null,
-                    'deskripsi'   => $item['desc'] ?? null,
+                    'deskripsi'   => $item['desc'] ?? ($item['deskripsi'] ?? null),
                     'qty'         => $item['qty'] ?? 0,
+                    'uom'         => $uom,
                     'created_by'  => $userId,
                 ]);
             }
 
             foreach ($replacements->replacements ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
                 MtcPenggantianMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid'         => $item['mid'] ?? null,
-                    'deskripsi'   => $item['desc'] ?? null,
+                    'deskripsi'   => $item['desc'] ?? ($item['deskripsi'] ?? null),
                     'qty'         => $item['qty'] ?? 0,
+                    'uom'         => $uom,
                     'created_by'  => $userId,
                 ]);
             }
@@ -166,7 +177,7 @@ class MtcRefrigerasiController extends Controller
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data MTC Refrigerasi berhasil disimpan',
+            'message' => 'Data Mtc Refrigerasi berhasil disimpan',
         ], 201);
     }
 
@@ -182,27 +193,27 @@ class MtcRefrigerasiController extends Controller
                 'penggantianMaterial',
             ]);
 
-        // filter tanggal
+        // 🔍 filter tanggal
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
         }
 
-        // filter paket
+        // 🔍 filter paket
         if ($request->filled('paket')) {
             $query->where('paket', $request->paket);
         }
 
-        // filter nama mesin
+        // 🔍 filter nama mesin
         if ($request->filled('nama_mesin')) {
             $query->whereHas('refrigerasi.mesin', function ($q) use ($request) {
                 $q->where('nama_mesin', 'like', '%' . $request->nama_mesin . '%');
             });
         }
 
-        // 🔥 total data
+        // 🔥 total setelah filter
         $total = $query->count();
 
-        // 🔥 pagination (inti solusi)
+        // 🔥 ambil data sesuai DataTables
         $data = $query
             ->orderBy('tanggal', 'desc')
             ->skip($request->start)
@@ -242,22 +253,28 @@ class MtcRefrigerasiController extends Controller
             $incomingIds = [];
 
             foreach ($materials['materials'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
 
                 if (!empty($item['id'])) {
                     $incomingIds[] = $item['id'];
 
                     MtcKebutuhanMaterialModel::where('id', $item['id'])->update([
                         'mid'        => $item['mid'] ?? null,
-                        'deskripsi'  => $item['deskripsi'] ?? null,
+                        'deskripsi'  => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty'        => $item['qty'] ?? 0,
+                        'uom'        => $uom,
                         'updated_by' => $userId,
                     ]);
                 } else {
                     $new = MtcKebutuhanMaterialModel::create([
                         'mtc_main_id' => $main->id,
                         'mid'         => $item['mid'] ?? null,
-                        'deskripsi'   => $item['deskripsi'] ?? null,
+                        'deskripsi'   => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty'         => $item['qty'] ?? 0,
+                        'uom'         => $uom,
                         'created_by'  => $userId,
                     ]);
 
@@ -275,22 +292,28 @@ class MtcRefrigerasiController extends Controller
             $incomingReplIds = [];
 
             foreach ($replacements['replacements'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
 
                 if (!empty($item['id'])) {
                     $incomingReplIds[] = $item['id'];
 
                     MtcPenggantianMaterialModel::where('id', $item['id'])->update([
                         'mid'        => $item['mid'] ?? null,
-                        'deskripsi'  => $item['deskripsi'] ?? null,
+                        'deskripsi'  => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty'        => $item['qty'] ?? 0,
+                        'uom'        => $uom,
                         'updated_by' => $userId,
                     ]);
                 } else {
                     $new = MtcPenggantianMaterialModel::create([
                         'mtc_main_id' => $main->id,
                         'mid'         => $item['mid'] ?? null,
-                        'deskripsi'   => $item['deskripsi'] ?? null,
+                        'deskripsi'   => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty'         => $item['qty'] ?? 0,
+                        'uom'         => $uom,
                         'created_by'  => $userId,
                     ]);
 

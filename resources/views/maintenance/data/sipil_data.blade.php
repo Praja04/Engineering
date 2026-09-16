@@ -464,8 +464,8 @@
                        ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                                                                                                                        <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                                                                                    `).join('')
+                                    <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -474,8 +474,8 @@
                        ${
                                 row.penggantian_material && row.penggantian_material.length
                                 ? row.penggantian_material.map(m => `
-                                                                                                                                        <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                                                                                    `).join('')
+                                    <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                `).join('')
                                 : '<div>-</div>'
                             }
                         </div>

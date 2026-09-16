@@ -160,6 +160,7 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('/agenda', [MtcAgendaController::class, 'index'])->name('agenda.index');
             Route::get('/agenda/master/data', [MtcAgendaController::class, 'getMasterData'])->name('agenda.master.data');
+            Route::get('/agenda/download-template', [MtcAgendaController::class, 'downloadTemplate'])->name('agenda.download-template');
             Route::post('/agenda/upload', [MtcAgendaController::class, 'upload'])->name('agenda.upload');
             Route::post('/agenda/master/save-single', [MtcAgendaController::class, 'saveSingle'])->name('agenda.master.save-single');
             Route::post('/agenda/master/clear-machine', [MtcAgendaController::class, 'clearMachine'])->name('agenda.master.clear-machine');

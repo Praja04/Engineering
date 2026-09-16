@@ -7,6 +7,7 @@ use App\Models\NotificationsModel;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Maintenance\MtcMasterMaterialModel;
 use App\Models\Maintenance\MtcMainModel;
 use App\Models\Maintenance\MtcApprovalModel;
 use App\Models\Maintenance\MtcMasterMesinModel;
@@ -59,21 +60,31 @@ class MtcUtilityController extends Controller
             ]);
 
             foreach ($materials->materials ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid'        => $item['mid'] ?? null,
-                    'deskripsi'  => $item['desc'] ?? null,
+                    'deskripsi'  => $item['desc'] ?? ($item['deskripsi'] ?? null),
                     'qty'        => $item['qty'] ?? 0,
+                    'uom'        => $uom,
                     'created_by' => $userId,
                 ]);
             }
 
             foreach ($replacements->replacements ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
                 MtcPenggantianMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid'        => $item['mid'] ?? null,
-                    'deskripsi'  => $item['desc'] ?? null,
+                    'deskripsi'  => $item['desc'] ?? ($item['deskripsi'] ?? null),
                     'qty'        => $item['qty'] ?? 0,
+                    'uom'        => $uom,
                     'created_by' => $userId,
                 ]);
             }
@@ -99,24 +110,10 @@ class MtcUtilityController extends Controller
                 ],
             ];
 
-            // $ttdPath = null;
-
-
-            $ttdPaths = [
-                'teknisi' => 'mtc/ttd/ttd_teknisi.jpeg',  // TTD operator/teknisi
-                'staff'   => 'mtc/ttd/ttd_staff.jpeg',     // TTD supervisor
-                'user'    => 'mtc/ttd/ttd_user.jpeg',      // TTD user MT/MTC
-            ];
-
-
-
-
             $notificationSent = false;
             foreach ($approvalFlows as $flow) {
-                $isAutoApproved = $flow['auto'];
 
-                // Ambil ttd sesuai role
-                $ttdPath = $isAutoApproved ? ($ttdPaths[$flow['role']] ?? null) : null;
+                $isAutoApproved = $flow['auto'];
 
                 MtcApprovalModel::create([
                     'mtc_main_id' => $main->id,
@@ -124,7 +121,6 @@ class MtcUtilityController extends Controller
                     'role'        => $flow['role'],
                     'approver_id' => $flow['approver_id'],
                     'status'      => $isAutoApproved ? 'approved' : 'pending',
-                    'ttd'         => $ttdPath,
                     'action_at'   => $isAutoApproved ? now() : null,
                     'action_by'   => $isAutoApproved ? $userId : null,
                 ]);
@@ -135,11 +131,10 @@ class MtcUtilityController extends Controller
                         'notifiable_type' => MtcMainModel::class,
                         'notifiable_id'   => $main->id,
                         'title'           => 'Approval Maintenance',
-                        'message'         => 'Maintenance Utility tanggal '.date('d F Y', strtotime($main->tanggal)).' menunggu persetujuan Anda',
+                        'message'         => 'Maintenance Utility tanggal ' . date('d F Y', strtotime($main->tanggal)) . ' menunggu persetujuan Anda',
                         'url'             => route('mtc.approval.index'),
                         'is_read'         => false,
                     ]);
-
                     $notificationSent = true;
                 }
             }
@@ -147,7 +142,7 @@ class MtcUtilityController extends Controller
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data MTC Utility & Kebutuhan Material berhasil disimpan',
+            'message' => 'Data Mtc Utility berhasil disimpan',
         ], 201);
     }
 
@@ -179,7 +174,7 @@ class MtcUtilityController extends Controller
             });
         }
 
-        // 🔥 total sebelum pagination
+        // 🔥 total setelah filter
         $total = $query->count();
 
         // 🔥 ambil data sesuai DataTables
@@ -223,6 +218,10 @@ class MtcUtilityController extends Controller
             $incomingIds = [];
 
             foreach ($materials['materials'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
 
                 if (!empty($item['id'])) {
 
@@ -231,8 +230,9 @@ class MtcUtilityController extends Controller
                     MtcKebutuhanMaterialModel::where('id', $item['id'])
                         ->update([
                             'mid'        => $item['mid'] ?? null,
-                            'deskripsi'  => $item['deskripsi'] ?? null,
+                            'deskripsi'  => $item['deskripsi'] ?? ($item['desc'] ?? null),
                             'qty'        => $item['qty'] ?? 0,
+                            'uom'        => $uom,
                             'updated_by' => $userId,
                         ]);
                 } else {
@@ -240,8 +240,9 @@ class MtcUtilityController extends Controller
                     $new = MtcKebutuhanMaterialModel::create([
                         'mtc_main_id'       => $main->id,
                         'mid'               => $item['mid'] ?? null,
-                        'deskripsi'         => $item['deskripsi'] ?? null,
+                        'deskripsi'         => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty'               => $item['qty'] ?? 0,
+                        'uom'               => $uom,
                         'created_by'        => $userId,
                     ]);
 
@@ -249,6 +250,7 @@ class MtcUtilityController extends Controller
                 }
             }
 
+            // DELETE material yg dihapus
             $toDelete = array_diff($existingIds, $incomingIds);
             if ($toDelete) {
                 MtcKebutuhanMaterialModel::whereIn('id', $toDelete)->delete();
@@ -258,6 +260,10 @@ class MtcUtilityController extends Controller
             $incomingReplIds = [];
 
             foreach ($replacements['replacements'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
 
                 if (!empty($item['id'])) {
 
@@ -266,8 +272,9 @@ class MtcUtilityController extends Controller
                     MtcPenggantianMaterialModel::where('id', $item['id'])
                         ->update([
                             'mid'        => $item['mid'] ?? null,
-                            'deskripsi'  => $item['deskripsi'] ?? null,
+                            'deskripsi'  => $item['deskripsi'] ?? ($item['desc'] ?? null),
                             'qty'        => $item['qty'] ?? 0,
+                            'uom'        => $uom,
                             'updated_by' => $userId,
                         ]);
                 } else {
@@ -275,8 +282,9 @@ class MtcUtilityController extends Controller
                     $new = MtcPenggantianMaterialModel::create([
                         'mtc_main_id'       => $main->id,
                         'mid'               => $item['mid'] ?? null,
-                        'deskripsi'         => $item['deskripsi'] ?? null,
+                        'deskripsi'         => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty'               => $item['qty'] ?? 0,
+                        'uom'               => $uom,
                         'created_by'        => $userId,
                     ]);
 

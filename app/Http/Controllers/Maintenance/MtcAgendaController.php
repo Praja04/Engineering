@@ -162,96 +162,118 @@ class MtcAgendaController extends Controller
     }
 
     /**
-     * Update or delete individual weekly packages for a specific machine-month-year
+     * Update or delete individual weekly/date packages for specific machine(s)-month-year
      */
     public function saveSingle(Request $request)
     {
         $request->validate([
-            'mesin_id' => 'required|exists:mtc_master_mesin,id',
-            'tahun' => 'required|integer',
-            'bulan' => 'required|integer|between:1,12',
-            'weeks' => 'nullable|array',
-            'dates' => 'nullable|array',
+            'mesin_id'      => 'nullable',
+            'mesin_ids'     => 'nullable|array',
+            'tahun'         => 'required|integer',
+            'bulan'         => 'required|integer|between:1,12',
+            'weeks'         => 'nullable|array',
+            'dates'         => 'nullable|array',
             'date_packages' => 'nullable|array',
         ]);
 
-        $mesinId = $request->mesin_id;
         $tahun = (int) $request->tahun;
         $bulan = (int) $request->bulan;
 
-        $mesin = MtcMasterMesinModel::findOrFail($mesinId);
-        $isDateBased = in_array($mesin->jenis_mtc, ['Electric Engine', 'Diesel Engine']);
+        // Collect machine IDs (support both array mesin_ids and single mesin_id)
+        $mesinIds = $request->input('mesin_ids', []);
+        if (empty($mesinIds) && $request->filled('mesin_id')) {
+            $mesinIds = [$request->input('mesin_id')];
+        }
+
+        if (empty($mesinIds)) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Pilih minimal satu mesin.'
+            ], 422);
+        }
+
+        $userId = Auth::id();
+        $updatedCount = 0;
 
         DB::beginTransaction();
         try {
-            if ($isDateBased) {
-                // Delete existing records for this machine, year, month
-                MtcAgendaModel::where([
-                    'mesin_id' => $mesinId,
-                    'tahun' => $tahun,
-                    'bulan' => $bulan
-                ])->delete();
+            foreach ($mesinIds as $mId) {
+                $mesin = MtcMasterMesinModel::find($mId);
+                if (!$mesin) continue;
 
-                $dates = $request->get('dates', []);
-                $packages = $request->get('date_packages', []);
+                $isDateBased = in_array($mesin->jenis_mtc, ['Electric Engine', 'Diesel Engine']);
 
-                foreach ($dates as $idx => $dateStr) {
-                    if (empty($dateStr)) continue;
-                    $paket = isset($packages[$idx]) ? trim($packages[$idx]) : '';
-                    if (empty($paket) || $paket === 'none') continue;
+                if ($isDateBased) {
+                    // Delete existing records for this machine, year, month
+                    MtcAgendaModel::where([
+                        'mesin_id' => $mId,
+                        'tahun'    => $tahun,
+                        'bulan'    => $bulan
+                    ])->delete();
 
-                    MtcAgendaModel::create([
-                        'mesin_id' => $mesinId,
-                        'tahun' => $tahun,
-                        'bulan' => $bulan,
-                        'minggu_ke' => null, // NULL for date-based
-                        'tanggal' => $dateStr,
-                        'paket' => strtoupper($paket),
-                        'created_by' => Auth::id(),
-                        'updated_by' => Auth::id(),
-                    ]);
-                }
-            } else {
-                $weeks = $request->get('weeks', []); // array of week_num => paket
-                for ($weekNum = 1; $weekNum <= 5; $weekNum++) {
-                    $paket = isset($weeks[$weekNum]) ? trim($weeks[$weekNum]) : '';
+                    $dates = $request->get('dates', []);
+                    $packages = $request->get('date_packages', []);
 
-                    if (empty($paket) || $paket === 'none') {
-                        // Delete if exists
-                        MtcAgendaModel::where([
-                            'mesin_id' => $mesinId,
-                            'tahun' => $tahun,
-                            'bulan' => $bulan,
-                            'minggu_ke' => $weekNum
-                        ])->delete();
-                    } else {
-                        // Update or create
-                        MtcAgendaModel::updateOrCreate(
-                            [
-                                'mesin_id' => $mesinId,
-                                'tahun' => $tahun,
-                                'bulan' => $bulan,
+                    foreach ($dates as $idx => $dateStr) {
+                        if (empty($dateStr)) continue;
+                        $paket = isset($packages[$idx]) ? trim($packages[$idx]) : '';
+                        if (empty($paket) || $paket === 'none') continue;
+
+                        MtcAgendaModel::create([
+                            'mesin_id'   => $mId,
+                            'tahun'      => $tahun,
+                            'bulan'      => $bulan,
+                            'minggu_ke'  => null, // NULL for date-based
+                            'tanggal'    => $dateStr,
+                            'paket'      => strtoupper($paket),
+                            'created_by' => $userId,
+                            'updated_by' => $userId,
+                        ]);
+                    }
+                } else {
+                    $weeks = $request->get('weeks', []); // array of week_num => paket
+                    for ($weekNum = 1; $weekNum <= 5; $weekNum++) {
+                        $paket = isset($weeks[$weekNum]) ? trim($weeks[$weekNum]) : '';
+
+                        if (empty($paket) || $paket === 'none') {
+                            MtcAgendaModel::where([
+                                'mesin_id'  => $mId,
+                                'tahun'     => $tahun,
+                                'bulan'     => $bulan,
                                 'minggu_ke' => $weekNum
-                            ],
-                            [
-                                'paket' => strtoupper($paket),
-                                'tanggal' => null, // NULL for week-based
-                                'updated_by' => Auth::id()
-                            ]
-                        );
+                            ])->delete();
+                        } else {
+                            MtcAgendaModel::updateOrCreate(
+                                [
+                                    'mesin_id'  => $mId,
+                                    'tahun'     => $tahun,
+                                    'bulan'     => $bulan,
+                                    'minggu_ke' => $weekNum
+                                ],
+                                [
+                                    'paket'      => strtoupper($paket),
+                                    'tanggal'    => null, // NULL for week-based
+                                    'updated_by' => $userId
+                                ]
+                            );
+                        }
                     }
                 }
+                $updatedCount++;
             }
+
             DB::commit();
 
             return response()->json([
-                'status' => true,
-                'message' => 'Agenda berhasil diperbarui.'
+                'status'  => true,
+                'message' => $updatedCount > 1 
+                    ? "Agenda berhasil disimpan untuk {$updatedCount} mesin."
+                    : 'Agenda berhasil diperbarui.'
             ]);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
@@ -861,37 +883,551 @@ class MtcAgendaController extends Controller
     }
 
     /**
-     * Upload & import Excel Agenda
+     * Download Excel template for Master Agenda
+     * Supports:
+     * - 'mhe' (Multi-sheet: Electric Engine, Diesel Engine; columns: No, Kode Mesin, Nama Mesin, Lokasi, Tanggal, Paket)
+     * - 'non_mhe' (Multi-sheet: Electrical, Motor Pompa, Refrigerasi, Sipil, Utility, etc.; columns: No, Kode Mesin, Nama Mesin, Lokasi, 12 Bulan x (Minggu, Paket))
+     */
+    public function downloadTemplate(Request $request)
+    {
+        $type = $request->get('type', 'non_mhe'); // 'mhe' or 'non_mhe'
+        $tahun = (int) $request->get('tahun', Carbon::today()->year);
+        $bulan = (int) $request->get('bulan', Carbon::today()->month);
+
+        $monthNamesId = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 10],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                'wrapText' => true
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '1E293B']
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => '94A3B8']
+                ]
+            ]
+        ];
+
+        $subHeaderStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => '0F172A'], 'size' => 9],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'E2E8F0']
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => 'CBD5E1']
+                ]
+            ]
+        ];
+
+        $dataBorder = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => 'E2E8F0']
+                ]
+            ]
+        ];
+
+        if ($type === 'mhe') {
+            $mheTypes = ['Electric Engine', 'Diesel Engine'];
+            $sheetIndex = 0;
+
+            foreach ($mheTypes as $mheJenis) {
+                if ($sheetIndex === 0) {
+                    $sheet = $spreadsheet->getActiveSheet();
+                } else {
+                    $sheet = $spreadsheet->createSheet();
+                }
+                $sheet->setTitle($mheJenis);
+
+                // Title Banner
+                $sheet->setCellValue('A1', 'TEMPLATE MASTER AGENDA MHE - ' . strtoupper($mheJenis) . ' (HARIAN / PER TANGGAL)');
+                $sheet->mergeCells('A1:F1');
+                $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(12);
+
+                $bulanNama = $monthNamesId[$bulan] ?? "Bulan {$bulan}";
+                $sheet->setCellValue('A2', "Periode: {$bulanNama} {$tahun} | Petunjuk: Masukkan tanggal (1-31, pisah koma jika > 1, misal: 5, 12, 19, 26) dan kode paket (misal: A, B, A, B).");
+                $sheet->mergeCells('A2:F2');
+                $sheet->getStyle('A2')->getFont()->setItalic(true)->setSize(9);
+
+                // Headers
+                $sheet->setCellValue('A4', 'No');
+                $sheet->setCellValue('B4', 'Kode Mesin');
+                $sheet->setCellValue('C4', 'Nama Mesin');
+                $sheet->setCellValue('D4', 'Lokasi');
+                $sheet->setCellValue('E4', "Tanggal ({$bulanNama})");
+                $sheet->setCellValue('F4', 'Paket');
+
+                $sheet->getStyle('A4:F4')->applyFromArray($headerStyle);
+                $sheet->getRowDimension(4)->setRowHeight(26);
+
+                // Fetch active machines
+                $machines = MtcMasterMesinModel::where('jenis_mtc', $mheJenis)
+                    ->where('aktif', true)
+                    ->orderBy('kode_mesin')
+                    ->get();
+
+                $rowIdx = 5;
+                if ($machines->isNotEmpty()) {
+                    foreach ($machines as $i => $m) {
+                        $sheet->setCellValue("A{$rowIdx}", $i + 1);
+                        $sheet->setCellValue("B{$rowIdx}", $m->kode_mesin);
+                        $sheet->setCellValue("C{$rowIdx}", $m->nama_mesin);
+                        $sheet->setCellValue("D{$rowIdx}", $m->lokasi);
+                        if ($i === 0) {
+                            $sheet->setCellValue("E{$rowIdx}", '5, 19');
+                            $sheet->setCellValue("F{$rowIdx}", 'A, B');
+                        }
+                        $sheet->getStyle("A{$rowIdx}:F{$rowIdx}")->applyFromArray($dataBorder);
+                        $sheet->getStyle("A{$rowIdx}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $rowIdx++;
+                    }
+                } else {
+                    $sheet->setCellValue('A5', '1');
+                    $sheet->setCellValue('B5', 'EE-01');
+                    $sheet->setCellValue('C5', "Contoh {$mheJenis} 01");
+                    $sheet->setCellValue('D5', 'Warehouse');
+                    $sheet->setCellValue('E5', '5, 19');
+                    $sheet->setCellValue('F5', 'A, B');
+                    $sheet->getStyle('A5:F5')->applyFromArray($dataBorder);
+                }
+
+                foreach (['A', 'B', 'C', 'D', 'E', 'F'] as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
+
+                $sheetIndex++;
+            }
+
+            $filename = "Template_Agenda_MHE_{$bulan}_{$tahun}.xlsx";
+        } else {
+            // Non-MHE Types
+            $nonMheTypes = MtcMasterMesinModel::whereNotIn('jenis_mtc', ['Electric Engine', 'Diesel Engine'])
+                ->where('aktif', true)
+                ->distinct()
+                ->orderBy('jenis_mtc')
+                ->pluck('jenis_mtc')
+                ->toArray();
+
+            if (empty($nonMheTypes)) {
+                $nonMheTypes = ['Electrical', 'Motor Pompa', 'Refrigerasi', 'Sipil', 'Utility'];
+            }
+
+            $sheetIndex = 0;
+            foreach ($nonMheTypes as $jenis) {
+                if ($sheetIndex === 0) {
+                    $sheet = $spreadsheet->getActiveSheet();
+                } else {
+                    $sheet = $spreadsheet->createSheet();
+                }
+                $sheet->setTitle(substr($jenis, 0, 31));
+
+                // Title
+                $sheet->setCellValue('A1', 'TEMPLATE MASTER AGENDA - ' . strtoupper($jenis) . ' (MINGGUAN / TAHUNAN)');
+                $sheet->mergeCells('A1:AB1');
+                $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(12);
+
+                $sheet->setCellValue('A2', "Tahun: {$tahun} | Petunjuk: Masukkan nomor minggu (1-5, pisah koma jika > 1, contoh: 1, 3) dan kode paket (contoh: A, B).");
+                $sheet->mergeCells('A2:AB2');
+                $sheet->getStyle('A2')->getFont()->setItalic(true)->setSize(9);
+
+                // Row 4: Main headers
+                $sheet->setCellValue('A4', 'No');
+                $sheet->mergeCells('A4:A5');
+                $sheet->setCellValue('B4', 'Kode Mesin');
+                $sheet->mergeCells('B4:B5');
+                $sheet->setCellValue('C4', 'Nama Mesin');
+                $sheet->mergeCells('C4:C5');
+                $sheet->setCellValue('D4', 'Lokasi');
+                $sheet->mergeCells('D4:D5');
+
+                $sheet->getStyle('A4:D5')->applyFromArray($headerStyle);
+
+                // Months 1 to 12
+                $colIdx = 5; // Column E
+                for ($m = 1; $m <= 12; $m++) {
+                    $col1 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
+                    $col2 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
+
+                    $monthName = strtoupper($monthNamesId[$m] ?? "BLN {$m}");
+                    $sheet->setCellValue("{$col1}4", $monthName);
+                    $sheet->mergeCells("{$col1}4:{$col2}4");
+                    $sheet->getStyle("{$col1}4:{$col2}4")->applyFromArray($headerStyle);
+
+                    $sheet->setCellValue("{$col1}5", 'Minggu');
+                    $sheet->setCellValue("{$col2}5", 'Paket');
+                    $sheet->getStyle("{$col1}5:{$col2}5")->applyFromArray($subHeaderStyle);
+
+                    $colIdx += 2;
+                }
+
+                $sheet->getRowDimension(4)->setRowHeight(22);
+                $sheet->getRowDimension(5)->setRowHeight(20);
+
+                // Machines for this jenis
+                $machines = MtcMasterMesinModel::where('jenis_mtc', $jenis)
+                    ->where('aktif', true)
+                    ->orderBy('kode_mesin')
+                    ->get();
+
+                $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx - 1);
+                $rowIdx = 6;
+                if ($machines->isNotEmpty()) {
+                    foreach ($machines as $i => $m) {
+                        $sheet->setCellValue("A{$rowIdx}", $i + 1);
+                        $sheet->setCellValue("B{$rowIdx}", $m->kode_mesin);
+                        $sheet->setCellValue("C{$rowIdx}", $m->nama_mesin);
+                        $sheet->setCellValue("D{$rowIdx}", $m->lokasi);
+
+                        if ($i === 0) {
+                            $sheet->setCellValue("E{$rowIdx}", '1, 3');
+                            $sheet->setCellValue("F{$rowIdx}", 'A, B');
+                        }
+
+                        $sheet->getStyle("A{$rowIdx}:{$lastColLetter}{$rowIdx}")->applyFromArray($dataBorder);
+                        $sheet->getStyle("A{$rowIdx}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                        $rowIdx++;
+                    }
+                } else {
+                    $sheet->setCellValue('A6', '1');
+                    $sheet->setCellValue('B6', 'MC-01');
+                    $sheet->setCellValue('C6', "Contoh {$jenis} 01");
+                    $sheet->setCellValue('D6', 'Area Produksi');
+                    $sheet->setCellValue('E6', '1');
+                    $sheet->setCellValue('F6', 'A');
+                    $sheet->getStyle("A6:{$lastColLetter}6")->applyFromArray($dataBorder);
+                }
+
+                for ($c = 1; $c < $colIdx; $c++) {
+                    $cLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
+                    $sheet->getColumnDimension($cLetter)->setAutoSize(true);
+                }
+
+                $sheetIndex++;
+            }
+
+            $filename = "Template_Agenda_Non_MHE_{$tahun}.xlsx";
+        }
+
+        $spreadsheet->setActiveSheetIndex(0);
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    /**
+     * Upload & import Excel Agenda with Multi-Sheet support for MHE and Non-MHE
      */
     public function upload(MtcAgendaUploadRequest $request)
     {
         $file = $request->file('file_excel');
         $tahun = (int) $request->tahun;
-        $jenisMtc = $request->jenis_mtc;
+        $kategori = $request->input('kategori'); // 'mhe' or 'non_mhe'
+        $bulan = $request->filled('bulan') ? (int) $request->bulan : null;
+        $userId = Auth::id();
 
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
-        $sheet = $spreadsheet->getActiveSheet();
-        $rows = $sheet->toArray(null, true, true, true);
+        $allSheets = $spreadsheet->getAllSheets();
 
+        // Get all distinct jenis_mtc in system for sheet matching
+        $registeredJenisList = MtcMasterMesinModel::distinct()->pluck('jenis_mtc')->toArray();
+
+        $processedSheets = [];
+        $totalMachinesUpdated = 0;
+        $allRowErrors = [];
+        $skippedSheets = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($allSheets as $sheet) {
+                $sheetTitle = trim($sheet->getTitle());
+
+                // Find matching jenis_mtc from registered master mesin
+                $matchedJenis = null;
+                foreach ($registeredJenisList as $regJenis) {
+                    if (strcasecmp(trim($regJenis), $sheetTitle) === 0) {
+                        $matchedJenis = $regJenis;
+                        break;
+                    }
+                }
+
+                // If not exact match, try matching known aliases
+                if (!$matchedJenis) {
+                    $sheetTitleLower = strtolower($sheetTitle);
+                    foreach ($registeredJenisList as $regJenis) {
+                        $regLower = strtolower($regJenis);
+                        if (str_contains($sheetTitleLower, $regLower) || str_contains($regLower, $sheetTitleLower)) {
+                            $matchedJenis = $regJenis;
+                            break;
+                        }
+                    }
+                }
+
+                // If still not matched, check if sheet is a special MHE sheet name
+                if (!$matchedJenis && $kategori === 'mhe') {
+                    if (str_contains(strtolower($sheetTitle), 'electric')) {
+                        $matchedJenis = 'Electric Engine';
+                    } elseif (str_contains(strtolower($sheetTitle), 'diesel')) {
+                        $matchedJenis = 'Diesel Engine';
+                    }
+                }
+
+                if (!$matchedJenis) {
+                    $skippedSheets[] = "Sheet '{$sheetTitle}' dilewati (tidak dikenali sebagai Jenis MTC).";
+                    continue;
+                }
+
+                $isMheJenis = in_array(strtolower($matchedJenis), ['electric engine', 'diesel engine']);
+
+                // Filter based on selected kategori
+                if ($kategori === 'mhe' && !$isMheJenis) {
+                    $skippedSheets[] = "Sheet '{$sheetTitle}' dilewati karena bukan kategori MHE.";
+                    continue;
+                }
+                if ($kategori === 'non_mhe' && $isMheJenis) {
+                    $skippedSheets[] = "Sheet '{$sheetTitle}' dilewati karena berformat MHE (per tanggal).";
+                    continue;
+                }
+
+                $rows = $sheet->toArray(null, true, true, true);
+                if (empty($rows)) {
+                    continue;
+                }
+
+                // Clear old data for machines of this jenis_mtc
+                $mesinIds = MtcMasterMesinModel::where('jenis_mtc', $matchedJenis)->pluck('id')->toArray();
+                if (!empty($mesinIds)) {
+                    if ($isMheJenis && $bulan) {
+                        MtcAgendaModel::whereIn('mesin_id', $mesinIds)
+                            ->where('tahun', $tahun)
+                            ->where('bulan', $bulan)
+                            ->delete();
+                    } else {
+                        MtcAgendaModel::whereIn('mesin_id', $mesinIds)
+                            ->where('tahun', $tahun)
+                            ->delete();
+                    }
+                }
+
+                $sheetInserted = 0;
+
+                if ($isMheJenis) {
+                    // ── MHE Date-Based Sheet Processing ──
+                    $mheResult = $this->processMheSheet($rows, $matchedJenis, $tahun, $bulan ?? 1, $userId, $sheetTitle);
+                    $sheetInserted = $mheResult['inserted'];
+                    if (!empty($mheResult['errors'])) {
+                        $allRowErrors = array_merge($allRowErrors, $mheResult['errors']);
+                    }
+                } else {
+                    // ── Non-MHE Week-Based Sheet Processing ──
+                    $nonMheResult = $this->processNonMheSheet($rows, $matchedJenis, $tahun, $userId, $sheetTitle);
+                    $sheetInserted = $nonMheResult['inserted'];
+                    if (!empty($nonMheResult['errors'])) {
+                        $allRowErrors = array_merge($allRowErrors, $nonMheResult['errors']);
+                    }
+                }
+
+                if ($sheetInserted > 0) {
+                    $processedSheets[$matchedJenis] = $sheetInserted;
+                    $totalMachinesUpdated += $sheetInserted;
+                }
+            }
+
+            if (!empty($allRowErrors)) {
+                throw new \Exception(implode("<br>", $allRowErrors));
+            }
+
+            if (empty($processedSheets)) {
+                $skipMsg = !empty($skippedSheets) ? '<br>' . implode('<br>', $skippedSheets) : '';
+                throw new \Exception("Tidak ada sheet yang cocok atau berisi data valid untuk diimport pada kategori " . strtoupper($kategori) . ". Pastikan nama sheet sesuai dengan Jenis MTC." . $skipMsg);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+
+        $summaryText = implode(', ', array_map(function ($k, $v) {
+            return "{$k}: {$v} mesin";
+        }, array_keys($processedSheets), $processedSheets));
+
+        return response()->json([
+            'status' => true,
+            'message' => "Berhasil mengimport Master Agenda untuk kategori " . strtoupper($kategori) . " ({$summaryText}).",
+            'total_inserted' => $totalMachinesUpdated,
+            'processed_sheets' => $processedSheets,
+            'warnings' => $skippedSheets
+        ]);
+    }
+
+    /**
+     * Helper to process MHE date-based sheet (per tanggal & paket for a specific month)
+     */
+    private function processMheSheet(array $rows, string $jenisMtc, int $tahun, int $bulan, $userId, string $sheetTitle): array
+    {
+        $inserted = 0;
+        $rowErrors = [];
+
+        // Scan rows 1-6 to detect header row
         $headerRowIdx = null;
-        // Indon/English month search names
+        $colMap = [
+            'nama_mesin' => 'C',
+            'kode_mesin' => 'B',
+            'tanggal'    => 'E',
+            'paket'      => 'F',
+        ];
+
+        for ($r = 1; $r <= 6; $r++) {
+            if (!isset($rows[$r])) continue;
+            $row = $rows[$r];
+
+            foreach ($row as $col => $val) {
+                if (empty($val)) continue;
+                $valLower = strtolower(trim((string)$val));
+
+                if (str_contains($valLower, 'kode') || str_contains($valLower, 'code')) {
+                    $colMap['kode_mesin'] = $col;
+                    $headerRowIdx = $r;
+                } elseif (str_contains($valLower, 'nama') || str_contains($valLower, 'mesin')) {
+                    $colMap['nama_mesin'] = $col;
+                    $headerRowIdx = $r;
+                } elseif (str_contains($valLower, 'tanggal') || str_contains($valLower, 'tgl') || str_contains($valLower, 'date')) {
+                    $colMap['tanggal'] = $col;
+                    $headerRowIdx = $r;
+                } elseif (str_contains($valLower, 'paket') || str_contains($valLower, 'package')) {
+                    $colMap['paket'] = $col;
+                    $headerRowIdx = $r;
+                }
+            }
+
+            if ($headerRowIdx !== null && isset($colMap['tanggal'])) {
+                break;
+            }
+        }
+
+        $dataStart = ($headerRowIdx ?? 4) + 1;
+
+        foreach ($rows as $rowNum => $row) {
+            if ($rowNum < $dataStart) continue;
+
+            $namaMesinVal = trim((string)($row[$colMap['nama_mesin']] ?? ''));
+            $kodeMesinVal = (!empty($colMap['kode_mesin']) && isset($row[$colMap['kode_mesin']])) ? trim((string)$row[$colMap['kode_mesin']]) : '';
+
+            if ($namaMesinVal === '' && $kodeMesinVal === '') {
+                continue;
+            }
+
+            $mesin = null;
+            if ($kodeMesinVal !== '') {
+                $mesin = MtcMasterMesinModel::where('kode_mesin', $kodeMesinVal)
+                    ->where('jenis_mtc', $jenisMtc)
+                    ->first();
+            }
+            if (!$mesin && $namaMesinVal !== '') {
+                $mesin = MtcMasterMesinModel::where('nama_mesin', $namaMesinVal)
+                    ->where('jenis_mtc', $jenisMtc)
+                    ->first();
+            }
+
+            if (!$mesin) {
+                $rowErrors[] = "Sheet '{$sheetTitle}' Baris {$rowNum}: Mesin '{$namaMesinVal}' ('{$kodeMesinVal}') tidak ditemukan di Jenis MTC '{$jenisMtc}'.";
+                continue;
+            }
+
+            $datesRaw = $row[$colMap['tanggal']] ?? '';
+            $packagesRaw = $row[$colMap['paket']] ?? '';
+
+            $parsedList = $this->parseDaysAndPackages($datesRaw, $packagesRaw, $tahun, $bulan);
+
+            if (!empty($parsedList)) {
+                $hasSchedule = false;
+                foreach ($parsedList as $parsed) {
+                    try {
+                        MtcAgendaModel::create([
+                            'mesin_id'   => $mesin->id,
+                            'tahun'      => $tahun,
+                            'bulan'      => $bulan,
+                            'minggu_ke'  => null,
+                            'tanggal'    => $parsed['tanggal'],
+                            'paket'      => $parsed['paket'],
+                            'created_by' => $userId,
+                        ]);
+                        $hasSchedule = true;
+                    } catch (\Illuminate\Database\QueryException $ex) {
+                        if ($ex->getCode() == 23000) {
+                            $rowErrors[] = "Sheet '{$sheetTitle}' Baris {$rowNum}: Jadwal ganda terdeteksi untuk Mesin '{$mesin->nama_mesin}' pada Tanggal {$parsed['tanggal']}.";
+                        } else {
+                            $rowErrors[] = "Sheet '{$sheetTitle}' Baris {$rowNum}: Database error pada Tanggal {$parsed['tanggal']} - " . $ex->getMessage();
+                        }
+                    }
+                }
+                if ($hasSchedule) {
+                    $inserted++;
+                }
+            }
+        }
+
+        return [
+            'inserted' => $inserted,
+            'errors'   => $rowErrors
+        ];
+    }
+
+    /**
+     * Helper to process Non-MHE week-based sheet (12 months x weeks & packages)
+     */
+    private function processNonMheSheet(array $rows, string $jenisMtc, int $tahun, $userId, string $sheetTitle): array
+    {
+        $inserted = 0;
+        $rowErrors = [];
+
         $monthNames = [
-            1 => ['jan', 'januari', 'january'],
-            2 => ['feb', 'februari', 'february'],
-            3 => ['mar', 'maret', 'march'],
-            4 => ['apr', 'april'],
-            5 => ['mei', 'may'],
-            6 => ['jun', 'juni', 'june'],
-            7 => ['jul', 'juli', 'july'],
-            8 => ['agt', 'agustus', 'august', 'agu'],
-            9 => ['sep', 'september'],
+            1  => ['jan', 'januari', 'january'],
+            2  => ['feb', 'februari', 'february'],
+            3  => ['mar', 'maret', 'march'],
+            4  => ['apr', 'april'],
+            5  => ['mei', 'may'],
+            6  => ['jun', 'juni', 'june'],
+            7  => ['jul', 'juli', 'july'],
+            8  => ['agt', 'agustus', 'august', 'agu'],
+            9  => ['sep', 'september'],
             10 => ['okt', 'oktober', 'october', 'okt'],
             11 => ['nov', 'november'],
             12 => ['des', 'desember', 'december', 'dec']
         ];
 
-        // Scan rows 1-5 to detect headers and column letters
-        for ($r = 1; $r <= 5; $r++) {
+        // Scan rows 1-6 to detect month header row
+        $headerRowIdx = null;
+        for ($r = 1; $r <= 6; $r++) {
             if (!isset($rows[$r])) continue;
             $row = $rows[$r];
 
@@ -900,7 +1436,6 @@ class MtcAgendaController extends Controller
                 if (empty($cellVal)) continue;
                 $valLower = strtolower(trim((string)$cellVal));
 
-                // Check if this cell matches any month
                 foreach ($monthNames as $mNum => $mAliases) {
                     if (in_array($valLower, $mAliases, true)) {
                         $foundMonthsCount++;
@@ -916,177 +1451,141 @@ class MtcAgendaController extends Controller
         }
 
         if ($headerRowIdx === null) {
-            $headerRowIdx = 2;
+            $headerRowIdx = 4;
         }
 
-        // Set explicit mappings based on Jenis MTC
+        // Set column mapping
         $colMap = [
-            'nama_mesin' => 'A',
+            'nama_mesin' => 'C',
             'kode_mesin' => 'B',
-            'months' => []
+            'months'     => []
         ];
 
-        $jenisMtcLower = strtolower($jenisMtc);
-        if (str_contains($jenisMtcLower, 'refrigerasi')) {
-            $colMap['nama_mesin'] = 'A';
-            $colMap['kode_mesin'] = 'B';
-            $startColIdx = 6; // Column F
-        } elseif (str_contains($jenisMtcLower, 'electrical') || str_contains($jenisMtcLower, 'listrik')) {
-            $colMap['nama_mesin'] = 'A';
-            $colMap['kode_mesin'] = null; // No Kode Mesin
-            $startColIdx = 4; // Column D
-        } else {
-            // Default: Utility, Motor Pompa, dll.
-            $colMap['nama_mesin'] = 'A';
-            $colMap['kode_mesin'] = 'B';
-            $startColIdx = 5; // Column E
+        // Detect nama & kode mesin from header rows
+        for ($r = 1; $r <= $headerRowIdx + 1; $r++) {
+            if (!isset($rows[$r])) continue;
+            foreach ($rows[$r] as $col => $val) {
+                $valLower = strtolower(trim((string)$val));
+                if (str_contains($valLower, 'kode') || str_contains($valLower, 'code')) {
+                    $colMap['kode_mesin'] = $col;
+                } elseif (str_contains($valLower, 'nama') || str_contains($valLower, 'mesin')) {
+                    $colMap['nama_mesin'] = $col;
+                }
+            }
         }
 
-        for ($m = 1; $m <= 12; $m++) {
-            $weekColIdx = $startColIdx + ($m - 1) * 2;
-            $paketColIdx = $weekColIdx + 1;
+        // Search for Month columns dynamically
+        $headerRow = $rows[$headerRowIdx] ?? [];
+        $monthColIndices = [];
+        foreach ($headerRow as $colLetter => $cellVal) {
+            if (empty($cellVal)) continue;
+            $valLower = strtolower(trim((string)$cellVal));
+            foreach ($monthNames as $mNum => $mAliases) {
+                if (in_array($valLower, $mAliases, true)) {
+                    $colIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLetter);
+                    $monthColIndices[$mNum] = $colIdx;
+                    break;
+                }
+            }
+        }
 
-            $colMap['months'][$m] = [
-                'week_col'  => \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($weekColIdx),
-                'paket_col' => \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($paketColIdx),
-            ];
+        // If month columns detected dynamically
+        if (count($monthColIndices) >= 6) {
+            for ($m = 1; $m <= 12; $m++) {
+                if (isset($monthColIndices[$m])) {
+                    $weekColIdx = $monthColIndices[$m];
+                    $paketColIdx = $weekColIdx + 1;
+                    $colMap['months'][$m] = [
+                        'week_col'  => \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($weekColIdx),
+                        'paket_col' => \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($paketColIdx),
+                    ];
+                }
+            }
+        } else {
+            // Fallback to standard starting column E (5)
+            $startColIdx = 5;
+            for ($m = 1; $m <= 12; $m++) {
+                $weekColIdx = $startColIdx + ($m - 1) * 2;
+                $paketColIdx = $weekColIdx + 1;
+
+                $colMap['months'][$m] = [
+                    'week_col'  => \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($weekColIdx),
+                    'paket_col' => \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($paketColIdx),
+                ];
+            }
         }
 
         $dataStart = $headerRowIdx + 2;
-        $inserted = 0;
-        $skipped = 0;
-        $errors = [];
 
-        DB::beginTransaction();
-        try {
-            $mesinIds = MtcMasterMesinModel::where('jenis_mtc', $jenisMtc)
-                ->pluck('id')
-                ->toArray();
+        foreach ($rows as $rowNum => $row) {
+            if ($rowNum < $dataStart) continue;
 
-            if (!empty($mesinIds)) {
-                MtcAgendaModel::whereIn('mesin_id', $mesinIds)
-                    ->where('tahun', $tahun)
-                    ->delete();
+            $namaMesinVal = trim((string)($row[$colMap['nama_mesin']] ?? ''));
+            $kodeMesinVal = (!empty($colMap['kode_mesin']) && isset($row[$colMap['kode_mesin']])) ? trim((string)$row[$colMap['kode_mesin']]) : '';
+
+            if ($namaMesinVal === '' && $kodeMesinVal === '') {
+                continue;
             }
 
-            $userId = Auth::id();
-            $rowErrors = [];
+            $mesin = null;
+            if ($kodeMesinVal !== '') {
+                $mesin = MtcMasterMesinModel::where('kode_mesin', $kodeMesinVal)
+                    ->where('jenis_mtc', $jenisMtc)
+                    ->first();
+            }
+            if (!$mesin && $namaMesinVal !== '') {
+                $mesin = MtcMasterMesinModel::where('nama_mesin', $namaMesinVal)
+                    ->where('jenis_mtc', $jenisMtc)
+                    ->first();
+            }
 
-            foreach ($rows as $rowNum => $row) {
-                if ($rowNum < $dataStart) continue;
+            if (!$mesin) {
+                $rowErrors[] = "Sheet '{$sheetTitle}' Baris {$rowNum}: Mesin '{$namaMesinVal}' ('{$kodeMesinVal}') tidak ditemukan di Jenis MTC '{$jenisMtc}'.";
+                continue;
+            }
 
-                $namaMesinVal = trim((string)($row[$colMap['nama_mesin']] ?? ''));
-                $kodeMesinVal = (!empty($colMap['kode_mesin']) && isset($row[$colMap['kode_mesin']])) ? trim((string)$row[$colMap['kode_mesin']]) : '';
+            $hasSchedule = false;
 
-                if ($namaMesinVal === '' && $kodeMesinVal === '') {
-                    continue;
-                }
+            foreach ($colMap['months'] as $mNum => $cfg) {
+                $weekCol = $cfg['week_col'];
+                $paketCol = $cfg['paket_col'];
 
-                $mesin = null;
-                // Prioritas utama: kode mesin (nama tidak perlu cocok)
-                // Jika kode mesin ada di Excel → cari berdasarkan kode saja
-                if ($kodeMesinVal !== '') {
-                    $mesin = MtcMasterMesinModel::where('kode_mesin', $kodeMesinVal)
-                        ->where('jenis_mtc', $jenisMtc)
-                        ->first();
-                }
+                $weeksRaw = $row[$weekCol] ?? '';
+                $packagesRaw = $row[$paketCol] ?? '';
 
-                // Fallback: jika kode mesin tidak ada di Excel → cari berdasarkan nama saja
-                if (!$mesin && $kodeMesinVal === '' && $namaMesinVal !== '') {
-                    $mesin = MtcMasterMesinModel::where('nama_mesin', $namaMesinVal)
-                        ->where('jenis_mtc', $jenisMtc)
-                        ->first();
-                }
+                $parsedList = $this->parseWeeksAndPackages($weeksRaw, $packagesRaw);
 
-                if (!$mesin) {
-                    $rowErrors[] = "Baris {$rowNum}: Mesin dengan Kode '{$kodeMesinVal}' atau Nama '{$namaMesinVal}' tidak ditemukan di Master Mesin dengan Jenis MTC '{$jenisMtc}'.";
-                    continue;
-                }
-
-                $hasSchedule = false;
-                $isDateBased = in_array($jenisMtc, ['Electric Engine', 'Diesel Engine']);
-
-                foreach ($colMap['months'] as $mNum => $cfg) {
-                    $weekCol = $cfg['week_col'];
-                    $paketCol = $cfg['paket_col'];
-
-                    $weeksRaw = $row[$weekCol] ?? '';
-                    $packagesRaw = $row[$paketCol] ?? '';
-
-                    if ($isDateBased) {
-                        $parsedList = $this->parseDaysAndPackages($weeksRaw, $packagesRaw, $tahun, $mNum);
-
-                        foreach ($parsedList as $parsed) {
-                            try {
-                                MtcAgendaModel::create([
-                                    'mesin_id' => $mesin->id,
-                                    'tahun' => $tahun,
-                                    'bulan' => $mNum,
-                                    'minggu_ke' => null, // NULL for date-based
-                                    'tanggal' => $parsed['tanggal'],
-                                    'paket' => $parsed['paket'],
-                                    'created_by' => $userId,
-                                ]);
-                                $hasSchedule = true;
-                            } catch (\Illuminate\Database\QueryException $ex) {
-                                if ($ex->getCode() == 23000) {
-                                    $rowErrors[] = "Baris {$rowNum}: Jadwal ganda terdeteksi untuk Mesin '{$mesin->nama_mesin}' pada Tanggal {$parsed['tanggal']}.";
-                                } else {
-                                    $rowErrors[] = "Baris {$rowNum}: Database error pada Tanggal {$parsed['tanggal']} - " . $ex->getMessage();
-                                }
-                            }
-                        }
-                    } else {
-                        $parsedList = $this->parseWeeksAndPackages($weeksRaw, $packagesRaw);
-
-                        foreach ($parsedList as $parsed) {
-                            try {
-                                MtcAgendaModel::create([
-                                    'mesin_id' => $mesin->id,
-                                    'tahun' => $tahun,
-                                    'bulan' => $mNum,
-                                    'minggu_ke' => $parsed['minggu_ke'],
-                                    'tanggal' => null,
-                                    'paket' => $parsed['paket'],
-                                    'created_by' => $userId,
-                                ]);
-                                $hasSchedule = true;
-                            } catch (\Illuminate\Database\QueryException $ex) {
-                                if ($ex->getCode() == 23000) {
-                                    $rowErrors[] = "Baris {$rowNum}: Jadwal ganda terdeteksi untuk Mesin '{$mesin->nama_mesin}' pada Bulan {$mNum} Minggu {$parsed['minggu_ke']}.";
-                                } else {
-                                    $rowErrors[] = "Baris {$rowNum}: Database error pada Bulan {$mNum} Minggu {$parsed['minggu_ke']} - " . $ex->getMessage();
-                                }
-                            }
+                foreach ($parsedList as $parsed) {
+                    try {
+                        MtcAgendaModel::create([
+                            'mesin_id'   => $mesin->id,
+                            'tahun'      => $tahun,
+                            'bulan'      => $mNum,
+                            'minggu_ke'  => $parsed['minggu_ke'],
+                            'tanggal'    => null,
+                            'paket'      => $parsed['paket'],
+                            'created_by' => $userId,
+                        ]);
+                        $hasSchedule = true;
+                    } catch (\Illuminate\Database\QueryException $ex) {
+                        if ($ex->getCode() == 23000) {
+                            $rowErrors[] = "Sheet '{$sheetTitle}' Baris {$rowNum}: Jadwal ganda terdeteksi untuk Mesin '{$mesin->nama_mesin}' pada Bulan {$mNum} Minggu {$parsed['minggu_ke']}.";
+                        } else {
+                            $rowErrors[] = "Sheet '{$sheetTitle}' Baris {$rowNum}: Database error pada Bulan {$mNum} Minggu {$parsed['minggu_ke']} - " . $ex->getMessage();
                         }
                     }
                 }
-
-                if ($hasSchedule) {
-                    $inserted++;
-                } else {
-                    $rowErrors[] = "Baris {$rowNum}: Mesin '{$mesin->nama_mesin}' tidak memiliki data jadwal yang valid.";
-                }
             }
 
-            if (!empty($rowErrors)) {
-                throw new \Exception(implode("<br>", $rowErrors));
+            if ($hasSchedule) {
+                $inserted++;
             }
-
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ], 422);
         }
 
-        return response()->json([
-            'status' => true,
-            'message' => "Berhasil mengimport agenda untuk {$inserted} mesin.",
+        return [
             'inserted' => $inserted,
-        ]);
+            'errors'   => $rowErrors
+        ];
     }
 
     /**
@@ -1164,12 +1663,11 @@ class MtcAgendaController extends Controller
                 $dayNum = intval(trim($days[$i]));
                 if ($dayNum < 1 || $dayNum > 31) continue;
 
-                // Validate if day exists in that month/year
                 try {
                     $dateObj = Carbon::createFromDate($tahun, $bulan, $dayNum);
                     $dateStr = $dateObj->format('Y-m-d');
                 } catch (\Exception $e) {
-                    continue; // Skip invalid date
+                    continue;
                 }
 
                 $pkg = '';

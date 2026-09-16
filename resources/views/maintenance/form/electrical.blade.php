@@ -638,6 +638,7 @@
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
                                         nama_barang: item.nama_barang,
+                                        uom: item.uom || '',
                                         qty: item.latest_stock?.qty_soh ?? 0
                                     };
                                 })
@@ -664,9 +665,11 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
+                    $(this).closest('tr').find('input[name*="[uom]"]').val(data.uom || '');
                     $(this).closest('tr').find('input[name*="[qty]"]').prop('required', true);
                 }).on('select2:clear select2:unselect', function(e) {
                     $(this).closest('tr').find('input[name*="[desc]"]').val('');
+                    $(this).closest('tr').find('input[name*="[uom]"]').val('');
                     $(this).closest('tr').find('input[name*="[qty]"]').val('').prop('required', false);
                 });
             }
@@ -680,6 +683,7 @@
                     <tr>
                         <td>
                             <select name="materials[${index}][mid]" class="form-control form-control-sm mid-select2"></select>
+                            <input type="hidden" name="materials[${index}][uom]" class="material-uom">
                         </td>
                         <td>
                             <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
@@ -704,6 +708,7 @@
                     <tr>
                         <td>
                             <select name="replacements[${replacementIndex}][mid]" class="form-control form-control-sm mid-select2"></select>
+                            <input type="hidden" name="replacements[${replacementIndex}][uom]" class="replacement-uom">
                         </td>
                         <td>
                             <input type="text" name="replacements[${replacementIndex}][desc]" class="form-control form-control-sm">

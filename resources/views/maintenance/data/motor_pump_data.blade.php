@@ -572,8 +572,8 @@
                            ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                                                                                        <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                                                    `).join('')
+                                    <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -582,8 +582,8 @@
                            ${
                                 row.penggantian_material && row.penggantian_material.length
                                 ? row.penggantian_material.map(m => `
-                                                                                                        <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                                                    `).join('')
+                                    <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -967,7 +967,8 @@
                                     return {
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
-                                        nama_barang: item.nama_barang
+                                        nama_barang: item.nama_barang,
+                                        uom: item.uom || ''
                                     };
                                 })
                             };
@@ -990,9 +991,11 @@
                     const data = e.params.data;
                     $(this).closest('tr').find('.material-deskripsi, .replacement-deskripsi').val(data
                         .nama_barang);
+                    $(this).closest('tr').find('.material-uom, .replacement-uom').val(data.uom || '');
                     $(this).closest('tr').find('.material-qty, .replacement-qty').prop('required', true);
                 }).on('select2:clear select2:unselect', function(e) {
                     $(this).closest('tr').find('.material-deskripsi, .replacement-deskripsi').val('');
+                    $(this).closest('tr').find('.material-uom, .replacement-uom').val('');
                     $(this).closest('tr').find('.material-qty, .replacement-qty').val('').prop('required',
                         false);
                 });
@@ -1020,6 +1023,7 @@
                     row.find('.material-id').val(item.id);
                     row.find('.material-deskripsi').val(item.deskripsi);
                     row.find('.material-qty').val(item.qty);
+                    row.find('.material-uom').val(item.uom || '');
 
                     // Add existing MID as option
                     if (item.mid) {
@@ -1037,6 +1041,7 @@
                 return `
                      <tr class="material-row">
                          <input type="hidden" name="materials[${index}][id]" class="material-id">
+                         <input type="hidden" name="materials[${index}][uom]" class="material-uom">
 
                          <td>
                              <select name="materials[${index}][mid]" class="form-control form-control-sm material-mid"></select>
@@ -1105,6 +1110,7 @@
                     row.find('.replacement-id').val(item.id);
                     row.find('.replacement-deskripsi').val(item.deskripsi);
                     row.find('.replacement-qty').val(item.qty);
+                    row.find('.replacement-uom').val(item.uom || '');
 
                     // Add existing MID as option
                     if (item.mid) {
@@ -1122,6 +1128,7 @@
                 return `
                     <tr class="replacement-row">
                         <input type="hidden" name="replacements[${index}][id]" class="replacement-id">
+                        <input type="hidden" name="replacements[${index}][uom]" class="replacement-uom">
 
                         <td>
                             <select name="replacements[${index}][mid]" class="form-control form-control-sm replacement-mid"></select>
