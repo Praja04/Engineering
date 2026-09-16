@@ -202,7 +202,8 @@
         <div class="container-fluid">
 
             {{-- ══════════════════════════════════════════ HEADER ══ --}}
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 animate-fade-in-up position-relative" style="z-index: 1050;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 animate-fade-in-up position-relative"
+                style="z-index: 10;">
                 <div>
                     <h1 class="fw-bold fs-3 mb-1 mt-2" style="letter-spacing: -0.5px;">Master Agenda Plan</h1>
                     <p class="text-secondary small mb-0 fw-medium">
@@ -215,15 +216,16 @@
                         <i class="mdi mdi-chart-line"></i>
                         Dashboard Agenda
                     </a>
-                    <div class="dropdown position-relative" style="z-index: 1055;">
+                    <div class="dropdown position-relative" style="z-index: 15;">
                         <button class="btn btn-outline-dark shadow-sm dropdown-toggle d-flex align-items-center gap-2"
                             type="button" id="dropdownDownloadTemplate" data-bs-toggle="dropdown" aria-expanded="false"
                             style="border-radius: 8px;">
                             <i class="mdi mdi-file-download-outline"></i>
                             Download Template
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="dropdownDownloadTemplate"
-                            style="border-radius: 10px; font-size: 13px; min-width: 260px; z-index: 1060; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;">
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0"
+                            aria-labelledby="dropdownDownloadTemplate"
+                            style="border-radius: 10px; font-size: 13px; min-width: 260px; z-index: 1050; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;">
                             <li>
                                 <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2"
                                     id="btnDownloadTemplateMhe"
@@ -231,11 +233,14 @@
                                     <i class="mdi mdi-calendar-clock text-primary fs-5"></i>
                                     <div>
                                         <div class="fw-bold text-dark">Template MHE (Per Tanggal)</div>
-                                        <small class="text-muted" style="font-size: 11px;">Electric Engine &amp; Diesel Engine</small>
+                                        <small class="text-muted" style="font-size: 11px;">Electric Engine &amp; Diesel
+                                            Engine</small>
                                     </div>
                                 </a>
                             </li>
-                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <hr class="dropdown-divider my-1">
+                            </li>
                             <li>
                                 <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2"
                                     id="btnDownloadTemplateNonMhe"
@@ -243,7 +248,8 @@
                                     <i class="mdi mdi-calendar-week text-success fs-5"></i>
                                     <div>
                                         <div class="fw-bold text-dark">Template Non-MHE (Per Minggu)</div>
-                                        <small class="text-muted" style="font-size: 11px;">Utility, Electrical, Motor Pompa, dll.</small>
+                                        <small class="text-muted" style="font-size: 11px;">Utility, Electrical, Motor Pompa,
+                                            dll.</small>
                                     </div>
                                 </a>
                             </li>
@@ -263,7 +269,8 @@
             </div>
 
             {{-- ═══════════════════════════════════ JENIS FILTER ══ --}}
-            <div class="d-flex align-items-center flex-wrap gap-3 mb-4 animate-fade-in-up position-relative" style="animation-delay: 0.15s; z-index: 10;">
+            <div class="d-flex align-items-center flex-wrap gap-3 mb-4 animate-fade-in-up position-relative"
+                style="animation-delay: 0.15s; z-index: 2;">
                 <span class="text-secondary text-uppercase fw-bold" style="font-size:11px; letter-spacing:.05em;">Jenis
                     Mesin:</span>
                 <div class="d-flex flex-wrap gap-2" id="filterChipsContainer">
@@ -355,7 +362,8 @@
                                                     Ke-{{ $w }}</label>
                                             </div>
                                             <div class="col-8">
-                                                <select name="weeks[{{ $w }}]" id="editWeek{{ $w }}"
+                                                <select name="weeks[{{ $w }}]"
+                                                    id="editWeek{{ $w }}"
                                                     class="form-select form-select-sm week-select"
                                                     style="border-radius: 8px; padding: 6px 12px;">
                                                     <option value="none">(Kosong / Hapus)</option>
@@ -424,67 +432,87 @@
                             <div class="modal-body p-4">
                                 <!-- Kategori Agenda Choice -->
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold text-secondary mb-2">Kategori Format Upload <span class="text-danger">*</span></label>
+                                    <label class="form-label small fw-bold text-secondary mb-2">Kategori Format Upload
+                                        <span class="text-danger">*</span></label>
                                     <div class="row g-2">
                                         <div class="col-6">
-                                            <input type="radio" class="btn-check" name="kategori" id="kategoriMhe" value="mhe" autocomplete="off" checked>
-                                            <label class="btn btn-outline-primary w-100 text-start p-2" for="kategoriMhe" style="border-radius: 8px; font-size: 12px;">
+                                            <input type="radio" class="btn-check" name="kategori" id="kategoriMhe"
+                                                value="mhe" autocomplete="off" checked>
+                                            <label class="btn btn-outline-primary w-100 text-start p-2" for="kategoriMhe"
+                                                style="border-radius: 8px; font-size: 12px;">
                                                 <div class="fw-bold"><i class="mdi mdi-calendar-clock me-1"></i> MHE</div>
-                                                <small class="text-muted d-block" style="font-size: 10px;">Per Tanggal (Bulanan)</small>
+                                                <small class="text-muted d-block" style="font-size: 10px;">Per Tanggal
+                                                    (Bulanan)</small>
                                             </label>
                                         </div>
                                         <div class="col-6">
-                                            <input type="radio" class="btn-check" name="kategori" id="kategoriNonMhe" value="non_mhe" autocomplete="off">
-                                            <label class="btn btn-outline-success w-100 text-start p-2" for="kategoriNonMhe" style="border-radius: 8px; font-size: 12px;">
-                                                <div class="fw-bold"><i class="mdi mdi-calendar-week me-1"></i> Non MHE</div>
-                                                <small class="text-muted d-block" style="font-size: 10px;">Per Minggu (Tahunan)</small>
+                                            <input type="radio" class="btn-check" name="kategori" id="kategoriNonMhe"
+                                                value="non_mhe" autocomplete="off">
+                                            <label class="btn btn-outline-success w-100 text-start p-2"
+                                                for="kategoriNonMhe" style="border-radius: 8px; font-size: 12px;">
+                                                <div class="fw-bold"><i class="mdi mdi-calendar-week me-1"></i> Non MHE
+                                                </div>
+                                                <small class="text-muted d-block" style="font-size: 10px;">Per Minggu
+                                                    (Tahunan)</small>
                                             </label>
                                         </div>
                                     </div>
                                     <div class="text-muted small mt-1" id="kategoriDesc" style="font-size: 11px;">
-                                        <i class="mdi mdi-information-outline text-primary"></i> <strong>Format MHE:</strong> Mencakup sheet <em>Electric Engine</em> dan <em>Diesel Engine</em> dengan kolom Tanggal &amp; Paket.
+                                        <i class="mdi mdi-information-outline text-primary"></i> <strong>Format
+                                            MHE:</strong> Mencakup sheet <em>Electric Engine</em> dan <em>Diesel Engine</em>
+                                        dengan kolom Tanggal &amp; Paket.
                                     </div>
                                 </div>
 
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
-                                        <label for="uploadTahun" class="form-label small fw-bold text-secondary">Tahun Agenda <span class="text-danger">*</span></label>
-                                        <select name="tahun" id="uploadTahun" class="form-select form-select-sm" required
-                                            style="border-radius: 8px; padding: 7px 12px;">
+                                        <label for="uploadTahun" class="form-label small fw-bold text-secondary">Tahun
+                                            Agenda <span class="text-danger">*</span></label>
+                                        <select name="tahun" id="uploadTahun" class="form-select form-select-sm"
+                                            required style="border-radius: 8px; padding: 7px 12px;">
                                             @for ($y = date('Y') - 1; $y <= date('Y') + 4; $y++)
-                                                <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>
+                                                <option value="{{ $y }}"
+                                                    {{ $selectedYear == $y ? 'selected' : '' }}>
                                                     {{ $y }}
                                                 </option>
                                             @endfor
                                         </select>
                                     </div>
                                     <div class="col-6" id="uploadBulanContainer">
-                                        <label for="uploadBulan" class="form-label small fw-bold text-secondary">Bulan Agenda <span class="text-danger">*</span></label>
+                                        <label for="uploadBulan" class="form-label small fw-bold text-secondary">Bulan
+                                            Agenda <span class="text-danger">*</span></label>
                                         <select name="bulan" id="uploadBulan" class="form-select form-select-sm"
                                             style="border-radius: 8px; padding: 7px 12px;">
                                             @php
                                                 $curMonth = (int) date('n');
                                             @endphp
                                             <option value="1" {{ $curMonth == 1 ? 'selected' : '' }}>Januari</option>
-                                            <option value="2" {{ $curMonth == 2 ? 'selected' : '' }}>Februari</option>
+                                            <option value="2" {{ $curMonth == 2 ? 'selected' : '' }}>Februari
+                                            </option>
                                             <option value="3" {{ $curMonth == 3 ? 'selected' : '' }}>Maret</option>
                                             <option value="4" {{ $curMonth == 4 ? 'selected' : '' }}>April</option>
                                             <option value="5" {{ $curMonth == 5 ? 'selected' : '' }}>Mei</option>
                                             <option value="6" {{ $curMonth == 6 ? 'selected' : '' }}>Juni</option>
                                             <option value="7" {{ $curMonth == 7 ? 'selected' : '' }}>Juli</option>
                                             <option value="8" {{ $curMonth == 8 ? 'selected' : '' }}>Agustus</option>
-                                            <option value="9" {{ $curMonth == 9 ? 'selected' : '' }}>September</option>
-                                            <option value="10" {{ $curMonth == 10 ? 'selected' : '' }}>Oktober</option>
-                                            <option value="11" {{ $curMonth == 11 ? 'selected' : '' }}>November</option>
-                                            <option value="12" {{ $curMonth == 12 ? 'selected' : '' }}>Desember</option>
+                                            <option value="9" {{ $curMonth == 9 ? 'selected' : '' }}>September
+                                            </option>
+                                            <option value="10" {{ $curMonth == 10 ? 'selected' : '' }}>Oktober
+                                            </option>
+                                            <option value="11" {{ $curMonth == 11 ? 'selected' : '' }}>November
+                                            </option>
+                                            <option value="12" {{ $curMonth == 12 ? 'selected' : '' }}>Desember
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <label class="form-label small fw-bold text-secondary mb-0">File Excel <span class="text-danger">*</span></label>
-                                        <a href="#" id="modalTemplateLink" class="small fw-semibold text-decoration-none" style="font-size: 11px;">
+                                        <label class="form-label small fw-bold text-secondary mb-0">File Excel <span
+                                                class="text-danger">*</span></label>
+                                        <a href="#" id="modalTemplateLink"
+                                            class="small fw-semibold text-decoration-none" style="font-size: 11px;">
                                             <i class="mdi mdi-download"></i> Unduh Template Sesuai Pilihan
                                         </a>
                                     </div>
@@ -496,7 +524,8 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                                             </svg>
-                                            <div class="small fw-bold text-primary" id="fileNamePlaceholder">Pilih file excel (.xlsx, .xls)</div>
+                                            <div class="small fw-bold text-primary" id="fileNamePlaceholder">Pilih file
+                                                excel (.xlsx, .xls)</div>
                                             <input type="file" name="file_excel" id="fileExcel"
                                                 class="file-input-hidden" accept=".xlsx, .xls" required
                                                 onchange="updateFileName(this)">
@@ -516,7 +545,8 @@
 
                                 <div class="alert alert-warning py-2 px-3 small mb-0"
                                     style="border-radius: 8px; font-size: 11px;">
-                                    <strong>Multi-Sheet:</strong> Sistem otomatis membaca tiap sheet yang sesuai dengan nama Jenis MTC dan menimpa rencana lama pada periode tersebut.
+                                    <strong>Multi-Sheet:</strong> Sistem otomatis membaca tiap sheet yang sesuai dengan nama
+                                    Jenis MTC dan menimpa rencana lama pada periode tersebut.
                                 </div>
                             </div>
                             <div class="modal-footer bg-light justify-content-end p-3">
@@ -548,7 +578,8 @@
                             <div class="modal-body p-4">
                                 <div class="row g-2 mb-3">
                                     <div class="col-4">
-                                        <label for="manualJenisMtc" class="form-label small fw-bold text-secondary mb-1">Jenis
+                                        <label for="manualJenisMtc"
+                                            class="form-label small fw-bold text-secondary mb-1">Jenis
                                             MTC <span class="text-danger">*</span></label>
                                         <select name="jenis_mtc" id="manualJenisMtc" class="form-select form-select-sm"
                                             required style="border-radius: 8px; padding: 7px 10px;">
@@ -561,7 +592,8 @@
                                         </select>
                                     </div>
                                     <div class="col-4">
-                                        <label for="manualTahun" class="form-label small fw-bold text-secondary mb-1">Tahun
+                                        <label for="manualTahun"
+                                            class="form-label small fw-bold text-secondary mb-1">Tahun
                                             <span class="text-danger">*</span></label>
                                         <select name="tahun" id="manualTahun" class="form-select form-select-sm"
                                             required style="border-radius: 8px; padding: 7px 10px;">
@@ -573,7 +605,8 @@
                                         </select>
                                     </div>
                                     <div class="col-4">
-                                        <label for="manualBulan" class="form-label small fw-bold text-secondary mb-1">Bulan
+                                        <label for="manualBulan"
+                                            class="form-label small fw-bold text-secondary mb-1">Bulan
                                             <span class="text-danger">*</span></label>
                                         <select name="bulan" id="manualBulan" class="form-select form-select-sm"
                                             required style="border-radius: 8px; padding: 7px 10px;">
@@ -597,23 +630,29 @@
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <label for="manualMesinId" class="form-label small fw-bold text-secondary mb-0">
                                             Pilih Mesin <span class="text-danger">*</span>
-                                            <span class="badge badge-soft-primary ms-1" id="selectedMachineCountBadge" style="font-size: 11px;">0 Dipilih</span>
+                                            <span class="badge badge-soft-primary ms-1" id="selectedMachineCountBadge"
+                                                style="font-size: 11px;">0 Dipilih</span>
                                         </label>
                                         <div class="d-flex gap-2 align-items-center">
-                                            <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none small fw-bold text-primary" id="btnSelectAllManualMachines" style="font-size: 11px;">
+                                            <button type="button"
+                                                class="btn btn-link btn-xs p-0 text-decoration-none small fw-bold text-primary"
+                                                id="btnSelectAllManualMachines" style="font-size: 11px;">
                                                 Pilih Semua
                                             </button>
                                             <span class="text-muted" style="font-size: 11px;">•</span>
-                                            <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none small text-secondary" id="btnDeselectAllManualMachines" style="font-size: 11px;">
+                                            <button type="button"
+                                                class="btn btn-link btn-xs p-0 text-decoration-none small text-secondary"
+                                                id="btnDeselectAllManualMachines" style="font-size: 11px;">
                                                 Kosongkan
                                             </button>
                                         </div>
                                     </div>
-                                    <select name="mesin_ids[]" id="manualMesinId" class="form-select form-select-sm" multiple="multiple" required
-                                        style="border-radius: 8px; width: 100%;">
+                                    <select name="mesin_ids[]" id="manualMesinId" class="form-select form-select-sm"
+                                        multiple="multiple" required style="border-radius: 8px; width: 100%;">
                                     </select>
                                     <div class="text-muted mt-1" style="font-size: 11px;">
-                                        <i class="mdi mdi-information-outline text-primary"></i> Anda dapat memilih satu atau beberapa mesin sekaligus untuk mengatur agendanya bersamaan.
+                                        <i class="mdi mdi-information-outline text-primary"></i> Anda dapat memilih satu
+                                        atau beberapa mesin sekaligus untuk mengatur agendanya bersamaan.
                                     </div>
                                 </div>
 
@@ -866,7 +905,8 @@
                     if (loadedMachines && loadedMachines.length > 0) {
                         loadedMachines.forEach(m => {
                             manualMesinSelect.append(
-                                new Option(`${m.nama_mesin} (${m.kode_mesin || '—'})`, m.id, false, false)
+                                new Option(`${m.nama_mesin} (${m.kode_mesin || '—'})`, m.id, false,
+                                    false)
                             );
                         });
                     }
@@ -1317,13 +1357,19 @@
                 if (kategori === 'mhe') {
                     $('#uploadBulanContainer').removeClass('d-none');
                     $('#uploadBulan').prop('required', true);
-                    $('#kategoriDesc').html('<i class="mdi mdi-information-outline text-primary"></i> <strong>Format MHE:</strong> Mencakup sheet <em>Electric Engine</em> dan <em>Diesel Engine</em> dengan kolom Tanggal &amp; Paket.');
-                    $('#modalTemplateLink').attr('href', `{{ route('agenda.download-template') }}?type=mhe&tahun=${yr}&bulan=${bln}`);
+                    $('#kategoriDesc').html(
+                        '<i class="mdi mdi-information-outline text-primary"></i> <strong>Format MHE:</strong> Mencakup sheet <em>Electric Engine</em> dan <em>Diesel Engine</em> dengan kolom Tanggal &amp; Paket.'
+                        );
+                    $('#modalTemplateLink').attr('href',
+                        `{{ route('agenda.download-template') }}?type=mhe&tahun=${yr}&bulan=${bln}`);
                 } else {
                     $('#uploadBulanContainer').addClass('d-none');
                     $('#uploadBulan').prop('required', false);
-                    $('#kategoriDesc').html('<i class="mdi mdi-information-outline text-success"></i> <strong>Format Non-MHE:</strong> Mencakup sheet untuk masing-masing Jenis MTC (Utility, Electrical, Motor Pompa, dll.) dengan kolom 12 Bulan (Minggu &amp; Paket).');
-                    $('#modalTemplateLink').attr('href', `{{ route('agenda.download-template') }}?type=non_mhe&tahun=${yr}`);
+                    $('#kategoriDesc').html(
+                        '<i class="mdi mdi-information-outline text-success"></i> <strong>Format Non-MHE:</strong> Mencakup sheet untuk masing-masing Jenis MTC (Utility, Electrical, Motor Pompa, dll.) dengan kolom 12 Bulan (Minggu &amp; Paket).'
+                        );
+                    $('#modalTemplateLink').attr('href',
+                        `{{ route('agenda.download-template') }}?type=non_mhe&tahun=${yr}`);
                 }
             }
 
@@ -1364,7 +1410,8 @@
                             const xhr = new window.XMLHttpRequest();
                             xhr.upload.addEventListener("progress", function(evt) {
                                 if (evt.lengthComputable) {
-                                    const percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                                    const percentComplete = Math.round((evt.loaded / evt
+                                        .total) * 100);
                                     progressBar.style.width = percentComplete + '%';
                                 }
                             }, false);
@@ -1390,17 +1437,22 @@
 
                                 // Reset file input
                                 $('#fileExcel').val('');
-                                $('#fileNamePlaceholder').text("Pilih file excel (.xlsx, .xls)").attr('class', 'small fw-bold text-primary');
+                                $('#fileNamePlaceholder').text(
+                                    "Pilih file excel (.xlsx, .xls)").attr('class',
+                                    'small fw-bold text-primary');
 
                                 // Synchronize table preview year
                                 currentTahun = uploadedTahun;
                                 $('#tahunSelect').val(currentTahun);
 
                                 // If MHE, adjust currentJenis if currently not on MHE
-                                if (uploadedKategori === 'mhe' && currentJenis !== 'Electric Engine' && currentJenis !== 'Diesel Engine') {
+                                if (uploadedKategori === 'mhe' && currentJenis !==
+                                    'Electric Engine' && currentJenis !==
+                                    'Diesel Engine') {
                                     currentJenis = 'Electric Engine';
                                     $('.filter-chip').removeClass('active-chip');
-                                    $(`.filter-chip[data-jenis="${currentJenis}"]`).addClass('active-chip');
+                                    $(`.filter-chip[data-jenis="${currentJenis}"]`)
+                                        .addClass('active-chip');
                                 }
 
                                 // Refresh matrix table preview dynamically

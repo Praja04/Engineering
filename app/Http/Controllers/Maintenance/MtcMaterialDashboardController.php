@@ -610,7 +610,7 @@ class MtcMaterialDashboardController extends Controller
         foreach ($mains as $main) {
             $tglStr  = $main->tanggal ? $main->tanggal->format('d M Y') : '-';
             $tglRaw  = $main->tanggal ? $main->tanggal->format('Y-m-d') : '';
-            $teknisi = $main->createdBy?->name ?? 'Teknisi';
+            $teknisi = $main->createdBy?->fullname ?: ($main->createdBy?->username ?: 'Teknisi');
             $paket   = $main->paket ?: '-';
 
             // 1. Kebutuhan Material

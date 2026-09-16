@@ -182,7 +182,7 @@
                                 localStorage.removeItem("PTBAS_USER");
                                 localStorage.removeItem("EJO_GREETING_DISMISSED");
                                 sessionStorage.clear();
-                            } catch(e) {}
+                            } catch (e) {}
 
                             $.ajax({
                                 url: "{{ route('logout') }}",
@@ -302,7 +302,7 @@
                     if (xhr.status === 401 || xhr.status === 419) {
                         try {
                             localStorage.setItem('ptbas_logout_event', Date.now().toString());
-                        } catch(e) {}
+                        } catch (e) {}
                         window.location.href = "{{ route('login') }}";
                     }
                 });
@@ -316,7 +316,7 @@
                             if (response.status === 401 || response.status === 419) {
                                 try {
                                     localStorage.setItem('ptbas_logout_event', Date.now().toString());
-                                } catch(e) {}
+                                } catch (e) {}
                                 window.location.href = "{{ route('login') }}";
                             }
                             return response;
