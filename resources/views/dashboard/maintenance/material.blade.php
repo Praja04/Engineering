@@ -65,8 +65,16 @@
                                         <label class="form-label fw-semibold small text-muted">PAKET MAINTENANCE</label>
                                         <select id="filterPaket" name="paket" class="form-select border">
                                             <option value="">Semua Paket</option>
-                                            <option value="Maintenance">Maintenance</option>
+                                            <option value="Maintenance">Maintenance (A, B, C, D, Z, Checkpoint)</option>
                                             <option value="Korektif">Korektif</option>
+                                            <optgroup label="Paket Spesifik">
+                                                <option value="A">Paket A</option>
+                                                <option value="B">Paket B</option>
+                                                <option value="C">Paket C</option>
+                                                <option value="D">Paket D</option>
+                                                <option value="Z">Paket Z</option>
+                                                <option value="Checkpoint">Checkpoint</option>
+                                            </optgroup>
                                         </select>
                                     </div>
                                     <div class="col-lg-2 col-12 d-flex gap-2">
@@ -744,9 +752,17 @@
                     const katBadge = item.kategori === 'Kebutuhan' 
                         ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">Kebutuhan</span>`
                         : `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Penggantian</span>`;
-                    const pktBadge = item.paket && item.paket.toLowerCase().includes('korektif')
-                        ? `<span class="badge bg-danger-subtle text-danger">Korektif</span>`
-                        : `<span class="badge bg-info-subtle text-info">Maintenance</span>`;
+                    let pktBadge = '<span class="badge bg-secondary-subtle text-secondary">-</span>';
+                    if (item.paket && item.paket !== '-') {
+                        if (item.paket.toLowerCase().includes('korektif')) {
+                            pktBadge = `<span class="badge bg-danger-subtle text-danger">Korektif</span>`;
+                        } else {
+                            const displayText = ['a', 'b', 'c', 'd', 'z'].includes(item.paket.toLowerCase()) 
+                                ? `Paket ${item.paket.toUpperCase()}` 
+                                : item.paket;
+                            pktBadge = `<span class="badge bg-info-subtle text-info">${displayText}</span>`;
+                        }
+                    }
 
                     rowsHtml += `
                         <tr>

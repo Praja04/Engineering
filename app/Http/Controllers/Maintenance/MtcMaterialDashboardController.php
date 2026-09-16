@@ -51,23 +51,14 @@ class MtcMaterialDashboardController extends Controller
         if ($request->filled('paket')) {
             $paket = trim($request->paket);
             if (strcasecmp($paket, 'Korektif') === 0) {
-                $query->where(function ($q) {
-                    $q->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) LIKE '%Korektif%'")
-                        ->orWhere(function ($sub) {
-                            $sub->whereNotNull('mtc_main.korektif')
-                                ->where('mtc_main.korektif', '!=', '');
-                        });
-                });
+                $query->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) LIKE '%korektif%'");
             } elseif (strcasecmp($paket, 'Maintenance') === 0) {
                 $query->where(function ($q) {
-                    $q->where(function ($sub) {
-                        $sub->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) NOT LIKE '%Korektif%'")
-                            ->orWhereNull('mtc_main.paket');
-                    })->where(function ($sub) {
-                        $sub->whereNull('mtc_main.korektif')
-                            ->orWhere('mtc_main.korektif', '=', '');
-                    });
+                    $q->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) NOT LIKE '%korektif%'")
+                        ->orWhereNull('mtc_main.paket');
                 });
+            } else {
+                $query->where('mtc_main.paket', $paket);
             }
         }
 
@@ -203,23 +194,14 @@ class MtcMaterialDashboardController extends Controller
         if ($request->filled('paket')) {
             $paket = trim($request->paket);
             if (strcasecmp($paket, 'Korektif') === 0) {
-                $mainQuery->where(function ($q) {
-                    $q->whereRaw("LOWER(COALESCE(paket, '')) LIKE '%korektif%'")
-                        ->orWhere(function ($sub) {
-                            $sub->whereNotNull('korektif')
-                                ->where('korektif', '!=', '');
-                        });
-                });
+                $mainQuery->whereRaw("LOWER(COALESCE(paket, '')) LIKE '%korektif%'");
             } elseif (strcasecmp($paket, 'Maintenance') === 0) {
                 $mainQuery->where(function ($q) {
-                    $q->where(function ($sub) {
-                        $sub->whereRaw("LOWER(COALESCE(paket, '')) NOT LIKE '%korektif%'")
-                            ->orWhereNull('paket');
-                    })->where(function ($sub) {
-                        $sub->whereNull('korektif')
-                            ->orWhere('korektif', '=', '');
-                    });
+                    $q->whereRaw("LOWER(COALESCE(paket, '')) NOT LIKE '%korektif%'")
+                        ->orWhereNull('paket');
                 });
+            } else {
+                $mainQuery->where('paket', $paket);
             }
         }
 
@@ -339,7 +321,7 @@ class MtcMaterialDashboardController extends Controller
             $tglStr  = $main->tanggal ? $main->tanggal->format('d M Y') : '-';
             $tglRaw  = $main->tanggal ? $main->tanggal->format('Y-m-d') : '';
             $teknisi = $main->createdBy?->name ?? 'Teknisi';
-            $paket   = $main->paket ? $main->paket : ($main->korektif ? 'Korektif' : 'Maintenance');
+            $paket   = $main->paket ?: '-';
 
             // 1. Kebutuhan Material
             foreach ($main->kebutuhanMaterial as $item) {
