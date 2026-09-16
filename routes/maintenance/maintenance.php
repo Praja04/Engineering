@@ -16,6 +16,7 @@ use App\Http\Controllers\Maintenance\MtcDieselEngineController;
 use App\Http\Controllers\Maintenance\MtcElectricEngineController;
 use App\Http\Controllers\Maintenance\MtcMainController;
 use App\Http\Controllers\Maintenance\MtcMasterMesinController;
+use App\Http\Controllers\Maintenance\MtcMasterMaterialController;
 use App\Http\Controllers\Maintenance\MtcMaterialDashboardController;
 use App\Http\Controllers\Maintenance\MtcP2hController;
 
@@ -130,6 +131,17 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/update/{id}', [MtcMasterMesinController::class, 'update'])->name('master.mtc.mesin.update');
                 Route::get('/download-template', [MtcMasterMesinController::class, 'downloadTemplate'])->name('downloadTemplate');
                 Route::post('/upload-excel',     [MtcMasterMesinController::class, 'uploadExcel'])->name('uploadExcel');
+            });
+
+            Route::prefix('material')->group(function () {
+                Route::get('/index', [MtcMasterMaterialController::class, 'index'])->name('master.mtc.material.index');
+                Route::get('/data', [MtcMasterMaterialController::class, 'getData'])->name('master.mtc.material.data');
+                Route::post('/store', [MtcMasterMaterialController::class, 'store'])->name('master.mtc.material.store');
+                Route::post('/update/{id}', [MtcMasterMaterialController::class, 'update'])->name('master.mtc.material.update');
+                Route::delete('/delete/{id}', [MtcMasterMaterialController::class, 'destroy'])->name('master.mtc.material.delete');
+                Route::get('/download-template', [MtcMasterMaterialController::class, 'downloadTemplate'])->name('master.mtc.material.downloadTemplate');
+                Route::post('/upload-excel', [MtcMasterMaterialController::class, 'uploadExcel'])->name('master.mtc.material.uploadExcel');
+                Route::post('/sync-warehouse', [MtcMasterMaterialController::class, 'syncWarehouse'])->name('master.mtc.material.syncWarehouse');
             });
 
             Route::get('/agenda/master', [MtcAgendaController::class, 'master'])->name('master.mtc.agenda.master');

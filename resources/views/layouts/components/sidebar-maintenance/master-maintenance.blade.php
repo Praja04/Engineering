@@ -21,14 +21,20 @@
             <ul class="nav nav-sm flex-column">
                 <li class="nav-item">
                     <a href="{{ route('master.mtc.mesin.index') }}"
-                        class="nav-link {{ request()->routeIs('master.mtc.mesin.index') ? 'active' : '' }}">
+                        class="nav-link {{ request()->routeIs('master.mtc.mesin.*') ? 'active' : '' }}">
                         <i class="mdi mdi-view-grid"></i>Master Mesin
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('master.mtc.material.index') }}"
+                        class="nav-link {{ request()->routeIs('master.mtc.material.*') ? 'active' : '' }}">
+                        <i class="mdi mdi-cube-outline"></i>Master Material
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ url('mtc/master/agenda/master') }}"
                         class="nav-link {{ request()->is('mtc/master/agenda/master') ? 'active' : '' }}">
-                        <i class="mdi mdi-chart-bar me-2"></i> Master Agenda
+                        <i class="mdi mdi-chart-bar"></i>Master Agenda
                     </a>
                 </li>
             </ul>
