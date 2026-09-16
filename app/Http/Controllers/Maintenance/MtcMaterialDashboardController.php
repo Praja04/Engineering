@@ -19,12 +19,12 @@ class MtcMaterialDashboardController extends Controller
     {
         // Get unique maintenance types that have material requirements or replacements
         $jenisMtcList = MtcMainModel::where(function ($query) {
-                $query->whereHas('kebutuhanMaterial', function ($q) {
-                    $q->where('qty', '>', 0);
-                })->orWhereHas('penggantianMaterial', function ($q) {
-                    $q->where('qty', '>', 0);
-                });
-            })
+            $query->whereHas('kebutuhanMaterial', function ($q) {
+                $q->where('qty', '>', 0);
+            })->orWhereHas('penggantianMaterial', function ($q) {
+                $q->where('qty', '>', 0);
+            });
+        })
             ->select('jenis_mtc')
             ->whereNotNull('jenis_mtc')
             ->distinct()
@@ -52,18 +52,18 @@ class MtcMaterialDashboardController extends Controller
             $paket = trim($request->paket);
             if (strcasecmp($paket, 'Korektif') === 0) {
                 $query->where(function ($q) {
-                    $q->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) LIKE '%korektif%'")
-                      ->orWhere(function($sub) {
-                          $sub->whereNotNull('mtc_main.korektif')
-                              ->where('mtc_main.korektif', '!=', '');
-                      });
+                    $q->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) LIKE '%Korektif%'")
+                        ->orWhere(function ($sub) {
+                            $sub->whereNotNull('mtc_main.korektif')
+                                ->where('mtc_main.korektif', '!=', '');
+                        });
                 });
             } elseif (strcasecmp($paket, 'Maintenance') === 0) {
                 $query->where(function ($q) {
-                    $q->where(function($sub) {
-                        $sub->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) NOT LIKE '%korektif%'")
+                    $q->where(function ($sub) {
+                        $sub->whereRaw("LOWER(COALESCE(mtc_main.paket, '')) NOT LIKE '%Korektif%'")
                             ->orWhereNull('mtc_main.paket');
-                    })->where(function($sub) {
+                    })->where(function ($sub) {
                         $sub->whereNull('mtc_main.korektif')
                             ->orWhere('mtc_main.korektif', '=', '');
                     });
@@ -205,17 +205,17 @@ class MtcMaterialDashboardController extends Controller
             if (strcasecmp($paket, 'Korektif') === 0) {
                 $mainQuery->where(function ($q) {
                     $q->whereRaw("LOWER(COALESCE(paket, '')) LIKE '%korektif%'")
-                      ->orWhere(function($sub) {
-                          $sub->whereNotNull('korektif')
-                              ->where('korektif', '!=', '');
-                      });
+                        ->orWhere(function ($sub) {
+                            $sub->whereNotNull('korektif')
+                                ->where('korektif', '!=', '');
+                        });
                 });
             } elseif (strcasecmp($paket, 'Maintenance') === 0) {
                 $mainQuery->where(function ($q) {
-                    $q->where(function($sub) {
+                    $q->where(function ($sub) {
                         $sub->whereRaw("LOWER(COALESCE(paket, '')) NOT LIKE '%korektif%'")
                             ->orWhereNull('paket');
-                    })->where(function($sub) {
+                    })->where(function ($sub) {
                         $sub->whereNull('korektif')
                             ->orWhere('korektif', '=', '');
                     });
@@ -278,7 +278,7 @@ class MtcMaterialDashboardController extends Controller
                     'jenis_mtc'            => $main->jenis_mtc ?? '-',
                     'lokasi'               => $location,
                     'total_kebutuhan_qty'  => 0,
-                    'total_penggantian_qty'=> 0,
+                    'total_penggantian_qty' => 0,
                     'main_ids'             => [],
                     'total_pekerjaan'      => 0,
                 ];
