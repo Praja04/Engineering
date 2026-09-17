@@ -74,22 +74,32 @@
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div>
                         <h4 class="fw-bold mb-1">Data Maintenance P2H</h4>
-                        <div class="small-muted">Data pemeriksaan Forklift & Pallet Mover yang disinkronkan dari sistem Warehouse & Production</div>
+                        <div class="small-muted">Data pemeriksaan Forklift & Pallet Mover yang disinkronkan dari sistem
+                            Warehouse & Production</div>
                     </div>
                     <div class="d-flex gap-2 flex-wrap">
                         <div class="btn-group">
-                            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown"
+                                aria-expanded="false">
                                 <i class="ri-refresh-line me-1"></i> Sync Data P2H
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
-                                <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnSyncAll"><i class="ri-refresh-line text-primary me-2"></i><strong>Sync Semua</strong> (Warehouse & Production)</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnSyncWarehouse"><i class="ri-store-2-line text-success me-2"></i>Sync Data <strong>Warehouse</strong></a></li>
-                                <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnSyncProduction"><i class="ri-settings-4-line text-warning me-2"></i>Sync Data <strong>Production</strong></a></li>
+                                <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnSyncAll"><i
+                                            class="ri-refresh-line text-primary me-2"></i><strong>Sync Semua</strong>
+                                        (Warehouse & Production)</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnSyncWarehouse"><i
+                                            class="ri-store-2-line text-success me-2"></i>Sync Data
+                                        <strong>Warehouse</strong></a></li>
+                                <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnSyncProduction"><i
+                                            class="ri-settings-4-line text-warning me-2"></i>Sync Data
+                                        <strong>Production</strong></a></li>
                             </ul>
                         </div>
                         <a href="{{ route('p2h.form.index') }}" class="btn btn-primary">
-                            <i class="ri-add-line me-1"></i> + Input Genset P2H
+                            <i class="ri-add-line me-1"></i> Input Genset P2H
                         </a>
                     </div>
                 </div>
@@ -103,7 +113,8 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Nama Unit / Mesin</label>
-                            <input type="text" class="form-control" id="filterNoUnit" placeholder="Contoh: F16, PM01, Forklift">
+                            <input type="text" class="form-control" id="filterNoUnit"
+                                placeholder="Contoh: F16, PM01, Forklift">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Jenis P2H</label>
@@ -214,7 +225,8 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">No Unit / Code</label>
-                                <input type="text" class="form-control" name="nomor_unit" id="editNomorUnit" readonly>
+                                <input type="text" class="form-control" name="nomor_unit" id="editNomorUnit"
+                                    readonly>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Shift *</label>
@@ -226,7 +238,8 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Hours Meter (Jam Operasional)</label>
-                                <input type="number" step="any" class="form-control" name="hours_meter" id="editHourMeter">
+                                <input type="number" step="any" class="form-control" name="hours_meter"
+                                    id="editHourMeter">
                             </div>
                             <div class="col-md-9">
                                 <label class="form-label">Catatan</label>
@@ -268,28 +281,94 @@
 
             // Master metadata checklist sesuai API Warehouse & Production
             const checklistDict = {
-                cek_baterai: { label: 'Baterai / Battery', standar: 'Kondisi baik, daya >= 30%' },
-                air_aki: { label: 'Air Aki / Level Accu', standar: 'Berada di level standar/normal' },
-                cek_fork: { label: 'Cek Fork', standar: 'Tidak bengkok, tidak retak/patah' },
-                kondisi_body_kebersihan: { label: 'Body Unit & Kebersihan', standar: 'Bersih, tidak lecet/penyok parah' },
-                rantai_lift: { label: 'Rantai Lift', standar: 'Kekencangan seimbang, terlubrikasi' },
-                sistem_hidrolik: { label: 'Sistem Hidrolik', standar: 'Berfungsi normal, tidak ada kebocoran' },
-                sistem_kemudi: { label: 'Sistem Kemudi', standar: 'Tidak berat, bergerak lancar' },
-                panel_display: { label: 'Panel Display & Indikator', standar: 'Berfungsi normal, tidak ada alarm error' },
-                klakson: { label: 'Klakson', standar: 'Berbunyi nyaring saat ditekan' },
-                buzzer_mundur: { label: 'Buzzer Mundur', standar: 'Berbunyi saat unit mundur' },
-                kaca_spion: { label: 'Kaca Spion', standar: 'Terpasang lengkap, tidak pecah' },
-                kondisi_ban: { label: 'Kondisi Ban / Roda', standar: 'Layak pakai, tidak aus berlebih' },
-                fungsi_rem: { label: 'Fungsi Rem', standar: 'Berfungsi baik, tidak blong' },
-                lampu_kiri: { label: 'Lampu Kiri', standar: 'Menyala normal' },
-                lampu_kanan: { label: 'Lampu Kanan', standar: 'Menyala normal' },
-                lampu_sorot: { label: 'Lampu Sorot', standar: 'Menyala normal, tidak pecah' },
-                lampu_sign_depan_kanan: { label: 'Sign Depan Kanan', standar: 'Menyala berkedip' },
-                lampu_sign_depan_kiri: { label: 'Sign Depan Kiri', standar: 'Menyala berkedip' },
-                kipas_belakang: { label: 'Kipas Belakang', standar: 'Berputar normal' },
-                kondisi_axle: { label: 'Kondisi Axle', standar: 'Normal, tidak goyang' },
-                check_kunci_pm: { label: 'Kunci Pallet Mover', standar: 'Berfungsi baik dan lengkap' },
-                check_kebersihan_unit: { label: 'Kebersihan Unit PM', standar: 'Bersih dari kotoran' }
+                cek_baterai: {
+                    label: 'Baterai / Battery',
+                    standar: 'Kondisi baik, daya >= 30%'
+                },
+                air_aki: {
+                    label: 'Air Aki / Level Accu',
+                    standar: 'Berada di level standar/normal'
+                },
+                cek_fork: {
+                    label: 'Cek Fork',
+                    standar: 'Tidak bengkok, tidak retak/patah'
+                },
+                kondisi_body_kebersihan: {
+                    label: 'Body Unit & Kebersihan',
+                    standar: 'Bersih, tidak lecet/penyok parah'
+                },
+                rantai_lift: {
+                    label: 'Rantai Lift',
+                    standar: 'Kekencangan seimbang, terlubrikasi'
+                },
+                sistem_hidrolik: {
+                    label: 'Sistem Hidrolik',
+                    standar: 'Berfungsi normal, tidak ada kebocoran'
+                },
+                sistem_kemudi: {
+                    label: 'Sistem Kemudi',
+                    standar: 'Tidak berat, bergerak lancar'
+                },
+                panel_display: {
+                    label: 'Panel Display & Indikator',
+                    standar: 'Berfungsi normal, tidak ada alarm error'
+                },
+                klakson: {
+                    label: 'Klakson',
+                    standar: 'Berbunyi nyaring saat ditekan'
+                },
+                buzzer_mundur: {
+                    label: 'Buzzer Mundur',
+                    standar: 'Berbunyi saat unit mundur'
+                },
+                kaca_spion: {
+                    label: 'Kaca Spion',
+                    standar: 'Terpasang lengkap, tidak pecah'
+                },
+                kondisi_ban: {
+                    label: 'Kondisi Ban / Roda',
+                    standar: 'Layak pakai, tidak aus berlebih'
+                },
+                fungsi_rem: {
+                    label: 'Fungsi Rem',
+                    standar: 'Berfungsi baik, tidak blong'
+                },
+                lampu_kiri: {
+                    label: 'Lampu Kiri',
+                    standar: 'Menyala normal'
+                },
+                lampu_kanan: {
+                    label: 'Lampu Kanan',
+                    standar: 'Menyala normal'
+                },
+                lampu_sorot: {
+                    label: 'Lampu Sorot',
+                    standar: 'Menyala normal, tidak pecah'
+                },
+                lampu_sign_depan_kanan: {
+                    label: 'Sign Depan Kanan',
+                    standar: 'Menyala berkedip'
+                },
+                lampu_sign_depan_kiri: {
+                    label: 'Sign Depan Kiri',
+                    standar: 'Menyala berkedip'
+                },
+                kipas_belakang: {
+                    label: 'Kipas Belakang',
+                    standar: 'Berputar normal'
+                },
+                kondisi_axle: {
+                    label: 'Kondisi Axle',
+                    standar: 'Normal, tidak goyang'
+                },
+                check_kunci_pm: {
+                    label: 'Kunci Pallet Mover',
+                    standar: 'Berfungsi baik dan lengkap'
+                },
+                check_kebersihan_unit: {
+                    label: 'Kebersihan Unit PM',
+                    standar: 'Bersih dari kotoran'
+                }
             };
 
             function fmtDate(iso) {
@@ -322,12 +401,18 @@
             }
 
             function buildDetailHTML(row) {
-                const mesinInfo = row.mesin ? `${row.mesin.nama_mesin} (${row.mesin.kode_mesin || '-'})` : 'Belum Terhubung ke Master';
+                const mesinInfo = row.mesin ? `${row.mesin.nama_mesin} (${row.mesin.kode_mesin || '-'})` :
+                    'Belum Terhubung ke Master';
                 const scoreDisplay = row.persentase !== null ? `<b>${row.persentase}%</b>` : '-';
                 const jamOp = row.jam_operasional !== null ? `${row.jam_operasional}` : '-';
-                const syncSource = row.source || (row.warehouse_id ? 'Warehouse' : (row.production_id ? 'Production' : '-'));
-                const syncIdVal = row.warehouse_id ? `WH #${row.warehouse_id}` : (row.production_id ? `PRD #${row.production_id}` : `#${row.id}`);
-                const sourceBadge = syncSource === 'Production' ? `<span class="badge bg-warning text-dark">Production</span>` : (syncSource === 'Warehouse' ? `<span class="badge bg-info">Warehouse</span>` : `<span class="badge bg-secondary">${syncSource}</span>`);
+                const syncSource = row.source || (row.warehouse_id ? 'Warehouse' : (row.production_id ?
+                    'Production' : '-'));
+                const syncIdVal = row.warehouse_id ? `WH #${row.warehouse_id}` : (row.production_id ?
+                    `PRD #${row.production_id}` : `#${row.id}`);
+                const sourceBadge = syncSource === 'Production' ?
+                    `<span class="badge bg-warning text-dark">Production</span>` : (syncSource === 'Warehouse' ?
+                        `<span class="badge bg-info">Warehouse</span>` :
+                        `<span class="badge bg-secondary">${syncSource}</span>`);
 
                 let cells = '';
                 let countItems = 0;
@@ -472,32 +557,46 @@
                         let html = '';
                         currentRows.forEach((row, index) => {
                             const rowNum = start + index + 1;
-                            const machineName = row.mesin ? `${row.mesin.nama_mesin}` : `<span class="text-muted fst-italic">Belum cocok</span>`;
+                            const machineName = row.mesin ? `${row.mesin.nama_mesin}` :
+                                `<span class="text-muted fst-italic">Belum cocok</span>`;
                             const shiftVal = row.shift ? `Shift ${row.shift}` : '-';
-                            const hoursVal = row.jam_operasional !== null ? row.jam_operasional : '-';
-                            const percentageVal = row.persentase !== null ? `<b>${row.persentase}%</b>` : '-';
+                            const hoursVal = row.jam_operasional !== null ? row
+                                .jam_operasional : '-';
+                            const percentageVal = row.persentase !== null ?
+                                `<b>${row.persentase}%</b>` : '-';
 
                             let typeBadge = '';
                             if (row.jenis_p2h === 'Forklift') {
-                                typeBadge = `<span class="badge bg-soft-primary text-primary">Forklift</span>`;
+                                typeBadge =
+                                    `<span class="badge bg-soft-primary text-primary">Forklift</span>`;
                             } else if (row.jenis_p2h === 'Pallet Mover') {
-                                typeBadge = `<span class="badge bg-soft-info text-info">Pallet Mover</span>`;
+                                typeBadge =
+                                    `<span class="badge bg-soft-info text-info">Pallet Mover</span>`;
                             } else {
-                                typeBadge = `<span class="badge bg-soft-secondary text-secondary">${row.jenis_p2h || 'P2H'}</span>`;
+                                typeBadge =
+                                    `<span class="badge bg-soft-secondary text-secondary">${row.jenis_p2h || 'P2H'}</span>`;
                             }
 
                             let sourceTag = '';
-                            if (row.source === 'Production' || (!row.source && row.production_id)) {
-                                sourceTag = `<span class="badge bg-soft-warning text-dark border border-warning" style="font-size:0.68rem;">Production</span>`;
-                            } else if (row.source === 'Warehouse' || (!row.source && row.warehouse_id)) {
-                                sourceTag = `<span class="badge bg-soft-info text-info border border-info" style="font-size:0.68rem;">Warehouse</span>`;
+                            if (row.source === 'Production' || (!row.source && row
+                                    .production_id)) {
+                                sourceTag =
+                                    `<span class="badge bg-soft-warning text-dark border border-warning" style="font-size:0.68rem;">Production</span>`;
+                            } else if (row.source === 'Warehouse' || (!row.source && row
+                                    .warehouse_id)) {
+                                sourceTag =
+                                    `<span class="badge bg-soft-info text-info border border-info" style="font-size:0.68rem;">Warehouse</span>`;
                             }
 
-                            const deptDisplay = `<div>${row.dept || '-'}</div>${sourceTag ? '<div class="mt-1">' + sourceTag + '</div>' : ''}`;
+                            const deptDisplay =
+                                `<div>${row.dept || '-'}</div>${sourceTag ? '<div class="mt-1">' + sourceTag + '</div>' : ''}`;
 
-                            const showBtn = `<button class="btn btn-sm btn-info btn-detail me-1" data-id="${row.id}" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
-                            const editBtn = `<button class="btn btn-sm btn-primary btn-edit me-1" data-id="${row.id}" title="Edit"><i class="mdi mdi-pencil"></i></button>`;
-                            const delBtn = `<button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
+                            const showBtn =
+                                `<button class="btn btn-sm btn-info btn-detail me-1" data-id="${row.id}" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
+                            const editBtn =
+                                `<button class="btn btn-sm btn-primary btn-edit me-1" data-id="${row.id}" title="Edit"><i class="mdi mdi-pencil"></i></button>`;
+                            const delBtn =
+                                `<button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
 
                             html += `
                                 <tr>
@@ -528,7 +627,8 @@
                         // Pagination
                         const totalPages = Math.ceil(totalRecords / pageSize);
                         const endRow = Math.min(start + pageSize, totalRecords);
-                        $('#paginationInfo').text(`Menampilkan ${start + 1} sampai ${endRow} dari ${totalRecords} data`);
+                        $('#paginationInfo').text(
+                            `Menampilkan ${start + 1} sampai ${endRow} dari ${totalRecords} data`);
 
                         let pagHtml = '';
                         pagHtml += `
@@ -613,7 +713,9 @@
             loadTableData(1);
 
             // Filter button events
-            $('#btnApply').on('click', function() { loadTableData(1); });
+            $('#btnApply').on('click', function() {
+                loadTableData(1);
+            });
             $('#btnReset').on('click', function() {
                 $('#filterDate').val('');
                 $('#filterNoUnit').val('');
@@ -639,7 +741,8 @@
                 if (!row) return;
 
                 $('#detailTitle').text(`P2H ${row.jenis_p2h} - Unit ${row.nomor_unit}`);
-                $('#detailSub').text(`Inspeksi tanggal ${fmtDate(row.tanggal)} (Shift ${row.shift || '-'})`);
+                $('#detailSub').text(
+                `Inspeksi tanggal ${fmtDate(row.tanggal)} (Shift ${row.shift || '-'})`);
                 $('#detailBody').html(buildDetailHTML(row));
                 $('#modalDetail').modal('show');
             });
@@ -726,7 +829,8 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Gagal',
-                            text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memperbarui data.'
+                            text: xhr.responseJSON?.message ||
+                                'Terjadi kesalahan saat memperbarui data.'
                         });
                     },
                     complete: function() {
@@ -824,7 +928,8 @@
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Sync Gagal',
-                                    text: xhr.responseJSON?.message || 'Tidak dapat menghubungi server API. Pastikan server aktif di host/port yang sesuai.'
+                                    text: xhr.responseJSON?.message ||
+                                        'Tidak dapat menghubungi server API. Pastikan server aktif di host/port yang sesuai.'
                                 });
                             }
                         });
