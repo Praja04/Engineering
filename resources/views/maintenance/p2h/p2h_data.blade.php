@@ -73,13 +73,21 @@
             <div class="card card-soft shadow-sm">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div>
-                        <h4 class="fw-bold mb-1">Data Maintenance P2H (Warehouse)</h4>
-                        <div class="small-muted">Data pemeriksaan Forklift & Pallet Mover yang disinkronkan dari sistem Warehouse</div>
+                        <h4 class="fw-bold mb-1">Data Maintenance P2H</h4>
+                        <div class="small-muted">Data pemeriksaan Forklift & Pallet Mover yang disinkronkan dari sistem Warehouse & Production</div>
                     </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-success" id="btnSyncWarehouse">
-                            <i class="ri-refresh-line me-1"></i> Sync Data Warehouse
-                        </button>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ri-refresh-line me-1"></i> Sync Data P2H
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnSyncAll"><i class="ri-refresh-line text-primary me-2"></i><strong>Sync Semua</strong> (Warehouse & Production)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnSyncWarehouse"><i class="ri-store-2-line text-success me-2"></i>Sync Data <strong>Warehouse</strong></a></li>
+                                <li><a class="dropdown-item py-2" href="javascript:void(0)" id="btnSyncProduction"><i class="ri-settings-4-line text-warning me-2"></i>Sync Data <strong>Production</strong></a></li>
+                            </ul>
+                        </div>
                         <a href="{{ route('p2h.form.index') }}" class="btn btn-primary">
                             <i class="ri-add-line me-1"></i> + Input Genset P2H
                         </a>
@@ -251,12 +259,14 @@
         $(document).ready(function() {
             const API_URL = "{{ url('api/mtc/p2h/get-data') }}";
             const SYNC_URL = "{{ route('p2h.sync.warehouse') }}";
+            const SYNC_PRODUCTION_URL = "{{ route('p2h.sync.production') }}";
+            const SYNC_ALL_URL = "{{ route('p2h.sync.all') }}";
             const UPDATE_URL = "{{ url('mtc/p2h/data/update') }}";
             const DELETE_URL = "{{ url('mtc/p2h/data/delete') }}";
 
             let currentRows = [];
 
-            // Master metadata checklist sesuai API Warehouse
+            // Master metadata checklist sesuai API Warehouse & Production
             const checklistDict = {
                 cek_baterai: { label: 'Baterai / Battery', standar: 'Kondisi baik, daya >= 30%' },
                 air_aki: { label: 'Air Aki / Level Accu', standar: 'Berada di level standar/normal' },
@@ -315,6 +325,9 @@
                 const mesinInfo = row.mesin ? `${row.mesin.nama_mesin} (${row.mesin.kode_mesin || '-'})` : 'Belum Terhubung ke Master';
                 const scoreDisplay = row.persentase !== null ? `<b>${row.persentase}%</b>` : '-';
                 const jamOp = row.jam_operasional !== null ? `${row.jam_operasional}` : '-';
+                const syncSource = row.source || (row.warehouse_id ? 'Warehouse' : (row.production_id ? 'Production' : '-'));
+                const syncIdVal = row.warehouse_id ? `WH #${row.warehouse_id}` : (row.production_id ? `PRD #${row.production_id}` : `#${row.id}`);
+                const sourceBadge = syncSource === 'Production' ? `<span class="badge bg-warning text-dark">Production</span>` : (syncSource === 'Warehouse' ? `<span class="badge bg-info">Warehouse</span>` : `<span class="badge bg-secondary">${syncSource}</span>`);
 
                 let cells = '';
                 let countItems = 0;
@@ -390,8 +403,8 @@
                             <div>${kelayakanBadge(row.status_kelayakan)}</div>
                         </div>
                         <div class="col-md-4">
-                            <div class="text-muted small">ID Sync Warehouse</div>
-                            <div><span class="badge bg-info">#${row.warehouse_id || '-'}</span></div>
+                            <div class="text-muted small">Sumber & ID Sync</div>
+                            <div>${sourceBadge} <span class="badge bg-secondary">${syncIdVal}</span></div>
                         </div>
                         ${fotoAccuHtml}
                     </div>
@@ -473,6 +486,15 @@
                                 typeBadge = `<span class="badge bg-soft-secondary text-secondary">${row.jenis_p2h || 'P2H'}</span>`;
                             }
 
+                            let sourceTag = '';
+                            if (row.source === 'Production' || (!row.source && row.production_id)) {
+                                sourceTag = `<span class="badge bg-soft-warning text-dark border border-warning" style="font-size:0.68rem;">Production</span>`;
+                            } else if (row.source === 'Warehouse' || (!row.source && row.warehouse_id)) {
+                                sourceTag = `<span class="badge bg-soft-info text-info border border-info" style="font-size:0.68rem;">Warehouse</span>`;
+                            }
+
+                            const deptDisplay = `<div>${row.dept || '-'}</div>${sourceTag ? '<div class="mt-1">' + sourceTag + '</div>' : ''}`;
+
                             const showBtn = `<button class="btn btn-sm btn-info btn-detail me-1" data-id="${row.id}" title="Lihat Detail"><i class="mdi mdi-eye"></i></button>`;
                             const editBtn = `<button class="btn btn-sm btn-primary btn-edit me-1" data-id="${row.id}" title="Edit"><i class="mdi mdi-pencil"></i></button>`;
                             const delBtn = `<button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
@@ -484,7 +506,7 @@
                                     <td>${typeBadge}</td>
                                     <td><span class="fw-semibold text-primary">${row.nomor_unit || '-'}</span></td>
                                     <td>${machineName}</td>
-                                    <td>${row.dept || '-'}</td>
+                                    <td>${deptDisplay}</td>
                                     <td class="text-center">${shiftVal}</td>
                                     <td>${row.operator_name || '-'}</td>
                                     <td>${hoursVal}</td>
@@ -758,11 +780,11 @@
                 });
             });
 
-            // Sync Data Warehouse (Direct confirm without modal)
-            $('#btnSyncWarehouse').on('click', function() {
+            // Helper generic function for sync trigger
+            function triggerSync(url, title, text, loadingText) {
                 Swal.fire({
-                    title: 'Sync Data Warehouse?',
-                    text: 'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Warehouse.',
+                    title: title,
+                    text: text,
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#198754',
@@ -773,7 +795,7 @@
                     if (result.isConfirmed) {
                         Swal.fire({
                             title: 'Menyinkronkan Data...',
-                            text: 'Sedang menghubungi API Warehouse & menyinkronkan data P2H...',
+                            text: loadingText,
                             allowOutsideClick: false,
                             allowEscapeKey: false,
                             showConfirmButton: false,
@@ -783,7 +805,7 @@
                         });
 
                         $.ajax({
-                            url: SYNC_URL,
+                            url: url,
                             type: 'POST',
                             data: {
                                 _token: $('meta[name="csrf-token"]').attr('content')
@@ -802,12 +824,42 @@
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Sync Gagal',
-                                    text: xhr.responseJSON?.message || 'Tidak dapat menghubungi server warehouse. Pastikan server aktif di port yang sesuai.'
+                                    text: xhr.responseJSON?.message || 'Tidak dapat menghubungi server API. Pastikan server aktif di host/port yang sesuai.'
                                 });
                             }
                         });
                     }
                 });
+            }
+
+            // Sync Data Warehouse
+            $('#btnSyncWarehouse').on('click', function() {
+                triggerSync(
+                    SYNC_URL,
+                    'Sync Data Warehouse?',
+                    'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Warehouse.',
+                    'Sedang menghubungi API Warehouse & menyinkronkan data P2H...'
+                );
+            });
+
+            // Sync Data Production
+            $('#btnSyncProduction').on('click', function() {
+                triggerSync(
+                    SYNC_PRODUCTION_URL,
+                    'Sync Data Production?',
+                    'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Production.',
+                    'Sedang menghubungi API Production & menyinkronkan data P2H...'
+                );
+            });
+
+            // Sync All Data (Warehouse & Production)
+            $('#btnSyncAll').on('click', function() {
+                triggerSync(
+                    SYNC_ALL_URL,
+                    'Sync Semua Data (Warehouse & Production)?',
+                    'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Warehouse & Production.',
+                    'Sedang menyinkronkan seluruh data P2H dari Warehouse & Production...'
+                );
             });
         });
     </script>

@@ -307,52 +307,150 @@ class MtcP2hController extends Controller
     }
 
     /**
-     * Sinkronisasi data P2H dari Warehouse API (/api/p2h/all-data?format=separate)
+     * Sinkronisasi data P2H dari Warehouse API
      */
     public function syncWarehouse(Request $request)
     {
-        try {
-            // Bisa menerima payload langsung jika webhook / testing
-            if ($request->has('data') && is_array($request->input('data'))) {
-                $payload = $request->input('data');
-            } else {
-                $baseUrl = env('WAREHOUSE_BASE_URL', 'http://127.0.0.1:8081');
-                $baseUrl = rtrim($baseUrl, '/');
-                $apiUrl = "{$baseUrl}/api/p2h/all-data?format=separate";
+        $customData = ($request->has('data') && is_array($request->input('data'))) ? $request->input('data') : null;
+        $result = $this->performSyncP2h('Warehouse', 'http://127.0.0.1:8081', 'WAREHOUSE_BASE_URL', $customData, 'Warehouse');
 
-                Log::info("Sinkronisasi data P2H Warehouse dari: {$apiUrl}");
+        return response()->json($result, $result['status'] ? 200 : 500);
+    }
 
-                $response = Http::timeout(30)->get($apiUrl);
+    /**
+     * Sinkronisasi data P2H dari Production API
+     */
+    public function syncProduction(Request $request)
+    {
+        $customData = ($request->has('data') && is_array($request->input('data'))) ? $request->input('data') : null;
+        $result = $this->performSyncP2h('Production', 'http://127.0.0.1:8082', 'PRODUCTION_BASE_URL', $customData, 'Produksi');
 
+        return response()->json($result, $result['status'] ? 200 : 500);
+    }
+
+    /**
+     * Sinkronisasi data P2H dari Warehouse & Production sekaligus
+     */
+    public function syncAll(Request $request)
+    {
+        $whResult = $this->performSyncP2h('Warehouse', 'http://127.0.0.1:8081', 'WAREHOUSE_BASE_URL', null, 'Warehouse');
+        $prdResult = $this->performSyncP2h('Production', 'http://127.0.0.1:8082', 'PRODUCTION_BASE_URL', null, 'Produksi');
+
+        $whSuccess = $whResult['status'] ?? false;
+        $prdSuccess = $prdResult['status'] ?? false;
+
+        $whForklift = $whResult['data']['total_forklift'] ?? 0;
+        $whPM = $whResult['data']['total_pallet_mover'] ?? 0;
+        $prdForklift = $prdResult['data']['total_forklift'] ?? 0;
+        $prdPM = $prdResult['data']['total_pallet_mover'] ?? 0;
+
+        $totalForklift = $whForklift + $prdForklift;
+        $totalPM = $whPM + $prdPM;
+        $grandTotal = $totalForklift + $totalPM;
+
+        $messages = [];
+        if ($whSuccess) {
+            $messages[] = "Warehouse: {$whResult['message']}";
+        } else {
+            $messages[] = "Warehouse Gagal: {$whResult['message']}";
+        }
+
+        if ($prdSuccess) {
+            $messages[] = "Production: {$prdResult['message']}";
+        } else {
+            $messages[] = "Production Gagal: {$prdResult['message']}";
+        }
+
+        $overallStatus = $whSuccess || $prdSuccess;
+
+        return response()->json([
+            'status' => $overallStatus,
+            'message' => implode(" | ", $messages),
+            'data' => [
+                'warehouse' => $whResult['data'] ?? null,
+                'production' => $prdResult['data'] ?? null,
+                'total_forklift' => $totalForklift,
+                'total_pallet_mover' => $totalPM,
+                'total' => $grandTotal,
+            ]
+        ], $overallStatus ? 200 : 500);
+    }
+
+    /**
+     * Helper umum untuk menyinkronkan data P2H dari endpoint API atau payload
+     */
+    private function performSyncP2h(string $source, string $defaultBaseUrl, string $envKey, ?array $customData = null, string $defaultDept = 'Production'): array
+    {
+        // 1. Dapatkan payload
+        if ($customData !== null && is_array($customData)) {
+            $payload = $customData;
+        } else {
+            $baseUrl = env($envKey, $defaultBaseUrl);
+            $baseUrl = rtrim($baseUrl, '/');
+            $apiUrl = "{$baseUrl}/api/p2h/all-data";
+
+            Log::info("Sinkronisasi data P2H {$source} dari: {$apiUrl}");
+
+            try {
+                // Coba ambil format separate dulu
+                $response = Http::timeout(30)->get("{$apiUrl}?format=separate");
                 if (!$response->successful()) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Gagal menghubungi API Warehouse (HTTP ' . $response->status() . '). Pastikan server warehouse aktif di: ' . $apiUrl,
-                    ], 500);
+                    // Fallback tanpa query params
+                    $response = Http::timeout(30)->get($apiUrl);
                 }
-
-                $json = $response->json();
-                $payload = $json['data'] ?? [];
+            } catch (\Exception $e) {
+                return [
+                    'status' => false,
+                    'message' => "Gagal terhubung ke API {$source} ({$apiUrl}): " . $e->getMessage(),
+                ];
             }
 
+            if (!$response->successful()) {
+                return [
+                    'status' => false,
+                    'message' => "Gagal menghubungi API {$source} (HTTP {$response->status()}). Pastikan server {$source} aktif di: {$apiUrl}",
+                ];
+            }
+
+            $json = $response->json();
+            $payload = $json['data'] ?? [];
+        }
+
+        // 2. Pilah antara forklift dan pallet mover
+        $forklifts = [];
+        $palletMovers = [];
+
+        if (isset($payload['forklift']) || isset($payload['pallet_mover'])) {
             $forklifts = $payload['forklift'] ?? [];
             $palletMovers = $payload['pallet_mover'] ?? [];
+        } elseif (is_array($payload)) {
+            // Payload berupa array list data flat (sesuai format JSON response)
+            foreach ($payload as $item) {
+                $jenis = strtolower($item['jenis_p2h'] ?? '');
+                if (str_contains($jenis, 'pallet') || str_contains($jenis, 'pm') || str_contains($jenis, 'mover')) {
+                    $palletMovers[] = $item;
+                } else {
+                    $forklifts[] = $item;
+                }
+            }
+        }
 
-            $savedForklift = 0;
-            $savedPalletMover = 0;
+        $savedForklift = 0;
+        $savedPalletMover = 0;
 
-            DB::beginTransaction();
-
-            // 1. Mapping data Forklift
+        DB::beginTransaction();
+        try {
+            // 3. Mapping data Forklift
             foreach ($forklifts as $item) {
                 $nomorUnit = $item['nomor_unit'] ?? '';
-                $mesinId = $this->resolveMesinId($nomorUnit, $item['dept'] ?? null);
+                $itemDept = $item['dept'] ?? $defaultDept;
+                $mesinId = $this->resolveMesinId($nomorUnit, $itemDept);
 
                 $mapped = [
-                    'warehouse_id' => $item['id'] ?? null,
                     'mesin_id' => $mesinId,
                     'nomor_unit' => $nomorUnit,
-                    'dept' => $item['dept'] ?? 'Warehouse',
+                    'dept' => $itemDept,
+                    'source' => $source,
                     'tanggal' => $item['tanggal'] ?? date('Y-m-d'),
                     'shift' => (string)($item['shift'] ?? '1'),
                     'jenis_p2h' => $item['jenis_p2h'] ?? 'Forklift',
@@ -363,10 +461,10 @@ class MtcP2hController extends Controller
                     'foto_kondisi_accu' => $item['foto_kondisi_accu'] ?? null,
                     'catatan' => $item['catatan'] ?? null,
 
-                    // Checklist
-                    'cek_baterai' => isset($item['cek_baterai']) ? (bool)$item['cek_baterai'] : null,
-                    'cek_fork' => isset($item['cek_fork']) ? (bool)$item['cek_fork'] : null,
-                    'kondisi_body_kebersihan' => isset($item['kondisi_body_kebersihan']) ? (bool)$item['kondisi_body_kebersihan'] : null,
+                    // Checklist Forklift
+                    'cek_baterai' => isset($item['cek_baterai']) ? (bool)$item['cek_baterai'] : (isset($item['check_battery']) ? (bool)$item['check_battery'] : null),
+                    'cek_fork' => isset($item['cek_fork']) ? (bool)$item['cek_fork'] : (isset($item['check_fork']) ? (bool)$item['check_fork'] : null),
+                    'kondisi_body_kebersihan' => isset($item['kondisi_body_kebersihan']) ? (bool)$item['kondisi_body_kebersihan'] : (isset($item['check_body_unit']) ? (bool)$item['check_body_unit'] : null),
                     'lampu_kiri' => isset($item['lampu_kiri']) ? (bool)$item['lampu_kiri'] : null,
                     'lampu_kanan' => isset($item['lampu_kanan']) ? (bool)$item['lampu_kanan'] : null,
                     'lampu_sorot' => isset($item['lampu_sorot']) ? (bool)$item['lampu_sorot'] : null,
@@ -374,114 +472,134 @@ class MtcP2hController extends Controller
                     'lampu_sign_depan_kiri' => isset($item['lampu_sign_depan_kiri']) ? (bool)$item['lampu_sign_depan_kiri'] : null,
                     'kipas_belakang' => isset($item['kipas_belakang']) ? (bool)$item['kipas_belakang'] : null,
                     'rantai_lift' => isset($item['rantai_lift']) ? (bool)$item['rantai_lift'] : null,
-                    'sistem_hidrolik' => isset($item['sistem_hidrolik']) ? (bool)$item['sistem_hidrolik'] : null,
+                    'sistem_hidrolik' => isset($item['sistem_hidrolik']) ? (bool)$item['sistem_hidrolik'] : (isset($item['check_hydraulic']) ? (bool)$item['check_hydraulic'] : null),
                     'kondisi_axle' => isset($item['kondisi_axle']) ? (bool)$item['kondisi_axle'] : null,
-                    'sistem_kemudi' => isset($item['sistem_kemudi']) ? (bool)$item['sistem_kemudi'] : null,
+                    'sistem_kemudi' => isset($item['sistem_kemudi']) ? (bool)$item['sistem_kemudi'] : (isset($item['check_sistem_kemudi']) ? (bool)$item['check_sistem_kemudi'] : null),
                     'panel_display' => isset($item['panel_display']) ? (bool)$item['panel_display'] : null,
-                    'air_aki' => isset($item['air_aki']) ? (bool)$item['air_aki'] : null,
-                    'klakson' => isset($item['klakson']) ? (bool)$item['klakson'] : null,
+                    'air_aki' => isset($item['air_aki']) ? (bool)$item['air_aki'] : (isset($item['check_air_accu']) ? (bool)$item['check_air_accu'] : null),
+                    'klakson' => isset($item['klakson']) ? (bool)$item['klakson'] : (isset($item['check_klakson']) ? (bool)$item['check_klakson'] : null),
                     'buzzer_mundur' => isset($item['buzzer_mundur']) ? (bool)$item['buzzer_mundur'] : null,
                     'kaca_spion' => isset($item['kaca_spion']) ? (bool)$item['kaca_spion'] : null,
-                    'kondisi_ban' => isset($item['kondisi_ban']) ? (bool)$item['kondisi_ban'] : null,
+                    'kondisi_ban' => isset($item['kondisi_ban']) ? (bool)$item['kondisi_ban'] : (isset($item['check_roda']) ? (bool)$item['check_roda'] : null),
                     'fungsi_rem' => isset($item['fungsi_rem']) ? (bool)$item['fungsi_rem'] : null,
                 ];
 
-                if (!empty($mapped['warehouse_id'])) {
-                    MtcP2hModel::updateOrCreate(
-                        [
-                            'warehouse_id' => $mapped['warehouse_id'],
-                            'jenis_p2h' => $mapped['jenis_p2h'],
-                        ],
-                        $mapped
-                    );
-                } else {
-                    MtcP2hModel::updateOrCreate(
-                        [
-                            'nomor_unit' => $mapped['nomor_unit'],
-                            'tanggal' => $mapped['tanggal'],
-                            'shift' => $mapped['shift'],
-                            'jenis_p2h' => $mapped['jenis_p2h'],
-                        ],
-                        $mapped
-                    );
+                if ($source === 'Warehouse') {
+                    $mapped['warehouse_id'] = $item['id'] ?? null;
+                    if (!empty($mapped['warehouse_id'])) {
+                        MtcP2hModel::updateOrCreate(
+                            ['warehouse_id' => $mapped['warehouse_id'], 'jenis_p2h' => $mapped['jenis_p2h']],
+                            $mapped
+                        );
+                    } else {
+                        MtcP2hModel::updateOrCreate(
+                            ['nomor_unit' => $mapped['nomor_unit'], 'tanggal' => $mapped['tanggal'], 'shift' => $mapped['shift'], 'jenis_p2h' => $mapped['jenis_p2h'], 'dept' => $mapped['dept']],
+                            $mapped
+                        );
+                    }
+                } elseif ($source === 'Production') {
+                    $mapped['production_id'] = $item['id'] ?? null;
+                    if (!empty($mapped['production_id'])) {
+                        MtcP2hModel::updateOrCreate(
+                            ['production_id' => $mapped['production_id'], 'jenis_p2h' => $mapped['jenis_p2h']],
+                            $mapped
+                        );
+                    } else {
+                        MtcP2hModel::updateOrCreate(
+                            ['nomor_unit' => $mapped['nomor_unit'], 'tanggal' => $mapped['tanggal'], 'shift' => $mapped['shift'], 'jenis_p2h' => $mapped['jenis_p2h'], 'dept' => $mapped['dept']],
+                            $mapped
+                        );
+                    }
                 }
+
                 $savedForklift++;
             }
 
-            // 2. Mapping data Pallet Mover
+            // 4. Mapping data Pallet Mover
             foreach ($palletMovers as $item) {
                 $nomorUnit = $item['nomor_unit'] ?? '';
-                $mesinId = $this->resolveMesinId($nomorUnit, $item['dept'] ?? null);
+                $itemDept = $item['dept'] ?? $defaultDept;
+                $mesinId = $this->resolveMesinId($nomorUnit, $itemDept);
 
                 $mapped = [
-                    'warehouse_id' => $item['id'] ?? null,
                     'mesin_id' => $mesinId,
                     'nomor_unit' => $nomorUnit,
-                    'dept' => $item['dept'] ?? 'Warehouse',
+                    'dept' => $itemDept,
+                    'source' => $source,
                     'tanggal' => $item['tanggal'] ?? date('Y-m-d'),
                     'shift' => (string)($item['shift'] ?? '1'),
                     'jenis_p2h' => $item['jenis_p2h'] ?? 'Pallet Mover',
                     'operator_name' => $item['operator_name'] ?? null,
-                    'persentase' => $item['kelayakan']['persentase'] ?? null,
+                    'jam_operasional' => $item['jam_operasional'] ?? null,
+                    'persentase' => isset($item['persentase']) ? $item['persentase'] : ($item['kelayakan']['persentase'] ?? null),
                     'status_kelayakan' => $item['kelayakan']['status'] ?? null,
                     'foto_kondisi_accu' => $item['foto_kondisi_accu'] ?? null,
                     'catatan' => $item['catatan'] ?? null,
 
                     // Checklist Pallet Mover
-                    'air_aki' => isset($item['check_air_accu']) ? (bool)$item['check_air_accu'] : null,
-                    'cek_baterai' => isset($item['check_battery']) ? (bool)$item['check_battery'] : null,
-                    'kondisi_body_kebersihan' => isset($item['check_body_unit']) ? (bool)$item['check_body_unit'] : null,
-                    'klakson' => isset($item['check_klakson']) ? (bool)$item['check_klakson'] : null,
-                    'kondisi_ban' => isset($item['check_roda']) ? (bool)$item['check_roda'] : null,
-                    'sistem_kemudi' => isset($item['check_sistem_kemudi']) ? (bool)$item['check_sistem_kemudi'] : null,
+                    'air_aki' => isset($item['check_air_accu']) ? (bool)$item['check_air_accu'] : (isset($item['air_aki']) ? (bool)$item['air_aki'] : null),
+                    'cek_baterai' => isset($item['check_battery']) ? (bool)$item['check_battery'] : (isset($item['cek_baterai']) ? (bool)$item['cek_baterai'] : null),
+                    'kondisi_body_kebersihan' => isset($item['check_body_unit']) ? (bool)$item['check_body_unit'] : (isset($item['kondisi_body_kebersihan']) ? (bool)$item['kondisi_body_kebersihan'] : null),
+                    'klakson' => isset($item['check_klakson']) ? (bool)$item['check_klakson'] : (isset($item['klakson']) ? (bool)$item['klakson'] : null),
+                    'kondisi_ban' => isset($item['check_roda']) ? (bool)$item['check_roda'] : (isset($item['kondisi_ban']) ? (bool)$item['kondisi_ban'] : null),
+                    'sistem_kemudi' => isset($item['check_sistem_kemudi']) ? (bool)$item['check_sistem_kemudi'] : (isset($item['sistem_kemudi']) ? (bool)$item['sistem_kemudi'] : null),
                     'check_kebersihan_unit' => isset($item['check_kebersihan_unit']) ? (bool)$item['check_kebersihan_unit'] : null,
                     'check_kunci_pm' => isset($item['check_kunci_pm']) ? (bool)$item['check_kunci_pm'] : null,
-                    'sistem_hidrolik' => isset($item['check_hydraulic']) ? (bool)$item['check_hydraulic'] : null,
+                    'sistem_hidrolik' => isset($item['check_hydraulic']) ? (bool)$item['check_hydraulic'] : (isset($item['sistem_hidrolik']) ? (bool)$item['sistem_hidrolik'] : null),
                 ];
 
-                if (!empty($mapped['warehouse_id'])) {
-                    MtcP2hModel::updateOrCreate(
-                        [
-                            'warehouse_id' => $mapped['warehouse_id'],
-                            'jenis_p2h' => $mapped['jenis_p2h'],
-                        ],
-                        $mapped
-                    );
-                } else {
-                    MtcP2hModel::updateOrCreate(
-                        [
-                            'nomor_unit' => $mapped['nomor_unit'],
-                            'tanggal' => $mapped['tanggal'],
-                            'shift' => $mapped['shift'],
-                            'jenis_p2h' => $mapped['jenis_p2h'],
-                        ],
-                        $mapped
-                    );
+                if ($source === 'Warehouse') {
+                    $mapped['warehouse_id'] = $item['id'] ?? null;
+                    if (!empty($mapped['warehouse_id'])) {
+                        MtcP2hModel::updateOrCreate(
+                            ['warehouse_id' => $mapped['warehouse_id'], 'jenis_p2h' => $mapped['jenis_p2h']],
+                            $mapped
+                        );
+                    } else {
+                        MtcP2hModel::updateOrCreate(
+                            ['nomor_unit' => $mapped['nomor_unit'], 'tanggal' => $mapped['tanggal'], 'shift' => $mapped['shift'], 'jenis_p2h' => $mapped['jenis_p2h'], 'dept' => $mapped['dept']],
+                            $mapped
+                        );
+                    }
+                } elseif ($source === 'Production') {
+                    $mapped['production_id'] = $item['id'] ?? null;
+                    if (!empty($mapped['production_id'])) {
+                        MtcP2hModel::updateOrCreate(
+                            ['production_id' => $mapped['production_id'], 'jenis_p2h' => $mapped['jenis_p2h']],
+                            $mapped
+                        );
+                    } else {
+                        MtcP2hModel::updateOrCreate(
+                            ['nomor_unit' => $mapped['nomor_unit'], 'tanggal' => $mapped['tanggal'], 'shift' => $mapped['shift'], 'jenis_p2h' => $mapped['jenis_p2h'], 'dept' => $mapped['dept']],
+                            $mapped
+                        );
+                    }
                 }
+
                 $savedPalletMover++;
             }
 
             DB::commit();
 
-            return response()->json([
+            return [
                 'status' => true,
-                'message' => "Sinkronisasi P2H Warehouse berhasil! Diperbarui: {$savedForklift} Forklift & {$savedPalletMover} Pallet Mover.",
+                'message' => "Sinkronisasi P2H {$source} berhasil! Diperbarui: {$savedForklift} Forklift & {$savedPalletMover} Pallet Mover.",
                 'data' => [
                     'total_forklift' => $savedForklift,
                     'total_pallet_mover' => $savedPalletMover,
                     'total' => $savedForklift + $savedPalletMover,
                 ]
-            ]);
+            ];
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error syncWarehouse P2H: ' . $e->getMessage(), [
+            Log::error("Error sync P2H {$source}: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return response()->json([
+            return [
                 'status' => false,
-                'message' => 'Gagal sinkronisasi data P2H: ' . $e->getMessage(),
-            ], 500);
+                'message' => "Gagal sinkronisasi data P2H {$source}: " . $e->getMessage(),
+            ];
         }
     }
 
@@ -499,77 +617,117 @@ class MtcP2hController extends Controller
         $cleanUnit = strtoupper(str_replace(['-', ' ', '_'], '', $nomorUnit));
         $p2hTypes = ['Diesel P2H', 'Electric P2H', 'Electrical P2H'];
 
-        // Buat variasi kode untuk pencocokan leading zero (misal F1 <-> F01, PM3 <-> PM03)
+        // Buat variasi kode untuk pencocokan
         $variants = [$nomorUnit, $cleanUnit];
-        if (preg_match('/^([A-Z]+)(\d+)$/', $cleanUnit, $m)) {
+
+        // Jika nomor unit diawali nama seperti FORKLIFT02 / PALLETMOVER03 / STACKER01
+        if (preg_match('/^(FORKLIFT|FL|FORK|PALLETMOVER|PALLET|PM|STACKER|ST|ES)(\d+)$/i', $cleanUnit, $matchFull)) {
+            $p = strtoupper($matchFull[1]);
+            $num = (int)$matchFull[2];
+            $numPad = sprintf('%02d', $num);
+
+            if (str_starts_with($p, 'FORK') || $p === 'FL') {
+                $variants[] = 'F' . $num;
+                $variants[] = 'F' . $numPad;
+                $variants[] = 'FORKLIFT ' . $num;
+                $variants[] = 'FORKLIFT ' . $numPad;
+            } elseif (str_starts_with($p, 'PALLET') || $p === 'PM') {
+                $variants[] = 'PM' . $num;
+                $variants[] = 'PM' . $numPad;
+                $variants[] = 'PALLET MOVER ' . $num;
+                $variants[] = 'PALLET MOVER ' . $numPad;
+            } elseif (str_starts_with($p, 'ST') || $p === 'ES') {
+                $variants[] = 'ES' . $num;
+                $variants[] = 'ES' . $numPad;
+            }
+        } elseif (preg_match('/^([A-Z]+)(\d+)$/', $cleanUnit, $m)) {
             $prefix = $m[1];
             $num = (int)$m[2];
             $variants[] = $prefix . $num;
             $variants[] = $prefix . sprintf('%02d', $num);
         }
+
         $variants = array_unique($variants);
 
-        // 1. Exact match kode_mesin pada jenis_mtc Diesel P2H / Electric P2H
-        $mesin = MtcMasterMesinModel::whereIn('jenis_mtc', $p2hTypes)
+        // 1. Exact match kode_mesin / nama_mesin pada jenis_mtc Diesel P2H / Electric P2H
+        $query1 = MtcMasterMesinModel::whereIn('jenis_mtc', $p2hTypes)
             ->where(function ($q) use ($variants) {
                 foreach ($variants as $v) {
-                    $q->orWhere('kode_mesin', $v);
+                    $q->orWhere('kode_mesin', $v)
+                      ->orWhere('nama_mesin', $v);
                 }
-            })
-            ->first();
+            });
 
+        if (!empty($dept)) {
+            $deptClean = str_contains(strtolower($dept), 'prod') ? 'Produksi' : (str_contains(strtolower($dept), 'ware') ? 'Warehouse' : $dept);
+            $mesinWithDept = (clone $query1)->where('dept', 'like', '%' . $deptClean . '%')->first();
+            if ($mesinWithDept) {
+                return $mesinWithDept->id;
+            }
+        }
+
+        $mesin = $query1->first();
         if ($mesin) {
             return $mesin->id;
         }
 
-        // 2. Prefix match kode_mesin (contoh: 'PM04' cocok dengan 'PM04-WRH' jika ada di P2H)
-        $mesin = MtcMasterMesinModel::whereIn('jenis_mtc', $p2hTypes)
+        // 2. Prefix match kode_mesin
+        $query2 = MtcMasterMesinModel::whereIn('jenis_mtc', $p2hTypes)
             ->where(function ($q) use ($variants) {
                 foreach ($variants as $v) {
                     $q->orWhere('kode_mesin', 'like', $v . '-%')
                       ->orWhere('kode_mesin', 'like', $v . ' %');
                 }
-            })
-            ->first();
+            });
 
+        if (!empty($dept)) {
+            $deptClean = str_contains(strtolower($dept), 'prod') ? 'Produksi' : (str_contains(strtolower($dept), 'ware') ? 'Warehouse' : $dept);
+            $mesinWithDept = (clone $query2)->where('dept', 'like', '%' . $deptClean . '%')->first();
+            if ($mesinWithDept) {
+                return $mesinWithDept->id;
+            }
+        }
+
+        $mesin = $query2->first();
         if ($mesin) {
             return $mesin->id;
         }
 
-        // 3. Match berdasarkan nama_mesin pada jenis_mtc P2H sesuai tipe unit
-        if (isset($m) && $m) {
-            $prefix = $m[1];
-            $digits = $m[2];
-            $intNum = (int)$m[2];
-            $query = MtcMasterMesinModel::whereIn('jenis_mtc', $p2hTypes);
+        // 3. Match berdasarkan nama_mesin pada jenis_mtc P2H sesuai tipe unit & digit
+        if (preg_match('/(\d+)/', $cleanUnit, $digitsMatch)) {
+            $digits = $digitsMatch[1];
+            $intNum = (int)$digitsMatch[1];
+            $query3 = MtcMasterMesinModel::whereIn('jenis_mtc', $p2hTypes);
 
-            $matchedType = false;
-            if ($prefix === 'F') {
-                $query->where('nama_mesin', 'like', '%Forklift%');
-                $matchedType = true;
-            } elseif ($prefix === 'PM') {
-                $query->where('nama_mesin', 'like', '%Pallet%');
-                $matchedType = true;
-            } elseif ($prefix === 'ES') {
-                $query->where(function ($sq) {
-                    $sq->where('nama_mesin', 'like', '%Stacker%')
-                       ->orWhere('nama_mesin', 'like', '%Stecker%');
-                });
-                $matchedType = true;
+            $isForklift = str_contains($cleanUnit, 'FORK') || str_starts_with($cleanUnit, 'F');
+            $isPM = str_contains($cleanUnit, 'PALLET') || str_starts_with($cleanUnit, 'PM');
+
+            if ($isForklift) {
+                $query3->where('nama_mesin', 'like', '%Forklift%');
+            } elseif ($isPM) {
+                $query3->where('nama_mesin', 'like', '%Pallet%');
             }
 
-            if ($matchedType) {
-                $query->where(function ($sq) use ($digits, $intNum) {
-                    $sq->where('nama_mesin', 'like', '% ' . $digits . '%')
-                       ->orWhere('nama_mesin', 'like', '% ' . $intNum . '%')
-                       ->orWhere('nama_mesin', 'like', '%.' . $digits . '%')
-                       ->orWhere('nama_mesin', 'like', '%.' . $intNum . '%');
-                });
+            $query3->where(function ($sq) use ($digits, $intNum) {
+                $sq->where('nama_mesin', 'like', '% ' . $digits . '%')
+                   ->orWhere('nama_mesin', 'like', '% ' . $intNum . '%')
+                   ->orWhere('nama_mesin', 'like', '%.' . $digits . '%')
+                   ->orWhere('nama_mesin', 'like', '%.' . $intNum . '%')
+                   ->orWhere('kode_mesin', 'like', '%' . $digits)
+                   ->orWhere('kode_mesin', 'like', '%' . $intNum);
+            });
 
-                $mesin = $query->first();
-                if ($mesin) {
-                    return $mesin->id;
+            if (!empty($dept)) {
+                $deptClean = str_contains(strtolower($dept), 'prod') ? 'Produksi' : (str_contains(strtolower($dept), 'ware') ? 'Warehouse' : $dept);
+                $mesinWithDept = (clone $query3)->where('dept', 'like', '%' . $deptClean . '%')->first();
+                if ($mesinWithDept) {
+                    return $mesinWithDept->id;
                 }
+            }
+
+            $mesin = $query3->first();
+            if ($mesin) {
+                return $mesin->id;
             }
         }
 

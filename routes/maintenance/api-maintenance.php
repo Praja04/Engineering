@@ -29,6 +29,8 @@ Route::prefix('mtc')->group(function () {
     Route::get('/diesel-p2h/get-data', [MtcDieselP2hController::class, 'getData']);
     Route::get('/p2h/get-data', [MtcP2hController::class, 'getData']);
     Route::post('/p2h/sync-warehouse', [MtcP2hController::class, 'syncWarehouse']);
+    Route::post('/p2h/sync-production', [MtcP2hController::class, 'syncProduction']);
+    Route::post('/p2h/sync-all', [MtcP2hController::class, 'syncAll']);
     Route::get('/master/mesin/get-data', [MtcMasterMesinController::class, 'getData']);
     Route::get('/users/approvers', [MtcMainController::class, 'getApprovers']);
 });

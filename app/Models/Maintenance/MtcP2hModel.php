@@ -13,6 +13,8 @@ class MtcP2hModel extends Model
 
     protected $fillable = [
         'warehouse_id',
+        'production_id',
+        'source',
         'mesin_id',
         'nomor_unit',
         'dept',

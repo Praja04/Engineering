@@ -175,6 +175,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/data/update/{id}', [MtcP2hController::class, 'update'])->name('p2h.data.update');
             Route::delete('/data/delete/{id}', [MtcP2hController::class, 'destroy'])->name('p2h.data.delete');
             Route::post('/sync-warehouse', [MtcP2hController::class, 'syncWarehouse'])->name('p2h.sync.warehouse');
+            Route::post('/sync-production', [MtcP2hController::class, 'syncProduction'])->name('p2h.sync.production');
+            Route::post('/sync-all', [MtcP2hController::class, 'syncAll'])->name('p2h.sync.all');
         });
     });
 });
