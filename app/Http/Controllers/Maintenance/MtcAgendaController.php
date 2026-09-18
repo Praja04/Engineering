@@ -1297,52 +1297,22 @@ class MtcAgendaController extends Controller
         $inserted = 0;
         $rowErrors = [];
 
-        // Scan rows 1-6 to detect header row
-        $headerRowIdx = null;
-        $colMap = [
-            'nama_mesin' => 'C',
-            'kode_mesin' => 'B',
-            'tanggal'    => 'E',
-            'paket'      => 'F',
-        ];
-
-        for ($r = 1; $r <= 6; $r++) {
-            if (!isset($rows[$r])) continue;
-            $row = $rows[$r];
-
-            foreach ($row as $col => $val) {
-                if (empty($val)) continue;
-                $valLower = strtolower(trim((string)$val));
-
-                if (str_contains($valLower, 'kode') || str_contains($valLower, 'code')) {
-                    $colMap['kode_mesin'] = $col;
-                    $headerRowIdx = $r;
-                } elseif (str_contains($valLower, 'nama') || str_contains($valLower, 'mesin')) {
-                    $colMap['nama_mesin'] = $col;
-                    $headerRowIdx = $r;
-                } elseif (str_contains($valLower, 'tanggal') || str_contains($valLower, 'tgl') || str_contains($valLower, 'date')) {
-                    $colMap['tanggal'] = $col;
-                    $headerRowIdx = $r;
-                } elseif (str_contains($valLower, 'paket') || str_contains($valLower, 'package')) {
-                    $colMap['paket'] = $col;
-                    $headerRowIdx = $r;
-                }
-            }
-
-            if ($headerRowIdx !== null && isset($colMap['tanggal'])) {
-                break;
-            }
-        }
-
-        $dataStart = ($headerRowIdx ?? 4) + 1;
+        // Template MHE: Baris 1-4 adalah Header/Title, Data selalu mulai dari Baris 5
+        // Kolom: A=No, B=Kode Mesin, C=Nama Mesin, D=Lokasi, E=Tanggal, F=Paket
+        $dataStart = 5;
+        $ignoreHeaders = ['kode mesin', 'kode', 'code', 'nama mesin', 'nama', 'mesin', 'tanggal', 'tgl', 'date', 'paket', 'package', 'lokasi', 'no', 'nomor'];
 
         foreach ($rows as $rowNum => $row) {
             if ($rowNum < $dataStart) continue;
 
-            $namaMesinVal = trim((string)($row[$colMap['nama_mesin']] ?? ''));
-            $kodeMesinVal = (!empty($colMap['kode_mesin']) && isset($row[$colMap['kode_mesin']])) ? trim((string)$row[$colMap['kode_mesin']]) : '';
+            $namaMesinVal = trim((string)($row['C'] ?? ''));
+            $kodeMesinVal = trim((string)($row['B'] ?? ''));
 
             if ($namaMesinVal === '' && $kodeMesinVal === '') {
+                continue;
+            }
+
+            if (in_array(strtolower($namaMesinVal), $ignoreHeaders, true) || in_array(strtolower($kodeMesinVal), $ignoreHeaders, true)) {
                 continue;
             }
 
@@ -1363,8 +1333,8 @@ class MtcAgendaController extends Controller
                 continue;
             }
 
-            $datesRaw = $row[$colMap['tanggal']] ?? '';
-            $packagesRaw = $row[$colMap['paket']] ?? '';
+            $datesRaw = $row['E'] ?? '';
+            $packagesRaw = $row['F'] ?? '';
 
             $parsedList = $this->parseDaysAndPackages($datesRaw, $packagesRaw, $tahun, $bulan);
 
@@ -1516,6 +1486,7 @@ class MtcAgendaController extends Controller
         }
 
         $dataStart = $headerRowIdx + 2;
+        $ignoreHeaders = ['kode mesin', 'kode', 'code', 'nama mesin', 'nama', 'mesin', 'lokasi', 'no', 'nomor'];
 
         foreach ($rows as $rowNum => $row) {
             if ($rowNum < $dataStart) continue;
@@ -1524,6 +1495,10 @@ class MtcAgendaController extends Controller
             $kodeMesinVal = (!empty($colMap['kode_mesin']) && isset($row[$colMap['kode_mesin']])) ? trim((string)$row[$colMap['kode_mesin']]) : '';
 
             if ($namaMesinVal === '' && $kodeMesinVal === '') {
+                continue;
+            }
+
+            if (in_array(strtolower($namaMesinVal), $ignoreHeaders, true) || in_array(strtolower($kodeMesinVal), $ignoreHeaders, true)) {
                 continue;
             }
 
