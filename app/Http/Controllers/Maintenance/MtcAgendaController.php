@@ -14,17 +14,17 @@ use Illuminate\Support\Facades\Auth;
 class MtcAgendaController extends Controller
 {
     /**
-     * Map jenis_mtc → inspection table yang punya kolom mesin_id
+     * Map jenis_mtc → inspection table and foreign key
      */
     private array $inspectionTables = [
-        'Refrigerasi'     => 'mtc_refrigerasi_inspections',
-        'Motor Pompa'      => 'mtc_motor_pump_inspections',
-        'Utility'         => 'mtc_utility_inspections',
-        'Electrical'      => 'mtc_electrical_inspections',
-        'Electric Engine' => 'mtc_electric_engine_inspections',
-        'Diesel Engine'   => 'mtc_diesel_engine_inspections',
-        'Electric P2H'    => 'mtc_electric_p2h_inspections',
-        'Diesel P2H'      => 'mtc_diesel_p2h_inspections',
+        'Refrigerasi'     => ['table' => 'mtc_refrigerasi_inspections', 'foreign_key' => 'mesin_id'],
+        'Motor Pompa'     => ['table' => 'mtc_motor_pump_inspections', 'foreign_key' => 'mesin_id'],
+        'Utility'         => ['table' => 'mtc_utility_inspections', 'foreign_key' => 'mesin_id'],
+        'Electrical'      => ['table' => 'mtc_electrical_inspections', 'foreign_key' => 'mesin_id'],
+        'Electric Engine' => ['table' => 'mtc_electric_engine_inspections', 'foreign_key' => 'mesin_id'],
+        'Diesel Engine'   => ['table' => 'mtc_diesel_engine_inspections', 'foreign_key' => 'mesin_id'],
+        'Electric P2H'    => ['table' => 'mtc_electric_p2h_inspections', 'foreign_key' => 'no_unit'],
+        'Diesel P2H'      => ['table' => 'mtc_diesel_p2h_inspections', 'foreign_key' => 'mesin_id'],
     ];
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -395,11 +395,30 @@ class MtcAgendaController extends Controller
             // Get all actual inspections for this machine (from inspection table)
             $actualInspections = [];
             if ($inspTable) {
-                $actualInspections = DB::table($inspTable)
-                    ->join('mtc_main', 'mtc_main.id', '=', "{$inspTable}.mtc_main_id")
-                    ->where("{$inspTable}.mesin_id", $mesin->id)
+                $table = $inspTable['table'];
+                $fk    = $inspTable['foreign_key'];
+                $actualInspections = DB::table($table)
+                    ->join('mtc_main', 'mtc_main.id', '=', "{$table}.mtc_main_id")
+                    ->where("{$table}.{$fk}", $mesin->id)
                     ->whereYear('mtc_main.tanggal', $tahun)
                     ->select('mtc_main.tanggal', 'mtc_main.paket')
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'tanggal' => Carbon::parse($row->tanggal),
+                            'paket'   => $row->paket,
+                        ];
+                    })
+                    ->toArray();
+            } elseif ($jenisMtc === 'Sipil') {
+                $actualInspections = DB::table('mtc_main')
+                    ->where('jenis_mtc', 'Sipil')
+                    ->where(function ($q) use ($mesin) {
+                        $q->where('area', $mesin->nama_mesin)
+                          ->orWhere('area', $mesin->kode_mesin);
+                    })
+                    ->whereYear('tanggal', $tahun)
+                    ->select('tanggal', 'paket')
                     ->get()
                     ->map(function ($row) {
                         return [
@@ -610,12 +629,32 @@ class MtcAgendaController extends Controller
             // Get actual inspections for this machine in this month
             $actualInspections = [];
             if ($inspTable) {
-                $actualInspections = DB::table($inspTable)
-                    ->join('mtc_main', 'mtc_main.id', '=', "{$inspTable}.mtc_main_id")
-                    ->where("{$inspTable}.mesin_id", $mesinId)
+                $table = $inspTable['table'];
+                $fk    = $inspTable['foreign_key'];
+                $actualInspections = DB::table($table)
+                    ->join('mtc_main', 'mtc_main.id', '=', "{$table}.mtc_main_id")
+                    ->where("{$table}.{$fk}", $mesinId)
                     ->whereYear('mtc_main.tanggal', $tahun)
                     ->whereMonth('mtc_main.tanggal', $bulan)
                     ->select('mtc_main.tanggal', 'mtc_main.paket')
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'tanggal' => Carbon::parse($row->tanggal),
+                            'paket'   => $row->paket,
+                        ];
+                    })
+                    ->toArray();
+            } elseif ($jenisMtc === 'Sipil') {
+                $actualInspections = DB::table('mtc_main')
+                    ->where('jenis_mtc', 'Sipil')
+                    ->where(function ($q) use ($mesin) {
+                        $q->where('area', $mesin->nama_mesin)
+                          ->orWhere('area', $mesin->kode_mesin);
+                    })
+                    ->whereYear('tanggal', $tahun)
+                    ->whereMonth('tanggal', $bulan)
+                    ->select('tanggal', 'paket')
                     ->get()
                     ->map(function ($row) {
                         return [
@@ -763,7 +802,10 @@ class MtcAgendaController extends Controller
     private function getLastMaintenanceDate(int $mesinId, string $jenisMtc): ?Carbon
     {
         $table = $this->inspectionTables[$jenisMtc] ?? null;
-        if (!$table) return null;
+        if (!$table && $jenisMtc !== 'Sipil') return null;
+
+        $mesin = MtcMasterMesinModel::find($mesinId);
+        if (!$mesin) return null;
 
         // Subquery: mtc_main_id yang semua approval-nya sudah approved
         $approvedMainIds = DB::table('mtc_approval')
@@ -771,24 +813,55 @@ class MtcAgendaController extends Controller
             ->groupBy('mtc_main_id')
             ->havingRaw('SUM(CASE WHEN status != ? THEN 1 ELSE 0 END) = 0', ['approved']);
 
-        $row = DB::table($table)
-            ->join('mtc_main', 'mtc_main.id', '=', "{$table}.mtc_main_id")
-            ->joinSub($approvedMainIds, 'approved_main', function ($join) use ($table) {
-                $join->on('approved_main.mtc_main_id', '=', "{$table}.mtc_main_id");
-            })
-            ->where("{$table}.mesin_id", $mesinId)
-            ->orderByDesc('mtc_main.tanggal')
-            ->select('mtc_main.tanggal')
-            ->first();
+        if ($table) {
+            $tableName = $table['table'];
+            $fk        = $table['foreign_key'];
 
-        // Fallback: ambil semua tanpa filter approval
-        if (!$row) {
-            $row = DB::table($table)
-                ->join('mtc_main', 'mtc_main.id', '=', "{$table}.mtc_main_id")
-                ->where("{$table}.mesin_id", $mesinId)
+            $row = DB::table($tableName)
+                ->join('mtc_main', 'mtc_main.id', '=', "{$tableName}.mtc_main_id")
+                ->joinSub($approvedMainIds, 'approved_main', function ($join) use ($tableName) {
+                    $join->on('approved_main.mtc_main_id', '=', "{$tableName}.mtc_main_id");
+                })
+                ->where("{$tableName}.{$fk}", $mesinId)
                 ->orderByDesc('mtc_main.tanggal')
                 ->select('mtc_main.tanggal')
                 ->first();
+
+            // Fallback: ambil semua tanpa filter approval
+            if (!$row) {
+                $row = DB::table($tableName)
+                    ->join('mtc_main', 'mtc_main.id', '=', "{$tableName}.mtc_main_id")
+                    ->where("{$tableName}.{$fk}", $mesinId)
+                    ->orderByDesc('mtc_main.tanggal')
+                    ->select('mtc_main.tanggal')
+                    ->first();
+            }
+        } else {
+            // Sipil
+            $row = DB::table('mtc_main')
+                ->joinSub($approvedMainIds, 'approved_main', function ($join) {
+                    $join->on('approved_main.mtc_main_id', '=', 'mtc_main.id');
+                })
+                ->where('mtc_main.jenis_mtc', 'Sipil')
+                ->where(function ($q) use ($mesin) {
+                    $q->where('mtc_main.area', $mesin->nama_mesin)
+                      ->orWhere('mtc_main.area', $mesin->kode_mesin);
+                })
+                ->orderByDesc('mtc_main.tanggal')
+                ->select('mtc_main.tanggal')
+                ->first();
+
+            if (!$row) {
+                $row = DB::table('mtc_main')
+                    ->where('mtc_main.jenis_mtc', 'Sipil')
+                    ->where(function ($q) use ($mesin) {
+                        $q->where('mtc_main.area', $mesin->nama_mesin)
+                          ->orWhere('mtc_main.area', $mesin->kode_mesin);
+                    })
+                    ->orderByDesc('mtc_main.tanggal')
+                    ->select('mtc_main.tanggal')
+                    ->first();
+            }
         }
 
         return $row ? Carbon::parse($row->tanggal) : null;

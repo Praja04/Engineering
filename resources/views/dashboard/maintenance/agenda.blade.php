@@ -1538,7 +1538,7 @@
                     }
                     renderKpi(res.summary || {});
                     allMachinesData = res.machines || [];
-                    if (!res.machines || res.machines.length === 0 || (res.summary.total_planned || 0) === 0) {
+                    if (!res.machines || res.machines.length === 0) {
                         $('#tableLoading').hide();
                         $('#tableEmpty').show();
                         return;
