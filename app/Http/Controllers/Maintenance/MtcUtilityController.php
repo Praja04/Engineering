@@ -152,7 +152,7 @@ class MtcUtilityController extends Controller
             ->where('jenis_mtc', 'Utility')
             ->with([
                 'createdBy:id,username',
-                'utility.mesin:id,nama_mesin,lokasi',
+                'utility.mesin:id,nama_mesin,lokasi,kode_mesin',
                 'kebutuhanMaterial',
                 'penggantianMaterial'
             ]);

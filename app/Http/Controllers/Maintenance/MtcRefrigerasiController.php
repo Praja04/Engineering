@@ -187,7 +187,7 @@ class MtcRefrigerasiController extends Controller
             ->where('jenis_mtc', 'Refrigerasi')
             ->with([
                 'createdBy:id,username',
-                'refrigerasi.mesin:id,nama_mesin,lokasi',
+                'refrigerasi.mesin:id,nama_mesin,lokasi,kode_mesin',
                 // ⚠️ optional: comment kalau berat
                 'kebutuhanMaterial',
                 'penggantianMaterial',

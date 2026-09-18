@@ -161,6 +161,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Nama Mesin</th>
+                                    <th>Kode Mesin</th>
                                     <th>Lokasi</th>
                                     <th>Tanggal</th>
                                     <th>Waktu Mulai</th>
@@ -172,7 +173,7 @@
                             </thead>
                             <tbody id="tbodyElectricEngine">
                                 <tr>
-                                    <td colspan="9" class="text-center small-muted py-4">Memuat data...</td>
+                                    <td colspan="10" class="text-center small-muted py-4">Memuat data...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -454,9 +455,10 @@
                 const select = $('#editNamaMesin');
 
                 mesinList.forEach(m => {
+                    const code = m.kode_mesin ? `(${m.kode_mesin}) ` : '';
                     select.append(`
                         <option value="${m.id}">
-                            ${m.nama_mesin} - ${m.lokasi}
+                            ${m.nama_mesin} ${code}- ${m.lokasi}
                         </option>
                     `);
                 });
@@ -513,11 +515,15 @@
                     <div class="detail-meta row g-3 mb-2">
                          <div class="col-md-3">
                             <div class="meta-label">Nama Mesin</div>
-                            <div class="meta-value">${row.electric_engine.mesin.nama_mesin ?? '-'}</div>
+                            <div class="meta-value">${row.electric_engine?.mesin?.nama_mesin ?? '-'}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="meta-label">Kode Mesin</div>
+                            <div class="meta-value">${row.electric_engine?.mesin?.kode_mesin ?? '-'}</div>
                         </div>
                         <div class="col-md-3">
                             <div class="meta-label">Lokasi</div>
-                            <div class="meta-value">${row.electric_engine.mesin.lokasi ?? '-'}</div>
+                            <div class="meta-value">${row.electric_engine?.mesin?.lokasi ?? '-'}</div>
                         </div>
                         <div class="col-md-3">
                             <div class="meta-label">Tanggal</div>
@@ -694,7 +700,7 @@
                         if (currentRows.length === 0) {
                             $('#tbodyElectricEngine').html(`
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted py-4">Tidak ada data ditemukan</td>
+                                    <td colspan="10" class="text-center text-muted py-4">Tidak ada data ditemukan</td>
                                 </tr>
                             `);
                             $('#paginationInfo').text('Menampilkan 0 sampai 0 dari 0 data');
@@ -707,6 +713,7 @@
                             const rowNum = start + index + 1;
                             const engine = row.electric_engine || {};
                             const machineName = engine.mesin?.nama_mesin || '-';
+                            const machineCode = engine.mesin?.kode_mesin || '-';
                             const location = engine.mesin?.lokasi || '-';
 
                             const showBtn =
@@ -723,6 +730,7 @@
                                 <tr>
                                     <td class="text-center">${rowNum}</td>
                                     <td>${machineName}</td>
+                                    <td>${machineCode}</td>
                                     <td>${location}</td>
                                     <td>${fmtDate(row.tanggal)}</td>
                                     <td>${row.waktu_mulai ?? '-'}</td>

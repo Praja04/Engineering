@@ -153,8 +153,8 @@
                                     <option value="" disabled selected>-- Pilih Area --</option>
                                     @foreach ($area as $item)
                                         <option value="{{ $item->nama_mesin }}" data-lokasi="{{ $item->lokasi }}"
-                                            data-departemen="{{ $item->dept }}">
-                                            {{ $item->nama_mesin }} - {{ $item->lokasi }}
+                                            data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}">
+                                            {{ $item->nama_mesin }} {{ $item->kode_mesin ? "({$item->kode_mesin})" : '' }} - {{ $item->lokasi }}
                                         </option>
                                     @endforeach
                                 </select>

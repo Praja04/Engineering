@@ -60,7 +60,7 @@
                                         <option value="{{ $item->id }}" data-lokasi="{{ $item->lokasi }}"
                                             data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}"
                                             data-nama-mesin="{{ $item->nama_mesin }}">
-                                            {{ $item->nama_mesin }} - {{ $item->lokasi }}
+                                            {{ $item->nama_mesin }} {{ $item->kode_mesin ? "({$item->kode_mesin})" : '' }} - {{ $item->lokasi }}
                                         </option>
                                     @endforeach
                                 </select>

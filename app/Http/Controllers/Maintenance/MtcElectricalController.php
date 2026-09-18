@@ -166,7 +166,7 @@ class MtcElectricalController extends Controller
                 'createdBy:id,username',
                 'kebutuhanMaterial',
                 'penggantianMaterial',
-                'electrical.mesin:id,nama_mesin,lokasi'
+                'electrical.mesin:id,nama_mesin,lokasi,kode_mesin'
             ]);
 
         // 🔍 filter tanggal

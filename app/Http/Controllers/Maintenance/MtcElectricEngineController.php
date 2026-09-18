@@ -164,7 +164,7 @@ class MtcElectricEngineController extends Controller
                 'createdBy:id,username',
                 'kebutuhanMaterial',
                 'penggantianMaterial',
-                'electricEngine.mesin:id,nama_mesin,lokasi'
+                'electricEngine.mesin:id,nama_mesin,lokasi,kode_mesin'
             ]);
 
         // 🔍 filter tanggal

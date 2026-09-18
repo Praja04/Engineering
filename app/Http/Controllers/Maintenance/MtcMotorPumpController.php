@@ -162,7 +162,7 @@ class MtcMotorPumpController extends Controller
             ->where('jenis_mtc', 'Motor Pompa')
             ->with([
                 'createdBy:id,username',
-                'motorPump.mesin:id,nama_mesin,lokasi',
+                'motorPump.mesin:id,nama_mesin,lokasi,kode_mesin',
                 'kebutuhanMaterial',
                 'penggantianMaterial'
             ]);

@@ -163,7 +163,7 @@ class MtcDieselEngineController extends Controller
             ->where('jenis_mtc', 'Diesel Engine')
             ->with([
                 'createdBy:id,username',
-                'dieselEngine.mesin:id,nama_mesin,lokasi',
+                'dieselEngine.mesin:id,nama_mesin,lokasi,kode_mesin',
                 'kebutuhanMaterial',
                 'penggantianMaterial'
             ]);
