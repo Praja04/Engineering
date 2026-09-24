@@ -466,6 +466,19 @@
                 renumberCells();
             });
 
+            // TOGGLE RADIO OK / TIDAK OK
+            $(document).on('click', '.status-radio', function() {
+                var $this = $(this);
+                if ($this.data('waschecked') === true) {
+                    this.checked = false;
+                    $this.data('waschecked', false);
+                    $this.trigger('change');
+                } else {
+                    $('input[name="' + this.name + '"].status-radio').data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
             // STATUS LABEL + WARNA
             $(document).on('change', '.status-radio', function() {
                 const $container = $(this).closest('.item-card');
@@ -482,15 +495,27 @@
                     $container.append($noteContainer);
                 }
 
-                const isNG = $(this).val() === '0' || $(this).val() === 'Tidak OK';
+                const $checked = $container.find('input.status-radio:checked');
+                const $label = $container.find('.status-label-default');
+
+                if (!$checked.length) {
+                    $noteContainer.addClass('d-none');
+                    $noteContainer.find('input').val('');
+                    $label.text('Belum dicek').removeClass('text-success text-danger').addClass('fst-italic text-muted');
+                    return;
+                }
+
+                const isNG = $checked.val() === '0' || $checked.val() === 'Tidak OK';
                 $noteContainer.toggleClass('d-none', !isNG);
+                if (!isNG) {
+                    $noteContainer.find('input').val('');
+                }
 
                 // Update label status juga (untuk visual)
-                const $label = $container.find('.status-label-default');
-                if ($(this).val() === '1' || $(this).val() === 'OK') {
-                    $label.text('OK').removeClass('text-danger fst-italic').addClass('text-success');
-                } else if ($(this).val() === '0' || $(this).val() === 'Tidak OK') {
-                    $label.text('Tidak OK').removeClass('text-success fst-italic').addClass('text-danger');
+                if ($checked.val() === '1' || $checked.val() === 'OK') {
+                    $label.text('OK').removeClass('text-danger fst-italic text-muted').addClass('text-success');
+                } else if ($checked.val() === '0' || $checked.val() === 'Tidak OK') {
+                    $label.text('Tidak OK').removeClass('text-success fst-italic text-muted').addClass('text-danger');
                 }
             });
 

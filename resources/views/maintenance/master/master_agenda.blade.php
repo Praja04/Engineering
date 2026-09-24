@@ -372,6 +372,7 @@
                                                     <option value="B">Paket B</option>
                                                     <option value="C">Paket C</option>
                                                     <option value="D">Paket D</option>
+                                                    <option value="E">Paket E</option>
                                                     <option value="Checkpoint">Checkpoint</option>
                                                     <option value="Korektif">Korektif</option>
                                                 </select>
@@ -679,6 +680,7 @@
                                                         <option value="B">Paket B</option>
                                                         <option value="C">Paket C</option>
                                                         <option value="D">Paket D</option>
+                                                        <option value="E">Paket E</option>
                                                         <option value="Checkpoint">Checkpoint</option>
                                                         <option value="Korektif">Korektif</option>
                                                     </select>
@@ -770,6 +772,7 @@
                             <option value="B" ${packageVal === 'B' ? 'selected' : ''}>Paket B</option>
                             <option value="C" ${packageVal === 'C' ? 'selected' : ''}>Paket C</option>
                             <option value="D" ${packageVal === 'D' ? 'selected' : ''}>Paket D</option>
+                            <option value="E" ${packageVal === 'E' ? 'selected' : ''}>Paket E</option>
                             <option value="Checkpoint" ${packageVal === 'Checkpoint' ? 'selected' : ''}>Checkpoint</option>
                             <option value="Korektif" ${packageVal === 'Korektif' ? 'selected' : ''}>Korektif</option>
                         </select>
@@ -806,6 +809,7 @@
                             <option value="B" ${packageVal === 'B' ? 'selected' : ''}>Paket B</option>
                             <option value="C" ${packageVal === 'C' ? 'selected' : ''}>Paket C</option>
                             <option value="D" ${packageVal === 'D' ? 'selected' : ''}>Paket D</option>
+                            <option value="E" ${packageVal === 'E' ? 'selected' : ''}>Paket E</option>
                             <option value="Checkpoint" ${packageVal === 'Checkpoint' ? 'selected' : ''}>Checkpoint</option>
                             <option value="Korektif" ${packageVal === 'Korektif' ? 'selected' : ''}>Korektif</option>
                         </select>

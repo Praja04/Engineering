@@ -27,7 +27,7 @@ class MtcPenggantianMaterialRequest extends FormRequest
             'replacements.*.mid'         => ['required', 'string'],
             'replacements.*.desc'        => ['nullable', 'string'],
             'replacements.*.deskripsi'   => ['nullable', 'string'],
-            'replacements.*.qty'         => ['required', 'integer', 'min:1'],
+            'replacements.*.qty'         => ['required', 'numeric', 'gt:0'],
             'replacements.*.uom'         => ['nullable', 'string'],
         ];
     }

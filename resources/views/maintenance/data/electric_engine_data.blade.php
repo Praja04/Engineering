@@ -134,6 +134,7 @@
                                 <option value="B">B</option>
                                 <option value="C">C</option>
                                 <option value="D">D</option>
+                                <option value="E">E</option>
                                 <option value="Korektif">Korektif</option>
                                 <option value="Checkpoint">Checkpoint</option>
                             </select>
@@ -248,16 +249,21 @@
                                     <option>B</option>
                                     <option>C</option>
                                     <option>D</option>
+                                    <option>E</option>
                                     <option>Korektif</option>
                                     <option>Checkpoint</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
+                                <label class="form-label">Running Hour</label>
+                                <input type="number" step="0.01" class="form-control" name="running_hour" id="editRunningHour" placeholder="0.00">
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label">Waktu Mulai</label>
                                 <input type="time" class="form-control" name="waktu_mulai" id="editWaktuMulai"
                                     readonly>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <label class="form-label">Waktu Selesai</label>
                                 <input type="time" class="form-control" name="waktu_selesai" id="editWaktuSelesai"
                                     readonly>
@@ -536,6 +542,10 @@
                         <div class="col-md-3">
                             <div class="meta-label">Waktu Selesai</div>
                             <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="meta-label">Running Hour</div>
+                            <div class="meta-value">${row.running_hour ?? '-'}</div>
                         </div>
                         ${row.paket === 'Korektif' ? `
                                                                                             <div class="col-md-3">
@@ -922,6 +932,28 @@
                 `;
             }
 
+            $(document).on('click', '.edit-radio', function() {
+                const $this = $(this);
+                if ($this.val() === '') return;
+
+                if ($this.data('waschecked') === true) {
+                    const name = this.name;
+                    this.checked = false;
+                    $this.data('waschecked', false);
+
+                    const $nullRadio = $(`input.edit-radio[name="${name}"][value=""]`);
+                    if ($nullRadio.length) {
+                        $nullRadio.prop('checked', true).data('waschecked', true);
+                        $nullRadio.trigger('change');
+                    } else {
+                        $this.trigger('change');
+                    }
+                } else {
+                    $(`input.edit-radio[name="${this.name}"]`).data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
             $(document).on('change', '.edit-radio', function() {
                 const $card = $(this).closest('.item-edit');
                 const field = $card.data('field');
@@ -971,6 +1003,9 @@
                     ${renderEditSection('Oil', fields.oil, row)}
                 `;
                 $('#editSections').html(html);
+                $('#editSections input.edit-radio:checked').each(function() {
+                    $(this).data('waschecked', true);
+                });
             }
 
             $(document).on('click', '.btn-edit', function() {
@@ -980,6 +1015,7 @@
 
                 $('#editId').val(row.id);
                 $('#editTanggal').val(toDateInputValue(row.tanggal));
+                $('#editRunningHour').val(row.running_hour ?? '');
                 $('#editWaktuMulai').val((row.waktu_mulai ?? '').toString().slice(0, 5));
                 $('#editWaktuSelesai').val((row.waktu_selesai ?? '').toString().slice(0, 5));
                 $('#editPaket').val(row.paket ?? '');
@@ -1175,7 +1211,8 @@
                              <input type="number"
                                  name="materials[${index}][qty]"
                                  class="form-control form-control-sm material-qty"
-                                 min="1">
+                                 step="any"
+                                 min="0">
                          </td>
 
                          <td class="text-center">
@@ -1262,7 +1299,8 @@
                              <input type="number"
                                  name="replacements[${index}][qty]"
                                  class="form-control form-control-sm replacement-qty"
-                                 min="1">
+                                 step="any"
+                                 min="0">
                          </td>
 
                          <td class="text-center">

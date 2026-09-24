@@ -134,6 +134,7 @@
                                 <option value="B">B</option>
                                 <option value="C">C</option>
                                 <option value="D">D</option>
+                                <option value="E">E</option>
                                 <option value="Korektif">Korektif</option>
                                 <option value="Checkpoint">Checkpoint</option>
                             </select>
@@ -248,6 +249,7 @@
                                     <option>B</option>
                                     <option>C</option>
                                     <option>D</option>
+                                    <option>E</option>
                                     <option>Korektif</option>
                                     <option>Checkpoint</option>
                                 </select>
@@ -927,6 +929,28 @@
                 `;
             }
 
+            $(document).on('click', '.edit-radio', function() {
+                const $this = $(this);
+                if ($this.val() === '') return;
+
+                if ($this.data('waschecked') === true) {
+                    const name = this.name;
+                    this.checked = false;
+                    $this.data('waschecked', false);
+
+                    const $nullRadio = $(`input.edit-radio[name="${name}"][value=""]`);
+                    if ($nullRadio.length) {
+                        $nullRadio.prop('checked', true).data('waschecked', true);
+                        $nullRadio.trigger('change');
+                    } else {
+                        $this.trigger('change');
+                    }
+                } else {
+                    $(`input.edit-radio[name="${this.name}"]`).data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
             $(document).on('change', '.edit-radio', function() {
                 const $card = $(this).closest('.item-edit');
                 const field = $card.data('field');
@@ -978,6 +1002,9 @@
                     ${renderEditSection('WWTP', fields.wwtp, row)}
                 `;
                 $('#editSections').html(html);
+                $('#editSections input.edit-radio:checked').each(function() {
+                    $(this).data('waschecked', true);
+                });
             }
 
             $(document).on('click', '.btn-edit', function() {
@@ -1152,7 +1179,8 @@
                             <input type="number"
                                 name="materials[${index}][qty]"
                                 class="form-control form-control-sm material-qty"
-                                min="1">
+                                step="any"
+                                min="0">
                         </td>
 
                         <td class="text-center">
@@ -1239,7 +1267,8 @@
                             <input type="number"
                                 name="replacements[${index}][qty]"
                                 class="form-control form-control-sm replacement-qty"
-                                min="1">
+                                step="any"
+                                min="0">
                         </td>
 
                         <td class="text-center">

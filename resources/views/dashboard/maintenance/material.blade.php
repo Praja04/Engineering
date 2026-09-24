@@ -72,13 +72,14 @@
                                         <label class="form-label fw-semibold small text-muted">PAKET MAINTENANCE</label>
                                         <select id="filterPaket" name="paket" class="form-select border">
                                             <option value="">Semua Paket</option>
-                                            <option value="Maintenance">Maintenance (A, B, C, D, Z, Checkpoint)</option>
+                                            <option value="Maintenance">Maintenance (A, B, C, D, E, Z, Checkpoint)</option>
                                             <option value="Korektif">Korektif</option>
                                             <optgroup label="Paket Spesifik">
                                                 <option value="A">Paket A</option>
                                                 <option value="B">Paket B</option>
                                                 <option value="C">Paket C</option>
                                                 <option value="D">Paket D</option>
+                                                <option value="E">Paket E</option>
                                                 <option value="Z">Paket Z</option>
                                                 <option value="Checkpoint">Checkpoint</option>
                                             </optgroup>

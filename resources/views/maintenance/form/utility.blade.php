@@ -127,6 +127,7 @@
                                     <option>B</option>
                                     <option>C</option>
                                     <option>D</option>
+                                    <option>E</option>
                                     <option>Korektif</option>
                                     <option>Checkpoint</option>
                                 </select>
@@ -631,6 +632,22 @@
 
 
 
+            $(document).on('click', '.status-radio', function() {
+                const $this = $(this);
+                if ($this.data('waschecked') === true) {
+                    this.checked = false;
+                    $this.data('waschecked', false);
+                    $this.trigger('change');
+                } else {
+                    $(`input[name="${this.name}"]`).data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
+            $('.status-radio:checked').each(function() {
+                $(this).data('waschecked', true);
+            });
+
             $('.status-radio').on('change', function() {
                 const $row = $(this).closest('.item-row');
                 // const isOk = $row.find('input[value="1"]').is(':checked');
@@ -726,7 +743,7 @@
                             <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
                         </td>
                         <td>
-                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1">
+                            <input type="number" step="any" min="0" name="materials[${index}][qty]" class="form-control form-control-sm">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
@@ -752,7 +769,7 @@
                             <input type="text" name="replacements[${replacementIndex}][desc]" class="form-control form-control-sm">
                         </td>
                         <td>
-                            <input type="number" name="replacements[${replacementIndex}][qty]" class="form-control form-control-sm" min="1">
+                            <input type="number" step="any" min="0" name="replacements[${replacementIndex}][qty]" class="form-control form-control-sm">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
@@ -811,6 +828,7 @@
                 const $form = $('#form-mtc-utility');
 
                 $form[0].reset();
+                $('.status-radio').data('waschecked', false);
 
                 $form.find('select').each(function() {
                     if ($(this).hasClass('select2-hidden-accessible')) {

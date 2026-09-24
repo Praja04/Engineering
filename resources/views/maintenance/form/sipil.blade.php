@@ -420,6 +420,22 @@
 
 
 
+            $('input.status-radio:checked').each(function() {
+                $(this).data('waschecked', true);
+            });
+
+            $('.status-radio').on('click', function() {
+                var $this = $(this);
+                if ($this.data('waschecked') === true) {
+                    this.checked = false;
+                    $this.data('waschecked', false);
+                    $this.trigger('change');
+                } else {
+                    $('input[name="' + this.name + '"].status-radio').data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
             $('.status-radio').on('change', function() {
                 const $row = $(this).closest('.item-row');
                 // const isOk = $row.find('input[value="1"]').is(':checked');
@@ -513,7 +529,7 @@
                             <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
                         </td>
                         <td>
-                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1">
+                            <input type="number" step="any" min="0" name="materials[${index}][qty]" class="form-control form-control-sm">
                             <input type="hidden" name="materials[${index}][uom]" value="">
                         </td>
                         <td class="text-center">
@@ -538,7 +554,7 @@
                             <input type="text" name="replacements[${replacementIndex}][desc]" class="form-control form-control-sm">
                         </td>
                         <td>
-                            <input type="number" name="replacements[${replacementIndex}][qty]" class="form-control form-control-sm" min="1">
+                            <input type="number" step="any" min="0" name="replacements[${replacementIndex}][qty]" class="form-control form-control-sm">
                             <input type="hidden" name="replacements[${replacementIndex}][uom]" value="">
                         </td>
                         <td class="text-center">
@@ -584,9 +600,9 @@
                     }
                 });
 
-                $form.find('.kondisi-radio').prop('checked', false);
+                $form.find('.status-radio').prop('checked', false).data('waschecked', false);
                 $('.kondisi-btn').removeClass('active');
-                $('.keterangan-wrapper').remove();
+                $('.keterangan-wrapper').addClass('d-none').find('input').val('').removeAttr('required');
                 $('.item-card').removeClass('not-ok');
                 $('.is-invalid').removeClass('is-invalid');
                 $('#materialTable tbody').empty();
@@ -594,8 +610,6 @@
                 $('#replacementTable tbody').empty();
                 replacementIndex = 0;
                 // updateRowState();
-
-
             }
 
             function collectNotOkDetails() {

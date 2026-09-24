@@ -252,6 +252,30 @@
                 }
             });
 
+            $('input.radio-checklist:checked').each(function() {
+                $(this).data('waschecked', true);
+            });
+
+            $(document).on('click', '.radio-checklist', function() {
+                var $this = $(this);
+                if ($this.val() === '') {
+                    $('input[name="' + this.name + '"].radio-checklist').data('waschecked', false);
+                    $this.data('waschecked', true);
+                    return;
+                }
+
+                if ($this.data('waschecked') === true) {
+                    this.checked = false;
+                    $this.data('waschecked', false);
+                    const $emptyRadio = $('input[name="' + this.name + '"][value=""]');
+                    $emptyRadio.prop('checked', true).data('waschecked', true);
+                    $emptyRadio.trigger('change');
+                } else {
+                    $('input[name="' + this.name + '"].radio-checklist').data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
             // Toggle keterangan input when NOK is checked
             $(document).on('change', '.radio-checklist', function() {
                 const val = $(this).val();
@@ -387,7 +411,8 @@
                 }).then(r => {
                     if (r.isConfirmed) {
                         $('#form-mtc-p2h')[0].reset();
-                        $('.radio-checklist[value=""]').prop('checked', true);
+                        $('.radio-checklist').data('waschecked', false);
+                        $('.radio-checklist[value=""]').prop('checked', true).data('waschecked', true);
                         $('.item-row').removeClass('not-ok');
                         $('.keterangan-wrapper').addClass('d-none').find('input').val('');
                     }
