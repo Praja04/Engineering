@@ -942,7 +942,7 @@
                 triggerSync(
                     SYNC_URL,
                     'Sync Data Warehouse?',
-                    'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Warehouse.',
+                    'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Warehouse mulai H-1 dari tanggal data terakhir.',
                     'Sedang menghubungi API Warehouse & menyinkronkan data P2H...'
                 );
             });
@@ -952,7 +952,7 @@
                 triggerSync(
                     SYNC_PRODUCTION_URL,
                     'Sync Data Production?',
-                    'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Production.',
+                    'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Production mulai H-1 dari tanggal data terakhir.',
                     'Sedang menghubungi API Production & menyinkronkan data P2H...'
                 );
             });
@@ -962,8 +962,8 @@
                 triggerSync(
                     SYNC_ALL_URL,
                     'Sync Semua Data (Warehouse & Production)?',
-                    'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Warehouse & Production.',
-                    'Sedang menyinkronkan seluruh data P2H dari Warehouse & Production...'
+                    'Data inspeksi P2H Forklift dan Pallet Mover akan ditarik dari sistem Warehouse & Production mulai H-1 dari tanggal data terakhir.',
+                    'Sedang menyinkronkan data P2H dari Warehouse & Production...'
                 );
             });
         });

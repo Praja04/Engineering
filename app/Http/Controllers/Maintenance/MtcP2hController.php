@@ -14,6 +14,7 @@ use App\Models\Maintenance\MtcMainModel;
 use App\Models\Maintenance\MtcGensetP2hInspectionModel;
 use App\Models\Maintenance\MtcApprovalModel;
 use App\Models\NotificationsModel;
+use Carbon\Carbon;
 
 class MtcP2hController extends Controller
 {
@@ -312,7 +313,8 @@ class MtcP2hController extends Controller
     public function syncWarehouse(Request $request)
     {
         $customData = ($request->has('data') && is_array($request->input('data'))) ? $request->input('data') : null;
-        $result = $this->performSyncP2h('Warehouse', 'http://127.0.0.1:8081', 'WAREHOUSE_BASE_URL', $customData, 'Warehouse');
+        $startDate = $request->input('start_date');
+        $result = $this->performSyncP2h('Warehouse', 'http://127.0.0.1:8081', 'WAREHOUSE_BASE_URL', $customData, 'Warehouse', $startDate);
 
         return response()->json($result, $result['status'] ? 200 : 500);
     }
@@ -323,7 +325,8 @@ class MtcP2hController extends Controller
     public function syncProduction(Request $request)
     {
         $customData = ($request->has('data') && is_array($request->input('data'))) ? $request->input('data') : null;
-        $result = $this->performSyncP2h('Production', 'http://127.0.0.1:8082', 'PRODUCTION_BASE_URL', $customData, 'Produksi');
+        $startDate = $request->input('start_date');
+        $result = $this->performSyncP2h('Production', 'http://127.0.0.1:8082', 'PRODUCTION_BASE_URL', $customData, 'Produksi', $startDate);
 
         return response()->json($result, $result['status'] ? 200 : 500);
     }
@@ -333,8 +336,9 @@ class MtcP2hController extends Controller
      */
     public function syncAll(Request $request)
     {
-        $whResult = $this->performSyncP2h('Warehouse', 'http://127.0.0.1:8081', 'WAREHOUSE_BASE_URL', null, 'Warehouse');
-        $prdResult = $this->performSyncP2h('Production', 'http://127.0.0.1:8082', 'PRODUCTION_BASE_URL', null, 'Produksi');
+        $startDate = $request->input('start_date');
+        $whResult = $this->performSyncP2h('Warehouse', 'http://127.0.0.1:8081', 'WAREHOUSE_BASE_URL', null, 'Warehouse', $startDate);
+        $prdResult = $this->performSyncP2h('Production', 'http://127.0.0.1:8082', 'PRODUCTION_BASE_URL', null, 'Produksi', $startDate);
 
         $whSuccess = $whResult['status'] ?? false;
         $prdSuccess = $prdResult['status'] ?? false;
@@ -379,8 +383,31 @@ class MtcP2hController extends Controller
     /**
      * Helper umum untuk menyinkronkan data P2H dari endpoint API atau payload
      */
-    private function performSyncP2h(string $source, string $defaultBaseUrl, string $envKey, ?array $customData = null, string $defaultDept = 'Production'): array
+    private function performSyncP2h(string $source, string $defaultBaseUrl, string $envKey, ?array $customData = null, string $defaultDept = 'Production', ?string $manualStartDate = null): array
     {
+        // Tentukan tanggal mulai sync (H-1 dari tanggal data terakhir yang ada di database)
+        $startDate = $manualStartDate;
+        $latestDate = null;
+
+        if (empty($startDate)) {
+            // Cari tanggal data terakhir berdasarkan source / department
+            $latestDate = MtcP2hModel::where(function ($q) use ($source, $defaultDept) {
+                $q->where('source', $source)
+                    ->orWhere('dept', 'like', "%{$source}%")
+                    ->orWhere('dept', 'like', "%{$defaultDept}%");
+            })->max('tanggal');
+
+            // Fallback jika belum ada data untuk source ini, ambil tanggal terakhir keseluruhan
+            if (!$latestDate) {
+                $latestDate = MtcP2hModel::max('tanggal');
+            }
+
+            // Jika ada tanggal data terakhir, tarik data dari H-1
+            if ($latestDate) {
+                $startDate = Carbon::parse($latestDate)->subDay()->format('Y-m-d');
+            }
+        }
+
         // 1. Dapatkan payload
         if ($customData !== null && is_array($customData)) {
             $payload = $customData;
@@ -389,14 +416,27 @@ class MtcP2hController extends Controller
             $baseUrl = rtrim($baseUrl, '/');
             $apiUrl = "{$baseUrl}/api/p2h/all-data";
 
-            Log::info("Sinkronisasi data P2H {$source} dari: {$apiUrl}");
+            $queryParams = [
+                'format' => 'separate',
+            ];
+            if (!empty($startDate)) {
+                $queryParams['start_date'] = $startDate;
+            }
+
+            Log::info("Sinkronisasi data P2H {$source} dari: {$apiUrl}", [
+                'params' => $queryParams,
+                'tgl_terakhir' => $latestDate,
+                'mulai_h_minus_1' => $startDate ?? 'SEMUA',
+            ]);
 
             try {
-                // Coba ambil format separate dulu
-                $response = Http::timeout(30)->get("{$apiUrl}?format=separate");
+                // Coba ambil format separate dengan parameter filter start_date
+                $response = Http::timeout(30)->get($apiUrl, $queryParams);
                 if (!$response->successful()) {
-                    // Fallback tanpa query params
-                    $response = Http::timeout(30)->get($apiUrl);
+                    // Fallback tanpa format=separate jika API format lama
+                    $fallbackParams = $queryParams;
+                    unset($fallbackParams['format']);
+                    $response = Http::timeout(30)->get($apiUrl, $fallbackParams);
                 }
             } catch (\Exception $e) {
                 return [
@@ -581,10 +621,14 @@ class MtcP2hController extends Controller
 
             DB::commit();
 
+            $infoRange = $startDate ? "(Mulai H-1: {$startDate})" : "(Semua Data)";
+
             return [
                 'status' => true,
-                'message' => "Sinkronisasi P2H {$source} berhasil! Diperbarui: {$savedForklift} Forklift & {$savedPalletMover} Pallet Mover.",
+                'message' => "Sinkronisasi P2H {$source} {$infoRange} berhasil! Diperbarui: {$savedForklift} Forklift & {$savedPalletMover} Pallet Mover.",
                 'data' => [
+                    'start_date' => $startDate,
+                    'latest_date' => $latestDate,
                     'total_forklift' => $savedForklift,
                     'total_pallet_mover' => $savedPalletMover,
                     'total' => $savedForklift + $savedPalletMover,
