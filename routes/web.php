@@ -82,6 +82,7 @@ Route::middleware('auth')->group(function () {
     @include 'utility/analisis-utility-routes.php';
     @include 'utility/ahu-routes.php';
     @include 'utility/boiler-routes.php';
+    @include 'utility/history-card-routes.php';
     @include 'ejo/ejo-routes.php';
     @include 'project/project_routes.php';
 
