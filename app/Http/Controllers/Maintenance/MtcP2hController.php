@@ -386,23 +386,30 @@ class MtcP2hController extends Controller
     private function performSyncP2h(string $source, string $defaultBaseUrl, string $envKey, ?array $customData = null, string $defaultDept = 'Production', ?string $manualStartDate = null): array
     {
         // Tentukan tanggal mulai sync (H-1 dari tanggal data terakhir yang ada di database)
+        // Dipisahkan secara ketat per-source (Warehouse vs Production) agar tidak saling mempengaruhi
         $startDate = $manualStartDate;
         $latestDate = null;
 
         if (empty($startDate)) {
-            // Cari tanggal data terakhir berdasarkan source / department
-            $latestDate = MtcP2hModel::where(function ($q) use ($source, $defaultDept) {
-                $q->where('source', $source)
-                    ->orWhere('dept', 'like', "%{$source}%")
-                    ->orWhere('dept', 'like', "%{$defaultDept}%");
-            })->max('tanggal');
-
-            // Fallback jika belum ada data untuk source ini, ambil tanggal terakhir keseluruhan
-            if (!$latestDate) {
-                $latestDate = MtcP2hModel::max('tanggal');
+            if (strcasecmp($source, 'Warehouse') === 0) {
+                // Khusus data Warehouse: cek source Warehouse atau record yang memiliki warehouse_id
+                $latestDate = MtcP2hModel::where(function ($q) {
+                    $q->where('source', 'Warehouse')
+                        ->orWhereNotNull('warehouse_id');
+                })->max('tanggal');
+            } elseif (strcasecmp($source, 'Production') === 0) {
+                // Khusus data Production: cek source Production atau record yang memiliki production_id
+                $latestDate = MtcP2hModel::where(function ($q) {
+                    $q->where('source', 'Production')
+                        ->orWhereNotNull('production_id');
+                })->max('tanggal');
+            } else {
+                $latestDate = MtcP2hModel::where('source', $source)->max('tanggal');
             }
 
-            // Jika ada tanggal data terakhir, tarik data dari H-1
+            // Jika source ini sudah memiliki riwayat data di database, tarik mulai H-1 dari tanggal terakhir source tersebut
+            // Jika source ini belum memiliki data sama sekali ($latestDate == null), jangan gunakan fallback ke source lain!
+            // Biarkan $startDate = null agar menarik semua data (get all) khusus untuk source yang belum ada data ini.
             if ($latestDate) {
                 $startDate = Carbon::parse($latestDate)->subDay()->format('Y-m-d');
             }
