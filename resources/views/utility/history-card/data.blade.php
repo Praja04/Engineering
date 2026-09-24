@@ -142,15 +142,17 @@
                                     </div>
 
                                     <div class="col-lg-2 col-md-6 col-6">
-                                        <label class="form-label small fw-semibold text-muted mb-1">TGL MULAI (Opsional)</label>
-                                        <input type="date" name="start_date" id="filterStartDate" class="form-control form-control-sm"
-                                            value="{{ $startDate }}">
+                                        <label class="form-label small fw-semibold text-muted mb-1">TGL MULAI
+                                            (Opsional)</label>
+                                        <input type="date" name="start_date" id="filterStartDate"
+                                            class="form-control form-control-sm" value="{{ $startDate }}">
                                     </div>
 
                                     <div class="col-lg-2 col-md-6 col-6">
-                                        <label class="form-label small fw-semibold text-muted mb-1">TGL SELESAI (Opsional)</label>
-                                        <input type="date" name="end_date" id="filterEndDate" class="form-control form-control-sm"
-                                            value="{{ $endDate }}">
+                                        <label class="form-label small fw-semibold text-muted mb-1">TGL SELESAI
+                                            (Opsional)</label>
+                                        <input type="date" name="end_date" id="filterEndDate"
+                                            class="form-control form-control-sm" value="{{ $endDate }}">
                                     </div>
 
                                     <div class="col-lg-1 col-12 d-flex gap-1">
@@ -174,7 +176,8 @@
             <div class="row">
                 <div class="col-12">
                     <div class="card shadow-sm border-0">
-                        <div class="card-header border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div
+                            class="card-header border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div class="d-flex align-items-center">
                                 <div class="avatar-xs me-2">
                                     <span class="avatar-title bg-primary-subtle rounded-circle">
@@ -212,13 +215,16 @@
                                             <th style="width: 20%;">Area</th>
                                             <th>Deskripsi</th>
                                             <th class="text-center" style="width: 13%;">Teknisi</th>
-                                            <th class="text-center" style="width: 10%;">Aksi</th>
+                                            @if (auth()->user()->jabatan != 'operator')
+                                                <th class="text-center" style="width: 10%;">Aksi</th>
+                                            @endif
                                         </tr>
                                     </thead>
                                     <tbody id="tbodyHistoryCard">
                                         <tr>
                                             <td colspan="7" class="text-center py-5">
-                                                <div class="spinner-border text-primary spinner-border-sm me-1" role="status"></div>
+                                                <div class="spinner-border text-primary spinner-border-sm me-1"
+                                                    role="status"></div>
                                                 <span class="text-muted">Memuat data riwayat history card...</span>
                                             </td>
                                         </tr>
@@ -227,7 +233,8 @@
                             </div>
                         </div>
 
-                        <div class="card-footer bg-white border-top py-3" id="paginationContainer" style="display: none;">
+                        <div class="card-footer bg-white border-top py-3" id="paginationContainer"
+                            style="display: none;">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div class="small text-muted" id="paginationInfo"></div>
                                 <div>
@@ -264,16 +271,21 @@
                             </div>
                             <div class="col-6">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label fw-semibold mb-0">Jam (WIB) <span class="text-danger">*</span></label>
-                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold" id="btnNowJamEdit" title="Gunakan waktu sekarang">
+                                    <label class="form-label fw-semibold mb-0">Jam (WIB) <span
+                                            class="text-danger">*</span></label>
+                                    <button type="button"
+                                        class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold"
+                                        id="btnNowJamEdit" title="Gunakan waktu sekarang">
                                         <i class="ri-time-line me-1"></i>Sekarang
                                     </button>
                                 </div>
                                 <div class="input-group">
-                                    <input type="text" id="editJam" name="jam" class="form-control" required placeholder="HH:MM (Custom WIB)">
+                                    <input type="text" id="editJam" name="jam" class="form-control" required
+                                        placeholder="HH:MM (Custom WIB)">
                                     <span class="input-group-text bg-light fw-bold text-primary">WIB</span>
                                 </div>
-                                <small class="text-muted" style="font-size: 11px;">Format 24 Jam (WIB). Bisa diketik manual atau dipilih.</small>
+                                <small class="text-muted" style="font-size: 11px;">Format 24 Jam (WIB). Bisa diketik
+                                    manual atau dipilih.</small>
                             </div>
                         </div>
 
@@ -322,7 +334,8 @@
                                 <option value="{{ $area }}">{{ $area }}</option>
                             @endforeach
                         </select>
-                        <small class="text-muted">Judul lembar sheet akan tercetak otomatis dengan nama area terpilih.</small>
+                        <small class="text-muted">Judul lembar sheet akan tercetak otomatis dengan nama area
+                            terpilih.</small>
                     </div>
                 </div>
                 <div class="modal-footer bg-light py-2">
@@ -468,26 +481,24 @@
                                         <i class="ri-user-3-line me-1"></i>${escapeHtml(item.teknisi)}
                                     </span>
                                 </td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button"
-                                            class="btn btn-outline-primary btnEditRecord"
-                                            data-id="${item.id}"
-                                            data-tanggal="${escapeHtml(item.tanggal)}"
-                                            data-jam="${escapeHtml(item.jam)}"
-                                            data-area="${escapeHtml(item.area)}"
-                                            data-deskripsi="${escapeHtml(item.deskripsi)}"
-                                            title="Edit Catatan">
-                                            <i class="ri-pencil-line"></i>
-                                        </button>
-                                        <button type="button"
-                                            class="btn btn-outline-danger btnDeleteRecord"
-                                            data-id="${item.id}"
-                                            title="Hapus Catatan">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>
-                                    </div>
-                                </td>
+                                @if (auth()->user()->jabatan != 'operator')
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary btnEditRecord"
+                                                data-id="${item.id}" data-tanggal="${escapeHtml(item.tanggal)}"
+                                                data-jam="${escapeHtml(item.jam)}" data-area="${escapeHtml(item.area)}"
+                                                data-deskripsi="${escapeHtml(item.deskripsi)}" title="Edit Catatan">
+                                                <i class="ri-pencil-line"></i>
+                                            </button>
+                                            <button type="button"
+                                                class="btn btn-outline-danger btnDeleteRecord"
+                                                data-id="${item.id}"
+                                                title="Hapus Catatan">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                @endif
                             </tr>
                         `;
                     });
@@ -545,7 +556,8 @@
             const endPage = Math.min(p.last_page, p.current_page + 2);
 
             if (startPage > 1) {
-                linksHtml += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadData(1)">1</a></li>`;
+                linksHtml +=
+                    `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadData(1)">1</a></li>`;
                 if (startPage > 2) {
                     linksHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
                 }
@@ -555,7 +567,8 @@
                 if (i === p.current_page) {
                     linksHtml += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
                 } else {
-                    linksHtml += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadData(${i})">${i}</a></li>`;
+                    linksHtml +=
+                        `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadData(${i})">${i}</a></li>`;
                 }
             }
 
@@ -563,7 +576,8 @@
                 if (endPage < p.last_page - 1) {
                     linksHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
                 }
-                linksHtml += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadData(${p.last_page})">${p.last_page}</a></li>`;
+                linksHtml +=
+                    `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="loadData(${p.last_page})">${p.last_page}</a></li>`;
             }
 
             // Next Button
@@ -733,7 +747,8 @@
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Terhapus!',
-                                    text: res.message || 'Data berhasil dihapus.',
+                                    text: res.message ||
+                                        'Data berhasil dihapus.',
                                     timer: 1500,
                                     showConfirmButton: false
                                 });
@@ -743,7 +758,8 @@
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Gagal',
-                                    text: xhr.responseJSON?.message || 'Gagal menghapus data.'
+                                    text: xhr.responseJSON?.message ||
+                                        'Gagal menghapus data.'
                                 });
                             }
                         });
