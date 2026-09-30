@@ -64,6 +64,12 @@
                         <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets2">WWTP Dashboard</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link {{ request()->is('dashboard/wwtp/wco') ? 'active' : '' }}"
+                        href="{{ url('dashboard/wwtp/wco') }}">
+                        <i class="mdi mdi-shield-check me-2"></i> <span data-key="t-widgets3">WCO - HSE Dashboard</span>
+                    </a>
+                </li>
             </ul>
         </div>
     </li>

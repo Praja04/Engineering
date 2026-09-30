@@ -13,3 +13,5 @@ Route::get('dashboard/wwtp/performance', [DashboardUtilityController::class, 'ww
 Route::get('dashboard/wwtp/sludge', [DashboardUtilityController::class, 'wwtp_sludge'])->name('wwtp.dashboard_sludge');
 Route::get('dashboard/wwtp/visualisasi', [DashboardUtilityController::class, 'wwtp_visualisasi'])->name('wwtp.dashboard_visualisasi');
 Route::get('dashboard/wwtp/visualisasi-data', [WWTPController::class, 'wwtp_visualisasi_data'])->name('wwtp.dashboard_visualisasi_data');
+Route::get('dashboard/wwtp/wco', [DashboardUtilityController::class, 'wwtp_wco'])->name('wwtp.dashboard_wco');
+Route::get('dashboard/wwtp/wco-data', [WWTPController::class, 'wwtp_wco_data'])->name('wwtp.dashboard_wco_data');

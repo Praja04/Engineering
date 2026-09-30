@@ -68,4 +68,8 @@ class DashboardUtilityController extends Controller
     {
         return view('dashboard.wwtp.dashboard_visualisasi');
     }
+    public function wwtp_wco()
+    {
+        return view('dashboard.wwtp.dashboard_wco');
+    }
 }
