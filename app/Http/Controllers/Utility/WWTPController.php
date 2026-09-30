@@ -1563,25 +1563,33 @@ class WWTPController extends Controller
         if ($influentRecords->isNotEmpty()) {
             $groupedByDate = $influentRecords->groupBy('tanggal')->sortKeys();
             foreach ($groupedByDate as $date => $recs) {
-                $sparta   = (float)$recs->sum('pit_sparta');
-                $garam    = (float)$recs->sum('pit_garam');
-                $domestik = (float)$recs->sum('pit_domestik');
-                $step3    = (float)$recs->sum('pit_produksi_step3');
-                $storage  = (float)$recs->sum('pit_storage');
-                $proses2  = (float)$recs->sum('pit_proses_wwtp2');
-                $outlet   = (float)$recs->sum('pit_outlet');
-                $boiler   = (float)$recs->sum('pit_boiler');
+                $calcPitDiff = function($field) use ($recs) {
+                    return (float) $recs->reduce(function ($carry, $rec) use ($field) {
+                        $awalField = $field . '_awal';
+                        $diff = (float)($rec->$field ?? 0) - (float)($rec->$awalField ?? 0);
+                        return $carry + max(0, $diff);
+                    }, 0);
+                };
+
+                $sparta   = $calcPitDiff('pit_sparta');
+                $garam    = $calcPitDiff('pit_garam');
+                $domestik = $calcPitDiff('pit_domestik');
+                $step3    = $calcPitDiff('pit_produksi_step3');
+                $storage  = $calcPitDiff('pit_storage');
+                $proses2  = $calcPitDiff('pit_proses_wwtp2');
+                $outlet   = $calcPitDiff('pit_outlet');
+                $boiler   = $calcPitDiff('pit_boiler');
 
                 $dailyAggregated[] = [
                     'tanggal'            => Carbon::parse($date)->format('d M'),
-                    'pit_sparta'          => $sparta,
-                    'pit_garam'           => $garam,
-                    'pit_domestik'        => $domestik,
-                    'pit_produksi_step3' => $step3,
-                    'pit_storage'         => $storage,
-                    'pit_proses_wwtp2'   => $proses2,
-                    'pit_outlet'          => $outlet,
-                    'pit_boiler'          => $boiler,
+                    'pit_sparta'          => round($sparta, 2),
+                    'pit_garam'           => round($garam, 2),
+                    'pit_domestik'        => round($domestik, 2),
+                    'pit_produksi_step3' => round($step3, 2),
+                    'pit_storage'         => round($storage, 2),
+                    'pit_proses_wwtp2'   => round($proses2, 2),
+                    'pit_outlet'          => round($outlet, 2),
+                    'pit_boiler'          => round($boiler, 2),
                 ];
 
                 $dailyDistribution['Pit Sparta']          += $sparta;
