@@ -252,6 +252,14 @@ class MtcMasterMaterialController extends Controller
      */
     public function uploadExcel(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('>>> [MTC Upload] Request Masuk ke Controller <<<', [
+            'has_file'   => $request->hasFile('file_excel'),
+            'file_name'  => $request->hasFile('file_excel') ? $request->file('file_excel')->getClientOriginalName() : null,
+            'file_size'  => $request->hasFile('file_excel') ? $request->file('file_excel')->getSize() : null,
+            'all_keys'   => array_keys($request->all()),
+            'client_ip'  => $request->ip(),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:30720' // up to 30MB
         ], [
