@@ -350,33 +350,40 @@
                 <form id="formImportExcel" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body p-4">
-                        <div class="alert alert-info border-0 d-flex align-items-start gap-2 mb-3"
-                            style="font-size: 12.5px;">
-                            <i class="ri-information-line fs-5"></i>
+                        <div class="alert alert-primary border-0 d-flex align-items-start gap-2 mb-3"
+                            style="font-size: 12.5px; background-color: #eff6ff; border-radius: 8px;">
+                            <i class="ri-information-line fs-5 text-primary mt-1"></i>
                             <div>
-                                Gunakan template excel yang telah disediakan agar format kolom sesuai. Jika baris memiliki
-                                <strong>MID</strong> yang telah terdaftar, harga dan data akan otomatis diperbarui.
+                                <strong class="text-primary d-block mb-1">Mendukung File SAP (Sheet "Pmk SAP") &amp; Template Standar</strong>
+                                Sistem otomatis mendeteksi sheet <strong>"Pmk SAP"</strong>:
+                                <ul class="mb-1 ps-3 mt-1" style="font-size: 12px;">
+                                    <li><strong>Kolom SAP:</strong> K = MID, L = Deskripsi, M = Kategori, N = Val.in RC (Total), O = Quantity, P = UoM.</li>
+                                    <li><strong>Filter MID &amp; Jasa:</strong> Baris tanpa MID dan kategori Jasa otomatis dilewati. Kategori disaring khusus <strong>Consumable</strong> &amp; <strong>Maintenance</strong>.</li>
+                                    <li><strong>Otomatis Konversi:</strong> Harga satuan dihitung dari <code>Total Harga / Qty</code>.</li>
+                                    <li><strong>MID Unik &amp; API Warehouse:</strong> Menghilangkan duplikat transaksi dan melengkapi katalog dari API Warehouse.</li>
+                                    <li><strong>Optimasi Data Besar:</strong> Menggunakan teknik chunking dan buffer memory untuk menangani puluhan ribu data tanpa limit.</li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small">Pilih File Excel (.xlsx, .xls, .csv) <span
+                        <div class="mb-0">
+                            <label class="form-label fw-semibold small">Pilih File Excel SAP / MTC (.xlsx, .xls) <span
                                     class="text-danger">*</span></label>
                             <input type="file" class="form-control" name="file_excel" id="fileExcelInput"
                                 accept=".xlsx,.xls,.csv" required>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center pt-2">
-                            <a href="{{ route('master.mtc.material.downloadTemplate') }}"
-                                class="btn btn-link btn-sm text-decoration-none p-0 text-primary fw-semibold">
-                                <i class="ri-download-line me-1"></i> Download Format Template Excel
-                            </a>
-                        </div>
                     </div>
-                    <div class="modal-footer bg-light py-3 px-4 border-top">
-                        <button type="button" class="btn btn-secondary btn-sm px-4 fw-semibold"
-                            data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success btn-sm px-4 fw-semibold" id="btnSubmitImport">
-                            <i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses
-                        </button>
+                    <div class="modal-footer bg-light py-3 px-4 border-top d-flex justify-content-between align-items-center">
+                        <a href="{{ route('master.mtc.material.downloadTemplate') }}"
+                            class="btn btn-outline-secondary btn-sm px-3 fw-semibold">
+                            <i class="ri-download-line me-1"></i> Download Template
+                        </a>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-secondary btn-sm px-4 fw-semibold"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success btn-sm px-4 fw-semibold" id="btnSubmitImport">
+                                <i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -733,6 +740,34 @@
                 e.preventDefault();
                 const formData = new FormData(this);
 
+                // Tutup modal import excel terlebih dahulu agar tidak menumpuk dengan popup
+                $('#modalImportExcel').modal('hide');
+
+                // Tampilkan Swal info full yang tidak bisa diklik di mana pun (unclosable)
+                Swal.fire({
+                    title: 'Memproses Import Material...',
+                    html: `
+                        <div class="text-center py-2">
+                            <p class="text-secondary small mb-3">
+                                Sedang membaca sheet <strong>"Pmk SAP"</strong>, menyaring MID valid, mengonversi harga satuan, dan menyinkronkan data...
+                            </p>
+                            <div class="progress mb-3" style="height: 8px; border-radius: 4px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 100%;"></div>
+                            </div>
+                            <div class="badge bg-light text-dark border px-3 py-2 text-wrap" style="font-size: 11.5px; font-weight: 500; line-height: 1.5;">
+                                <i class="ri-information-line text-primary me-1"></i> Untuk file besar puluhan ribu baris, proses konversi butuh beberapa detik. Mohon jangan tutup atau refresh halaman.
+                            </div>
+                        </div>
+                    `,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
                 $('#btnSubmitImport').prop('disabled', true).html(
                     '<span class="spinner-border spinner-border-sm me-1"></span> Mengimpor data...');
 
@@ -745,27 +780,48 @@
                     success: function(res) {
                         $('#btnSubmitImport').prop('disabled', false).html(
                             '<i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses'
-                            );
+                        );
+                        $('#formImportExcel')[0].reset();
+
                         if (res.status) {
-                            $('#modalImportExcel').modal('hide');
-                            $('#formImportExcel')[0].reset();
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Import Selesai',
-                                text: res.message
+                                title: res.format === 'Pmk SAP' ? 'Import SAP Berhasil!' : 'Import Selesai',
+                                html: `<div class="text-start small mt-2">
+                                    <p class="mb-2">${res.message}</p>
+                                    ${res.unique_count ? `<div class="p-2 bg-light rounded border">
+                                        <div><strong>Format:</strong> Sheet ${res.format}</div>
+                                        <div><strong>Total Baris Dibaca:</strong> ${(res.total_rows || 0).toLocaleString('id-ID')} baris</div>
+                                        <div><strong>Total MID Unik:</strong> ${res.unique_count.toLocaleString('id-ID')} MID</div>
+                                        <div><strong>Material Baru:</strong> ${res.inserted.toLocaleString('id-ID')} item</div>
+                                        <div><strong>Material Diperbarui:</strong> ${res.updated.toLocaleString('id-ID')} item</div>
+                                        ${res.skipped_jasa ? `<div><strong>Kategori Jasa Dilewati:</strong> ${res.skipped_jasa.toLocaleString('id-ID')} baris</div>` : ''}
+                                    </div>` : ''}
+                                </div>`,
+                                confirmButtonText: 'Selesai'
                             });
                             loadMaterialData();
                         } else {
-                            Swal.fire('Gagal Import', res.message, 'warning');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Gagal Import',
+                                text: res.message,
+                                confirmButtonText: 'Tutup'
+                            });
                         }
                     },
                     error: function(xhr) {
                         $('#btnSubmitImport').prop('disabled', false).html(
                             '<i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses'
-                            );
+                        );
                         const msg = xhr.responseJSON?.message ||
-                            'Terjadi kesalahan saat mengunggah file.';
-                        Swal.fire('Error', msg, 'error');
+                            'Terjadi kesalahan saat mengunggah dan memproses file Excel.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Memproses File',
+                            text: msg,
+                            confirmButtonText: 'Tutup'
+                        });
                     }
                 });
             });
