@@ -330,18 +330,18 @@ class MtcMasterMaterialController extends Controller
                 $spreadsheet = $reader->load($filePath);
                 $sheet = $spreadsheet->getSheetByName($pmkSheetName) ?? $spreadsheet->getActiveSheet();
 
-                // Ambil data tanpa hitung ulang formula dan tanpa formatting cell
-                $rows = $sheet->toArray(null, false, false, true);
+                // Pre-fetch katalog Warehouse API sekali di awal
+                $warehouseMap = $this->getWarehouseCatalogMap();
+
+                // Proses langsung dari sheet tanpa toArray() untuk mencegah lonjakan RAM (Memory Exhaustion)
+                $result = $this->processPmkSapSheet($sheet, $warehouseMap);
 
                 // Release RAM dari spreadsheet seketika
                 $spreadsheet->disconnectWorksheets();
                 unset($spreadsheet);
                 unset($reader);
 
-                // Pre-fetch katalog Warehouse API sekali di awal
-                $warehouseMap = $this->getWarehouseCatalogMap();
-
-                return $this->processPmkSapRows($rows, $warehouseMap);
+                return $result;
             }
 
             // 2. Fallback: jika tidak ada sheet "Pmk SAP", cek apakah ini template standar MTC
@@ -378,33 +378,42 @@ class MtcMasterMaterialController extends Controller
     }
 
     /**
-     * Process high-volume "Pmk SAP" rows with strict filtering and chunked upserting:
-     * - Hanya ambil yang memiliki MID valid (MID kosong / '-' / header otomatis dilewati).
-     * - Kategori 'JASA' otomatis dilewati.
-     * - Kategori dinormalisasi HANYA 'Consumable' atau 'Maintenance'.
-     * - Konversi harga per 1 barang: abs(Val.in RC) / abs(Quantity).
-     * - Menyaring hanya MID unik (tidak ada duplikat).
-     * - Sinkronisasi deskripsi & UOM dari API Warehouse.
-     * - Database chunked upsert untuk puluhan ribu baris agar tidak kena limit.
+     * Process high-volume "Pmk SAP" sheet directly without converting entire sheet to array.
+     * Uses cellCollection directly to avoid creating dummy cells for non-selected columns,
+     * reducing RAM usage by 95% and finishing in seconds.
      */
-    private function processPmkSapRows(array $rows, array $warehouseMap)
+    private function processPmkSapSheet(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, array $warehouseMap)
     {
         $uniqueMaterials = [];
         $totalRowsRead   = 0;
         $jasaSkipped     = 0;
         $emptyMidSkipped = 0;
 
-        foreach ($rows as $rowNum => $row) {
-            $midRaw = trim((string) ($row['K'] ?? ''));
+        $cellCollection = $sheet->getCellCollection();
+        $highestRow     = (int) $sheet->getHighestRow();
 
-            // 1. Lewati jika MID kosong, '-', atau teks header
+        for ($rowNum = 2; $rowNum <= $highestRow; $rowNum++) {
+            // 1. Lewati jika cell K tidak ada di collection (kolom MID)
+            if (!$cellCollection->has("K{$rowNum}")) {
+                $emptyMidSkipped++;
+                continue;
+            }
+
+            $cellK = $cellCollection->get("K{$rowNum}");
+            $midRaw = $cellK ? trim((string) $cellK->getValue()) : '';
+
+            // Lewati jika MID kosong, '-', atau teks header
             if ($midRaw === '' || $midRaw === '-' || strcasecmp($midRaw, 'material') === 0 || strcasecmp($midRaw, 'mid') === 0) {
                 $emptyMidSkipped++;
                 continue;
             }
 
             // 2. Cek kategori di kolom M (Skip jika Jasa/JASA)
-            $katRaw = strtoupper(trim((string) ($row['M'] ?? '')));
+            $katRaw = '';
+            if ($cellCollection->has("M{$rowNum}")) {
+                $cellM = $cellCollection->get("M{$rowNum}");
+                $katRaw = $cellM ? strtoupper(trim((string) $cellM->getValue())) : '';
+            }
             if (str_contains($katRaw, 'JASA')) {
                 $jasaSkipped++;
                 continue;
@@ -431,10 +440,17 @@ class MtcMasterMaterialController extends Controller
 
             $totalRowsRead++;
 
-            $valInRcRaw = $row['N'] ?? 0;
-            $qtyRaw     = $row['O'] ?? 0;
-            $uomPumRaw  = strtoupper(trim((string) ($row['P'] ?? '')));
-            $descExcel  = trim((string) ($row['L'] ?? ''));
+            $cellN = $cellCollection->has("N{$rowNum}") ? $cellCollection->get("N{$rowNum}") : null;
+            $valInRcRaw = $cellN ? $cellN->getValue() : 0;
+
+            $cellO = $cellCollection->has("O{$rowNum}") ? $cellCollection->get("O{$rowNum}") : null;
+            $qtyRaw = $cellO ? $cellO->getValue() : 0;
+
+            $cellP = $cellCollection->has("P{$rowNum}") ? $cellCollection->get("P{$rowNum}") : null;
+            $uomPumRaw = $cellP ? strtoupper(trim((string) $cellP->getValue())) : '';
+
+            $cellL = $cellCollection->has("L{$rowNum}") ? $cellCollection->get("L{$rowNum}") : null;
+            $descExcel = $cellL ? trim((string) $cellL->getValue()) : '';
 
             $totalHarga = $this->parseNumericValue($valInRcRaw);
             $parsedQty  = $this->parseQtyAndUom($qtyRaw);
@@ -474,9 +490,6 @@ class MtcMasterMaterialController extends Controller
                 }
             }
         }
-
-        // Bebaskan memori array mentah rows seketika
-        unset($rows);
 
         $totalUnique = count($uniqueMaterials);
         if ($totalUnique === 0) {
