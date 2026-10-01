@@ -738,6 +738,23 @@
             // Upload Excel Submit
             $('#formImportExcel').on('submit', function(e) {
                 e.preventDefault();
+
+                // Validasi ukuran file di sisi client sebelum dikirim ke server
+                const fileInput = document.getElementById('fileExcelInput');
+                if (fileInput && fileInput.files.length > 0) {
+                    const fileSize = fileInput.files[0].size;
+                    const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                    if (fileSize > 40 * 1024 * 1024) { // Lebih dari 40MB
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Ukuran File Terlalu Besar',
+                            text: `Ukuran file Anda (${fileSizeMB} MB) melebihi batas maksimal yang disarankan (40 MB).`,
+                            confirmButtonText: 'Tutup'
+                        });
+                        return;
+                    }
+                }
+
                 const formData = new FormData(this);
 
                 // Tutup modal import excel terlebih dahulu agar tidak menumpuk dengan popup
@@ -783,29 +800,46 @@
                         );
                         $('#formImportExcel')[0].reset();
 
-                        if (res.status) {
+                        // Deteksi jika response berstatus 200 tapi berisi warning PHP "POST Content-Length exceeds limit"
+                        let rawResponse = '';
+                        if (typeof res === 'string') {
+                            rawResponse = res;
+                            try {
+                                const jsonStart = res.indexOf('{');
+                                if (jsonStart !== -1) {
+                                    res = JSON.parse(res.substring(jsonStart));
+                                }
+                            } catch (err) {}
+                        }
+
+                        const isPostTooLarge = (typeof rawResponse === 'string' && (rawResponse.includes('POST Content-Length') || rawResponse.includes('PostTooLargeException'))) ||
+                            (res && res.message && typeof res.message === 'string' && res.message.toLowerCase().includes('post data is too large')) ||
+                            (res && res.exception && typeof res.exception === 'string' && res.exception.includes('PostTooLargeException'));
+
+                        if (isPostTooLarge) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Ukuran File Terlalu Besar',
+                                text: 'Ukuran file Excel melebihi batas maksimal sistem. Silakan hubungi tim IT / Administrator.',
+                                confirmButtonText: 'Tutup'
+                            });
+                            return;
+                        }
+
+                        if (res && res.status) {
                             Swal.fire({
                                 icon: 'success',
-                                title: res.format === 'Pmk SAP' ? 'Import SAP Berhasil!' : 'Import Selesai',
-                                html: `<div class="text-start small mt-2">
-                                    <p class="mb-2">${res.message}</p>
-                                    ${res.unique_count ? `<div class="p-2 bg-light rounded border">
-                                        <div><strong>Format:</strong> Sheet ${res.format}</div>
-                                        <div><strong>Total Baris Dibaca:</strong> ${(res.total_rows || 0).toLocaleString('id-ID')} baris</div>
-                                        <div><strong>Total MID Unik:</strong> ${res.unique_count.toLocaleString('id-ID')} MID</div>
-                                        <div><strong>Material Baru:</strong> ${res.inserted.toLocaleString('id-ID')} item</div>
-                                        <div><strong>Material Diperbarui:</strong> ${res.updated.toLocaleString('id-ID')} item</div>
-                                        ${res.skipped_jasa ? `<div><strong>Kategori Jasa Dilewati:</strong> ${res.skipped_jasa.toLocaleString('id-ID')} baris</div>` : ''}
-                                    </div>` : ''}
-                                </div>`,
+                                title: 'Import Berhasil!',
+                                text: res.message || 'Data master material berhasil diperbarui.',
                                 confirmButtonText: 'Selesai'
                             });
                             loadMaterialData();
                         } else {
+                            const errorMsg = (res && res.message) ? res.message : 'Terjadi kesalahan saat memproses file Excel.';
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Gagal Import',
-                                text: res.message,
+                                text: errorMsg,
                                 confirmButtonText: 'Tutup'
                             });
                         }
@@ -814,11 +848,16 @@
                         $('#btnSubmitImport').prop('disabled', false).html(
                             '<i class="ri-upload-cloud-2-line me-1"></i> Upload &amp; Proses'
                         );
-                        const msg = xhr.responseJSON?.message ||
+                        let msg = xhr.responseJSON?.message ||
                             'Terjadi kesalahan saat mengunggah dan memproses file Excel.';
+
+                        if (xhr.status === 413 || (msg && msg.toLowerCase().includes('post data is too large'))) {
+                            msg = 'Ukuran file Excel melebihi batas maksimal sistem. Silakan hubungi tim IT / Administrator.';
+                        }
+
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal Memproses File',
+                            title: 'Gagal Mengunggah File',
                             text: msg,
                             confirmButtonText: 'Tutup'
                         });
