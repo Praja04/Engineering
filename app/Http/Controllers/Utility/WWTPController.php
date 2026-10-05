@@ -1514,13 +1514,21 @@ class WWTPController extends Controller
             'target'  => '≥ 90%'
         ];
 
+        // 5b. Card Analisa Air Limbah Effluent (COD, TSS, pH, EC)
+        $cardEffluentAnalisa = [
+            'ph'  => $envStages['Effluent']['ph'],
+            'tss' => $envStages['Effluent']['tss'],
+            'cod' => $envStages['Effluent']['cod'],
+            'ec'  => $envStages['Effluent']['ec'],
+        ];
+
         // 8. Card Environment Performance (Table)
         $cardEnvironmentPerformance = [
             ['parameter' => 'Influent',       'satuan' => 'mg/L', 'ph' => $envStages['Influent']['ph'],       'tss' => $envStages['Influent']['tss'],       'cod' => $envStages['Influent']['cod'],       'ec' => $envStages['Influent']['ec'],       'baku_mutu' => '-',   'status' => 'OK'],
             ['parameter' => 'Outlet Anaerob', 'satuan' => 'mg/L', 'ph' => $envStages['Outlet Anaerob']['ph'], 'tss' => $envStages['Outlet Anaerob']['tss'], 'cod' => $envStages['Outlet Anaerob']['cod'], 'ec' => $envStages['Outlet Anaerob']['ec'], 'baku_mutu' => '-',   'status' => 'OK'],
             ['parameter' => 'Aerob (Aerasi)', 'satuan' => 'mg/L', 'ph' => $envStages['Aerob']['ph'],          'tss' => $envStages['Aerob']['tss'],          'cod' => $envStages['Aerob']['cod'],          'ec' => $envStages['Aerob']['ec'],          'baku_mutu' => '-',   'status' => 'OK'],
             ['parameter' => 'Outlet DAF',     'satuan' => 'mg/L', 'ph' => $envStages['Outlet DAF']['ph'],     'tss' => $envStages['Outlet DAF']['tss'],     'cod' => $envStages['Outlet DAF']['cod'],     'ec' => $envStages['Outlet DAF']['ec'],     'baku_mutu' => '-',   'status' => 'OK'],
-            ['parameter' => 'Effluent Final', 'satuan' => 'mg/L', 'ph' => $envStages['Effluent']['ph'],       'tss' => $envStages['Effluent']['tss'],       'cod' => $envStages['Effluent']['cod'],       'ec' => $envStages['Effluent']['ec'],       'baku_mutu' => '100', 'status' => 'OK'],
+            ['parameter' => 'Effluent Final', 'satuan' => 'mg/L', 'ph' => $envStages['Effluent']['ph'],       'tss' => $envStages['Effluent']['tss'],       'cod' => $envStages['Effluent']['cod'],       'ec' => $envStages['Effluent']['ec'],       'baku_mutu' => '300', 'status' => 'OK'],
         ];
 
         // ==========================================
@@ -1543,6 +1551,15 @@ class WWTPController extends Controller
             'kapasitas_design' => '96 m³/day',
             'jam_operasi'      => '24 Jam',
             'personil'         => '18 Orang',
+            // Tangki Kapasitas Permanent
+            'tanks'            => [
+                ['name' => 'Equal',        'kapasitas' => '20 m³',  'img' => asset('assets/images/wwtp/dashboard/EQUALISASI.png')],
+                ['name' => 'Anaerob',      'kapasitas' => '426 m³', 'img' => asset('assets/images/wwtp/dashboard/ANAEROB.png')],
+                ['name' => 'Aerob',        'kapasitas' => '170 m³', 'img' => asset('assets/images/wwtp/dashboard/AEROB.png')],
+                ['name' => 'Lumpur Aktif', 'kapasitas' => '160 m³', 'img' => asset('assets/images/wwtp/dashboard/LUMPUR AKTIF.png')],
+                ['name' => 'DAF',          'kapasitas' => '10 m³',  'img' => asset('assets/images/wwtp/dashboard/DAF.png')],
+                ['name' => 'Outlet',       'kapasitas' => '1 m³',   'img' => asset('assets/images/wwtp/dashboard/OUTLET.png')],
+            ]
         ];
 
         // ==========================================
@@ -1711,7 +1728,7 @@ class WWTPController extends Controller
         }
 
         // ==========================================
-        // 12. TREND KEPATUHAN EFFLUENT (COD)
+        // 12. TREND KEPATUHAN EFFLUENT (COD) -> BAKU MUTU = 300
         // ==========================================
         $perfOutletCOD = WwtpPerformanceRecord::where('jenis', 'outlet')
             ->orderBy('created_at', 'desc')
@@ -1722,23 +1739,25 @@ class WWTPController extends Controller
         $trendEffluentCOD = [
             'categories' => [],
             'values'     => [],
-            'baku_mutu'  => 100,
-            'compliance' => []
+            'baku_mutu'  => 300,
+            'compliance' => 100
         ];
 
         if ($perfOutletCOD->isNotEmpty()) {
+            $totalCodCount = $perfOutletCOD->count();
+            $okCodCount = 0;
             foreach ($perfOutletCOD as $p) {
                 $trendEffluentCOD['categories'][] = $p->created_at->format('d M');
                 $codVal = (float)$p->cod;
                 $trendEffluentCOD['values'][] = $codVal;
-                $trendEffluentCOD['compliance'][] = $codVal <= 100 ? 100 : round((100 / $codVal) * 100, 1);
+                if ($codVal <= 300) $okCodCount++;
             }
+            $trendEffluentCOD['compliance'] = round(($okCodCount / $totalCodCount) * 100, 1);
         } else {
             $months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul'];
-            $sampleCODs = [96, 94, 95, 97, 98, 98, 98];
             $trendEffluentCOD['categories'] = $months;
             $trendEffluentCOD['values']     = [48, 52, 49, 45, 42, 46, 44];
-            $trendEffluentCOD['compliance'] = $sampleCODs;
+            $trendEffluentCOD['compliance'] = 100;
         }
 
         // ==========================================
@@ -1829,7 +1848,7 @@ class WWTPController extends Controller
         }
 
         // ==========================================
-        // 15. SLUDGE & WASTE MANAGEMENT
+        // 15. SLUDGE & WASTE MANAGEMENT (Parameter Harian: Drain lumpur, Running Hour scp, hasil lumpur, content sludge)
         // ==========================================
         $sludgeRecords = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])->get();
         if ($sludgeRecords->isEmpty()) {
@@ -1840,61 +1859,105 @@ class WWTPController extends Controller
             ->where('week_end', '>=', $startDate)
             ->get();
 
-        $totalPengangkutan = $pengangkutanList->sum('jumlah_pengangkutan');
+        if ($pengangkutanList->isEmpty()) {
+            $latestPengangkutan = WwtpPengangkutanSludge::orderBy('week_start', 'desc')->first();
+            if ($latestPengangkutan) {
+                $pengangkutanList = collect([$latestPengangkutan]);
+            }
+        }
+
+        $totalTonasePengangkutan = (float) $pengangkutanList->sum('jumlah_pengangkutan');
+
+        $drainLumpurTotal = (float) $sludgeRecords->sum('drain_lumpur');
+        $runningHourScpTotal = (float) $sludgeRecords->sum('running_hour_scp');
+        $hasilLumpurTotal = (float) $sludgeRecords->sum('hasil_lumpur');
+        $sludgeContentAvg = (float) $sludgeRecords->avg('sludge_content');
 
         $cardSludge = [
-            'sludge_generated' => round((float)($sludgeRecords->sum('hasil_lumpur') ?: 3250), 0),
-            'sludge_moisture'  => round((float)($sludgeRecords->avg('sludge_content') ?: 78), 1),
-            'sludge_disposal'  => round((float)($totalPengangkutan ?: 1450), 0),
-            'running_hour_scp' => round((float)($sludgeRecords->sum('running_hour_scp') ?: 18), 1),
-            'on_process'       => 0,
+            'drain_lumpur'     => round($drainLumpurTotal ?: 42.5, 1),
+            'running_hour_scp' => round($runningHourScpTotal ?: 18.0, 1),
+            'hasil_lumpur'     => round($hasilLumpurTotal ?: 3250, 0),
+            'sludge_content'   => round($sludgeContentAvg ?: 78.4, 1),
             'status'           => 'OK'
         ];
 
+        // 3. Card Pengangkutan Sludge (menggantikan Chemical Safety)
+        $cardPengangkutan = [
+            'total_tonase' => round($totalTonasePengangkutan ?: 12.5, 2),
+            'formatted'    => number_format($totalTonasePengangkutan ?: 12.5, 2, ',', '.') . ' Ton',
+            'target'       => 'TOTAL AKUMULASI',
+            'status'       => 'TERJADWAL'
+        ];
+
         // ==========================================
-        // 16. TOP 5 RISK WWTP -> JUMLAH KOLONI
+        // 16. TOP 5 RISK WWTP -> JUMLAH KOLONI (GRAFIK DENGAN STANDAR 10^5)
         // ==========================================
         $koloniDetails = WwtpKoloniDetail::with('masterKoloni')
             ->orderBy('tanggal', 'desc')
             ->limit(5)
             ->get();
 
-        $cardTopRiskKoloni = [];
+        $koloniCategories = [];
+        $koloniValues = [];
+        $koloniStrings = [];
+        $koloniItems = [];
         $no = 1;
+
         if ($koloniDetails->isNotEmpty()) {
             foreach ($koloniDetails as $kd) {
                 $sampleName = $kd->masterKoloni?->nama_sample ?? 'Sampel #' . $no;
-                $base = $kd->nilai_base;
-                $exp = $kd->nilai_pangkat;
+                $base = (float) $kd->nilai_base;
+                $exp = (int) $kd->nilai_pangkat;
                 $valStr = "{$base} × 10^{$exp} CFU/mL";
-                $isHigh = ($exp >= 6 || ($exp == 5 && $base > 5));
+                // Nilai dinormalisasi dalam satuan 10^5 CFU/mL agar mudah digrafikkan bersama standar 1.0 (10^5)
+                $scaledVal = round(($base * pow(10, $exp)) / 100000, 2);
 
-                $cardTopRiskKoloni[] = [
+                $koloniCategories[] = $sampleName;
+                $koloniValues[]     = $scaledVal;
+                $koloniStrings[]    = $valStr;
+
+                $koloniItems[] = [
                     'no'          => $no++,
                     'nama_sample' => $sampleName,
                     'koloni_str'  => $valStr,
-                    'level'       => $isHigh ? 'HIGH' : ($exp >= 4 ? 'MEDIUM' : 'LOW'),
+                    'scaled_val'  => $scaledVal,
+                    'level'       => ($scaledVal > 1.0) ? 'HIGH' : 'NORMAL',
                     'status'      => 'NORMAL'
                 ];
             }
         } else {
             $defaultKoloni = [
-                ['name' => 'Inlet Anaerob',     'base' => 3.2, 'exp' => 6, 'level' => 'HIGH'],
-                ['name' => 'Outlet Anaerob',    'base' => 1.8, 'exp' => 5, 'level' => 'HIGH'],
-                ['name' => 'Aerasi 1',          'base' => 4.5, 'exp' => 5, 'level' => 'HIGH'],
-                ['name' => 'Aerasi 6',          'base' => 2.1, 'exp' => 4, 'level' => 'MEDIUM'],
-                ['name' => 'Effluent Akhir',    'base' => 8.0, 'exp' => 2, 'level' => 'LOW'],
+                ['name' => 'Inlet Anaerob',     'base' => 3.2, 'exp' => 6], // 32 * 10^5
+                ['name' => 'Outlet Anaerob',    'base' => 1.8, 'exp' => 5], // 1.8 * 10^5
+                ['name' => 'Aerasi 1',          'base' => 4.5, 'exp' => 5], // 4.5 * 10^5
+                ['name' => 'Aerasi 6',          'base' => 0.8, 'exp' => 5], // 0.8 * 10^5
+                ['name' => 'Effluent Akhir',    'base' => 0.2, 'exp' => 5], // 0.2 * 10^5
             ];
             foreach ($defaultKoloni as $item) {
-                $cardTopRiskKoloni[] = [
+                $scaledVal = round(($item['base'] * pow(10, $item['exp'])) / 100000, 2);
+                $valStr = "{$item['base']} × 10^{$item['exp']} CFU/mL";
+                $koloniCategories[] = $item['name'];
+                $koloniValues[]     = $scaledVal;
+                $koloniStrings[]    = $valStr;
+
+                $koloniItems[] = [
                     'no'          => $no++,
                     'nama_sample' => $item['name'],
-                    'koloni_str'  => "{$item['base']} × 10^{$item['exp']} CFU/mL",
-                    'level'       => $item['level'],
+                    'koloni_str'  => $valStr,
+                    'scaled_val'  => $scaledVal,
+                    'level'       => ($scaledVal > 1.0) ? 'HIGH' : 'NORMAL',
                     'status'      => 'NORMAL'
                 ];
             }
         }
+
+        $cardTopRiskKoloni = [
+            'categories' => $koloniCategories,
+            'values'     => $koloniValues,
+            'strings'    => $koloniStrings,
+            'standard'   => 1.0, // 1.0 * 10^5 CFU/mL
+            'items'      => $koloniItems
+        ];
 
         // ==========================================
         // 17. HSE TRAINING COMPLIANCE -> EFFLUENT TSS GRAFIK
@@ -1951,8 +2014,10 @@ class WWTPController extends Controller
                 'trend_up'  => true
             ],
             'card3_chemical_safety'          => $cardChemicalSafety,
+            'card3_pengangkutan_sludge'      => $cardPengangkutan,
             'card4_equalisasi'               => $cardEqualisasi,
             'card5_removal_outlet'           => $cardRemoval,
+            'card5_effluent_analisa'         => $cardEffluentAnalisa,
             'card6_informasi_wwtp'           => $cardInformasiWWTP,
             'card7_safety_perf'              => [
                 'daily_aggregated'   => $dailyAggregated,

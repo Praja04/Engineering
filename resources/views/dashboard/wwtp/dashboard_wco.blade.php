@@ -255,6 +255,51 @@
         font-size: 9px;
     }
 
+    /* Info WWTP Tangki List */
+    .info-tank-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 6px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .info-tank-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(6, 182, 212, 0.3);
+    }
+
+    .info-tank-item img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    }
+
+    .info-tank-meta {
+        overflow: hidden;
+        line-height: 1.15;
+    }
+
+    .info-tank-name {
+        font-size: 9px;
+        font-weight: 700;
+        color: #94a3b8;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+    .info-tank-cap {
+        font-size: 11px;
+        font-weight: 800;
+        color: #38bdf8;
+        font-family: monospace;
+    }
+
     /* Removal Mini */
     .removal-metric-row {
         display: flex;
@@ -271,6 +316,49 @@
     .removal-metric-row strong {
         color: #10b981;
         font-size: 11px;
+    }
+
+    /* ApexCharts Tooltip Dark Styling for WCO Dashboard (Fix for light theme) */
+    .apexcharts-tooltip,
+    .apexcharts-tooltip.apexcharts-theme-light,
+    .apexcharts-tooltip.apexcharts-theme-dark,
+    div.apexcharts-tooltip {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+        border: 1px solid #334155 !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .apexcharts-tooltip-title {
+        background: #1e293b !important;
+        border-bottom: 1px solid #334155 !important;
+        color: #38bdf8 !important;
+        font-weight: 700 !important;
+        padding: 4px 8px !important;
+    }
+
+    .apexcharts-tooltip-text,
+    .apexcharts-tooltip-text-y-label,
+    .apexcharts-tooltip-text-y-value,
+    .apexcharts-tooltip-series-group {
+        color: #f8fafc !important;
+    }
+
+    .apexcharts-tooltip-series-group.apexcharts-active,
+    .apexcharts-tooltip-series-group:last-child {
+        padding-bottom: 4px !important;
+    }
+
+    .apexcharts-xaxistooltip,
+    .apexcharts-yaxistooltip {
+        background: #0f172a !important;
+        color: #38bdf8 !important;
+        border: 1px solid #334155 !important;
+    }
+
+    .apexcharts-xaxistooltip:after,
+    .apexcharts-xaxistooltip:before {
+        border-bottom-color: #0f172a !important;
     }
 
     /* High Tech Tables */
@@ -477,23 +565,36 @@
         <!-- TOP ROW: 5 KPI CARDS + OVERALL SCORE GAUGE (1 TO 5) -->
         <!-- ======================================================= -->
         <div class="row g-2 mb-2">
-            <!-- Left Score Gauge Box (WWTP HSE WCO Score) -->
+            <!-- Card: REMOVAL EFFLUENT (Presentase Gede - Menggantikan Score) -->
             <div class="col-xl-2 col-lg-4 col-md-6">
-                <div class="kpi-score-card">
-                    <div class="text-uppercase fw-bold text-center" style="font-size: 8.5px; color: #38bdf8; letter-spacing: 0.8px;">
-                        WWTP HSE WCO SCORE
+                <div class="kpi-top-card">
+                    <div class="kpi-top-header">
+                        <div class="kpi-top-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                            <i class="mdi mdi-percent-outline"></i>
+                        </div>
+                        <div>
+                            <div class="kpi-top-label">REMOVAL EFFLUENT</div>
+                            <div class="text-muted" style="font-size: 8.5px;">INFLUENT VS EFFLUENT</div>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center justify-content-center my-1" style="height: 40px;">
-                        <span class="display-6 fw-bold text-success" id="scoreGaugeText" style="font-size: 26px;">94%</span>
+                    <div class="d-flex align-items-center justify-content-around my-auto py-1">
+                        <div class="text-center">
+                            <div class="text-muted" style="font-size: 8.5px; font-weight: 700; letter-spacing: 0.5px;">TSS REMOVAL</div>
+                            <div class="fw-bold text-success font-monospace" id="remTssVal" style="font-size: 20px; line-height: 1.1;">0%</div>
+                        </div>
+                        <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.1);"></div>
+                        <div class="text-center">
+                            <div class="text-muted" style="font-size: 8.5px; font-weight: 700; letter-spacing: 0.5px;">COD REMOVAL</div>
+                            <div class="fw-bold text-cyan font-monospace" id="remCodVal" style="font-size: 20px; line-height: 1.1;">0%</div>
+                        </div>
                     </div>
-                    <div class="text-center">
-                        <span class="badge bg-success-subtle text-success fw-bold px-2 py-0" style="font-size: 9px;">EXCELLENT</span>
-                        <div class="text-warning mt-1" style="font-size: 10px; letter-spacing: 2px;">★★★★★</div>
+                    <div class="kpi-top-sub text-success">
+                        <i class="mdi mdi-arrow-up-bold"></i> TARGET ≥ 90%
                     </div>
                 </div>
             </div>
 
-            <!-- Card 1: TOTAL COST / M3 (User #1: Biaya per Kubik di Biaya Chemical) -->
+            <!-- Card 1: TOTAL COST / M3 (Biaya per Kubik di Biaya Chemical) -->
             <div class="col-xl-2 col-lg-4 col-md-6">
                 <div class="kpi-top-card">
                     <div class="kpi-top-header">
@@ -514,7 +615,7 @@
                 </div>
             </div>
 
-            <!-- Card 2: TOTAL COST CHEMICAL (User #2: Total Cost Chemical / bulan) -->
+            <!-- Card 2: TOTAL COST CHEMICAL (Total Cost Chemical / bulan) -->
             <div class="col-xl-2 col-lg-4 col-md-6">
                 <div class="kpi-top-card">
                     <div class="kpi-top-header">
@@ -535,28 +636,28 @@
                 </div>
             </div>
 
-            <!-- Card 3: CHEMICAL SAFETY DUMMY (User #3) -->
+            <!-- Card 3: PENGANGKUTAN SLUDGE (Total Tonase Pengangkutan Sludge) -->
             <div class="col-xl-2 col-lg-4 col-md-6">
                 <div class="kpi-top-card">
                     <div class="kpi-top-header">
                         <div class="kpi-top-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
-                            <i class="mdi mdi-shield-check-outline"></i>
+                            <i class="mdi mdi-truck-delivery-outline"></i>
                         </div>
                         <div>
-                            <div class="kpi-top-label">CHEMICAL SAFETY</div>
-                            <div class="text-muted" style="font-size: 8.5px;">SAFETY COMPLIANCE</div>
+                            <div class="kpi-top-label">PENGANGKUTAN SLUDGE</div>
+                            <div class="text-muted" style="font-size: 8.5px;">TOTAL TONASE</div>
                         </div>
                     </div>
                     <div class="my-auto">
-                        <div class="kpi-top-val" id="topChemSafetyVal">92%</div>
+                        <div class="kpi-top-val" id="topPengangkutanSludgeVal">0 Ton</div>
                     </div>
-                    <div class="kpi-top-sub text-warning">
-                        <i class="mdi mdi-arrow-right-bold"></i> TARGET ≥ 95%
+                    <div class="kpi-top-sub text-warning" id="topPengangkutanSludgeSub">
+                        <i class="mdi mdi-scale"></i> TOTAL AKUMULASI
                     </div>
                 </div>
             </div>
 
-            <!-- Card 4: EQUALISASI (User #4: pH, TSS, COD, EC list) -->
+            <!-- Card 4: EQUALISASI (INFLUENT) (pH, TSS, COD, EC) -->
             <div class="col-xl-2 col-lg-4 col-md-6">
                 <div class="kpi-top-card">
                     <div class="kpi-top-header">
@@ -580,28 +681,26 @@
                 </div>
             </div>
 
-            <!-- Card 5: REMOVAL OUTLET (EFFLUENT) (User #5: TSS & COD berapa percent) -->
+            <!-- Card 5: ANALISA AIR LIMBAH EFFLUENT (COD, TSS, pH, EC) -->
             <div class="col-xl-2 col-lg-4 col-md-6">
                 <div class="kpi-top-card">
                     <div class="kpi-top-header">
                         <div class="kpi-top-icon" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">
-                            <i class="mdi mdi-percent-outline"></i>
+                            <i class="mdi mdi-water-check-outline"></i>
                         </div>
                         <div>
-                            <div class="kpi-top-label">REMOVAL EFFLUENT</div>
-                            <div class="text-muted" style="font-size: 8.5px;">INFLUENT VS EFFLUENT</div>
+                            <div class="kpi-top-label">ANALISA EFFLUENT</div>
+                            <div class="text-muted" style="font-size: 8.5px;">PARAMETER AIR KELUAR</div>
                         </div>
                     </div>
-                    <div class="my-auto">
-                        <div class="removal-metric-row">
-                            <span>TSS Removal:</span> <strong id="remTssVal">0%</strong>
-                        </div>
-                        <div class="removal-metric-row">
-                            <span>COD Removal:</span> <strong id="remCodVal">0%</strong>
-                        </div>
+                    <div class="eq-pill-grid">
+                        <div class="eq-pill-item"><span>pH:</span> <strong id="effValPh">-</strong></div>
+                        <div class="eq-pill-item"><span>TSS:</span> <strong id="effValTss">-</strong></div>
+                        <div class="eq-pill-item"><span>COD:</span> <strong id="effValCod">-</strong></div>
+                        <div class="eq-pill-item"><span>EC:</span> <strong id="effValEc">-</strong></div>
                     </div>
-                    <div class="kpi-top-sub text-success">
-                        <i class="mdi mdi-arrow-up-bold"></i> TARGET ≥ 90%
+                    <div class="kpi-top-sub text-info mt-1">
+                        <i class="mdi mdi-check-circle-outline"></i> Baku Mutu: COD ≤ 300
                     </div>
                 </div>
             </div>
@@ -611,58 +710,68 @@
         <!-- ROW 1: 4 CARDS (INFORMASI WWTP, STATUS OPERASI, ENVIRONMENT PERF, CHEMICAL CONSUMPTION) -->
         <!-- ======================================================= -->
         <div class="row g-2 mb-2">
-            <!-- 6. INFORMASI WWTP (User #6: Debit 1, Running 1, Debit 2, Running 2) -->
+            <!-- 6. INFORMASI WWTP (Kapasitas Tangki Permanent) -->
             <div class="col-xl-3 col-lg-6">
                 <div class="wco-card">
                     <div class="wco-card-header">
                         <h5 class="wco-card-title">
                             <i class="mdi mdi-information-outline text-info"></i> INFORMASI WWTP
                         </h5>
-                        <span class="badge bg-primary-subtle text-primary" style="font-size: 8.5px;">DEBIT & RUNNING</span>
+                        <span class="badge bg-primary-subtle text-primary" style="font-size: 8.5px;">KAPASITAS TANGKI</span>
                     </div>
                     <div class="wco-card-body p-2 d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center gap-2 mb-1 p-1 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-                            <img src="{{ asset('assets/images/wwtp/dashboard/OUTLET.png') }}" alt="WWTP Facility" style="width: 52px; height: 42px; object-fit: cover; border-radius: 4px; border: 1px solid var(--wco-border);">
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 9.5px;">
-                                    <span class="text-muted"><i class="mdi mdi-factory text-warning me-1"></i>Kapasitas:</span>
-                                    <strong class="text-white" id="infoKapasitas">96 m³/d</strong>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center" style="font-size: 9.5px;">
-                                    <span class="text-muted"><i class="mdi mdi-clock-check text-purple me-1"></i>Operasi:</span>
-                                    <strong class="text-success" id="infoJamOperasi">24 Jam</strong>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="row g-1">
                             <div class="col-6">
-                                <div class="p-1 rounded h-100" style="background: rgba(6, 182, 212, 0.05); border: 1px solid rgba(6, 182, 212, 0.2);">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fw-bold text-cyan" style="font-size: 9.5px;">WWTP 1</span>
-                                        <span class="pulse-dot pulse-green"></span>
-                                    </div>
-                                    <div class="mt-1">
-                                        <span class="text-muted" style="font-size: 8.5px;">Debit:</span>
-                                        <div class="fw-bold text-white font-monospace" style="font-size: 12px;"><span id="infoDebit1">0</span> <small class="text-muted" style="font-size: 8.5px;">m³/h</small></div>
-                                    </div>
-                                    <div style="font-size: 8.5px;">
-                                        <span class="text-muted">Run:</span> <strong class="text-success" id="infoRunning1">-</strong>
+                                <div class="info-tank-item">
+                                    <img src="{{ asset('assets/images/wwtp/dashboard/EQUALISASI.png') }}" alt="Equal">
+                                    <div class="info-tank-meta">
+                                        <div class="info-tank-name">Equal</div>
+                                        <div class="info-tank-cap">20 m³</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-6">
-                                <div class="p-1 rounded h-100" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2);">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fw-bold text-info" style="font-size: 9.5px;">WWTP 2</span>
-                                        <span class="pulse-dot pulse-green"></span>
+                                <div class="info-tank-item">
+                                    <img src="{{ asset('assets/images/wwtp/dashboard/ANAEROB.png') }}" alt="Anaerob">
+                                    <div class="info-tank-meta">
+                                        <div class="info-tank-name">Anaerob</div>
+                                        <div class="info-tank-cap">426 m³</div>
                                     </div>
-                                    <div class="mt-1">
-                                        <span class="text-muted" style="font-size: 8.5px;">Debit:</span>
-                                        <div class="fw-bold text-white font-monospace" style="font-size: 12px;"><span id="infoDebit2">0</span> <small class="text-muted" style="font-size: 8.5px;">m³/h</small></div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="info-tank-item">
+                                    <img src="{{ asset('assets/images/wwtp/dashboard/AEROB.png') }}" alt="Aerob">
+                                    <div class="info-tank-meta">
+                                        <div class="info-tank-name">Aerob</div>
+                                        <div class="info-tank-cap">170 m³</div>
                                     </div>
-                                    <div style="font-size: 8.5px;">
-                                        <span class="text-muted">Run:</span> <strong class="text-success" id="infoRunning2">-</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="info-tank-item">
+                                    <img src="{{ asset('assets/images/wwtp/dashboard/LUMPUR AKTIF.png') }}" alt="Lumpur Aktif">
+                                    <div class="info-tank-meta">
+                                        <div class="info-tank-name">Lumpur Aktif</div>
+                                        <div class="info-tank-cap">160 m³</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="info-tank-item">
+                                    <img src="{{ asset('assets/images/wwtp/dashboard/DAF.png') }}" alt="DAF">
+                                    <div class="info-tank-meta">
+                                        <div class="info-tank-name">DAF</div>
+                                        <div class="info-tank-cap">10 m³</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="info-tank-item">
+                                    <img src="{{ asset('assets/images/wwtp/dashboard/OUTLET.png') }}" alt="Outlet">
+                                    <div class="info-tank-meta">
+                                        <div class="info-tank-name">Outlet</div>
+                                        <div class="info-tank-cap">1 m³</div>
                                     </div>
                                 </div>
                             </div>
@@ -807,18 +916,18 @@
                 </div>
             </div>
 
-            <!-- 12. TREND KEPATUHAN EFFLUENT (COD) (User #12: Kepatuhan COD) -->
+            <!-- 12. TREND KEPATUHAN EFFLUENT (COD) (Baku Mutu 300 PPM) -->
             <div class="col-xl-3 col-lg-6">
                 <div class="wco-card">
                     <div class="wco-card-header">
                         <h5 class="wco-card-title">
                             <i class="mdi mdi-check-decagram text-warning"></i> KEPATUHAN COD
                         </h5>
-                        <span class="badge bg-warning-subtle text-warning" style="font-size: 8.5px;">≤ 100 PPM</span>
+                        <span class="badge bg-warning-subtle text-warning" style="font-size: 8.5px;">≤ 300 PPM</span>
                     </div>
                     <div class="wco-card-body p-2">
                         <div class="wco-mini-stat">
-                            <span>COD vs Baku Mutu (100 ppm):</span>
+                            <span>COD vs Baku Mutu (300 ppm):</span>
                             <strong class="text-success" id="codComplianceBadge">100% OK</strong>
                         </div>
                         <div class="wco-chart-box" id="chartKepatuhanCod"></div>
@@ -862,14 +971,14 @@
                 </div>
             </div>
 
-            <!-- 15. SLUDGE & WASTE MANAGEMENT (User #15: Sludge Management) -->
+            <!-- 15. SLUDGE MANAGEMENT (Parameter Harian: Drain lumpur, Running Hour scp, hasil lumpur, content sludge) -->
             <div class="col-xl-3 col-lg-6">
                 <div class="wco-card">
                     <div class="wco-card-header">
                         <h5 class="wco-card-title">
-                            <i class="mdi mdi-truck-delivery-outline text-purple"></i> SLUDGE MANAGEMENT
+                            <i class="mdi mdi-recycle text-purple"></i> SLUDGE MANAGEMENT
                         </h5>
-                        <span class="badge bg-purple-subtle text-purple" style="font-size: 8.5px;">MANAJEMEN LUMPUR</span>
+                        <span class="badge bg-purple-subtle text-purple" style="font-size: 8.5px;">PARAMETER HARIAN</span>
                     </div>
                     <div class="wco-card-body p-1">
                         <table class="wco-table">
@@ -883,27 +992,27 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="text-muted">Sludge Generated</td>
-                                    <td class="text-end fw-bold text-white"><span id="sludgeGeneratedVal">3,250</span></td>
-                                    <td class="text-center text-muted">kg/h</td>
-                                    <td class="text-center"><span class="badge-ok">OK</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted">Sludge Moisture</td>
-                                    <td class="text-end fw-bold text-white"><span id="sludgeMoistureVal">78</span></td>
-                                    <td class="text-center text-muted">%</td>
-                                    <td class="text-center"><span class="badge-ok">OK</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted">Sludge Disposal</td>
-                                    <td class="text-end fw-bold text-white"><span id="sludgeDisposalVal">1,450</span></td>
-                                    <td class="text-center text-muted">kg/b</td>
+                                    <td class="text-muted">Drain Lumpur</td>
+                                    <td class="text-end fw-bold text-white"><span id="sludgeDrainVal">0</span></td>
+                                    <td class="text-center text-muted">m³</td>
                                     <td class="text-center"><span class="badge-ok">OK</span></td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Running Hour SCP</td>
-                                    <td class="text-end fw-bold text-white"><span id="sludgeRunningVal">18</span></td>
-                                    <td class="text-center text-muted">jam/h</td>
+                                    <td class="text-end fw-bold text-white"><span id="sludgeRunningVal">0</span></td>
+                                    <td class="text-center text-muted">Jam</td>
+                                    <td class="text-center"><span class="badge-ok">OK</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Hasil Lumpur</td>
+                                    <td class="text-end fw-bold text-white"><span id="sludgeHasilVal">0</span></td>
+                                    <td class="text-center text-muted">kg</td>
+                                    <td class="text-center"><span class="badge-ok">OK</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Content Sludge</td>
+                                    <td class="text-end fw-bold text-white"><span id="sludgeContentVal">0</span></td>
+                                    <td class="text-center text-muted">%</td>
                                     <td class="text-center"><span class="badge-ok">OK</span></td>
                                 </tr>
                             </tbody>
@@ -912,32 +1021,21 @@
                 </div>
             </div>
 
-            <!-- 16. TOP 5 RISK WWTP -> JUMLAH KOLONI (User #16: Jumlah Koloni) -->
+            <!-- 16. TOP 5 RISK WWTP -> JUMLAH KOLONI (Grafik Standar 10^5) -->
             <div class="col-xl-3 col-lg-6">
                 <div class="wco-card">
                     <div class="wco-card-header">
                         <h5 class="wco-card-title">
                             <i class="mdi mdi-alert-circle-outline text-danger"></i> TOP 5 RISK (KOLONI)
                         </h5>
-                        <span class="badge bg-danger-subtle text-danger" style="font-size: 8.5px;">JUMLAH KOLONI</span>
+                        <span class="badge bg-danger-subtle text-danger" style="font-size: 8.5px;">STANDAR: 10⁵ CFU</span>
                     </div>
-                    <div class="wco-card-body p-0">
-                        <div class="table-responsive" style="max-height: 145px; overflow-y: auto;">
-                            <table class="wco-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 20px;">#</th>
-                                        <th>Sample Point</th>
-                                        <th>Koloni</th>
-                                        <th class="text-center">Level</th>
-                                        <th class="text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableTopRiskBody">
-                                    <!-- Filled by JS -->
-                                </tbody>
-                            </table>
+                    <div class="wco-card-body p-2">
+                        <div class="wco-mini-stat">
+                            <span>Batas Standar: 1.0 × 10⁵ CFU/mL</span>
+                            <span class="badge bg-danger text-white" style="font-size: 8px;">10⁵</span>
                         </div>
+                        <div class="wco-chart-box" id="chartTopRiskKoloni"></div>
                     </div>
                 </div>
             </div>
@@ -1062,9 +1160,10 @@
             // Last Update
             document.getElementById('wcoLastUpdate').textContent = data.last_update || '-';
 
-            // Top WCO Score Gauge Text
-            if (data.wco_score) {
-                document.getElementById('scoreGaugeText').textContent = data.wco_score + '%';
+            // Top Card: Removal Outlet (Effluent) - Presentase Gede
+            if (data.card5_removal_outlet) {
+                document.getElementById('remTssVal').textContent = `${data.card5_removal_outlet.tss_pct}%`;
+                document.getElementById('remCodVal').textContent = `${data.card5_removal_outlet.cod_pct}%`;
             }
 
             // 1. Card Biaya per Kubik
@@ -1078,9 +1177,9 @@
                 document.getElementById('topCostTotalVal').textContent = data.card2_total_cost_chem.formatted;
             }
 
-            // 3. Card Chemical Safety Dummy
-            if (data.card3_chemical_safety) {
-                document.getElementById('topChemSafetyVal').textContent = `${data.card3_chemical_safety.score}%`;
+            // 3. Card Pengangkutan Sludge (menggantikan Chemical Safety)
+            if (data.card3_pengangkutan_sludge) {
+                document.getElementById('topPengangkutanSludgeVal').textContent = data.card3_pengangkutan_sludge.formatted;
             }
 
             // 4. Card Equalisasi (Influent list)
@@ -1091,21 +1190,12 @@
                 document.getElementById('eqValEc').textContent  = (data.card4_equalisasi.ec || '-') + ' mS';
             }
 
-            // 5. Card Removal Outlet (Effluent)
-            if (data.card5_removal_outlet) {
-                document.getElementById('remTssVal').textContent = `${data.card5_removal_outlet.tss_pct}%`;
-                document.getElementById('remCodVal').textContent = `${data.card5_removal_outlet.cod_pct}%`;
-            }
-
-            // 6. Card Informasi WWTP
-            if (data.card6_informasi_wwtp) {
-                const info = data.card6_informasi_wwtp;
-                document.getElementById('infoDebit1').textContent = info.debit1;
-                document.getElementById('infoRunning1').textContent = info.running1;
-                document.getElementById('infoDebit2').textContent = info.debit2;
-                document.getElementById('infoRunning2').textContent = info.running2;
-                if (info.kapasitas_design) document.getElementById('infoKapasitas').textContent = info.kapasitas_design;
-                if (info.jam_operasi) document.getElementById('infoJamOperasi').textContent = info.jam_operasi;
+            // 5. Card Analisa Air Limbah Effluent
+            if (data.card5_effluent_analisa) {
+                document.getElementById('effValPh').textContent  = data.card5_effluent_analisa.ph || '-';
+                document.getElementById('effValTss').textContent = (data.card5_effluent_analisa.tss || '-') + ' ppm';
+                document.getElementById('effValCod').textContent = (data.card5_effluent_analisa.cod || '-') + ' ppm';
+                document.getElementById('effValEc').textContent  = (data.card5_effluent_analisa.ec || '-') + ' mS';
             }
 
             // 10. Card Status Operasi
@@ -1232,9 +1322,13 @@
                 renderOrUpdateChart('chartEffluentMingguan', effluentWeeklyOptions);
             }
 
-            // 12. Card Trend Kepatuhan Effluent COD (Chart)
+            // 12. Card Trend Kepatuhan Effluent COD (Chart: Baku Mutu 300)
             if (data.card12_trend_kepatuhan_effluent_cod) {
                 const cod = data.card12_trend_kepatuhan_effluent_cod;
+                const bakuMutuVal = cod.baku_mutu || 300;
+                if (document.getElementById('codComplianceBadge')) {
+                    document.getElementById('codComplianceBadge').textContent = (cod.compliance ?? 100) + '% OK';
+                }
                 const codOptions = {
                     chart: { type: 'line', height: 135, toolbar: { show: false }, background: 'transparent' },
                     theme: { mode: 'dark' },
@@ -1243,7 +1337,12 @@
                     colors: ['#10b981'],
                     series: [{ name: 'COD (ppm)', data: cod.values || [] }],
                     annotations: {
-                        yaxis: [{ y: 100, borderColor: '#ef4444', strokeDashArray: 2, label: { text: 'Baku Mutu (100)', style: { color: '#fff', background: '#ef4444', fontSize: '8px' } } }]
+                        yaxis: [{
+                            y: bakuMutuVal,
+                            borderColor: '#ef4444',
+                            strokeDashArray: 2,
+                            label: { text: `Baku Mutu (${bakuMutuVal})`, style: { color: '#fff', background: '#ef4444', fontSize: '8px' } }
+                        }]
                     },
                     xaxis: { categories: cod.categories || [], labels: { style: { colors: '#64748b', fontSize: '9px' } } },
                     yaxis: { labels: { style: { colors: '#64748b', fontSize: '9px' } } },
@@ -1272,31 +1371,80 @@
                 document.getElementById('tableAerasiBody').innerHTML = aerasiHtml;
             }
 
-            // 15. Card Sludge & Waste Management
+            // 15. Card Sludge Management (Parameter Harian)
             if (data.card15_sludge_mgmt) {
                 const sl = data.card15_sludge_mgmt;
-                document.getElementById('sludgeGeneratedVal').textContent = Number(sl.sludge_generated).toLocaleString('id-ID');
-                document.getElementById('sludgeMoistureVal').textContent  = sl.sludge_moisture;
-                document.getElementById('sludgeDisposalVal').textContent  = Number(sl.sludge_disposal).toLocaleString('id-ID');
-                document.getElementById('sludgeRunningVal').textContent   = sl.running_hour_scp;
+                document.getElementById('sludgeDrainVal').textContent   = Number(sl.drain_lumpur || 0).toLocaleString('id-ID');
+                document.getElementById('sludgeRunningVal').textContent = Number(sl.running_hour_scp || 0).toLocaleString('id-ID');
+                document.getElementById('sludgeHasilVal').textContent   = Number(sl.hasil_lumpur || 0).toLocaleString('id-ID');
+                document.getElementById('sludgeContentVal').textContent = Number(sl.sludge_content || 0).toLocaleString('id-ID');
             }
 
-            // 16. Card Top 5 Risk WWTP -> Jumlah Koloni
-            if (data.card16_top_risk_koloni && Array.isArray(data.card16_top_risk_koloni)) {
-                let riskHtml = '';
-                data.card16_top_risk_koloni.forEach(r => {
-                    const badgeClass = r.level === 'HIGH' ? 'badge-danger' : (r.level === 'MEDIUM' ? 'badge-warn' : 'badge-ok');
-                    riskHtml += `
-                        <tr>
-                            <td class="text-muted font-monospace">${r.no}</td>
-                            <td class="fw-semibold text-white" style="font-size: 9px;">${r.nama_sample}</td>
-                            <td class="font-monospace text-cyan" style="font-size: 9px;">${r.koloni_str}</td>
-                            <td class="text-center"><span class="${badgeClass}">${r.level}</span></td>
-                            <td class="text-center"><span class="badge-ok">${r.status}</span></td>
-                        </tr>
-                    `;
-                });
-                document.getElementById('tableTopRiskBody').innerHTML = riskHtml;
+            // 16. Card Top 5 Risk WWTP -> Jumlah Koloni (Grafik Standar 10^5)
+            if (data.card16_top_risk_koloni) {
+                const kData = data.card16_top_risk_koloni;
+                const categories = kData.categories || [];
+                const values = kData.values || [];
+                const strings = kData.strings || [];
+
+                const koloniOptions = {
+                    chart: { type: 'bar', height: 135, toolbar: { show: false }, background: 'transparent' },
+                    theme: { mode: 'dark' },
+                    plotOptions: {
+                        bar: {
+                            horizontal: true,
+                            barHeight: '55%',
+                            borderRadius: 2,
+                            colors: {
+                                ranges: [
+                                    { from: 0, to: 1.0, color: '#10b981' },
+                                    { from: 1.01, to: 999999, color: '#ef4444' }
+                                ]
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        textAnchor: 'start',
+                        style: { fontSize: '8.5px', colors: ['#ffffff'] },
+                        formatter: function (val, opt) {
+                            return (strings[opt.dataPointIndex] || (val + ' × 10⁵')).split(' ')[0] + ' × 10⁵';
+                        },
+                        offsetX: 5
+                    },
+                    series: [{ name: 'Koloni (× 10⁵ CFU)', data: values }],
+                    xaxis: {
+                        categories: categories,
+                        labels: { style: { colors: '#64748b', fontSize: '8.5px' } }
+                    },
+                    yaxis: {
+                        labels: { style: { colors: '#94a3b8', fontSize: '9px', fontWeight: 600 } }
+                    },
+                    annotations: {
+                        xaxis: [{
+                            x: 1.0,
+                            borderColor: '#f59e0b',
+                            strokeDashArray: 3,
+                            label: {
+                                text: 'Standar (10⁵)',
+                                orientation: 'horizontal',
+                                style: { color: '#ffffff', background: '#f59e0b', fontSize: '8px' }
+                            }
+                        }]
+                    },
+                    grid: { borderColor: '#1e293b', strokeDashArray: 3, padding: { top: -10, bottom: -5, left: 10, right: 10 } },
+                    tooltip: {
+                        theme: 'dark',
+                        y: {
+                            formatter: function (val, opt) {
+                                const str = strings[opt.dataPointIndex] || (val + ' × 10⁵ CFU/mL');
+                                const status = val > 1.0 ? ' (MELEBIHI STANDAR 10⁵)' : ' (AMAN ≤ 10⁵)';
+                                return str + status;
+                            }
+                        }
+                    }
+                };
+                renderOrUpdateChart('chartTopRiskKoloni', koloniOptions);
             }
 
             // 17. Card Kepatuhan Effluent TSS (Chart)
