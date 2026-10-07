@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
 use App\Models\Utility\PemakaianChemicalModel;
+use App\Models\Utility\ChemicalType;
 use App\Models\Utility\wwtp_analisa\WwtpAnalisa;
 use App\Models\Utility\wwtp_analisa\WwtpParameter;
 use App\Models\Utility\wwtp_analisa\WwtpPoint;
@@ -870,6 +871,9 @@ class WWTPController extends Controller
                 return Carbon::parse($item->tanggal)->format('j'); // 1 sampai 31
             });
 
+        // Preload chemical types map untuk kalkulasi rumus dinamis
+        $chemicalTypesMap = ChemicalType::all()->keyBy(fn($c) => strtolower(trim($c->nama_chemical)));
+
         // ── Isi data ke cell ─────────────────────────────────────────────────
         for ($day = 1; $day <= $daysInMonth; $day++) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(4 + $day); // Day 1 = E (kolom ke-5)
@@ -936,7 +940,7 @@ class WWTPController extends Controller
                 }
             }
 
-            // 2.1 Chemical (Kg/Hari)
+            // 2.1 Chemical (Kg/Hari) - Menggunakan rumus dinamis dari master chemical
             foreach ($chemicalKgHari as $row => $possibleNames) {
                 $matchingChems = $dayChems->filter(function ($item) use ($possibleNames) {
                     return in_array(strtolower(trim($item->jenis_pemakaian)), array_map('strtolower', $possibleNames));
@@ -950,36 +954,12 @@ class WWTPController extends Controller
                             : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
 
                         $rh = $entry->running_hour ?? 1;
-                        $jenisAsli = trim($entry->jenis_pemakaian);
+                        $chemModel = $chemicalTypesMap->get(strtolower(trim($entry->jenis_pemakaian)));
 
-                        switch ($jenisAsli) {
-                            case 'PAC powder 1':
-                                $totalPemakaian += $rh * ($nilai * 60 * 7.6 / 100) / 1000;
-                                break;
-                            case 'PAC powder 2':
-                                $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
-                                break;
-                            case 'BE-100':
-                                $totalPemakaian += $rh * ($nilai * 60 * 2.5 / 100) / 1000;
-                                break;
-                            case 'C-204':
-                                $totalPemakaian += $rh * ($nilai * 60 * 1 / 100) / 1000;
-                                break;
-                            case 'C-9040 step 1':
-                                $totalPemakaian += $rh * ($nilai * 60 * 0.11 / 100) / 1000;
-                                break;
-                            case 'C-9040 step 2':
-                                $totalPemakaian += $rh * ($nilai * 60 * 0.35 / 100) / 1000;
-                                break;
-                            case 'Denfloc 260 PA':
-                                $totalPemakaian += ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
-                                break;
-                            case 'NaOH':
-                                $totalPemakaian += $rh * ($nilai / 1000 * 60) * 1.5;
-                                break;
-                            default:
-                                $totalPemakaian += $nilai;
-                                break;
+                        if ($chemModel && $chemModel->tipe_perhitungan === 'rumus' && !empty($chemModel->rumus_formula)) {
+                            $totalPemakaian += $chemModel->calculateUsage($nilai, (float) $rh);
+                        } else {
+                            $totalPemakaian += $nilai;
                         }
                     }
                     $setCell($colLetter . $row, round($totalPemakaian, 3));

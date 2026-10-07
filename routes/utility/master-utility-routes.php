@@ -30,6 +30,7 @@ Route::prefix('utility/master')->middleware('auth')->group(function () {
     // Master Chemical (Jenis Pemakaian / Types)
     Route::get('/chemical-types', [MasterUtilityController::class, 'getChemicalTypes'])->name('utility.master.chemical-types.list');
     Route::post('/chemical-types', [MasterUtilityController::class, 'storeChemicalType'])->name('utility.master.chemical-types.store');
+    Route::post('/chemical-types/test-formula', [MasterUtilityController::class, 'testFormula'])->name('utility.master.chemical-types.test-formula');
     Route::post('/chemical-types/{id}/update', [MasterUtilityController::class, 'updateChemicalType'])->name('utility.master.chemical-types.update');
     Route::post('/chemical-types/{id}/toggle', [MasterUtilityController::class, 'toggleChemicalType'])->name('utility.master.chemical-types.toggle');
     Route::delete('/chemical-types/{id}', [MasterUtilityController::class, 'destroyChemicalType'])->name('utility.master.chemical-types.destroy');

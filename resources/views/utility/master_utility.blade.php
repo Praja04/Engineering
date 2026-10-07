@@ -337,17 +337,18 @@
                                                     <thead class="table-light">
                                                         <tr>
                                                             <th style="width: 5%;" class="text-center">No</th>
-                                                            <th style="width: 25%;">Nama Chemical</th>
-                                                            <th style="width: 20%;">Area</th>
-                                                            <th style="width: 12%;" class="text-center">Satuan</th>
-                                                            <th style="width: 10%;" class="text-center">Status</th>
-                                                            <th style="width: 12%;" class="text-center">Transaksi</th>
-                                                            <th style="width: 16%;" class="text-center">Aksi</th>
+                                                            <th style="width: 20%;">Nama Chemical</th>
+                                                            <th style="width: 15%;">Area</th>
+                                                            <th style="width: 10%;" class="text-center">Satuan</th>
+                                                            <th style="width: 22%;">Perhitungan / Rumus</th>
+                                                            <th style="width: 8%;" class="text-center">Status</th>
+                                                            <th style="width: 8%;" class="text-center">Transaksi</th>
+                                                            <th style="width: 12%;" class="text-center">Aksi</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody id="chemTypeTableBody">
                                                         <tr>
-                                                            <td colspan="7" class="text-center py-4">
+                                                            <td colspan="8" class="text-center py-4">
                                                                 <div class="spinner-border text-info" role="status">
                                                                 </div>
                                                                 <div class="text-muted mt-2">Memuat jenis chemical...</div>
@@ -479,7 +480,7 @@
     <!-- MODAL 4: FORM JENIS PEMAKAIAN CHEMICAL         -->
     <!-- ============================================== -->
     <div class="modal fade" id="modalChemType" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form id="formChemType">
                     <div class="modal-header">
@@ -488,26 +489,128 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" id="chemTypeId">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Pilih Area Chemical <span
-                                    class="text-danger">*</span></label>
-                            <select class="form-select" id="chemTypeAreaId" required>
-                                <option value="">-- Pilih Area --</option>
-                            </select>
-                            <small class="text-muted">Chemical ini akan otomatis muncul saat Area tersebut dipilih di
-                                form.</small>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Pilih Area Chemical <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" id="chemTypeAreaId" required>
+                                    <option value="">-- Pilih Area --</option>
+                                </select>
+                                <small class="text-muted">Chemical ini akan otomatis muncul saat Area tersebut dipilih di
+                                    form.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Satuan <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="chemTypeSatuan"
+                                    placeholder="Contoh: Liter, Kg, Drum" value="Kg" required>
+                                <small class="text-muted">Satuan ukur hasil pemakaian (default: Kg).</small>
+                            </div>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nama Chemical (Jenis Pemakaian) <span
                                     class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="chemTypeNama"
                                 placeholder="Contoh: SRTF, SCF, PAC powder 1, BE-100" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Satuan <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="chemTypeSatuan"
-                                placeholder="Contoh: Liter, Kg, Drum" value="Kg" required>
+
+                        <!-- Opsi Tipe Perhitungan: Langsung vs Rumus -->
+                        <div class="card border border-light-subtle bg-light mb-3">
+                            <div class="card-body p-3">
+                                <label class="form-label fw-semibold mb-2">Metode Perhitungan Pemakaian <span
+                                        class="text-danger">*</span></label>
+                                <div class="d-flex flex-wrap gap-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="chemTipePerhitungan"
+                                            id="tipePerhitunganLangsung" value="langsung" checked>
+                                        <label class="form-check-label fw-medium" for="tipePerhitunganLangsung">
+                                            <i class="mdi mdi-numeric me-1 text-primary"></i> Input Langsung (Nilai Murni)
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="chemTipePerhitungan"
+                                            id="tipePerhitunganRumus" value="rumus">
+                                        <label class="form-check-label fw-medium" for="tipePerhitunganRumus">
+                                            <i class="mdi mdi-function me-1 text-info"></i> Gunakan Rumus / Formula
+                                            Matematika
+                                        </label>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block">
+                                    Pilih <strong>Input Langsung</strong> untuk area biasa (misal Boiler: SRTF, SCF). Pilih
+                                    <strong>Rumus</strong> jika pemakaian dihitung otomatis dari dosis dan jam kerja
+                                    (seperti WWTP: PAC powder, NaOH, dll).
+                                </small>
+                            </div>
                         </div>
+
+                        <!-- Container Pengaturan Rumus & Simulator -->
+                        <div id="containerRumusFormula" class="card border border-info-subtle shadow-none mb-3"
+                            style="display: none;">
+                            <div class="card-header bg-info-subtle py-2 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-info"><i class="mdi mdi-calculator-variant me-1"></i>
+                                    Konfigurasi Rumus Chemical</span>
+                                <span class="badge bg-info text-white">Dinamis</span>
+                            </div>
+                            <div class="card-body p-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Rumus Formula <span
+                                            class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text font-monospace text-muted">Hasil =</span>
+                                        <input type="text" class="form-control font-monospace" id="chemTypeRumus"
+                                            placeholder="Contoh: ({nilai} * 10 * {rh}) / 1000">
+                                    </div>
+                                    <div class="form-text mt-2">
+                                        <strong>Token Variabel:</strong>
+                                        <span class="badge border text-dark font-monospace me-1">{nilai}</span> atau <span
+                                            class="badge border text-dark font-monospace me-2">nilai</span> (Dosis pompa /
+                                        input operator) &bull;
+                                        <span class="badge border text-dark font-monospace me-1">{rh}</span> atau <span
+                                            class="badge border text-dark font-monospace me-2">rh</span> (Running hours
+                                        pompa / hari).<br>
+                                        <span class="text-muted">Operator yang didukung: <code>+</code>, <code>-</code>,
+                                            <code>*</code>, <code>/</code>, <code>( )</code>. Contoh: <code>({nilai} * 10 *
+                                                {rh}) / 1000</code></span>
+                                    </div>
+                                </div>
+
+                                <!-- Simulator Uji Coba -->
+                                <div class=border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="fw-semibold small text-secondary"><i
+                                                class="mdi mdi-play-box-outline me-1"></i> Uji Coba / Simulator
+                                            Rumus</span>
+                                        <small class="text-muted">Cek apakah rumus valid sebelum disimpan</small>
+                                    </div>
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-4">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text text-muted">{nilai}</span>
+                                                <input type="number" step="any" class="form-control form-control-sm"
+                                                    id="testNilai" value="15" placeholder="Nilai">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text text-muted">{rh}</span>
+                                                <input type="number" step="any" class="form-control form-control-sm"
+                                                    id="testRh" value="24" placeholder="RH (Jam)">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="button" class="btn btn-outline-info btn-sm w-100"
+                                                id="btnTestRumus">
+                                                <i class="mdi mdi-play-circle-outline me-1"></i> Uji Coba Rumus
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="testFormulaResult" class="mt-2" style="display: none;"></div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -1100,7 +1203,7 @@
                 renderChemTypeTable();
             }).fail(function() {
                 $('#chemTypeTableBody').html(
-                    '<tr><td colspan="7" class="text-center text-danger py-4">Gagal memuat jenis chemical.</td></tr>'
+                    '<tr><td colspan="8" class="text-center text-danger py-4">Gagal memuat jenis chemical.</td></tr>'
                 );
             });
         }
@@ -1108,13 +1211,14 @@
         function renderChemTypeTable() {
             const search = ($('#searchChemType').val() || '').toLowerCase();
             const filtered = globalChemTypes.filter(t => t.nama_chemical.toLowerCase().includes(search) || t.nama_area
-                .toLowerCase().includes(search) || t.satuan.toLowerCase().includes(search));
+                .toLowerCase().includes(search) || t.satuan.toLowerCase().includes(search) || (t.rumus_formula && t
+                    .rumus_formula.toLowerCase().includes(search)));
             const $tbody = $('#chemTypeTableBody');
             $tbody.empty();
 
             if (filtered.length === 0) {
                 $tbody.html(
-                    '<tr><td colspan="7" class="text-center text-muted py-4">Tidak ada data jenis chemical yang cocok.</td></tr>'
+                    '<tr><td colspan="8" class="text-center text-muted py-4">Tidak ada data jenis chemical yang cocok.</td></tr>'
                 );
                 return;
             }
@@ -1123,6 +1227,17 @@
                 const statusBadge = t.is_active ?
                     '<span class="badge bg-success-subtle text-success border border-success-subtle">Aktif</span>' :
                     '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Nonaktif</span>';
+
+                let rumusHtml = '<span class="badge bg-secondary-subtle text-muted border">Langsung</span>';
+                if (t.tipe_perhitungan === 'rumus' && t.rumus_formula) {
+                    rumusHtml = `
+                        <div class="d-flex align-items-center" title="${escapeHtml(t.rumus_formula)}">
+                            <span class="badge bg-info-subtle text-dark border font-monospace text-truncate" style="max-width: 200px;">
+                                <i class="mdi mdi-function text-info me-1"></i>${escapeHtml(t.rumus_formula)}
+                            </span>
+                        </div>
+                    `;
+                }
 
                 let actionHtml = '-';
                 if (canManageMaster) {
@@ -1147,6 +1262,7 @@
                         <td class="fw-bold text-dark">${escapeHtml(t.nama_chemical)}</td>
                         <td><span class="badge bg-info-subtle text-info border border-info-subtle">${escapeHtml(t.nama_area)}</span></td>
                         <td class="text-center"><span class="badge bg-light text-dark border">${escapeHtml(t.satuan)}</span></td>
+                        <td>${rumusHtml}</td>
                         <td class="text-center">${statusBadge}</td>
                         <td class="text-center"><span class="badge bg-light text-secondary border">${t.usage_count} record</span></td>
                         <td class="text-center">${actionHtml}</td>
@@ -1159,9 +1275,61 @@
         $('#searchChemType').on('keyup', renderChemTypeTable);
         $('#btnRefreshChemTypes').on('click', loadChemTypes);
 
+        // Toggle container rumus berdasarkan radio button
+        $('input[name="chemTipePerhitungan"]').on('change', function() {
+            if ($(this).val() === 'rumus') {
+                $('#containerRumusFormula').slideDown(200);
+            } else {
+                $('#containerRumusFormula').slideUp(200);
+            }
+        });
+
+        // Uji coba simulator rumus
+        $('#btnTestRumus').on('click', function() {
+            const formula = $('#chemTypeRumus').val();
+            const nilai = $('#testNilai').val();
+            const rh = $('#testRh').val();
+
+            if (!formula || !formula.trim()) {
+                $('#testFormulaResult').removeClass('alert alert-success alert-danger').addClass(
+                    'alert alert-warning py-1 px-2 mb-0').html(
+                    '<i class="mdi mdi-alert-circle me-1"></i>Masukkan rumus formula terlebih dahulu.'
+                ).show();
+                return;
+            }
+
+            const btn = $(this);
+            btn.prop('disabled', true).html(
+                '<span class="spinner-border spinner-border-sm me-1"></span> Menguji...');
+
+            $.post("{{ url('utility/master/chemical-types/test-formula') }}", {
+                formula: formula,
+                nilai: nilai,
+                rh: rh
+            }, function(res) {
+                $('#testFormulaResult').removeClass('alert alert-danger alert-warning').addClass(
+                    'alert alert-success py-1 px-2 mb-0').html(
+                    `<strong><i class="mdi mdi-check-circle me-1"></i>${res.preview}</strong>`
+                ).show();
+            }).fail(function(xhr) {
+                $('#testFormulaResult').removeClass('alert alert-success alert-warning').addClass(
+                    'alert alert-danger py-1 px-2 mb-0').html(
+                    `<i class="mdi mdi-close-circle me-1"></i>${xhr.responseJSON?.message || 'Rumus tidak valid.'}`
+                ).show();
+            }).always(function() {
+                btn.prop('disabled', false).html(
+                    '<i class="mdi mdi-play-circle-outline me-1"></i> Uji Coba Rumus');
+            });
+        });
+
         $('#btnAddChemType').on('click', function() {
             $('#formChemType')[0].reset();
             $('#chemTypeId').val('');
+            $('input[name="chemTipePerhitungan"][value="langsung"]').prop('checked', true);
+            $('#containerRumusFormula').hide();
+            $('#chemTypeRumus').val('');
+            $('#testFormulaResult').hide().empty();
+
             const currentFilter = $('#filterChemAreaSelect').val();
             if (currentFilter) {
                 $('#chemTypeAreaId').val(currentFilter);
@@ -1177,6 +1345,18 @@
             $('#chemTypeAreaId').val(t.chemical_area_id);
             $('#chemTypeNama').val(t.nama_chemical);
             $('#chemTypeSatuan').val(t.satuan);
+
+            const tipe = t.tipe_perhitungan || 'langsung';
+            $(`input[name="chemTipePerhitungan"][value="${tipe}"]`).prop('checked', true);
+            $('#chemTypeRumus').val(t.rumus_formula || '');
+            $('#testFormulaResult').hide().empty();
+
+            if (tipe === 'rumus') {
+                $('#containerRumusFormula').show();
+            } else {
+                $('#containerRumusFormula').hide();
+            }
+
             $('#modalChemTypeTitle').text('Edit Chemical: ' + t.nama_chemical);
             $('#modalChemType').modal('show');
         };
@@ -1187,12 +1367,27 @@
             const url = id ? `{{ url('utility/master/chemical-types') }}/${id}/update` :
                 `{{ url('utility/master/chemical-types') }}`;
             const btn = $('#btnSubmitChemType');
+
+            const tipePerhitungan = $('input[name="chemTipePerhitungan"]:checked').val() || 'langsung';
+            const rumusFormula = tipePerhitungan === 'rumus' ? $('#chemTypeRumus').val() : '';
+
+            if (tipePerhitungan === 'rumus' && !rumusFormula.trim()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Rumus Kosong',
+                    text: 'Silakan isi rumus formula atau pilih metode Input Langsung.'
+                });
+                return;
+            }
+
             btn.prop('disabled', true).text('Menyimpan...');
 
             $.post(url, {
                 chemical_area_id: $('#chemTypeAreaId').val(),
                 nama_chemical: $('#chemTypeNama').val(),
-                satuan: $('#chemTypeSatuan').val()
+                satuan: $('#chemTypeSatuan').val(),
+                tipe_perhitungan: tipePerhitungan,
+                rumus_formula: rumusFormula
             }, function(res) {
                 Swal.fire({
                     icon: 'success',

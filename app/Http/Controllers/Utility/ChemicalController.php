@@ -248,10 +248,11 @@ class ChemicalController extends Controller
             ->orderBy('tanggal', 'desc')
             ->get();
 
-        // Mapping satuan berdasarkan nama chemical yang dinormalisasi
-        $satuanMap = ChemicalType::pluck('satuan', 'nama_chemical')->mapWithKeys(function ($satuan, $nama) {
-            $key = strtolower(preg_replace('/[^a-z0-9]/', '', $nama));
-            return [$key => $satuan];
+        // Mapping satuan dan chemical model berdasarkan nama chemical yang dinormalisasi
+        $chemicalTypesMap = ChemicalType::all()->keyBy(fn($c) => strtolower(trim($c->nama_chemical)));
+        $satuanMap = $chemicalTypesMap->mapWithKeys(function ($item, $key) {
+            $normalizedKey = preg_replace('/[^a-z0-9]/', '', $key);
+            return [$normalizedKey => $item->satuan];
         });
 
         $grouped = $data->groupBy(fn($item) => date('Y-m-d', strtotime($item->tanggal)));
@@ -281,7 +282,7 @@ class ChemicalController extends Controller
                     ];
                 })->sortBy(fn($s) => preg_replace('/\D/', '', strtolower($s['shift'])))->values();
 
-                // Hitung total pemakaian dan tentukan satuannya
+                // Hitung total pemakaian dan tentukan satuannya menggunakan master rumus dinamis
                 $totalPemakaian = 0;
                 $hasCustomRumus = false;
 
@@ -290,44 +291,13 @@ class ChemicalController extends Controller
                         ? floatval($entry->nilai_pemakaian)
                         : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
                     $rh = $entry->running_hour ?? 1;
-                    $jenisAsli = trim($entry->jenis_pemakaian);
+                    $chemModel = $chemicalTypesMap->get(strtolower(trim($entry->jenis_pemakaian)));
 
-                    switch ($jenisAsli) {
-                        case 'PAC powder 1':
-                            $totalPemakaian += $rh * ($nilai * 60 * 7.6 / 100) / 1000;
-                            $hasCustomRumus = true;
-                            break;
-                        case 'PAC powder 2':
-                            $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
-                            $hasCustomRumus = true;
-                            break;
-                        case 'BE-100':
-                            $totalPemakaian += $rh * ($nilai * 60 * 2.5 / 100) / 1000;
-                            $hasCustomRumus = true;
-                            break;
-                        case 'C-204':
-                            $totalPemakaian += $rh * ($nilai * 60 * 1 / 100) / 1000;
-                            $hasCustomRumus = true;
-                            break;
-                        case 'C-9040 step 1':
-                            $totalPemakaian += $rh * ($nilai * 60 * 0.11 / 100) / 1000;
-                            $hasCustomRumus = true;
-                            break;
-                        case 'C-9040 step 2':
-                            $totalPemakaian += $rh * ($nilai * 60 * 0.35 / 100) / 1000;
-                            $hasCustomRumus = true;
-                            break;
-                        case 'Denfloc 260 PA':
-                            $totalPemakaian += ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
-                            $hasCustomRumus = true;
-                            break;
-                        case 'NaOH':
-                            $totalPemakaian += $rh * ($nilai / 1000 * 60) * 1.5;
-                            $hasCustomRumus = true;
-                            break;
-                        default:
-                            $totalPemakaian += $nilai;
-                            break;
+                    if ($chemModel && $chemModel->tipe_perhitungan === 'rumus' && !empty($chemModel->rumus_formula)) {
+                        $totalPemakaian += $chemModel->calculateUsage($nilai, (float) $rh);
+                        $hasCustomRumus = true;
+                    } else {
+                        $totalPemakaian += $nilai;
                     }
                 }
 
@@ -391,12 +361,12 @@ class ChemicalController extends Controller
             'SRF'
         ];
 
-        // Normalisasi satuan dari chemical_types
-        $satuanMap = ChemicalType::all()
-            ->mapWithKeys(function ($item) {
-                $key = strtolower(preg_replace('/[^a-z0-9]/', '', trim($item->nama_chemical)));
-                return [$key => trim($item->satuan)];
-            });
+        // Normalisasi satuan dan map model dari chemical_types
+        $chemicalTypesMap = ChemicalType::all()->keyBy(fn($c) => strtolower(trim($c->nama_chemical)));
+        $satuanMap = $chemicalTypesMap->mapWithKeys(function ($item, $key) {
+            $normalizedKey = preg_replace('/[^a-z0-9]/', '', $key);
+            return [$normalizedKey => trim($item->satuan)];
+        });
 
         // Load template
         $templatePath = public_path('assets/templates/utility/template_chemical.xlsx');
@@ -430,36 +400,12 @@ class ChemicalController extends Controller
                         : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
 
                     $rh = $entry->running_hour ?? 1;
-                    $jenisAsli = trim($entry->jenis_pemakaian);
+                    $chemModel = $chemicalTypesMap->get(strtolower(trim($entry->jenis_pemakaian)));
 
-                    switch ($jenisAsli) {
-                        case 'PAC powder 1':
-                            $totalPemakaian += $rh * ($nilai * 60 * 7.6 / 100) / 1000;
-                            break;
-                        case 'PAC powder 2':
-                            $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
-                            break;
-                        case 'BE-100':
-                            $totalPemakaian += $rh * ($nilai * 60 * 2.5 / 100) / 1000;
-                            break;
-                        case 'C-204':
-                            $totalPemakaian += $rh * ($nilai * 60 * 1 / 100) / 1000;
-                            break;
-                        case 'C-9040 step 1':
-                            $totalPemakaian += $rh * ($nilai * 60 * 0.11 / 100) / 1000;
-                            break;
-                        case 'C-9040 step 2':
-                            $totalPemakaian += $rh * ($nilai * 60 * 0.35 / 100) / 1000;
-                            break;
-                        case 'Denfloc 260 PA':
-                            $totalPemakaian += ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
-                            break;
-                        case 'NaOH':
-                            $totalPemakaian += $rh * ($nilai / 1000 * 60) * 1.5;
-                            break;
-                        default:
-                            $totalPemakaian += $nilai;
-                            break;
+                    if ($chemModel && $chemModel->tipe_perhitungan === 'rumus' && !empty($chemModel->rumus_formula)) {
+                        $totalPemakaian += $chemModel->calculateUsage($nilai, (float) $rh);
+                    } else {
+                        $totalPemakaian += $nilai;
                     }
                 }
 
@@ -712,56 +658,22 @@ class ChemicalController extends Controller
             ->groupBy('jenis_pemakaian');
 
         $result = [];
+        $chemicalTypesMap = ChemicalType::all()->keyBy(fn($c) => strtolower(trim($c->nama_chemical)));
 
         foreach ($data as $jenis => $records) {
             $dataPoints = [];
+            $chemModel = $chemicalTypesMap->get(strtolower(trim($jenis)));
 
             foreach ($records as $record) {
                 $nilai = is_numeric($record->nilai_pemakaian)
                     ? floatval($record->nilai_pemakaian)
                     : floatval(preg_replace('/[^\d.]+/', '', $record->nilai_pemakaian));
                 $rh = $record->running_hour ?? 1;
-                $totalPemakaian = 0;
-                // $satuan = $record->satuan ?? '-';
-                $jenisAsli = trim($record->jenis_pemakaian);
 
-                // Hitung berdasarkan rumus khusus
-                switch ($jenisAsli) {
-                    case 'PAC powder 1':
-                        $totalPemakaian = $rh * ($nilai * 60 * 7.6 / 100) / 1000;
-                        // $satuan = 'kg/hari';
-                        break;
-                    case 'PAC powder 2':
-                        $totalPemakaian = $rh * ($nilai * 60 * 12.5 / 100) / 1000;
-                        // $satuan = 'kg/hari';
-                        break;
-                    case 'BE-100':
-                        $totalPemakaian = $rh * ($nilai * 60 * 2.5 / 100) / 1000;
-                        // $satuan = 'kg/hari';
-                        break;
-                    case 'C-204':
-                        $totalPemakaian = $rh * ($nilai * 60 * 1 / 100) / 1000;
-                        // $satuan = 'kg/hari';
-                        break;
-                    case 'C-9040 step 1':
-                        $totalPemakaian = $rh * ($nilai * 60 * 0.11 / 100) / 1000;
-                        // $satuan = 'kg/hari';
-                        break;
-                    case 'C-9040 step 2':
-                        $totalPemakaian = $rh * ($nilai * 60 * 0.35 / 100) / 1000;
-                        // $satuan = 'kg/hari';
-                        break;
-                    case 'Denfloc 260 PA':
-                        $totalPemakaian = ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
-                        // $satuan = 'kg/hari';
-                        break;
-                    case 'NaOH':
-                        $totalPemakaian = $rh * ($nilai / 1000 * 60) * 1.5;
-                        // $satuan = 'kg/hari';
-                        break;
-                    default:
-                        $totalPemakaian = $nilai;
-                        break;
+                if ($chemModel && $chemModel->tipe_perhitungan === 'rumus' && !empty($chemModel->rumus_formula)) {
+                    $totalPemakaian = $chemModel->calculateUsage($nilai, (float) $rh);
+                } else {
+                    $totalPemakaian = $nilai;
                 }
 
                 $dataPoints[] = [
@@ -827,10 +739,11 @@ class ChemicalController extends Controller
             });
         }
 
-        // Normalisasi satuan dari chemical type
-        $satuanMap = ChemicalType::pluck('satuan', 'nama_chemical')->mapWithKeys(function ($satuan, $nama) {
-            $key = strtolower(preg_replace('/[^a-z0-9]/', '', $nama));
-            return [$key => $satuan];
+        // Normalisasi satuan dan map model dari chemical_types
+        $chemicalTypesMap = ChemicalType::all()->keyBy(fn($c) => strtolower(trim($c->nama_chemical)));
+        $satuanMap = $chemicalTypesMap->mapWithKeys(function ($item, $key) {
+            $normalizedKey = preg_replace('/[^a-z0-9]/', '', $key);
+            return [$normalizedKey => $item->satuan];
         });
 
         $grouped = $data->groupBy('jenis_pemakaian');
@@ -841,50 +754,19 @@ class ChemicalController extends Controller
             $hasCustomRumus = false;
             $lookupKey = strtolower(preg_replace('/[^a-z0-9]/', '', $jenis));
             $satuanAsli = $satuanMap[$lookupKey] ?? null;
+            $chemModel = $chemicalTypesMap->get(strtolower(trim($jenis)));
 
             foreach ($entries as $entry) {
                 $nilai = is_numeric($entry->nilai_pemakaian)
                     ? floatval($entry->nilai_pemakaian)
                     : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
                 $rh = $entry->running_hour ?? 1;
-                $jenisAsli = trim($entry->jenis_pemakaian);
 
-                switch ($jenisAsli) {
-                    case 'PAC powder 1':
-                        $totalPemakaian += $rh * ($nilai * 60 * 7.6 / 100) / 1000;
-                        $hasCustomRumus = true;
-                        break;
-                    case 'PAC powder 2':
-                        $totalPemakaian += $rh * ($nilai * 60 * 12.5 / 100) / 1000;
-                        $hasCustomRumus = true;
-                        break;
-                    case 'BE-100':
-                        $totalPemakaian += $rh * ($nilai * 60 * 2.5 / 100) / 1000;
-                        $hasCustomRumus = true;
-                        break;
-                    case 'C-204':
-                        $totalPemakaian += $rh * ($nilai * 60 * 1 / 100) / 1000;
-                        $hasCustomRumus = true;
-                        break;
-                    case 'C-9040 step 1':
-                        $totalPemakaian += $rh * ($nilai * 60 * 0.11 / 100) / 1000;
-                        $hasCustomRumus = true;
-                        break;
-                    case 'C-9040 step 2':
-                        $totalPemakaian += $rh * ($nilai * 60 * 0.35 / 100) / 1000;
-                        $hasCustomRumus = true;
-                        break;
-                    case 'Denfloc 260 PA':
-                        $totalPemakaian += ($rh * ($nilai / 1000 * 60) * 480) / 1000 / 1000 / 1000;
-                        $hasCustomRumus = true;
-                        break;
-                    case 'NaOH':
-                        $totalPemakaian += $rh * ($nilai / 1000 * 60) * 1.5;
-                        $hasCustomRumus = true;
-                        break;
-                    default:
-                        $totalPemakaian += $nilai;
-                        break;
+                if ($chemModel && $chemModel->tipe_perhitungan === 'rumus' && !empty($chemModel->rumus_formula)) {
+                    $totalPemakaian += $chemModel->calculateUsage($nilai, (float) $rh);
+                    $hasCustomRumus = true;
+                } else {
+                    $totalPemakaian += $nilai;
                 }
             }
 

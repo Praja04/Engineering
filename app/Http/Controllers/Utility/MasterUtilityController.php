@@ -499,6 +499,8 @@ class MasterUtilityController extends Controller
                 'nama_area' => $t->area->nama_area ?? '-',
                 'nama_chemical' => $t->nama_chemical,
                 'satuan' => $t->satuan ?? 'Kg',
+                'tipe_perhitungan' => $t->tipe_perhitungan ?? 'langsung',
+                'rumus_formula' => $t->rumus_formula ?? '',
                 'is_active' => (bool) ($t->is_active ?? true),
                 'usage_count' => $usageCounts[$t->nama_chemical] ?? 0,
                 'created_at' => $t->created_at ? $t->created_at->format('d M Y H:i') : '-',
@@ -516,6 +518,8 @@ class MasterUtilityController extends Controller
             'chemical_area_id' => 'required|exists:chemical_areas,id',
             'nama_chemical' => 'required|string|max:50',
             'satuan' => 'required|string|max:50',
+            'tipe_perhitungan' => 'nullable|in:langsung,rumus',
+            'rumus_formula' => 'nullable|string|max:255',
         ], [
             'chemical_area_id.required' => 'Pilih area chemical terlebih dahulu.',
             'chemical_area_id.exists' => 'Area chemical tidak valid.',
@@ -536,10 +540,15 @@ class MasterUtilityController extends Controller
             return response()->json(['message' => "Chemical '{$request->input('nama_chemical')}' sudah terdaftar pada area ini."], 422);
         }
 
+        $tipePerhitungan = $request->input('tipe_perhitungan', 'langsung');
+        $rumusFormula = $tipePerhitungan === 'rumus' ? trim($request->input('rumus_formula')) : null;
+
         $type = ChemicalType::create([
             'chemical_area_id' => $request->input('chemical_area_id'),
             'nama_chemical' => trim($request->input('nama_chemical')),
             'satuan' => trim($request->input('satuan')),
+            'tipe_perhitungan' => $tipePerhitungan,
+            'rumus_formula' => $rumusFormula,
             'is_active' => true,
         ]);
 
@@ -560,6 +569,8 @@ class MasterUtilityController extends Controller
             'chemical_area_id' => 'required|exists:chemical_areas,id',
             'nama_chemical' => 'required|string|max:50',
             'satuan' => 'required|string|max:50',
+            'tipe_perhitungan' => 'nullable|in:langsung,rumus',
+            'rumus_formula' => 'nullable|string|max:255',
             'is_active' => 'nullable|boolean',
         ], [
             'chemical_area_id.required' => 'Pilih area chemical terlebih dahulu.',
@@ -584,11 +595,15 @@ class MasterUtilityController extends Controller
 
         $oldName = $type->nama_chemical;
         $newName = trim($request->input('nama_chemical'));
+        $tipePerhitungan = $request->input('tipe_perhitungan', 'langsung');
+        $rumusFormula = $tipePerhitungan === 'rumus' ? trim($request->input('rumus_formula')) : null;
 
         $type->update([
             'chemical_area_id' => $request->input('chemical_area_id'),
             'nama_chemical' => $newName,
             'satuan' => trim($request->input('satuan')),
+            'tipe_perhitungan' => $tipePerhitungan,
+            'rumus_formula' => $rumusFormula,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : ($type->is_active ?? true),
         ]);
 
@@ -600,6 +615,29 @@ class MasterUtilityController extends Controller
             'success' => true,
             'message' => "Jenis chemical '{$newName}' berhasil diperbarui.",
             'data' => $type->load('area')
+        ]);
+    }
+
+    public function testFormula(Request $request)
+    {
+        $formula = $request->input('formula');
+        $nilai = (float) $request->input('nilai', 10);
+        $rh = (float) $request->input('rh', 24);
+
+        if (empty($formula)) {
+            return response()->json([
+                'success' => true,
+                'result' => $nilai,
+                'preview' => "Tanpa rumus -> Hasil langsung = {$nilai}"
+            ]);
+        }
+
+        $result = ChemicalType::evaluateFormula($formula, $nilai, $rh);
+
+        return response()->json([
+            'success' => true,
+            'result' => round($result, 4),
+            'preview' => "Simulasi: nilai={$nilai}, rh={$rh} jam -> Hasil: " . round($result, 4)
         ]);
     }
 
