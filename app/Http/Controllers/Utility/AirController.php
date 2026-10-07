@@ -232,7 +232,7 @@ class AirController extends Controller
 
     public function getAirAreas()
     {
-        $areas = AirArea::orderBy('nama_area')->get();
+        $areas = AirArea::where('is_active', true)->orderBy('nama_area')->get();
 
         if ($areas->isEmpty()) {
             $defaultAreas = PemakaianAirModel::distinct()->pluck('jenis_pemakaian')->filter()->toArray();
@@ -253,9 +253,9 @@ class AirController extends Controller
                 ];
             }
             foreach ($defaultAreas as $name) {
-                AirArea::firstOrCreate(['nama_area' => $name]);
+                AirArea::firstOrCreate(['nama_area' => $name], ['is_active' => true]);
             }
-            $areas = AirArea::orderBy('nama_area')->get();
+            $areas = AirArea::where('is_active', true)->orderBy('nama_area')->get();
         }
 
         foreach ($areas as $area) {

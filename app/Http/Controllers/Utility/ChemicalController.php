@@ -25,6 +25,8 @@ class ChemicalController extends Controller
     {
         $chemicals = ChemicalType::with('area')
             ->where('chemical_area_id', $id)
+            ->where('is_active', true)
+            ->orderBy('nama_chemical')
             ->get();
 
         if ($chemicals->isEmpty()) {
@@ -352,7 +354,7 @@ class ChemicalController extends Controller
 
     public function getChemicalAreas()
     {
-        $areas = ChemicalArea::orderBy('nama_area')->get();
+        $areas = ChemicalArea::where('is_active', true)->orderBy('nama_area')->get();
 
         return response()->json($areas);
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
 use App\Models\Utility\PemakaianListrikModel;
+use App\Models\Utility\MasterListrikPanel;
 use App\Models\Utility\UtilityMonthlyApproval;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -21,7 +22,20 @@ class ListrikController extends Controller
 
     public function formUtility()
     {
-        return view('utility.form_utility');
+        $panelListrik = MasterListrikPanel::where('is_active', true)
+            ->orderBy('urutan')
+            ->orderBy('nama_panel')
+            ->get();
+
+        if ($panelListrik->isEmpty()) {
+            $defaultPanels = ['MDP', 'SDP1', 'SDP2', 'SDP3', 'SDP4', 'SDP5', 'SDP6', 'SDP7', 'SDP8', 'SDP9', 'SDP10', 'SDP11', 'SDP12', 'SDP13', 'SDP14'];
+            foreach ($defaultPanels as $idx => $p) {
+                MasterListrikPanel::firstOrCreate(['nama_panel' => $p], ['urutan' => $idx + 1, 'is_active' => true]);
+            }
+            $panelListrik = MasterListrikPanel::where('is_active', true)->orderBy('urutan')->orderBy('nama_panel')->get();
+        }
+
+        return view('utility.form_utility', compact('panelListrik'));
     }
 
     public function DataUtility()
@@ -77,7 +91,7 @@ class ListrikController extends Controller
     {
         $validated = $request->validate([
             'waktu' => 'required|date',
-            'panel_type' => 'required|in:MDP,SDP1,SDP2,SDP3,SDP4,SDP5,SDP6,SDP7,SDP8,SDP9,SDP10,SDP11,SDP12,SDP13,SDP14',
+            'panel_type' => 'required|string|max:100',
             'volt' => 'nullable|numeric',
             'a' => 'nullable|numeric',
             'kw' => 'nullable|numeric',

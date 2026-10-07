@@ -2,7 +2,7 @@
     $jabatan = Auth::user()->jabatan;
     $bagian = Auth::user()->bagian;
 
-    $isUtility = request()->is('utility/form') || request()->is('utility/data') || request()->is('utility/approval');
+    $isUtility = request()->is('utility/form') || request()->is('utility/data') || request()->is('utility/approval') || request()->is('utility/master*');
 
     $isEsp =
         request()->is('utility/esp-operational-report*') ||
@@ -82,6 +82,13 @@
                 </li>
 
                 @if ($jabatan != 'operator')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('utility/master*') ? 'active' : '' }}"
+                            href="{{ url('utility/master') }}">
+                            <i class="mdi mdi-database-cog-outline"></i>
+                            <span>Master Utility</span>
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('utility/approval') ? 'active' : '' }}"
                             href="{{ url('utility/approval') }}">

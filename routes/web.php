@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
     @include 'utility/air-routes.php';
     @include 'utility/wwtp-routes.php';
     @include 'utility/chemical-routes.php';
+    @include 'utility/master-utility-routes.php';
     @include 'utility/dashboard.php';
     @include 'utility/esp-routes.php';
     @include 'utility/water-softener-routes.php';
