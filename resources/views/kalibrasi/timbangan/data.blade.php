@@ -226,6 +226,9 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Edit Kalibrasi --}}
+    @include('kalibrasi.partials.modal_edit_kalibrasi')
 @endsection
 
 @section('scripts')
@@ -309,16 +312,24 @@
                             data: null,
                             orderable: false,
                             className: "text-center",
-                            render: (data, type, row) => `
-                                <div>
-                                    <button class="btn btn-sm btn-soft-info btn-detail" data-id="${row.id}" title="Detail">
-                                        <i class="mdi mdi-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-soft-danger delete-btn" data-id="${row.id}" title="Hapus">
-                                        <i class="mdi mdi-delete"></i>
-                                    </button>
-                                </div>
-                            `
+                            render: (data, type, row) => {
+                                const canEdit = {{ (Auth::user() && strtolower(Auth::user()->jabatan ?? '') !== 'operator') ? 'true' : 'false' }};
+                                return `
+                                    <div>
+                                        <button class="btn btn-sm btn-soft-info btn-detail" data-id="${row.id}" title="Detail">
+                                            <i class="mdi mdi-eye"></i>
+                                        </button>
+                                        ${canEdit ? `
+                                            <button class="btn btn-sm btn-soft-warning btn-edit" data-id="${row.id}" title="Edit Data">
+                                                <i class="mdi mdi-pencil"></i>
+                                            </button>
+                                        ` : ''}
+                                        <button class="btn btn-sm btn-soft-danger delete-btn" data-id="${row.id}" title="Hapus">
+                                            <i class="mdi mdi-delete"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }
                         }
                     ],
                     dom: '<"row mb-3"<"col-md-6"l><"col-md-6 text-end"f>>rt<"row mt-3"<"col-md-6"i><"col-md-6 text-end"p>>',

@@ -258,6 +258,9 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Edit Kalibrasi --}}
+    @include('kalibrasi.partials.modal_edit_kalibrasi')
 @endsection
 
 @section('scripts')
@@ -387,6 +390,15 @@
                                 }
 
 
+                                let editButton = '';
+                                if (userRole !== 'operator' && '{{ strtolower(Auth::user()->jabatan ?? '') }}' !== 'operator') {
+                                    editButton = `
+                                        <button class="btn btn-outline-warning btn-sm btn-edit" data-id="${item.id}" title="Edit Data Kalibrasi & Sertifikat">
+                                            <i class="mdi mdi-pencil-outline"></i>
+                                        </button>
+                                    `;
+                                }
+
                                 let row = `
                                     <tr>
                                         ${checkboxCol}
@@ -404,6 +416,7 @@
                                         <td class="text-center">
                                             <div class="d-flex flex-nowrap justify-content-end gap-2"> 
                                                 ${actionButtons}
+                                                ${editButton}
                                                 ${sertifButtons}
                                                 ${deleteButtons}
                                             </div>

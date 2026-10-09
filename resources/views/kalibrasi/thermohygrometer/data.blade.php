@@ -265,6 +265,9 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Edit Kalibrasi --}}
+    @include('kalibrasi.partials.modal_edit_kalibrasi')
 @endsection
 
 @section('scripts')
@@ -348,10 +351,16 @@
                             data: null,
                             orderable: false,
                             render: function(data, type, row) {
+                                const canEdit = {{ (Auth::user() && strtolower(Auth::user()->jabatan ?? '') !== 'operator') ? 'true' : 'false' }};
                                 return `
                                     <button class="btn btn-sm btn-soft-info btn-detail" data-id="${row.id}" title="Detail">
                                         <i class="mdi mdi-eye"></i>
                                     </button>
+                                    ${canEdit ? `
+                                        <button class="btn btn-sm btn-soft-warning btn-edit" data-id="${row.id}" title="Edit Data">
+                                            <i class="mdi mdi-pencil"></i>
+                                        </button>
+                                    ` : ''}
                                     <button class="btn btn-sm btn-soft-danger delete-btn" data-id="${row.id}" title="Delete">
                                         <i class="mdi mdi-delete"></i>
                                     </button>

@@ -64,6 +64,8 @@ Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
         Route::get('/certificate/preview/{id}', [KalibrasiCertificateController::class, 'previewSertifikat'])->name('kalibrasi.certificate.preview');
         Route::delete('/certificate/delete/{id}', [KalibrasiController::class, 'destroy'])->name('kalibrasi.certificate.delete');
         Route::post('/certificate/mass-delete', [KalibrasiController::class, 'massDelete'])->name('kalibrasi.certificate.mass-delete');
+        Route::get('/get-data-edit/{id}', [KalibrasiController::class, 'getEditData'])->name('kalibrasi.get-data-edit');
+        Route::post('/update-data-kalibrasi/{id}', [KalibrasiController::class, 'updateDataKalibrasi'])->name('kalibrasi.update-data');
         Route::get('/approval/detail/{id}', [KalibrasiController::class, 'detail'])->name('kalibrasi.certificate.download');
         Route::post('/approval/approve/{id}', [KalibrasiCertificateController::class, 'approve'])->name('approval.approve');
         Route::post('/approval/mass-approve', [KalibrasiCertificateController::class, 'massApprove'])->name('approval.mass-approve');

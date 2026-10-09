@@ -18,6 +18,21 @@ use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use App\Models\Kalibrasi\Pressure\KalibrasiPressureModel;
+use App\Models\Kalibrasi\Volumetrik\KalibrasiVolumetrikModel;
+use App\Models\Kalibrasi\Temperature\KalibrasiTemperatureModel;
+use App\Models\Kalibrasi\Thermohygrometer\KalibrasiThermohygrometerModel;
+use App\Models\Kalibrasi\JangkaSorong\KalibrasiJangkaSorongModel;
+use App\Models\Kalibrasi\JangkaSorong\KalibrasiJangkaSorongSummaryModel;
+use App\Models\Kalibrasi\Timbangan\KemampuanUlangSummariesModel;
+use App\Models\Kalibrasi\Timbangan\KeseragamanSkalaSummariesModel;
+use App\Models\Kalibrasi\Timbangan\PingganSummariesModel;
+use App\Models\Kalibrasi\Timbangan\TareSummariesModel;
+use App\Models\Kalibrasi\Timbangan\HisterisisSummariesModel;
+use App\Models\Kalibrasi\Timbangan\KetidakpastianSummariesModel;
+use App\Models\Kalibrasi\Instrumen\CalInstrumenModel;
+use App\Models\Kalibrasi\Dimensi\CalDimensiModel;
+use App\Models\Kalibrasi\Flowmeter\CalFlowmeterModel;
 
 class KalibrasiController extends Controller
 {
@@ -360,6 +375,377 @@ class KalibrasiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getEditData(string $id)
+    {
+        if (Auth::user() && strtolower(Auth::user()->jabatan ?? '') === 'operator') {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'User dengan jabatan operator tidak diperbolehkan mengakses edit data kalibrasi.'
+            ], 403);
+        }
+
+        try {
+            $kalibrasi = KalibrasiModel::with([
+                'alat',
+                'user',
+                'certificate',
+                'pressure',
+                'volumetrik.details',
+                'temperature',
+                'thermohygrometer',
+                'jangkaSorong.master',
+                'jangkaSorongSummary',
+                'kemampuanUlangSummary',
+                'keseragamanSkalaSummary',
+                'pingganSummary',
+                'tareSummary',
+                'histerisisSummary',
+                'ketidakpastianSummary',
+                'instrumen',
+                'dimensi',
+                'flowmeter'
+            ])->findOrFail($id);
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $kalibrasi
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gagal mengambil data kalibrasi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateDataKalibrasi(Request $request, string $id)
+    {
+        if (Auth::user() && strtolower(Auth::user()->jabatan ?? '') === 'operator') {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'User dengan jabatan operator tidak diperbolehkan mengedit data kalibrasi.'
+            ], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $kalibrasi = KalibrasiModel::findOrFail($id);
+
+            // 1. Update data umum / header kalibrasi (cal_main)
+            $updateMain = [];
+            if ($request->has('tgl_kalibrasi')) $updateMain['tgl_kalibrasi'] = $request->tgl_kalibrasi;
+            if ($request->has('tgl_kalibrasi_ulang')) $updateMain['tgl_kalibrasi_ulang'] = $request->tgl_kalibrasi_ulang;
+            if ($request->has('lokasi_kalibrasi')) $updateMain['lokasi_kalibrasi'] = $request->lokasi_kalibrasi;
+            if ($request->has('suhu_ruangan')) $updateMain['suhu_ruangan'] = $request->suhu_ruangan;
+            if ($request->has('kelembaban')) $updateMain['kelembaban'] = $request->kelembaban;
+            if ($request->has('catatan')) $updateMain['catatan'] = $request->catatan;
+
+            if (!empty($updateMain)) {
+                $kalibrasi->update($updateMain);
+            }
+
+            $jenis = strtolower(str_replace(['-', ' '], '_', $kalibrasi->jenis_kalibrasi));
+
+            // 2. Update data per jenis kalibrasi (bagian average / sertifikat)
+            switch ($jenis) {
+                case 'pressure':
+                    if ($request->has('pressure') && is_array($request->pressure)) {
+                        foreach ($request->pressure as $pData) {
+                            if (!empty($pData['id'])) {
+                                $p = KalibrasiPressureModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $pData['id'])
+                                    ->first();
+                                if ($p) {
+                                    $p->update([
+                                        'titik_kalibrasi'          => $pData['titik_kalibrasi'] ?? $p->titik_kalibrasi,
+                                        'avg_penunjuk_alat_naik'   => $pData['avg_penunjuk_alat_naik'] ?? $p->avg_penunjuk_alat_naik,
+                                        'avg_penunjuk_alat_turun'  => $pData['avg_penunjuk_alat_turun'] ?? $p->avg_penunjuk_alat_turun,
+                                        'avg_tekanan_standar_naik' => $pData['avg_tekanan_standar_naik'] ?? $p->avg_tekanan_standar_naik,
+                                        'avg_tekanan_standar_turun'=> $pData['avg_tekanan_standar_turun'] ?? $p->avg_tekanan_standar_turun,
+                                        'avg_koreksi_alat_naik'    => $pData['avg_koreksi_alat_naik'] ?? $p->avg_koreksi_alat_naik,
+                                        'avg_koreksi_alat_turun'   => $pData['avg_koreksi_alat_turun'] ?? $p->avg_koreksi_alat_turun,
+                                        'std_deviasi_naik'         => $pData['std_deviasi_naik'] ?? $p->std_deviasi_naik,
+                                        'std_deviasi_turun'        => $pData['std_deviasi_turun'] ?? $p->std_deviasi_turun,
+                                        'ketidakpastian_naik'      => $pData['ketidakpastian_naik'] ?? $p->ketidakpastian_naik,
+                                        'ketidakpastian_turun'     => $pData['ketidakpastian_turun'] ?? $p->ketidakpastian_turun,
+                                        'u_naik'                   => $pData['u_naik'] ?? $p->u_naik,
+                                        'u_turun'                  => $pData['u_turun'] ?? $p->u_turun,
+                                        'u_gabungan'               => $pData['u_gabungan'] ?? $p->u_gabungan,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case 'volumetrik':
+                    if ($request->has('volumetrik') && is_array($request->volumetrik)) {
+                        foreach ($request->volumetrik as $vData) {
+                            if (!empty($vData['id'])) {
+                                $v = KalibrasiVolumetrikModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $vData['id'])
+                                    ->first();
+                                if ($v) {
+                                    $v->update([
+                                        'titik_kalibrasi'        => $vData['titik_kalibrasi'] ?? $v->titik_kalibrasi,
+                                        'avg_penunjuk_standar'   => $vData['avg_penunjuk_standar'] ?? $v->avg_penunjuk_standar,
+                                        'avg_koreksi'            => $vData['avg_koreksi'] ?? $v->avg_koreksi,
+                                        'stdev_penunjuk_standar' => $vData['stdev_penunjuk_standar'] ?? $v->stdev_penunjuk_standar,
+                                        'u_total'                => $vData['u_total'] ?? $v->u_total,
+                                    ]);
+
+                                    if (isset($vData['penunjuk_alat'])) {
+                                        $detail = $v->details()->first();
+                                        if ($detail) {
+                                            $detail->update(['penunjuk_alat' => $vData['penunjuk_alat']]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case 'temperature':
+                    if ($request->has('temperature') && is_array($request->temperature)) {
+                        foreach ($request->temperature as $tData) {
+                            if (!empty($tData['id'])) {
+                                $t = KalibrasiTemperatureModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $tData['id'])
+                                    ->first();
+                                if ($t) {
+                                    $t->update([
+                                        'titik_kalibrasi'   => $tData['titik_kalibrasi'] ?? $t->titik_kalibrasi,
+                                        'avg_penunjuk_alat' => $tData['avg_penunjuk_alat'] ?? $t->avg_penunjuk_alat,
+                                        'avg_suhu_standar'  => $tData['avg_suhu_standar'] ?? $t->avg_suhu_standar,
+                                        'avg_kor_alat'      => $tData['avg_kor_alat'] ?? $t->avg_kor_alat,
+                                        'stdev'             => $tData['stdev'] ?? $t->stdev,
+                                        'ketidakpastian'    => $tData['ketidakpastian'] ?? $t->ketidakpastian,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case 'thermohygrometer':
+                    if ($request->has('thermohygrometer') && is_array($request->thermohygrometer)) {
+                        foreach ($request->thermohygrometer as $thData) {
+                            if (!empty($thData['id'])) {
+                                $th = KalibrasiThermohygrometerModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $thData['id'])
+                                    ->first();
+                                if ($th) {
+                                    $th->update([
+                                        'titik_kalibrasi'          => $thData['titik_kalibrasi'] ?? $th->titik_kalibrasi,
+                                        'posisi'                   => $thData['posisi'] ?? $th->posisi,
+                                        'avg_penunjuk_alat_suhu'   => $thData['avg_penunjuk_alat_suhu'] ?? $th->avg_penunjuk_alat_suhu,
+                                        'avg_tekanan_standar_suhu' => $thData['avg_tekanan_standar_suhu'] ?? $th->avg_tekanan_standar_suhu,
+                                        'avg_koreksi_suhu'         => $thData['avg_koreksi_suhu'] ?? $th->avg_koreksi_suhu,
+                                        'std_deviasi_suhu'         => $thData['std_deviasi_suhu'] ?? $th->std_deviasi_suhu,
+                                        'ketidak_pastian_suhu'     => $thData['ketidak_pastian_suhu'] ?? $th->ketidak_pastian_suhu,
+                                        'avg_penunjuk_alat_rh'     => $thData['avg_penunjuk_alat_rh'] ?? $th->avg_penunjuk_alat_rh,
+                                        'avg_tekanan_standar_rh'   => $thData['avg_tekanan_standar_rh'] ?? $th->avg_tekanan_standar_rh,
+                                        'avg_koreksi_rh'           => $thData['avg_koreksi_rh'] ?? $th->avg_koreksi_rh,
+                                        'std_deviasi_rh'           => $thData['std_deviasi_rh'] ?? $th->std_deviasi_rh,
+                                        'ketidak_pastian_rh'       => $thData['ketidak_pastian_rh'] ?? $th->ketidak_pastian_rh,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case 'jangka_sorong':
+                    if ($request->has('jangka_sorong') && is_array($request->jangka_sorong)) {
+                        foreach ($request->jangka_sorong as $jsData) {
+                            if (!empty($jsData['id'])) {
+                                $js = KalibrasiJangkaSorongModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $jsData['id'])
+                                    ->first();
+                                if ($js) {
+                                    $js->update([
+                                        'avg_pembacaan' => $jsData['avg_pembacaan'] ?? $js->avg_pembacaan,
+                                        'std_dev'       => $jsData['std_dev'] ?? $js->std_dev,
+                                        'koreksi'       => $jsData['koreksi'] ?? $js->koreksi,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    if ($request->has('jangka_sorong_summary')) {
+                        $jsSummary = KalibrasiJangkaSorongSummaryModel::where('kalibrasi_id', $kalibrasi->id)->first();
+                        if ($jsSummary) {
+                            $jsSummary->update([
+                                'std_dev_total'  => $request->jangka_sorong_summary['std_dev_total'] ?? $jsSummary->std_dev_total,
+                                'ketidakpastian' => $request->jangka_sorong_summary['ketidakpastian'] ?? $jsSummary->ketidakpastian,
+                            ]);
+                        }
+                    }
+                    break;
+
+                case 'timbangan':
+                    if ($request->has('kemampuan_ulang_summary') && is_array($request->kemampuan_ulang_summary)) {
+                        foreach ($request->kemampuan_ulang_summary as $kuData) {
+                            if (!empty($kuData['id'])) {
+                                $ku = KemampuanUlangSummariesModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $kuData['id'])
+                                    ->first();
+                                if ($ku) {
+                                    $ku->update([
+                                        'massa'                => $kuData['massa'] ?? $ku->massa,
+                                        'std_dev'              => $kuData['std_dev'] ?? $ku->std_dev,
+                                        'maks_perbedaan_akhir' => $kuData['maks_perbedaan_akhir'] ?? $ku->maks_perbedaan_akhir,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    if ($request->has('keseragaman_skala_summary') && is_array($request->keseragaman_skala_summary)) {
+                        foreach ($request->keseragaman_skala_summary as $ksData) {
+                            if (!empty($ksData['id'])) {
+                                $ks = KeseragamanSkalaSummariesModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $ksData['id'])
+                                    ->first();
+                                if ($ks) {
+                                    $ks->update([
+                                        'beban'         => $ksData['beban'] ?? $ks->beban,
+                                        'koreksi_skala' => $ksData['koreksi_skala'] ?? $ks->koreksi_skala,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    if ($request->has('pinggan_summary')) {
+                        $pSummary = PingganSummariesModel::where('kalibrasi_id', $kalibrasi->id)->first();
+                        if ($pSummary) {
+                            $pSummary->update([
+                                'summary_tengah'   => $request->pinggan_summary['summary_tengah'] ?? $pSummary->summary_tengah,
+                                'summary_depan'    => $request->pinggan_summary['summary_depan'] ?? $pSummary->summary_depan,
+                                'summary_belakang' => $request->pinggan_summary['summary_belakang'] ?? $pSummary->summary_belakang,
+                                'summary_kiri'     => $request->pinggan_summary['summary_kiri'] ?? $pSummary->summary_kiri,
+                                'summary_kanan'    => $request->pinggan_summary['summary_kanan'] ?? $pSummary->summary_kanan,
+                                'selisih_maks'     => $request->pinggan_summary['selisih_maks'] ?? $pSummary->selisih_maks,
+                            ]);
+                        }
+                    }
+                    if ($request->has('tare_summary') && is_array($request->tare_summary)) {
+                        foreach ($request->tare_summary as $tData) {
+                            if (!empty($tData['id'])) {
+                                $t = TareSummariesModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $tData['id'])
+                                    ->first();
+                                if ($t) {
+                                    $t->update([
+                                        'massa'      => $tData['massa'] ?? $t->massa,
+                                        'selisih_mz' => $tData['selisih_mz'] ?? $t->selisih_mz,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    if ($request->has('histerisis_summary')) {
+                        $hSummary = HisterisisSummariesModel::where('kalibrasi_id', $kalibrasi->id)->first();
+                        if ($hSummary) {
+                            $hSummary->update([
+                                'setengah_kapasitas' => $request->histerisis_summary['setengah_kapasitas'] ?? $hSummary->setengah_kapasitas,
+                                'histerisis'         => $request->histerisis_summary['histerisis'] ?? $hSummary->histerisis,
+                            ]);
+                        }
+                    }
+                    if ($request->has('ketidakpastian_summary')) {
+                        $kpSummary = KetidakpastianSummariesModel::where('kalibrasi_id', $kalibrasi->id)->first();
+                        if ($kpSummary) {
+                            $kpSummary->update([
+                                'ketidakpastian_gabungan' => $request->ketidakpastian_summary['ketidakpastian_gabungan'] ?? $kpSummary->ketidakpastian_gabungan,
+                                'ketidakpastian_perluas'  => $request->ketidakpastian_summary['ketidakpastian_perluas'] ?? $kpSummary->ketidakpastian_perluas,
+                            ]);
+                        }
+                    }
+                    break;
+
+                case 'instrumen':
+                    if ($request->has('instrumen') && is_array($request->instrumen)) {
+                        foreach ($request->instrumen as $inData) {
+                            if (!empty($inData['id'])) {
+                                $in = CalInstrumenModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $inData['id'])
+                                    ->first();
+                                if ($in) {
+                                    $in->update([
+                                        'titik_kalibrasi' => $inData['titik_kalibrasi'] ?? $in->titik_kalibrasi,
+                                        'nilai_master'    => $inData['nilai_master'] ?? $in->nilai_master,
+                                        'avg_pembacaan'   => $inData['avg_pembacaan'] ?? $in->avg_pembacaan,
+                                        'std_dev'         => $inData['std_dev'] ?? $in->std_dev,
+                                        'koreksi'         => $inData['koreksi'] ?? $in->koreksi,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case 'dimensi':
+                    if ($request->has('dimensi') && is_array($request->dimensi)) {
+                        foreach ($request->dimensi as $dData) {
+                            if (!empty($dData['id'])) {
+                                $d = CalDimensiModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $dData['id'])
+                                    ->first();
+                                if ($d) {
+                                    $d->update([
+                                        'titik_kalibrasi' => $dData['titik_kalibrasi'] ?? $d->titik_kalibrasi,
+                                        'nilai_master'    => $dData['nilai_master'] ?? $d->nilai_master,
+                                        'avg_pembacaan'   => $dData['avg_pembacaan'] ?? $d->avg_pembacaan,
+                                        'koreksi'         => $dData['koreksi'] ?? $d->koreksi,
+                                        'std_dev'         => $dData['std_dev'] ?? $d->std_dev,
+                                        'ketidakpastian'  => $dData['ketidakpastian'] ?? $d->ketidakpastian,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case 'flowmeter':
+                    if ($request->has('flowmeter') && is_array($request->flowmeter)) {
+                        foreach ($request->flowmeter as $fData) {
+                            if (!empty($fData['id'])) {
+                                $f = CalFlowmeterModel::where('kalibrasi_id', $kalibrasi->id)
+                                    ->where('id', $fData['id'])
+                                    ->first();
+                                if ($f) {
+                                    $f->update([
+                                        'titik_kalibrasi' => $fData['titik_kalibrasi'] ?? $f->titik_kalibrasi,
+                                        'nilai_master'    => $fData['nilai_master'] ?? $f->nilai_master,
+                                        'avg_pembacaan'   => $fData['avg_pembacaan'] ?? $f->avg_pembacaan,
+                                        'koreksi'         => $fData['koreksi'] ?? $f->koreksi,
+                                        'std_dev'         => $fData['std_dev'] ?? $f->std_dev,
+                                        'ketidakpastian'  => $fData['ketidakpastian'] ?? $f->ketidakpastian,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                    break;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Data kalibrasi dan sertifikat berhasil diperbarui!',
+                'data'    => $kalibrasi
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gagal memperbarui data: ' . $e->getMessage(),
             ], 500);
         }
     }
