@@ -405,7 +405,7 @@ class CapacitorBankController extends Controller
 
         for ($day = 1; $day <= 31; $day++) {
             $excelRow = $day + 6;   // hari 1 → row 7, dst.
-            $range    = "A{$excelRow}:R{$excelRow}";
+            $range    = "A{$excelRow}:Q{$excelRow}";
 
             $sheet->getStyle($range)->applyFromArray($borderStyle);
             $sheet->getStyle($range)->applyFromArray($centerAlign);
@@ -451,9 +451,9 @@ class CapacitorBankController extends Controller
         if ($formCode) {
             $sheet->setCellValue('O46', $formCode);
             $sheet->setCellValue('O38', null);
-            $sheet->unmergeCells('O38:R38');
-            $sheet->mergeCells('O46:R46');
-            $sheet->getStyle('O46:R46')->applyFromArray([
+            $sheet->unmergeCells('O38:Q38');
+            $sheet->mergeCells('O46:Q46');
+            $sheet->getStyle('O46:Q46')->applyFromArray([
                 'font' => [
                     'name' => 'Calibri',
                     'size' => 10,
@@ -515,7 +515,7 @@ class CapacitorBankController extends Controller
             ],
             [
                 'colStart'  => 'M',
-                'colEnd'    => 'R',
+                'colEnd'    => 'Q',
                 'label'     => 'Supervisor',
                 'ttdFile'   => $basePath,
                 'name'      => $getName($approval->supervisor),
