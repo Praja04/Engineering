@@ -472,23 +472,6 @@
 
             </div>
 
-            {{-- ── Suhu Ruang ── --}}
-            <div class="ws-section">
-                <div class="ws-section-header hdr-suhu">
-                    <div class="icon-wrap"><i class="bx bx-thermometer"></i></div Suhu Ruang </div>
-                    <div class="ws-section-body">
-                        <div class="row g-3">
-                            <div class="col-sm-6">
-                                <label class="form-label">Suhu Ruang <span class="text-muted fw-normal">(°C)</span></label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" min="0" class="form-control" id="suhu_ruang" name="suhu_ruang" placeholder="0.00">
-                                    <span class="unit-badge">°C</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 {{-- ── Submit Row ── --}}
                 <div class="ws-submit-row d-flex align-items-center justify-content-between flex-wrap gap-3" data-aos="fade-up" data-aos-delay="300">
                     <div>
@@ -569,8 +552,6 @@
                     cap_c_i1: $('#cap_c_i1').val() || null,
                     cap_c_i2: $('#cap_c_i2').val() || null,
                     cap_c_i3: $('#cap_c_i3').val() || null,
-
-                    suhu_ruang: $('#suhu_ruang').val() || null,
                 },
                 success: function(res) {
                     toastr.success(res.message, 'Berhasil', {
@@ -602,7 +583,7 @@
             const fields = [
                 'jam', 'arus_total', 'cap_a_nomor', 'cap_a_i1', 'cap_a_i2', 'cap_a_i3',
                 'cap_b_nomor', 'cap_b_i1', 'cap_b_i2', 'cap_b_i3',
-                'cap_c_nomor', 'cap_c_i1', 'cap_c_i2', 'cap_c_i3', 'suhu_ruang'
+                'cap_c_nomor', 'cap_c_i1', 'cap_c_i2', 'cap_c_i3'
             ];
 
             fields.forEach(f => {
@@ -622,7 +603,7 @@
             const fields = [
                 'arus_total', 'cap_a_nomor', 'cap_a_i1', 'cap_a_i2', 'cap_a_i3',
                 'cap_b_nomor', 'cap_b_i1', 'cap_b_i2', 'cap_b_i3',
-                'cap_c_nomor', 'cap_c_i1', 'cap_c_i2', 'cap_c_i3', 'suhu_ruang'
+                'cap_c_nomor', 'cap_c_i1', 'cap_c_i2', 'cap_c_i3'
             ];
             fields.forEach(f => $('#' + f).val(''));
         }

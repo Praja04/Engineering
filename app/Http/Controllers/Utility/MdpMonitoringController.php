@@ -54,6 +54,8 @@ class MdpMonitoringController extends Controller
                 'daya_p3' => 'nullable|numeric',
                 'temperatur_transformator' => 'nullable|numeric',
                 'level_oil' => 'nullable|string|in:ok,nok',
+                'suhu_ruang_trafo' => 'nullable|numeric',
+                'suhu_ruang_genset' => 'nullable|numeric',
             ]);
 
             // Cek Duplikat
@@ -273,6 +275,8 @@ class MdpMonitoringController extends Controller
                 'daya_p3' => 'nullable|numeric',
                 'temperatur_transformator' => 'nullable|numeric',
                 'level_oil' => 'nullable|string|in:ok,nok',
+                'suhu_ruang_trafo' => 'nullable|numeric',
+                'suhu_ruang_genset' => 'nullable|numeric',
             ]);
 
             $data->update([
@@ -491,26 +495,28 @@ class MdpMonitoringController extends Controller
             $sheet->setCellValue('O' . $currentRow, $item->daya_p3);
             $sheet->setCellValue('P' . $currentRow, $item->temperatur_transformator);
             $sheet->setCellValue('Q' . $currentRow, $item->level_oil);
+            $sheet->setCellValue('R' . $currentRow, $item->suhu_ruang_trafo);
+            $sheet->setCellValue('S' . $currentRow, $item->suhu_ruang_genset);
 
-            // Masukkan TTD ke dalam Loop (Kolom R & S)
+            // Masukkan TTD ke dalam Loop (Kolom T & U)
             if ($hasSignature) {
-                // TTD Operator (R)
+                // TTD Operator (T) - Pelaksana
                 if ($item->status != 'draft') {
                     $drawOp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                     $drawOp->setName('Op');
                     $drawOp->setPath($signaturePath);
                     $drawOp->setHeight(20); // Ukuran lebih kecil
-                    $drawOp->setCoordinates('R' . $currentRow);
+                    $drawOp->setCoordinates('T' . $currentRow);
                     $drawOp->setWorksheet($sheet);
                 }
 
-                // TTD Approval (S)
+                // TTD Approval (U) - Staff
                 if (in_array($item->status, ['approved_foreman', 'approved_supervisor'])) {
                     $drawApp = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                     $drawApp->setName('App');
                     $drawApp->setPath($signaturePath);
                     $drawApp->setHeight(20); // Ukuran lebih kecil
-                    $drawApp->setCoordinates('S' . $currentRow);
+                    $drawApp->setCoordinates('U' . $currentRow);
                     $drawApp->setWorksheet($sheet);
                 }
             }

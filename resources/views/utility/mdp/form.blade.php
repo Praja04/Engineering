@@ -194,14 +194,22 @@
 
                             {{-- Seksi Tambahan --}}
                             <div class="form-section-title">
-                                <i class="ri-more-2-line"></i> Informasi Tambahan
+                                <i class="ri-more-2-line"></i> Informasi Tambahan & Suhu Ruang
                             </div>
                             <div class="row mb-4">
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Suhu Ruang Trafo (°C)</label>
+                                    <input type="number" step="0.01" name="suhu_ruang_trafo" class="form-control" placeholder="0.00">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Suhu Ruang Genset (°C)</label>
+                                    <input type="number" step="0.01" name="suhu_ruang_genset" class="form-control" placeholder="0.00">
+                                </div>
+                                <div class="col-md-3 mb-3">
                                     <label class="form-label">Daya Total (kW)</label>
                                     <input type="number" step="0.01" name="daya_total" class="form-control" placeholder="0.00">
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-3 mb-3">
                                     <label class="form-label">Level Oil</label>
                                     <select name="level_oil" class="form-select">
                                         <option value="">-- Pilih Level Oil --</option>

@@ -431,7 +431,6 @@
                                 <th>Cap C I1</th>
                                 <th>Cap C I2</th>
                                 <th>Cap C I3</th>
-                                <th>Suhu</th>
                             </tr>
                         </thead>
                         <tbody id="detailTblBody"></tbody>
@@ -628,7 +627,7 @@
         // ── Detail Table Helper ───────────────────────────────────────
         function loadDetailTable(bulan, tahun, cb) {
             const $body = $('#detailTblBody');
-            $body.html('<tr><td colspan="13" class="text-center py-3"><i class="bx bx-loader-alt bx-spin me-1"></i>Memuat…</td></tr>');
+            $body.html('<tr><td colspan="12" class="text-center py-3"><i class="bx bx-loader-alt bx-spin me-1"></i>Memuat…</td></tr>');
 
             $.ajax({
                 url: DATA_URL,
@@ -639,7 +638,7 @@
                 success: function(res) {
                     $body.empty();
                     if (!res.data.length) {
-                        $body.html('<tr><td colspan="13" class="text-center text-muted">Tidak ada data</td></tr>');
+                        $body.html('<tr><td colspan="12" class="text-center text-muted">Tidak ada data</td></tr>');
                     } else {
                         const M = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
                         res.data.forEach(r => {
@@ -654,8 +653,6 @@
                             const i1c = currentBadge(r.cap_c_i1);
                             const i2c = currentBadge(r.cap_c_i2);
                             const i3c = currentBadge(r.cap_c_i3);
-                            const suhu = r.suhu_ruang !== null && r.suhu_ruang !== undefined ?
-                                `${r.suhu_ruang}°C` : '-';
 
                             $body.append(`
                                 <tr>
@@ -665,14 +662,13 @@
                                     <td>${i1a}</td><td>${i2a}</td><td>${i3a}</td>
                                     <td>${i1b}</td><td>${i2b}</td><td>${i3b}</td>
                                     <td>${i1c}</td><td>${i2c}</td><td>${i3c}</td>
-                                    <td>${suhu}</td>
                                 </tr>`);
                         });
                     }
                     if (cb) cb();
                 },
                 error: function() {
-                    $body.html('<tr><td colspan="13" class="text-center text-danger">Gagal memuat data</td></tr>');
+                    $body.html('<tr><td colspan="12" class="text-center text-danger">Gagal memuat data</td></tr>');
                     if (cb) cb();
                 }
             });

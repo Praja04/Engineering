@@ -441,7 +441,7 @@
 
         {{-- ── Summary Cards ── --}}
         <div class="row g-3 sum-row" data-aos="fade-up" data-aos-delay="100">
-            <div class="col-6 col-md-3">
+            <div class="col-12 col-md-4">
                 <div class="sum-card sum-total">
                     <div class="sum-icon"><i class="bx bx-calendar"></i></div>
                     <div class="sum-val" id="sumTotal">—</div>
@@ -449,7 +449,7 @@
                     <div class="sum-sub">Data terekam bulan ini</div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-12 col-md-4">
                 <div class="sum-card sum-high">
                     <div class="sum-icon"><i class="bx bx-trending-up"></i></div>
                     <div class="sum-val" id="sumHigh">—</div>
@@ -457,15 +457,7 @@
                     <div class="sum-sub">I &gt; 50A</div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="sum-card sum-hot">
-                    <div class="sum-icon"><i class="bx bx-thermometer"></i></div>
-                    <div class="sum-val" id="sumHot">—</div>
-                    <div class="sum-lbl">Suhu Panas</div>
-                    <div class="sum-sub">T &gt; 60°C</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
+            <div class="col-12 col-md-4">
                 <div class="sum-card sum-status">
                     <div class="sum-icon"><i class="bx bx-shield-check"></i></div>
                     <div class="sum-val" id="sumStatus" style="font-size:1rem;margin-top:4px;">—</div>
@@ -491,7 +483,6 @@
                             <th colspan="3" class="text-center" style="background:#dbeafe;">Capacitor A</th>
                             <th colspan="3" class="text-center" style="background:#e0f2fe;">Capacitor B</th>
                             <th colspan="3" class="text-center" style="background:#fef3c7;">Capacitor C</th>
-                            <th rowspan="2" style="vertical-align:middle;">Suhu</th>
                             <th rowspan="2" style="vertical-align:middle;text-align:center;">Aksi</th>
                         </tr>
                         <tr>
@@ -508,7 +499,7 @@
                     </thead>
                     <tbody id="tblBody">
                         <tr>
-                            <td colspan="14" class="text-center text-muted py-4">
+                            <td colspan="13" class="text-center text-muted py-4">
                                 Pilih bulan lalu klik <strong>Tampilkan</strong>
                             </td>
                         </tr>
@@ -589,17 +580,13 @@
 
                 <!-- INFO UTAMA -->
                 <div class="row g-2 mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label>Jam</label>
                         <input type="time" id="upd_jam" class="form-control">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label>Arus Total</label>
                         <input type="number" id="upd_arus_total" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Suhu</label>
-                        <input type="number" id="upd_suhu" class="form-control">
                     </div>
                 </div>
 
@@ -728,7 +715,7 @@
                 },
                 error: function() {
                     toastr.error('Gagal memuat data.');
-                    $('#tblBody').html('<tr><td colspan="14" class="text-center text-muted py-4">Gagal memuat data</td></tr>');
+                    $('#tblBody').html('<tr><td colspan="13" class="text-center text-muted py-4">Gagal memuat data</td></tr>');
                 }
             });
         }
@@ -762,7 +749,6 @@
 
             $('#sumTotal').text(total);
             $('#sumHigh').text(high);
-            $('#sumHot').text(hot);
             $('#sumStatus').html(`<i class="bx ${stInfo.icon} me-1"></i>${stInfo.text}`);
             $('#sumStatusSub').text(approval ? `${currentBulan}/${currentTahun}` : 'Belum ada laporan');
             $('#badgeTgl').text(total + ' tanggal');
@@ -826,7 +812,7 @@
             const canEdit = !approval || approval.status === 'draft';
 
             if (!rows.length) {
-                $body.html('<tr><td colspan="14" class="text-center text-muted py-4">Tidak ada data bulan ini</td></tr>');
+                $body.html('<tr><td colspan="13" class="text-center text-muted py-4">Tidak ada data bulan ini</td></tr>');
                 return;
             }
 
@@ -845,7 +831,6 @@
                 const i1c = currentBadge(r.cap_c_i1);
                 const i2c = currentBadge(r.cap_c_i2);
                 const i3c = currentBadge(r.cap_c_i3);
-                const suhuBadge = tempBadge(r.suhu_ruang);
 
                 const updateBtn = canEdit ? `
                     <button class="btn btn-sm btn-outline-warning rounded-pill px-2 py-0 btn-update-row"
@@ -867,7 +852,6 @@
                         <td>${i1a}</td><td>${i2a}</td><td>${i3a}</td>
                         <td>${i1b}</td><td>${i2b}</td><td>${i3b}</td>
                         <td>${i1c}</td><td>${i2c}</td><td>${i3c}</td>
-                        <td>${suhuBadge}</td>
                         <td class="text-center" style="white-space:nowrap;">${detailBtn} ${updateBtn}</td>
                     </tr>
                 `);
@@ -895,7 +879,7 @@
         function skeletonTable() {
             let rows = '';
             for (let i = 0; i < 5; i++) {
-                rows += '<tr class="skeleton-row">' + '<td></td>'.repeat(14) + '</tr>';
+                rows += '<tr class="skeleton-row">' + '<td></td>'.repeat(13) + '</tr>';
             }
             $('#tblBody').html(rows);
         }
@@ -918,7 +902,6 @@
                     <tr><th>Tanggal</th><td>${row.tanggal}</td></tr>
                     <tr><th>Jam</th><td>${row.jam ?? '-'}</td></tr>
                     <tr><th>Arus Total</th><td>${row.arus_total ?? '-'}</td></tr>
-                    <tr><th>Suhu</th><td>${row.suhu_ruang ?? '-'}</td></tr>
                 </table>
             `;
 
@@ -932,7 +915,6 @@
             $('#upd_tanggal').val(row.tanggal);
             $('#upd_jam').val(row.jam);
             $('#upd_arus_total').val(row.arus_total);
-            $('#upd_suhu').val(row.suhu_ruang);
 
             // CAP A
             $('#upd_cap_a_i1').val(row.cap_a_i1);
@@ -967,7 +949,6 @@
                 data: {
                     jam: $('#upd_jam').val(),
                     arus_total: $('#upd_arus_total').val(),
-                    suhu_ruang: $('#upd_suhu').val(), // ✅ HARUS ini
 
                     // CAP A
                     cap_a_i1: $('#upd_cap_a_i1').val(),

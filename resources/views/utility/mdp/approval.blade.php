@@ -266,6 +266,8 @@
                                 ${renderTechnicalItem('Volt V3', d.tegangan_v3, 'V')}
                                 ${renderTechnicalItem('Temp Trafo', d.temperatur_transformator, '°C')}
                                 ${renderTechnicalItem('Level Oil', d.level_oil?.toUpperCase(), '')}
+                                ${renderTechnicalItem('Suhu R. Trafo', d.suhu_ruang_trafo, '°C')}
+                                ${renderTechnicalItem('Suhu R. Genset', d.suhu_ruang_genset, '°C')}
                             </div>
                         </div>
                     </div>

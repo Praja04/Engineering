@@ -432,11 +432,11 @@ class CapacitorBankController extends Controller
                 $sheet->setCellValue("N{$excelRow}", $r->cap_c_i2);
                 $sheet->setCellValue("O{$excelRow}", $r->cap_c_i3);
 
-                $sheet->setCellValue("P{$excelRow}", $r->suhu_ruang);
+                // $sheet->setCellValue("P{$excelRow}", $r->suhu_ruang);
 
                 if ($approval) {
-                    $sheet->setCellValue("Q{$excelRow}", $approval->operator?->username ?? '-');
-                    $sheet->setCellValue("R{$excelRow}", $approval->foreman?->username ?? '-');
+                    $sheet->setCellValue("P{$excelRow}", $approval->operator?->username ?? '-');
+                    $sheet->setCellValue("Q{$excelRow}", $approval->foreman?->username ?? '-');
                 }
             }
         }
