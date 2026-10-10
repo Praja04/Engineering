@@ -1173,655 +1173,642 @@
             }
         }
 
-        // Fetch and bind all data
-        async function loadWcoData() {
+        // Generic section fetcher
+        async function fetchWcoSection(section, start, end) {
+            try {
+                const url = `{{ route('wwtp.dashboard_wco_data') }}?section=${section}&start_date=${start}&end_date=${end}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+                const data = await res.json();
+                if (data.last_update) {
+                    document.getElementById('wcoLastUpdate').textContent = data.last_update;
+                }
+                return data;
+            } catch (err) {
+                console.error(`Error loading section ${section}:`, err);
+                return null;
+            }
+        }
+
+        // 1 & 2. Biaya Chemical (Top Cards & Chemical Consumption Table)
+        async function loadBiayaSection(start, end) {
+            const data = await fetchWcoSection('biaya', start, end);
+            if (!data) return;
+
+            if (data.card1_biaya_per_m3) {
+                document.getElementById('topCostM3Val').innerHTML = `${data.card1_biaya_per_m3.formatted}`;
+                document.getElementById('topCostM3Sub').innerHTML =
+                    `<i class="mdi mdi-arrow-down-bold"></i> ${data.card1_biaya_per_m3.target}`;
+            }
+
+            if (data.card2_total_cost_chem) {
+                document.getElementById('topCostTotalVal').textContent = data.card2_total_cost_chem.formatted;
+            }
+
+            if (data.card9_chem_consumption && Array.isArray(data.card9_chem_consumption)) {
+                let tbodyHtml = '';
+                data.card9_chem_consumption.forEach(item => {
+                    tbodyHtml += `
+                    <tr>
+                        <td class="fw-semibold text-white" style="font-size: 9.5px;">${item.chemical_name}</td>
+                        <td class="text-end font-monospace">${Number(item.qty).toLocaleString('id-ID')}</td>
+                        <td class="text-end font-monospace text-muted">Rp ${Number(item.cost_m3).toLocaleString('id-ID')}</td>
+                        <td class="text-center"><span class="badge-ok">${item.status}</span></td>
+                    </tr>
+                `;
+                });
+                document.getElementById('tableChemConsBody').innerHTML = tbodyHtml;
+            }
+        }
+
+        // 4, 5, 8. Analisa Parameter & Removal Outlet
+        async function loadAnalisaSection(start, end) {
+            const data = await fetchWcoSection('analisa', start, end);
+            if (!data) return;
+
+            if (data.card5_removal_outlet) {
+                document.getElementById('remTssVal').textContent = `${data.card5_removal_outlet.tss_pct}%`;
+                document.getElementById('remCodVal').textContent = `${data.card5_removal_outlet.cod_pct}%`;
+            }
+
+            if (data.card4_equalisasi) {
+                document.getElementById('eqValPh').textContent = data.card4_equalisasi.ph || '-';
+                document.getElementById('eqValTss').textContent = (data.card4_equalisasi.tss || '-') + ' ppm';
+                document.getElementById('eqValCod').textContent = (data.card4_equalisasi.cod || '-') + ' ppm';
+                document.getElementById('eqValEc').textContent = (data.card4_equalisasi.ec || '-') + ' mS';
+            }
+
+            if (data.card5_effluent_analisa) {
+                document.getElementById('effValPh').textContent = data.card5_effluent_analisa.ph || '-';
+                document.getElementById('effValTss').textContent = (data.card5_effluent_analisa.tss || '-') + ' ppm';
+                document.getElementById('effValCod').textContent = (data.card5_effluent_analisa.cod || '-') + ' ppm';
+                document.getElementById('effValEc').textContent = (data.card5_effluent_analisa.ec || '-') + ' mS';
+            }
+
+            if (data.card8_env_perf && Array.isArray(data.card8_env_perf)) {
+                let tbodyHtml = '';
+                data.card8_env_perf.forEach(item => {
+                    tbodyHtml += `
+                    <tr>
+                        <td class="fw-semibold text-white" style="font-size: 9.5px;">${item.parameter}</td>
+                        <td class="text-center font-monospace">${item.ph}</td>
+                        <td class="text-center font-monospace text-cyan">${item.cod}</td>
+                        <td class="text-center font-monospace text-info">${item.tss}</td>
+                        <td class="text-center"><span class="badge-ok">${item.status}</span></td>
+                    </tr>
+                `;
+                });
+                document.getElementById('tableEnvPerfBody').innerHTML = tbodyHtml;
+            }
+        }
+
+        // 10. Status Operasi Pit
+        async function loadStatusOperasiSection(start, end) {
+            const data = await fetchWcoSection('status_operasi', start, end);
+            if (!data) return;
+
+            if (data.card10_status_operasi && Array.isArray(data.card10_status_operasi)) {
+                let containerHtml = '';
+                data.card10_status_operasi.forEach(item => {
+                    containerHtml += `
+                    <div class="op-status-item">
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="${item.img}" alt="${item.name}" style="width: 22px; height: 22px; object-fit: contain;">
+                            <div>
+                                <div class="fw-bold text-white" style="font-size: 10px;">${item.name}</div>
+                                <div class="text-muted" style="font-size: 8px;">${item.subtext}</div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge-ok"><span class="pulse-dot pulse-green"></span>${item.status}</span>
+                            <div class="text-info fw-bold font-monospace" style="font-size: 9px; margin-top: 1px;">${item.volume}</div>
+                        </div>
+                    </div>
+                `;
+                });
+                document.getElementById('wcoStatusOperasiContainer').innerHTML = containerHtml;
+            }
+        }
+
+        // 7. Safety Performance (Influent Daily Aggregated Chart)
+        async function loadSafetyPerfSection(start, end) {
+            const data = await fetchWcoSection('safety_perf', start, end);
+            if (!data) return;
+
+            if (data.card7_safety_perf && data.card7_safety_perf.daily_aggregated) {
+                const arr = data.card7_safety_perf.daily_aggregated;
+                const categories = arr.map(a => a.tanggal);
+                const totals = arr.map(a => {
+                    return Math.round((a.pit_sparta || 0) + (a.pit_garam || 0) + (a.pit_produksi_step3 || 0) + (a.pit_domestik || 0) + (a.pit_storage || 0));
+                });
+
+                const safetyOptions = {
+                    chart: {
+                        type: 'bar',
+                        height: 135,
+                        toolbar: { show: false },
+                        background: 'transparent'
+                    },
+                    theme: { mode: 'dark' },
+                    plotOptions: {
+                        bar: {
+                            columnWidth: '55%',
+                            borderRadius: 2
+                        }
+                    },
+                    dataLabels: { enabled: false },
+                    colors: ['#06b6d4'],
+                    series: [{
+                        name: 'Total Influent (m³)',
+                        data: totals
+                    }],
+                    xaxis: {
+                        categories: categories,
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: '#1e293b',
+                        strokeDashArray: 3,
+                        padding: {
+                            top: -10,
+                            bottom: -5,
+                            left: 5,
+                            right: 5
+                        }
+                    },
+                    tooltip: { theme: 'dark' }
+                };
+                renderOrUpdateChart('chartSafetyPerf', safetyOptions);
+            }
+        }
+
+        // 14. Influent Mingguan (Area Chart)
+        async function loadInfluentMingguanSection(start, end) {
+            const data = await fetchWcoSection('influent_mingguan', start, end);
+            if (!data) return;
+
+            if (data.card14_influent_mingguan) {
+                const im = data.card14_influent_mingguan;
+                const influentWeeklyOptions = {
+                    chart: {
+                        type: 'area',
+                        height: 135,
+                        toolbar: { show: false },
+                        background: 'transparent'
+                    },
+                    theme: { mode: 'dark' },
+                    dataLabels: { enabled: false },
+                    stroke: {
+                        curve: 'smooth',
+                        width: 2
+                    },
+                    colors: ['#06b6d4', '#10b981', '#f59e0b'],
+                    series: [
+                        { name: 'Pit Sparta', data: im.sparta || [] },
+                        { name: 'Pit Garam', data: im.garam || [] },
+                        { name: 'Step 3', data: im.step3 || [] }
+                    ],
+                    xaxis: {
+                        categories: im.categories || [],
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: '#1e293b',
+                        strokeDashArray: 3,
+                        padding: {
+                            top: -10,
+                            bottom: -5,
+                            left: 5,
+                            right: 5
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        fontSize: '8.5px',
+                        labels: { colors: '#94a3b8' },
+                        itemMargin: { horizontal: 3 }
+                    },
+                    tooltip: { theme: 'dark' }
+                };
+                renderOrUpdateChart('chartInfluentMingguan', influentWeeklyOptions);
+            }
+        }
+
+        // 11. Trend Effluent Mingguan (Bar Chart)
+        async function loadEffluentMingguanSection(start, end) {
+            const data = await fetchWcoSection('effluent_mingguan', start, end);
+            if (!data) return;
+
+            if (data.card11_trend_effluent_mingguan) {
+                const em = data.card11_trend_effluent_mingguan;
+                const effluentWeeklyOptions = {
+                    chart: {
+                        type: 'bar',
+                        height: 135,
+                        toolbar: { show: false },
+                        background: 'transparent'
+                    },
+                    theme: { mode: 'dark' },
+                    plotOptions: {
+                        bar: {
+                            columnWidth: '50%',
+                            borderRadius: 2
+                        }
+                    },
+                    dataLabels: { enabled: false },
+                    colors: ['#3b82f6', '#8b5cf6'],
+                    series: [
+                        { name: 'Full Proses', data: em.full_proses || [] },
+                        { name: 'DAF Pre', data: em.daf_pre || [] }
+                    ],
+                    xaxis: {
+                        categories: em.categories || [],
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: '#1e293b',
+                        strokeDashArray: 3,
+                        padding: {
+                            top: -10,
+                            bottom: -5,
+                            left: 5,
+                            right: 5
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        fontSize: '8.5px',
+                        labels: { colors: '#94a3b8' },
+                        itemMargin: { horizontal: 3 }
+                    },
+                    tooltip: { theme: 'dark' }
+                };
+                renderOrUpdateChart('chartEffluentMingguan', effluentWeeklyOptions);
+            }
+        }
+
+        // 12. Trend Kepatuhan COD (Line Chart with Baku Mutu 300)
+        async function loadKepatuhanCodSection(start, end) {
+            const data = await fetchWcoSection('kepatuhan_cod', start, end);
+            if (!data) return;
+
+            if (data.card12_trend_kepatuhan_effluent_cod) {
+                const cod = data.card12_trend_kepatuhan_effluent_cod;
+                const bakuMutuVal = cod.baku_mutu || 300;
+                if (document.getElementById('codComplianceBadge')) {
+                    document.getElementById('codComplianceBadge').textContent = (cod.compliance ?? 100) + '% OK';
+                }
+                const codOptions = {
+                    chart: {
+                        type: 'line',
+                        height: 135,
+                        toolbar: { show: false },
+                        background: 'transparent'
+                    },
+                    theme: { mode: 'dark' },
+                    dataLabels: { enabled: false },
+                    stroke: {
+                        curve: 'smooth',
+                        width: 2.5
+                    },
+                    colors: ['#10b981'],
+                    series: [{
+                        name: 'COD (ppm)',
+                        data: cod.values || []
+                    }],
+                    annotations: {
+                        yaxis: [{
+                            y: bakuMutuVal,
+                            borderColor: '#ef4444',
+                            strokeDashArray: 2,
+                            label: {
+                                text: `Baku Mutu (${bakuMutuVal})`,
+                                style: {
+                                    color: '#fff',
+                                    background: '#ef4444',
+                                    fontSize: '8px'
+                                }
+                            }
+                        }]
+                    },
+                    xaxis: {
+                        categories: cod.categories || [],
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: '#1e293b',
+                        strokeDashArray: 3,
+                        padding: {
+                            top: -10,
+                            bottom: -5,
+                            left: 5,
+                            right: 5
+                        }
+                    },
+                    tooltip: { theme: 'dark' }
+                };
+                renderOrUpdateChart('chartKepatuhanCod', codOptions);
+            }
+        }
+
+        // 13. Performance Sampel (Table)
+        async function loadPerformanceSampleSection(start, end) {
+            const data = await fetchWcoSection('performance_sampel', start, end);
+            if (!data) return;
+
+            if (data.card13_chem_storage_performance) {
+                const samples = data.card13_chem_storage_performance.samples || [];
+                let aerasiHtml = '';
+                samples.forEach(s => {
+                    aerasiHtml += `
+                    <tr>
+                        <td class="fw-semibold text-white" style="font-size: 9.5px;">${s.nama_sampel}</td>
+                        <td class="text-center font-monospace">${s.sv30}</td>
+                        <td class="text-center font-monospace text-cyan">${s.mlss}</td>
+                        <td class="text-center font-monospace text-success">${s.do}</td>
+                        <td class="text-center font-monospace text-warning">${s.ph}</td>
+                        <td class="text-center"><span class="badge-ok">${s.status}</span></td>
+                    </tr>
+                `;
+                });
+                document.getElementById('tableAerasiBody').innerHTML = aerasiHtml;
+            }
+        }
+
+        // 3 & 15. Sludge Management & Pengangkutan
+        async function loadSludgeMgmtSection(start, end) {
+            const data = await fetchWcoSection('sludge_mgmt', start, end);
+            if (!data) return;
+
+            if (data.card3_pengangkutan_sludge) {
+                document.getElementById('topPengangkutanSludgeVal').textContent = data.card3_pengangkutan_sludge.formatted;
+            }
+
+            if (data.card15_sludge_mgmt) {
+                const sl = data.card15_sludge_mgmt;
+                document.getElementById('sludgeDrainVal').textContent = Number(sl.drain_lumpur || 0).toLocaleString('id-ID');
+                document.getElementById('sludgeRunningVal').textContent = Number(sl.running_hour_scp || 0).toLocaleString('id-ID');
+                document.getElementById('sludgeHasilVal').textContent = Number(sl.hasil_lumpur || 0).toLocaleString('id-ID');
+                document.getElementById('sludgeContentVal').textContent = Number(sl.sludge_content || 0).toLocaleString('id-ID');
+            }
+        }
+
+        // 16. Top Risk WWTP - Jumlah Koloni (Bar Chart with Standar 10^5)
+        async function loadTopRiskKoloniSection() {
+            const data = await fetchWcoSection('top_risk_koloni', '', '');
+            if (!data) return;
+
+            if (data.card16_top_risk_koloni) {
+                const kData = data.card16_top_risk_koloni;
+                const categories = kData.categories || [];
+                const values = kData.values || [];
+                const strings = kData.strings || [];
+
+                const koloniOptions = {
+                    chart: {
+                        type: 'bar',
+                        height: 135,
+                        toolbar: { show: false },
+                        background: 'transparent'
+                    },
+                    theme: { mode: 'dark' },
+                    plotOptions: {
+                        bar: {
+                            horizontal: true,
+                            barHeight: '55%',
+                            borderRadius: 2,
+                            colors: {
+                                ranges: [
+                                    { from: 0, to: 1.0, color: '#10b981' },
+                                    { from: 1.01, to: 999999, color: '#ef4444' }
+                                ]
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        textAnchor: 'start',
+                        style: {
+                            fontSize: '8.5px',
+                            colors: ['#ffffff']
+                        },
+                        formatter: function(val, opt) {
+                            return (strings[opt.dataPointIndex] || (val + ' × 10⁵')).split(' ')[0] + ' × 10⁵';
+                        },
+                        offsetX: 5
+                    },
+                    series: [{
+                        name: 'Koloni (× 10⁵ CFU)',
+                        data: values
+                    }],
+                    xaxis: {
+                        categories: categories,
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '8.5px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: '#94a3b8',
+                                fontSize: '9px',
+                                fontWeight: 600
+                            }
+                        }
+                    },
+                    annotations: {
+                        xaxis: [{
+                            x: 1.0,
+                            borderColor: '#f59e0b',
+                            strokeDashArray: 3,
+                            label: {
+                                text: 'Standar (10⁵)',
+                                orientation: 'horizontal',
+                                style: {
+                                    color: '#ffffff',
+                                    background: '#f59e0b',
+                                    fontSize: '8px'
+                                }
+                            }
+                        }]
+                    },
+                    grid: {
+                        borderColor: '#1e293b',
+                        strokeDashArray: 3,
+                        padding: {
+                            top: -10,
+                            bottom: -5,
+                            left: 10,
+                            right: 10
+                        }
+                    },
+                    tooltip: {
+                        theme: 'dark',
+                        y: {
+                            formatter: function(val, opt) {
+                                const str = strings[opt.dataPointIndex] || (val + ' × 10⁵ CFU/mL');
+                                const status = val > 1.0 ? ' (MELEBIHI STANDAR 10⁵)' : ' (AMAN ≤ 10⁵)';
+                                return str + status;
+                            }
+                        }
+                    }
+                };
+                renderOrUpdateChart('chartTopRiskKoloni', koloniOptions);
+            }
+        }
+
+        // 17. Kepatuhan Effluent TSS (Line Chart with Baku Mutu 100)
+        async function loadKepatuhanTssSection(start, end) {
+            const data = await fetchWcoSection('kepatuhan_tss', start, end);
+            if (!data) return;
+
+            const tss = data.card17_she_training_effluent_tss || data.card17_hse_training_effluent_tss;
+            if (tss) {
+                const bakuMutuTss = tss.baku_mutu || 100;
+                if (document.getElementById('tssComplianceBadge')) {
+                    const comp = tss.compliance ?? 96;
+                    document.getElementById('tssComplianceBadge').textContent = comp + '% OK';
+                    document.getElementById('tssComplianceBadge').className = comp >= 90 ? 'text-success' : 'text-danger';
+                }
+                const tssOptions = {
+                    chart: {
+                        type: 'line',
+                        height: 135,
+                        toolbar: { show: false },
+                        background: 'transparent'
+                    },
+                    theme: { mode: 'dark' },
+                    dataLabels: { enabled: false },
+                    stroke: {
+                        curve: 'smooth',
+                        width: 2.5
+                    },
+                    colors: ['#06b6d4'],
+                    series: [{
+                        name: 'TSS (ppm)',
+                        data: tss.values || []
+                    }],
+                    annotations: {
+                        yaxis: [{
+                            y: bakuMutuTss,
+                            borderColor: '#ef4444',
+                            strokeDashArray: 2,
+                            label: {
+                                text: `Baku Mutu (${bakuMutuTss})`,
+                                style: {
+                                    color: '#fff',
+                                    background: '#ef4444',
+                                    fontSize: '8px'
+                                }
+                            }
+                        }]
+                    },
+                    xaxis: {
+                        categories: tss.categories || [],
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: '#64748b',
+                                fontSize: '9px'
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: '#1e293b',
+                        strokeDashArray: 3,
+                        padding: {
+                            top: -10,
+                            bottom: -5,
+                            left: 5,
+                            right: 5
+                        }
+                    },
+                    tooltip: { theme: 'dark' }
+                };
+                renderOrUpdateChart('chartKepatuhanTss', tssOptions);
+            }
+        }
+
+        // Master Loader: All sections triggered in parallel!
+        function loadWcoData() {
             const start = document.getElementById('wcoStartDate').value;
             const end = document.getElementById('wcoEndDate').value;
 
-            try {
-                const res = await fetch(`{{ route('wwtp.dashboard_wco_data') }}?start_date=${start}&end_date=${end}`);
-                if (!res.ok) throw new Error('Network error');
-                const data = await res.json();
-
-                // Last Update
-                document.getElementById('wcoLastUpdate').textContent = data.last_update || '-';
-
-                // Top Card: Removal Outlet (Effluent) - Presentase Gede
-                if (data.card5_removal_outlet) {
-                    document.getElementById('remTssVal').textContent = `${data.card5_removal_outlet.tss_pct}%`;
-                    document.getElementById('remCodVal').textContent = `${data.card5_removal_outlet.cod_pct}%`;
-                }
-
-                // 1. Card Biaya per Kubik
-                if (data.card1_biaya_per_m3) {
-                    document.getElementById('topCostM3Val').innerHTML = `${data.card1_biaya_per_m3.formatted}`;
-                    document.getElementById('topCostM3Sub').innerHTML =
-                        `<i class="mdi mdi-arrow-down-bold"></i> ${data.card1_biaya_per_m3.target}`;
-                }
-
-                // 2. Card Total Cost Chemical
-                if (data.card2_total_cost_chem) {
-                    document.getElementById('topCostTotalVal').textContent = data.card2_total_cost_chem.formatted;
-                }
-
-                // 3. Card Pengangkutan Sludge (menggantikan Chemical Safety)
-                if (data.card3_pengangkutan_sludge) {
-                    document.getElementById('topPengangkutanSludgeVal').textContent = data.card3_pengangkutan_sludge
-                        .formatted;
-                }
-
-                // 4. Card Equalisasi (Influent list)
-                if (data.card4_equalisasi) {
-                    document.getElementById('eqValPh').textContent = data.card4_equalisasi.ph || '-';
-                    document.getElementById('eqValTss').textContent = (data.card4_equalisasi.tss || '-') + ' ppm';
-                    document.getElementById('eqValCod').textContent = (data.card4_equalisasi.cod || '-') + ' ppm';
-                    document.getElementById('eqValEc').textContent = (data.card4_equalisasi.ec || '-') + ' mS';
-                }
-
-                // 5. Card Analisa Air Limbah Effluent
-                if (data.card5_effluent_analisa) {
-                    document.getElementById('effValPh').textContent = data.card5_effluent_analisa.ph || '-';
-                    document.getElementById('effValTss').textContent = (data.card5_effluent_analisa.tss || '-') +
-                        ' ppm';
-                    document.getElementById('effValCod').textContent = (data.card5_effluent_analisa.cod || '-') +
-                        ' ppm';
-                    document.getElementById('effValEc').textContent = (data.card5_effluent_analisa.ec || '-') + ' mS';
-                }
-
-                // 10. Card Status Operasi
-                if (data.card10_status_operasi && Array.isArray(data.card10_status_operasi)) {
-                    let containerHtml = '';
-                    data.card10_status_operasi.forEach(item => {
-                        containerHtml += `
-                        <div class="op-status-item">
-                            <div class="d-flex align-items-center gap-2">
-                                <img src="${item.img}" alt="${item.name}" style="width: 22px; height: 22px; object-fit: contain;">
-                                <div>
-                                    <div class="fw-bold text-white" style="font-size: 10px;">${item.name}</div>
-                                    <div class="text-muted" style="font-size: 8px;">${item.subtext}</div>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge-ok"><span class="pulse-dot pulse-green"></span>${item.status}</span>
-                                <div class="text-info fw-bold font-monospace" style="font-size: 9px; margin-top: 1px;">${item.volume}</div>
-                            </div>
-                        </div>
-                    `;
-                    });
-                    document.getElementById('wcoStatusOperasiContainer').innerHTML = containerHtml;
-                }
-
-                // 8. Card Environment Performance (Table)
-                if (data.card8_env_perf && Array.isArray(data.card8_env_perf)) {
-                    let tbodyHtml = '';
-                    data.card8_env_perf.forEach(item => {
-                        tbodyHtml += `
-                        <tr>
-                            <td class="fw-semibold text-white" style="font-size: 9.5px;">${item.parameter}</td>
-                            <td class="text-center font-monospace">${item.ph}</td>
-                            <td class="text-center font-monospace text-cyan">${item.cod}</td>
-                            <td class="text-center font-monospace text-info">${item.tss}</td>
-                            <td class="text-center"><span class="badge-ok">${item.status}</span></td>
-                        </tr>
-                    `;
-                    });
-                    document.getElementById('tableEnvPerfBody').innerHTML = tbodyHtml;
-                }
-
-                // 9. Card Chemical Consumption (Table)
-                if (data.card9_chem_consumption && Array.isArray(data.card9_chem_consumption)) {
-                    let tbodyHtml = '';
-                    data.card9_chem_consumption.forEach(item => {
-                        tbodyHtml += `
-                        <tr>
-                            <td class="fw-semibold text-white" style="font-size: 9.5px;">${item.chemical_name}</td>
-                            <td class="text-end font-monospace">${Number(item.qty).toLocaleString('id-ID')}</td>
-                            <td class="text-end font-monospace text-muted">Rp ${Number(item.cost_m3).toLocaleString('id-ID')}</td>
-                            <td class="text-center"><span class="badge-ok">${item.status}</span></td>
-                        </tr>
-                    `;
-                    });
-                    document.getElementById('tableChemConsBody').innerHTML = tbodyHtml;
-                }
-
-                // 7. Card Safety Performance (Chart: Influent Daily Aggregated)
-                if (data.card7_safety_perf && data.card7_safety_perf.daily_aggregated) {
-                    const arr = data.card7_safety_perf.daily_aggregated;
-                    const categories = arr.map(a => a.tanggal);
-                    const totals = arr.map(a => {
-                        return Math.round((a.pit_sparta || 0) + (a.pit_garam || 0) + (a.pit_produksi_step3 ||
-                            0) + (a.pit_domestik || 0) + (a.pit_storage || 0));
-                    });
-
-                    const safetyOptions = {
-                        chart: {
-                            type: 'bar',
-                            height: 135,
-                            toolbar: {
-                                show: false
-                            },
-                            background: 'transparent'
-                        },
-                        theme: {
-                            mode: 'dark'
-                        },
-                        plotOptions: {
-                            bar: {
-                                columnWidth: '55%',
-                                borderRadius: 2
-                            }
-                        },
-                        dataLabels: {
-                            enabled: false
-                        },
-                        colors: ['#06b6d4'],
-                        series: [{
-                            name: 'Total Influent (m³)',
-                            data: totals
-                        }],
-                        xaxis: {
-                            categories: categories,
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        yaxis: {
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        grid: {
-                            borderColor: '#1e293b',
-                            strokeDashArray: 3,
-                            padding: {
-                                top: -10,
-                                bottom: -5,
-                                left: 5,
-                                right: 5
-                            }
-                        },
-                        tooltip: {
-                            theme: 'dark'
-                        }
-                    };
-                    renderOrUpdateChart('chartSafetyPerf', safetyOptions);
-                }
-
-                // 14. Card Influent Mingguan (Chart)
-                if (data.card14_influent_mingguan) {
-                    const im = data.card14_influent_mingguan;
-                    const influentWeeklyOptions = {
-                        chart: {
-                            type: 'area',
-                            height: 135,
-                            toolbar: {
-                                show: false
-                            },
-                            background: 'transparent'
-                        },
-                        theme: {
-                            mode: 'dark'
-                        },
-                        dataLabels: {
-                            enabled: false
-                        },
-                        stroke: {
-                            curve: 'smooth',
-                            width: 2
-                        },
-                        colors: ['#06b6d4', '#10b981', '#f59e0b'],
-                        series: [{
-                                name: 'Pit Sparta',
-                                data: im.sparta || []
-                            },
-                            {
-                                name: 'Pit Garam',
-                                data: im.garam || []
-                            },
-                            {
-                                name: 'Step 3',
-                                data: im.step3 || []
-                            }
-                        ],
-                        xaxis: {
-                            categories: im.categories || [],
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        yaxis: {
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        grid: {
-                            borderColor: '#1e293b',
-                            strokeDashArray: 3,
-                            padding: {
-                                top: -10,
-                                bottom: -5,
-                                left: 5,
-                                right: 5
-                            }
-                        },
-                        legend: {
-                            position: 'top',
-                            fontSize: '8.5px',
-                            labels: {
-                                colors: '#94a3b8'
-                            },
-                            itemMargin: {
-                                horizontal: 3
-                            }
-                        },
-                        tooltip: {
-                            theme: 'dark'
-                        }
-                    };
-                    renderOrUpdateChart('chartInfluentMingguan', influentWeeklyOptions);
-                }
-
-                // 11. Card Trend Effluent Mingguan (Chart)
-                if (data.card11_trend_effluent_mingguan) {
-                    const em = data.card11_trend_effluent_mingguan;
-                    const effluentWeeklyOptions = {
-                        chart: {
-                            type: 'bar',
-                            height: 135,
-                            toolbar: {
-                                show: false
-                            },
-                            background: 'transparent'
-                        },
-                        theme: {
-                            mode: 'dark'
-                        },
-                        plotOptions: {
-                            bar: {
-                                columnWidth: '50%',
-                                borderRadius: 2
-                            }
-                        },
-                        dataLabels: {
-                            enabled: false
-                        },
-                        colors: ['#3b82f6', '#8b5cf6'],
-                        series: [{
-                                name: 'Full Proses',
-                                data: em.full_proses || []
-                            },
-                            {
-                                name: 'DAF Pre',
-                                data: em.daf_pre || []
-                            }
-                        ],
-                        xaxis: {
-                            categories: em.categories || [],
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        yaxis: {
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        grid: {
-                            borderColor: '#1e293b',
-                            strokeDashArray: 3,
-                            padding: {
-                                top: -10,
-                                bottom: -5,
-                                left: 5,
-                                right: 5
-                            }
-                        },
-                        legend: {
-                            position: 'top',
-                            fontSize: '8.5px',
-                            labels: {
-                                colors: '#94a3b8'
-                            },
-                            itemMargin: {
-                                horizontal: 3
-                            }
-                        },
-                        tooltip: {
-                            theme: 'dark'
-                        }
-                    };
-                    renderOrUpdateChart('chartEffluentMingguan', effluentWeeklyOptions);
-                }
-
-                // 12. Card Trend Kepatuhan Effluent COD (Chart: Baku Mutu 300)
-                if (data.card12_trend_kepatuhan_effluent_cod) {
-                    const cod = data.card12_trend_kepatuhan_effluent_cod;
-                    const bakuMutuVal = cod.baku_mutu || 300;
-                    if (document.getElementById('codComplianceBadge')) {
-                        document.getElementById('codComplianceBadge').textContent = (cod.compliance ?? 100) + '% OK';
-                    }
-                    const codOptions = {
-                        chart: {
-                            type: 'line',
-                            height: 135,
-                            toolbar: {
-                                show: false
-                            },
-                            background: 'transparent'
-                        },
-                        theme: {
-                            mode: 'dark'
-                        },
-                        dataLabels: {
-                            enabled: false
-                        },
-                        stroke: {
-                            curve: 'smooth',
-                            width: 2.5
-                        },
-                        colors: ['#10b981'],
-                        series: [{
-                            name: 'COD (ppm)',
-                            data: cod.values || []
-                        }],
-                        annotations: {
-                            yaxis: [{
-                                y: bakuMutuVal,
-                                borderColor: '#ef4444',
-                                strokeDashArray: 2,
-                                label: {
-                                    text: `Baku Mutu (${bakuMutuVal})`,
-                                    style: {
-                                        color: '#fff',
-                                        background: '#ef4444',
-                                        fontSize: '8px'
-                                    }
-                                }
-                            }]
-                        },
-                        xaxis: {
-                            categories: cod.categories || [],
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        yaxis: {
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        grid: {
-                            borderColor: '#1e293b',
-                            strokeDashArray: 3,
-                            padding: {
-                                top: -10,
-                                bottom: -5,
-                                left: 5,
-                                right: 5
-                            }
-                        },
-                        tooltip: {
-                            theme: 'dark'
-                        }
-                    };
-                    renderOrUpdateChart('chartKepatuhanCod', codOptions);
-                }
-
-                // 13. Card Performance Sampel (Aerasi 1-6 & Lumpur Aktif)
-                if (data.card13_chem_storage_performance) {
-                    const samples = data.card13_chem_storage_performance.samples || [];
-                    let aerasiHtml = '';
-                    samples.forEach(s => {
-                        aerasiHtml += `
-                        <tr>
-                            <td class="fw-semibold text-white" style="font-size: 9.5px;">${s.nama_sampel}</td>
-                            <td class="text-center font-monospace">${s.sv30}</td>
-                            <td class="text-center font-monospace text-cyan">${s.mlss}</td>
-                            <td class="text-center font-monospace text-success">${s.do}</td>
-                            <td class="text-center font-monospace text-warning">${s.ph}</td>
-                            <td class="text-center"><span class="badge-ok">${s.status}</span></td>
-                        </tr>
-                    `;
-                    });
-                    document.getElementById('tableAerasiBody').innerHTML = aerasiHtml;
-                }
-
-                // 15. Card Sludge Management (Parameter Harian)
-                if (data.card15_sludge_mgmt) {
-                    const sl = data.card15_sludge_mgmt;
-                    document.getElementById('sludgeDrainVal').textContent = Number(sl.drain_lumpur || 0).toLocaleString(
-                        'id-ID');
-                    document.getElementById('sludgeRunningVal').textContent = Number(sl.running_hour_scp || 0)
-                        .toLocaleString('id-ID');
-                    document.getElementById('sludgeHasilVal').textContent = Number(sl.hasil_lumpur || 0).toLocaleString(
-                        'id-ID');
-                    document.getElementById('sludgeContentVal').textContent = Number(sl.sludge_content || 0)
-                        .toLocaleString('id-ID');
-                }
-
-                // 16. Card Top 5 Risk WWTP -> Jumlah Koloni (Grafik Standar 10^5)
-                if (data.card16_top_risk_koloni) {
-                    const kData = data.card16_top_risk_koloni;
-                    const categories = kData.categories || [];
-                    const values = kData.values || [];
-                    const strings = kData.strings || [];
-
-                    const koloniOptions = {
-                        chart: {
-                            type: 'bar',
-                            height: 135,
-                            toolbar: {
-                                show: false
-                            },
-                            background: 'transparent'
-                        },
-                        theme: {
-                            mode: 'dark'
-                        },
-                        plotOptions: {
-                            bar: {
-                                horizontal: true,
-                                barHeight: '55%',
-                                borderRadius: 2,
-                                colors: {
-                                    ranges: [{
-                                            from: 0,
-                                            to: 1.0,
-                                            color: '#10b981'
-                                        },
-                                        {
-                                            from: 1.01,
-                                            to: 999999,
-                                            color: '#ef4444'
-                                        }
-                                    ]
-                                }
-                            }
-                        },
-                        dataLabels: {
-                            enabled: true,
-                            textAnchor: 'start',
-                            style: {
-                                fontSize: '8.5px',
-                                colors: ['#ffffff']
-                            },
-                            formatter: function(val, opt) {
-                                return (strings[opt.dataPointIndex] || (val + ' × 10⁵')).split(' ')[0] +
-                                    ' × 10⁵';
-                            },
-                            offsetX: 5
-                        },
-                        series: [{
-                            name: 'Koloni (× 10⁵ CFU)',
-                            data: values
-                        }],
-                        xaxis: {
-                            categories: categories,
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '8.5px'
-                                }
-                            }
-                        },
-                        yaxis: {
-                            labels: {
-                                style: {
-                                    colors: '#94a3b8',
-                                    fontSize: '9px',
-                                    fontWeight: 600
-                                }
-                            }
-                        },
-                        annotations: {
-                            xaxis: [{
-                                x: 1.0,
-                                borderColor: '#f59e0b',
-                                strokeDashArray: 3,
-                                label: {
-                                    text: 'Standar (10⁵)',
-                                    orientation: 'horizontal',
-                                    style: {
-                                        color: '#ffffff',
-                                        background: '#f59e0b',
-                                        fontSize: '8px'
-                                    }
-                                }
-                            }]
-                        },
-                        grid: {
-                            borderColor: '#1e293b',
-                            strokeDashArray: 3,
-                            padding: {
-                                top: -10,
-                                bottom: -5,
-                                left: 10,
-                                right: 10
-                            }
-                        },
-                        tooltip: {
-                            theme: 'dark',
-                            y: {
-                                formatter: function(val, opt) {
-                                    const str = strings[opt.dataPointIndex] || (val + ' × 10⁵ CFU/mL');
-                                    const status = val > 1.0 ? ' (MELEBIHI STANDAR 10⁵)' : ' (AMAN ≤ 10⁵)';
-                                    return str + status;
-                                }
-                            }
-                        }
-                    };
-                    renderOrUpdateChart('chartTopRiskKoloni', koloniOptions);
-                }
-
-                // 17. Card Kepatuhan Effluent TSS (Chart)
-                const tss = data.card17_she_training_effluent_tss || data.card17_hse_training_effluent_tss;
-                if (tss) {
-                    const bakuMutuTss = tss.baku_mutu || 100;
-                    if (document.getElementById('tssComplianceBadge')) {
-                        const comp = tss.compliance ?? 96;
-                        document.getElementById('tssComplianceBadge').textContent = comp + '% OK';
-                        document.getElementById('tssComplianceBadge').className = comp >= 90 ? 'text-success' : 'text-danger';
-                    }
-                    const tssOptions = {
-                        chart: {
-                            type: 'line',
-                            height: 135,
-                            toolbar: {
-                                show: false
-                            },
-                            background: 'transparent'
-                        },
-                        theme: {
-                            mode: 'dark'
-                        },
-                        dataLabels: {
-                            enabled: false
-                        },
-                        stroke: {
-                            curve: 'smooth',
-                            width: 2.5
-                        },
-                        colors: ['#06b6d4'],
-                        series: [{
-                            name: 'TSS (ppm)',
-                            data: tss.values || []
-                        }],
-                        annotations: {
-                            yaxis: [{
-                                y: bakuMutuTss,
-                                borderColor: '#ef4444',
-                                strokeDashArray: 2,
-                                label: {
-                                    text: `Baku Mutu (${bakuMutuTss})`,
-                                    style: {
-                                        color: '#fff',
-                                        background: '#ef4444',
-                                        fontSize: '8px'
-                                    }
-                                }
-                            }]
-                        },
-                        xaxis: {
-                            categories: tss.categories || [],
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        yaxis: {
-                            labels: {
-                                style: {
-                                    colors: '#64748b',
-                                    fontSize: '9px'
-                                }
-                            }
-                        },
-                        grid: {
-                            borderColor: '#1e293b',
-                            strokeDashArray: 3,
-                            padding: {
-                                top: -10,
-                                bottom: -5,
-                                left: 5,
-                                right: 5
-                            }
-                        },
-                        tooltip: {
-                            theme: 'dark'
-                        }
-                    };
-                    renderOrUpdateChart('chartKepatuhanTss', tssOptions);
-                }
-
-            } catch (err) {
-                console.error('Error loading WCO Dashboard data:', err);
-            }
+            // Trigger every card asynchronously in parallel.
+            // Whichever finishes first renders immediately!
+            loadBiayaSection(start, end);
+            loadAnalisaSection(start, end);
+            loadStatusOperasiSection(start, end);
+            loadSafetyPerfSection(start, end);
+            loadInfluentMingguanSection(start, end);
+            loadEffluentMingguanSection(start, end);
+            loadKepatuhanCodSection(start, end);
+            loadPerformanceSampleSection(start, end);
+            loadSludgeMgmtSection(start, end);
+            loadTopRiskKoloniSection();
+            loadKepatuhanTssSection(start, end);
         }
     </script>
 @endsection

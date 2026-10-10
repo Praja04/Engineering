@@ -2114,5 +2114,4 @@ class WWTPController extends Controller
             ]
         ];
     }
-    }
 }
