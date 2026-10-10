@@ -1305,11 +1305,13 @@ class WWTPController extends Controller
 
     /**
      * Data API for Integrated WCO - HSE WWTP Dashboard
+     * Supports lazy loading per section via ?section=...
      */
     public function wwtp_wco_data(Request $request)
     {
         $startDateStr = $request->query('start_date') ?? $request->query('tanggal');
         $endDateStr   = $request->query('end_date') ?? $request->query('tanggal');
+        $section      = $request->query('section', 'all');
 
         // Determine date range (defaults to current month if not given)
         if (!$startDateStr || !$endDateStr) {
@@ -1336,9 +1338,80 @@ class WWTPController extends Controller
         $startCarbon = Carbon::parse($startDate);
         $endCarbon   = Carbon::parse($endDate);
 
-        // ==========================================
-        // 1 & 2. BIAYA CHEMICAL (Total Cost & Cost/m3)
-        // ==========================================
+        $baseResponse = [
+            'status'      => 'success',
+            'section'     => $section,
+            'start_date'  => $startDate,
+            'end_date'    => $endDate,
+            'last_update' => Carbon::now()->format('d M Y H:i'),
+        ];
+
+        switch ($section) {
+            case 'biaya':
+                return response()->json(array_merge($baseResponse, $this->getWcoBiayaData($startCarbon, $endCarbon)));
+
+            case 'analisa':
+                $analisa = $this->getWcoAnalisaData($startDate, $endDate);
+                unset($analisa['envStages']);
+                return response()->json(array_merge($baseResponse, $analisa));
+
+            case 'status_operasi':
+                return response()->json(array_merge($baseResponse, $this->getWcoStatusOperasiData($startDate, $endDate)));
+
+            case 'safety_perf':
+                return response()->json(array_merge($baseResponse, $this->getWcoSafetyPerfData($startDate, $endDate)));
+
+            case 'influent_mingguan':
+                return response()->json(array_merge($baseResponse, $this->getWcoInfluentMingguanData($startDate, $endDate)));
+
+            case 'effluent_mingguan':
+                return response()->json(array_merge($baseResponse, $this->getWcoEffluentMingguanData($startDate, $endDate)));
+
+            case 'kepatuhan_cod':
+                return response()->json(array_merge($baseResponse, $this->getWcoKepatuhanCodData($startDate, $endDate)));
+
+            case 'performance_sampel':
+                return response()->json(array_merge($baseResponse, $this->getWcoPerformanceSampleData($startDate, $endDate)));
+
+            case 'sludge_mgmt':
+                return response()->json(array_merge($baseResponse, $this->getWcoSludgeMgmtData($startDate, $endDate)));
+
+            case 'top_risk_koloni':
+                return response()->json(array_merge($baseResponse, $this->getWcoTopRiskKoloniData()));
+
+            case 'kepatuhan_tss':
+                return response()->json(array_merge($baseResponse, $this->getWcoKepatuhanTssData($startDate, $endDate)));
+
+            case 'all':
+            default:
+                $biaya = $this->getWcoBiayaData($startCarbon, $endCarbon);
+                $analisa = $this->getWcoAnalisaData($startDate, $endDate);
+                $statusOperasi = $this->getWcoStatusOperasiData($startDate, $endDate, $analisa['envStages'] ?? null);
+                unset($analisa['envStages']);
+                $safetyPerf = $this->getWcoSafetyPerfData($startDate, $endDate);
+                $influentMingguan = $this->getWcoInfluentMingguanData($startDate, $endDate);
+                $effluentMingguan = $this->getWcoEffluentMingguanData($startDate, $endDate);
+                $kepatuhanCod = $this->getWcoKepatuhanCodData($startDate, $endDate);
+                $performanceSample = $this->getWcoPerformanceSampleData($startDate, $endDate);
+                $sludgeMgmt = $this->getWcoSludgeMgmtData($startDate, $endDate);
+                $topRiskKoloni = $this->getWcoTopRiskKoloniData();
+                $kepatuhanTss = $this->getWcoKepatuhanTssData($startDate, $endDate);
+
+                return response()->json(array_merge($baseResponse, [
+                    'wco_score'             => 94,
+                    'card3_chemical_safety' => [
+                        'score'  => 92,
+                        'target' => 95,
+                        'label'  => 'EXCELLENT',
+                        'status' => 'AMAN'
+                    ],
+                    'card6_informasi_wwtp'  => $this->getWcoInformasiWWTPData($startDate, $endDate),
+                ], $biaya, $analisa, $statusOperasi, $safetyPerf, $influentMingguan, $effluentMingguan, $kepatuhanCod, $performanceSample, $sludgeMgmt, $topRiskKoloni, $kepatuhanTss));
+        }
+    }
+
+    private function getWcoBiayaData($startCarbon, $endCarbon)
+    {
         $biayaRecord = WwtpBiayaChemicalRecord::with(['details.chemicalStandard'])
             ->where(function($q) use ($startCarbon, $endCarbon) {
                 $q->whereBetween('tanggal', [$startCarbon->toDateString(), $endCarbon->toDateString()])
@@ -1382,7 +1455,6 @@ class WWTPController extends Controller
             }
             $totalCostM3 = $limbahDiOlah > 0 ? $totalCost / $limbahDiOlah : 0;
         } else {
-            // Default baseline numbers if DB has no record yet
             $totalCost = 45250000;
             $limbahDiOlah = 18500;
             $totalCostM3 = 2445.94;
@@ -1399,19 +1471,25 @@ class WWTPController extends Controller
             }
         }
 
-        // ==========================================
-        // 3. CHEMICAL SAFETY (Dummy)
-        // ==========================================
-        $cardChemicalSafety = [
-            'score'  => 92,
-            'target' => 95,
-            'label'  => 'EXCELLENT',
-            'status' => 'AMAN'
+        return [
+            'card1_biaya_per_m3' => [
+                'value'     => $totalCostM3,
+                'formatted' => 'Rp ' . number_format($totalCostM3, 0, ',', '.') . ' / m³',
+                'target'    => 'TARGET ≤ Rp 3.000',
+                'trend_up'  => true
+            ],
+            'card2_total_cost_chem' => [
+                'value'     => $totalCost,
+                'formatted' => 'Rp ' . number_format($totalCost, 0, ',', '.'),
+                'target'    => 'TOTAL / BULAN',
+                'trend_up'  => true
+            ],
+            'card9_chem_consumption' => $chemicalsUsageList,
         ];
+    }
 
-        // ==========================================
-        // 4 & 8. ANALISA PARAMETER WWTP (Influent, Outlet Anaerob, Aerob, DAF, Effluent)
-        // ==========================================
+    private function getWcoAnalisaData($startDate, $endDate)
+    {
         $analisaRecords = WwtpAnalisa::with(['details.point', 'details.parameter'])
             ->whereBetween('analisa_date', [$startDate, $endDate])
             ->get();
@@ -1475,45 +1553,42 @@ class WWTPController extends Controller
             'Effluent'       => ['ph' => $getAnalisaVal($paramPH?->id, 'Effluent', 7.2), 'tss' => $getAnalisaVal($paramTSS?->id, 'Effluent', 22.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Effluent', 48.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Effluent', 1.0)],
         ];
 
-        // 4. Card Equalisasi: pH, TSS, COD, EC
-        $cardEqualisasi = [
-            'ph'  => $envStages['Influent']['ph'],
-            'tss' => $envStages['Influent']['tss'],
-            'cod' => $envStages['Influent']['cod'],
-            'ec'  => $envStages['Influent']['ec'],
-        ];
-
-        // 5. Card Removal Outlet (Effluent) TSS & COD
         $calcRem = function($in, $out) {
             if ($in <= 0) return 95.0;
             return round((($in - $out) / $in) * 100, 1);
         };
-        $cardRemoval = [
-            'tss_pct' => $calcRem($envStages['Influent']['tss'], $envStages['Effluent']['tss']),
-            'cod_pct' => $calcRem($envStages['Influent']['cod'], $envStages['Effluent']['cod']),
-            'target'  => '≥ 90%'
-        ];
 
-        // 5b. Card Analisa Air Limbah Effluent (COD, TSS, pH, EC)
-        $cardEffluentAnalisa = [
-            'ph'  => $envStages['Effluent']['ph'],
-            'tss' => $envStages['Effluent']['tss'],
-            'cod' => $envStages['Effluent']['cod'],
-            'ec'  => $envStages['Effluent']['ec'],
+        return [
+            'card4_equalisasi' => [
+                'ph'  => $envStages['Influent']['ph'],
+                'tss' => $envStages['Influent']['tss'],
+                'cod' => $envStages['Influent']['cod'],
+                'ec'  => $envStages['Influent']['ec'],
+            ],
+            'card5_removal_outlet' => [
+                'tss_pct' => $calcRem($envStages['Influent']['tss'], $envStages['Effluent']['tss']),
+                'cod_pct' => $calcRem($envStages['Influent']['cod'], $envStages['Effluent']['cod']),
+                'target'  => '≥ 90%'
+            ],
+            'card5_effluent_analisa' => [
+                'ph'  => $envStages['Effluent']['ph'],
+                'tss' => $envStages['Effluent']['tss'],
+                'cod' => $envStages['Effluent']['cod'],
+                'ec'  => $envStages['Effluent']['ec'],
+            ],
+            'card8_env_perf' => [
+                ['parameter' => 'Influent',       'satuan' => 'mg/L', 'ph' => $envStages['Influent']['ph'],       'tss' => $envStages['Influent']['tss'],       'cod' => $envStages['Influent']['cod'],       'ec' => $envStages['Influent']['ec'],       'baku_mutu' => '-',   'status' => 'OK'],
+                ['parameter' => 'Outlet Anaerob', 'satuan' => 'mg/L', 'ph' => $envStages['Outlet Anaerob']['ph'], 'tss' => $envStages['Outlet Anaerob']['tss'], 'cod' => $envStages['Outlet Anaerob']['cod'], 'ec' => $envStages['Outlet Anaerob']['ec'], 'baku_mutu' => '-',   'status' => 'OK'],
+                ['parameter' => 'Aerob (Aerasi)', 'satuan' => 'mg/L', 'ph' => $envStages['Aerob']['ph'],          'tss' => $envStages['Aerob']['tss'],          'cod' => $envStages['Aerob']['cod'],          'ec' => $envStages['Aerob']['ec'],          'baku_mutu' => '-',   'status' => 'OK'],
+                ['parameter' => 'Outlet DAF',     'satuan' => 'mg/L', 'ph' => $envStages['Outlet DAF']['ph'],     'tss' => $envStages['Outlet DAF']['tss'],     'cod' => $envStages['Outlet DAF']['cod'],     'ec' => $envStages['Outlet DAF']['ec'],     'baku_mutu' => '-',   'status' => 'OK'],
+                ['parameter' => 'Effluent Final', 'satuan' => 'mg/L', 'ph' => $envStages['Effluent']['ph'],       'tss' => $envStages['Effluent']['tss'],       'cod' => $envStages['Effluent']['cod'],       'ec' => $envStages['Effluent']['ec'],       'baku_mutu' => '300', 'status' => 'OK'],
+            ],
+            'envStages' => $envStages,
         ];
+    }
 
-        // 8. Card Environment Performance (Table)
-        $cardEnvironmentPerformance = [
-            ['parameter' => 'Influent',       'satuan' => 'mg/L', 'ph' => $envStages['Influent']['ph'],       'tss' => $envStages['Influent']['tss'],       'cod' => $envStages['Influent']['cod'],       'ec' => $envStages['Influent']['ec'],       'baku_mutu' => '-',   'status' => 'OK'],
-            ['parameter' => 'Outlet Anaerob', 'satuan' => 'mg/L', 'ph' => $envStages['Outlet Anaerob']['ph'], 'tss' => $envStages['Outlet Anaerob']['tss'], 'cod' => $envStages['Outlet Anaerob']['cod'], 'ec' => $envStages['Outlet Anaerob']['ec'], 'baku_mutu' => '-',   'status' => 'OK'],
-            ['parameter' => 'Aerob (Aerasi)', 'satuan' => 'mg/L', 'ph' => $envStages['Aerob']['ph'],          'tss' => $envStages['Aerob']['tss'],          'cod' => $envStages['Aerob']['cod'],          'ec' => $envStages['Aerob']['ec'],          'baku_mutu' => '-',   'status' => 'OK'],
-            ['parameter' => 'Outlet DAF',     'satuan' => 'mg/L', 'ph' => $envStages['Outlet DAF']['ph'],     'tss' => $envStages['Outlet DAF']['tss'],     'cod' => $envStages['Outlet DAF']['cod'],     'ec' => $envStages['Outlet DAF']['ec'],     'baku_mutu' => '-',   'status' => 'OK'],
-            ['parameter' => 'Effluent Final', 'satuan' => 'mg/L', 'ph' => $envStages['Effluent']['ph'],       'tss' => $envStages['Effluent']['tss'],       'cod' => $envStages['Effluent']['cod'],       'ec' => $envStages['Effluent']['ec'],       'baku_mutu' => '300', 'status' => 'OK'],
-        ];
-
-        // ==========================================
-        // 6. INFORMASI WWTP (Debit 1, running 1, debit 2, running 2)
-        // ==========================================
+    private function getWcoStatusOperasiData($startDate, $endDate, $envStages = null)
+    {
         $influentRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])->orderBy('tanggal', 'desc')->get();
         if ($influentRecords->isEmpty()) {
             $latestRecords = WwtpInfluentHarian::orderBy('tanggal', 'desc')->limit(30)->get();
@@ -1522,29 +1597,68 @@ class WWTPController extends Controller
             }
         }
 
-        $latestInfluentRow = $influentRecords->first();
-        $cardInformasiWWTP = [
-            'debit1'   => $latestInfluentRow && $latestInfluentRow->debit1 !== null ? (float)$latestInfluentRow->debit1 : round((float)($influentRecords->avg('debit1') ?: 42.5), 1),
-            'running1' => $latestInfluentRow && $latestInfluentRow->running_wwtp1 ? $latestInfluentRow->running_wwtp1 : '24 Jam',
-            'debit2'   => $latestInfluentRow && $latestInfluentRow->debit2 !== null ? (float)$latestInfluentRow->debit2 : round((float)($influentRecords->avg('debit2') ?: 44.7), 1),
-            'running2' => $latestInfluentRow && $latestInfluentRow->running_wwtp2 ? $latestInfluentRow->running_wwtp2 : '24 Jam',
-            'kapasitas_design' => '96 m³/day',
-            'jam_operasi'      => '24 Jam',
-            'personil'         => '18 Orang',
-            // Tangki Kapasitas Permanent
-            'tanks'            => [
-                ['name' => 'Equal',        'kapasitas' => '20 m³',  'img' => asset('assets/images/wwtp/dashboard/EQUALISASI.png')],
-                ['name' => 'Anaerob',      'kapasitas' => '426 m³', 'img' => asset('assets/images/wwtp/dashboard/ANAEROB.png')],
-                ['name' => 'Aerob',        'kapasitas' => '170 m³', 'img' => asset('assets/images/wwtp/dashboard/AEROB.png')],
-                ['name' => 'Lumpur Aktif', 'kapasitas' => '160 m³', 'img' => asset('assets/images/wwtp/dashboard/LUMPUR AKTIF.png')],
-                ['name' => 'DAF',          'kapasitas' => '10 m³',  'img' => asset('assets/images/wwtp/dashboard/DAF.png')],
-                ['name' => 'Outlet',       'kapasitas' => '1 m³',   'img' => asset('assets/images/wwtp/dashboard/OUTLET.png')],
+        $calcPitVol = function ($field) use ($influentRecords) {
+            if ($influentRecords->isEmpty()) return rand(15, 45) . ' m³';
+            $val = (float) $influentRecords->reduce(function ($carry, $rec) use ($field) {
+                $awalField = $field . '_awal';
+                return $carry + max(0, (float)($rec->$field ?? 0) - (float)($rec->$awalField ?? 0));
+            }, 0);
+            return round($val ?: rand(20, 50), 1) . ' m³';
+        };
+
+        $phInfluent = $envStages['Influent']['ph'] ?? '7.2';
+        $tssInfluent = $envStages['Influent']['tss'] ?? '245';
+
+        $cardStatusOperasi = [
+            [
+                'name'    => 'PIT Garam',
+                'volume'  => $calcPitVol('pit_garam'),
+                'subtext' => 'pH: ' . $phInfluent . ' | TSS: ' . $tssInfluent,
+                'status'  => 'NORMAL',
+                'badge'   => 'success',
+                'img'     => asset('assets/images/wwtp/dashboard/PIT GARAM.png')
+            ],
+            [
+                'name'    => 'Buffer Pit Garam',
+                'volume'  => 'Buffer Steady',
+                'subtext' => 'Ready / Active Buffer',
+                'status'  => 'ACTIVE',
+                'badge'   => 'success',
+                'img'     => asset('assets/images/wwtp/dashboard/BUFFER PIT GARAM.png')
+            ],
+            [
+                'name'    => 'Pit Sparta',
+                'volume'  => $calcPitVol('pit_sparta'),
+                'subtext' => 'Influent Raw Equal',
+                'status'  => 'NORMAL',
+                'badge'   => 'success',
+                'img'     => asset('assets/images/wwtp/dashboard/PIT SPARTA.png')
+            ],
+            [
+                'name'    => 'Step 3',
+                'volume'  => $calcPitVol('pit_produksi_step3'),
+                'subtext' => 'Pumping & Clarifier Feed',
+                'status'  => 'NORMAL',
+                'badge'   => 'success',
+                'img'     => asset('assets/images/wwtp/dashboard/STEP 3.png')
             ]
         ];
 
-        // ==========================================
-        // 7. SAFETY PERFORMANCE (Influent Daily Aggregated & Daily Distribution)
-        // ==========================================
+        return [
+            'card10_status_operasi' => $cardStatusOperasi
+        ];
+    }
+
+    private function getWcoSafetyPerfData($startDate, $endDate)
+    {
+        $influentRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])->orderBy('tanggal', 'desc')->get();
+        if ($influentRecords->isEmpty()) {
+            $latestRecords = WwtpInfluentHarian::orderBy('tanggal', 'desc')->limit(30)->get();
+            if ($latestRecords->isNotEmpty()) {
+                $influentRecords = $latestRecords;
+            }
+        }
+
         $dailyAggregated = [];
         $dailyDistribution = [
             'Pit Sparta'          => 0,
@@ -1625,61 +1739,59 @@ class WWTPController extends Controller
             ];
         }
 
-        // ==========================================
-        // 9. CHEMICAL CONSUMPTION
-        // ==========================================
-        $cardChemicalConsumption = $chemicalsUsageList;
-
-        // ==========================================
-        // 10. STATUS OPERASI (PIT Garam, Buffer Pit Garam, Pit Sparta, Step 3)
-        // ==========================================
-        $calcPitVol = function ($field) use ($influentRecords) {
-            if ($influentRecords->isEmpty()) return rand(15, 45) . ' m³';
-            $val = (float) $influentRecords->reduce(function ($carry, $rec) use ($field) {
-                $awalField = $field . '_awal';
-                return $carry + max(0, (float)($rec->$field ?? 0) - (float)($rec->$awalField ?? 0));
-            }, 0);
-            return round($val ?: rand(20, 50), 1) . ' m³';
-        };
-
-        $cardStatusOperasi = [
-            [
-                'name'    => 'PIT Garam',
-                'volume'  => $calcPitVol('pit_garam'),
-                'subtext' => 'pH: ' . $envStages['Influent']['ph'] . ' | TSS: ' . $envStages['Influent']['tss'],
-                'status'  => 'NORMAL',
-                'badge'   => 'success',
-                'img'     => asset('assets/images/wwtp/dashboard/PIT GARAM.png')
-            ],
-            [
-                'name'    => 'Buffer Pit Garam',
-                'volume'  => 'Buffer Steady',
-                'subtext' => 'Ready / Active Buffer',
-                'status'  => 'ACTIVE',
-                'badge'   => 'success',
-                'img'     => asset('assets/images/wwtp/dashboard/BUFFER PIT GARAM.png')
-            ],
-            [
-                'name'    => 'Pit Sparta',
-                'volume'  => $calcPitVol('pit_sparta'),
-                'subtext' => 'Influent Raw Equal',
-                'status'  => 'NORMAL',
-                'badge'   => 'success',
-                'img'     => asset('assets/images/wwtp/dashboard/PIT SPARTA.png')
-            ],
-            [
-                'name'    => 'Step 3',
-                'volume'  => $calcPitVol('pit_produksi_step3'),
-                'subtext' => 'Pumping & Clarifier Feed',
-                'status'  => 'NORMAL',
-                'badge'   => 'success',
-                'img'     => asset('assets/images/wwtp/dashboard/STEP 3.png')
+        return [
+            'card7_safety_perf' => [
+                'daily_aggregated'   => $dailyAggregated,
+                'daily_distribution' => $dailyDistribution
             ]
         ];
+    }
 
-        // ==========================================
-        // 11. TREND NEAR MISS & SAFETY -> EFFLUENT MINGGUAN PROSES WWTP
-        // ==========================================
+    private function getWcoInfluentMingguanData($startDate, $endDate)
+    {
+        $influentWeeklyRecords = WwtpRecord::where('kategori', 'influent')
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->with('influent')
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        $influentWeeklyChart = [
+            'categories' => [],
+            'sparta'     => [],
+            'garam'      => [],
+            'domestik'   => [],
+            'step3'      => [],
+            'storage'    => []
+        ];
+
+        if ($influentWeeklyRecords->isNotEmpty()) {
+            foreach ($influentWeeklyRecords as $rec) {
+                $influentWeeklyChart['categories'][] = Carbon::parse($rec->tanggal)->format('d M');
+                $influentWeeklyChart['sparta'][]     = (float)($rec->influent->pit_sparta ?? 0);
+                $influentWeeklyChart['garam'][]      = (float)($rec->influent->pit_garam ?? 0);
+                $influentWeeklyChart['domestik'][]   = (float)($rec->influent->pit_domestik ?? 0);
+                $influentWeeklyChart['step3'][]      = (float)($rec->influent->pit_produksi_step3 ?? 0);
+                $influentWeeklyChart['storage'][]    = (float)($rec->influent->pit_storage ?? 0);
+            }
+        } else {
+            for ($w = 6; $w >= 0; $w--) {
+                $dt = Carbon::now()->subWeeks($w);
+                $influentWeeklyChart['categories'][] = 'W' . $dt->weekOfYear;
+                $influentWeeklyChart['sparta'][]     = rand(80, 150);
+                $influentWeeklyChart['garam'][]      = rand(30, 70);
+                $influentWeeklyChart['domestik'][]   = rand(15, 35);
+                $influentWeeklyChart['step3'][]      = rand(50, 95);
+                $influentWeeklyChart['storage'][]    = rand(20, 50);
+            }
+        }
+
+        return [
+            'card14_influent_mingguan' => $influentWeeklyChart
+        ];
+    }
+
+    private function getWcoEffluentMingguanData($startDate, $endDate)
+    {
         $effluentWeeklyRecords = WwtpRecord::where('kategori', 'effluent')
             ->whereBetween('tanggal', [$startDate, $endDate])
             ->with('effluent')
@@ -1707,14 +1819,27 @@ class WWTPController extends Controller
             }
         }
 
-        // ==========================================
-        // 12. TREND KEPATUHAN EFFLUENT (COD) -> BAKU MUTU = 300
-        // ==========================================
+        return [
+            'card11_trend_effluent_mingguan' => $trendEffluentMingguan
+        ];
+    }
+
+    private function getWcoKepatuhanCodData($startDate, $endDate)
+    {
         $perfOutletCOD = WwtpPerformanceRecord::where('jenis', 'outlet')
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->orderBy('created_at', 'desc')
-            ->limit(7)
-            ->get()
-            ->reverse();
+            ->limit(14)
+            ->get();
+
+        if ($perfOutletCOD->isEmpty()) {
+            $perfOutletCOD = WwtpPerformanceRecord::where('jenis', 'outlet')
+                ->orderBy('created_at', 'desc')
+                ->limit(7)
+                ->get();
+        }
+
+        $perfOutletCOD = $perfOutletCOD->reverse()->values();
 
         $trendEffluentCOD = [
             'categories' => [],
@@ -1740,9 +1865,13 @@ class WWTPController extends Controller
             $trendEffluentCOD['compliance'] = 100;
         }
 
-        // ==========================================
-        // 13. PERFORMANCE SAMPEL (AERASI 1 - 6 & LUMPUR AKTIF)
-        // ==========================================
+        return [
+            'card12_trend_kepatuhan_effluent_cod' => $trendEffluentCOD
+        ];
+    }
+
+    private function getWcoPerformanceSampleData($startDate, $endDate)
+    {
         $sampleRecords = WwtpPerformanceSample::with('jenisSampel')
             ->whereBetween('tanggal', [$startDate, $endDate])
             ->get();
@@ -1788,48 +1917,16 @@ class WWTPController extends Controller
             }
         }
 
-        // ==========================================
-        // 14. INFLUENT MINGGUAN (PROSES WWTP)
-        // ==========================================
-        $influentWeeklyRecords = WwtpRecord::where('kategori', 'influent')
-            ->whereBetween('tanggal', [$startDate, $endDate])
-            ->with('influent')
-            ->orderBy('tanggal', 'asc')
-            ->get();
-
-        $influentWeeklyChart = [
-            'categories' => [],
-            'sparta'     => [],
-            'garam'      => [],
-            'domestik'   => [],
-            'step3'      => [],
-            'storage'    => []
+        return [
+            'card13_chem_storage_performance' => [
+                'samples'          => $cardPerformanceSample,
+                'compliance_score' => 96
+            ]
         ];
+    }
 
-        if ($influentWeeklyRecords->isNotEmpty()) {
-            foreach ($influentWeeklyRecords as $rec) {
-                $influentWeeklyChart['categories'][] = Carbon::parse($rec->tanggal)->format('d M');
-                $influentWeeklyChart['sparta'][]     = (float)($rec->influent->pit_sparta ?? 0);
-                $influentWeeklyChart['garam'][]      = (float)($rec->influent->pit_garam ?? 0);
-                $influentWeeklyChart['domestik'][]   = (float)($rec->influent->pit_domestik ?? 0);
-                $influentWeeklyChart['step3'][]      = (float)($rec->influent->pit_produksi_step3 ?? 0);
-                $influentWeeklyChart['storage'][]    = (float)($rec->influent->pit_storage ?? 0);
-            }
-        } else {
-            for ($w = 6; $w >= 0; $w--) {
-                $dt = Carbon::now()->subWeeks($w);
-                $influentWeeklyChart['categories'][] = 'W' . $dt->weekOfYear;
-                $influentWeeklyChart['sparta'][]     = rand(80, 150);
-                $influentWeeklyChart['garam'][]      = rand(30, 70);
-                $influentWeeklyChart['domestik'][]   = rand(15, 35);
-                $influentWeeklyChart['step3'][]      = rand(50, 95);
-                $influentWeeklyChart['storage'][]    = rand(20, 50);
-            }
-        }
-
-        // ==========================================
-        // 15. SLUDGE & WASTE MANAGEMENT (Parameter Harian: Drain lumpur, Running Hour scp, hasil lumpur, content sludge)
-        // ==========================================
+    private function getWcoSludgeMgmtData($startDate, $endDate)
+    {
         $sludgeRecords = WwtpSludge::whereBetween('tanggal', [$startDate, $endDate])->get();
         if ($sludgeRecords->isEmpty()) {
             $sludgeRecords = WwtpSludge::latest('tanggal')->limit(30)->get();
@@ -1853,25 +1950,25 @@ class WWTPController extends Controller
         $hasilLumpurTotal = (float) $sludgeRecords->sum('hasil_lumpur');
         $sludgeContentAvg = (float) $sludgeRecords->avg('sludge_content');
 
-        $cardSludge = [
-            'drain_lumpur'     => round($drainLumpurTotal ?: 42.5, 1),
-            'running_hour_scp' => round($runningHourScpTotal ?: 18.0, 1),
-            'hasil_lumpur'     => round($hasilLumpurTotal ?: 3250, 0),
-            'sludge_content'   => round($sludgeContentAvg ?: 78.4, 1),
-            'status'           => 'OK'
+        return [
+            'card3_pengangkutan_sludge' => [
+                'total_tonase' => round($totalTonasePengangkutan ?: 12.5, 2),
+                'formatted'    => number_format($totalTonasePengangkutan ?: 12.5, 2, ',', '.') . ' Ton',
+                'target'       => 'TOTAL AKUMULASI',
+                'status'       => 'TERJADWAL'
+            ],
+            'card15_sludge_mgmt' => [
+                'drain_lumpur'     => round($drainLumpurTotal ?: 42.5, 1),
+                'running_hour_scp' => round($runningHourScpTotal ?: 18.0, 1),
+                'hasil_lumpur'     => round($hasilLumpurTotal ?: 3250, 0),
+                'sludge_content'   => round($sludgeContentAvg ?: 78.4, 1),
+                'status'           => 'OK'
+            ]
         ];
+    }
 
-        // 3. Card Pengangkutan Sludge (menggantikan Chemical Safety)
-        $cardPengangkutan = [
-            'total_tonase' => round($totalTonasePengangkutan ?: 12.5, 2),
-            'formatted'    => number_format($totalTonasePengangkutan ?: 12.5, 2, ',', '.') . ' Ton',
-            'target'       => 'TOTAL AKUMULASI',
-            'status'       => 'TERJADWAL'
-        ];
-
-        // ==========================================
-        // 16. TOP 5 RISK WWTP -> JUMLAH KOLONI (GRAFIK DENGAN STANDAR 10^5)
-        // ==========================================
+    private function getWcoTopRiskKoloniData()
+    {
         $koloniDetails = WwtpKoloniDetail::with('masterKoloni')
             ->orderBy('tanggal', 'desc')
             ->limit(5)
@@ -1889,7 +1986,6 @@ class WWTPController extends Controller
                 $base = (float) $kd->nilai_base;
                 $exp = (int) $kd->nilai_pangkat;
                 $valStr = "{$base} × 10^{$exp} CFU/mL";
-                // Nilai dinormalisasi dalam satuan 10^5 CFU/mL agar mudah digrafikkan bersama standar 1.0 (10^5)
                 $scaledVal = round(($base * pow(10, $exp)) / 100000, 2);
 
                 $koloniCategories[] = $sampleName;
@@ -1907,11 +2003,11 @@ class WWTPController extends Controller
             }
         } else {
             $defaultKoloni = [
-                ['name' => 'Inlet Anaerob',     'base' => 3.2, 'exp' => 6], // 32 * 10^5
-                ['name' => 'Outlet Anaerob',    'base' => 1.8, 'exp' => 5], // 1.8 * 10^5
-                ['name' => 'Aerasi 1',          'base' => 4.5, 'exp' => 5], // 4.5 * 10^5
-                ['name' => 'Aerasi 6',          'base' => 0.8, 'exp' => 5], // 0.8 * 10^5
-                ['name' => 'Effluent Akhir',    'base' => 0.2, 'exp' => 5], // 0.2 * 10^5
+                ['name' => 'Inlet Anaerob',     'base' => 3.2, 'exp' => 6],
+                ['name' => 'Outlet Anaerob',    'base' => 1.8, 'exp' => 5],
+                ['name' => 'Aerasi 1',          'base' => 4.5, 'exp' => 5],
+                ['name' => 'Aerasi 6',          'base' => 0.8, 'exp' => 5],
+                ['name' => 'Effluent Akhir',    'base' => 0.2, 'exp' => 5],
             ];
             foreach ($defaultKoloni as $item) {
                 $scaledVal = round(($item['base'] * pow(10, $item['exp'])) / 100000, 2);
@@ -1931,22 +2027,33 @@ class WWTPController extends Controller
             }
         }
 
-        $cardTopRiskKoloni = [
-            'categories' => $koloniCategories,
-            'values'     => $koloniValues,
-            'strings'    => $koloniStrings,
-            'standard'   => 1.0, // 1.0 * 10^5 CFU/mL
-            'items'      => $koloniItems
+        return [
+            'card16_top_risk_koloni' => [
+                'categories' => $koloniCategories,
+                'values'     => $koloniValues,
+                'strings'    => $koloniStrings,
+                'standard'   => 1.0,
+                'items'      => $koloniItems
+            ]
         ];
+    }
 
-        // ==========================================
-        // 17. HSE TRAINING COMPLIANCE -> EFFLUENT TSS GRAFIK
-        // ==========================================
+    private function getWcoKepatuhanTssData($startDate, $endDate)
+    {
         $perfOutletTSS = WwtpPerformanceRecord::where('jenis', 'outlet')
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->orderBy('created_at', 'desc')
-            ->limit(7)
-            ->get()
-            ->reverse();
+            ->limit(14)
+            ->get();
+
+        if ($perfOutletTSS->isEmpty()) {
+            $perfOutletTSS = WwtpPerformanceRecord::where('jenis', 'outlet')
+                ->orderBy('created_at', 'desc')
+                ->limit(7)
+                ->get();
+        }
+
+        $perfOutletTSS = $perfOutletTSS->reverse()->values();
 
         $trendEffluentTSS = [
             'categories' => [],
@@ -1972,50 +2079,40 @@ class WWTPController extends Controller
             $trendEffluentTSS['compliance'] = 96;
         }
 
-        // Overall WCO Score (Weighted composite)
-        $wcoScore = 94;
+        return [
+            'card17_hse_training_effluent_tss' => $trendEffluentTSS,
+            'card17_she_training_effluent_tss' => $trendEffluentTSS
+        ];
+    }
 
-        return response()->json([
-            'status'                         => 'success',
-            'start_date'                     => $startDate,
-            'end_date'                       => $endDate,
-            'last_update'                    => Carbon::now()->format('d M Y H:i'),
-            'wco_score'                      => $wcoScore,
-            'card1_biaya_per_m3'             => [
-                'value'     => $totalCostM3,
-                'formatted' => 'Rp ' . number_format($totalCostM3, 0, ',', '.') . ' / m³',
-                'target'    => 'TARGET ≤ Rp 3.000',
-                'trend_up'  => true
-            ],
-            'card2_total_cost_chem'          => [
-                'value'     => $totalCost,
-                'formatted' => 'Rp ' . number_format($totalCost, 0, ',', '.'),
-                'target'    => 'TOTAL / BULAN',
-                'trend_up'  => true
-            ],
-            'card3_chemical_safety'          => $cardChemicalSafety,
-            'card3_pengangkutan_sludge'      => $cardPengangkutan,
-            'card4_equalisasi'               => $cardEqualisasi,
-            'card5_removal_outlet'           => $cardRemoval,
-            'card5_effluent_analisa'         => $cardEffluentAnalisa,
-            'card6_informasi_wwtp'           => $cardInformasiWWTP,
-            'card7_safety_perf'              => [
-                'daily_aggregated'   => $dailyAggregated,
-                'daily_distribution' => $dailyDistribution
-            ],
-            'card8_env_perf'                 => $cardEnvironmentPerformance,
-            'card9_chem_consumption'         => $cardChemicalConsumption,
-            'card10_status_operasi'          => $cardStatusOperasi,
-            'card11_trend_effluent_mingguan' => $trendEffluentMingguan,
-            'card12_trend_kepatuhan_effluent_cod' => $trendEffluentCOD,
-            'card13_chem_storage_performance'     => [
-                'samples'          => $cardPerformanceSample,
-                'compliance_score' => 96
-            ],
-            'card14_influent_mingguan'       => $influentWeeklyChart,
-            'card15_sludge_mgmt'             => $cardSludge,
-            'card16_top_risk_koloni'         => $cardTopRiskKoloni,
-            'card17_hse_training_effluent_tss' => $trendEffluentTSS
-        ]);
+    private function getWcoInformasiWWTPData($startDate, $endDate)
+    {
+        $influentRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])->orderBy('tanggal', 'desc')->get();
+        if ($influentRecords->isEmpty()) {
+            $latestRecords = WwtpInfluentHarian::orderBy('tanggal', 'desc')->limit(30)->get();
+            if ($latestRecords->isNotEmpty()) {
+                $influentRecords = $latestRecords;
+            }
+        }
+
+        $latestInfluentRow = $influentRecords->first();
+        return [
+            'debit1'   => $latestInfluentRow && $latestInfluentRow->debit1 !== null ? (float)$latestInfluentRow->debit1 : round((float)($influentRecords->avg('debit1') ?: 42.5), 1),
+            'running1' => $latestInfluentRow && $latestInfluentRow->running_wwtp1 ? $latestInfluentRow->running_wwtp1 : '24 Jam',
+            'debit2'   => $latestInfluentRow && $latestInfluentRow->debit2 !== null ? (float)$latestInfluentRow->debit2 : round((float)($influentRecords->avg('debit2') ?: 44.7), 1),
+            'running2' => $latestInfluentRow && $latestInfluentRow->running_wwtp2 ? $latestInfluentRow->running_wwtp2 : '24 Jam',
+            'kapasitas_design' => '96 m³/day',
+            'jam_operasi'      => '24 Jam',
+            'personil'         => '18 Orang',
+            'tanks'            => [
+                ['name' => 'Equal',        'kapasitas' => '20 m³',  'img' => asset('assets/images/wwtp/dashboard/EQUALISASI.png')],
+                ['name' => 'Anaerob',      'kapasitas' => '426 m³', 'img' => asset('assets/images/wwtp/dashboard/ANAEROB.png')],
+                ['name' => 'Aerob',        'kapasitas' => '170 m³', 'img' => asset('assets/images/wwtp/dashboard/AEROB.png')],
+                ['name' => 'Lumpur Aktif', 'kapasitas' => '160 m³', 'img' => asset('assets/images/wwtp/dashboard/LUMPUR AKTIF.png')],
+                ['name' => 'DAF',          'kapasitas' => '10 m³',  'img' => asset('assets/images/wwtp/dashboard/DAF.png')],
+                ['name' => 'Outlet',       'kapasitas' => '1 m³',   'img' => asset('assets/images/wwtp/dashboard/OUTLET.png')],
+            ]
+        ];
+    }
     }
 }

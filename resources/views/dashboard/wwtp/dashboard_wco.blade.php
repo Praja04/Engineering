@@ -1738,8 +1738,14 @@
                 }
 
                 // 17. Card Kepatuhan Effluent TSS (Chart)
-                if (data.card17_she_training_effluent_tss) {
-                    const tss = data.card17_she_training_effluent_tss;
+                const tss = data.card17_she_training_effluent_tss || data.card17_hse_training_effluent_tss;
+                if (tss) {
+                    const bakuMutuTss = tss.baku_mutu || 100;
+                    if (document.getElementById('tssComplianceBadge')) {
+                        const comp = tss.compliance ?? 96;
+                        document.getElementById('tssComplianceBadge').textContent = comp + '% OK';
+                        document.getElementById('tssComplianceBadge').className = comp >= 90 ? 'text-success' : 'text-danger';
+                    }
                     const tssOptions = {
                         chart: {
                             type: 'line',
@@ -1766,11 +1772,11 @@
                         }],
                         annotations: {
                             yaxis: [{
-                                y: 100,
+                                y: bakuMutuTss,
                                 borderColor: '#ef4444',
                                 strokeDashArray: 2,
                                 label: {
-                                    text: 'Baku Mutu (100)',
+                                    text: `Baku Mutu (${bakuMutuTss})`,
                                     style: {
                                         color: '#fff',
                                         background: '#ef4444',
