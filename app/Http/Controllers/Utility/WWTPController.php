@@ -1756,11 +1756,28 @@ class WWTPController extends Controller
 
     private function getWcoInfluentMingguanData($startDate, $endDate)
     {
+        $startC = Carbon::parse($startDate);
+        $endC   = Carbon::parse($endDate);
+        $diffDays = $startC->diffInDays($endC);
+        $numWeeks = max(1, min(12, (int) ceil(($diffDays + 1) / 7)));
+
         $influentWeeklyRecords = WwtpRecord::where('kategori', 'influent')
             ->whereBetween('tanggal', [$startDate, $endDate])
             ->with('influent')
             ->orderBy('tanggal', 'asc')
             ->get();
+
+        if ($influentWeeklyRecords->isEmpty()) {
+            $latestRecords = WwtpRecord::where('kategori', 'influent')
+                ->with('influent')
+                ->orderBy('tanggal', 'desc')
+                ->limit($numWeeks)
+                ->get();
+
+            if ($latestRecords->isNotEmpty()) {
+                $influentWeeklyRecords = $latestRecords->reverse()->values();
+            }
+        }
 
         $influentWeeklyChart = [
             'categories' => [],
@@ -1773,7 +1790,8 @@ class WWTPController extends Controller
 
         if ($influentWeeklyRecords->isNotEmpty()) {
             foreach ($influentWeeklyRecords as $rec) {
-                $influentWeeklyChart['categories'][] = Carbon::parse($rec->tanggal)->format('d M');
+                $dt = Carbon::parse($rec->tanggal);
+                $influentWeeklyChart['categories'][] = 'W' . $dt->weekOfYear . ' (' . $dt->format('d M') . ')';
                 $influentWeeklyChart['sparta'][]     = (float)($rec->influent->pit_sparta ?? 0);
                 $influentWeeklyChart['garam'][]      = (float)($rec->influent->pit_garam ?? 0);
                 $influentWeeklyChart['domestik'][]   = (float)($rec->influent->pit_domestik ?? 0);
@@ -1781,9 +1799,9 @@ class WWTPController extends Controller
                 $influentWeeklyChart['storage'][]    = (float)($rec->influent->pit_storage ?? 0);
             }
         } else {
-            for ($w = 6; $w >= 0; $w--) {
-                $dt = Carbon::now()->subWeeks($w);
-                $influentWeeklyChart['categories'][] = 'W' . $dt->weekOfYear;
+            for ($w = $numWeeks - 1; $w >= 0; $w--) {
+                $dt = $endC->copy()->subWeeks($w);
+                $influentWeeklyChart['categories'][] = 'W' . $dt->weekOfYear . ' (' . $dt->format('d M') . ')';
                 $influentWeeklyChart['sparta'][]     = rand(80, 150);
                 $influentWeeklyChart['garam'][]      = rand(30, 70);
                 $influentWeeklyChart['domestik'][]   = rand(15, 35);
@@ -1799,11 +1817,28 @@ class WWTPController extends Controller
 
     private function getWcoEffluentMingguanData($startDate, $endDate)
     {
+        $startC = Carbon::parse($startDate);
+        $endC   = Carbon::parse($endDate);
+        $diffDays = $startC->diffInDays($endC);
+        $numWeeks = max(1, min(12, (int) ceil(($diffDays + 1) / 7)));
+
         $effluentWeeklyRecords = WwtpRecord::where('kategori', 'effluent')
             ->whereBetween('tanggal', [$startDate, $endDate])
             ->with('effluent')
             ->orderBy('tanggal', 'asc')
             ->get();
+
+        if ($effluentWeeklyRecords->isEmpty()) {
+            $latestRecords = WwtpRecord::where('kategori', 'effluent')
+                ->with('effluent')
+                ->orderBy('tanggal', 'desc')
+                ->limit($numWeeks)
+                ->get();
+
+            if ($latestRecords->isNotEmpty()) {
+                $effluentWeeklyRecords = $latestRecords->reverse()->values();
+            }
+        }
 
         $trendEffluentMingguan = [
             'categories'  => [],
@@ -1813,13 +1848,14 @@ class WWTPController extends Controller
 
         if ($effluentWeeklyRecords->isNotEmpty()) {
             foreach ($effluentWeeklyRecords as $rec) {
-                $trendEffluentMingguan['categories'][] = Carbon::parse($rec->tanggal)->format('d M');
+                $dt = Carbon::parse($rec->tanggal);
+                $trendEffluentMingguan['categories'][] = 'W' . $dt->weekOfYear . ' (' . $dt->format('d M') . ')';
                 $trendEffluentMingguan['full_proses'][] = (float)($rec->effluent->full_proses ?? 0);
                 $trendEffluentMingguan['daf_pre'][]     = (float)($rec->effluent->daf_pre ?? 0);
             }
         } else {
-            for ($w = 6; $w >= 0; $w--) {
-                $dt = Carbon::now()->subWeeks($w);
+            for ($w = $numWeeks - 1; $w >= 0; $w--) {
+                $dt = $endC->copy()->subWeeks($w);
                 $trendEffluentMingguan['categories'][] = 'W' . $dt->weekOfYear . ' (' . $dt->format('d M') . ')';
                 $trendEffluentMingguan['full_proses'][] = rand(80, 140);
                 $trendEffluentMingguan['daf_pre'][]     = rand(30, 70);
