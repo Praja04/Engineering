@@ -1342,10 +1342,24 @@
                     plotOptions: {
                         bar: {
                             columnWidth: '55%',
-                            borderRadius: 2
+                            borderRadius: 2,
+                            dataLabels: {
+                                position: 'top'
+                            }
                         }
                     },
-                    dataLabels: { enabled: false },
+                    dataLabels: {
+                        enabled: true,
+                        offsetY: -6,
+                        style: {
+                            fontSize: '7.5px',
+                            fontWeight: 600,
+                            colors: ['#38bdf8']
+                        },
+                        formatter: function(val) {
+                            return val > 0 ? Number(val).toLocaleString('id-ID') : '';
+                        }
+                    },
                     colors: ['#06b6d4'],
                     series: [{
                         name: 'Total Influent (m³)',
@@ -1372,7 +1386,7 @@
                         borderColor: '#1e293b',
                         strokeDashArray: 3,
                         padding: {
-                            top: -10,
+                            top: 5,
                             bottom: -5,
                             left: 5,
                             right: 5
@@ -1399,7 +1413,25 @@
                         background: 'transparent'
                     },
                     theme: { mode: 'dark' },
-                    dataLabels: { enabled: false },
+                    dataLabels: {
+                        enabled: true,
+                        offsetY: -3,
+                        style: {
+                            fontSize: '7.5px',
+                            fontWeight: 600,
+                            colors: ['#38bdf8', '#34d399', '#fbbf24']
+                        },
+                        background: {
+                            enabled: false
+                        },
+                        formatter: function(val) {
+                            return val !== null && val !== undefined && val !== '' ? Number(val).toLocaleString('id-ID') : '';
+                        }
+                    },
+                    markers: {
+                        size: 2.5,
+                        hover: { size: 4 }
+                    },
                     stroke: {
                         curve: 'smooth',
                         width: 2
@@ -1431,7 +1463,7 @@
                         borderColor: '#1e293b',
                         strokeDashArray: 3,
                         padding: {
-                            top: -10,
+                            top: 5,
                             bottom: -5,
                             left: 5,
                             right: 5
@@ -1467,10 +1499,24 @@
                     plotOptions: {
                         bar: {
                             columnWidth: '50%',
-                            borderRadius: 2
+                            borderRadius: 2,
+                            dataLabels: {
+                                position: 'top'
+                            }
                         }
                     },
-                    dataLabels: { enabled: false },
+                    dataLabels: {
+                        enabled: true,
+                        offsetY: -6,
+                        style: {
+                            fontSize: '7.5px',
+                            fontWeight: 600,
+                            colors: ['#93c5fd', '#c4b5fd']
+                        },
+                        formatter: function(val) {
+                            return val ? Number(val).toLocaleString('id-ID') : '';
+                        }
+                    },
                     colors: ['#3b82f6', '#8b5cf6'],
                     series: [
                         { name: 'Full Proses', data: em.full_proses || [] },
@@ -1497,7 +1543,7 @@
                         borderColor: '#1e293b',
                         strokeDashArray: 3,
                         padding: {
-                            top: -10,
+                            top: 5,
                             bottom: -5,
                             left: 5,
                             right: 5
@@ -1534,7 +1580,25 @@
                         background: 'transparent'
                     },
                     theme: { mode: 'dark' },
-                    dataLabels: { enabled: false },
+                    dataLabels: {
+                        enabled: true,
+                        offsetY: -4,
+                        style: {
+                            fontSize: '8px',
+                            fontWeight: 600,
+                            colors: ['#34d399']
+                        },
+                        background: {
+                            enabled: false
+                        },
+                        formatter: function(val) {
+                            return val !== null && val !== undefined ? Number(val).toLocaleString('id-ID') : '';
+                        }
+                    },
+                    markers: {
+                        size: 3,
+                        hover: { size: 5 }
+                    },
                     stroke: {
                         curve: 'smooth',
                         width: 2.5
@@ -1580,7 +1644,7 @@
                         borderColor: '#1e293b',
                         strokeDashArray: 3,
                         padding: {
-                            top: -10,
+                            top: 5,
                             bottom: -5,
                             left: 5,
                             right: 5
@@ -1762,7 +1826,25 @@
                         background: 'transparent'
                     },
                     theme: { mode: 'dark' },
-                    dataLabels: { enabled: false },
+                    dataLabels: {
+                        enabled: true,
+                        offsetY: -4,
+                        style: {
+                            fontSize: '8px',
+                            fontWeight: 600,
+                            colors: ['#38bdf8']
+                        },
+                        background: {
+                            enabled: false
+                        },
+                        formatter: function(val) {
+                            return val !== null && val !== undefined ? Number(val).toLocaleString('id-ID') : '';
+                        }
+                    },
+                    markers: {
+                        size: 3,
+                        hover: { size: 5 }
+                    },
                     stroke: {
                         curve: 'smooth',
                         width: 2.5
@@ -1808,7 +1890,7 @@
                         borderColor: '#1e293b',
                         strokeDashArray: 3,
                         padding: {
-                            top: -10,
+                            top: 5,
                             bottom: -5,
                             left: 5,
                             right: 5
