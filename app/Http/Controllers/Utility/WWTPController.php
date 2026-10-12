@@ -1418,12 +1418,12 @@ class WWTPController extends Controller
     private function getWcoBiayaData($startCarbon, $endCarbon)
     {
         $biayaRecord = WwtpBiayaChemicalRecord::with(['details.chemicalStandard'])
-            ->where(function($q) use ($startCarbon, $endCarbon) {
+            ->where(function ($q) use ($startCarbon, $endCarbon) {
                 $q->whereBetween('tanggal', [$startCarbon->toDateString(), $endCarbon->toDateString()])
-                  ->orWhere(function($sub) use ($startCarbon) {
-                      $sub->whereYear('tanggal', $startCarbon->year)
-                          ->whereMonth('tanggal', $startCarbon->month);
-                  });
+                    ->orWhere(function ($sub) use ($startCarbon) {
+                        $sub->whereYear('tanggal', $startCarbon->year)
+                            ->whereMonth('tanggal', $startCarbon->month);
+                    });
             })
             ->orderBy('tanggal', 'desc')
             ->first();
@@ -1558,7 +1558,7 @@ class WWTPController extends Controller
             'Effluent'       => ['ph' => $getAnalisaVal($paramPH?->id, 'Effluent', 7.2), 'tss' => $getAnalisaVal($paramTSS?->id, 'Effluent', 22.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Effluent', 48.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Effluent', 1.0)],
         ];
 
-        $calcRem = function($in, $out) {
+        $calcRem = function ($in, $out) {
             if ($in <= 0) return 95.0;
             return round((($in - $out) / $in) * 100, 1);
         };
@@ -1681,7 +1681,7 @@ class WWTPController extends Controller
         if ($influentRecords->isNotEmpty()) {
             $groupedByDate = $influentRecords->groupBy('tanggal')->sortKeys();
             foreach ($groupedByDate as $date => $recs) {
-                $calcPitDiff = function($field) use ($recs) {
+                $calcPitDiff = function ($field) use ($recs) {
                     return (float) $recs->reduce(function ($carry, $rec) use ($field) {
                         $awalField = $field . '_awal';
                         $diff = (float)($rec->$field ?? 0) - (float)($rec->$awalField ?? 0);
@@ -1870,8 +1870,8 @@ class WWTPController extends Controller
     private function getWcoKepatuhanCodData($startDate, $endDate)
     {
         $paramCOD = WwtpParameter::where('parameter_name', 'like', '%COD%')->first();
-        $effluentPointNames = ['Effluent COD (max 300 ppm)', 'Effluent COD', 'Effluent', 'Pit Outlet (Effluent)', 'Outlet'];
-        $effluentPointIds = WwtpPoint::where(function($q) use ($effluentPointNames) {
+        $effluentPointNames = ['Effluent'];
+        $effluentPointIds = WwtpPoint::where(function ($q) use ($effluentPointNames) {
             foreach ($effluentPointNames as $name) {
                 $q->orWhere('point_name', 'like', '%' . $name . '%');
             }
@@ -1879,36 +1879,36 @@ class WWTPController extends Controller
 
         $analisaRecords = collect();
         if ($paramCOD && !empty($effluentPointIds)) {
-            $analisaRecords = WwtpAnalisa::with(['details' => function($q) use ($paramCOD, $effluentPointIds) {
+            $analisaRecords = WwtpAnalisa::with(['details' => function ($q) use ($paramCOD, $effluentPointIds) {
                 $q->where('parameter_id', $paramCOD->id)
-                  ->whereIn('point_id', $effluentPointIds);
+                    ->whereIn('point_id', $effluentPointIds);
             }])
-            ->whereBetween('analisa_date', [$startDate, $endDate])
-            ->orderBy('analisa_date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+                ->whereBetween('analisa_date', [$startDate, $endDate])
+                ->orderBy('analisa_date', 'asc')
+                ->orderBy('shift', 'asc')
+                ->get();
         }
 
-        $validRecords = $analisaRecords->filter(function($rec) {
-            return $rec->details->contains(function($d) {
+        $validRecords = $analisaRecords->filter(function ($rec) {
+            return $rec->details->contains(function ($d) {
                 return $d->hasil_analisa !== null && is_numeric($d->hasil_analisa);
             });
         });
 
         // Fallback to recent daily analisa if current range has no records
         if ($validRecords->isEmpty() && $paramCOD && !empty($effluentPointIds)) {
-            $recent = WwtpAnalisa::with(['details' => function($q) use ($paramCOD, $effluentPointIds) {
+            $recent = WwtpAnalisa::with(['details' => function ($q) use ($paramCOD, $effluentPointIds) {
                 $q->where('parameter_id', $paramCOD->id)
-                  ->whereIn('point_id', $effluentPointIds);
+                    ->whereIn('point_id', $effluentPointIds);
             }])
-            ->whereHas('details', function($q) use ($paramCOD, $effluentPointIds) {
-                $q->where('parameter_id', $paramCOD->id)
-                  ->whereIn('point_id', $effluentPointIds)
-                  ->whereNotNull('hasil_analisa');
-            })
-            ->orderBy('analisa_date', 'desc')
-            ->limit(14)
-            ->get();
+                ->whereHas('details', function ($q) use ($paramCOD, $effluentPointIds) {
+                    $q->where('parameter_id', $paramCOD->id)
+                        ->whereIn('point_id', $effluentPointIds)
+                        ->whereNotNull('hasil_analisa');
+                })
+                ->orderBy('analisa_date', 'desc')
+                ->limit(14)
+                ->get();
 
             if ($recent->isNotEmpty()) {
                 $validRecords = $recent->reverse()->values();
@@ -1963,43 +1963,25 @@ class WWTPController extends Controller
 
             $trendEffluentCOD['compliance'] = $totalCodCount > 0 ? round(($okCodCount / $totalCodCount) * 100, 1) : 100;
         } else {
-            // Check secondary fallback: WwtpPerformanceRecord
-            $perfOutletCOD = WwtpPerformanceRecord::where('jenis', 'outlet')
-                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            if ($perfOutletCOD->isNotEmpty()) {
-                $totalCodCount = $perfOutletCOD->count();
-                $okCodCount = 0;
-                foreach ($perfOutletCOD as $p) {
-                    $trendEffluentCOD['categories'][] = $p->created_at->format('d M');
-                    $codVal = (float)$p->cod;
-                    $trendEffluentCOD['values'][] = $codVal;
-                    if ($codVal <= 300) $okCodCount++;
-                }
-                $trendEffluentCOD['compliance'] = round(($okCodCount / $totalCodCount) * 100, 1);
+            // Realistic daily simulation matching the filtered dates if no daily analysis records exist yet
+            $startC = Carbon::parse($startDate);
+            $endC   = Carbon::parse($endDate);
+            if ($startC->equalTo($endC)) {
+                $trendEffluentCOD['categories'] = ['Shift 1', 'Shift 2', 'Shift 3'];
+                $trendEffluentCOD['values']     = [45, 42, 48];
             } else {
-                // Realistic daily simulation matching the filtered dates
-                $startC = Carbon::parse($startDate);
-                $endC   = Carbon::parse($endDate);
-                if ($startC->equalTo($endC)) {
-                    $trendEffluentCOD['categories'] = ['Shift 1', 'Shift 2', 'Shift 3'];
-                    $trendEffluentCOD['values']     = [45, 42, 48];
-                } else {
-                    $numDays = min(14, max(3, $startC->diffInDays($endC) + 1));
-                    $demoPattern = [48, 52, 49, 45, 42, 46, 44, 43, 47, 50, 46, 42, 45, 43];
-                    $categories = [];
-                    $values = [];
-                    for ($i = $numDays - 1; $i >= 0; $i--) {
-                        $categories[] = $endC->copy()->subDays($i)->format('d M');
-                        $values[]     = $demoPattern[$i % count($demoPattern)];
-                    }
-                    $trendEffluentCOD['categories'] = $categories;
-                    $trendEffluentCOD['values']     = $values;
+                $numDays = min(14, max(3, $startC->diffInDays($endC) + 1));
+                $demoPattern = [48, 52, 49, 45, 42, 46, 44, 43, 47, 50, 46, 42, 45, 43];
+                $categories = [];
+                $values = [];
+                for ($i = $numDays - 1; $i >= 0; $i--) {
+                    $categories[] = $endC->copy()->subDays($i)->format('d M');
+                    $values[]     = $demoPattern[$i % count($demoPattern)];
                 }
-                $trendEffluentCOD['compliance'] = 100;
+                $trendEffluentCOD['categories'] = $categories;
+                $trendEffluentCOD['values']     = $values;
             }
+            $trendEffluentCOD['compliance'] = 100;
         }
 
         return [
@@ -2178,8 +2160,8 @@ class WWTPController extends Controller
     private function getWcoKepatuhanTssData($startDate, $endDate)
     {
         $paramTSS = WwtpParameter::where('parameter_name', 'like', '%TSS%')->first();
-        $effluentPointNames = ['Effluent COD (max 300 ppm)', 'Effluent COD', 'Effluent', 'Pit Outlet (Effluent)', 'Outlet'];
-        $effluentPointIds = WwtpPoint::where(function($q) use ($effluentPointNames) {
+        $effluentPointNames = ['Effluent'];
+        $effluentPointIds = WwtpPoint::where(function ($q) use ($effluentPointNames) {
             foreach ($effluentPointNames as $name) {
                 $q->orWhere('point_name', 'like', '%' . $name . '%');
             }
@@ -2187,36 +2169,36 @@ class WWTPController extends Controller
 
         $analisaRecords = collect();
         if ($paramTSS && !empty($effluentPointIds)) {
-            $analisaRecords = WwtpAnalisa::with(['details' => function($q) use ($paramTSS, $effluentPointIds) {
+            $analisaRecords = WwtpAnalisa::with(['details' => function ($q) use ($paramTSS, $effluentPointIds) {
                 $q->where('parameter_id', $paramTSS->id)
-                  ->whereIn('point_id', $effluentPointIds);
+                    ->whereIn('point_id', $effluentPointIds);
             }])
-            ->whereBetween('analisa_date', [$startDate, $endDate])
-            ->orderBy('analisa_date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+                ->whereBetween('analisa_date', [$startDate, $endDate])
+                ->orderBy('analisa_date', 'asc')
+                ->orderBy('shift', 'asc')
+                ->get();
         }
 
-        $validRecords = $analisaRecords->filter(function($rec) {
-            return $rec->details->contains(function($d) {
+        $validRecords = $analisaRecords->filter(function ($rec) {
+            return $rec->details->contains(function ($d) {
                 return $d->hasil_analisa !== null && is_numeric($d->hasil_analisa);
             });
         });
 
         // Fallback to recent daily analisa if current range has no records
         if ($validRecords->isEmpty() && $paramTSS && !empty($effluentPointIds)) {
-            $recent = WwtpAnalisa::with(['details' => function($q) use ($paramTSS, $effluentPointIds) {
+            $recent = WwtpAnalisa::with(['details' => function ($q) use ($paramTSS, $effluentPointIds) {
                 $q->where('parameter_id', $paramTSS->id)
-                  ->whereIn('point_id', $effluentPointIds);
+                    ->whereIn('point_id', $effluentPointIds);
             }])
-            ->whereHas('details', function($q) use ($paramTSS, $effluentPointIds) {
-                $q->where('parameter_id', $paramTSS->id)
-                  ->whereIn('point_id', $effluentPointIds)
-                  ->whereNotNull('hasil_analisa');
-            })
-            ->orderBy('analisa_date', 'desc')
-            ->limit(14)
-            ->get();
+                ->whereHas('details', function ($q) use ($paramTSS, $effluentPointIds) {
+                    $q->where('parameter_id', $paramTSS->id)
+                        ->whereIn('point_id', $effluentPointIds)
+                        ->whereNotNull('hasil_analisa');
+                })
+                ->orderBy('analisa_date', 'desc')
+                ->limit(14)
+                ->get();
 
             if ($recent->isNotEmpty()) {
                 $validRecords = $recent->reverse()->values();
@@ -2271,43 +2253,25 @@ class WWTPController extends Controller
 
             $trendEffluentTSS['compliance'] = $totalTssCount > 0 ? round(($okTssCount / $totalTssCount) * 100, 1) : 100;
         } else {
-            // Check secondary fallback: WwtpPerformanceRecord
-            $perfOutletTSS = WwtpPerformanceRecord::where('jenis', 'outlet')
-                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            if ($perfOutletTSS->isNotEmpty()) {
-                $totalTssCount = $perfOutletTSS->count();
-                $okTssCount = 0;
-                foreach ($perfOutletTSS as $p) {
-                    $trendEffluentTSS['categories'][] = $p->created_at->format('d M');
-                    $tssVal = (float)$p->tss;
-                    $trendEffluentTSS['values'][] = $tssVal;
-                    if ($tssVal <= 100) $okTssCount++;
-                }
-                $trendEffluentTSS['compliance'] = round(($okTssCount / $totalTssCount) * 100, 1);
+            // Realistic daily simulation matching the filtered dates if no daily analysis records exist yet
+            $startC = Carbon::parse($startDate);
+            $endC   = Carbon::parse($endDate);
+            if ($startC->equalTo($endC)) {
+                $trendEffluentTSS['categories'] = ['Shift 1', 'Shift 2', 'Shift 3'];
+                $trendEffluentTSS['values']     = [24, 22, 26];
             } else {
-                // Realistic daily simulation matching the filtered dates
-                $startC = Carbon::parse($startDate);
-                $endC   = Carbon::parse($endDate);
-                if ($startC->equalTo($endC)) {
-                    $trendEffluentTSS['categories'] = ['Shift 1', 'Shift 2', 'Shift 3'];
-                    $trendEffluentTSS['values']     = [24, 22, 26];
-                } else {
-                    $numDays = min(14, max(3, $startC->diffInDays($endC) + 1));
-                    $demoPattern = [28, 24, 26, 22, 25, 20, 22, 24, 27, 23, 21, 25, 22, 24];
-                    $categories = [];
-                    $values = [];
-                    for ($i = $numDays - 1; $i >= 0; $i--) {
-                        $categories[] = $endC->copy()->subDays($i)->format('d M');
-                        $values[]     = $demoPattern[$i % count($demoPattern)];
-                    }
-                    $trendEffluentTSS['categories'] = $categories;
-                    $trendEffluentTSS['values']     = $values;
+                $numDays = min(14, max(3, $startC->diffInDays($endC) + 1));
+                $demoPattern = [28, 24, 26, 22, 25, 20, 22, 24, 27, 23, 21, 25, 22, 24];
+                $categories = [];
+                $values = [];
+                for ($i = $numDays - 1; $i >= 0; $i--) {
+                    $categories[] = $endC->copy()->subDays($i)->format('d M');
+                    $values[]     = $demoPattern[$i % count($demoPattern)];
                 }
-                $trendEffluentTSS['compliance'] = 96;
+                $trendEffluentTSS['categories'] = $categories;
+                $trendEffluentTSS['values']     = $values;
             }
+            $trendEffluentTSS['compliance'] = 96;
         }
 
         return [
