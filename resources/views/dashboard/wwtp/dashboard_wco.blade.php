@@ -593,18 +593,20 @@
                                 <div class="text-muted" style="font-size: 8.5px; font-weight: 700; letter-spacing: 0.5px;">
                                     TSS REMOVAL</div>
                                 <div class="fw-bold text-success font-monospace" id="remTssVal"
-                                    style="font-size: 20px; line-height: 1.1;">0%</div>
+                                    style="font-size: 18px; line-height: 1.1;">0%</div>
+                                <div class="text-muted" style="font-size: 8px;">Target ≥ 95%</div>
                             </div>
-                            <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.1);"></div>
+                            <div style="width: 1px; height: 32px; background: rgba(255,255,255,0.1);"></div>
                             <div class="text-center">
                                 <div class="text-muted" style="font-size: 8.5px; font-weight: 700; letter-spacing: 0.5px;">
                                     COD REMOVAL</div>
                                 <div class="fw-bold text-cyan font-monospace" id="remCodVal"
-                                    style="font-size: 20px; line-height: 1.1;">0%</div>
+                                    style="font-size: 18px; line-height: 1.1;">0%</div>
+                                <div class="text-muted" style="font-size: 8px;">Target ≥ 98%</div>
                             </div>
                         </div>
-                        <div class="kpi-top-sub text-success">
-                            <i class="mdi mdi-arrow-up-bold"></i> TARGET ≥ 90%
+                        <div class="kpi-top-sub text-success" id="remSubTarget">
+                            <i class="mdi mdi-target"></i> TARGET: TSS ≥ 95% | COD ≥ 98%
                         </div>
                     </div>
                 </div>
@@ -625,7 +627,7 @@
                             <div class="kpi-top-val" id="topCostM3Val">Rp 0</div>
                         </div>
                         <div class="kpi-top-sub text-success" id="topCostM3Sub">
-                            <i class="mdi mdi-arrow-down-bold"></i> TARGET ≤ Rp 3.000 / m³
+                            <i class="mdi mdi-arrow-down-bold"></i> TARGET ≤ Rp 20.000 / m³
                         </div>
                     </div>
                 </div>
@@ -736,6 +738,28 @@
                                 TANGKI</span>
                         </div>
                         <div class="wco-card-body p-2 d-flex flex-column justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2 p-1 px-2"
+                                style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div style="width: 24px; height: 24px; background: rgba(6, 182, 212, 0.12); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="mdi mdi-water-pump text-cyan" style="font-size: 14px;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 8.5px; color: #94a3b8; font-weight: 700; letter-spacing: 0.3px;">DEBIT WWTP 1</div>
+                                        <div class="fw-bold font-monospace text-cyan" id="infoDebit1Val" style="font-size: 11px;">- m³/h</div>
+                                    </div>
+                                </div>
+                                <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.08);"></div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div style="width: 24px; height: 24px; background: rgba(59, 130, 246, 0.12); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="mdi mdi-water-pump text-primary" style="font-size: 14px;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 8.5px; color: #94a3b8; font-weight: 700; letter-spacing: 0.3px;">DEBIT WWTP 2</div>
+                                        <div class="fw-bold font-monospace text-primary" id="infoDebit2Val" style="font-size: 11px;">- m³/h</div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="row g-1">
                                 <div class="col-6">
                                     <div class="info-tank-item">
@@ -1227,8 +1251,13 @@
             if (!data) return;
 
             if (data.card5_removal_outlet) {
-                document.getElementById('remTssVal').textContent = `${data.card5_removal_outlet.tss_pct}%`;
-                document.getElementById('remCodVal').textContent = `${data.card5_removal_outlet.cod_pct}%`;
+                const rem = data.card5_removal_outlet;
+                document.getElementById('remTssVal').textContent = `${rem.tss_pct}%`;
+                document.getElementById('remCodVal').textContent = `${rem.cod_pct}%`;
+                if (document.getElementById('remSubTarget')) {
+                    document.getElementById('remSubTarget').innerHTML =
+                        `<i class="mdi mdi-target"></i> ${rem.target || 'TARGET: TSS ≥ 95% | COD ≥ 98%'}`;
+                }
             }
 
             if (data.card4_equalisasi) {
@@ -1791,6 +1820,20 @@
             }
         }
 
+        // 6. Informasi WWTP (Debit 1 & Debit 2)
+        async function loadInformasiWWTPSection(start, end) {
+            const data = await fetchWcoSection('informasi_wwtp', start, end);
+            if (!data) return;
+
+            const info = data.card6_informasi_wwtp || data;
+            if (info && info.debit1 !== undefined) {
+                document.getElementById('infoDebit1Val').textContent = `${info.debit1} m³/h`;
+            }
+            if (info && info.debit2 !== undefined) {
+                document.getElementById('infoDebit2Val').textContent = `${info.debit2} m³/h`;
+            }
+        }
+
         // Master Loader: All sections triggered in parallel!
         function loadWcoData() {
             const start = document.getElementById('wcoStartDate').value;
@@ -1800,6 +1843,7 @@
             // Whichever finishes first renders immediately!
             loadBiayaSection(start, end);
             loadAnalisaSection(start, end);
+            loadInformasiWWTPSection(start, end);
             loadStatusOperasiSection(start, end);
             loadSafetyPerfSection(start, end);
             loadInfluentMingguanSection(start, end);
