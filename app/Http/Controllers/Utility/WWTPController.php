@@ -2012,22 +2012,31 @@ class WWTPController extends Controller
             });
 
             if ($matched->isNotEmpty()) {
+                $avgSv30 = (float) $matched->avg('sv30');
+                $avgMlss = (float) $matched->avg('mlss');
+                $avgSvl  = (float) $matched->avg('svl');
+                if ($avgSvl <= 0 && $avgMlss > 0) {
+                    $avgSvl = ($avgSv30 * 1000) / $avgMlss;
+                }
                 $cardPerformanceSample[] = [
                     'nama_sampel' => $sName,
-                    'sv30'   => round($matched->avg('sv30') ?: 0, 1),
-                    'mlss'   => round($matched->avg('mlss') ?: 0, 1),
-                    'svl'    => round($matched->avg('svl') ?: 0, 1),
+                    'sv30'   => round($avgSv30 ?: 0, 1),
+                    'mlss'   => round($avgMlss ?: 0, 1),
+                    'svl'    => round($avgSvl ?: 0, 1),
+                    'svi'    => round($avgSvl ?: 0, 1),
                     'do'     => round($matched->avg('do') ?: 0, 1),
                     'ph'     => round($matched->avg('ph') ?: 7.2, 1),
                     'tss'    => round($matched->avg('tss') ?: 0, 1),
                     'status' => 'OK'
                 ];
             } else {
+                $demoSvi = rand(80, 130);
                 $cardPerformanceSample[] = [
                     'nama_sampel' => $sName,
                     'sv30'   => rand(250, 450),
                     'mlss'   => rand(2800, 4200),
-                    'svl'    => rand(80, 130),
+                    'svl'    => $demoSvi,
+                    'svi'    => $demoSvi,
                     'do'     => round(rand(20, 35) / 10, 1),
                     'ph'     => round(rand(70, 76) / 10, 1),
                     'tss'    => rand(200, 350),

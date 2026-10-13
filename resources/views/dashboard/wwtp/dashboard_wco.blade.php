@@ -585,7 +585,7 @@
                             </div>
                             <div>
                                 <div class="kpi-top-label">REMOVAL EFFLUENT</div>
-                                <div class="text-muted" style="font-size: 8.5px;">INFLUENT VS EFFLUENT</div>
+                                <div class="text-muted" style="font-size: 8.5px;">HASIL REMOVAL INFLUENT SAMPAI EFFLUENT</div>
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-around my-auto py-1">
@@ -600,7 +600,7 @@
                             <div class="text-center">
                                 <div class="text-muted" style="font-size: 8.5px; font-weight: 700; letter-spacing: 0.5px;">
                                     COD REMOVAL</div>
-                                <div class="fw-bold text-cyan font-monospace" id="remCodVal"
+                                <div class="fw-bold text-success font-monospace" id="remCodVal"
                                     style="font-size: 18px; line-height: 1.1;">0%</div>
                                 <div class="text-muted" style="font-size: 8px;">Target ≥ 98%</div>
                             </div>
@@ -822,28 +822,28 @@
                     </div>
                 </div>
 
-                <!-- 10. STATUS OPERASI (User #10: PIT Garam, Buffer Pit Garam, Pit Sparta, Step 3) -->
+                <!-- 10. FLOWMETER AIR LIMBAH (User #10: PIT Garam, Buffer Pit Garam, Pit Sparta, Step 3) -->
                 <div class="col-xl-3 col-lg-6">
                     <div class="wco-card">
                         <div class="wco-card-header">
                             <h5 class="wco-card-title">
-                                <i class="mdi mdi-cog-sync text-success"></i> STATUS OPERASI
+                                <i class="mdi mdi-speedometer text-success"></i> FLOWMETER AIR LIMBAH
                             </h5>
                             <span class="badge bg-success-subtle text-success" style="font-size: 8.5px;">REALTIME
                                 PITS</span>
                         </div>
                         <div class="wco-card-body p-2" id="wcoStatusOperasiContainer">
-                            <div class="text-center p-2 text-muted" style="font-size: 10px;">Memuat status pit...</div>
+                            <div class="text-center p-2 text-muted" style="font-size: 10px;">Memuat flowmeter...</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 8. ENVIRONMENT PERFORMANCE (User #8: Influent, Outlet Anaerob, Aerob, DAF, Effluent) -->
+                <!-- 8. PERFORMANCE WWTP (User #8: Influent, Outlet Anaerob, Aerob, DAF, Effluent) -->
                 <div class="col-xl-3 col-lg-6">
                     <div class="wco-card">
                         <div class="wco-card-header">
                             <h5 class="wco-card-title">
-                                <i class="mdi mdi-leaf text-success"></i> ENVIRONMENT PERF
+                                <i class="mdi mdi-leaf text-success"></i> PERFORMANCE WWTP
                             </h5>
                             <span class="badge bg-success-subtle text-success" style="font-size: 8.5px;">5 TAHAPAN</span>
                         </div>
@@ -986,12 +986,12 @@
             <!-- ROW 3: 4 CARDS (PERFORMANCE SAMPEL, SLUDGE, TOP 5 RISK, KEPATUHAN TSS) -->
             <!-- ======================================================= -->
             <div class="row g-2 mb-2">
-                <!-- 13. PERFORMANCE SAMPEL (User #13: Aerasi 1-6 & Lumpur Aktif) -->
+                <!-- 13. PERFORMANCE AERASI DAN LUMPUR AKTIF (User #13: Aerasi 1-6 & Lumpur Aktif) -->
                 <div class="col-xl-3 col-lg-6">
                     <div class="wco-card">
                         <div class="wco-card-header">
                             <h5 class="wco-card-title">
-                                <i class="mdi mdi-bacteria text-cyan"></i> PERFORMANCE SAMPEL
+                                <i class="mdi mdi-bacteria text-cyan"></i> PERFORMANCE AERASI DAN LUMPUR AKTIF
                             </h5>
                             <span class="badge bg-info-subtle text-info" style="font-size: 8.5px;">AERASI 1-6 & LA</span>
                         </div>
@@ -1003,6 +1003,7 @@
                                             <th>Sampel</th>
                                             <th class="text-center">SV30</th>
                                             <th class="text-center">MLSS</th>
+                                            <th class="text-center">SVI</th>
                                             <th class="text-center">DO</th>
                                             <th class="text-center">pH</th>
                                             <th class="text-center">Status</th>
@@ -1068,20 +1069,19 @@
                     </div>
                 </div>
 
-                <!-- 16. TOP 5 RISK WWTP -> JUMLAH KOLONI (Grafik Standar 10^5) -->
+                <!-- 16. TOTAL KOLONI DALAM PENGOLAHAN BIOLOGI (Grafik Standar 10^5) -->
                 <div class="col-xl-3 col-lg-6">
                     <div class="wco-card">
                         <div class="wco-card-header">
                             <h5 class="wco-card-title">
-                                <i class="mdi mdi-alert-circle-outline text-danger"></i> TOP 5 RISK (KOLONI)
+                                <i class="mdi mdi-bacteria text-success"></i> TOTAL KOLONI DALAM PENGOLAHAN BIOLOGI
                             </h5>
-                            <span class="badge bg-danger-subtle text-danger" style="font-size: 8.5px;">STANDAR: 10⁵
-                                CFU</span>
+                            <span class="badge bg-success-subtle text-success" style="font-size: 8.5px;">STANDAR: 10⁵ CFU</span>
                         </div>
                         <div class="wco-card-body p-2">
                             <div class="wco-mini-stat">
                                 <span>Batas Standar: 1.0 × 10⁵ CFU/mL</span>
-                                <span class="badge bg-danger text-white" style="font-size: 8px;">10⁵</span>
+                                <span class="badge bg-success-subtle text-success" style="font-size: 8px;">≥ 10⁵</span>
                             </div>
                             <div class="wco-chart-box" id="chartTopRiskKoloni"></div>
                         </div>
@@ -1252,9 +1252,24 @@
 
             if (data.card5_removal_outlet) {
                 const rem = data.card5_removal_outlet;
-                document.getElementById('remTssVal').textContent = `${rem.tss_pct}%`;
-                document.getElementById('remCodVal').textContent = `${rem.cod_pct}%`;
+                const tssVal = parseFloat(rem.tss_pct) || 0;
+                const codVal = parseFloat(rem.cod_pct) || 0;
+
+                const tssEl = document.getElementById('remTssVal');
+                if (tssEl) {
+                    tssEl.textContent = `${rem.tss_pct}%`;
+                    tssEl.className = `fw-bold font-monospace ${tssVal >= 95 ? 'text-success' : 'text-danger'}`;
+                }
+
+                const codEl = document.getElementById('remCodVal');
+                if (codEl) {
+                    codEl.textContent = `${rem.cod_pct}%`;
+                    codEl.className = `fw-bold font-monospace ${codVal >= 98 ? 'text-success' : 'text-danger'}`;
+                }
+
                 if (document.getElementById('remSubTarget')) {
+                    const allOk = tssVal >= 95 && codVal >= 98;
+                    document.getElementById('remSubTarget').className = `kpi-top-sub ${allOk ? 'text-success' : 'text-danger'}`;
                     document.getElementById('remSubTarget').innerHTML =
                         `<i class="mdi mdi-target"></i> ${rem.target || 'TARGET: TSS ≥ 95% | COD ≥ 98%'}`;
                 }
@@ -1656,7 +1671,7 @@
             }
         }
 
-        // 13. Performance Sampel (Table)
+        // 13. Performance Aerasi Dan Lumpur Aktif (Table)
         async function loadPerformanceSampleSection(start, end) {
             const data = await fetchWcoSection('performance_sampel', start, end);
             if (!data) return;
@@ -1665,13 +1680,15 @@
                 const samples = data.card13_chem_storage_performance.samples || [];
                 let aerasiHtml = '';
                 samples.forEach(s => {
+                    const sviVal = (s.svi !== undefined && s.svi !== null) ? s.svi : ((s.svl !== undefined && s.svl !== null) ? s.svl : '-');
                     aerasiHtml += `
                     <tr>
                         <td class="fw-semibold text-white" style="font-size: 9.5px;">${s.nama_sampel}</td>
                         <td class="text-center font-monospace">${s.sv30}</td>
                         <td class="text-center font-monospace text-cyan">${s.mlss}</td>
+                        <td class="text-center font-monospace text-warning">${sviVal}</td>
                         <td class="text-center font-monospace text-success">${s.do}</td>
-                        <td class="text-center font-monospace text-warning">${s.ph}</td>
+                        <td class="text-center font-monospace text-muted">${s.ph}</td>
                         <td class="text-center"><span class="badge-ok">${s.status}</span></td>
                     </tr>
                 `;
@@ -1698,7 +1715,7 @@
             }
         }
 
-        // 16. Top Risk WWTP - Jumlah Koloni (Bar Chart with Standar 10^5)
+        // 16. Total Koloni dalam Pengolahan Biologi (Bar Chart with Standar 10^5)
         async function loadTopRiskKoloniSection() {
             const data = await fetchWcoSection('top_risk_koloni', '', '');
             if (!data) return;
@@ -1724,8 +1741,8 @@
                             borderRadius: 2,
                             colors: {
                                 ranges: [
-                                    { from: 0, to: 1.0, color: '#10b981' },
-                                    { from: 1.01, to: 999999, color: '#ef4444' }
+                                    { from: 0, to: 0.999, color: '#ef4444' }, // Di bawah standar = merah
+                                    { from: 1.0, to: 999999, color: '#10b981' } // Di atas/memenuhi standar = hijau
                                 ]
                             }
                         }
@@ -1767,14 +1784,14 @@
                     annotations: {
                         xaxis: [{
                             x: 1.0,
-                            borderColor: '#f59e0b',
+                            borderColor: '#10b981',
                             strokeDashArray: 3,
                             label: {
                                 text: 'Standar (10⁵)',
                                 orientation: 'horizontal',
                                 style: {
                                     color: '#ffffff',
-                                    background: '#f59e0b',
+                                    background: '#10b981',
                                     fontSize: '8px'
                                 }
                             }
@@ -1795,7 +1812,7 @@
                         y: {
                             formatter: function(val, opt) {
                                 const str = strings[opt.dataPointIndex] || (val + ' × 10⁵ CFU/mL');
-                                const status = val > 1.0 ? ' (MELEBIHI STANDAR 10⁵)' : ' (AMAN ≤ 10⁵)';
+                                const status = val >= 1.0 ? ' (MEMENUHI STANDAR ≥ 10⁵)' : ' (DI BAWAH STANDAR < 10⁵)';
                                 return str + status;
                             }
                         }
