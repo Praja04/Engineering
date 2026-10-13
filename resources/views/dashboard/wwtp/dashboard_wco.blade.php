@@ -585,7 +585,8 @@
                             </div>
                             <div>
                                 <div class="kpi-top-label">REMOVAL EFFLUENT</div>
-                                <div class="text-muted" style="font-size: 8.5px;">HASIL REMOVAL INFLUENT SAMPAI EFFLUENT</div>
+                                <div class="text-muted" style="font-size: 8.5px;">HASIL REMOVAL INFLUENT SAMPAI EFFLUENT
+                                </div>
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-around my-auto py-1">
@@ -741,22 +742,30 @@
                             <div class="d-flex align-items-center justify-content-between gap-2 mb-2 p-1 px-2"
                                 style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px;">
                                 <div class="d-flex align-items-center gap-2">
-                                    <div style="width: 24px; height: 24px; background: rgba(6, 182, 212, 0.12); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                    <div
+                                        style="width: 24px; height: 24px; background: rgba(6, 182, 212, 0.12); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
                                         <i class="mdi mdi-water-pump text-cyan" style="font-size: 14px;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size: 8.5px; color: #94a3b8; font-weight: 700; letter-spacing: 0.3px;">DEBIT WWTP 1</div>
-                                        <div class="fw-bold font-monospace text-cyan" id="infoDebit1Val" style="font-size: 11px;">- m³/h</div>
+                                        <div
+                                            style="font-size: 8.5px; color: #94a3b8; font-weight: 700; letter-spacing: 0.3px;">
+                                            DEBIT WWTP 1</div>
+                                        <div class="fw-bold font-monospace text-cyan" id="infoDebit1Val"
+                                            style="font-size: 11px;">- m³/h</div>
                                     </div>
                                 </div>
                                 <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.08);"></div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <div style="width: 24px; height: 24px; background: rgba(59, 130, 246, 0.12); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                    <div
+                                        style="width: 24px; height: 24px; background: rgba(59, 130, 246, 0.12); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
                                         <i class="mdi mdi-water-pump text-primary" style="font-size: 14px;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size: 8.5px; color: #94a3b8; font-weight: 700; letter-spacing: 0.3px;">DEBIT WWTP 2</div>
-                                        <div class="fw-bold font-monospace text-primary" id="infoDebit2Val" style="font-size: 11px;">- m³/h</div>
+                                        <div
+                                            style="font-size: 8.5px; color: #94a3b8; font-weight: 700; letter-spacing: 0.3px;">
+                                            DEBIT WWTP 2</div>
+                                        <div class="fw-bold font-monospace text-primary" id="infoDebit2Val"
+                                            style="font-size: 11px;">- m³/h</div>
                                     </div>
                                 </div>
                             </div>
@@ -1076,7 +1085,8 @@
                             <h5 class="wco-card-title">
                                 <i class="mdi mdi-bacteria text-success"></i> TOTAL KOLONI DALAM PENGOLAHAN BIOLOGI
                             </h5>
-                            <span class="badge bg-success-subtle text-success" style="font-size: 8.5px;">STANDAR: 10⁵ CFU</span>
+                            <span class="badge bg-success-subtle text-success" style="font-size: 8.5px;">STANDAR: 10⁵
+                                CFU</span>
                         </div>
                         <div class="wco-card-body p-2">
                             <div class="wco-mini-stat">
@@ -1200,7 +1210,8 @@
         // Generic section fetcher
         async function fetchWcoSection(section, start, end) {
             try {
-                const url = `{{ route('wwtp.dashboard_wco_data') }}?section=${section}&start_date=${start}&end_date=${end}`;
+                const url =
+                    `{{ route('wwtp.dashboard_wco_data') }}?section=${section}&start_date=${start}&end_date=${end}`;
                 const res = await fetch(url);
                 if (!res.ok) throw new Error(`HTTP error ${res.status}`);
                 const data = await res.json();
@@ -1269,7 +1280,8 @@
 
                 if (document.getElementById('remSubTarget')) {
                     const allOk = tssVal >= 95 && codVal >= 98;
-                    document.getElementById('remSubTarget').className = `kpi-top-sub ${allOk ? 'text-success' : 'text-danger'}`;
+                    document.getElementById('remSubTarget').className =
+                        `kpi-top-sub ${allOk ? 'text-success' : 'text-danger'}`;
                     document.getElementById('remSubTarget').innerHTML =
                         `<i class="mdi mdi-target"></i> ${rem.target || 'TARGET: TSS ≥ 95% | COD ≥ 98%'}`;
                 }
@@ -1343,17 +1355,22 @@
                 const arr = data.card7_safety_perf.daily_aggregated;
                 const categories = arr.map(a => a.tanggal);
                 const totals = arr.map(a => {
-                    return Math.round((a.pit_sparta || 0) + (a.pit_garam || 0) + (a.pit_produksi_step3 || 0) + (a.pit_domestik || 0) + (a.pit_storage || 0));
+                    return Math.round((a.pit_sparta || 0) + (a.pit_garam || 0) + (a.pit_produksi_step3 || 0) + (
+                        a.pit_domestik || 0) + (a.pit_storage || 0));
                 });
 
                 const safetyOptions = {
                     chart: {
                         type: 'bar',
                         height: 135,
-                        toolbar: { show: false },
+                        toolbar: {
+                            show: false
+                        },
                         background: 'transparent'
                     },
-                    theme: { mode: 'dark' },
+                    theme: {
+                        mode: 'dark'
+                    },
                     plotOptions: {
                         bar: {
                             columnWidth: '55%',
@@ -1365,7 +1382,7 @@
                     },
                     dataLabels: {
                         enabled: true,
-                        offsetY: -6,
+                        offsetY: -10,
                         style: {
                             fontSize: '7.5px',
                             fontWeight: 600,
@@ -1407,7 +1424,9 @@
                             right: 5
                         }
                     },
-                    tooltip: { theme: 'dark' }
+                    tooltip: {
+                        theme: 'dark'
+                    }
                 };
                 renderOrUpdateChart('chartSafetyPerf', safetyOptions);
             }
@@ -1424,10 +1443,14 @@
                     chart: {
                         type: 'area',
                         height: 135,
-                        toolbar: { show: false },
+                        toolbar: {
+                            show: false
+                        },
                         background: 'transparent'
                     },
-                    theme: { mode: 'dark' },
+                    theme: {
+                        mode: 'dark'
+                    },
                     dataLabels: {
                         enabled: true,
                         offsetY: -3,
@@ -1440,22 +1463,33 @@
                             enabled: false
                         },
                         formatter: function(val) {
-                            return val !== null && val !== undefined && val !== '' ? Number(val).toLocaleString('id-ID') : '';
+                            return val !== null && val !== undefined && val !== '' ? Number(val).toLocaleString(
+                                'id-ID') : '';
                         }
                     },
                     markers: {
                         size: 2.5,
-                        hover: { size: 4 }
+                        hover: {
+                            size: 4
+                        }
                     },
                     stroke: {
                         curve: 'smooth',
                         width: 2
                     },
                     colors: ['#06b6d4', '#10b981', '#f59e0b'],
-                    series: [
-                        { name: 'Pit Sparta', data: im.sparta || [] },
-                        { name: 'Pit Garam', data: im.garam || [] },
-                        { name: 'Step 3', data: im.step3 || [] }
+                    series: [{
+                            name: 'Pit Sparta',
+                            data: im.sparta || []
+                        },
+                        {
+                            name: 'Pit Garam',
+                            data: im.garam || []
+                        },
+                        {
+                            name: 'Step 3',
+                            data: im.step3 || []
+                        }
                     ],
                     xaxis: {
                         categories: im.categories || [],
@@ -1487,10 +1521,16 @@
                     legend: {
                         position: 'top',
                         fontSize: '8.5px',
-                        labels: { colors: '#94a3b8' },
-                        itemMargin: { horizontal: 3 }
+                        labels: {
+                            colors: '#94a3b8'
+                        },
+                        itemMargin: {
+                            horizontal: 3
+                        }
                     },
-                    tooltip: { theme: 'dark' }
+                    tooltip: {
+                        theme: 'dark'
+                    }
                 };
                 renderOrUpdateChart('chartInfluentMingguan', influentWeeklyOptions);
             }
@@ -1507,10 +1547,14 @@
                     chart: {
                         type: 'bar',
                         height: 135,
-                        toolbar: { show: false },
+                        toolbar: {
+                            show: false
+                        },
                         background: 'transparent'
                     },
-                    theme: { mode: 'dark' },
+                    theme: {
+                        mode: 'dark'
+                    },
                     plotOptions: {
                         bar: {
                             columnWidth: '50%',
@@ -1522,7 +1566,7 @@
                     },
                     dataLabels: {
                         enabled: true,
-                        offsetY: -6,
+                        offsetY: -10,
                         style: {
                             fontSize: '7.5px',
                             fontWeight: 600,
@@ -1533,9 +1577,14 @@
                         }
                     },
                     colors: ['#3b82f6', '#8b5cf6'],
-                    series: [
-                        { name: 'Full Proses', data: em.full_proses || [] },
-                        { name: 'DAF Pre', data: em.daf_pre || [] }
+                    series: [{
+                            name: 'Full Proses',
+                            data: em.full_proses || []
+                        },
+                        {
+                            name: 'DAF Pre',
+                            data: em.daf_pre || []
+                        }
                     ],
                     xaxis: {
                         categories: em.categories || [],
@@ -1567,10 +1616,16 @@
                     legend: {
                         position: 'top',
                         fontSize: '8.5px',
-                        labels: { colors: '#94a3b8' },
-                        itemMargin: { horizontal: 3 }
+                        labels: {
+                            colors: '#94a3b8'
+                        },
+                        itemMargin: {
+                            horizontal: 3
+                        }
                     },
-                    tooltip: { theme: 'dark' }
+                    tooltip: {
+                        theme: 'dark'
+                    }
                 };
                 renderOrUpdateChart('chartEffluentMingguan', effluentWeeklyOptions);
             }
@@ -1591,10 +1646,14 @@
                     chart: {
                         type: 'line',
                         height: 135,
-                        toolbar: { show: false },
+                        toolbar: {
+                            show: false
+                        },
                         background: 'transparent'
                     },
-                    theme: { mode: 'dark' },
+                    theme: {
+                        mode: 'dark'
+                    },
                     dataLabels: {
                         enabled: true,
                         offsetY: -4,
@@ -1612,7 +1671,9 @@
                     },
                     markers: {
                         size: 3,
-                        hover: { size: 5 }
+                        hover: {
+                            size: 5
+                        }
                     },
                     stroke: {
                         curve: 'smooth',
@@ -1665,7 +1726,9 @@
                             right: 5
                         }
                     },
-                    tooltip: { theme: 'dark' }
+                    tooltip: {
+                        theme: 'dark'
+                    }
                 };
                 renderOrUpdateChart('chartKepatuhanCod', codOptions);
             }
@@ -1680,7 +1743,8 @@
                 const samples = data.card13_chem_storage_performance.samples || [];
                 let aerasiHtml = '';
                 samples.forEach(s => {
-                    const sviVal = (s.svi !== undefined && s.svi !== null) ? s.svi : ((s.svl !== undefined && s.svl !== null) ? s.svl : '-');
+                    const sviVal = (s.svi !== undefined && s.svi !== null) ? s.svi : ((s.svl !== undefined && s
+                        .svl !== null) ? s.svl : '-');
                     aerasiHtml += `
                     <tr>
                         <td class="fw-semibold text-white" style="font-size: 9.5px;">${s.nama_sampel}</td>
@@ -1703,15 +1767,20 @@
             if (!data) return;
 
             if (data.card3_pengangkutan_sludge) {
-                document.getElementById('topPengangkutanSludgeVal').textContent = data.card3_pengangkutan_sludge.formatted;
+                document.getElementById('topPengangkutanSludgeVal').textContent = data.card3_pengangkutan_sludge
+                    .formatted;
             }
 
             if (data.card15_sludge_mgmt) {
                 const sl = data.card15_sludge_mgmt;
-                document.getElementById('sludgeDrainVal').textContent = Number(sl.drain_lumpur || 0).toLocaleString('id-ID');
-                document.getElementById('sludgeRunningVal').textContent = Number(sl.running_hour_scp || 0).toLocaleString('id-ID');
-                document.getElementById('sludgeHasilVal').textContent = Number(sl.hasil_lumpur || 0).toLocaleString('id-ID');
-                document.getElementById('sludgeContentVal').textContent = Number(sl.sludge_content || 0).toLocaleString('id-ID');
+                document.getElementById('sludgeDrainVal').textContent = Number(sl.drain_lumpur || 0).toLocaleString(
+                    'id-ID');
+                document.getElementById('sludgeRunningVal').textContent = Number(sl.running_hour_scp || 0)
+                    .toLocaleString('id-ID');
+                document.getElementById('sludgeHasilVal').textContent = Number(sl.hasil_lumpur || 0).toLocaleString(
+                    'id-ID');
+                document.getElementById('sludgeContentVal').textContent = Number(sl.sludge_content || 0).toLocaleString(
+                    'id-ID');
             }
         }
 
@@ -1730,19 +1799,30 @@
                     chart: {
                         type: 'bar',
                         height: 135,
-                        toolbar: { show: false },
+                        toolbar: {
+                            show: false
+                        },
                         background: 'transparent'
                     },
-                    theme: { mode: 'dark' },
+                    theme: {
+                        mode: 'dark'
+                    },
                     plotOptions: {
                         bar: {
                             horizontal: true,
                             barHeight: '55%',
                             borderRadius: 2,
                             colors: {
-                                ranges: [
-                                    { from: 0, to: 0.999, color: '#ef4444' }, // Di bawah standar = merah
-                                    { from: 1.0, to: 999999, color: '#10b981' } // Di atas/memenuhi standar = hijau
+                                ranges: [{
+                                        from: 0,
+                                        to: 0.999,
+                                        color: '#ef4444'
+                                    }, // Di bawah standar = merah
+                                    {
+                                        from: 1.0,
+                                        to: 999999,
+                                        color: '#10b981'
+                                    } // Di atas/memenuhi standar = hijau
                                 ]
                             }
                         }
@@ -1812,7 +1892,8 @@
                         y: {
                             formatter: function(val, opt) {
                                 const str = strings[opt.dataPointIndex] || (val + ' × 10⁵ CFU/mL');
-                                const status = val >= 1.0 ? ' (MEMENUHI STANDAR ≥ 10⁵)' : ' (DI BAWAH STANDAR < 10⁵)';
+                                const status = val >= 1.0 ? ' (MEMENUHI STANDAR ≥ 10⁵)' :
+                                    ' (DI BAWAH STANDAR < 10⁵)';
                                 return str + status;
                             }
                         }
@@ -1833,16 +1914,21 @@
                 if (document.getElementById('tssComplianceBadge')) {
                     const comp = tss.compliance ?? 96;
                     document.getElementById('tssComplianceBadge').textContent = comp + '% OK';
-                    document.getElementById('tssComplianceBadge').className = comp >= 90 ? 'text-success' : 'text-danger';
+                    document.getElementById('tssComplianceBadge').className = comp >= 90 ? 'text-success' :
+                        'text-danger';
                 }
                 const tssOptions = {
                     chart: {
                         type: 'line',
                         height: 135,
-                        toolbar: { show: false },
+                        toolbar: {
+                            show: false
+                        },
                         background: 'transparent'
                     },
-                    theme: { mode: 'dark' },
+                    theme: {
+                        mode: 'dark'
+                    },
                     dataLabels: {
                         enabled: true,
                         offsetY: -4,
@@ -1860,7 +1946,9 @@
                     },
                     markers: {
                         size: 3,
-                        hover: { size: 5 }
+                        hover: {
+                            size: 5
+                        }
                     },
                     stroke: {
                         curve: 'smooth',
@@ -1913,7 +2001,9 @@
                             right: 5
                         }
                     },
-                    tooltip: { theme: 'dark' }
+                    tooltip: {
+                        theme: 'dark'
+                    }
                 };
                 renderOrUpdateChart('chartKepatuhanTss', tssOptions);
             }
