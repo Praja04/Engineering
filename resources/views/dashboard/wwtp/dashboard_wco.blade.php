@@ -996,7 +996,7 @@
                             <span class="badge bg-info-subtle text-info" style="font-size: 8.5px;">AERASI 1-6 & LA</span>
                         </div>
                         <div class="wco-card-body p-0">
-                            <div class="table-responsive" style="max-height: 145px; overflow-y: auto;">
+                            <div class="table-responsive">
                                 <table class="wco-table">
                                     <thead>
                                         <tr>
