@@ -66,8 +66,9 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ request()->is('dashboard/wwtp/wco') ? 'active' : '' }}"
-                        href="{{ url('dashboard/wwtp/wco') }}">
+                        href="{{ url('dashboard/wwtp/wco') }}" target="_blank">
                         <i class="mdi mdi-shield-check me-2"></i> <span data-key="t-widgets3">WCO - SHE Dashboard</span>
+                        <i class="mdi mdi-open-in-new ms-auto" style="font-size: 11px; opacity: 0.7;"></i>
                     </a>
                 </li>
             </ul>
