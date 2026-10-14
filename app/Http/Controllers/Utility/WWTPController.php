@@ -1434,47 +1434,143 @@ class WWTPController extends Controller
                 ->first();
         }
 
-        $standards = WwtpChemicalStandard::orderBy('chemical_name', 'asc')->get();
+        $allStandards = WwtpChemicalStandard::orderBy('chemical_name', 'asc')->get();
         $totalCost = 0;
         $totalCostM3 = 0;
-        $limbahDiOlah = 0;
+        $limbahDiOlah = $biayaRecord ? (float) $biayaRecord->limbah_di_olah : 1725;
         $chemicalsUsageList = [];
 
-        if ($biayaRecord) {
-            $limbahDiOlah = (float) $biayaRecord->limbah_di_olah;
-            foreach ($standards as $std) {
-                $detail = $biayaRecord->details->firstWhere('chemical_standard_id', $std->id);
-                $qty = $detail ? (float)$detail->qty : 0;
-                $cost = $qty * (float)$std->harga_standar;
-                $costM3 = $limbahDiOlah > 0 ? $cost / $limbahDiOlah : 0;
-                $totalCost += $cost;
+        // Standar pemakaian chemical per bulan (kg/bulan) sesuai instruksi user:
+        // NaOH : 6000 kg/bulan
+        // PAC : 4000 kg/bulan
+        // BE : 0 kg/bulan
+        // C-204 : 0 kg/bulan
+        // Denfloc 945 DAF : 60 kg/bulan
+        // Denfloc 945 : 90 kg
+        // C-9040 : 50 kg/bulan
+        $targetChemicals = [
+            [
+                'name'          => 'NaOH',
+                'standard'      => 6000,
+                'aliases'       => ['NAOH', 'NaOH', 'NaOH (50%)', 'NaOH step 2'],
+                'default_price' => 4200,
+            ],
+            [
+                'name'          => 'PAC',
+                'standard'      => 4000,
+                'aliases'       => ['PAC', 'PAC powder 1', 'PAC powder 2', 'PAC powder'],
+                'default_price' => 8400,
+            ],
+            [
+                'name'          => 'BE',
+                'standard'      => 0,
+                'aliases'       => ['BE', 'BE-100'],
+                'default_price' => 7000,
+            ],
+            [
+                'name'          => 'C-204',
+                'standard'      => 0,
+                'aliases'       => ['C-204', 'C204'],
+                'default_price' => 35000,
+            ],
+            [
+                'name'          => 'Denfloc 945 DAF',
+                'standard'      => 60,
+                'aliases'       => ['Denfloc 945 DAF', 'Denfloc 260 PA'],
+                'default_price' => 60000,
+            ],
+            [
+                'name'          => 'Denfloc 945',
+                'standard'      => 90,
+                'aliases'       => ['Denfloc 945'],
+                'default_price' => 60000,
+            ],
+            [
+                'name'          => 'C-9040',
+                'standard'      => 50,
+                'aliases'       => ['C-9040', 'C9040', 'C-9040 step 1', 'C-9040 step 2'],
+                'default_price' => 62000,
+            ],
+        ];
 
-                $chemicalsUsageList[] = [
-                    'chemical_name' => $std->chemical_name,
-                    'qty'           => $qty,
-                    'cost'          => $cost,
-                    'cost_m3'       => round($costM3, 2),
-                    'price'         => (float)$std->harga_standar,
-                    'status'        => $qty > 0 ? 'AMAN' : 'STANDBY'
-                ];
+        $matchedStandardIds = [];
+
+        foreach ($targetChemicals as $target) {
+            $qty = 0;
+            $price = $target['default_price'];
+
+            // 1. Cari dari detail biaya chemical bulanan jika ada
+            if ($biayaRecord && $biayaRecord->details) {
+                $detail = $biayaRecord->details->first(function ($d) use ($target) {
+                    if (!$d->chemicalStandard) return false;
+                    $cName = trim($d->chemicalStandard->chemical_name);
+                    foreach ($target['aliases'] as $alias) {
+                        if (strcasecmp($cName, $alias) === 0 || stripos($cName, $alias) !== false) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+
+                if ($detail) {
+                    $qty = (float) $detail->qty;
+                    $matchedStandardIds[] = $detail->chemical_standard_id;
+                    if ($detail->chemicalStandard && (float)$detail->chemicalStandard->harga_standar > 0) {
+                        $price = (float)$detail->chemicalStandard->harga_standar;
+                    }
+                }
             }
-            $totalCostM3 = $limbahDiOlah > 0 ? $totalCost / $limbahDiOlah : 0;
-        } else {
-            $totalCost = 45250000;
-            $limbahDiOlah = 18500;
-            $totalCostM3 = 2445.94;
-            $demoStandards = ['PAC powder 1' => 1250, 'Polymer' => 42, 'NaOH (50%)' => 310, 'H2SO4' => 280, 'FeCl3' => 360, 'Chlorine' => 18];
-            foreach ($demoStandards as $name => $qty) {
-                $chemicalsUsageList[] = [
-                    'chemical_name' => $name,
-                    'qty'           => $qty,
-                    'cost'          => $qty * 12500,
-                    'cost_m3'       => round(($qty * 12500) / $limbahDiOlah, 2),
-                    'price'         => 12500,
-                    'status'        => 'AMAN'
-                ];
+
+            // 2. Jika harga belum didapat dari detail, cari di master standard
+            $stdModel = $allStandards->first(function ($s) use ($target) {
+                foreach ($target['aliases'] as $alias) {
+                    if (strcasecmp($s->chemical_name, $alias) === 0 || stripos($s->chemical_name, $alias) !== false) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            if ($stdModel) {
+                $matchedStandardIds[] = $stdModel->id;
+                if ((float)$stdModel->harga_standar > 0) {
+                    $price = (float)$stdModel->harga_standar;
+                }
+            }
+
+            $cost = $qty * $price;
+            $costM3 = $limbahDiOlah > 0 ? ($cost / $limbahDiOlah) : 0;
+            $totalCost += $cost;
+
+            // Standar: di atas merah (OVER), di bawah / sama hijau (AMAN)
+            $isOver = ($qty > $target['standard']);
+            $status = $isOver ? 'OVER' : 'AMAN';
+
+            $chemicalsUsageList[] = [
+                'chemical_name' => $target['name'],
+                'qty'           => $qty,
+                'standard'      => $target['standard'],
+                'standard_text' => number_format($target['standard'], 0, ',', '.') . ' kg',
+                'cost'          => $cost,
+                'cost_m3'       => round($costM3, 2),
+                'price'         => $price,
+                'is_over'       => $isOver,
+                'status'        => $status,
+            ];
+        }
+
+        // Tambahan biaya dari chemical lain di record jika ada yang belum tercover di atas
+        if ($biayaRecord && $biayaRecord->details) {
+            foreach ($biayaRecord->details as $d) {
+                if (in_array($d->chemical_standard_id, $matchedStandardIds)) continue;
+                if ($d->chemicalStandard) {
+                    $cPrice = (float) $d->chemicalStandard->harga_standar;
+                    $cQty   = (float) $d->qty;
+                    $totalCost += ($cQty * $cPrice);
+                }
             }
         }
+
+        $totalCostM3 = $limbahDiOlah > 0 ? ($totalCost / $limbahDiOlah) : 0;
 
         return [
             'card1_biaya_per_m3' => [
@@ -1486,8 +1582,10 @@ class WWTPController extends Controller
             'card2_total_cost_chem' => [
                 'value'     => $totalCost,
                 'formatted' => 'Rp ' . number_format($totalCost, 0, ',', '.'),
-                'target'    => 'TOTAL / BULAN',
-                'trend_up'  => true
+                'standard'  => 45000000,
+                'target'    => 'STANDAR ≤ Rp 45 Jt',
+                'is_over'   => ($totalCost > 45000000),
+                'trend_up'  => ($totalCost > 45000000)
             ],
             'card9_chem_consumption' => $chemicalsUsageList,
         ];
@@ -1551,17 +1649,65 @@ class WWTPController extends Controller
         };
 
         $envStages = [
-            'Influent'       => ['ph' => $getAnalisaVal($paramPH?->id, 'Influent', 7.2), 'tss' => $getAnalisaVal($paramTSS?->id, 'Influent', 245.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Influent', 860.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Influent', 1.8)],
-            'Outlet Anaerob' => ['ph' => $getAnalisaVal($paramPH?->id, 'Outlet Anaerob', 7.5), 'tss' => $getAnalisaVal($paramTSS?->id, 'Outlet Anaerob', 125.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Outlet Anaerob', 380.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Outlet Anaerob', 1.6)],
-            'Aerob'          => ['ph' => $getAnalisaVal($paramPH?->id, 'Aerob', 7.4), 'tss' => $getAnalisaVal($paramTSS?->id, 'Aerob', 82.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Aerob', 165.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Aerob', 1.4)],
-            'Outlet DAF'     => ['ph' => $getAnalisaVal($paramPH?->id, 'Outlet DAF', 7.1), 'tss' => $getAnalisaVal($paramTSS?->id, 'Outlet DAF', 42.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Outlet DAF', 88.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Outlet DAF', 1.2)],
-            'Effluent'       => ['ph' => $getAnalisaVal($paramPH?->id, 'Effluent', 7.2), 'tss' => $getAnalisaVal($paramTSS?->id, 'Effluent', 22.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Effluent', 48.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Effluent', 1.0)],
+            'Influent'       => ['ph' => $getAnalisaVal($paramPH?->id, 'Influent', 7.2), 'tss' => $getAnalisaVal($paramTSS?->id, 'Influent', 450.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Influent', 2200.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Influent', 1.8)],
+            'Outlet Anaerob' => ['ph' => $getAnalisaVal($paramPH?->id, 'Outlet Anaerob', 7.5), 'tss' => $getAnalisaVal($paramTSS?->id, 'Outlet Anaerob', 85.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Outlet Anaerob', 380.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Outlet Anaerob', 1.6)],
+            'Aerob'          => ['ph' => $getAnalisaVal($paramPH?->id, 'Aerob', 7.4), 'tss' => $getAnalisaVal($paramTSS?->id, 'Aerob', 16.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Aerob', 70.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Aerob', 1.4)],
+            'Outlet DAF'     => ['ph' => $getAnalisaVal($paramPH?->id, 'Outlet DAF', 7.1), 'tss' => $getAnalisaVal($paramTSS?->id, 'Outlet DAF', 12.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Outlet DAF', 55.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Outlet DAF', 1.2)],
+            'Effluent'       => ['ph' => $getAnalisaVal($paramPH?->id, 'Effluent', 7.2), 'tss' => $getAnalisaVal($paramTSS?->id, 'Effluent', 10.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Effluent', 42.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Effluent', 1.0)],
         ];
 
         $calcRem = function ($in, $out) {
             if ($in <= 0) return 95.0;
             return round((($in - $out) / $in) * 100, 1);
         };
+
+        // Formula removal: (Inlet - Outlet) / Inlet * 100
+        $calcStageRemoval = function ($inVal, $outVal) {
+            $in = (float) $inVal;
+            $out = (float) $outVal;
+            if ($in <= 0) return null;
+            return round((($in - $out) / $in) * 100, 1);
+        };
+
+        // 1. Influent (baseline)
+        $infCod = (float) $envStages['Influent']['cod'];
+        $infTss = (float) $envStages['Influent']['tss'];
+
+        // 2. Outlet Anaerob (Standar: COD >= 80%, TSS >= 10%)
+        $anCod = (float) $envStages['Outlet Anaerob']['cod'];
+        $anTss = (float) $envStages['Outlet Anaerob']['tss'];
+        $remCodAnaerob = $calcStageRemoval($infCod, $anCod);
+        $remTssAnaerob = $calcStageRemoval($infTss, $anTss);
+        $codOkAnaerob  = ($remCodAnaerob !== null && $remCodAnaerob >= 80);
+        $tssOkAnaerob  = ($remTssAnaerob !== null && $remTssAnaerob >= 10);
+        $statusAnaerob = ($codOkAnaerob && $tssOkAnaerob) ? 'OK' : 'NOK';
+
+        // 3. Aerob (Standar: COD >= 80%, TSS >= 50%)
+        $aeroCod = (float) $envStages['Aerob']['cod'];
+        $aeroTss = (float) $envStages['Aerob']['tss'];
+        $remCodAerob = $calcStageRemoval($anCod, $aeroCod);
+        $remTssAerob = $calcStageRemoval($anTss, $aeroTss);
+        $codOkAerob  = ($remCodAerob !== null && $remCodAerob >= 80);
+        $tssOkAerob  = ($remTssAerob !== null && $remTssAerob >= 50);
+        $statusAerob = ($codOkAerob && $tssOkAerob) ? 'OK' : 'NOK';
+
+        // 4. Outlet DAF (Standar: COD >= 10%, TSS >= 70%)
+        $dafCod = (float) $envStages['Outlet DAF']['cod'];
+        $dafTss = (float) $envStages['Outlet DAF']['tss'];
+        $remCodDaf = $calcStageRemoval($aeroCod, $dafCod);
+        $remTssDaf = $calcStageRemoval($aeroTss, $dafTss);
+        $codOkDaf  = ($remCodDaf !== null && $remCodDaf >= 10);
+        $tssOkDaf  = ($remTssDaf !== null && $remTssDaf >= 70);
+        $statusDaf = ($codOkDaf && $tssOkDaf) ? 'OK' : 'NOK';
+
+        // 5. Effluent (Standar Baku Mutu: COD <= 300, TSS <= 100)
+        $effCod = (float) $envStages['Effluent']['cod'];
+        $effTss = (float) $envStages['Effluent']['tss'];
+        $remCodEff = $calcStageRemoval($dafCod, $effCod);
+        $remTssEff = $calcStageRemoval($dafTss, $effTss);
+        $codOkEff  = ($effCod <= 300);
+        $tssOkEff  = ($effTss <= 100);
+        $statusEff = ($codOkEff && $tssOkEff) ? 'OK' : 'NOK';
 
         return [
             'card4_equalisasi' => [
@@ -1584,11 +1730,86 @@ class WWTPController extends Controller
                 'ec'  => $envStages['Effluent']['ec'],
             ],
             'card8_env_perf' => [
-                ['parameter' => 'Influent',       'satuan' => 'mg/L', 'ph' => $envStages['Influent']['ph'],       'tss' => $envStages['Influent']['tss'],       'cod' => $envStages['Influent']['cod'],       'ec' => $envStages['Influent']['ec'],       'baku_mutu' => '-',   'status' => 'OK'],
-                ['parameter' => 'Outlet Anaerob', 'satuan' => 'mg/L', 'ph' => $envStages['Outlet Anaerob']['ph'], 'tss' => $envStages['Outlet Anaerob']['tss'], 'cod' => $envStages['Outlet Anaerob']['cod'], 'ec' => $envStages['Outlet Anaerob']['ec'], 'baku_mutu' => '-',   'status' => 'OK'],
-                ['parameter' => 'Aerob (Aerasi)', 'satuan' => 'mg/L', 'ph' => $envStages['Aerob']['ph'],          'tss' => $envStages['Aerob']['tss'],          'cod' => $envStages['Aerob']['cod'],          'ec' => $envStages['Aerob']['ec'],          'baku_mutu' => '-',   'status' => 'OK'],
-                ['parameter' => 'Outlet DAF',     'satuan' => 'mg/L', 'ph' => $envStages['Outlet DAF']['ph'],     'tss' => $envStages['Outlet DAF']['tss'],     'cod' => $envStages['Outlet DAF']['cod'],     'ec' => $envStages['Outlet DAF']['ec'],     'baku_mutu' => '-',   'status' => 'OK'],
-                ['parameter' => 'Effluent Final', 'satuan' => 'mg/L', 'ph' => $envStages['Effluent']['ph'],       'tss' => $envStages['Effluent']['tss'],       'cod' => $envStages['Effluent']['cod'],       'ec' => $envStages['Effluent']['ec'],       'baku_mutu' => '300', 'status' => 'OK'],
+                [
+                    'parameter'   => 'Influent',
+                    'satuan'      => 'mg/L',
+                    'ph'          => $envStages['Influent']['ph'],
+                    'tss'         => $envStages['Influent']['tss'],
+                    'cod'         => $envStages['Influent']['cod'],
+                    'ec'          => $envStages['Influent']['ec'],
+                    'rem_cod'     => '-',
+                    'rem_tss'     => '-',
+                    'rem_cod_val' => null,
+                    'rem_tss_val' => null,
+                    'cod_ok'      => true,
+                    'tss_ok'      => true,
+                    'standard'    => 'Baseline',
+                    'status'      => 'OK',
+                ],
+                [
+                    'parameter'   => 'Outlet Anaerob',
+                    'satuan'      => 'mg/L',
+                    'ph'          => $envStages['Outlet Anaerob']['ph'],
+                    'tss'         => $envStages['Outlet Anaerob']['tss'],
+                    'cod'         => $envStages['Outlet Anaerob']['cod'],
+                    'ec'          => $envStages['Outlet Anaerob']['ec'],
+                    'rem_cod'     => $remCodAnaerob !== null ? $remCodAnaerob . '%' : '-',
+                    'rem_tss'     => $remTssAnaerob !== null ? $remTssAnaerob . '%' : '-',
+                    'rem_cod_val' => $remCodAnaerob,
+                    'rem_tss_val' => $remTssAnaerob,
+                    'cod_ok'      => $codOkAnaerob,
+                    'tss_ok'      => $tssOkAnaerob,
+                    'standard'    => 'COD ≥ 80% | TSS ≥ 10%',
+                    'status'      => $statusAnaerob,
+                ],
+                [
+                    'parameter'   => 'Aerob',
+                    'satuan'      => 'mg/L',
+                    'ph'          => $envStages['Aerob']['ph'],
+                    'tss'         => $envStages['Aerob']['tss'],
+                    'cod'         => $envStages['Aerob']['cod'],
+                    'ec'          => $envStages['Aerob']['ec'],
+                    'rem_cod'     => $remCodAerob !== null ? $remCodAerob . '%' : '-',
+                    'rem_tss'     => $remTssAerob !== null ? $remTssAerob . '%' : '-',
+                    'rem_cod_val' => $remCodAerob,
+                    'rem_tss_val' => $remTssAerob,
+                    'cod_ok'      => $codOkAerob,
+                    'tss_ok'      => $tssOkAerob,
+                    'standard'    => 'COD ≥ 80% | TSS ≥ 50%',
+                    'status'      => $statusAerob,
+                ],
+                [
+                    'parameter'   => 'Outlet DAF',
+                    'satuan'      => 'mg/L',
+                    'ph'          => $envStages['Outlet DAF']['ph'],
+                    'tss'         => $envStages['Outlet DAF']['tss'],
+                    'cod'         => $envStages['Outlet DAF']['cod'],
+                    'ec'          => $envStages['Outlet DAF']['ec'],
+                    'rem_cod'     => $remCodDaf !== null ? $remCodDaf . '%' : '-',
+                    'rem_tss'     => $remTssDaf !== null ? $remTssDaf . '%' : '-',
+                    'rem_cod_val' => $remCodDaf,
+                    'rem_tss_val' => $remTssDaf,
+                    'cod_ok'      => $codOkDaf,
+                    'tss_ok'      => $tssOkDaf,
+                    'standard'    => 'COD ≥ 10% | TSS ≥ 70%',
+                    'status'      => $statusDaf,
+                ],
+                [
+                    'parameter'   => 'Effluent',
+                    'satuan'      => 'mg/L',
+                    'ph'          => $envStages['Effluent']['ph'],
+                    'tss'         => $envStages['Effluent']['tss'],
+                    'cod'         => $envStages['Effluent']['cod'],
+                    'ec'          => $envStages['Effluent']['ec'],
+                    'rem_cod'     => $remCodEff !== null ? $remCodEff . '%' : '-',
+                    'rem_tss'     => $remTssEff !== null ? $remTssEff . '%' : '-',
+                    'rem_cod_val' => $remCodEff,
+                    'rem_tss_val' => $remTssEff,
+                    'cod_ok'      => $codOkEff,
+                    'tss_ok'      => $tssOkEff,
+                    'standard'    => 'COD ≤ 300 | TSS ≤ 100',
+                    'status'      => $statusEff,
+                ],
             ],
             'envStages' => $envStages,
         ];
@@ -1604,52 +1825,92 @@ class WWTPController extends Controller
             }
         }
 
-        $calcPitVol = function ($field) use ($influentRecords) {
-            if ($influentRecords->isEmpty()) return rand(15, 45) . ' m³';
+        $uniqueDays = $influentRecords->pluck('tanggal')->unique()->count() ?: 1;
+
+        $calcPitVol = function ($field, $fallbackVal) use ($influentRecords, $uniqueDays) {
+            if ($influentRecords->isEmpty()) {
+                return [
+                    'total' => $fallbackVal,
+                    'daily' => $fallbackVal,
+                    'formatted' => $fallbackVal . ' m³/day'
+                ];
+            }
             $val = (float) $influentRecords->reduce(function ($carry, $rec) use ($field) {
                 $awalField = $field . '_awal';
                 return $carry + max(0, (float)($rec->$field ?? 0) - (float)($rec->$awalField ?? 0));
             }, 0);
-            return round($val ?: rand(20, 50), 1) . ' m³';
+
+            $daily = $uniqueDays > 0 ? ($val / $uniqueDays) : $val;
+            $dailyRounded = round($daily, 1);
+            return [
+                'total'     => round($val, 1),
+                'daily'     => $dailyRounded,
+                'formatted' => $dailyRounded . ' m³/day'
+            ];
         };
 
-        $phInfluent = $envStages['Influent']['ph'] ?? '7.2';
-        $tssInfluent = $envStages['Influent']['tss'] ?? '245';
-
-        $cardStatusOperasi = [
+        // 1. Pit Sparta (Std: 50 m³/day)
+        // 2. Pit Garam (Std: 50 m³/day)
+        // 3. Pit Domestic (Std: 2 m³/day)
+        // 4. Pit Produksi Step (Std: 48 m³/day)
+        // 5. Pit Outlet (Std: 50 m³/day)
+        $pitsConfig = [
             [
-                'name'    => 'PIT Garam',
-                'volume'  => $calcPitVol('pit_garam'),
-                'subtext' => 'pH: ' . $phInfluent . ' | TSS: ' . $tssInfluent,
-                'status'  => 'NORMAL',
-                'badge'   => 'success',
-                'img'     => asset('assets/images/wwtp/dashboard/PIT GARAM.png')
+                'name'     => 'Pit Sparta',
+                'field'    => 'pit_sparta',
+                'standard' => 50,
+                'fallback' => 35.0,
+                'img'      => asset('assets/images/wwtp/dashboard/PIT SPARTA.png'),
             ],
             [
-                'name'    => 'Buffer Pit Garam',
-                'volume'  => 'Buffer Steady',
-                'subtext' => 'Ready / Active Buffer',
-                'status'  => 'ACTIVE',
-                'badge'   => 'success',
-                'img'     => asset('assets/images/wwtp/dashboard/BUFFER PIT GARAM.png')
+                'name'     => 'Pit Garam',
+                'field'    => 'pit_garam',
+                'standard' => 50,
+                'fallback' => 28.5,
+                'img'      => asset('assets/images/wwtp/dashboard/PIT GARAM.png'),
             ],
             [
-                'name'    => 'Pit Sparta',
-                'volume'  => $calcPitVol('pit_sparta'),
-                'subtext' => 'Influent Raw Equal',
-                'status'  => 'NORMAL',
-                'badge'   => 'success',
-                'img'     => asset('assets/images/wwtp/dashboard/PIT SPARTA.png')
+                'name'     => 'Pit Domestic',
+                'field'    => 'pit_domestik',
+                'standard' => 2,
+                'fallback' => 1.2,
+                'img'      => asset('assets/images/wwtp/dashboard/EQUALISASI.png'),
             ],
             [
-                'name'    => 'Step 3',
-                'volume'  => $calcPitVol('pit_produksi_step3'),
-                'subtext' => 'Pumping & Clarifier Feed',
-                'status'  => 'NORMAL',
-                'badge'   => 'success',
-                'img'     => asset('assets/images/wwtp/dashboard/STEP 3.png')
-            ]
+                'name'     => 'Pit Produksi Step',
+                'field'    => 'pit_produksi_step3',
+                'standard' => 48,
+                'fallback' => 38.0,
+                'img'      => asset('assets/images/wwtp/dashboard/STEP 3.png'),
+            ],
+            [
+                'name'     => 'Pit Outlet',
+                'field'    => 'pit_outlet',
+                'standard' => 50,
+                'fallback' => 41.5,
+                'img'      => asset('assets/images/wwtp/dashboard/OUTLET.png'),
+            ],
         ];
+
+        $cardStatusOperasi = [];
+        foreach ($pitsConfig as $cfg) {
+            $data = $calcPitVol($cfg['field'], $cfg['fallback']);
+            $isOver = $data['daily'] > $cfg['standard'];
+            $subtext = 'Std: max ' . $cfg['standard'] . ' m³/day' . ($uniqueDays > 1 ? ' (' . $uniqueDays . ' hr)' : '');
+
+            $cardStatusOperasi[] = [
+                'name'      => $cfg['name'],
+                'volume'    => $data['formatted'],
+                'daily_val' => $data['daily'],
+                'total_val' => $data['total'],
+                'standard'  => $cfg['standard'],
+                'subtext'   => $subtext,
+                'status'    => $isOver ? 'OVER' : 'NORMAL',
+                'is_over'   => $isOver,
+                'badge'     => $isOver ? 'danger' : 'success',
+                'img'       => $cfg['img'],
+            ];
+        }
 
         return [
             'card10_status_operasi' => $cardStatusOperasi
@@ -1658,98 +1919,135 @@ class WWTPController extends Controller
 
     private function getWcoSafetyPerfData($startDate, $endDate)
     {
-        $influentRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])->orderBy('tanggal', 'desc')->get();
+        $influentRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('shift', 'asc')
+            ->get();
+
         if ($influentRecords->isEmpty()) {
             $latestRecords = WwtpInfluentHarian::orderBy('tanggal', 'desc')->limit(30)->get();
             if ($latestRecords->isNotEmpty()) {
-                $influentRecords = $latestRecords;
+                $influentRecords = $latestRecords->reverse()->values();
             }
         }
 
+        $categories      = [];
+        $spartaSeries    = [];
+        $garamSeries     = [];
+        $totalSparta     = 0;
+        $totalGaram      = 0;
         $dailyAggregated = [];
-        $dailyDistribution = [
-            'Pit Sparta'          => 0,
-            'Pit Garam'           => 0,
-            'Pit Domestik'        => 0,
-            'Pit Produksi Step 3' => 0,
-            'Pit Storage'         => 0,
-            'Pit Proses WWTP 2'   => 0,
-            'Pit Outlet'          => 0,
-            'Pit Boiler'          => 0,
-        ];
 
         if ($influentRecords->isNotEmpty()) {
-            $groupedByDate = $influentRecords->groupBy('tanggal')->sortKeys();
-            foreach ($groupedByDate as $date => $recs) {
-                $calcPitDiff = function ($field) use ($recs) {
-                    return (float) $recs->reduce(function ($carry, $rec) use ($field) {
-                        $awalField = $field . '_awal';
-                        $diff = (float)($rec->$field ?? 0) - (float)($rec->$awalField ?? 0);
-                        return $carry + max(0, $diff);
+            $uniqueDates = $influentRecords->pluck('tanggal')->unique();
+            if ($uniqueDates->count() === 1 && $influentRecords->count() > 1) {
+                // Single date with multiple shifts: breakdown by Shift
+                foreach ($influentRecords as $rec) {
+                    $shiftLabel = $rec->shift ? (str_starts_with(strtolower($rec->shift), 'shift') ? 'Shift ' . substr($rec->shift, 5) : ucfirst($rec->shift)) : 'Shift';
+                    $sVal = max(0, (float)($rec->pit_sparta ?? 0) - (float)($rec->pit_sparta_awal ?? 0));
+                    $gVal = max(0, (float)($rec->pit_garam ?? 0) - (float)($rec->pit_garam_awal ?? 0));
+
+                    $categories[]   = $shiftLabel;
+                    $spartaSeries[] = round($sVal, 1);
+                    $garamSeries[]  = round($gVal, 1);
+                    $totalSparta   += $sVal;
+                    $totalGaram    += $gVal;
+
+                    $dailyAggregated[] = [
+                        'tanggal'    => $shiftLabel,
+                        'pit_sparta' => round($sVal, 1),
+                        'pit_garam'  => round($gVal, 1),
+                    ];
+                }
+            } else {
+                // Group by daily date
+                $groupedByDate = $influentRecords->groupBy('tanggal');
+                foreach ($groupedByDate as $date => $recs) {
+                    $sDay = $recs->reduce(function ($carry, $rec) {
+                        return $carry + max(0, (float)($rec->pit_sparta ?? 0) - (float)($rec->pit_sparta_awal ?? 0));
                     }, 0);
-                };
+                    $gDay = $recs->reduce(function ($carry, $rec) {
+                        return $carry + max(0, (float)($rec->pit_garam ?? 0) - (float)($rec->pit_garam_awal ?? 0));
+                    }, 0);
 
-                $sparta   = $calcPitDiff('pit_sparta');
-                $garam    = $calcPitDiff('pit_garam');
-                $domestik = $calcPitDiff('pit_domestik');
-                $step3    = $calcPitDiff('pit_produksi_step3');
-                $storage  = $calcPitDiff('pit_storage');
-                $proses2  = $calcPitDiff('pit_proses_wwtp2');
-                $outlet   = $calcPitDiff('pit_outlet');
-                $boiler   = $calcPitDiff('pit_boiler');
+                    $fmtDate = Carbon::parse($date)->format('d M');
+                    $categories[]   = $fmtDate;
+                    $spartaSeries[] = round($sDay, 1);
+                    $garamSeries[]  = round($gDay, 1);
+                    $totalSparta   += $sDay;
+                    $totalGaram    += $gDay;
 
-                $dailyAggregated[] = [
-                    'tanggal'            => Carbon::parse($date)->format('d M'),
-                    'pit_sparta'          => round($sparta, 2),
-                    'pit_garam'           => round($garam, 2),
-                    'pit_domestik'        => round($domestik, 2),
-                    'pit_produksi_step3' => round($step3, 2),
-                    'pit_storage'         => round($storage, 2),
-                    'pit_proses_wwtp2'   => round($proses2, 2),
-                    'pit_outlet'          => round($outlet, 2),
-                    'pit_boiler'          => round($boiler, 2),
-                ];
-
-                $dailyDistribution['Pit Sparta']          += $sparta;
-                $dailyDistribution['Pit Garam']           += $garam;
-                $dailyDistribution['Pit Domestik']        += $domestik;
-                $dailyDistribution['Pit Produksi Step 3'] += $step3;
-                $dailyDistribution['Pit Storage']         += $storage;
-                $dailyDistribution['Pit Proses WWTP 2']   += $proses2;
-                $dailyDistribution['Pit Outlet']          += $outlet;
-                $dailyDistribution['Pit Boiler']          += $boiler;
+                    $dailyAggregated[] = [
+                        'tanggal'    => $fmtDate,
+                        'pit_sparta' => round($sDay, 1),
+                        'pit_garam'  => round($gDay, 1),
+                    ];
+                }
             }
         } else {
-            for ($d = 6; $d >= 0; $d--) {
-                $dt = Carbon::now()->subDays($d);
-                $dailyAggregated[] = [
-                    'tanggal'            => $dt->format('d M'),
-                    'pit_sparta'          => rand(20, 35),
-                    'pit_garam'           => rand(10, 20),
-                    'pit_domestik'        => rand(5, 12),
-                    'pit_produksi_step3' => rand(15, 28),
-                    'pit_storage'         => rand(8, 15),
-                    'pit_proses_wwtp2'   => rand(10, 18),
-                    'pit_outlet'          => rand(25, 40),
-                    'pit_boiler'          => rand(5, 10),
-                ];
+            // Realistic simulation matching date range when no data exists yet
+            $startC = Carbon::parse($startDate);
+            $endC   = Carbon::parse($endDate);
+
+            if ($startC->equalTo($endC)) {
+                $categories   = ['Shift 1', 'Shift 2', 'Shift 3'];
+                $spartaSeries = [12.5, 14.2, 11.0];
+                $garamSeries  = [9.2, 11.5, 8.8];
+                $totalSparta  = array_sum($spartaSeries);
+                $totalGaram   = array_sum($garamSeries);
+
+                foreach ($categories as $idx => $sh) {
+                    $dailyAggregated[] = [
+                        'tanggal'    => $sh,
+                        'pit_sparta' => $spartaSeries[$idx],
+                        'pit_garam'  => $garamSeries[$idx],
+                    ];
+                }
+            } else {
+                $numDays = min(14, max(3, $startC->diffInDays($endC) + 1));
+                $spartaPattern = [32, 38, 29, 41, 35, 44, 39, 36, 42, 33, 40, 37, 45, 34];
+                $garamPattern  = [22, 28, 25, 30, 26, 32, 29, 24, 27, 31, 23, 26, 28, 25];
+
+                for ($i = $numDays - 1; $i >= 0; $i--) {
+                    $dt = $endC->copy()->subDays($i);
+                    $fmtDate = $dt->format('d M');
+                    $sVal = (float)$spartaPattern[$i % count($spartaPattern)];
+                    $gVal = (float)$garamPattern[$i % count($garamPattern)];
+
+                    $categories[]   = $fmtDate;
+                    $spartaSeries[] = $sVal;
+                    $garamSeries[]  = $gVal;
+                    $totalSparta   += $sVal;
+                    $totalGaram    += $gVal;
+
+                    $dailyAggregated[] = [
+                        'tanggal'    => $fmtDate,
+                        'pit_sparta' => $sVal,
+                        'pit_garam'  => $gVal,
+                    ];
+                }
             }
-            $dailyDistribution = [
-                'Pit Sparta'          => 185,
-                'Pit Garam'           => 110,
-                'Pit Domestik'        => 65,
-                'Pit Produksi Step 3' => 140,
-                'Pit Storage'         => 75,
-                'Pit Proses WWTP 2'   => 95,
-                'Pit Outlet'          => 220,
-                'Pit Boiler'          => 45,
-            ];
         }
+
+        $count = count($spartaSeries) ?: 1;
+        $avgSparta = round($totalSparta / $count, 1);
+        $avgGaram  = round($totalGaram / $count, 1);
 
         return [
             'card7_safety_perf' => [
-                'daily_aggregated'   => $dailyAggregated,
-                'daily_distribution' => $dailyDistribution
+                'title'            => 'INFLUENT SPARTA & PIT GARAM',
+                'categories'       => $categories,
+                'sparta'           => $spartaSeries,
+                'garam'            => $garamSeries,
+                'total_sparta'     => round($totalSparta, 1),
+                'total_garam'      => round($totalGaram, 1),
+                'avg_sparta'       => $avgSparta,
+                'avg_garam'        => $avgGaram,
+                'std_sparta'       => 50,
+                'std_garam'        => 50,
+                'is_sparta_over'   => $avgSparta > 50,
+                'is_garam_over'    => $avgGaram > 50,
+                'daily_aggregated' => $dailyAggregated,
             ]
         ];
     }
@@ -2018,37 +2316,64 @@ class WWTPController extends Controller
                 if ($avgSvl <= 0 && $avgMlss > 0) {
                     $avgSvl = ($avgSv30 * 1000) / $avgMlss;
                 }
-                $cardPerformanceSample[] = [
-                    'nama_sampel' => $sName,
-                    'sv30'   => round($avgSv30 ?: 0, 1),
-                    'mlss'   => round($avgMlss ?: 0, 1),
-                    'svl'    => round($avgSvl ?: 0, 1),
-                    'svi'    => round($avgSvl ?: 0, 1),
-                    'do'     => round($matched->avg('do') ?: 0, 1),
-                    'ph'     => round($matched->avg('ph') ?: 7.2, 1),
-                    'tss'    => round($matched->avg('tss') ?: 0, 1),
-                    'status' => 'OK'
-                ];
+                $avgDo = (float) $matched->avg('do');
+                $avgPh = (float) ($matched->avg('ph') ?: 7.2);
+                $avgTss = (float) $matched->avg('tss');
+
+                $sv30Val = round($avgSv30 ?: 0, 1);
+                $mlssVal = round($avgMlss ?: 0, 1);
+                $sviVal  = round($avgSvl ?: 0, 1);
+                $doVal   = round($avgDo ?: 0, 1);
+                $phVal   = round($avgPh ?: 7.2, 1);
+                $tssVal  = round($avgTss ?: 0, 1);
             } else {
-                $demoSvi = rand(80, 130);
-                $cardPerformanceSample[] = [
-                    'nama_sampel' => $sName,
-                    'sv30'   => rand(250, 450),
-                    'mlss'   => rand(2800, 4200),
-                    'svl'    => $demoSvi,
-                    'svi'    => $demoSvi,
-                    'do'     => round(rand(20, 35) / 10, 1),
-                    'ph'     => round(rand(70, 76) / 10, 1),
-                    'tss'    => rand(200, 350),
-                    'status' => 'OK'
-                ];
+                $sv30Val = rand(320, 480);
+                $mlssVal = rand(2200, 4200);
+                $sviVal  = rand(95, 140);
+                $doVal   = round(rand(14, 20) / 10, 1);
+                $phVal   = round(rand(72, 78) / 10, 1);
+                $tssVal  = rand(200, 350);
             }
+
+            // Standar:
+            // 1. Sv'30 : 300 - 500 ml
+            // 2. Mlss : 1000 - 5000 ppm
+            // 3. SVI : 90 - 150
+            // 4. Do : 2 ppm (melebihi itu not oke -> do <= 2.0)
+            // 5. pH : 7 - 9
+            $sv30Ok = ($sv30Val >= 300 && $sv30Val <= 500);
+            $mlssOk = ($mlssVal >= 1000 && $mlssVal <= 5000);
+            $sviOk  = ($sviVal >= 90 && $sviVal <= 150);
+            $doOk   = ($doVal <= 2.0);
+            $phOk   = ($phVal >= 7.0 && $phVal <= 9.0);
+            $isOk   = ($sv30Ok && $mlssOk && $sviOk && $doOk && $phOk);
+
+            $cardPerformanceSample[] = [
+                'nama_sampel' => $sName,
+                'sv30'        => $sv30Val,
+                'mlss'        => $mlssVal,
+                'svl'         => $sviVal,
+                'svi'         => $sviVal,
+                'do'          => $doVal,
+                'ph'          => $phVal,
+                'tss'         => $tssVal,
+                'sv30_ok'     => $sv30Ok,
+                'mlss_ok'     => $mlssOk,
+                'svi_ok'      => $sviOk,
+                'do_ok'       => $doOk,
+                'ph_ok'       => $phOk,
+                'status'      => $isOk ? 'OK' : 'NOT OK',
+            ];
         }
+
+        $totalSamples = count($cardPerformanceSample);
+        $okSamples = collect($cardPerformanceSample)->where('status', 'OK')->count();
+        $complianceScore = $totalSamples > 0 ? round(($okSamples / $totalSamples) * 100) : 100;
 
         return [
             'card13_chem_storage_performance' => [
                 'samples'          => $cardPerformanceSample,
-                'compliance_score' => 96
+                'compliance_score' => $complianceScore
             ]
         ];
     }
@@ -2078,19 +2403,63 @@ class WWTPController extends Controller
         $hasilLumpurTotal = (float) $sludgeRecords->sum('hasil_lumpur');
         $sludgeContentAvg = (float) $sludgeRecords->avg('sludge_content');
 
+        $daysCount = $sludgeRecords->pluck('tanggal')->unique()->count() ?: 1;
+
+        if ($sludgeRecords->isNotEmpty()) {
+            $drainVal = round($drainLumpurTotal / $daysCount, 1);
+            $runningVal = round($runningHourScpTotal / $daysCount, 1);
+            $rawHasil = $hasilLumpurTotal / $daysCount;
+            // Jika nilai > 50 kemungkinan diinput dalam satuan kg, konversi ke ton
+            $hasilVal = $rawHasil > 50 ? round($rawHasil / 1000, 2) : round($rawHasil, 2);
+            $contentVal = round($sludgeContentAvg, 1);
+        } else {
+            $drainVal = 18.5;
+            $runningVal = 5.5;
+            $hasilVal = 1.1;
+            $contentVal = 22.5;
+        }
+
+        // Standar Sludge Management:
+        // 1. Sludge content : 20% (dibawah 20% merah, di atas 20% hijau)
+        $contentOk = ($contentVal >= 20.0);
+        // 2. Hasil Lumpur : 1.2 ton/hari (di atas standar merah, dibawah hijau)
+        $hasilOk   = ($hasilVal <= 1.2);
+        // 3. Running : 6 jam/hari (di atas standar merah, dibawah hijau)
+        $runningOk = ($runningVal <= 6.0);
+        // 4. Drain Lumpur : 19 m³/hari (di atas standar merah, dibawah hijau)
+        $drainOk   = ($drainVal <= 19.0);
+
+        // Rumus Cost Biaya Pengangkutan Sludge: Ton * 1000 * Rp 1.400 = Total Cost Rp
+        $tonaseVal = $totalTonasePengangkutan > 0 ? $totalTonasePengangkutan : 12.5;
+        $costPerKg = 1400;
+        $totalCostPengangkutan = $tonaseVal * 1000 * $costPerKg;
+
         return [
             'card3_pengangkutan_sludge' => [
-                'total_tonase' => round($totalTonasePengangkutan ?: 12.5, 2),
-                'formatted'    => number_format($totalTonasePengangkutan ?: 12.5, 2, ',', '.') . ' Ton',
-                'target'       => 'TOTAL AKUMULASI',
-                'status'       => 'TERJADWAL'
+                'total_tonase'   => round($tonaseVal, 2),
+                'formatted'      => number_format($tonaseVal, 2, ',', '.') . ' Ton',
+                'cost_per_kg'    => $costPerKg,
+                'total_cost'     => round($totalCostPengangkutan, 0),
+                'cost_formatted' => 'Rp ' . number_format($totalCostPengangkutan, 0, ',', '.'),
+                'formula'        => number_format($tonaseVal, 2, ',', '.') . ' Ton × 1000 × Rp ' . number_format($costPerKg, 0, ',', '.') . ' = Rp ' . number_format($totalCostPengangkutan, 0, ',', '.'),
+                'target'         => 'TOTAL AKUMULASI',
+                'status'         => 'TERJADWAL'
             ],
             'card15_sludge_mgmt' => [
-                'drain_lumpur'     => round($drainLumpurTotal ?: 42.5, 1),
-                'running_hour_scp' => round($runningHourScpTotal ?: 18.0, 1),
-                'hasil_lumpur'     => round($hasilLumpurTotal ?: 3250, 0),
-                'sludge_content'   => round($sludgeContentAvg ?: 78.4, 1),
-                'status'           => 'OK'
+                'drain_lumpur'       => $drainVal,
+                'drain_lumpur_std'   => '≤ 19 m³/hari',
+                'drain_lumpur_ok'    => $drainOk,
+                'running_hour_scp'   => $runningVal,
+                'running_hour_std'   => '≤ 6 jam/hari',
+                'running_hour_ok'    => $runningOk,
+                'hasil_lumpur'       => $hasilVal,
+                'hasil_lumpur_std'   => '≤ 1.2 ton/hari',
+                'hasil_lumpur_sat'   => 'Ton',
+                'hasil_lumpur_ok'    => $hasilOk,
+                'sludge_content'     => $contentVal,
+                'sludge_content_std' => '≥ 20%',
+                'sludge_content_ok'  => $contentOk,
+                'status'             => ($contentOk && $hasilOk && $runningOk && $drainOk) ? 'OK' : 'NOK'
             ]
         ];
     }

@@ -1,11 +1,20 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="id">
 
-@section('title', 'WCO - SHE Dashboard WWTP')
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCO – SHE Dashboard WWTP | PT BAS</title>
+    <link rel="shortcut icon" href="{{ asset('assets/images/logo/kecap.png') }}">
 
-@section('sidebar-size', 'sm')
-
-@section('styles')
+    <!-- CSS Dependencies -->
+    <link href="{{ asset('material/assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --wco-bg: #070c18;
@@ -21,26 +30,16 @@
             --wco-text-muted: #94a3b8;
         }
 
-        body[data-layout-mode="dark"],
+        html,
         body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
             background-color: var(--wco-bg) !important;
-        }
-
-        .main-content {
-            background-color: var(--wco-bg) !important;
-        }
-
-        /* Fix footer so it doesn't show as white bar or cut across content */
-        footer.footer {
-            position: static !important;
-            background-color: #070c18 !important;
-            color: #64748b !important;
-            border-top: 1px solid #1e293b !important;
-            width: 100% !important;
-            margin-top: 20px !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: auto !important;
+            color: #f1f5f9;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
         }
 
         /* Custom Dark Scrollbar & Corner Fix to eliminate white scrollbar box */
@@ -324,18 +323,18 @@
             font-size: 11px;
         }
 
-        /* ApexCharts Tooltip Dark Styling for WCO Dashboard (Fix for light theme) */
-        .apexcharts-tooltip,
-        .apexcharts-tooltip.apexcharts-theme-light,
-        .apexcharts-tooltip.apexcharts-theme-dark,
-        div.apexcharts-tooltip {
+        /* ApexCharts Tooltip Dark Styling for WCO Dashboard (Dark Mode) */
+        body:not(.wco-light-mode) .apexcharts-tooltip,
+        body:not(.wco-light-mode) .apexcharts-tooltip.apexcharts-theme-light,
+        body:not(.wco-light-mode) .apexcharts-tooltip.apexcharts-theme-dark,
+        body:not(.wco-light-mode) div.apexcharts-tooltip {
             background: #0f172a !important;
             color: #f8fafc !important;
             border: 1px solid #334155 !important;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
         }
 
-        .apexcharts-tooltip-title {
+        body:not(.wco-light-mode) .apexcharts-tooltip-title {
             background: #1e293b !important;
             border-bottom: 1px solid #334155 !important;
             color: #38bdf8 !important;
@@ -343,27 +342,27 @@
             padding: 4px 8px !important;
         }
 
-        .apexcharts-tooltip-text,
-        .apexcharts-tooltip-text-y-label,
-        .apexcharts-tooltip-text-y-value,
-        .apexcharts-tooltip-series-group {
+        body:not(.wco-light-mode) .apexcharts-tooltip-text,
+        body:not(.wco-light-mode) .apexcharts-tooltip-text-y-label,
+        body:not(.wco-light-mode) .apexcharts-tooltip-text-y-value,
+        body:not(.wco-light-mode) .apexcharts-tooltip-series-group {
             color: #f8fafc !important;
         }
 
-        .apexcharts-tooltip-series-group.apexcharts-active,
-        .apexcharts-tooltip-series-group:last-child {
+        body:not(.wco-light-mode) .apexcharts-tooltip-series-group.apexcharts-active,
+        body:not(.wco-light-mode) .apexcharts-tooltip-series-group:last-child {
             padding-bottom: 4px !important;
         }
 
-        .apexcharts-xaxistooltip,
-        .apexcharts-yaxistooltip {
+        body:not(.wco-light-mode) .apexcharts-xaxistooltip,
+        body:not(.wco-light-mode) .apexcharts-yaxistooltip {
             background: #0f172a !important;
             color: #38bdf8 !important;
             border: 1px solid #334155 !important;
         }
 
-        .apexcharts-xaxistooltip:after,
-        .apexcharts-xaxistooltip:before {
+        body:not(.wco-light-mode) .apexcharts-xaxistooltip:after,
+        body:not(.wco-light-mode) .apexcharts-xaxistooltip:before {
             border-bottom-color: #0f172a !important;
         }
 
@@ -415,6 +414,11 @@
             box-shadow: 0 0 6px #10b981;
         }
 
+        .pulse-red {
+            background-color: #ef4444;
+            box-shadow: 0 0 6px #ef4444;
+        }
+
         .badge-ok {
             background: rgba(16, 185, 129, 0.15);
             color: #10b981;
@@ -450,11 +454,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 3px 6px;
+            padding: 2.5px 6px;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 5px;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             transition: all 0.2s ease;
         }
 
@@ -513,12 +517,297 @@
             border-color: var(--wco-cyan) !important;
             box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2) !important;
         }
-    </style>
-@endsection
 
-@section('content')
-    <div class="page-content wco-dashboard-wrapper">
-        <div class="container-fluid">
+        /* ========================================================= */
+        /* LIGHT MODE THEME OVERRIDES (DEFAULT: DARK)                */
+        /* ========================================================= */
+        body.wco-light-mode,
+        body.wco-light-mode .main-content,
+        body.wco-light-mode .wco-dashboard-wrapper {
+            background-color: #f1f5f9 !important;
+            color: #1e293b !important;
+        }
+
+        body.wco-light-mode footer.footer {
+            background-color: #ffffff !important;
+            color: #64748b !important;
+            border-top: 1px solid #e2e8f0 !important;
+        }
+
+        body.wco-light-mode ::-webkit-scrollbar-track {
+            background: #f1f5f9 !important;
+        }
+        body.wco-light-mode ::-webkit-scrollbar-thumb {
+            background: #cbd5e1 !important;
+        }
+        body.wco-light-mode ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8 !important;
+        }
+        body.wco-light-mode ::-webkit-scrollbar-corner {
+            background: #f1f5f9 !important;
+        }
+
+        body.wco-light-mode .wco-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%) !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        body.wco-light-mode .wco-header-title {
+            color: #0f172a !important;
+            text-shadow: none !important;
+        }
+
+        body.wco-light-mode .wco-header-sub {
+            color: #0284c7 !important;
+        }
+
+        body.wco-light-mode .wco-header-motto {
+            color: #64748b !important;
+        }
+
+        body.wco-light-mode .wco-header h4 {
+            color: #0f172a !important;
+        }
+
+        body.wco-light-mode .wco-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        body.wco-light-mode .wco-card:hover {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.12) !important;
+        }
+
+        body.wco-light-mode .wco-card-header {
+            background-color: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+
+        body.wco-light-mode .wco-card-title {
+            color: #0f172a !important;
+        }
+
+        body.wco-light-mode .wco-table th {
+            background-color: #f8fafc !important;
+            color: #475569 !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+        }
+
+        body.wco-light-mode .wco-table td {
+            border-bottom: 1px solid #f1f5f9 !important;
+            color: #334155 !important;
+        }
+
+        body.wco-light-mode .wco-table tr:hover td {
+            background-color: #f8fafc !important;
+        }
+
+        body.wco-light-mode .kpi-top-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        body.wco-light-mode .kpi-top-card:hover {
+            border-color: #38bdf8 !important;
+        }
+
+        body.wco-light-mode .kpi-top-val {
+            color: #0f172a !important;
+        }
+
+        body.wco-light-mode .kpi-top-label {
+            color: #64748b !important;
+        }
+
+        body.wco-light-mode .kpi-score-card {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
+            border: 1px solid #7dd3fc !important;
+        }
+
+        body.wco-light-mode .filter-ctrl {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+
+        body.wco-light-mode .filter-ctrl:focus {
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2) !important;
+        }
+
+        body.wco-light-mode .text-white {
+            color: #0f172a !important;
+        }
+
+        body.wco-light-mode .text-muted {
+            color: #64748b !important;
+        }
+
+        body.wco-light-mode .info-tank-item {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        body.wco-light-mode .info-tank-name {
+            color: #475569 !important;
+        }
+
+        body.wco-light-mode .eq-pill-item {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        body.wco-light-mode .eq-pill-item span {
+            color: #64748b !important;
+        }
+
+        body.wco-light-mode .badge.bg-dark {
+            background-color: #e2e8f0 !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+
+        body.wco-light-mode .badge-ok {
+            background: rgba(16, 185, 129, 0.12) !important;
+            color: #047857 !important;
+            border-color: rgba(16, 185, 129, 0.3) !important;
+        }
+
+        body.wco-light-mode .badge-danger {
+            background: rgba(239, 68, 68, 0.12) !important;
+            color: #b91c1c !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+        }
+
+        body.wco-light-mode .badge-warn {
+            background: rgba(245, 158, 11, 0.12) !important;
+            color: #b45309 !important;
+            border-color: rgba(245, 158, 11, 0.3) !important;
+        }
+
+        body.wco-light-mode div[style*="rgba(255, 255, 255, 0.03)"],
+        body.wco-light-mode div[style*="rgba(255, 255, 255, 0.04)"] {
+            background: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        body.wco-light-mode div[style*="rgba(255,255,255,0.08)"] {
+            background: #cbd5e1 !important;
+        }
+
+        body.wco-light-mode div[style*="background: #0f172a"] {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        body.wco-light-mode .apexcharts-canvas text {
+            fill: #475569 !important;
+        }
+
+        body.wco-light-mode .apexcharts-tooltip,
+        body.wco-light-mode .apexcharts-tooltip.apexcharts-theme-light,
+        body.wco-light-mode .apexcharts-tooltip.apexcharts-theme-dark,
+        body.wco-light-mode div.apexcharts-tooltip {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        body.wco-light-mode .apexcharts-tooltip-title {
+            background: #f1f5f9 !important;
+            color: #0369a1 !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            font-weight: 700 !important;
+            padding: 4px 8px !important;
+        }
+
+        body.wco-light-mode .apexcharts-tooltip-text,
+        body.wco-light-mode .apexcharts-tooltip-text-y-label,
+        body.wco-light-mode .apexcharts-tooltip-text-y-value,
+        body.wco-light-mode .apexcharts-tooltip-text-goals-value,
+        body.wco-light-mode .apexcharts-tooltip-series-group,
+        body.wco-light-mode .apexcharts-tooltip span,
+        body.wco-light-mode .apexcharts-tooltip-series-group span,
+        body.wco-light-mode .apexcharts-tooltip-title span {
+            color: #0f172a !important;
+        }
+
+        body.wco-light-mode .apexcharts-tooltip-text-y-label {
+            color: #475569 !important;
+            font-weight: 600 !important;
+        }
+
+        body.wco-light-mode .apexcharts-tooltip-text-y-value {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+
+        body.wco-light-mode .apexcharts-xaxistooltip,
+        body.wco-light-mode .apexcharts-yaxistooltip {
+            background: #ffffff !important;
+            color: #0284c7 !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        body.wco-light-mode .apexcharts-xaxistooltip:after,
+        body.wco-light-mode .apexcharts-xaxistooltip:before {
+            border-bottom-color: #ffffff !important;
+        }
+
+        /* Theme toggle button styling */
+        .btn-theme-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #334155;
+            color: #f8fafc;
+            font-size: 11px;
+            padding: 4px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #38bdf8;
+            color: #38bdf8;
+        }
+
+        body.wco-light-mode .btn-theme-toggle {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            color: #334155 !important;
+        }
+
+        body.wco-light-mode .btn-theme-toggle:hover {
+            background: #f1f5f9 !important;
+            border-color: #0284c7 !important;
+            color: #0284c7 !important;
+        }
+    </style>
+</head>
+
+<body class="wco-body">
+    <script>
+        (function() {
+            try {
+                if (localStorage.getItem('wco_theme') === 'light') {
+                    document.body.classList.add('wco-light-mode');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <div class="wco-dashboard-wrapper p-2 p-md-3">
+        <div class="container-fluid px-1">
 
             <!-- ======================================================= -->
             <!-- HEADER SECTION -->
@@ -537,13 +826,13 @@
                         </div>
                     </div>
 
-                    <div class="col-xl-5 col-lg-4 col-md-12 text-center">
+                    <div class="col-xl-4 col-lg-4 col-md-12 text-center">
                         <div class="wco-header-title">WCO – SHE DASHBOARD</div>
                         <div class="wco-header-sub">WORLD CLASS OPERATIONAL – PILLAR SHE</div>
                         <div class="wco-header-motto">"Safe People, Compliant Process, Clean Environment"</div>
                     </div>
 
-                    <div class="col-xl-4 col-lg-4 col-md-12 d-flex align-items-center justify-content-end gap-2 flex-wrap">
+                    <div class="col-xl-5 col-lg-4 col-md-12 d-flex align-items-center justify-content-end gap-2 flex-wrap">
                         <select id="wcoPeriodSelect" class="form-select form-select-sm filter-ctrl" style="width: 110px;">
                             <option value="this_month" selected>Bulan Ini</option>
                             <option value="last_7_days">7 Hari</option>
@@ -563,6 +852,24 @@
                             title="Muat ulang data">
                             <i class="mdi mdi-refresh"></i>
                         </button>
+
+                        <button id="btnThemeToggle" class="btn-theme-toggle" type="button"
+                            title="Ganti Mode Tampilan (Dark / Light)">
+                            <i class="mdi mdi-weather-sunny text-warning" id="themeIcon"></i>
+                            <span id="themeText">Light</span>
+                        </button>
+
+                        <button id="btnFullscreen" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+                            title="Layar Penuh (Fullscreen)" type="button">
+                            <i class="mdi mdi-fullscreen" id="fsIcon"></i>
+                            <span class="d-none d-md-inline" id="fsText">Full</span>
+                        </button>
+
+                        <a href="{{ url('utility/dashboard') }}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+                            title="Kembali ke Portal Engineering">
+                            <i class="mdi mdi-home-outline"></i>
+                            <span class="d-none d-md-inline">Portal</span>
+                        </a>
 
                         <div class="badge bg-dark border border-secondary px-2 py-1 text-muted" style="font-size: 9.5px;">
                             <i class="mdi mdi-clock-outline me-1 text-cyan"></i>
@@ -649,12 +956,12 @@
                             <div class="kpi-top-val" id="topCostTotalVal">Rp 0</div>
                         </div>
                         <div class="kpi-top-sub text-cyan" id="topCostTotalSub">
-                            <i class="mdi mdi-check-circle-outline"></i> BIAYA PEMAKAIAN
+                            <i class="mdi mdi-target"></i> STANDAR ≤ Rp 45 Jt
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 3: PENGANGKUTAN SLUDGE (Total Tonase Pengangkutan Sludge) -->
+                <!-- Card 3: PENGANGKUTAN SLUDGE (Total Tonase Pengangkutan Sludge & Cost) -->
                 <div class="col-xl-2 col-lg-4 col-md-6">
                     <div class="kpi-top-card">
                         <div class="kpi-top-header">
@@ -663,14 +970,23 @@
                             </div>
                             <div>
                                 <div class="kpi-top-label">PENGANGKUTAN SLUDGE</div>
-                                <div class="text-muted" style="font-size: 8.5px;">TOTAL TONASE</div>
+                                <div class="text-muted" style="font-size: 8.5px;">TONASE & TOTAL BIAYA</div>
                             </div>
                         </div>
                         <div class="my-auto">
-                            <div class="kpi-top-val" id="topPengangkutanSludgeVal">0 Ton</div>
+                            <div class="d-flex align-items-baseline justify-content-between">
+                                <span class="kpi-top-val" id="topPengangkutanSludgeVal">0 Ton</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mt-1 pt-1"
+                                style="border-top: 1px dashed rgba(255,255,255,0.1);">
+                                <span class="text-muted" style="font-size: 8.5px; font-weight: 600;">TOTAL BIAYA:</span>
+                                <span class="text-warning fw-bold font-monospace" id="topPengangkutanSludgeCost"
+                                    style="font-size: 11.5px;">Rp 0</span>
+                            </div>
                         </div>
-                        <div class="kpi-top-sub text-warning" id="topPengangkutanSludgeSub">
-                            <i class="mdi mdi-scale"></i> TOTAL AKUMULASI
+                        <div class="kpi-top-sub text-warning" id="topPengangkutanSludgeSub"
+                            title="Rumus: Ton × 1000 × Rp 1.400 = Total Biaya">
+                            <i class="mdi mdi-calculator"></i> TARIF: Rp 1.400 / KG
                         </div>
                     </div>
                 </div>
@@ -831,17 +1147,18 @@
                     </div>
                 </div>
 
-                <!-- 10. FLOWMETER AIR LIMBAH (User #10: PIT Garam, Buffer Pit Garam, Pit Sparta, Step 3) -->
+                <!-- 10. FLOWMETER AIR LIMBAH (User #10: Pit Sparta, Pit Garam, Pit Domestic, Pit Produksi Step, Pit Outlet) -->
                 <div class="col-xl-3 col-lg-6">
                     <div class="wco-card">
                         <div class="wco-card-header">
                             <h5 class="wco-card-title">
                                 <i class="mdi mdi-speedometer text-success"></i> FLOWMETER AIR LIMBAH
                             </h5>
-                            <span class="badge bg-success-subtle text-success" style="font-size: 8.5px;">REALTIME
-                                PITS</span>
+                            <span class="badge bg-success-subtle text-success" style="font-size: 8.5px;">5 PITS
+                                HARIAN</span>
                         </div>
-                        <div class="wco-card-body p-2" id="wcoStatusOperasiContainer">
+                        <div class="wco-card-body p-2" id="wcoStatusOperasiContainer"
+                            style="max-height: 185px; overflow-y: auto;">
                             <div class="text-center p-2 text-muted" style="font-size: 10px;">Memuat flowmeter...</div>
                         </div>
                     </div>
@@ -858,14 +1175,18 @@
                         </div>
                         <div class="wco-card-body p-0">
                             <div class="table-responsive">
-                                <table class="wco-table">
+                                <table class="wco-table" style="font-size: 9.5px;">
                                     <thead>
                                         <tr>
-                                            <th>Tahapan</th>
-                                            <th class="text-center">pH</th>
-                                            <th class="text-center">COD</th>
-                                            <th class="text-center">TSS</th>
-                                            <th class="text-center">Status</th>
+                                            <th style="padding: 4px 4px;">Tahapan</th>
+                                            <th class="text-center" style="padding: 4px 3px;">pH</th>
+                                            <th class="text-center" style="padding: 4px 3px;">COD</th>
+                                            <th class="text-center" style="padding: 4px 3px;">TSS</th>
+                                            <th class="text-center" style="padding: 4px 3px;" title="Removal COD (%)">
+                                                Rem. COD</th>
+                                            <th class="text-center" style="padding: 4px 3px;" title="Removal TSS (%)">
+                                                Rem. TSS</th>
+                                            <th class="text-center" style="padding: 4px 4px;">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tableEnvPerfBody">
@@ -887,14 +1208,15 @@
                             <span class="badge bg-warning-subtle text-warning" style="font-size: 8.5px;">THIS MONTH</span>
                         </div>
                         <div class="wco-card-body p-0">
-                            <div class="table-responsive" style="max-height: 145px; overflow-y: auto;">
-                                <table class="wco-table">
+                            <div class="table-responsive" style="max-height: 185px; overflow-y: auto;">
+                                <table class="wco-table" style="font-size: 9.5px;">
                                     <thead>
                                         <tr>
-                                            <th>Chemical</th>
-                                            <th class="text-end">Qty</th>
-                                            <th class="text-end">Cost/m³</th>
-                                            <th class="text-center">Status</th>
+                                            <th style="padding: 4px 4px;">Chemical</th>
+                                            <th class="text-end" style="padding: 4px 4px;">Qty</th>
+                                            <th class="text-end" style="padding: 4px 4px;">Std</th>
+                                            <th class="text-end" style="padding: 4px 4px;">Cost/m³</th>
+                                            <th class="text-center" style="padding: 4px 4px;">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tableChemConsBody">
@@ -911,19 +1233,22 @@
             <!-- ROW 2: 4 TREND CARDS (SAFETY PERF, INFLUENT MINGGUAN, EFFLUENT MINGGUAN, KEPATUHAN COD) -->
             <!-- ======================================================= -->
             <div class="row g-2 mb-2">
-                <!-- 7. SAFETY PERFORMANCE (User #7: Influent Daily Aggregated & Pit Distribution) -->
+                <!-- 7. INFLUENT SPARTA & PIT GARAM (Data WWTP Proses Harian: Sparta & Pit Garam) -->
                 <div class="col-xl-3 col-lg-6">
                     <div class="wco-card">
                         <div class="wco-card-header">
                             <h5 class="wco-card-title">
-                                <i class="mdi mdi-shield-check text-cyan"></i> SAFETY PERFORMANCE
+                                <i class="mdi mdi-water-sync text-cyan"></i> INFLUENT SPARTA & GARAM
                             </h5>
-                            <span class="badge bg-info-subtle text-info" style="font-size: 8.5px;">INFLUENT DAILY</span>
+                            <span class="badge bg-info-subtle text-info" style="font-size: 8.5px;">PROSES HARIAN</span>
                         </div>
                         <div class="wco-card-body p-2">
-                            <div class="wco-mini-stat">
-                                <span>Trend Influent Harian (Aggregated):</span>
-                                <strong class="text-cyan" id="safetyDailyTotal">Active</strong>
+                            <div class="wco-mini-stat d-flex justify-content-between align-items-center">
+                                <span style="font-size: 8.5px; color: #94a3b8;">Std: ≤ 50 m³/day</span>
+                                <div class="d-flex align-items-center gap-1" id="safetyDailyTotal">
+                                    <span class="badge-ok" id="statSpartaBadge">Sparta: -</span>
+                                    <span class="badge-ok" id="statGaramBadge">Garam: -</span>
+                                </div>
                             </div>
                             <div class="wco-chart-box" id="chartSafetyPerf"></div>
                         </div>
@@ -1010,11 +1335,11 @@
                                     <thead>
                                         <tr>
                                             <th>Sampel</th>
-                                            <th class="text-center">SV30</th>
-                                            <th class="text-center">MLSS</th>
-                                            <th class="text-center">SVI</th>
-                                            <th class="text-center">DO</th>
-                                            <th class="text-center">pH</th>
+                                            <th class="text-center" title="Standar: 300 - 500 ml">SV30</th>
+                                            <th class="text-center" title="Standar: 1000 - 5000 ppm">MLSS</th>
+                                            <th class="text-center" title="Standar: 90 - 150">SVI</th>
+                                            <th class="text-center" title="Standar: ≤ 2 ppm">DO</th>
+                                            <th class="text-center" title="Standar: 7 - 9">pH</th>
                                             <th class="text-center">Status</th>
                                         </tr>
                                     </thead>
@@ -1038,39 +1363,54 @@
                                 HARIAN</span>
                         </div>
                         <div class="wco-card-body p-1">
-                            <table class="wco-table">
+                            <table class="wco-table" style="font-size: 9.5px;">
                                 <thead>
                                     <tr>
-                                        <th>Parameter</th>
-                                        <th class="text-end">Hasil</th>
-                                        <th class="text-center">Sat</th>
-                                        <th class="text-center">Status</th>
+                                        <th style="padding: 4px 4px;">Parameter</th>
+                                        <th class="text-end" style="padding: 4px 4px;">Hasil</th>
+                                        <th class="text-end" style="padding: 4px 4px;">Std</th>
+                                        <th class="text-center" style="padding: 4px 4px;">Sat</th>
+                                        <th class="text-center" style="padding: 4px 4px;">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="text-muted">Drain Lumpur</td>
-                                        <td class="text-end fw-bold text-white"><span id="sludgeDrainVal">0</span></td>
-                                        <td class="text-center text-muted">m³</td>
-                                        <td class="text-center"><span class="badge-ok">OK</span></td>
+                                        <td class="text-muted" style="padding: 4px 4px;">Drain Lumpur</td>
+                                        <td class="text-end font-monospace" style="padding: 4px 4px;"><span
+                                                id="sludgeDrainVal">0</span></td>
+                                        <td class="text-end font-monospace text-muted" style="padding: 4px 4px;">≤ 19</td>
+                                        <td class="text-center text-muted" style="padding: 4px 4px;">m³</td>
+                                        <td class="text-center" style="padding: 4px 4px;"><span id="sludgeDrainStatus"
+                                                class="badge-ok">OK</span></td>
                                     </tr>
                                     <tr>
-                                        <td class="text-muted">Running Hour SCP</td>
-                                        <td class="text-end fw-bold text-white"><span id="sludgeRunningVal">0</span></td>
-                                        <td class="text-center text-muted">Jam</td>
-                                        <td class="text-center"><span class="badge-ok">OK</span></td>
+                                        <td class="text-muted" style="padding: 4px 4px;">Running Hour SCP</td>
+                                        <td class="text-end font-monospace" style="padding: 4px 4px;"><span
+                                                id="sludgeRunningVal">0</span></td>
+                                        <td class="text-end font-monospace text-muted" style="padding: 4px 4px;">≤ 6</td>
+                                        <td class="text-center text-muted" style="padding: 4px 4px;">Jam</td>
+                                        <td class="text-center" style="padding: 4px 4px;"><span id="sludgeRunningStatus"
+                                                class="badge-ok">OK</span></td>
                                     </tr>
                                     <tr>
-                                        <td class="text-muted">Hasil Lumpur</td>
-                                        <td class="text-end fw-bold text-white"><span id="sludgeHasilVal">0</span></td>
-                                        <td class="text-center text-muted">kg</td>
-                                        <td class="text-center"><span class="badge-ok">OK</span></td>
+                                        <td class="text-muted" style="padding: 4px 4px;">Hasil Lumpur</td>
+                                        <td class="text-end font-monospace" style="padding: 4px 4px;"><span
+                                                id="sludgeHasilVal">0</span></td>
+                                        <td class="text-end font-monospace text-muted" style="padding: 4px 4px;">≤ 1.2
+                                        </td>
+                                        <td class="text-center text-muted" style="padding: 4px 4px;" id="sludgeHasilSat">
+                                            Ton</td>
+                                        <td class="text-center" style="padding: 4px 4px;"><span id="sludgeHasilStatus"
+                                                class="badge-ok">OK</span></td>
                                     </tr>
                                     <tr>
-                                        <td class="text-muted">Content Sludge</td>
-                                        <td class="text-end fw-bold text-white"><span id="sludgeContentVal">0</span></td>
-                                        <td class="text-center text-muted">%</td>
-                                        <td class="text-center"><span class="badge-ok">OK</span></td>
+                                        <td class="text-muted" style="padding: 4px 4px;">Content Sludge</td>
+                                        <td class="text-end font-monospace" style="padding: 4px 4px;"><span
+                                                id="sludgeContentVal">0</span></td>
+                                        <td class="text-end font-monospace text-muted" style="padding: 4px 4px;">≥ 20</td>
+                                        <td class="text-center text-muted" style="padding: 4px 4px;">%</td>
+                                        <td class="text-center" style="padding: 4px 4px;"><span id="sludgeContentStatus"
+                                                class="badge-ok">OK</span></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1127,15 +1467,60 @@
 
         </div>
     </div>
-@endsection
 
-@section('scripts')
+    <!-- JS Dependencies -->
+    <script src="{{ asset('material/assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('material/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
     <script>
+        if (typeof ApexCharts === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/apexcharts"><\/script>');
+        }
+    </script>
+
+    <script>
+        // Fullscreen toggle logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const fsBtn = document.getElementById('btnFullscreen');
+            if (fsBtn) {
+                fsBtn.addEventListener('click', function() {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => {
+                            console.log(`Fullscreen error: ${err.message}`);
+                        });
+                        const icon = document.getElementById('fsIcon');
+                        const text = document.getElementById('fsText');
+                        if (icon) icon.className = 'mdi mdi-fullscreen-exit';
+                        if (text) text.textContent = 'Exit';
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                            const icon = document.getElementById('fsIcon');
+                            const text = document.getElementById('fsText');
+                            if (icon) icon.className = 'mdi mdi-fullscreen';
+                            if (text) text.textContent = 'Full';
+                        }
+                    }
+                });
+            }
+        });
+
         let wcoCharts = {};
 
         document.addEventListener('DOMContentLoaded', function() {
             initDefaultDates();
             loadWcoData();
+
+            // Theme toggle initialization (Default: dark)
+            const savedTheme = localStorage.getItem('wco_theme') || 'dark';
+            applyTheme(savedTheme, false);
+
+            const themeBtn = document.getElementById('btnThemeToggle');
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    const isCurrentLight = document.body.classList.contains('wco-light-mode');
+                    applyTheme(isCurrentLight ? 'dark' : 'light', true);
+                });
+            }
 
             // Event Listeners
             document.getElementById('btnRefreshWco').addEventListener('click', function() {
@@ -1161,6 +1546,49 @@
                 if (document.getElementById('wcoPeriodSelect').value === 'custom') loadWcoData();
             });
         });
+
+        function applyTheme(theme, updateCharts = true) {
+            const isLight = (theme === 'light');
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            const btn = document.getElementById('btnThemeToggle');
+
+            if (isLight) {
+                document.body.classList.add('wco-light-mode');
+                if (icon) icon.className = 'mdi mdi-weather-night text-primary';
+                if (text) text.textContent = 'Dark';
+                if (btn) btn.title = 'Beralih ke Dark Mode';
+            } else {
+                document.body.classList.remove('wco-light-mode');
+                if (icon) icon.className = 'mdi mdi-weather-sunny text-warning';
+                if (text) text.textContent = 'Light';
+                if (btn) btn.title = 'Beralih ke Light Mode';
+            }
+
+            localStorage.setItem('wco_theme', theme);
+
+            if (updateCharts && typeof wcoCharts !== 'undefined') {
+                const chartThemeMode = isLight ? 'light' : 'dark';
+                const gridColor = isLight ? '#e2e8f0' : '#1e293b';
+                const labelColor = isLight ? '#64748b' : '#94a3b8';
+
+                Object.keys(wcoCharts).forEach(domId => {
+                    try {
+                        if (wcoCharts[domId]) {
+                            wcoCharts[domId].updateOptions({
+                                theme: { mode: chartThemeMode },
+                                tooltip: { theme: chartThemeMode },
+                                grid: { borderColor: gridColor },
+                                xaxis: { labels: { style: { colors: labelColor } } },
+                                yaxis: { labels: { style: { colors: labelColor } } }
+                            });
+                        }
+                    } catch (e) {
+                        // ignore if chart not ready
+                    }
+                });
+            }
+        }
 
         function initDefaultDates() {
             const today = new Date();
@@ -1199,6 +1627,31 @@
         function renderOrUpdateChart(domId, options) {
             const el = document.getElementById(domId);
             if (!el || typeof ApexCharts === 'undefined') return;
+
+            const isLight = document.body.classList.contains('wco-light-mode');
+            if (isLight) {
+                if (!options.theme) options.theme = {};
+                options.theme.mode = 'light';
+                if (!options.tooltip) options.tooltip = {};
+                options.tooltip.theme = 'light';
+                if (!options.grid) options.grid = {};
+                options.grid.borderColor = '#e2e8f0';
+                if (options.xaxis && options.xaxis.labels && options.xaxis.labels.style) {
+                    options.xaxis.labels.style.colors = '#64748b';
+                }
+                if (options.yaxis && options.yaxis.labels && options.yaxis.labels.style) {
+                    options.yaxis.labels.style.colors = '#64748b';
+                }
+                if (options.legend && options.legend.labels) {
+                    options.legend.labels.colors = '#475569';
+                }
+            } else {
+                if (!options.theme) options.theme = {};
+                options.theme.mode = 'dark';
+                if (!options.tooltip) options.tooltip = {};
+                options.tooltip.theme = 'dark';
+            }
+
             if (wcoCharts[domId]) {
                 wcoCharts[domId].updateOptions(options);
             } else {
@@ -1237,18 +1690,46 @@
             }
 
             if (data.card2_total_cost_chem) {
-                document.getElementById('topCostTotalVal').textContent = data.card2_total_cost_chem.formatted;
+                const totalChem = data.card2_total_cost_chem;
+                document.getElementById('topCostTotalVal').textContent = totalChem.formatted;
+                const subEl = document.getElementById('topCostTotalSub');
+                if (subEl) {
+                    const isOver = totalChem.is_over !== undefined ?
+                        totalChem.is_over :
+                        (Number(totalChem.value) > 45000000);
+                    if (isOver) {
+                        subEl.className = 'kpi-top-sub text-danger';
+                        subEl.innerHTML = `<i class="mdi mdi-arrow-up-bold"></i> STANDAR ≤ Rp 45 Jt`;
+                    } else {
+                        subEl.className = 'kpi-top-sub text-success';
+                        subEl.innerHTML = `<i class="mdi mdi-check-circle-outline"></i> STANDAR ≤ Rp 45 Jt`;
+                    }
+                }
             }
 
             if (data.card9_chem_consumption && Array.isArray(data.card9_chem_consumption)) {
                 let tbodyHtml = '';
                 data.card9_chem_consumption.forEach(item => {
+                    const isOver = item.is_over !== undefined ?
+                        item.is_over :
+                        (item.standard !== undefined ? (Number(item.qty) > Number(item.standard)) : false);
+                    const qtyColor = isOver ? 'text-danger fw-bold' : 'text-success fw-bold';
+                    const badgeClass = isOver ? 'badge-danger' : 'badge-ok';
+                    const statusText = item.status || (isOver ? 'OVER' : 'AMAN');
+                    const stdText = (item.standard !== undefined && item.standard !== null) ?
+                        `${Number(item.standard).toLocaleString('id-ID')} kg` :
+                        (item.standard_text || '-');
+                    const costM3Text = (item.cost_m3 !== undefined && item.cost_m3 !== null) ?
+                        `Rp ${Number(item.cost_m3).toLocaleString('id-ID')}` :
+                        '-';
+
                     tbodyHtml += `
                     <tr>
-                        <td class="fw-semibold text-white" style="font-size: 9.5px;">${item.chemical_name}</td>
-                        <td class="text-end font-monospace">${Number(item.qty).toLocaleString('id-ID')}</td>
-                        <td class="text-end font-monospace text-muted">Rp ${Number(item.cost_m3).toLocaleString('id-ID')}</td>
-                        <td class="text-center"><span class="badge-ok">${item.status}</span></td>
+                        <td class="fw-semibold text-white" style="font-size: 9px; padding: 3px 4px; white-space: nowrap;">${item.chemical_name}</td>
+                        <td class="text-end font-monospace ${qtyColor}" style="font-size: 9px; padding: 3px 4px;">${Number(item.qty).toLocaleString('id-ID')} kg</td>
+                        <td class="text-end font-monospace text-muted" style="font-size: 9px; padding: 3px 4px;">${stdText}</td>
+                        <td class="text-end font-monospace text-muted" style="font-size: 8.5px; padding: 3px 4px;">${costM3Text}</td>
+                        <td class="text-center" style="padding: 3px 4px;"><span class="${badgeClass}">${statusText}</span></td>
                     </tr>
                 `;
                 });
@@ -1303,16 +1784,96 @@
 
             if (data.card8_env_perf && Array.isArray(data.card8_env_perf)) {
                 let tbodyHtml = '';
-                data.card8_env_perf.forEach(item => {
+                const items = data.card8_env_perf;
+
+                const calcRemPct = (inVal, outVal) => {
+                    const a = parseFloat(inVal);
+                    const b = parseFloat(outVal);
+                    if (isNaN(a) || isNaN(b) || a <= 0) return null;
+                    return Math.round(((a - b) / a) * 1000) / 10;
+                };
+
+                items.forEach((item, idx) => {
+                    let remCod = item.rem_cod;
+                    let remTss = item.rem_tss;
+                    let status = item.status || 'OK';
+                    let standard = item.standard || '';
+                    let codOk = true;
+                    let tssOk = true;
+
+                    // Fallback client-side calculation if rem_cod is not provided by backend
+                    if (remCod === undefined || remCod === null) {
+                        if (idx === 0) {
+                            remCod = '-';
+                            remTss = '-';
+                            standard = 'Baseline';
+                            codOk = true;
+                            tssOk = true;
+                        } else {
+                            const prev = items[idx - 1];
+                            const cRem = calcRemPct(prev.cod, item.cod);
+                            const tRem = calcRemPct(prev.tss, item.tss);
+                            remCod = cRem !== null ? cRem + '%' : '-';
+                            remTss = tRem !== null ? tRem + '%' : '-';
+
+                            if (idx === 1) { // Outlet Anaerob (COD >= 80%, TSS >= 10%)
+                                standard = 'COD ≥ 80% | TSS ≥ 10%';
+                                codOk = cRem !== null && cRem >= 80;
+                                tssOk = tRem !== null && tRem >= 10;
+                            } else if (idx === 2) { // Aerob (COD >= 80%, TSS >= 50%)
+                                standard = 'COD ≥ 80% | TSS ≥ 50%';
+                                codOk = cRem !== null && cRem >= 80;
+                                tssOk = tRem !== null && tRem >= 50;
+                            } else if (idx === 3) { // Outlet DAF (COD >= 10%, TSS >= 70%)
+                                standard = 'COD ≥ 10% | TSS ≥ 70%';
+                                codOk = cRem !== null && cRem >= 10;
+                                tssOk = tRem !== null && tRem >= 70;
+                            } else if (idx === 4) { // Effluent (COD <= 300, TSS <= 100)
+                                standard = 'COD ≤ 300 | TSS ≤ 100';
+                                const cVal = parseFloat(item.cod) || 0;
+                                const tVal = parseFloat(item.tss) || 0;
+                                codOk = cVal <= 300;
+                                tssOk = tVal <= 100;
+                            }
+                        }
+                        status = (codOk && tssOk) ? 'OK' : 'NOK';
+                    } else {
+                        codOk = item.cod_ok !== undefined ? item.cod_ok : (status === 'OK');
+                        tssOk = item.tss_ok !== undefined ? item.tss_ok : (status === 'OK');
+                    }
+
+                    const isOk = (status === 'OK');
+                    const badgeClass = isOk ? 'badge-ok' : 'badge-danger';
+
+                    // Warna persentase COD: merah jika di bawah standar, hijau jika memenuhi
+                    const remCodColor = (remCod === '-' || idx === 0) ?
+                        'text-muted' :
+                        (codOk ? 'text-success fw-semibold' : 'text-danger fw-bold');
+
+                    // Warna persentase TSS: merah jika di bawah standar, hijau jika memenuhi
+                    const remTssColor = (remTss === '-' || idx === 0) ?
+                        'text-muted' :
+                        (tssOk ? 'text-success fw-semibold' : 'text-danger fw-bold');
+
+                    // Highlight Effluent jika melewati baku mutu
+                    const codCellClass = (idx === 4 && !codOk) ?
+                        'text-center font-monospace text-danger fw-bold' :
+                        'text-center font-monospace text-cyan';
+                    const tssCellClass = (idx === 4 && !tssOk) ?
+                        'text-center font-monospace text-danger fw-bold' :
+                        'text-center font-monospace text-info';
+
                     tbodyHtml += `
                     <tr>
-                        <td class="fw-semibold text-white" style="font-size: 9.5px;">${item.parameter}</td>
-                        <td class="text-center font-monospace">${item.ph}</td>
-                        <td class="text-center font-monospace text-cyan">${item.cod}</td>
-                        <td class="text-center font-monospace text-info">${item.tss}</td>
-                        <td class="text-center"><span class="badge-ok">${item.status}</span></td>
+                        <td class="fw-semibold text-white" style="font-size: 8.5px; white-space: nowrap; padding: 4px 4px;">${item.parameter}</td>
+                        <td class="text-center font-monospace" style="padding: 4px 3px; font-size: 8.5px;">${item.ph ?? '-'}</td>
+                        <td class="${codCellClass}" style="padding: 4px 3px; font-size: 8.5px;">${item.cod ?? '-'}</td>
+                        <td class="${tssCellClass}" style="padding: 4px 3px; font-size: 8.5px;">${item.tss ?? '-'}</td>
+                        <td class="text-center font-monospace ${remCodColor}" style="padding: 4px 3px; font-size: 8.5px;" title="Std: ${standard}">${remCod}</td>
+                        <td class="text-center font-monospace ${remTssColor}" style="padding: 4px 3px; font-size: 8.5px;" title="Std: ${standard}">${remTss}</td>
+                        <td class="text-center" style="padding: 4px 4px;"><span class="${badgeClass}" title="Std: ${standard}">${status}</span></td>
                     </tr>
-                `;
+                    `;
                 });
                 document.getElementById('tableEnvPerfBody').innerHTML = tbodyHtml;
             }
@@ -1326,18 +1887,25 @@
             if (data.card10_status_operasi && Array.isArray(data.card10_status_operasi)) {
                 let containerHtml = '';
                 data.card10_status_operasi.forEach(item => {
+                    const isOver = item.is_over === true || (item.status && item.status.toUpperCase() ===
+                        'OVER');
+                    const badgeClass = isOver ? 'badge-danger' : 'badge-ok';
+                    const pulseClass = isOver ? 'pulse-red' : 'pulse-green';
+                    const volColor = isOver ? 'text-danger fw-bold font-monospace' :
+                        'text-info fw-bold font-monospace';
+
                     containerHtml += `
-                    <div class="op-status-item">
+                    <div class="op-status-item" title="Standar: max ${item.standard || '-'} m³/day">
                         <div class="d-flex align-items-center gap-2">
-                            <img src="${item.img}" alt="${item.name}" style="width: 22px; height: 22px; object-fit: contain;">
+                            <img src="${item.img}" alt="${item.name}" style="width: 20px; height: 20px; object-fit: contain;">
                             <div>
-                                <div class="fw-bold text-white" style="font-size: 10px;">${item.name}</div>
+                                <div class="fw-bold text-white" style="font-size: 9.5px;">${item.name}</div>
                                 <div class="text-muted" style="font-size: 8px;">${item.subtext}</div>
                             </div>
                         </div>
                         <div class="text-end">
-                            <span class="badge-ok"><span class="pulse-dot pulse-green"></span>${item.status}</span>
-                            <div class="text-info fw-bold font-monospace" style="font-size: 9px; margin-top: 1px;">${item.volume}</div>
+                            <span class="${badgeClass}"><span class="pulse-dot ${pulseClass}"></span>${item.status}</span>
+                            <div class="${volColor}" style="font-size: 9px; margin-top: 1px;">${item.volume}</div>
                         </div>
                     </div>
                 `;
@@ -1346,18 +1914,32 @@
             }
         }
 
-        // 7. Safety Performance (Influent Daily Aggregated Chart)
+        // 7. Influent Sparta & Pit Garam (WWTP Proses Harian)
         async function loadSafetyPerfSection(start, end) {
             const data = await fetchWcoSection('safety_perf', start, end);
             if (!data) return;
 
-            if (data.card7_safety_perf && data.card7_safety_perf.daily_aggregated) {
-                const arr = data.card7_safety_perf.daily_aggregated;
-                const categories = arr.map(a => a.tanggal);
-                const totals = arr.map(a => {
-                    return Math.round((a.pit_sparta || 0) + (a.pit_garam || 0) + (a.pit_produksi_step3 || 0) + (
-                        a.pit_domestik || 0) + (a.pit_storage || 0));
-                });
+            if (data.card7_safety_perf) {
+                const sp = data.card7_safety_perf;
+                const categories = sp.categories || [];
+                const spartaData = sp.sparta || [];
+                const garamData = sp.garam || [];
+
+                // Update Mini Stat badges
+                const spartaBadge = document.getElementById('statSpartaBadge');
+                const garamBadge = document.getElementById('statGaramBadge');
+                if (spartaBadge && sp.avg_sparta !== undefined) {
+                    const isSpartaOver = sp.is_sparta_over !== undefined ? sp.is_sparta_over : (sp.avg_sparta > 50);
+                    spartaBadge.className = isSpartaOver ? 'badge-danger' : 'badge-ok';
+                    spartaBadge.textContent = `Sparta: ${sp.avg_sparta} m³`;
+                    spartaBadge.title = `Rata-rata Sparta: ${sp.avg_sparta} m³/day (Std: ≤ 50 m³) | Total: ${sp.total_sparta || '-'} m³`;
+                }
+                if (garamBadge && sp.avg_garam !== undefined) {
+                    const isGaramOver = sp.is_garam_over !== undefined ? sp.is_garam_over : (sp.avg_garam > 50);
+                    garamBadge.className = isGaramOver ? 'badge-danger' : 'badge-ok';
+                    garamBadge.textContent = `Garam: ${sp.avg_garam} m³`;
+                    garamBadge.title = `Rata-rata Garam: ${sp.avg_garam} m³/day (Std: ≤ 50 m³) | Total: ${sp.total_garam || '-'} m³`;
+                }
 
                 const safetyOptions = {
                     chart: {
@@ -1373,7 +1955,7 @@
                     },
                     plotOptions: {
                         bar: {
-                            columnWidth: '55%',
+                            columnWidth: '50%',
                             borderRadius: 2,
                             dataLabels: {
                                 position: 'top'
@@ -1382,27 +1964,32 @@
                     },
                     dataLabels: {
                         enabled: true,
-                        offsetY: -10,
+                        offsetY: -9,
                         style: {
                             fontSize: '7.5px',
                             fontWeight: 600,
-                            colors: ['#38bdf8']
+                            colors: ['#38bdf8', '#60a5fa']
                         },
                         formatter: function(val) {
                             return val > 0 ? Number(val).toLocaleString('id-ID') : '';
                         }
                     },
-                    colors: ['#06b6d4'],
+                    colors: ['#06b6d4', '#3b82f6'],
                     series: [{
-                        name: 'Total Influent (m³)',
-                        data: totals
-                    }],
+                            name: 'Pit Sparta',
+                            data: spartaData
+                        },
+                        {
+                            name: 'Pit Garam',
+                            data: garamData
+                        }
+                    ],
                     xaxis: {
                         categories: categories,
                         labels: {
                             style: {
                                 colors: '#64748b',
-                                fontSize: '9px'
+                                fontSize: '8.5px'
                             }
                         }
                     },
@@ -1410,7 +1997,7 @@
                         labels: {
                             style: {
                                 colors: '#64748b',
-                                fontSize: '9px'
+                                fontSize: '8.5px'
                             }
                         }
                     },
@@ -1424,8 +2011,23 @@
                             right: 5
                         }
                     },
+                    legend: {
+                        position: 'top',
+                        fontSize: '8.5px',
+                        labels: {
+                            colors: '#94a3b8'
+                        },
+                        itemMargin: {
+                            horizontal: 4
+                        }
+                    },
                     tooltip: {
-                        theme: 'dark'
+                        theme: 'dark',
+                        y: {
+                            formatter: function(val) {
+                                return val !== null && val !== undefined ? Number(val).toLocaleString('id-ID') + ' m³/day' : '-';
+                            }
+                        }
                     }
                 };
                 renderOrUpdateChart('chartSafetyPerf', safetyOptions);
@@ -1743,17 +2345,49 @@
                 const samples = data.card13_chem_storage_performance.samples || [];
                 let aerasiHtml = '';
                 samples.forEach(s => {
-                    const sviVal = (s.svi !== undefined && s.svi !== null) ? s.svi : ((s.svl !== undefined && s
-                        .svl !== null) ? s.svl : '-');
+                    const sv30 = parseFloat(s.sv30);
+                    const mlss = parseFloat(s.mlss);
+                    const svi = parseFloat((s.svi !== undefined && s.svi !== null) ? s.svi : s.svl);
+                    const doVal = parseFloat(s.do);
+                    const ph = parseFloat(s.ph);
+
+                    // Standar validasi:
+                    // 1. Sv'30: 300 - 500 ml
+                    const sv30Ok = s.sv30_ok !== undefined ? s.sv30_ok : (!isNaN(sv30) ? (sv30 >= 300 && sv30 <=
+                        500) : true);
+                    // 2. Mlss: 1000 - 5000 ppm
+                    const mlssOk = s.mlss_ok !== undefined ? s.mlss_ok : (!isNaN(mlss) ? (mlss >= 1000 &&
+                        mlss <= 5000) : true);
+                    // 3. SVI: 90 - 150
+                    const sviOk = s.svi_ok !== undefined ? s.svi_ok : (!isNaN(svi) ? (svi >= 90 && svi <= 150) :
+                        true);
+                    // 4. Do: 2 ppm (melebihi itu not oke -> do <= 2.0)
+                    const doOk = s.do_ok !== undefined ? s.do_ok : (!isNaN(doVal) ? (doVal <= 2.0) : true);
+                    // 5. pH: 7 - 9
+                    const phOk = s.ph_ok !== undefined ? s.ph_ok : (!isNaN(ph) ? (ph >= 7.0 && ph <= 9.0) :
+                        true);
+
+                    const isAllOk = (sv30Ok && mlssOk && sviOk && doOk && phOk);
+                    const rowStatus = s.status || (isAllOk ? 'OK' : 'NOT OK');
+                    const badgeClass = rowStatus === 'OK' ? 'badge-ok' : 'badge-danger';
+
+                    const sv30Color = sv30Ok ? 'text-white' : 'text-danger fw-bold';
+                    const mlssColor = mlssOk ? 'text-cyan' : 'text-danger fw-bold';
+                    const sviColor = sviOk ? 'text-warning' : 'text-danger fw-bold';
+                    const doColor = doOk ? 'text-success' : 'text-danger fw-bold';
+                    const phColor = phOk ? 'text-muted' : 'text-danger fw-bold';
+
+                    const sviDisplay = !isNaN(svi) ? svi : '-';
+
                     aerasiHtml += `
                     <tr>
                         <td class="fw-semibold text-white" style="font-size: 9.5px;">${s.nama_sampel}</td>
-                        <td class="text-center font-monospace">${s.sv30}</td>
-                        <td class="text-center font-monospace text-cyan">${s.mlss}</td>
-                        <td class="text-center font-monospace text-warning">${sviVal}</td>
-                        <td class="text-center font-monospace text-success">${s.do}</td>
-                        <td class="text-center font-monospace text-muted">${s.ph}</td>
-                        <td class="text-center"><span class="badge-ok">${s.status}</span></td>
+                        <td class="text-center font-monospace ${sv30Color}" title="Standar: 300 - 500 ml">${s.sv30 ?? '-'}</td>
+                        <td class="text-center font-monospace ${mlssColor}" title="Standar: 1000 - 5000 ppm">${s.mlss ?? '-'}</td>
+                        <td class="text-center font-monospace ${sviColor}" title="Standar: 90 - 150">${sviDisplay}</td>
+                        <td class="text-center font-monospace ${doColor}" title="Standar: ≤ 2 ppm">${s.do ?? '-'}</td>
+                        <td class="text-center font-monospace ${phColor}" title="Standar: 7 - 9">${s.ph ?? '-'}</td>
+                        <td class="text-center"><span class="${badgeClass}">${rowStatus}</span></td>
                     </tr>
                 `;
                 });
@@ -1767,20 +2401,103 @@
             if (!data) return;
 
             if (data.card3_pengangkutan_sludge) {
-                document.getElementById('topPengangkutanSludgeVal').textContent = data.card3_pengangkutan_sludge
-                    .formatted;
+                const p = data.card3_pengangkutan_sludge;
+                const tonVal = parseFloat(p.total_tonase) || 0;
+                const costVal = p.total_cost !== undefined ? p.total_cost : (tonVal * 1000 * 1400);
+                const costFormatted = p.cost_formatted || ('Rp ' + Number(costVal).toLocaleString('id-ID'));
+
+                document.getElementById('topPengangkutanSludgeVal').textContent = p.formatted || (tonVal.toLocaleString(
+                    'id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 2
+                    }) + ' Ton');
+
+                const costEl = document.getElementById('topPengangkutanSludgeCost');
+                if (costEl) {
+                    costEl.textContent = costFormatted;
+                }
+
+                const subEl = document.getElementById('topPengangkutanSludgeSub');
+                if (subEl && p.formula) {
+                    subEl.title = `Rumus: ${p.formula}`;
+                }
             }
 
             if (data.card15_sludge_mgmt) {
                 const sl = data.card15_sludge_mgmt;
-                document.getElementById('sludgeDrainVal').textContent = Number(sl.drain_lumpur || 0).toLocaleString(
-                    'id-ID');
-                document.getElementById('sludgeRunningVal').textContent = Number(sl.running_hour_scp || 0)
-                    .toLocaleString('id-ID');
-                document.getElementById('sludgeHasilVal').textContent = Number(sl.hasil_lumpur || 0).toLocaleString(
-                    'id-ID');
-                document.getElementById('sludgeContentVal').textContent = Number(sl.sludge_content || 0).toLocaleString(
-                    'id-ID');
+
+                // 1. Drain Lumpur (Standar: 19 m³/hari, di atas merah, dibawah/sama hijau)
+                const drainVal = parseFloat(sl.drain_lumpur) || 0;
+                const drainOk = sl.drain_lumpur_ok !== undefined ? sl.drain_lumpur_ok : (drainVal <= 19.0);
+                const drainEl = document.getElementById('sludgeDrainVal');
+                if (drainEl) {
+                    drainEl.textContent = drainVal.toLocaleString('id-ID', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 1
+                    });
+                    drainEl.className = drainOk ? 'text-success fw-bold' : 'text-danger fw-bold';
+                }
+                const drainStatusEl = document.getElementById('sludgeDrainStatus');
+                if (drainStatusEl) {
+                    drainStatusEl.className = drainOk ? 'badge-ok' : 'badge-danger';
+                    drainStatusEl.textContent = drainOk ? 'OK' : 'OVER';
+                }
+
+                // 2. Running Hour SCP (Standar: 6 jam/hari, di atas merah, dibawah/sama hijau)
+                const runningVal = parseFloat(sl.running_hour_scp) || 0;
+                const runningOk = sl.running_hour_ok !== undefined ? sl.running_hour_ok : (runningVal <= 6.0);
+                const runningEl = document.getElementById('sludgeRunningVal');
+                if (runningEl) {
+                    runningEl.textContent = runningVal.toLocaleString('id-ID', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 1
+                    });
+                    runningEl.className = runningOk ? 'text-success fw-bold' : 'text-danger fw-bold';
+                }
+                const runningStatusEl = document.getElementById('sludgeRunningStatus');
+                if (runningStatusEl) {
+                    runningStatusEl.className = runningOk ? 'badge-ok' : 'badge-danger';
+                    runningStatusEl.textContent = runningOk ? 'OK' : 'OVER';
+                }
+
+                // 3. Hasil Lumpur (Standar: 1.2 ton/hari, satuan Ton bukan kg, di atas merah, dibawah/sama hijau)
+                let hasilVal = parseFloat(sl.hasil_lumpur) || 0;
+                if (hasilVal > 50) hasilVal = hasilVal / 1000;
+                const hasilOk = sl.hasil_lumpur_ok !== undefined ? sl.hasil_lumpur_ok : (hasilVal <= 1.2);
+                const hasilEl = document.getElementById('sludgeHasilVal');
+                if (hasilEl) {
+                    hasilEl.textContent = hasilVal.toLocaleString('id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 2
+                    });
+                    hasilEl.className = hasilOk ? 'text-success fw-bold' : 'text-danger fw-bold';
+                }
+                const hasilStatusEl = document.getElementById('sludgeHasilStatus');
+                if (hasilStatusEl) {
+                    hasilStatusEl.className = hasilOk ? 'badge-ok' : 'badge-danger';
+                    hasilStatusEl.textContent = hasilOk ? 'OK' : 'OVER';
+                }
+                const hasilSatEl = document.getElementById('sludgeHasilSat');
+                if (hasilSatEl) {
+                    hasilSatEl.textContent = 'Ton';
+                }
+
+                // 4. Content Sludge (Standar: 20%, dibawah 20% merah, di atas/sama hijau)
+                const contentVal = parseFloat(sl.sludge_content) || 0;
+                const contentOk = sl.sludge_content_ok !== undefined ? sl.sludge_content_ok : (contentVal >= 20.0);
+                const contentEl = document.getElementById('sludgeContentVal');
+                if (contentEl) {
+                    contentEl.textContent = contentVal.toLocaleString('id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1
+                    });
+                    contentEl.className = contentOk ? 'text-success fw-bold' : 'text-danger fw-bold';
+                }
+                const contentStatusEl = document.getElementById('sludgeContentStatus');
+                if (contentStatusEl) {
+                    contentStatusEl.className = contentOk ? 'badge-ok' : 'badge-danger';
+                    contentStatusEl.textContent = contentOk ? 'OK' : 'LOW';
+                }
             }
         }
 
@@ -2044,4 +2761,6 @@
             loadKepatuhanTssSection(start, end);
         }
     </script>
-@endsection
+</body>
+
+</html>
