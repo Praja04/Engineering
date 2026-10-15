@@ -21,7 +21,8 @@
                                 <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-2 rounded-3"
                                     aria-labelledby="dropdownExportExcel" style="min-width: 280px;">
                                     <li>
-                                        <h6 class="dropdown-header text-uppercase fw-bold text-muted px-2 py-1">Opsi Export Excel</h6>
+                                        <h6 class="dropdown-header text-uppercase fw-bold text-muted px-2 py-1">Opsi Export
+                                            Excel</h6>
                                     </li>
                                     <li>
                                         <a class="dropdown-item d-flex align-items-center gap-2 p-2 rounded-2"
@@ -63,12 +64,13 @@
             </div>
 
             <div class="row">
-                <div class="col-lg-12">
+                <div class="col-lg-6">
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0">Batu Bara / Steam</h5>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportBBSteam" title="Download Excel Batu Bara / Steam">
+                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportBBSteam"
+                                    title="Download Excel Batu Bara / Steam">
                                     <i class="ri-file-excel-2-line"></i> <span>Excel</span>
                                 </button>
                                 <button class="btn btn-outline-danger d-flex" id="resetBBSteam">Reset</button>
@@ -109,15 +111,14 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-lg-12">
+                <div class="col-lg-6">
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0">Kondensat</h5>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportKondensat" title="Download Excel Kondensat">
+                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportKondensat"
+                                    title="Download Excel Kondensat">
                                     <i class="ri-file-excel-2-line"></i> <span>Excel</span>
                                 </button>
                                 <button class="btn btn-outline-danger d-flex" id="resetKondensat">Reset</button>
@@ -157,17 +158,15 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- CARD STEAM / FG -->
-            <div class="row">
-                <div class="col-lg-12">
+                <div class="col-lg-6">
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0" id="steam-card-title">Steam / Finish Goods <span
                                     class="d-none accounting">Accounting</span></h5>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportSteamFg" title="Download Excel Steam / Finish Goods">
+                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportSteamFg"
+                                    title="Download Excel Steam / Finish Goods">
                                     <i class="ri-file-excel-2-line"></i> <span>Excel</span>
                                 </button>
                                 <button class="btn btn-outline-danger d-flex" id="resetSteamFg">Reset</button>
@@ -251,17 +250,15 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- CARD BATU BARA / FG (sama persis, hanya ganti nama ID) -->
-            <div class="row mt-4">
-                <div class="col-lg-12">
+                <div class="col-lg-6">
                     <div class="card">
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h5 class="card-title mb-0" id="bb-card-title">Batu Bara / Finish Goods <span
                                     class="d-none accounting">Accounting</span></h5>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportBBFg" title="Download Excel Batu Bara / Finish Goods">
+                                <button class="btn btn-soft-success d-flex align-items-center gap-1" id="exportBBFg"
+                                    title="Download Excel Batu Bara / Finish Goods">
                                     <i class="ri-file-excel-2-line"></i> <span>Excel</span>
                                 </button>
                                 <button class="btn btn-outline-danger d-flex" id="resetBBFg">Reset</button>

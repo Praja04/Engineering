@@ -10,7 +10,7 @@
         ($jabatan === 'operator' && $bagian === 'Engineering WWTP') ||
         ($jabatan === 'foreman' && $bagian === 'Engineering WWTP'))
     <li class="nav-item">
-        <a class="nav-link menu-link {{ request()->is('dashboard/wwtp/*') ? '' : 'collapsed' }}""
+        <a class="nav-link menu-link {{ request()->is('dashboard/wwtp/*') ? '' : 'collapsed' }}"
             href="#sidebarUtilityDashboard" data-bs-toggle="collapse" role="button" aria-expanded="false"
             aria-controls="sidebarUtilityDashboard">
             <i class="mdi mdi-water"></i>
@@ -24,21 +24,6 @@
                     <i class="mdi mdi-chart-bar me-2"></i> Dashboard Utility
                 </a>
             </li> -->
-                <li class="nav-item">
-                    <a href="{{ url('utility/dashboard/listrik') }}" class="nav-link" data-key="t-analytics">
-                        <i class="mdi mdi-chart-bar me-2"></i> Pemakaian Listrik
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url('utility/dashboard/air') }}" class="nav-link" data-key="t-analytics">
-                        <i class="mdi mdi-chart-bar me-2"></i> Pemakaian Air
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url('utility/dashboard/chemical') }}" class="nav-link" data-key="t-analytics">
-                        <i class="mdi mdi-chart-bar me-2"></i> Pemakaian chemical
-                    </a>
-                </li>
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ request()->is('dashboard/wwtp/proses') ? 'active' : '' }}"
                         href="{{ url('dashboard/wwtp/proses') }}">
