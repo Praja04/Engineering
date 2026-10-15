@@ -1574,18 +1574,20 @@ class WWTPController extends Controller
 
         return [
             'card1_biaya_per_m3' => [
-                'value'     => $totalCostM3,
-                'formatted' => 'Rp ' . number_format($totalCostM3, 0, ',', '.') . ' / m³',
-                'target'    => 'TARGET ≤ Rp 20.000 / m³',
-                'trend_up'  => ($totalCostM3 > 20000)
+                'value'        => $totalCostM3,
+                'formatted'    => 'Rp ' . number_format($totalCostM3, 0, ',', '.') . ' / m³',
+                'target'       => 'TARGET ≤ Rp 20.000 / m³',
+                'target_value' => 20000,
+                'is_over'      => ($totalCostM3 > 20000),
+                'trend_up'     => ($totalCostM3 > 20000)
             ],
             'card2_total_cost_chem' => [
-                'value'     => $totalCost,
-                'formatted' => 'Rp ' . number_format($totalCost, 0, ',', '.'),
-                'standard'  => 45000000,
-                'target'    => 'STANDAR ≤ Rp 45 Jt',
-                'is_over'   => ($totalCost > 45000000),
-                'trend_up'  => ($totalCost > 45000000)
+                'value'        => $totalCost,
+                'formatted'    => 'Rp ' . number_format($totalCost, 0, ',', '.'),
+                'standard'     => 45000000,
+                'target'       => 'STANDAR ≤ Rp 45 Jt',
+                'is_over'      => ($totalCost > 45000000),
+                'trend_up'     => ($totalCost > 45000000)
             ],
             'card9_chem_consumption' => $chemicalsUsageList,
         ];

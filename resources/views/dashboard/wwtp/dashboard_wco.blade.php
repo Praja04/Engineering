@@ -221,6 +221,22 @@
             line-height: 1.2;
         }
 
+        .kpi-top-val.text-danger {
+            color: var(--wco-red) !important;
+        }
+
+        .kpi-top-val.text-success {
+            color: var(--wco-green) !important;
+        }
+
+        .kpi-top-card.border-danger-subtle {
+            border-color: rgba(239, 68, 68, 0.45) !important;
+        }
+
+        .kpi-top-card.border-success-subtle {
+            border-color: rgba(16, 185, 129, 0.35) !important;
+        }
+
         .kpi-top-sub {
             font-size: 8.5px;
             font-weight: 600;
@@ -921,9 +937,9 @@
 
                 <!-- Card 1: TOTAL COST / M3 (Biaya per Kubik di Biaya Chemical) -->
                 <div class="col-xl-2 col-lg-4 col-md-6">
-                    <div class="kpi-top-card">
+                    <div class="kpi-top-card" id="cardBiayaPerM3">
                         <div class="kpi-top-header">
-                            <div class="kpi-top-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                            <div class="kpi-top-icon" id="topCostM3Icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
                                 <i class="mdi mdi-cash-multiple"></i>
                             </div>
                             <div>
@@ -932,7 +948,7 @@
                             </div>
                         </div>
                         <div class="my-auto">
-                            <div class="kpi-top-val" id="topCostM3Val">Rp 0</div>
+                            <div class="kpi-top-val text-success" id="topCostM3Val">Rp 0</div>
                         </div>
                         <div class="kpi-top-sub text-success" id="topCostM3Sub">
                             <i class="mdi mdi-arrow-down-bold"></i> TARGET ≤ Rp 20.000 / m³
@@ -942,9 +958,9 @@
 
                 <!-- Card 2: TOTAL COST CHEMICAL (Total Cost Chemical / bulan) -->
                 <div class="col-xl-2 col-lg-4 col-md-6">
-                    <div class="kpi-top-card">
+                    <div class="kpi-top-card" id="cardTotalCostChem">
                         <div class="kpi-top-header">
-                            <div class="kpi-top-icon" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
+                            <div class="kpi-top-icon" id="topCostTotalIcon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
                                 <i class="mdi mdi-flask-round-bottom-outline"></i>
                             </div>
                             <div>
@@ -953,10 +969,10 @@
                             </div>
                         </div>
                         <div class="my-auto">
-                            <div class="kpi-top-val" id="topCostTotalVal">Rp 0</div>
+                            <div class="kpi-top-val text-success" id="topCostTotalVal">Rp 0</div>
                         </div>
-                        <div class="kpi-top-sub text-cyan" id="topCostTotalSub">
-                            <i class="mdi mdi-target"></i> STANDAR ≤ Rp 45 Jt
+                        <div class="kpi-top-sub text-success" id="topCostTotalSub">
+                            <i class="mdi mdi-check-circle-outline"></i> STANDAR ≤ Rp 45 Jt
                         </div>
                     </div>
                 </div>
@@ -1684,25 +1700,93 @@
             if (!data) return;
 
             if (data.card1_biaya_per_m3) {
-                document.getElementById('topCostM3Val').innerHTML = `${data.card1_biaya_per_m3.formatted}`;
-                document.getElementById('topCostM3Sub').innerHTML =
-                    `<i class="mdi mdi-arrow-down-bold"></i> ${data.card1_biaya_per_m3.target}`;
+                const c1 = data.card1_biaya_per_m3;
+                const valEl = document.getElementById('topCostM3Val');
+                const subEl = document.getElementById('topCostM3Sub');
+                const iconEl = document.getElementById('topCostM3Icon');
+                const cardEl = document.getElementById('cardBiayaPerM3');
+
+                if (valEl) {
+                    valEl.innerHTML = `${c1.formatted}`;
+                }
+
+                const isOverM3 = c1.is_over !== undefined ?
+                    c1.is_over :
+                    (Number(c1.value) > 20000);
+
+                if (isOverM3) {
+                    if (valEl) valEl.className = 'kpi-top-val text-danger';
+                    if (subEl) {
+                        subEl.className = 'kpi-top-sub text-danger';
+                        subEl.innerHTML = `<i class="mdi mdi-arrow-up-bold"></i> ${c1.target || 'TARGET ≤ Rp 20.000 / m³'}`;
+                    }
+                    if (iconEl) {
+                        iconEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                        iconEl.style.color = '#ef4444';
+                    }
+                    if (cardEl) {
+                        cardEl.classList.remove('border-success-subtle');
+                        cardEl.classList.add('border-danger-subtle');
+                    }
+                } else {
+                    if (valEl) valEl.className = 'kpi-top-val text-success';
+                    if (subEl) {
+                        subEl.className = 'kpi-top-sub text-success';
+                        subEl.innerHTML = `<i class="mdi mdi-arrow-down-bold"></i> ${c1.target || 'TARGET ≤ Rp 20.000 / m³'}`;
+                    }
+                    if (iconEl) {
+                        iconEl.style.background = 'rgba(16, 185, 129, 0.15)';
+                        iconEl.style.color = '#10b981';
+                    }
+                    if (cardEl) {
+                        cardEl.classList.remove('border-danger-subtle');
+                        cardEl.classList.add('border-success-subtle');
+                    }
+                }
             }
 
             if (data.card2_total_cost_chem) {
                 const totalChem = data.card2_total_cost_chem;
-                document.getElementById('topCostTotalVal').textContent = totalChem.formatted;
+                const valEl = document.getElementById('topCostTotalVal');
                 const subEl = document.getElementById('topCostTotalSub');
-                if (subEl) {
-                    const isOver = totalChem.is_over !== undefined ?
-                        totalChem.is_over :
-                        (Number(totalChem.value) > 45000000);
-                    if (isOver) {
+                const iconEl = document.getElementById('topCostTotalIcon');
+                const cardEl = document.getElementById('cardTotalCostChem');
+
+                if (valEl) {
+                    valEl.textContent = totalChem.formatted;
+                }
+
+                const isOverTotal = totalChem.is_over !== undefined ?
+                    totalChem.is_over :
+                    (Number(totalChem.value) > 45000000);
+
+                if (isOverTotal) {
+                    if (valEl) valEl.className = 'kpi-top-val text-danger';
+                    if (subEl) {
                         subEl.className = 'kpi-top-sub text-danger';
                         subEl.innerHTML = `<i class="mdi mdi-arrow-up-bold"></i> STANDAR ≤ Rp 45 Jt`;
-                    } else {
+                    }
+                    if (iconEl) {
+                        iconEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                        iconEl.style.color = '#ef4444';
+                    }
+                    if (cardEl) {
+                        cardEl.classList.remove('border-success-subtle');
+                        cardEl.classList.add('border-danger-subtle');
+                    }
+                } else {
+                    if (valEl) valEl.className = 'kpi-top-val text-success';
+                    if (subEl) {
                         subEl.className = 'kpi-top-sub text-success';
                         subEl.innerHTML = `<i class="mdi mdi-check-circle-outline"></i> STANDAR ≤ Rp 45 Jt`;
+                    }
+                    if (iconEl) {
+                        iconEl.style.background = 'rgba(16, 185, 129, 0.15)';
+                        iconEl.style.color = '#10b981';
+                    }
+                    if (cardEl) {
+                        cardEl.classList.remove('border-danger-subtle');
+                        cardEl.classList.add('border-success-subtle');
                     }
                 }
             }
