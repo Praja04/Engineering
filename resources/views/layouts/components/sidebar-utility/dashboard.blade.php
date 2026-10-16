@@ -14,7 +14,7 @@
             href="#sidebarUtilityDashboard" data-bs-toggle="collapse" role="button" aria-expanded="false"
             aria-controls="sidebarUtilityDashboard">
             <i class="mdi mdi-water"></i>
-            <span data-key="t-dashboards">Dashboard Utility & WWTP</span>
+            <span data-key="t-dashboards">Dashboard WWTP</span>
         </a>
         <div class="collapse menu-dropdown {{ request()->is('dashboard/wwtp/*') ? 'show' : '' }}"
             id="sidebarUtilityDashboard">
@@ -46,14 +46,13 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ request()->is('dashboard/wwtp/visualisasi') ? 'active' : '' }}"
                         href="{{ url('dashboard/wwtp/visualisasi') }}">
-                        <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets2">WWTP Dashboard</span>
+                        <i class="mdi mdi-chart-bar me-2"></i> <span data-key="t-widgets2">Flow Proses WWTP</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link menu-link {{ request()->is('dashboard/wwtp/wco') ? 'active' : '' }}"
-                        href="{{ url('dashboard/wwtp/wco') }}" target="_blank">
+                        href="{{ url('dashboard/wwtp/wco') }}">
                         <i class="mdi mdi-shield-check me-2"></i> <span data-key="t-widgets3">WCO - SHE Dashboard</span>
-                        <i class="mdi mdi-open-in-new ms-auto" style="font-size: 11px; opacity: 0.7;"></i>
                     </a>
                 </li>
             </ul>
