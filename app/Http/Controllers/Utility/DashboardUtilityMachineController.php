@@ -28,26 +28,30 @@ class DashboardUtilityMachineController extends Controller
         $endDateStr = $request->query('end_date');
         $gensetYear = (int)$request->query('genset_year', 0);
 
+        $latestDates = array_filter([
+            CompressorDetails::max('tanggal'),
+            AhuDetails::max('tanggal'),
+            MdpMonitoring::max('tanggal_laporan'),
+            CoolingTowerDetails::max('tanggal'),
+            AnalisisUtilityDetails::max('tanggal'),
+            WarmingUpGenset::max('tanggal_laporan'),
+        ]);
+        $defaultDate = !empty($latestDates) ? max($latestDates) : Carbon::today()->toDateString();
+
         if ($mode === 'today') {
-            $selectedDate = Carbon::today()->toDateString();
+            $today = Carbon::today()->toDateString();
+            $hasTodayData = CompressorDetails::where('tanggal', $today)->exists()
+                || CoolingTowerDetails::where('tanggal', $today)->exists()
+                || AhuDetails::where('tanggal', $today)->exists();
+            $selectedDate = $hasTodayData ? $today : $defaultDate;
             $startDate = $selectedDate;
             $endDate = $selectedDate;
         } else {
-            // Temukan tanggal terbaru di seluruh tabel jika belum dispesifikasikan
             if (!$reqDate && !$startDateStr) {
-                $latestDates = array_filter([
-                    CompressorDetails::max('tanggal'),
-                    AhuDetails::max('tanggal'),
-                    MdpMonitoring::max('tanggal_laporan'),
-                    CoolingTowerDetails::max('tanggal'),
-                    AnalisisUtilityDetails::max('tanggal'),
-                    WarmingUpGenset::max('tanggal_laporan'),
-                ]);
-                $defaultDate = !empty($latestDates) ? max($latestDates) : Carbon::today()->toDateString();
                 $reqDate = $defaultDate;
             }
 
-            $selectedDate = $reqDate ? Carbon::parse($reqDate)->toDateString() : Carbon::today()->toDateString();
+            $selectedDate = $reqDate ? Carbon::parse($reqDate)->toDateString() : $defaultDate;
 
             if ($mode === 'harian') {
                 $startDate = $selectedDate;
@@ -396,8 +400,17 @@ class DashboardUtilityMachineController extends Controller
         })->values();
 
         $ctHourly = $selectedDayCt->map(function ($item) {
+            $jam = $item->jam;
+            if ($jam instanceof \DateTimeInterface) {
+                $jamStr = $jam->format('H:i');
+            } elseif (is_string($jam)) {
+                $jamStr = strlen($jam) >= 16 ? substr($jam, 11, 5) : substr($jam, 0, 5);
+            } else {
+                $jamStr = (string)$jam;
+            }
+
             return [
-                'jam' => substr($item->jam, 0, 5),
+                'jam' => $jamStr,
                 'temp_out' => (float)($item->temp_ct_out ?? 0),
                 'temp_in' => (float)($item->temp_ct_in ?? 0),
                 'pressure_out' => (float)($item->pressure_ct_out ?? 0),

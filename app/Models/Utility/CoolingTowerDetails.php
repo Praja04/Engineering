@@ -28,7 +28,6 @@ class CoolingTowerDetails extends Model
 
     protected $casts = [
         'tanggal' => 'date:Y-m-d',
-        'jam' => 'datetime:H:i',
     ];
 
     protected function serializeDate(\DateTimeInterface $date)
