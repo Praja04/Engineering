@@ -829,7 +829,8 @@
                                     <div class="col-6">
                                         <div class="stat-tile py-1 px-2">
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <span class="stat-tile-label text-cyan" style="font-size: 8px;">TEMP
+                                                <span class="stat-tile-label text-cyan" style="font-size: 8px;">AVG.
+                                                    TEMP
                                                     OUT</span>
                                                 <i class="mdi mdi-thermometer text-cyan"></i>
                                             </div>
@@ -846,7 +847,7 @@
                                         <div class="stat-tile py-1 px-2">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <span class="stat-tile-label text-success"
-                                                    style="font-size: 8px;">PRESSURE OUT</span>
+                                                    style="font-size: 8px;">AVG. PRESSURE OUT</span>
                                                 <i class="mdi mdi-gauge text-success"></i>
                                             </div>
                                             <div class="stat-tile-val mt-1 text-success" id="valCtPressOut"
@@ -882,7 +883,8 @@
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-warning" style="font-size: 8px;">ARUS
+                                            <div class="stat-tile-label text-warning" style="font-size: 8px;">AVG.
+                                                ARUS
                                                 RATA2</div>
                                             <div class="stat-tile-val mt-1" id="valMdpArus" style="font-size: 12px;">
                                                 0.0 A</div>
@@ -892,7 +894,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-info" style="font-size: 8px;">TEGANGAN
+                                            <div class="stat-tile-label text-info" style="font-size: 8px;">AVG.
+                                                TEGANGAN
                                             </div>
                                             <div class="stat-tile-val mt-1" id="valMdpTegangan"
                                                 style="font-size: 12px;">0.0 V</div>
@@ -902,7 +905,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-success" style="font-size: 8px;">DAYA
+                                            <div class="stat-tile-label text-success" style="font-size: 8px;">AVG.
+                                                DAYA
                                                 TOTAL</div>
                                             <div class="stat-tile-val mt-1" id="valMdpDaya" style="font-size: 12px;">
                                                 0.0 kW</div>
@@ -924,7 +928,7 @@
                             <div class="wco-card-header">
                                 <div class="wco-card-title">
                                     <i class="mdi mdi-thermometer-lines text-danger"></i>
-                                    <span>MDP SUHU MESIN DAN RUANG</span>
+                                    <span>MDP SUHU MESIN DAN SUHU RUANG</span>
                                 </div>
                                 <span class="badge bg-dark border border-secondary text-danger"
                                     id="mdpThermalBadge">Suhu & Trafo</span>
@@ -934,7 +938,8 @@
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-danger" style="font-size: 7.5px;">TEMP
+                                            <div class="stat-tile-label text-danger" style="font-size: 7.5px;">AVG.
+                                                TEMP
                                                 TRAFO</div>
                                             <div class="stat-tile-val mt-1" id="valMdpTempTrafo"
                                                 style="font-size: 12px;">0.0 °C</div>
@@ -944,7 +949,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-warning" style="font-size: 7.5px;">RUANG
+                                            <div class="stat-tile-label text-warning" style="font-size: 7.5px;">AVG.
+                                                RUANG
                                                 TRAFO</div>
                                             <div class="stat-tile-val mt-1" id="valMdpSuhuTrafo"
                                                 style="font-size: 12px;">0.0 °C</div>
@@ -954,7 +960,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-pink" style="font-size: 7.5px;">RUANG
+                                            <div class="stat-tile-label text-pink" style="font-size: 7.5px;">AVG.
+                                                RUANG
                                                 GENSET</div>
                                             <div class="stat-tile-val mt-1" id="valMdpSuhuGenset"
                                                 style="font-size: 12px;">0.0 °C</div>
@@ -986,7 +993,7 @@
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <div class="stat-tile-label" style="font-size: 8px;">SPEED</div>
+                                            <div class="stat-tile-label" style="font-size: 8px;">AVG. SPEED</div>
                                             <div class="stat-tile-val mt-1 text-info" id="gensetSpeedVal"
                                                 style="font-size: 12px;">0</div>
                                             <div class="stat-tile-meta" style="font-size: 7px;">RPM</div>
@@ -994,7 +1001,7 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <div class="stat-tile-label" style="font-size: 8px;">TEMP</div>
+                                            <div class="stat-tile-label" style="font-size: 8px;">AVG. TEMP</div>
                                             <div class="stat-tile-val mt-1 text-warning" id="gensetTempVal"
                                                 style="font-size: 12px;">0</div>
                                             <div class="stat-tile-meta" style="font-size: 7px;">°C</div>
@@ -1002,7 +1009,7 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <div class="stat-tile-label" style="font-size: 8px;">OIL PRESS</div>
+                                            <div class="stat-tile-label" style="font-size: 8px;">AVG. OIL PRESS</div>
                                             <div class="stat-tile-val mt-1 text-success" id="gensetOilVal"
                                                 style="font-size: 12px;">0</div>
                                             <div class="stat-tile-meta" style="font-size: 7px;">Bar</div>
@@ -1076,8 +1083,8 @@
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-primary"
-                                                style="font-size: 8px;">pH</span>
+                                            <span class="stat-tile-label text-primary" style="font-size: 8px;">AVG.
+                                                pH</span>
                                             <div class="stat-tile-val mt-1" style="font-size: 12px;" id="wRoPh">
                                                 0.0</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 6.5 -
@@ -1086,7 +1093,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-info" style="font-size: 8px;">TDS</span>
+                                            <span class="stat-tile-label text-info" style="font-size: 8px;">AVG.
+                                                TDS</span>
                                             <div class="stat-tile-val mt-1 text-info" style="font-size: 11px;"
                                                 id="wRoTds">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: ≤ 50
@@ -1095,8 +1103,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-warning"
-                                                style="font-size: 8px;">HARDNESS</span>
+                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">AVG.
+                                                HARDNESS</span>
                                             <div class="stat-tile-val mt-1 text-warning" style="font-size: 11px;"
                                                 id="wRoHardness">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 0 - 10
@@ -1123,8 +1131,8 @@
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-success"
-                                                style="font-size: 8px;">pH</span>
+                                            <span class="stat-tile-label text-success" style="font-size: 8px;">AVG.
+                                                pH</span>
                                             <div class="stat-tile-val mt-1" style="font-size: 12px;" id="wWsPh">
                                                 0.0</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 6.8 -
@@ -1133,7 +1141,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-info" style="font-size: 8px;">TDS</span>
+                                            <span class="stat-tile-label text-info" style="font-size: 8px;">AVG.
+                                                TDS</span>
                                             <div class="stat-tile-val mt-1 text-info" style="font-size: 11px;"
                                                 id="wWsTds">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: ≤ 300
@@ -1142,8 +1151,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-warning"
-                                                style="font-size: 8px;">HARDNESS</span>
+                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">AVG.
+                                                HARDNESS</span>
                                             <div class="stat-tile-val mt-1 text-warning" style="font-size: 11px;"
                                                 id="wWsHardness">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 0 - 10
@@ -1170,8 +1179,8 @@
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-warning"
-                                                style="font-size: 8px;">pH</span>
+                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">AVG.
+                                                pH</span>
                                             <div class="stat-tile-val mt-1" style="font-size: 12px;" id="wBoilerPh">
                                                 0.0</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 10.5 -
@@ -1180,7 +1189,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-info" style="font-size: 8px;">TDS</span>
+                                            <span class="stat-tile-label text-info" style="font-size: 8px;">AVG.
+                                                TDS</span>
                                             <div class="stat-tile-val mt-1 text-info" style="font-size: 11px;"
                                                 id="wBoilerTds">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: ≤ 3500
@@ -1189,8 +1199,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-danger"
-                                                style="font-size: 8px;">HARDNESS</span>
+                                            <span class="stat-tile-label text-danger" style="font-size: 8px;">AVG.
+                                                HARDNESS</span>
                                             <div class="stat-tile-val mt-1 text-danger" style="font-size: 11px;"
                                                 id="wBoilerHardness">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 0 ppm
@@ -1217,8 +1227,8 @@
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-purple"
-                                                style="font-size: 8px;">pH</span>
+                                            <span class="stat-tile-label text-purple" style="font-size: 8px;">AVG.
+                                                pH</span>
                                             <div class="stat-tile-val mt-1" style="font-size: 12px;" id="wFwPh">
                                                 0.0</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 6.5 -
@@ -1227,7 +1237,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-info" style="font-size: 8px;">TDS</span>
+                                            <span class="stat-tile-label text-info" style="font-size: 8px;">AVG.
+                                                TDS</span>
                                             <div class="stat-tile-val mt-1 text-info" style="font-size: 11px;"
                                                 id="wFwTds">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: ≤ 500
@@ -1236,8 +1247,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-warning"
-                                                style="font-size: 8px;">HARDNESS</span>
+                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">AVG.
+                                                HARDNESS</span>
                                             <div class="stat-tile-val mt-1 text-warning" style="font-size: 11px;"
                                                 id="wFwHardness">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: ≤ 150
