@@ -118,13 +118,33 @@
                 display: flex;
                 flex-direction: column;
                 height: 100%;
-                overflow: hidden;
+                position: relative;
+                overflow: visible;
                 transition: border-color 0.2s ease, box-shadow 0.2s ease;
             }
 
-            .wco-card:hover {
+            .wco-card:hover,
+            .wco-card:focus-within {
                 border-color: rgba(56, 189, 248, 0.4);
                 box-shadow: 0 6px 20px rgba(6, 182, 212, 0.12);
+                z-index: 1050;
+            }
+
+            [class*="col-"]:has(.wco-card:hover),
+            [class*="col-"]:has(.wco-card:focus-within) {
+                z-index: 1050;
+                position: relative;
+            }
+
+            /* ApexCharts Tooltip Stacking & Visibility */
+            .apexcharts-canvas {
+                overflow: visible !important;
+            }
+
+            .apexcharts-tooltip {
+                z-index: 999999 !important;
+                pointer-events: none !important;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
             }
 
             .wco-card-header {
@@ -134,6 +154,8 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                border-top-left-radius: 9px;
+                border-top-right-radius: 9px;
             }
 
             .wco-card-title {
@@ -1899,7 +1921,12 @@
                             }
                         },
                         tooltip: {
-                            theme: chartTheme.mode
+                            theme: chartTheme.mode,
+                            shared: true,
+                            intersect: false,
+                            fixed: {
+                                enabled: false
+                            }
                         }
                     };
 
