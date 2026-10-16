@@ -6,14 +6,14 @@
 @if ($jabatan != 'operator' && in_array($bagian, ['IT', 'Engineering', 'Engineering Utility', 'Engineering WWTP']))
     <li class="nav-item">
         <a class="nav-link menu-link
-            {{ request()->routeIs('dashboard.boiler.*') || request()->Is('utility/dashboard/listrik') || request()->Is('utility/dashboard/air') || request()->Is('utility/dashboard/chemical') ? 'collapsed' : '' }}"
+            {{ request()->routeIs('dashboard.boiler.*') || request()->Is('utility/dashboard/listrik') || request()->Is('utility/dashboard/air') || request()->Is('utility/dashboard/chemical') || request()->Is('utility/dashboard/machine') ? 'collapsed' : '' }}"
             href="#sidebarDashboardBoiler" data-bs-toggle="collapse" role="button" aria-expanded="false"
             aria-controls="sidebarDashboardBoiler">
             <i class="mdi mdi-cog"></i>
             <span data-key="t-dashboards">Dashboard Utility & Boiler</span>
         </a>
         <div class="collapse menu-dropdown
-            {{ request()->routeIs('dashboard.boiler.*') || request()->Is('utility/dashboard/listrik') || request()->Is('utility/dashboard/air') || request()->Is('utility/dashboard/chemical') ? 'show' : '' }}"
+            {{ request()->routeIs('dashboard.boiler.*') || request()->Is('utility/dashboard/listrik') || request()->Is('utility/dashboard/air') || request()->Is('utility/dashboard/chemical') || request()->Is('utility/dashboard/machine') ? 'show' : '' }}"
             id="sidebarDashboardBoiler">
             <ul class="nav nav-sm flex-column">
                 <li class="nav-item">
@@ -50,6 +50,12 @@
                         data-key="t-analytics">
                         <i class="mdi mdi-chart-bar me-2"></i> Pemakaian chemical
                     </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url('utility/dashboard/machine') }}"
+                        class="nav-link {{ request()->Is('utility/dashboard/machine') ? 'active' : '' }}"
+                        data-key="t-analytics">
+                        <i class="mdi mdi-chart-bar me-2"></i> Utility Machine Dashboard </a>
                 </li>
             </ul>
         </div>

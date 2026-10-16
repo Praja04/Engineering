@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardUtilityController extends Controller
 {
@@ -35,10 +37,9 @@ class DashboardUtilityController extends Controller
         ]);
     }
 
-    //
     public function utility()
     {
-        return view('dashboard.utility.dashboard');
+        return view('dashboard.utility.dashboard_utility');
     }
     public function listrik()
     {
@@ -73,3 +74,4 @@ class DashboardUtilityController extends Controller
         return view('dashboard.wwtp.dashboard_wco');
     }
 }
+

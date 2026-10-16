@@ -2341,12 +2341,12 @@ class WWTPController extends Controller
             // 1. Sv'30 : 300 - 500 ml
             // 2. Mlss : 1000 - 5000 ppm
             // 3. SVI : 90 - 150
-            // 4. Do : 2 ppm (melebihi itu not oke -> do <= 2.0)
+            // 4. Do : 2 - 4 ppm (jika < 2 merah, jika 2 - 4 hijau, jika > 4 merah)
             // 5. pH : 7 - 9
             $sv30Ok = ($sv30Val >= 300 && $sv30Val <= 500);
             $mlssOk = ($mlssVal >= 1000 && $mlssVal <= 5000);
             $sviOk  = ($sviVal >= 90 && $sviVal <= 150);
-            $doOk   = ($doVal <= 2.0);
+            $doOk   = ($doVal >= 2.0 && $doVal <= 4.0);
             $phOk   = ($phVal >= 7.0 && $phVal <= 9.0);
             $isOk   = ($sv30Ok && $mlssOk && $sviOk && $doOk && $phOk);
 

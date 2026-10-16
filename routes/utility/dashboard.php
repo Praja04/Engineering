@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\DashboardUtilityController;
+use App\Http\Controllers\Utility\DashboardUtilityMachineController;
 use App\Http\Controllers\Utility\WWTPController;
 
 Route::get('utility/dashboard', [DashboardUtilityController::class, 'utility'])->name('utility.dashboard');
@@ -15,3 +16,5 @@ Route::get('dashboard/wwtp/visualisasi', [DashboardUtilityController::class, 'ww
 Route::get('dashboard/wwtp/visualisasi-data', [WWTPController::class, 'wwtp_visualisasi_data'])->name('wwtp.dashboard_visualisasi_data');
 Route::get('dashboard/wwtp/wco', [DashboardUtilityController::class, 'wwtp_wco'])->name('wwtp.dashboard_wco');
 Route::get('dashboard/wwtp/wco-data', [WWTPController::class, 'wwtp_wco_data'])->name('wwtp.dashboard_wco_data');
+Route::get('utility/dashboard/machine', [DashboardUtilityMachineController::class, 'machine'])->name('utility.dashboard_machine');
+Route::get('utility/dashboard/machine-data', [DashboardUtilityMachineController::class, 'machine_data'])->name('utility.dashboard_machine_data');
