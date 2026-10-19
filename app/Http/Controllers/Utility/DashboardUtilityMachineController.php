@@ -148,10 +148,37 @@ class DashboardUtilityMachineController extends Controller
             return is_string($item->tanggal) ? $item->tanggal : Carbon::parse($item->tanggal)->format('Y-m-d');
         });
 
+        // 1. Forward-fill RH1 for daily trends:
+        // Ambil data running_hour_1 terakhir sebelum $startDate jika ada
+        $prevRh1Record = CompressorDetails::where('tanggal', '<', $startDate)
+            ->whereNotNull('running_hour_1')
+            ->where('running_hour_1', '>', 0)
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('jam', 'desc')
+            ->first();
+
+        $currentRh1 = $prevRh1Record ? (float)$prevRh1Record->running_hour_1 : null;
+        if (is_null($currentRh1)) {
+            $firstInRange = $compDetails->first(function ($r) {
+                return !is_null($r->running_hour_1) && (float)$r->running_hour_1 > 0;
+            });
+            if ($firstInRange) {
+                $currentRh1 = (float)$firstInRange->running_hour_1;
+            }
+        }
+
         $compDailyTrends = [];
         foreach ($compDailyGroup as $dt => $rows) {
+            $validRh1 = $rows->filter(function ($r) {
+                return !is_null($r->running_hour_1) && (float)$r->running_hour_1 > 0;
+            });
+            if ($validRh1->isNotEmpty()) {
+                $currentRh1 = round((float)$validRh1->last()->running_hour_1, 2);
+            }
+
             $compDailyTrends[] = [
                 'tanggal' => $dt,
+                'rh1_avg' => $currentRh1,
                 'ga57_avg' => round($rows->avg('running_hour_2') ?? 0, 2),
                 'ir55_avg' => round($rows->avg('running_hour_3') ?? 0, 2),
                 'ga55_avg' => round($rows->avg('running_hour_4') ?? 0, 2),
@@ -159,14 +186,36 @@ class DashboardUtilityMachineController extends Controller
             ];
         }
 
+        // 2. Forward-fill RH1 for hourly readings:
         $selectedDayComp = $compDetails->filter(function ($item) use ($selectedDate) {
             $d = is_string($item->tanggal) ? $item->tanggal : Carbon::parse($item->tanggal)->format('Y-m-d');
             return $d === $selectedDate;
         })->values();
 
-        $compHourly = $selectedDayComp->map(function ($item) {
+        $prevHourlyRh1 = CompressorDetails::where('tanggal', '<', $selectedDate)
+            ->whereNotNull('running_hour_1')
+            ->where('running_hour_1', '>', 0)
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('jam', 'desc')
+            ->value('running_hour_1');
+
+        $hourlyRh1 = !is_null($prevHourlyRh1) ? (float)$prevHourlyRh1 : null;
+        if (is_null($hourlyRh1)) {
+            $firstDayRh1 = $selectedDayComp->first(function ($r) {
+                return !is_null($r->running_hour_1) && (float)$r->running_hour_1 > 0;
+            });
+            if ($firstDayRh1) {
+                $hourlyRh1 = (float)$firstDayRh1->running_hour_1;
+            }
+        }
+
+        $compHourly = $selectedDayComp->map(function ($item) use (&$hourlyRh1) {
+            if (!is_null($item->running_hour_1) && (float)$item->running_hour_1 > 0) {
+                $hourlyRh1 = (float)$item->running_hour_1;
+            }
             return [
                 'jam' => substr($item->jam, 0, 5),
+                'rh1' => !is_null($hourlyRh1) ? round($hourlyRh1, 2) : null,
                 'ga57' => (float)($item->running_hour_2 ?? 0),
                 'ir55' => (float)($item->running_hour_3 ?? 0),
                 'ga55' => (float)($item->running_hour_4 ?? 0),
@@ -175,10 +224,23 @@ class DashboardUtilityMachineController extends Controller
         });
 
         $compTarget = ($mode === 'harian') ? $selectedDayComp : $compDetails;
+
+        $latestTrend = !empty($compDailyTrends) ? $compDailyTrends[count($compDailyTrends) - 1] : null;
+        $latestDate = $latestTrend ? $latestTrend['tanggal'] : null;
+        $latestDateFormatted = $latestDate ? Carbon::parse($latestDate)->translatedFormat('d M Y') : null;
+
         $compSummary = [
+            'rh1_avg' => round($compTarget->whereNotNull('running_hour_1')->avg('running_hour_1') ?: ($currentRh1 ?? 0), 2),
             'ga57_avg' => round($compTarget->avg('running_hour_2') ?? 0, 2),
             'ir55_avg' => round($compTarget->avg('running_hour_3') ?? 0, 2),
             'ga55_avg' => round($compTarget->avg('running_hour_4') ?? 0, 2),
+            'rh1_latest_avg' => $latestTrend && !is_null($latestTrend['rh1_avg']) ? (float)$latestTrend['rh1_avg'] : ($currentRh1 ?? 0),
+            'ga57_latest_avg' => $latestTrend ? (float)$latestTrend['ga57_avg'] : round($compTarget->avg('running_hour_2') ?? 0, 2),
+            'ir55_latest_avg' => $latestTrend ? (float)$latestTrend['ir55_avg'] : round($compTarget->avg('running_hour_3') ?? 0, 2),
+            'ga55_latest_avg' => $latestTrend ? (float)$latestTrend['ga55_avg'] : round($compTarget->avg('running_hour_4') ?? 0, 2),
+            'latest_date' => $latestDate,
+            'latest_date_formatted' => $latestDateFormatted,
+            'rh1_latest' => (float)($selectedDayComp->whereNotNull('running_hour_1')->last()->running_hour_1 ?? ($compDetails->whereNotNull('running_hour_1')->last()->running_hour_1 ?? ($currentRh1 ?? 0))),
             'ga57_latest' => (float)($selectedDayComp->last()->running_hour_2 ?? ($compDetails->last()->running_hour_2 ?? 0)),
             'ir55_latest' => (float)($selectedDayComp->last()->running_hour_3 ?? ($compDetails->last()->running_hour_3 ?? 0)),
             'ga55_latest' => (float)($selectedDayComp->last()->running_hour_4 ?? ($compDetails->last()->running_hour_4 ?? 0)),

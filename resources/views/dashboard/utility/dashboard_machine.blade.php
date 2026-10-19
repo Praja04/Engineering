@@ -580,7 +580,7 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">COMPRESSOR</div>
-                                    <div class="text-muted" style="font-size: 8px;">AVG RUNNING HOUR</div>
+                                    <div class="text-muted" style="font-size: 8px;">TOTAL AVG RUNNING HOUR</div>
                                 </div>
                             </div>
                             <div class="kpi-top-val" id="kpiCompVal">0 <span
@@ -601,7 +601,7 @@
                                     <i class="mdi mdi-fan"></i>
                                 </div>
                                 <div>
-                                    <div class="kpi-top-label">AHU FLEET</div>
+                                    <div class="kpi-top-label">SUHU AHU</div>
                                     <div class="text-muted" style="font-size: 8px;">SUHU & AMPERE</div>
                                 </div>
                             </div>
@@ -717,10 +717,22 @@
                                     id="compPeriodBadge">Hourly Readings</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
-                                <!-- 3 Machine Metric Tiles -->
+                                <!-- 4 Machine Metric Tiles -->
                                 <div class="row g-1 mb-2">
+                                    <!-- RH 1 (rh1) -->
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1">
+                                            <div class="text-center">
+                                                <span class="stat-tile-label text-warning" style="font-size: 8px;">AVG. RH 1 (rh1)</span>
+                                            </div>
+                                            <div class="stat-tile-val mt-1 text-center text-warning" id="valCompRh1"
+                                                style="font-size: 13px;">0.00</div>
+                                            <div class="text-center text-muted" id="compMetaRh1"
+                                                style="font-size: 7.5px; line-height: 1.1;">Tgl Terbaru</div>
+                                        </div>
+                                    </div>
                                     <!-- GA57 (rh2) -->
-                                    <div class="col-4">
+                                    <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
                                                 <span class="stat-tile-label text-cyan" style="font-size: 8px;">AVG.
@@ -729,10 +741,12 @@
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center" id="valCompGa57"
                                                 style="font-size: 13px;">0.00</div>
+                                            <div class="text-center text-muted" id="compMetaGa57"
+                                                style="font-size: 7.5px; line-height: 1.1;">Tgl Terbaru</div>
                                         </div>
                                     </div>
                                     <!-- IR55 (rh3) -->
-                                    <div class="col-4">
+                                    <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
                                                 <span class="stat-tile-label text-info" style="font-size: 8px;">AVG.
@@ -741,10 +755,12 @@
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center" id="valCompIr55"
                                                 style="font-size: 13px;">0.00</div>
+                                            <div class="text-center text-muted" id="compMetaIr55"
+                                                style="font-size: 7.5px; line-height: 1.1;">Tgl Terbaru</div>
                                         </div>
                                     </div>
                                     <!-- GA55 (rh4) -->
-                                    <div class="col-4">
+                                    <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
                                                 <span class="stat-tile-label text-success"
@@ -752,6 +768,8 @@
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center" id="valCompGa55"
                                                 style="font-size: 13px;">0.00</div>
+                                            <div class="text-center text-muted" id="compMetaGa55"
+                                                style="font-size: 7.5px; line-height: 1.1;">Tgl Terbaru</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1442,9 +1460,35 @@
                     $('#kpiCompGa57').text(`${comp.ga57_avg} h`);
                     $('#kpiCompIr55').text(`${comp.ir55_avg} h`);
 
-                    $('#valCompGa57').text(comp.ga57_avg.toLocaleString('id-ID'));
-                    $('#valCompIr55').text(comp.ir55_avg.toLocaleString('id-ID'));
-                    $('#valCompGa55').text(comp.ga55_avg.toLocaleString('id-ID'));
+                    // Card metric tiles: tampilkan AVG data tanggal terbaru (bukan total periode)
+                    const rh1Val = (comp.rh1_latest_avg !== undefined) ? comp.rh1_latest_avg : (comp.rh1_avg || 0);
+                    const ga57Val = (comp.ga57_latest_avg !== undefined) ? comp.ga57_latest_avg : comp.ga57_avg;
+                    const ir55Val = (comp.ir55_latest_avg !== undefined) ? comp.ir55_latest_avg : comp.ir55_avg;
+                    const ga55Val = (comp.ga55_latest_avg !== undefined) ? comp.ga55_latest_avg : comp.ga55_avg;
+
+                    $('#valCompRh1').text(Number(rh1Val).toLocaleString('id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 2
+                    }));
+                    $('#valCompGa57').text(Number(ga57Val).toLocaleString('id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 2
+                    }));
+                    $('#valCompIr55').text(Number(ir55Val).toLocaleString('id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 2
+                    }));
+                    $('#valCompGa55').text(Number(ga55Val).toLocaleString('id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 2
+                    }));
+
+                    const dateMeta = comp.latest_date_formatted ? `Tgl: ${comp.latest_date_formatted}` : (comp
+                        .latest_date ? `Tgl: ${comp.latest_date}` : 'Tgl Terbaru');
+                    $('#compMetaRh1').text(dateMeta);
+                    $('#compMetaGa57').text(dateMeta);
+                    $('#compMetaIr55').text(dateMeta);
+                    $('#compMetaGa55').text(dateMeta);
                 }
 
                 async function loadCompressorSection() {
@@ -1669,6 +1713,10 @@
                     if (isHourly) {
                         compCategories = compData.hourly.map(h => h.jam);
                         compSeries = [{
+                                name: 'RH 1 (rh1)',
+                                data: compData.hourly.map(h => h.rh1)
+                            },
+                            {
                                 name: 'GA57 (rh2)',
                                 data: compData.hourly.map(h => h.ga57)
                             },
@@ -1684,6 +1732,10 @@
                     } else {
                         compCategories = compData.daily_trends.map(t => t.tanggal);
                         compSeries = [{
+                                name: 'RH 1 Avg (rh1)',
+                                data: compData.daily_trends.map(t => t.rh1_avg)
+                            },
+                            {
                                 name: 'GA57 Avg (rh2)',
                                 data: compData.daily_trends.map(t => t.ga57_avg)
                             },
@@ -1709,7 +1761,7 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: ['#06b6d4', '#3b82f6', '#10b981'],
+                        colors: ['#f59e0b', '#06b6d4', '#3b82f6', '#10b981'],
                         stroke: {
                             curve: 'smooth',
                             width: 2.5
@@ -1733,7 +1785,8 @@
                                 colors: [isThemeLight() ? '#334155' : '#cbd5e1']
                             },
                             formatter: function(val) {
-                                if (!val && val !== 0) return '';
+                                if (val === null || val === undefined || val === '') return '';
+                                if (val === 0) return '';
                                 return Number.isInteger(val) ? val : Number(val).toFixed(1);
                             }
                         },
