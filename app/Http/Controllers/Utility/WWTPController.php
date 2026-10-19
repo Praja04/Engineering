@@ -1434,80 +1434,35 @@ class WWTPController extends Controller
                 ->first();
         }
 
-        $allStandards = WwtpChemicalStandard::orderBy('chemical_name', 'asc')->get();
+        $allStandards = WwtpChemicalStandard::orderBy('id', 'asc')->get()->sortBy(function ($std) {
+            $name = strtoupper($std->chemical_name);
+            if (str_contains($name, 'NAOH')) return 1;
+            if (str_contains($name, 'PAC')) return 2;
+            if (str_contains($name, 'BE')) return 3;
+            if (str_contains($name, '204')) return 4;
+            if (str_contains($name, 'DAF')) return 5;
+            if (str_contains($name, 'DENFLOC')) return 6;
+            if (str_contains($name, '9040')) return 7;
+            return 100 + $std->id;
+        })->values();
+
         $totalCost = 0;
         $totalCostM3 = 0;
         $limbahDiOlah = $biayaRecord ? (float) $biayaRecord->limbah_di_olah : 1725;
         $chemicalsUsageList = [];
-
-        // Standar pemakaian chemical per bulan (kg/bulan) sesuai instruksi user:
-        // NaOH : 6000 kg/bulan
-        // PAC : 4000 kg/bulan
-        // BE : 0 kg/bulan
-        // C-204 : 0 kg/bulan
-        // Denfloc 945 DAF : 60 kg/bulan
-        // Denfloc 945 : 90 kg
-        // C-9040 : 50 kg/bulan
-        $targetChemicals = [
-            [
-                'name'          => 'NaOH',
-                'standard'      => 6000,
-                'aliases'       => ['NAOH', 'NaOH', 'NaOH (50%)', 'NaOH step 2'],
-                'default_price' => 4200,
-            ],
-            [
-                'name'          => 'PAC',
-                'standard'      => 4000,
-                'aliases'       => ['PAC', 'PAC powder 1', 'PAC powder 2', 'PAC powder'],
-                'default_price' => 8400,
-            ],
-            [
-                'name'          => 'BE',
-                'standard'      => 0,
-                'aliases'       => ['BE', 'BE-100'],
-                'default_price' => 7000,
-            ],
-            [
-                'name'          => 'C-204',
-                'standard'      => 0,
-                'aliases'       => ['C-204', 'C204'],
-                'default_price' => 35000,
-            ],
-            [
-                'name'          => 'Denfloc 945 DAF',
-                'standard'      => 60,
-                'aliases'       => ['Denfloc 945 DAF', 'Denfloc 260 PA'],
-                'default_price' => 60000,
-            ],
-            [
-                'name'          => 'Denfloc 945',
-                'standard'      => 90,
-                'aliases'       => ['Denfloc 945'],
-                'default_price' => 60000,
-            ],
-            [
-                'name'          => 'C-9040',
-                'standard'      => 50,
-                'aliases'       => ['C-9040', 'C9040', 'C-9040 step 1', 'C-9040 step 2'],
-                'default_price' => 62000,
-            ],
-        ];
-
         $matchedStandardIds = [];
 
-        foreach ($targetChemicals as $target) {
+        foreach ($allStandards as $std) {
             $qty = 0;
-            $price = $target['default_price'];
+            $price = (float) $std->harga_standar;
+            $standardQuota = (float) ($std->standar_pemakaian ?? 0);
 
-            // 1. Cari dari detail biaya chemical bulanan jika ada
+            // Cari dari detail biaya chemical bulanan jika ada
             if ($biayaRecord && $biayaRecord->details) {
-                $detail = $biayaRecord->details->first(function ($d) use ($target) {
-                    if (!$d->chemicalStandard) return false;
-                    $cName = trim($d->chemicalStandard->chemical_name);
-                    foreach ($target['aliases'] as $alias) {
-                        if (strcasecmp($cName, $alias) === 0 || stripos($cName, $alias) !== false) {
-                            return true;
-                        }
+                $detail = $biayaRecord->details->first(function ($d) use ($std) {
+                    if ($d->chemical_standard_id == $std->id) return true;
+                    if ($d->chemicalStandard && strcasecmp(trim($d->chemicalStandard->chemical_name), trim($std->chemical_name)) === 0) {
+                        return true;
                     }
                     return false;
                 });
@@ -1520,36 +1475,21 @@ class WWTPController extends Controller
                     }
                 }
             }
-
-            // 2. Jika harga belum didapat dari detail, cari di master standard
-            $stdModel = $allStandards->first(function ($s) use ($target) {
-                foreach ($target['aliases'] as $alias) {
-                    if (strcasecmp($s->chemical_name, $alias) === 0 || stripos($s->chemical_name, $alias) !== false) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-            if ($stdModel) {
-                $matchedStandardIds[] = $stdModel->id;
-                if ((float)$stdModel->harga_standar > 0) {
-                    $price = (float)$stdModel->harga_standar;
-                }
-            }
+            $matchedStandardIds[] = $std->id;
 
             $cost = $qty * $price;
             $costM3 = $limbahDiOlah > 0 ? ($cost / $limbahDiOlah) : 0;
             $totalCost += $cost;
 
             // Standar: di atas merah (OVER), di bawah / sama hijau (AMAN)
-            $isOver = ($qty > $target['standard']);
+            $isOver = ($qty > $standardQuota);
             $status = $isOver ? 'OVER' : 'AMAN';
 
             $chemicalsUsageList[] = [
-                'chemical_name' => $target['name'],
+                'chemical_name' => $std->chemical_name,
                 'qty'           => $qty,
-                'standard'      => $target['standard'],
-                'standard_text' => number_format($target['standard'], 0, ',', '.') . ' kg',
+                'standard'      => $standardQuota,
+                'standard_text' => number_format($standardQuota, 0, ',', '.') . ' kg',
                 'cost'          => $cost,
                 'cost_m3'       => round($costM3, 2),
                 'price'         => $price,

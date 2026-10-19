@@ -253,14 +253,16 @@ class WWTPControllerBiayaChemical extends Controller
         abort_if(Auth::user()?->jabatan === 'operator', 403);
 
         $request->validate([
-            'chemical_name' => 'required|string|max:255|unique:wwtp_chemical_standards,chemical_name',
-            'harga_standar' => 'required|numeric|min:0',
+            'chemical_name'     => 'required|string|max:255|unique:wwtp_chemical_standards,chemical_name',
+            'harga_standar'     => 'required|numeric|min:0',
+            'standar_pemakaian' => 'nullable|numeric|min:0',
         ]);
 
         $standard = WwtpChemicalStandard::create([
-            'chemical_name' => strtoupper($request->chemical_name),
-            'harga_standar' => $request->harga_standar,
-            'created_by'    => Auth::id() ?? 1,
+            'chemical_name'     => strtoupper($request->chemical_name),
+            'harga_standar'     => $request->harga_standar,
+            'standar_pemakaian' => $request->standar_pemakaian ?? 0,
+            'created_by'        => Auth::id() ?? 1,
         ]);
 
         return response()->json([
@@ -276,17 +278,24 @@ class WWTPControllerBiayaChemical extends Controller
         $standard = WwtpChemicalStandard::findOrFail($id);
 
         $request->validate([
-            'harga_standar' => 'required|numeric|min:0',
+            'harga_standar'     => 'required|numeric|min:0',
+            'standar_pemakaian' => 'nullable|numeric|min:0',
         ]);
 
-        $standard->update([
+        $updateData = [
             'harga_standar' => $request->harga_standar,
             'updated_by'    => Auth::id() ?? 1,
-        ]);
+        ];
+
+        if ($request->has('standar_pemakaian')) {
+            $updateData['standar_pemakaian'] = $request->standar_pemakaian ?? 0;
+        }
+
+        $standard->update($updateData);
 
         return response()->json([
             'status'  => 'success',
-            'message' => "Harga standar chemical {$standard->chemical_name} berhasil diperbarui.",
+            'message' => "Data standar chemical {$standard->chemical_name} berhasil diperbarui.",
             'data'    => $standard
         ]);
     }

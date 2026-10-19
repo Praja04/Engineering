@@ -15,12 +15,14 @@ class WwtpChemicalStandard extends Model
     protected $fillable = [
         'chemical_name',
         'harga_standar',
+        'standar_pemakaian',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
-        'harga_standar' => 'double',
+        'harga_standar'     => 'double',
+        'standar_pemakaian' => 'double',
     ];
 
     public function createdBy()

@@ -33,9 +33,8 @@
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                         <div>
-                            <h4 class="mb-1">Master Harga Standar Chemical WWTP</h4>
-                            <p class="text-muted mb-0">Kelola harga standar per kilogram untuk kalkulasi biaya chemical
-                                bulanan.</p>
+                            <h4 class="mb-1">Master Biaya & Standar Chemical WWTP</h4>
+                            <p class="text-muted mb-0">Kelola harga standar dan kuota standar pemakaian per bulan untuk kalkulasi biaya chemical.</p>
                         </div>
                         <div class="d-flex gap-2">
                             <a href="{{ url('/wwtp/form_biaya_chemical') }}" class="btn btn-outline-secondary">
@@ -54,25 +53,26 @@
                 <div class="col-lg">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header border-0 py-3">
-                            <h5 class="card-title mb-0">Daftar Standar Harga Chemical</h5>
+                            <h5 class="card-title mb-0">Daftar Standar Biaya & Pemakaian Chemical</h5>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table id="standardsTable" class="table table-hover table-striped align-middle mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th style="width: 80px;" class="text-center">No</th>
+                                            <th style="width: 70px;" class="text-center">No</th>
                                             <th>Tipe Chemical</th>
-                                            <th class="text-end" style="width: 200px;">Harga Standar (Rp/kg)</th>
+                                            <th class="text-end" style="width: 190px;">Harga Standar (Rp/kg)</th>
+                                            <th class="text-end" style="width: 200px;">Standar Pemakaian</th>
                                             <th>Dibuat / Terakhir Diubah Oleh</th>
-                                            <th style="width: 250px;" class="text-center">Aksi</th>
+                                            <th style="width: 220px;" class="text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="standardsTableBody">
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted py-4">
+                                            <td colspan="6" class="text-center text-muted py-4">
                                                 <i class="mdi mdi-loading mdi-spin fs-4 mb-2 d-block"></i>
-                                                Memuat data harga standar...
+                                                Memuat data standar...
                                             </td>
                                         </tr>
                                     </tbody>
@@ -90,7 +90,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title" id="modalStandardLabel">Ubah Harga Standar</h5>
+                    <h5 class="modal-title" id="modalStandardLabel">Ubah Standar Chemical</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="formStandard">
@@ -111,6 +111,16 @@
                                 <input type="number" class="form-control" id="harga_standar" name="harga_standar" required
                                     min="0" step="0.01" placeholder="Contoh: 8400">
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="standar_pemakaian" class="form-label fw-semibold">Standar Pemakaian (kg/bulan) <span
+                                    class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="standar_pemakaian" name="standar_pemakaian" required
+                                    min="0" step="0.01" placeholder="Contoh: 4000">
+                                <span class="input-group-text">kg/bulan</span>
+                            </div>
+                            <small class="text-muted">Target kuota pemakaian per bulan untuk evaluasi dashboard WWTP.</small>
                         </div>
                     </div>
                     <div class="modal-footer bg-light">
@@ -143,24 +153,29 @@
                         let rows = '';
                         if (response.length === 0) {
                             rows =
-                                `<tr><td colspan="5" class="text-center py-4 text-muted">Tidak ada data harga standar ditemukan</td></tr>`;
+                                `<tr><td colspan="6" class="text-center py-4 text-muted">Tidak ada data standar chemical ditemukan</td></tr>`;
                         } else {
                             response.forEach((item, index) => {
                                 const updater = item.updated_by?.username ?? item.created_by
                                     ?.username ?? '-';
+                                const stdVal = (item.standar_pemakaian !== undefined && item.standar_pemakaian !== null) 
+                                    ? Number(item.standar_pemakaian) 
+                                    : 0;
                                 rows += `
                                     <tr>
                                         <td class="text-center fw-semibold">${index + 1}</td>
                                         <td class="fw-bold text-dark">${item.chemical_name}</td>
                                         <td class="text-end fw-bold text-primary">Rp ${formatRupiah(item.harga_standar)}</td>
+                                        <td class="text-end fw-bold text-success">${formatRupiah(stdVal)} kg/bln</td>
                                         <td>${updater}</td>
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-2">
                                                 <button class="btn btn-soft-warning btn-sm btn-edit" 
                                                     data-id="${item.id}" 
                                                     data-name="${item.chemical_name}" 
-                                                    data-price="${item.harga_standar}">
-                                                    <i class="mdi mdi-pencil me-1"></i> Edit Harga
+                                                    data-price="${item.harga_standar}"
+                                                    data-standar="${stdVal}">
+                                                    <i class="mdi mdi-pencil me-1"></i> Edit
                                                 </button>
                                                 <button class="btn btn-soft-danger btn-sm btn-delete" 
                                                     data-id="${item.id}" 
@@ -177,7 +192,7 @@
                     },
                     error: function() {
                         $('#standardsTableBody').html(
-                            `<tr><td colspan="5" class="text-center text-danger py-4">Gagal memuat data. Silakan refresh halaman.</td></tr>`
+                            `<tr><td colspan="6" class="text-center text-danger py-4">Gagal memuat data. Silakan refresh halaman.</td></tr>`
                         );
                     }
                 });
@@ -191,6 +206,7 @@
                 $('#formStandard')[0].reset();
                 $('#standardId').val('');
                 $('#chemical_name').prop('readonly', false).removeClass('bg-light');
+                $('#standar_pemakaian').val('0');
                 $('#modalStandardLabel').text('Tambah Chemical Baru');
                 $('#modalStandard').modal('show');
             });
@@ -200,11 +216,13 @@
                 const id = $(this).data('id');
                 const name = $(this).data('name');
                 const price = $(this).data('price');
+                const standar = $(this).data('standar');
 
                 $('#standardId').val(id);
                 $('#chemical_name').val(name).prop('readonly', true).addClass('bg-light');
                 $('#harga_standar').val(price);
-                $('#modalStandardLabel').text(`Ubah Harga Standar - ${name}`);
+                $('#standar_pemakaian').val(standar);
+                $('#modalStandardLabel').text(`Ubah Standar Chemical - ${name}`);
                 $('#modalStandard').modal('show');
             });
 
@@ -227,7 +245,8 @@
                     data: {
                         _token: "{{ csrf_token() }}",
                         chemical_name: $('#chemical_name').val(),
-                        harga_standar: $('#harga_standar').val()
+                        harga_standar: $('#harga_standar').val(),
+                        standar_pemakaian: $('#standar_pemakaian').val()
                     },
                     success: function(response) {
                         $('#modalStandard').modal('hide');
