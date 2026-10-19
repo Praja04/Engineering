@@ -110,6 +110,7 @@
                                     <th>Listrik BAS (Kwh)</th>
                                     <th>Steam</th>
                                     <th>Batubara</th>
+                                    <th>Utility Cost</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -186,6 +187,10 @@
                     <div class="mb-3">
                         <label for="batubara" class="form-label">Batubara</label>
                         <input type="number" id="batubara" class="form-control" step="0.01" min="0">
+                    </div>
+                    <div class="mb-3 d-none" id="groupMonthlyCostEdit">
+                        <label for="utility_cost" class="form-label">Utility Cost (Rp)</label>
+                        <input type="number" id="utility_cost" class="form-control" step="0.01" min="0" placeholder="Contoh: 150000000">
                     </div>
 
                 </div>
@@ -297,7 +302,7 @@
                 if (response.data.length === 0) {
                     tableBody.append(`
                             <tr>
-                                <td colspan="8" class="text-center py-4">
+                                <td colspan="10" class="text-center py-4">
                                     <div class="d-flex flex-column align-items-center text-muted">
                                         <i class="mdi mdi-database-off mdi-36px mb-2"></i>
                                         <span class="fw-semibold">Tidak ada data ditemukan</span>
@@ -332,6 +337,7 @@
                                 <td>${batubara}</td>
                             `;
                     } else {
+                        const utilityCost = item.utility_cost ? ('Rp ' + Number(item.utility_cost).toLocaleString('id-ID')) : '-';
                         row += `
                                 <td>${item.month || '-'}</td>
                                 <td>${finishGoods}</td>
@@ -340,6 +346,7 @@
                                 <td>${ListrikBas}</td>
                                 <td>${steam}</td>
                                 <td>${batubara}</td>
+                                <td>${utilityCost}</td>
                             `;
                     }
 
@@ -447,6 +454,7 @@
             // MONTHLY
             if (periode === 'monthly') {
                 payload.month = $('#editMonth').val();
+                payload.utility_cost = $('#utility_cost').val();
             }
 
             $.ajax({
@@ -494,6 +502,7 @@
         const periodeTipe = $('#periodeTipe');
         const groupWeeklyEdit = $('#groupWeeklyEdit');
         const groupMonthlyEdit = $('#groupMonthlyEdit');
+        const groupMonthlyCostEdit = $('#groupMonthlyCostEdit');
         const ListrikPrd = $('#listrik_prd');
         const ListrikBas = $('#listrik_bas');
 
@@ -504,6 +513,7 @@
             // Reset dulu
             groupWeeklyEdit.addClass('d-none');
             groupMonthlyEdit.addClass('d-none');
+            groupMonthlyCostEdit.addClass('d-none');
             ListrikPrd.prop('required', false);
             ListrikBas.prop('required', false);
 
@@ -511,6 +521,7 @@
                 groupWeeklyEdit.removeClass('d-none');
             } else if (tipe === 'monthly') {
                 groupMonthlyEdit.removeClass('d-none');
+                groupMonthlyCostEdit.removeClass('d-none');
             }
         }
 
@@ -542,6 +553,7 @@
                     $('#listrik_bas').val(formatNumber(data.listrik_bas || 0));
                     $('#steam').val(formatNumber(data.steam || 0));
                     $('#batubara').val(formatNumber(data.batubara || 0));
+                    $('#utility_cost').val(data.utility_cost ? formatNumber(data.utility_cost) : '');
 
                     $('#modalKpi').modal('show');
 

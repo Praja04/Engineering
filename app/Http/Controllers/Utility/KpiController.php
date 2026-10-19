@@ -33,6 +33,7 @@ class KpiController extends Controller
             'listrik_bas' => 'nullable|numeric|min:0',
             'steam' => 'nullable|numeric|min:0',
             'batubara' => 'nullable|numeric|min:0',
+            'utility_cost' => 'nullable|numeric|min:0',
 
         ]);
 
@@ -88,6 +89,7 @@ class KpiController extends Controller
             'listrik_bas' => $request->listrik_bas,
             'steam' => $request->steam,
             'batubara' => $request->batubara,
+            'utility_cost' => $jenis === 'monthly' ? $request->utility_cost : null,
         ]);
 
         return response()->json([
@@ -168,6 +170,7 @@ class KpiController extends Controller
             'listrik_bas' => 'nullable|numeric|min:0',
             'steam' => 'nullable|numeric|min:0',
             'batubara' => 'nullable|numeric|min:0',
+            'utility_cost' => 'nullable|numeric|min:0',
         ]);
 
         $kpi = KpiModel::find($id);
@@ -192,6 +195,7 @@ class KpiController extends Controller
             'listrik_bas' => $request->listrik_bas,
             'steam' => $request->steam,
             'batubara' => $request->batubara,
+            'utility_cost' => $jenis === 'monthly' ? $request->utility_cost : null,
         ]);
 
         return response()->json([

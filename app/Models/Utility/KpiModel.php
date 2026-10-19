@@ -23,5 +23,6 @@ class KpiModel extends Model
         'listrik_bas',
         'steam',
         'batubara',
+        'utility_cost',
     ];
 }
