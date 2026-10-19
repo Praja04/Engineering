@@ -447,6 +447,14 @@
             .text-cyan {
                 color: #06b6d4 !important;
             }
+
+            .text-pink {
+                color: #ec4899 !important;
+            }
+
+            .text-purple {
+                color: #a855f7 !important;
+            }
         </style>
     </head>
 
@@ -476,20 +484,22 @@
                                 <i class="mdi mdi-cog-sync" style="font-size: 22px; color: var(--wco-cyan);"></i>
                             </div>
                             <div>
-                                <h4 class="mb-0 fw-bold" style="letter-spacing: 0.8px; font-size: 15px;">MESIN
-                                    UTILITY</h4>
+                                <h4 class="mb-0 fw-bold" style="letter-spacing: 0.8px; font-size: 15px;">ENGINEERING
+                                    UTILITY
+                                </h4>
                                 <div
                                     style="font-size: 9px; color: var(--wco-cyan); font-weight: 700; letter-spacing: 0.5px;">
-                                    OPERASIONAL MESIN UTILITY
+                                    OPERASIONAL ENGINEERING UTILITY
                                 </div>
                             </div>
                         </div>
 
                         <!-- Center: Title -->
                         <div class="col-xl-4 col-lg-4 col-md-12 text-center d-none d-lg-block">
-                            <div class="wco-header-title">UTILITY MACHINE DASHBOARD</div>
+                            <div class="wco-header-title">ENGINEERING UTILITY DASHBOARD</div>
                             <div class="wco-header-sub"> COMPRESSOR • AHU • MDP • GENSET • COOLING TOWER • AIR</div>
-                            <div class="wco-header-motto">"Reliability & Efficiency Of Utility Operation"</div>
+                            <div class="wco-header-motto">"Reliability & Efficiency Of Engineering Utility Operation"
+                            </div>
                         </div>
 
                         <!-- Right: Filters & Controls -->
@@ -924,37 +934,48 @@
                             <div class="wco-card-body p-2 d-flex flex-column">
                                 <!-- MDP Electrical Metrics -->
                                 <div class="row g-1 mb-2">
-                                    <div class="col-4">
+                                    <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-warning" style="font-size: 8px;">AVG.
-                                                ARUS
-                                                RATA2</div>
-                                            <div class="stat-tile-val mt-1" id="valMdpArus" style="font-size: 12px;">
+                                            <div class="stat-tile-label text-warning" style="font-size: 7.5px;">AVG.
+                                                ARUS</div>
+                                            <div class="stat-tile-val mt-1 text-warning" id="valMdpArus"
+                                                style="font-size: 11px;">
                                                 0.0 A</div>
                                             <div class="stat-tile-meta" id="valMdpArusPhases"
-                                                style="font-size: 7px;">I1: - | I2: -</div>
+                                                style="font-size: 6.5px;">I1: - | I2: -</div>
                                         </div>
                                     </div>
-                                    <div class="col-4">
+                                    <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-info" style="font-size: 8px;">AVG.
+                                            <div class="stat-tile-label text-info" style="font-size: 7.5px;">AVG.
                                                 TEGANGAN
                                             </div>
-                                            <div class="stat-tile-val mt-1" id="valMdpTegangan"
-                                                style="font-size: 12px;">0.0 V</div>
+                                            <div class="stat-tile-val mt-1 text-info" id="valMdpTegangan"
+                                                style="font-size: 11px;">0.0 V</div>
                                             <div class="stat-tile-meta" id="valMdpVoltPhases"
-                                                style="font-size: 7px;">V1: - | V2: -</div>
+                                                style="font-size: 6.5px;">V1: - | V2: -</div>
                                         </div>
                                     </div>
-                                    <div class="col-4">
+                                    <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-success" style="font-size: 8px;">AVG.
-                                                DAYA
-                                                TOTAL</div>
-                                            <div class="stat-tile-val mt-1" id="valMdpDaya" style="font-size: 12px;">
+                                            <div class="stat-tile-label text-success" style="font-size: 7.5px;">AVG.
+                                                DAYA</div>
+                                            <div class="stat-tile-val mt-1 text-success" id="valMdpDaya"
+                                                style="font-size: 11px;">
                                                 0.0 kW</div>
                                             <div class="stat-tile-meta" id="valMdpDayaPhases"
-                                                style="font-size: 7px;">P1: - | P2: -</div>
+                                                style="font-size: 6.5px;">P1: - | P2: -</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1">
+                                            <div class="stat-tile-label text-cyan" style="font-size: 7.5px;">AVG.
+                                                COS φ</div>
+                                            <div class="stat-tile-val mt-1 text-cyan" id="valMdpCosPhi"
+                                                style="font-size: 11px;">
+                                                0.00</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 6.5px;">Cap. Bank
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -984,7 +1005,7 @@
                                             <div class="stat-tile-label text-danger" style="font-size: 7.5px;">AVG.
                                                 TEMP
                                                 TRAFO</div>
-                                            <div class="stat-tile-val mt-1" id="valMdpTempTrafo"
+                                            <div class="stat-tile-val mt-1 text-danger" id="valMdpTempTrafo"
                                                 style="font-size: 12px;">0.0 °C</div>
                                             <div class="stat-tile-meta" style="font-size: 7px;">Oil: <strong
                                                     id="valMdpLevelOil" class="text-success">OK</strong></div>
@@ -995,7 +1016,7 @@
                                             <div class="stat-tile-label text-warning" style="font-size: 7.5px;">AVG.
                                                 RUANG
                                                 TRAFO</div>
-                                            <div class="stat-tile-val mt-1" id="valMdpSuhuTrafo"
+                                            <div class="stat-tile-val mt-1 text-warning" id="valMdpSuhuTrafo"
                                                 style="font-size: 12px;">0.0 °C</div>
                                             <div class="stat-tile-meta" style="font-size: 7px;">Cond: <strong
                                                     id="valMdpTrafoCond" class="text-warning">Normal</strong></div>
@@ -1006,7 +1027,7 @@
                                             <div class="stat-tile-label text-pink" style="font-size: 7.5px;">AVG.
                                                 RUANG
                                                 GENSET</div>
-                                            <div class="stat-tile-val mt-1" id="valMdpSuhuGenset"
+                                            <div class="stat-tile-val mt-1 text-pink" id="valMdpSuhuGenset"
                                                 style="font-size: 12px;">0.0 °C</div>
                                             <div class="stat-tile-meta" style="font-size: 7px;">Cond: <strong
                                                     id="valMdpGensetCond" class="text-pink">Normal</strong></div>
@@ -1080,8 +1101,10 @@
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-cyan" style="font-size: 8px;">pH</span>
-                                            <div class="stat-tile-val mt-1" style="font-size: 12px;" id="wCtPh">
+                                            <span class="stat-tile-label text-cyan" style="font-size: 8px;"> AVG.
+                                                pH</span>
+                                            <div class="stat-tile-val mt-1 text-cyan" style="font-size: 12px;"
+                                                id="wCtPh">
                                                 0.0</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 7.5 -
                                                 8.5</div>
@@ -1089,7 +1112,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-info" style="font-size: 8px;">TDS</span>
+                                            <span class="stat-tile-label text-info" style="font-size: 8px;">AVG.
+                                                TDS</span>
                                             <div class="stat-tile-val mt-1 text-info" style="font-size: 11px;"
                                                 id="wCtTds">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: ≤ 2500
@@ -1098,8 +1122,8 @@
                                     </div>
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-warning"
-                                                style="font-size: 8px;">HARDNESS</span>
+                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">AVG.
+                                                HARDNESS</span>
                                             <div class="stat-tile-val mt-1 text-warning" style="font-size: 11px;"
                                                 id="wCtHardness">0 ppm</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: ≤ 800
@@ -1117,18 +1141,19 @@
                         <div class="wco-card h-100">
                             <div class="wco-card-header">
                                 <div class="wco-card-title">
-                                    <i class="mdi mdi-water-plus text-primary"></i>
+                                    <i class="mdi mdi-water-plus text-cyan"></i>
                                     <span>KUALITAS AIR REVERSE OSMOSIS</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-primary">RO System</span>
+                                <span class="badge bg-dark border border-secondary text-cyan">RO System</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-primary" style="font-size: 8px;">AVG.
+                                            <span class="stat-tile-label text-cyan" style="font-size: 8px;">AVG.
                                                 pH</span>
-                                            <div class="stat-tile-val mt-1" style="font-size: 12px;" id="wRoPh">
+                                            <div class="stat-tile-val mt-1 text-cyan" style="font-size: 12px;"
+                                                id="wRoPh">
                                                 0.0</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 6.5 -
                                                 7.5</div>
@@ -1176,7 +1201,8 @@
                                         <div class="stat-tile text-center py-1 px-1">
                                             <span class="stat-tile-label text-success" style="font-size: 8px;">AVG.
                                                 pH</span>
-                                            <div class="stat-tile-val mt-1" style="font-size: 12px;" id="wWsPh">
+                                            <div class="stat-tile-val mt-1 text-success" style="font-size: 12px;"
+                                                id="wWsPh">
                                                 0.0</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 6.8 -
                                                 7.8</div>
@@ -1224,7 +1250,8 @@
                                         <div class="stat-tile text-center py-1 px-1">
                                             <span class="stat-tile-label text-warning" style="font-size: 8px;">AVG.
                                                 pH</span>
-                                            <div class="stat-tile-val mt-1" style="font-size: 12px;" id="wBoilerPh">
+                                            <div class="stat-tile-val mt-1 text-warning" style="font-size: 12px;"
+                                                id="wBoilerPh">
                                                 0.0</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 10.5 -
                                                 11.5</div>
@@ -1261,18 +1288,19 @@
                         <div class="wco-card h-100">
                             <div class="wco-card-header">
                                 <div class="wco-card-title">
-                                    <i class="mdi mdi-water text-purple"></i>
+                                    <i class="mdi mdi-water text-cyan"></i>
                                     <span>KUALITAS AIR FRESH WATER</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-purple">Fresh Water</span>
+                                <span class="badge bg-dark border border-secondary text-cyan">Fresh Water</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
                                 <div class="row g-1 mb-2">
                                     <div class="col-4">
                                         <div class="stat-tile text-center py-1 px-1">
-                                            <span class="stat-tile-label text-purple" style="font-size: 8px;">AVG.
+                                            <span class="stat-tile-label text-cyan" style="font-size: 8px;">AVG.
                                                 pH</span>
-                                            <div class="stat-tile-val mt-1" style="font-size: 12px;" id="wFwPh">
+                                            <div class="stat-tile-val mt-1 text-cyan" style="font-size: 12px;"
+                                                id="wFwPh">
                                                 0.0</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Std: 6.5 -
                                                 8.5</div>
@@ -1533,6 +1561,11 @@
                     );
                     $('#kpiMdpTrafo').text(mdp.temperatur_transformator);
                     $('#kpiMdpArus').text(mdp.arus_rata_rata);
+                    if (mdp.has_cos_phi_data) {
+                        $('#kpiMdpSub').html(
+                            `<i class="mdi mdi-thermometer"></i> Trafo: <span id="kpiMdpTrafo">${mdp.temperatur_transformator}</span> °C | <span id="kpiMdpArus">${mdp.arus_rata_rata}</span> A | Cos φ: <span>${Number(mdp.cos_phi).toFixed(2)}</span>`
+                        );
+                    }
 
                     $('#valMdpArus').text(`${mdp.arus_rata_rata} A`);
                     $('#valMdpTegangan').text(`${mdp.tegangan_rata_rata} V`);
@@ -1540,6 +1573,12 @@
                     $('#valMdpTempTrafo').text(`${mdp.temperatur_transformator} °C`);
                     $('#valMdpSuhuTrafo').text(`${mdp.suhu_ruang_trafo} °C`);
                     $('#valMdpSuhuGenset').text(`${mdp.suhu_ruang_genset} °C`);
+
+                    if (mdp.has_cos_phi_data) {
+                        $('#valMdpCosPhi').text(Number(mdp.cos_phi).toFixed(2));
+                    } else {
+                        $('#valMdpCosPhi').text('0.00');
+                    }
 
                     if (mdp.latest) {
                         $('#valMdpArusPhases').text(
@@ -1624,7 +1663,9 @@
                     $('#kpiGensetRhLatest').text(`${rhLatest}h`);
                     if ($('#kpiGensetRuns').length) $('#kpiGensetRuns').text(genset.total_runs);
                     if ($('#kpiGensetOil').length) $('#kpiGensetOil').text(genset.avg_oil_pressure);
-                    $('#kpiGensetSub').attr('title', `RH Awal: ${rhStart}h (${genset.rh_start_date || '-'}) | RH Akhir: ${rhLatest}h (${genset.rh_latest_date || '-'}) | Runs: ${genset.total_runs}`);
+                    $('#kpiGensetSub').attr('title',
+                        `RH Awal: ${rhStart}h (${genset.rh_start_date || '-'}) | RH Akhir: ${rhLatest}h (${genset.rh_latest_date || '-'}) | Runs: ${genset.total_runs}`
+                    );
 
                     $('#gensetHeaderYearBadge').text(`Tahun ${genset.year}`);
                     $('#gensetSpeedVal').text(genset.avg_speed);
@@ -2061,7 +2102,7 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: ['#f59e0b', '#06b6d4', '#3b82f6'],
+                        colors: ['#10b981', '#f59e0b', '#06b6d4'],
                         stroke: {
                             width: [2, 2.5, 2.5],
                             curve: 'smooth'
@@ -2082,8 +2123,8 @@
                                 fontSize: '8px',
                                 fontFamily: 'JetBrains Mono, monospace',
                                 fontWeight: '600',
-                                colors: isThemeLight() ? ['#d97706', '#0891b2', '#2563eb'] : ['#fbbf24', '#22d3ee',
-                                    '#60a5fa'
+                                colors: isThemeLight() ? ['#059669', '#d97706', '#0891b2'] : ['#34d399', '#fbbf24',
+                                    '#22d3ee'
                                 ]
                             },
                             formatter: function(val, opt) {
@@ -2532,7 +2573,9 @@
                     const waterCategories = hasWaterTrends ?
                         waterData.daily_trends.map(t => t.tanggal) : [selectedDate || 'Today'];
 
-                    function renderWaterSystemChart(chartElemId, chartKey, phData, tdsData, hardnessData, phColor) {
+                    function renderWaterSystemChart(chartElemId, chartKey, phData, tdsData, hardnessData, phColor,
+                        tdsColor = '#38bdf8', hardnessColor = '#f59e0b', phColorLight = null) {
+                        const lightPh = phColorLight || phColor;
                         const series = [{
                                 name: 'pH',
                                 type: 'line',
@@ -2560,7 +2603,7 @@
                                 background: 'transparent'
                             },
                             theme: chartTheme,
-                            colors: [phColor, '#38bdf8', '#fb923c'],
+                            colors: [phColor, tdsColor, hardnessColor],
                             stroke: {
                                 width: [2.5, 1.8, 2],
                                 curve: 'smooth'
@@ -2588,8 +2631,14 @@
                                     fontSize: '8px',
                                     fontFamily: 'JetBrains Mono, monospace',
                                     fontWeight: '600',
-                                    colors: isThemeLight() ? [phColor, '#0284c7', '#d97706'] : [phColor, '#38bdf8',
-                                        '#fbbf24'
+                                    colors: isThemeLight() ? [
+                                        lightPh,
+                                        '#0284c7',
+                                        hardnessColor === '#ef4444' ? '#dc2626' : '#d97706'
+                                    ] : [
+                                        phColor,
+                                        tdsColor,
+                                        hardnessColor === '#ef4444' ? '#f87171' : '#fbbf24'
                                     ]
                                 },
                                 formatter: function(val, opt) {
@@ -2626,7 +2675,7 @@
                                         text: 'ppm',
                                         style: {
                                             fontSize: '8px',
-                                            color: '#38bdf8'
+                                            color: tdsColor
                                         }
                                     },
                                     labels: {
@@ -2695,46 +2744,50 @@
                         charts[chartKey].render();
                     }
 
-                    // 1. Cooling Tower Water
+                    // 1. Cooling Tower Water (pH Cyan, TDS Info Blue, Hardness Warning Amber)
                     const ctPh = hasWaterTrends ? waterData.daily_trends.map(t => t.ct_ph) : [ws.cooling_tower.ph];
                     const ctTds = hasWaterTrends ? waterData.daily_trends.map(t => t.ct_tds) : [ws.cooling_tower.tds];
                     const ctHardness = hasWaterTrends ? waterData.daily_trends.map(t => t.ct_hardness) : [ws
                         .cooling_tower.hardness
                     ];
-                    renderWaterSystemChart('#chartWaterCt', 'waterCt', ctPh, ctTds, ctHardness, '#06b6d4');
+                    renderWaterSystemChart('#chartWaterCt', 'waterCt', ctPh, ctTds, ctHardness, '#06b6d4', '#38bdf8',
+                        '#f59e0b', '#0891b2');
 
-                    // 2. Reverse Osmosis Water
+                    // 2. Reverse Osmosis Water (pH Cyan, TDS Info Blue, Hardness Warning Amber)
                     const roPh = hasWaterTrends ? waterData.daily_trends.map(t => t.ro_ph) : [ws.reverse_osmosis.ph];
                     const roTds = hasWaterTrends ? waterData.daily_trends.map(t => t.ro_tds) : [ws.reverse_osmosis.tds];
                     const roHardness = hasWaterTrends ? waterData.daily_trends.map(t => t.ro_hardness) : [ws
                         .reverse_osmosis.hardness
                     ];
-                    renderWaterSystemChart('#chartWaterRo', 'waterRo', roPh, roTds, roHardness, '#3b82f6');
+                    renderWaterSystemChart('#chartWaterRo', 'waterRo', roPh, roTds, roHardness, '#06b6d4', '#38bdf8',
+                        '#f59e0b', '#0891b2');
 
-                    // 3. Water Softener Water
+                    // 3. Water Softener Water (pH Success Green, TDS Info Blue, Hardness Warning Amber)
                     const wsPh = hasWaterTrends ? waterData.daily_trends.map(t => t.ws_ph) : [ws.water_softener.ph];
                     const wsTds = hasWaterTrends ? waterData.daily_trends.map(t => t.ws_tds) : [ws.water_softener.tds];
                     const wsHardness = hasWaterTrends ? waterData.daily_trends.map(t => t.ws_hardness) : [ws
                         .water_softener.hardness
                     ];
-                    renderWaterSystemChart('#chartWaterWs', 'waterWs', wsPh, wsTds, wsHardness, '#10b981');
+                    renderWaterSystemChart('#chartWaterWs', 'waterWs', wsPh, wsTds, wsHardness, '#10b981', '#38bdf8',
+                        '#f59e0b', '#059669');
 
-                    // 4. Boiler Water
+                    // 4. Boiler Water (pH Warning Amber, TDS Info Blue, Hardness Danger Red)
                     const boilerPh = hasWaterTrends ? waterData.daily_trends.map(t => t.boiler_ph) : [ws.boiler.ph];
                     const boilerTds = hasWaterTrends ? waterData.daily_trends.map(t => t.boiler_tds) : [ws.boiler.tds];
                     const boilerHardness = hasWaterTrends ? waterData.daily_trends.map(t => t.boiler_hardness) : [ws
                         .boiler.hardness
                     ];
                     renderWaterSystemChart('#chartWaterBoiler', 'waterBoiler', boilerPh, boilerTds, boilerHardness,
-                        '#f59e0b');
+                        '#f59e0b', '#38bdf8', '#ef4444', '#d97706');
 
-                    // 5. Fresh Water
+                    // 5. Fresh Water (pH Cyan, TDS Info Blue, Hardness Warning Amber)
                     const fwPh = hasWaterTrends ? waterData.daily_trends.map(t => t.fw_ph) : [ws.fresh_water.ph];
                     const fwTds = hasWaterTrends ? waterData.daily_trends.map(t => t.fw_tds) : [ws.fresh_water.tds];
                     const fwHardness = hasWaterTrends ? waterData.daily_trends.map(t => t.fw_hardness) : [ws.fresh_water
                         .hardness
                     ];
-                    renderWaterSystemChart('#chartWaterFw', 'waterFw', fwPh, fwTds, fwHardness, '#a855f7');
+                    renderWaterSystemChart('#chartWaterFw', 'waterFw', fwPh, fwTds, fwHardness, '#06b6d4', '#38bdf8',
+                        '#f59e0b', '#0891b2');
                 }
 
                 // Initial trigger

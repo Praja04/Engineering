@@ -55,7 +55,7 @@
                     <a href="{{ url('utility/dashboard/machine') }}"
                         class="nav-link {{ request()->Is('utility/dashboard/machine') ? 'active' : '' }}"
                         data-key="t-analytics">
-                        <i class="mdi mdi-chart-bar me-2"></i> Utility Machine Dashboard </a>
+                        <i class="mdi mdi-chart-bar me-2"></i> Engineering Utility Dashboard </a>
                 </li>
             </ul>
         </div>

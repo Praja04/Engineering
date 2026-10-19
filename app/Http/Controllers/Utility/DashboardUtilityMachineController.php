@@ -9,6 +9,7 @@ use App\Models\Utility\MdpMonitoring;
 use App\Models\Utility\WarmingUpGenset;
 use App\Models\Utility\CoolingTowerDetails;
 use App\Models\Utility\AnalisisUtilityDetails;
+use App\Models\Utility\CapacitorBankMachineData;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -35,6 +36,7 @@ class DashboardUtilityMachineController extends Controller
             CoolingTowerDetails::max('tanggal'),
             AnalisisUtilityDetails::max('tanggal'),
             WarmingUpGenset::max('tanggal_laporan'),
+            CapacitorBankMachineData::max('tanggal'),
         ]);
         $defaultDate = !empty($latestDates) ? max($latestDates) : Carbon::today()->toDateString();
 
@@ -407,6 +409,51 @@ class DashboardUtilityMachineController extends Controller
 
         $mdpTarget = ($mode === 'harian') ? $selectedDayMdp : $mdpDetails;
         $latestMdp = $selectedDayMdp->last() ?? $mdpDetails->last();
+
+        // ── Cos Phi dari Capacitor Bank Mesin (per 30 menit -> rata-rata harian -> rata-rata periode) ──
+        $capData = CapacitorBankMachineData::where(function ($q) use ($startDate, $endDate) {
+            $q->whereBetween('tanggal', [$startDate, $endDate])
+              ->orWhere(function ($q2) use ($startDate, $endDate) {
+                  $q2->whereNull('tanggal')
+                     ->whereDate('created_at', '>=', $startDate)
+                     ->whereDate('created_at', '<=', $endDate);
+              });
+        })->orderBy('created_at', 'asc')->get();
+
+        // Jika mode harian, filter tepat ke selectedDate
+        if ($mode === 'harian') {
+            $capData = $capData->filter(function ($item) use ($selectedDate) {
+                $d = !empty($item->tanggal)
+                    ? (is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : Carbon::parse($item->tanggal)->format('Y-m-d'))
+                    : Carbon::parse($item->created_at)->format('Y-m-d');
+                return $d === $selectedDate;
+            })->values();
+        }
+
+        // Kelompokkan per hari untuk menghitung rata-rata harian
+        $capDailyGroup = $capData->groupBy(function ($item) {
+            if (!empty($item->tanggal)) {
+                return is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : Carbon::parse($item->tanggal)->format('Y-m-d');
+            }
+            return Carbon::parse($item->created_at)->format('Y-m-d');
+        });
+
+        $dailyCosPhiList = [];
+        foreach ($capDailyGroup as $dt => $rows) {
+            $rowCosPhis = [];
+            foreach ($rows as $r) {
+                $phases = array_filter([(float)$r->cosphi_dPFa, (float)$r->cosphi_dPFb, (float)$r->cosphi_dPFc], fn($v) => !is_null($v) && is_numeric($v));
+                if (!empty($phases)) {
+                    $rowCosPhis[] = array_sum($phases) / count($phases);
+                }
+            }
+            if (!empty($rowCosPhis)) {
+                $dailyCosPhiList[] = array_sum($rowCosPhis) / count($rowCosPhis);
+            }
+        }
+
+        $cosPhiAvg = !empty($dailyCosPhiList) ? round(array_sum($dailyCosPhiList) / count($dailyCosPhiList), 2) : 0;
+
         $mdpSummary = [
             'arus_rata_rata' => round($mdpTarget->avg('arus_rata_rata') ?? 0, 2),
             'tegangan_rata_rata' => round($mdpTarget->avg('tegangan_rata_rata') ?? 0, 2),
@@ -414,6 +461,8 @@ class DashboardUtilityMachineController extends Controller
             'temperatur_transformator' => round($mdpTarget->avg('temperatur_transformator') ?? 0, 2),
             'suhu_ruang_trafo' => round($mdpTarget->avg('suhu_ruang_trafo') ?? 0, 2),
             'suhu_ruang_genset' => round($mdpTarget->avg('suhu_ruang_genset') ?? 0, 2),
+            'cos_phi' => $cosPhiAvg,
+            'has_cos_phi_data' => !empty($dailyCosPhiList),
             'latest' => $latestMdp ? [
                 'jam' => substr($latestMdp->jam_pencatatan, 0, 5),
                 'arus_i1' => (float)$latestMdp->arus_i1,
