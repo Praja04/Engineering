@@ -1557,12 +1557,12 @@ class WWTPController extends Controller
         $dbPoints = WwtpPoint::all();
 
         // Pemetaan nama point dari Master Point Analisa WWTP untuk setiap tahapan
+        // Catatan: Aerob dihitung khusus dari rata-rata (Clarifier 1 + Clarifier 2) / 2
         $stageCandidatePoints = [
-            'Influent'       => ['Influent COD', 'Inlet Anaerob', 'Sparta', 'Influent', 'Equalisasi'],
-            'Outlet Anaerob' => ['Outlet Anaerob', 'New Anaerob', 'Anaerob'],
-            'Aerob'          => ['Aerasi-6', 'Aerasi 6', 'Aerasi-5', 'Aerasi-4', 'Aerasi-3', 'Aerasi-2', 'Aerasi-1', 'Aerob'],
-            'Outlet DAF'     => ['Outlet DAF', 'DAF', 'Clarifier 2', 'Clarifier 1'],
-            'Effluent'       => ['Effluent COD (max 300 ppm)', 'Effluent COD', 'Effluent', 'Outlet Sand Filter'],
+            'Influent'       => ['Influent'],
+            'Outlet Anaerob' => ['Outlet Anaerob'],
+            'Outlet DAF'     => ['Outlet DAF'],
+            'Effluent'       => ['Effluent'],
         ];
 
         $getAnalisaVal = function ($paramObj, array $candidateNames, $fallback) use ($analisaRecords, $dbPoints) {
@@ -1603,6 +1603,23 @@ class WWTPController extends Controller
             return $fallback;
         };
 
+        // Aerob dihitung dari rata-rata (Clarifier 1 + Clarifier 2) / 2
+        $getAerobVal = function ($paramObj, $fallback) use ($getAnalisaVal) {
+            $val1 = $getAnalisaVal($paramObj, ['Clarifier 1'], null);
+            $val2 = $getAnalisaVal($paramObj, ['Clarifier 2'], null);
+
+            if ($val1 !== null && $val2 !== null) {
+                return round(($val1 + $val2) / 2, 2);
+            }
+            if ($val1 !== null) {
+                return $val1;
+            }
+            if ($val2 !== null) {
+                return $val2;
+            }
+            return $fallback;
+        };
+
         $envStages = [
             'Influent'       => [
                 'ph'  => $getAnalisaVal($paramPH, $stageCandidatePoints['Influent'], 7.2),
@@ -1617,10 +1634,10 @@ class WWTPController extends Controller
                 'ec'  => $getAnalisaVal($paramEC, $stageCandidatePoints['Outlet Anaerob'], 1.6),
             ],
             'Aerob'          => [
-                'ph'  => $getAnalisaVal($paramPH, $stageCandidatePoints['Aerob'], 7.4),
-                'tss' => $getAnalisaVal($paramTSS, $stageCandidatePoints['Aerob'], 16.0),
-                'cod' => $getAnalisaVal($paramCOD, $stageCandidatePoints['Aerob'], 70.0),
-                'ec'  => $getAnalisaVal($paramEC, $stageCandidatePoints['Aerob'], 1.4),
+                'ph'  => $getAerobVal($paramPH, 7.4),
+                'tss' => $getAerobVal($paramTSS, 16.0),
+                'cod' => $getAerobVal($paramCOD, 70.0),
+                'ec'  => $getAerobVal($paramEC, 1.4),
             ],
             'Outlet DAF'     => [
                 'ph'  => $getAnalisaVal($paramPH, $stageCandidatePoints['Outlet DAF'], 7.1),
