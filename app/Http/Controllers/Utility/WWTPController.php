@@ -1540,62 +1540,100 @@ class WWTPController extends Controller
             ->get();
 
         if ($analisaRecords->isEmpty()) {
-            $latestAnalisa = WwtpAnalisa::with(['details.point', 'details.parameter'])->latest('analisa_date')->first();
-            if ($latestAnalisa) {
-                $analisaRecords = collect([$latestAnalisa]);
+            $latestDate = WwtpAnalisa::max('analisa_date');
+            if ($latestDate) {
+                $analisaRecords = WwtpAnalisa::with(['details.point', 'details.parameter'])
+                    ->where('analisa_date', $latestDate)
+                    ->get();
             }
         }
 
-        $paramCOD = WwtpParameter::where('parameter_name', 'like', '%COD%')->first();
-        $paramTSS = WwtpParameter::where('parameter_name', 'like', '%TSS%')->first();
-        $paramPH  = WwtpParameter::where('parameter_name', 'like', '%pH%')->first();
-        $paramEC  = WwtpParameter::where('parameter_name', 'like', '%EC%')->first();
-
-        $pointNamesMap = [
-            'Influent'       => ['Influent COD', 'Influent', 'Equalisasi'],
-            'Outlet Anaerob' => ['Outlet Anaerob', 'Anaerob'],
-            'Aerob'          => ['Aerasi-6', 'Aerasi 6', 'Aerob'],
-            'Outlet DAF'     => ['Outlet DAF', 'DAF'],
-            'Effluent'       => ['Effluent COD (max 300 ppm)', 'Effluent COD', 'Effluent']
-        ];
+        $allParams = WwtpParameter::all();
+        $paramCOD = $allParams->first(fn($p) => stripos($p->parameter_name, 'COD') !== false);
+        $paramTSS = $allParams->first(fn($p) => stripos($p->parameter_name, 'TSS') !== false);
+        $paramPH  = $allParams->first(fn($p) => stripos($p->parameter_name, 'pH') !== false);
+        $paramEC  = $allParams->first(fn($p) => stripos($p->parameter_name, 'EC') !== false);
 
         $dbPoints = WwtpPoint::all();
-        $pointIdMap = [];
-        foreach ($pointNamesMap as $key => $names) {
-            foreach ($names as $name) {
-                $found = $dbPoints->first(function ($p) use ($name) {
-                    return strtolower(trim($p->point_name)) === strtolower(trim($name));
-                });
-                if ($found) {
-                    $pointIdMap[$key] = $found->id;
-                    break;
-                }
-            }
-        }
 
-        $getAnalisaVal = function ($parameterId, $pointKey, $fallback) use ($analisaRecords, $pointIdMap) {
-            if (!$parameterId || !isset($pointIdMap[$pointKey]) || $analisaRecords->isEmpty()) {
+        // Pemetaan nama point dari Master Point Analisa WWTP untuk setiap tahapan
+        $stageCandidatePoints = [
+            'Influent'       => ['Influent COD', 'Inlet Anaerob', 'Sparta', 'Influent', 'Equalisasi'],
+            'Outlet Anaerob' => ['Outlet Anaerob', 'New Anaerob', 'Anaerob'],
+            'Aerob'          => ['Aerasi-6', 'Aerasi 6', 'Aerasi-5', 'Aerasi-4', 'Aerasi-3', 'Aerasi-2', 'Aerasi-1', 'Aerob'],
+            'Outlet DAF'     => ['Outlet DAF', 'DAF', 'Clarifier 2', 'Clarifier 1'],
+            'Effluent'       => ['Effluent COD (max 300 ppm)', 'Effluent COD', 'Effluent', 'Outlet Sand Filter'],
+        ];
+
+        $getAnalisaVal = function ($paramObj, array $candidateNames, $fallback) use ($analisaRecords, $dbPoints) {
+            if (!$paramObj || $analisaRecords->isEmpty()) {
                 return $fallback;
             }
-            $pointId = $pointIdMap[$pointKey];
-            $values = collect();
-            foreach ($analisaRecords as $rec) {
-                $detail = $rec->details->first(function ($d) use ($parameterId, $pointId) {
-                    return $d->parameter_id == $parameterId && $d->point_id == $pointId;
-                });
-                if ($detail && $detail->hasil_analisa !== null && is_numeric($detail->hasil_analisa)) {
-                    $values->push((float)$detail->hasil_analisa);
+
+            $paramId = $paramObj->id;
+
+            // Kumpulkan ID point kandidat sesuai urutan prioritas
+            $targetPointIds = [];
+            foreach ($candidateNames as $cName) {
+                foreach ($dbPoints as $p) {
+                    if (strcasecmp(trim($p->point_name), trim($cName)) === 0 || stripos($p->point_name, $cName) !== false) {
+                        if (!in_array($p->id, $targetPointIds)) {
+                            $targetPointIds[] = $p->id;
+                        }
+                    }
                 }
             }
-            return $values->isNotEmpty() ? round($values->average(), 2) : $fallback;
+
+            // Cari nilai dari data analisa harian berdasarkan urutan prioritas point
+            foreach ($targetPointIds as $ptId) {
+                $vals = collect();
+                foreach ($analisaRecords as $rec) {
+                    if (!$rec->details) continue;
+                    foreach ($rec->details as $d) {
+                        if ($d->parameter_id == $paramId && $d->point_id == $ptId && $d->hasil_analisa !== null && is_numeric($d->hasil_analisa)) {
+                            $vals->push((float) $d->hasil_analisa);
+                        }
+                    }
+                }
+                if ($vals->isNotEmpty()) {
+                    return round($vals->average(), 2);
+                }
+            }
+
+            return $fallback;
         };
 
         $envStages = [
-            'Influent'       => ['ph' => $getAnalisaVal($paramPH?->id, 'Influent', 7.2), 'tss' => $getAnalisaVal($paramTSS?->id, 'Influent', 450.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Influent', 2200.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Influent', 1.8)],
-            'Outlet Anaerob' => ['ph' => $getAnalisaVal($paramPH?->id, 'Outlet Anaerob', 7.5), 'tss' => $getAnalisaVal($paramTSS?->id, 'Outlet Anaerob', 85.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Outlet Anaerob', 380.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Outlet Anaerob', 1.6)],
-            'Aerob'          => ['ph' => $getAnalisaVal($paramPH?->id, 'Aerob', 7.4), 'tss' => $getAnalisaVal($paramTSS?->id, 'Aerob', 16.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Aerob', 70.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Aerob', 1.4)],
-            'Outlet DAF'     => ['ph' => $getAnalisaVal($paramPH?->id, 'Outlet DAF', 7.1), 'tss' => $getAnalisaVal($paramTSS?->id, 'Outlet DAF', 12.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Outlet DAF', 55.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Outlet DAF', 1.2)],
-            'Effluent'       => ['ph' => $getAnalisaVal($paramPH?->id, 'Effluent', 7.2), 'tss' => $getAnalisaVal($paramTSS?->id, 'Effluent', 10.0), 'cod' => $getAnalisaVal($paramCOD?->id, 'Effluent', 42.0), 'ec' => $getAnalisaVal($paramEC?->id, 'Effluent', 1.0)],
+            'Influent'       => [
+                'ph'  => $getAnalisaVal($paramPH, $stageCandidatePoints['Influent'], 7.2),
+                'tss' => $getAnalisaVal($paramTSS, $stageCandidatePoints['Influent'], 450.0),
+                'cod' => $getAnalisaVal($paramCOD, $stageCandidatePoints['Influent'], 2200.0),
+                'ec'  => $getAnalisaVal($paramEC, $stageCandidatePoints['Influent'], 1.8),
+            ],
+            'Outlet Anaerob' => [
+                'ph'  => $getAnalisaVal($paramPH, $stageCandidatePoints['Outlet Anaerob'], 7.5),
+                'tss' => $getAnalisaVal($paramTSS, $stageCandidatePoints['Outlet Anaerob'], 85.0),
+                'cod' => $getAnalisaVal($paramCOD, $stageCandidatePoints['Outlet Anaerob'], 380.0),
+                'ec'  => $getAnalisaVal($paramEC, $stageCandidatePoints['Outlet Anaerob'], 1.6),
+            ],
+            'Aerob'          => [
+                'ph'  => $getAnalisaVal($paramPH, $stageCandidatePoints['Aerob'], 7.4),
+                'tss' => $getAnalisaVal($paramTSS, $stageCandidatePoints['Aerob'], 16.0),
+                'cod' => $getAnalisaVal($paramCOD, $stageCandidatePoints['Aerob'], 70.0),
+                'ec'  => $getAnalisaVal($paramEC, $stageCandidatePoints['Aerob'], 1.4),
+            ],
+            'Outlet DAF'     => [
+                'ph'  => $getAnalisaVal($paramPH, $stageCandidatePoints['Outlet DAF'], 7.1),
+                'tss' => $getAnalisaVal($paramTSS, $stageCandidatePoints['Outlet DAF'], 12.0),
+                'cod' => $getAnalisaVal($paramCOD, $stageCandidatePoints['Outlet DAF'], 55.0),
+                'ec'  => $getAnalisaVal($paramEC, $stageCandidatePoints['Outlet DAF'], 1.2),
+            ],
+            'Effluent'       => [
+                'ph'  => $getAnalisaVal($paramPH, $stageCandidatePoints['Effluent'], 7.2),
+                'tss' => $getAnalisaVal($paramTSS, $stageCandidatePoints['Effluent'], 10.0),
+                'cod' => $getAnalisaVal($paramCOD, $stageCandidatePoints['Effluent'], 42.0),
+                'ec'  => $getAnalisaVal($paramEC, $stageCandidatePoints['Effluent'], 1.0),
+            ],
         ];
 
         $calcRem = function ($in, $out) {
