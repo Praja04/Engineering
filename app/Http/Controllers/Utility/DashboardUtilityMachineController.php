@@ -167,23 +167,44 @@ class DashboardUtilityMachineController extends Controller
             }
         }
 
-        $compDailyTrends = [];
-        foreach ($compDailyGroup as $dt => $rows) {
-            $validRh1 = $rows->filter(function ($r) {
-                return !is_null($r->running_hour_1) && (float)$r->running_hour_1 > 0;
-            });
-            if ($validRh1->isNotEmpty()) {
-                $currentRh1 = round((float)$validRh1->last()->running_hour_1, 2);
-            }
+        // Generate continuous date range from $startDate to $endDate (agar hari Minggu/libur tetap tampil di chart)
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        $allDates = [];
+        for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+            $allDates[] = $d->format('Y-m-d');
+        }
 
-            $compDailyTrends[] = [
-                'tanggal' => $dt,
-                'rh1_avg' => $currentRh1,
-                'ga57_avg' => round($rows->avg('running_hour_2') ?? 0, 2),
-                'ir55_avg' => round($rows->avg('running_hour_3') ?? 0, 2),
-                'ga55_avg' => round($rows->avg('running_hour_4') ?? 0, 2),
-                'count' => $rows->count(),
-            ];
+        $compDailyTrends = [];
+        foreach ($allDates as $dt) {
+            if ($compDailyGroup->has($dt)) {
+                $rows = $compDailyGroup->get($dt);
+                $validRh1 = $rows->filter(function ($r) {
+                    return !is_null($r->running_hour_1) && (float)$r->running_hour_1 > 0;
+                });
+                if ($validRh1->isNotEmpty()) {
+                    $currentRh1 = round((float)$validRh1->last()->running_hour_1, 2);
+                }
+
+                $compDailyTrends[] = [
+                    'tanggal' => $dt,
+                    'rh1_avg' => $currentRh1,
+                    'ga57_avg' => round($rows->avg('running_hour_2') ?? 0, 2),
+                    'ir55_avg' => round($rows->avg('running_hour_3') ?? 0, 2),
+                    'ga55_avg' => round($rows->avg('running_hour_4') ?? 0, 2),
+                    'count' => $rows->count(),
+                ];
+            } else {
+                // Hari tanpa data (misal hari Minggu / libur operasional)
+                $compDailyTrends[] = [
+                    'tanggal' => $dt,
+                    'rh1_avg' => null,
+                    'ga57_avg' => null,
+                    'ir55_avg' => null,
+                    'ga55_avg' => null,
+                    'count' => 0,
+                ];
+            }
         }
 
         // 2. Forward-fill RH1 for hourly readings:
@@ -225,7 +246,10 @@ class DashboardUtilityMachineController extends Controller
 
         $compTarget = ($mode === 'harian') ? $selectedDayComp : $compDetails;
 
-        $latestTrend = !empty($compDailyTrends) ? $compDailyTrends[count($compDailyTrends) - 1] : null;
+        $validDailyTrends = array_values(array_filter($compDailyTrends, function ($t) {
+            return $t['count'] > 0;
+        }));
+        $latestTrend = !empty($validDailyTrends) ? $validDailyTrends[count($validDailyTrends) - 1] : null;
         $latestDate = $latestTrend ? $latestTrend['tanggal'] : null;
         $latestDateFormatted = $latestDate ? Carbon::parse($latestDate)->translatedFormat('d M Y') : null;
 

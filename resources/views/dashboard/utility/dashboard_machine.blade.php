@@ -585,9 +585,10 @@
                             </div>
                             <div class="kpi-top-val" id="kpiCompVal">0 <span
                                     style="font-size: 11px; font-weight: normal; color: #94a3b8;">h</span></div>
-                            <div class="kpi-top-sub" id="kpiCompSub">
-                                <i class="mdi mdi-check-circle-outline"></i> GA57: <span id="kpiCompGa57">-</span> |
-                                IR55: <span id="kpiCompIr55">-</span>
+                            <div class="kpi-top-sub" id="kpiCompSub"
+                                style="font-size: 8px; gap: 3px; flex-wrap: wrap;">
+                                <i class="mdi mdi-check-circle-outline"></i> RH1: <span id="kpiCompRh1">-</span> |
+                                RH3: <span id="kpiCompIr55">-</span> | RH4: <span id="kpiCompGa55">-</span>
                             </div>
                         </div>
                     </div>
@@ -723,7 +724,8 @@
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
-                                                <span class="stat-tile-label text-warning" style="font-size: 8px;">AVG. RH 1 (rh1)</span>
+                                                <span class="stat-tile-label text-warning"
+                                                    style="font-size: 8px;">AVG. RH 1 (rh1)</span>
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center text-warning" id="valCompRh1"
                                                 style="font-size: 13px;">0.00</div>
@@ -1457,8 +1459,9 @@
                     $('#kpiCompVal').html(
                         `${comp.ga57_avg} <span style="font-size: 11px; font-weight: normal; color: #94a3b8;">h</span>`
                     );
-                    $('#kpiCompGa57').text(`${comp.ga57_avg} h`);
-                    $('#kpiCompIr55').text(`${comp.ir55_avg} h`);
+                    $('#kpiCompRh1').text(comp.rh1_avg ? `${comp.rh1_avg}h` : '-');
+                    $('#kpiCompIr55').text(`${comp.ir55_avg}h`);
+                    $('#kpiCompGa55').text(`${comp.ga55_avg}h`);
 
                     // Card metric tiles: tampilkan AVG data tanggal terbaru (bukan total periode)
                     const rh1Val = (comp.rh1_latest_avg !== undefined) ? comp.rh1_latest_avg : (comp.rh1_avg || 0);
@@ -1770,7 +1773,8 @@
                             size: 4,
                             hover: {
                                 size: 6
-                            }
+                            },
+                            showNullDataPoints: false
                         },
                         dataLabels: {
                             enabled: true,
