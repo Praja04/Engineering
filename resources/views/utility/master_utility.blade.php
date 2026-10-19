@@ -224,16 +224,17 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th style="width: 5%;" class="text-center">No</th>
-                                            <th style="width: 25%;">Jenis Pemakaian / Area</th>
-                                            <th style="width: 25%;">Deskripsi / Catatan</th>
-                                            <th style="width: 12%;" class="text-center">Status</th>
-                                            <th style="width: 15%;" class="text-center">Riwayat Transaksi</th>
-                                            <th style="width: 18%;" class="text-center">Aksi</th>
+                                            <th style="width: 22%;">Jenis Pemakaian / Area</th>
+                                            <th style="width: 20%;">Deskripsi / Catatan</th>
+                                            <th style="width: 15%;" class="text-center">Quota Target</th>
+                                            <th style="width: 10%;" class="text-center">Status</th>
+                                            <th style="width: 13%;" class="text-center">Riwayat Transaksi</th>
+                                            <th style="width: 15%;" class="text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="airTableBody">
                                         <tr>
-                                            <td colspan="6" class="text-center py-4">
+                                            <td colspan="7" class="text-center py-4">
                                                 <div class="spinner-border text-primary" role="status"></div>
                                                 <div class="text-muted mt-2">Memuat data pemakaian air...</div>
                                             </td>
@@ -434,6 +435,18 @@
                             <label class="form-label fw-semibold">Deskripsi / Catatan</label>
                             <input type="text" class="form-control" id="airDeskripsi"
                                 placeholder="Keterangan area (opsional)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold d-flex justify-content-between align-items-center">
+                                <span>Quota Target (m³/hari)</span>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle small fw-normal">Khusus Air Mentah</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" class="form-control" id="airQuotaTarget"
+                                    placeholder="Contoh: 59">
+                                <span class="input-group-text bg-light text-muted">m³/hari</span>
+                            </div>
+                            <small class="text-muted">Target kuota harian untuk pembanding performa pemakaian (khusus jenis Air Mentah: Sumur, PDAM, dsb). Kosongkan jika bukan air mentah.</small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -831,7 +844,7 @@
                 renderAirTable();
             }).fail(function() {
                 $('#airTableBody').html(
-                    '<tr><td colspan="6" class="text-center text-danger py-4">Gagal memuat data pemakaian air.</td></tr>'
+                    '<tr><td colspan="7" class="text-center text-danger py-4">Gagal memuat data pemakaian air.</td></tr>'
                 );
             });
         }
@@ -845,7 +858,7 @@
 
             if (filtered.length === 0) {
                 $tbody.html(
-                    '<tr><td colspan="6" class="text-center text-muted py-4">Tidak ada data jenis pemakaian air yang cocok.</td></tr>'
+                    '<tr><td colspan="7" class="text-center text-muted py-4">Tidak ada data jenis pemakaian air yang cocok.</td></tr>'
                 );
                 return;
             }
@@ -854,6 +867,11 @@
                 const statusBadge = a.is_active ?
                     '<span class="badge bg-success-subtle text-success border border-success-subtle">Aktif</span>' :
                     '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Nonaktif</span>';
+
+                let quotaBadge = '<span class="text-muted">-</span>';
+                if (a.quota_target !== null && a.quota_target !== undefined && a.quota_target !== '') {
+                    quotaBadge = `<span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace"><i class="mdi mdi-water-check me-1"></i>${Number(a.quota_target).toLocaleString('id-ID')} m³/hari</span>`;
+                }
 
                 let actionHtml = '-';
                 if (canManageMaster) {
@@ -880,6 +898,7 @@
                         <td class="text-center">${idx + 1}</td>
                         <td class="fw-bold text-dark">${escapeHtml(a.nama_area)}</td>
                         <td>${escapeHtml(a.deskripsi)}</td>
+                        <td class="text-center">${quotaBadge}</td>
                         <td class="text-center">${statusBadge}</td>
                         <td class="text-center"><span class="badge bg-light text-secondary border">${a.usage_count} record</span></td>
                         <td class="text-center">${actionHtml}</td>
@@ -894,6 +913,7 @@
         $('#btnAddAir').on('click', function() {
             $('#formAirArea')[0].reset();
             $('#airId').val('');
+            $('#airQuotaTarget').val('');
             $('#modalAirTitle').text('Tambah Jenis Pemakaian Air');
             $('#modalAir').modal('show');
         });
@@ -904,6 +924,7 @@
             $('#airId').val(a.id);
             $('#airNama').val(a.nama_area);
             $('#airDeskripsi').val(a.deskripsi === '-' ? '' : a.deskripsi);
+            $('#airQuotaTarget').val(a.quota_target !== null && a.quota_target !== undefined ? a.quota_target : '');
             $('#modalAirTitle').text('Edit Jenis Pemakaian Air: ' + a.nama_area);
             $('#modalAir').modal('show');
         };
@@ -917,7 +938,8 @@
 
             $.post(url, {
                 nama_area: $('#airNama').val(),
-                deskripsi: $('#airDeskripsi').val()
+                deskripsi: $('#airDeskripsi').val(),
+                quota_target: $('#airQuotaTarget').val()
             }, function(res) {
                 Swal.fire({
                     icon: 'success',

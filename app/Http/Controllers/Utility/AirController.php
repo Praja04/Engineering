@@ -471,6 +471,10 @@ class AirController extends Controller
             $end = now()->endOfMonth()->format('Y-m-d');
         }
         $excludedSources = ['PDAM', 'Sumur 1', 'Sumur 2', 'Sumur 4', 'Sumur 5'];
+        $quotas = AirArea::whereIn('nama_area', $excludedSources)
+            ->pluck('quota_target', 'nama_area')
+            ->toArray();
+
         $data = PemakaianAirModel::query()
             ->select('jenis_pemakaian', DB::raw('SUM(pemakaian_akhir - pemakaian_awal) AS total_pemakaian'))
             ->whereBetween('tanggal', [$start, $end])
@@ -478,10 +482,11 @@ class AirController extends Controller
             ->groupBy('jenis_pemakaian')
             ->orderByDesc('total_pemakaian')
             ->get()
-            ->map(function ($item) use ($start, $end) {
+            ->map(function ($item) use ($start, $end, $quotas) {
                 return [
                     'jenis_pemakaian' => $item->jenis_pemakaian,
                     'total_pemakaian' => $item->total_pemakaian,
+                    'quota_target'    => isset($quotas[$item->jenis_pemakaian]) && $quotas[$item->jenis_pemakaian] !== null ? (float)$quotas[$item->jenis_pemakaian] : null,
                     'start_date'      => $start,
                     'end_date'        => $end,
                 ];

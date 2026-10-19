@@ -11,10 +11,11 @@ class AirArea extends Model
 
     protected $table = 'air_area_utility';
     protected $primaryKey = 'id';
-    protected $fillable = ['nama_area', 'is_active', 'deskripsi'];
+    protected $fillable = ['nama_area', 'is_active', 'deskripsi', 'quota_target'];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'quota_target' => 'float',
     ];
 
     public function scopeActive($query)

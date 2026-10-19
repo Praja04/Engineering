@@ -216,6 +216,7 @@ class MasterUtilityController extends Controller
                 'id' => $a->id,
                 'nama_area' => $a->nama_area,
                 'deskripsi' => $a->deskripsi ?? '-',
+                'quota_target' => $a->quota_target !== null ? (float) $a->quota_target : null,
                 'is_active' => (bool) ($a->is_active ?? true),
                 'usage_count' => $usageCounts[$a->nama_area] ?? 0,
                 'created_at' => $a->created_at ? $a->created_at->format('d M Y H:i') : '-',
@@ -232,18 +233,24 @@ class MasterUtilityController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_area' => 'required|string|max:100|unique:air_area_utility,nama_area',
             'deskripsi' => 'nullable|string|max:255',
+            'quota_target' => 'nullable|numeric|min:0',
         ], [
             'nama_area.required' => 'Nama jenis pemakaian air wajib diisi.',
             'nama_area.unique' => 'Jenis pemakaian air sudah terdaftar.',
+            'quota_target.numeric' => 'Quota target harus berupa angka.',
+            'quota_target.min' => 'Quota target tidak boleh kurang dari 0.',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
+        $quotaTarget = $request->filled('quota_target') ? $request->input('quota_target') : null;
+
         $area = AirArea::create([
             'nama_area' => trim($request->input('nama_area')),
             'deskripsi' => $request->input('deskripsi'),
+            'quota_target' => $quotaTarget,
             'is_active' => true,
         ]);
 
@@ -263,10 +270,13 @@ class MasterUtilityController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_area' => 'required|string|max:100|unique:air_area_utility,nama_area,' . $id,
             'deskripsi' => 'nullable|string|max:255',
+            'quota_target' => 'nullable|numeric|min:0',
             'is_active' => 'nullable|boolean',
         ], [
             'nama_area.required' => 'Nama jenis pemakaian air wajib diisi.',
             'nama_area.unique' => 'Jenis pemakaian air sudah terdaftar.',
+            'quota_target.numeric' => 'Quota target harus berupa angka.',
+            'quota_target.min' => 'Quota target tidak boleh kurang dari 0.',
         ]);
 
         if ($validator->fails()) {
@@ -275,10 +285,12 @@ class MasterUtilityController extends Controller
 
         $oldName = $area->nama_area;
         $newName = trim($request->input('nama_area'));
+        $quotaTarget = $request->filled('quota_target') ? $request->input('quota_target') : null;
 
         $area->update([
             'nama_area' => $newName,
             'deskripsi' => $request->input('deskripsi'),
+            'quota_target' => $quotaTarget,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : ($area->is_active ?? true),
         ]);
 
