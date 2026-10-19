@@ -391,20 +391,49 @@ class DashboardUtilityMachineController extends Controller
             return $d === $selectedDate;
         })->values();
 
+        // Generate continuous date range from $startDate to $endDate (sama seperti Compressor agar tanggal tanpa data tetap tampil 0)
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        $today = Carbon::today();
+        if ($end->gt($today)) {
+            $end = $today;
+        }
+        $allDates = [];
+        for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+            $allDates[] = $d->format('Y-m-d');
+        }
+
         $mdpDailyTrends = [];
         $mdpDailyGroup = $mdpDetails->groupBy(function ($item) {
             return is_string($item->tanggal_laporan) ? $item->tanggal_laporan : Carbon::parse($item->tanggal_laporan)->format('Y-m-d');
         });
-        foreach ($mdpDailyGroup as $dt => $rows) {
-            $mdpDailyTrends[] = [
-                'tanggal' => $dt,
-                'arus_avg' => round($rows->avg('arus_rata_rata') ?? 0, 2),
-                'tegangan_avg' => round($rows->avg('tegangan_rata_rata') ?? 0, 2),
-                'daya_total_avg' => round($rows->avg('daya_total') ?? 0, 2),
-                'temp_trafo_avg' => round($rows->avg('temperatur_transformator') ?? 0, 2),
-                'suhu_trafo_avg' => round($rows->avg('suhu_ruang_trafo') ?? 0, 2),
-                'suhu_genset_avg' => round($rows->avg('suhu_ruang_genset') ?? 0, 2),
-            ];
+
+        foreach ($allDates as $dt) {
+            if ($mdpDailyGroup->has($dt)) {
+                $rows = $mdpDailyGroup->get($dt);
+                $mdpDailyTrends[] = [
+                    'tanggal' => $dt,
+                    'arus_avg' => round($rows->avg('arus_rata_rata') ?? 0, 2),
+                    'tegangan_avg' => round($rows->avg('tegangan_rata_rata') ?? 0, 2),
+                    'daya_total_avg' => round($rows->avg('daya_total') ?? 0, 2),
+                    'temp_trafo_avg' => round($rows->avg('temperatur_transformator') ?? 0, 2),
+                    'suhu_trafo_avg' => round($rows->avg('suhu_ruang_trafo') ?? 0, 2),
+                    'suhu_genset_avg' => round($rows->avg('suhu_ruang_genset') ?? 0, 2),
+                    'count' => $rows->count(),
+                ];
+            } else {
+                // Hari tanpa data (misal hari Minggu / libur operasional) -> jadikan 0 (sama seperti Compressor)
+                $mdpDailyTrends[] = [
+                    'tanggal' => $dt,
+                    'arus_avg' => 0,
+                    'tegangan_avg' => 0,
+                    'daya_total_avg' => 0,
+                    'temp_trafo_avg' => 0,
+                    'suhu_trafo_avg' => 0,
+                    'suhu_genset_avg' => 0,
+                    'count' => 0,
+                ];
+            }
         }
 
         $mdpTarget = ($mode === 'harian') ? $selectedDayMdp : $mdpDetails;
@@ -456,6 +485,7 @@ class DashboardUtilityMachineController extends Controller
             'suhu_ruang_trafo' => round($mdpTarget->avg('suhu_ruang_trafo') ?? 0, 2),
             'suhu_ruang_genset' => round($mdpTarget->avg('suhu_ruang_genset') ?? 0, 2),
             'cos_phi' => $cosPhiAvg,
+            'cos_phi_status' => !empty($dailyCosPhiList) ? ($cosPhiAvg >= 0.85 && $cosPhiAvg <= 1.00 ? 'normal' : 'danger') : 'no_data',
             'has_cos_phi_data' => !empty($dailyCosPhiList),
             'latest' => $latestMdp ? [
                 'jam' => substr($latestMdp->jam_pencatatan, 0, 5),

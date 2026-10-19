@@ -969,13 +969,13 @@
                                     </div>
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-cyan" style="font-size: 7.5px;">AVG.
+                                            <div class="stat-tile-label text-cyan" id="labelMdpCosPhi" style="font-size: 7.5px;">AVG.
                                                 COS φ</div>
                                             <div class="stat-tile-val mt-1 text-cyan" id="valMdpCosPhi"
                                                 style="font-size: 11px;">
                                                 0.00</div>
-                                            <div class="stat-tile-meta text-muted" style="font-size: 6.5px;">Cap. Bank
-                                            </div>
+                                            <div class="stat-tile-meta text-muted" id="valMdpCosPhiMeta"
+                                                style="font-size: 6.5px;">STD: 0.85 - 1.00</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1562,8 +1562,11 @@
                     $('#kpiMdpTrafo').text(mdp.temperatur_transformator);
                     $('#kpiMdpArus').text(mdp.arus_rata_rata);
                     if (mdp.has_cos_phi_data) {
+                        const cosVal = Number(mdp.cos_phi);
+                        const isAbnormal = cosVal < 0.85 || cosVal > 1.00;
+                        const cosColor = isAbnormal ? '#ef4444' : 'var(--wco-cyan, #06b6d4)';
                         $('#kpiMdpSub').html(
-                            `<i class="mdi mdi-thermometer"></i> Trafo: <span id="kpiMdpTrafo">${mdp.temperatur_transformator}</span> °C | <span id="kpiMdpArus">${mdp.arus_rata_rata}</span> A | Cos φ: <span>${Number(mdp.cos_phi).toFixed(2)}</span>`
+                            `<i class="mdi mdi-thermometer"></i> Trafo: <span id="kpiMdpTrafo">${mdp.temperatur_transformator}</span> °C | <span id="kpiMdpArus">${mdp.arus_rata_rata}</span> A | Cos φ: <span style="color: ${cosColor}; font-weight: 700;">${cosVal.toFixed(2)}</span>`
                         );
                     }
 
@@ -1575,9 +1578,21 @@
                     $('#valMdpSuhuGenset').text(`${mdp.suhu_ruang_genset} °C`);
 
                     if (mdp.has_cos_phi_data) {
-                        $('#valMdpCosPhi').text(Number(mdp.cos_phi).toFixed(2));
+                        const cosVal = Number(mdp.cos_phi);
+                        $('#valMdpCosPhi').text(cosVal.toFixed(2));
+                        if (cosVal < 0.85 || cosVal > 1.00) {
+                            $('#valMdpCosPhi').removeClass('text-cyan text-success').addClass('text-danger');
+                            $('#labelMdpCosPhi').removeClass('text-cyan text-success').addClass('text-danger');
+                            $('#valMdpCosPhiMeta').html('<span class="text-danger fw-bold"><i class="mdi mdi-alert-circle"></i> Di Luar STD</span>');
+                        } else {
+                            $('#valMdpCosPhi').removeClass('text-danger text-success').addClass('text-cyan');
+                            $('#labelMdpCosPhi').removeClass('text-danger text-success').addClass('text-cyan');
+                            $('#valMdpCosPhiMeta').html('<span class="text-success"><i class="mdi mdi-check-circle"></i> Normal (0.85-1)</span>');
+                        }
                     } else {
-                        $('#valMdpCosPhi').text('0.00');
+                        $('#valMdpCosPhi').removeClass('text-danger text-success').addClass('text-cyan').text('0.00');
+                        $('#labelMdpCosPhi').removeClass('text-danger text-success').addClass('text-cyan');
+                        $('#valMdpCosPhiMeta').html('<span class="text-muted">STD: 0.85 - 1.00</span>');
                     }
 
                     if (mdp.latest) {
