@@ -5,7 +5,7 @@
         <meta charset="UTF-8">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Dashboard Mesin Utility | PT BAS</title>
+        <title>Dashboard Engineering Utility | PT BAS</title>
         <link rel="shortcut icon" href="{{ asset('assets/images/logo/kecap.png') }}">
 
         <!-- CSS Dependencies -->
@@ -624,24 +624,62 @@
                         </div>
                     </div>
 
-                    <!-- Card 3: MDP Power -->
+                    <!-- Card 3: Power House (formerly MDP Power) -->
                     <div class="col-xl-2 col-md-4 col-6">
                         <div class="kpi-top-card">
                             <div class="kpi-top-header">
                                 <div class="kpi-top-icon"
                                     style="background: rgba(245, 158, 11, 0.15); color: var(--wco-amber);">
-                                    <i class="mdi mdi-lightning-bolt"></i>
+                                    <i class="mdi mdi-home-lightning-bolt"></i>
                                 </div>
                                 <div>
-                                    <div class="kpi-top-label">MDP POWER</div>
-                                    <div class="text-muted" style="font-size: 8px;">DAYA & ARUS MDP</div>
+                                    <div class="kpi-top-label">POWER HOUSE</div>
+                                    <div class="text-muted" style="font-size: 8px;">PLN • PLTS • INVOICE</div>
                                 </div>
                             </div>
-                            <div class="kpi-top-val text-warning" id="kpiMdpVal">0 <span
-                                    style="font-size: 11px; font-weight: normal; color: #94a3b8;">kW</span></div>
-                            <div class="kpi-top-sub" id="kpiMdpSub">
-                                <i class="mdi mdi-thermometer"></i> Trafo: <span id="kpiMdpTrafo">-</span> °C | <span
-                                    id="kpiMdpArus">-</span> A
+
+                            <!-- 3 Metrics: PLN | PLTS | Invoice -->
+                            <div class="row g-0 text-center my-auto py-1 align-items-center"
+                                style="background: rgba(255, 255, 255, 0.02); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                <!-- PLN -->
+                                <div class="col-4 border-end border-secondary border-opacity-25 px-1">
+                                    <div class="text-muted"
+                                        style="font-size: 7.5px; font-weight: 700; text-transform: uppercase;">PLN
+                                    </div>
+                                    <div class="text-warning fw-bold text-truncate" id="kpiPlnVal"
+                                        style="font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.2;"
+                                        title="E-Del Terbaru - Awal">0</div>
+                                    <div class="text-muted" style="font-size: 7px;">kWh</div>
+                                </div>
+                                <!-- PLTS -->
+                                <div class="col-4 border-end border-secondary border-opacity-25 px-1">
+                                    <div class="text-muted"
+                                        style="font-size: 7.5px; font-weight: 700; text-transform: uppercase;">PLTS
+                                    </div>
+                                    <div class="text-success fw-bold text-truncate" id="kpiPltsVal"
+                                        style="font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.2;"
+                                        title="iSolarCloud API (Dummy)">0</div>
+                                    <div class="text-muted" style="font-size: 7px;">kWh</div>
+                                </div>
+                                <!-- Invoice -->
+                                <div class="col-4 px-1">
+                                    <div class="text-muted"
+                                        style="font-size: 7.5px; font-weight: 700; text-transform: uppercase;">INVOICE
+                                    </div>
+                                    <div class="text-cyan fw-bold text-truncate" id="kpiInvoiceVal"
+                                        style="font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.2;"
+                                        title="Estimasi Biaya">Rp 0</div>
+                                    <div class="text-muted text-truncate" id="kpiInvoiceSub" style="font-size: 7px;"
+                                        title="Tarif Listrik">kWh/Rp</div>
+                                </div>
+                            </div>
+
+                            <div class="kpi-top-sub d-flex justify-content-between align-items-center mt-1"
+                                id="kpiPowerHouseSub" style="font-size: 7.5px;">
+                                <span class="text-truncate"><i class="mdi mdi-flash text-warning"></i> Tot: <strong
+                                        id="kpiTotalEnergy">0</strong> kWh</span>
+                                <span class="text-muted text-truncate" id="kpiEdelMeta" title="E-Del Akhir - Awal">Δ
+                                    E-Del</span>
                             </div>
                         </div>
                     </div>
@@ -690,24 +728,24 @@
                         </div>
                     </div>
 
-                    <!-- Card 6: Water Quality Chemistry -->
+                    <!-- Card 6: Raw Water Usage vs Quota -->
                     <div class="col-xl-2 col-md-4 col-6">
                         <div class="kpi-top-card">
                             <div class="kpi-top-header">
                                 <div class="kpi-top-icon"
-                                    style="background: rgba(139, 92, 246, 0.15); color: var(--wco-purple);">
-                                    <i class="mdi mdi-water-check"></i>
+                                    style="background: rgba(6, 182, 212, 0.15); color: var(--wco-cyan);">
+                                    <i class="mdi mdi-water-pump"></i>
                                 </div>
                                 <div>
-                                    <div class="kpi-top-label">KUALITAS AIR</div>
-                                    <div class="text-muted" style="font-size: 8px;">5 SISTEM AIR UTILITY</div>
+                                    <div class="kpi-top-label">AIR MENTAH</div>
+                                    <div class="text-muted" style="font-size: 8px;">TOTAL / QUOTA RAW WATER</div>
                                 </div>
                             </div>
-                            <div class="kpi-top-val text-info" id="kpiWaterVal">5 / 5 <span
-                                    style="font-size: 10px; font-weight: normal; color: #94a3b8;">SYS</span></div>
+                            <div class="kpi-top-val text-cyan" id="kpiWaterVal">0 / 0 <span
+                                    style="font-size: 10px; font-weight: normal; color: #94a3b8;">m³</span></div>
                             <div class="kpi-top-sub" id="kpiWaterSub">
-                                <i class="mdi mdi-flask-outline"></i> Boiler pH: <span id="kpiBoilerPh">-</span> |
-                                TDS: <span id="kpiBoilerTds">-</span>
+                                <i class="mdi mdi-water-check"></i> Aktual: <span id="kpiRawAktual">0</span> | Quota:
+                                <span id="kpiRawQuota">0</span> m³
                             </div>
                         </div>
                     </div>
@@ -891,8 +929,8 @@
                                                 style="font-size: 13px;">0.00 °C</div>
                                             <div class="stat-tile-meta d-flex justify-content-between"
                                                 style="font-size: 7.5px;">
-                                                <span>Avg: <strong id="avgCtTemp">0</strong>°C</span>
-                                                <span id="rangeCtTemp">Max: 0</span>
+                                                <span>Avg Total: <strong id="avgCtTemp">0</strong>°C</span>
+                                                <span id="rangeCtTemp" class="text-muted">Tgl Terbaru</span>
                                             </div>
                                         </div>
                                     </div>
@@ -907,8 +945,8 @@
                                                 style="font-size: 13px;">0.00 Bar</div>
                                             <div class="stat-tile-meta d-flex justify-content-between"
                                                 style="font-size: 7.5px;">
-                                                <span>Avg: <strong id="avgCtPress">0</strong>Bar</span>
-                                                <span id="rangeCtPress">Max: 0</span>
+                                                <span>Avg Total: <strong id="avgCtPress">0</strong> Bar</span>
+                                                <span id="rangeCtPress" class="text-muted">Tgl Terbaru</span>
                                             </div>
                                         </div>
                                     </div>
@@ -969,7 +1007,8 @@
                                     </div>
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
-                                            <div class="stat-tile-label text-cyan" id="labelMdpCosPhi" style="font-size: 7.5px;">AVG.
+                                            <div class="stat-tile-label text-cyan" id="labelMdpCosPhi"
+                                                style="font-size: 7.5px;">AVG.
                                                 COS φ</div>
                                             <div class="stat-tile-val mt-1 text-cyan" id="valMdpCosPhi"
                                                 style="font-size: 11px;">
@@ -1087,7 +1126,128 @@
                         </div>
                     </div>
 
-                    <!-- 7. KUALITAS AIR COOLING TOWER (col-xl-4) -->
+                    <!-- 7. PEMAKAIAN AIR PROSES & SUPPORT (col-xl-6) -->
+                    <div class="col-xl-4 col-lg-6 col-12">
+                        <div class="wco-card h-100">
+                            <div class="wco-card-header">
+                                <div class="wco-card-title">
+                                    <i class="mdi mdi-water text-primary"></i>
+                                    <span>AIR PROSES & SUPPORT</span>
+                                </div>
+                                <span class="badge bg-dark border border-secondary text-primary"
+                                    id="airProsesPeriodBadge">Pemakaian Area</span>
+                            </div>
+                            <div class="wco-card-body p-2 d-flex flex-column">
+                                <!-- 4 Stat Tiles -->
+                                <div class="row g-1 mb-2">
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-primary" style="font-size: 8px;">TOTAL
+                                                PEMAKAIAN</span>
+                                            <div class="stat-tile-val mt-1 text-primary" id="valAirProsesTotal"
+                                                style="font-size: 12px;">0 m³</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Semua Area
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-info" style="font-size: 8px;">AREA
+                                                TERBESAR</span>
+                                            <div class="stat-tile-val mt-1 text-info text-truncate"
+                                                id="valAirProsesTopArea" style="font-size: 11px;" title="-">-
+                                            </div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Top
+                                                Konsumsi</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">TOP
+                                                KONSUMSI</span>
+                                            <div class="stat-tile-val mt-1 text-warning" id="valAirProsesTopVal"
+                                                style="font-size: 12px;">0 m³</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Volume
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-2">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-success" style="font-size: 8px;">TITIK
+                                                AREA</span>
+                                            <div class="stat-tile-val mt-1 text-success" id="valAirProsesCount"
+                                                style="font-size: 12px;">0</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Titik Aktif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="chartAirProses" style="min-height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 8. PEMAKAIAN AIR MENTAH / RAW WATER (col-xl-6) -->
+                    <div class="col-xl-4 col-lg-6 col-12">
+                        <div class="wco-card h-100">
+                            <div class="wco-card-header">
+                                <div class="wco-card-title">
+                                    <i class="mdi mdi-water-pump text-cyan"></i>
+                                    <span>AIR MENTAH (AKTUAL VS QUOTA)</span>
+                                </div>
+                                <span class="badge bg-dark border border-secondary text-cyan"
+                                    id="airRawPeriodBadge">Sumur 1,2,4,5 & PDAM</span>
+                            </div>
+                            <div class="wco-card-body p-2 d-flex flex-column">
+                                <!-- 4 Stat Tiles -->
+                                <div class="row g-1 mb-2">
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-cyan" style="font-size: 8px;">AKTUAL
+                                                RAW</span>
+                                            <div class="stat-tile-val mt-1 text-cyan" id="valAirRawTotal"
+                                                style="font-size: 12px;">0 m³</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Total
+                                                Aktual</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-muted" style="font-size: 8px;">TARGET
+                                                QUOTA</span>
+                                            <div class="stat-tile-val mt-1 text-secondary" id="valAirRawQuota"
+                                                style="font-size: 12px;">0 m³</div>
+                                            <div class="stat-tile-meta text-muted" id="valAirRawDaysMeta"
+                                                style="font-size: 7px;">1 Hari</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-info"
+                                                style="font-size: 8px;">VARIANSI</span>
+                                            <div class="stat-tile-val mt-1" id="valAirRawVariance"
+                                                style="font-size: 12px;">0 m³</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Aktual -
+                                                Quota</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">%
+                                                PENCAPAIAN</span>
+                                            <div class="stat-tile-val mt-1" id="valAirRawPercent"
+                                                style="font-size: 12px;">0%</div>
+                                            <div class="stat-tile-meta" id="valAirRawStatusMeta"
+                                                style="font-size: 7px;">Status: Normal</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="chartAirRaw" style="min-height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 9. KUALITAS AIR COOLING TOWER (col-xl-4) -->
                     <div class="col-xl-4 col-lg-6 col-12">
                         <div class="wco-card h-100">
                             <div class="wco-card-header">
@@ -1235,7 +1395,7 @@
                     </div>
 
                     <!-- 10. KUALITAS AIR BOILER (col-xl-6) -->
-                    <div class="col-xl-6 col-lg-6 col-12">
+                    <div class="col-xl-4 col-lg-6 col-12">
                         <div class="wco-card h-100">
                             <div class="wco-card-header">
                                 <div class="wco-card-title">
@@ -1331,6 +1491,65 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 12. COST SMKP & UTILITY (col-xl-4) -->
+                    <div class="col-xl-6 col-lg-6 col-12">
+                        <div class="wco-card h-100">
+                            <div class="wco-card-header">
+                                <div class="wco-card-title">
+                                    <i class="mdi mdi-cash-multiple text-warning"></i>
+                                    <span>COST SMKP & UTILITY</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <select id="costSmkpYearSelect" class="form-select form-select-sm filter-ctrl"
+                                        style="width: 75px; padding: 1px 6px; font-size: 10px;"
+                                        title="Filter Tahun Cost SMKP">
+                                        <option value="2026" selected>2026</option>
+                                    </select>
+                                    <span class="badge bg-dark border border-secondary text-warning"
+                                        id="costSmkpBadge">1 Tahun</span>
+                                </div>
+                            </div>
+                            <div class="wco-card-body p-2 d-flex flex-column">
+                                <!-- 3 Stat Highlight Tiles -->
+                                <div class="row g-1 mb-2">
+                                    <div class="col-4">
+                                        <div class="stat-tile text-center py-1 px-1">
+                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">AVG. BB
+                                                / FG</span>
+                                            <div class="stat-tile-val mt-1 text-warning" style="font-size: 12px;"
+                                                id="valCostSmkpBb">0.00</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Kg/Ton FG
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="stat-tile text-center py-1 px-1">
+                                            <span class="stat-tile-label text-cyan" style="font-size: 8px;">AVG.
+                                                LISTRIK/KM</span>
+                                            <div class="stat-tile-val mt-1 text-cyan" style="font-size: 12px;"
+                                                id="valCostSmkpListrik">0.00</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">kWh/Ton KM
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="stat-tile text-center py-1 px-1">
+                                            <span class="stat-tile-label text-success" style="font-size: 8px;">TOTAL
+                                                COST</span>
+                                            <div class="stat-tile-val mt-1 text-success" style="font-size: 11px;"
+                                                id="valCostSmkpCost">Rp 0 Jt</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;"
+                                                id="metaCostSmkpMonth">Per Bulan</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ApexChart Combined 1-Year Trend (BB/FG, Listrik BAS/KM, Cost Utility) -->
+                                <div id="chartCostSmkp" style="min-height: 190px;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -1361,7 +1580,7 @@
                     const isLight = $('body').hasClass('wco-light-mode');
                     localStorage.setItem('utility_machine_theme', isLight ? 'light' : 'dark');
                     updateThemeUI();
-                    renderAllCharts(); // Redraw charts with theme color adjustments
+                    loadDashboardData(); // Redraw charts with theme color adjustments
                 });
 
                 // Fullscreen setup
@@ -1397,10 +1616,22 @@
                 });
 
                 $('#selectedDate, #customStartDate, #customEndDate').on('change', function() {
+                    const curDateVal = $('#selectedDate').val() || $('#customStartDate').val();
+                    if (curDateVal) {
+                        const yr = new Date(curDateVal).getFullYear();
+                        if (yr && $('#costSmkpYearSelect').val() != yr) {
+                            if ($(`#costSmkpYearSelect option[value="${yr}"]`).length > 0) {
+                                $('#costSmkpYearSelect').val(yr);
+                            }
+                        }
+                    }
                     loadDashboardData();
                 });
                 $('#gensetYearSelect').on('change', function() {
                     loadGensetSection();
+                });
+                $('#costSmkpYearSelect').on('change', function() {
+                    loadCostSmkpSection();
                 });
                 $('#btnRefresh').on('click', function() {
                     loadDashboardData();
@@ -1418,7 +1649,10 @@
                     waterRo: null,
                     waterWs: null,
                     waterBoiler: null,
-                    waterFw: null
+                    waterFw: null,
+                    airProses: null,
+                    airRaw: null,
+                    costSmkp: null
                 };
 
 
@@ -1442,11 +1676,13 @@
                     const startDate = $('#customStartDate').val();
                     const endDate = $('#customEndDate').val();
                     const gensetYear = $('#gensetYearSelect').val();
+                    const costYear = $('#costSmkpYearSelect').val();
 
                     let params = {
                         mode: mode,
                         tanggal: tanggal,
-                        genset_year: gensetYear
+                        genset_year: gensetYear,
+                        cost_year: costYear
                     };
                     if (mode === 'custom') {
                         params.start_date = startDate;
@@ -1556,17 +1792,63 @@
 
                 // 3. MDP UI & LOADER
                 function updateMdpUI(mdp) {
-                    $('#kpiMdpVal').html(
-                        `${mdp.daya_total} <span style="font-size: 11px; font-weight: normal; color: #94a3b8;">kW</span>`
-                    );
-                    $('#kpiMdpTrafo').text(mdp.temperatur_transformator);
-                    $('#kpiMdpArus').text(mdp.arus_rata_rata);
-                    if (mdp.has_cos_phi_data) {
-                        const cosVal = Number(mdp.cos_phi);
-                        const isAbnormal = cosVal < 0.85 || cosVal > 1.00;
-                        const cosColor = isAbnormal ? '#ef4444' : 'var(--wco-cyan, #06b6d4)';
-                        $('#kpiMdpSub').html(
-                            `<i class="mdi mdi-thermometer"></i> Trafo: <span id="kpiMdpTrafo">${mdp.temperatur_transformator}</span> °C | <span id="kpiMdpArus">${mdp.arus_rata_rata}</span> A | Cos φ: <span style="color: ${cosColor}; font-weight: 700;">${cosVal.toFixed(2)}</span>`
+                    // Top KPI Card: Power House (PLN | PLTS | Invoice)
+                    if (mdp.power_house) {
+                        const ph = mdp.power_house;
+                        const plnVal = Number(ph.pln_kwh || 0);
+                        const pltsVal = Number(ph.plts_kwh || 0);
+                        const totalEnergy = Number(ph.total_energy_kwh || (plnVal + pltsVal));
+                        const invVal = Number(ph.invoice_total || 0);
+
+                        // 1. PLN (E-Del Terbaru - Awal)
+                        $('#kpiPlnVal').text(plnVal.toLocaleString('id-ID', {
+                            maximumFractionDigits: 1
+                        }));
+                        $('#kpiPlnVal').attr('title',
+                            `PLN E-Del: Akhir (${Number(ph.edel_latest || 0).toLocaleString('id-ID')}) - Awal (${Number(ph.edel_start || 0).toLocaleString('id-ID')}) kWh`
+                        );
+
+                        // 2. PLTS (iSolarCloud Dummy API)
+                        $('#kpiPltsVal').text(pltsVal.toLocaleString('id-ID', {
+                            maximumFractionDigits: 1
+                        }));
+                        $('#kpiPltsVal').attr('title',
+                            `PLTS Produksi: ${pltsVal.toLocaleString('id-ID', { maximumFractionDigits: 1 })} kWh (${ph.plts_source || 'iSolarCloud API'})`
+                        );
+
+                        // 3. Invoice (kWh / Rp)
+                        let invFormatted = 'Rp 0';
+                        if (invVal >= 1000000000) {
+                            invFormatted = 'Rp ' + (invVal / 1000000000).toLocaleString('id-ID', {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 2
+                            }) + ' M';
+                        } else if (invVal >= 1000000) {
+                            invFormatted = 'Rp ' + (invVal / 1000000).toLocaleString('id-ID', {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 2
+                            }) + ' Jt';
+                        } else if (invVal > 0) {
+                            invFormatted = 'Rp ' + (invVal / 1000).toLocaleString('id-ID', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 1
+                            }) + ' Rb';
+                        } else {
+                            invFormatted = 'Rp 1.444';
+                        }
+                        $('#kpiInvoiceVal').text(invFormatted);
+                        $('#kpiInvoiceVal').attr('title',
+                            `Estimasi Biaya: Rp ${invVal.toLocaleString('id-ID')} (@Rp 1.444,70 / kWh)`);
+                        $('#kpiInvoiceSub').text(`@1.444/kWh`);
+
+                        // Subtitle Meta
+                        $('#kpiTotalEnergy').text(totalEnergy.toLocaleString('id-ID', {
+                            maximumFractionDigits: 1
+                        }));
+                        const edelDiffText =
+                            `Δ E-Del: ${(plnVal > 0 ? '+' : '') + plnVal.toLocaleString('id-ID', { maximumFractionDigits: 0 })}`;
+                        $('#kpiEdelMeta').text(edelDiffText).attr('title',
+                            `E-Del Akhir (${ph.edel_latest_date || ''}): ${Number(ph.edel_latest || 0).toLocaleString('id-ID')} vs Awal (${ph.edel_start_date || ''}): ${Number(ph.edel_start || 0).toLocaleString('id-ID')}`
                         );
                     }
 
@@ -1583,11 +1865,15 @@
                         if (cosVal < 0.85 || cosVal > 1.00) {
                             $('#valMdpCosPhi').removeClass('text-cyan text-success').addClass('text-danger');
                             $('#labelMdpCosPhi').removeClass('text-cyan text-success').addClass('text-danger');
-                            $('#valMdpCosPhiMeta').html('<span class="text-danger fw-bold"><i class="mdi mdi-alert-circle"></i> Di Luar STD</span>');
+                            $('#valMdpCosPhiMeta').html(
+                                '<span class="text-danger fw-bold"><i class="mdi mdi-alert-circle"></i> Di Luar STD</span>'
+                            );
                         } else {
                             $('#valMdpCosPhi').removeClass('text-danger text-success').addClass('text-cyan');
                             $('#labelMdpCosPhi').removeClass('text-danger text-success').addClass('text-cyan');
-                            $('#valMdpCosPhiMeta').html('<span class="text-success"><i class="mdi mdi-check-circle"></i> Normal (0.85-1)</span>');
+                            $('#valMdpCosPhiMeta').html(
+                                '<span class="text-success"><i class="mdi mdi-check-circle"></i> Normal (0.85-1)</span>'
+                            );
                         }
                     } else {
                         $('#valMdpCosPhi').removeClass('text-danger text-success').addClass('text-cyan').text('0.00');
@@ -1626,18 +1912,33 @@
 
                 // 4. COOLING TOWER UI & LOADER
                 function updateCtUI(ct) {
+                    // Top KPI Card: Total AVG across period
                     $('#kpiCtVal').html(
                         `${ct.temp_out_avg} <span style="font-size: 11px; font-weight: normal; color: #94a3b8;">°C</span>`
                     );
                     $('#kpiCtPress').text(ct.pressure_out_avg);
 
-                    $('#valCtTempOut').text(`${ct.temp_out_avg} °C`);
-                    $('#avgCtTemp').text(ct.temp_out_avg);
-                    $('#rangeCtTemp').text(`Min: ${ct.temp_out_min} | Max: ${ct.temp_out_max}`);
+                    // Card metric tiles: tampilkan AVG data tanggal terbaru (sama seperti Compressor)
+                    const tempLatestVal = (ct.temp_out_latest_avg !== undefined) ? ct.temp_out_latest_avg : ct
+                        .temp_out_avg;
+                    const pressLatestVal = (ct.pressure_out_latest_avg !== undefined) ? ct.pressure_out_latest_avg : ct
+                        .pressure_out_avg;
 
-                    $('#valCtPressOut').text(`${ct.pressure_out_avg} Bar`);
+                    $('#valCtTempOut').text(
+                        `${Number(tempLatestVal).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} °C`
+                    );
+                    $('#valCtPressOut').text(
+                        `${Number(pressLatestVal).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} Bar`
+                    );
+
+                    const dateMeta = ct.latest_date_formatted ? `Tgl: ${ct.latest_date_formatted}` : (ct.latest_date ?
+                        `Tgl: ${ct.latest_date}` : 'Tgl Terbaru');
+
+                    $('#avgCtTemp').text(ct.temp_out_avg);
+                    $('#rangeCtTemp').text(dateMeta);
+
                     $('#avgCtPress').text(ct.pressure_out_avg);
-                    $('#rangeCtPress').text(`Min: ${ct.pressure_out_min} | Max: ${ct.pressure_out_max}`);
+                    $('#rangeCtPress').text(dateMeta);
                 }
 
                 async function loadCoolingTowerSection() {
@@ -1740,10 +2041,6 @@
                     $('#wFwPh').text(ws.fresh_water.ph);
                     $('#wFwTds').html(`${ws.fresh_water.tds} <span style="font-size: 9px;">ppm</span>`);
                     $('#wFwHardness').html(`${ws.fresh_water.hardness} <span style="font-size: 9px;">ppm</span>`);
-
-                    // Top KPI strip water values
-                    $('#kpiBoilerPh').text(ws.boiler.ph);
-                    $('#kpiBoilerTds').text(`${ws.boiler.tds} ppm`);
                 }
 
                 async function loadWaterSection() {
@@ -1751,6 +2048,87 @@
                     if (!data || !data.analisis_utility) return;
                     updateWaterUI(data.analisis_utility.water_systems);
                     renderWaterCharts(data.analisis_utility, data.selected_date);
+                }
+
+                // 7. WATER USAGE UI & LOADER (PROSES & AIR MENTAH)
+                function updateWaterUsageUI(wu) {
+                    if (!wu) return;
+                    const raw = wu.raw || {};
+                    const proses = wu.proses || {};
+
+                    // Top KPI Card Air Mentah (Card 6)
+                    const totalAktual = Number(raw.total_aktual || 0);
+                    const totalQuota = Number(raw.total_quota || 0);
+                    const aktualFormatted = totalAktual.toLocaleString('id-ID', {
+                        maximumFractionDigits: 1
+                    });
+                    const quotaFormatted = totalQuota.toLocaleString('id-ID', {
+                        maximumFractionDigits: 0
+                    });
+
+                    $('#kpiWaterVal').html(
+                        `${aktualFormatted} / ${quotaFormatted} <span style="font-size: 10px; font-weight: normal; color: #94a3b8;">m³</span>`
+                    );
+                    $('#kpiRawAktual').text(aktualFormatted);
+                    $('#kpiRawQuota').text(quotaFormatted);
+
+                    if (raw.status === 'exceeded') {
+                        $('#kpiWaterVal').removeClass('text-cyan text-info').addClass('text-danger');
+                        $('#kpiWaterSub').html(
+                            `<i class="mdi mdi-alert-circle text-danger"></i> <span class="text-danger fw-bold">Over Quota: +${Number(raw.total_variance).toLocaleString('id-ID')} m³</span> (${raw.total_percentage}%)`
+                        );
+                    } else {
+                        $('#kpiWaterVal').removeClass('text-danger').addClass('text-cyan');
+                        $('#kpiWaterSub').html(
+                            `<i class="mdi mdi-water-check text-cyan"></i> Quota: ${quotaFormatted} m³ | Pemakaian: ${raw.total_percentage}%`
+                        );
+                    }
+                    $('#kpiWaterSub').attr('title',
+                        `Aktual: ${aktualFormatted} m³ | Quota: ${quotaFormatted} m³ (${raw.days_count || 1} hari)`);
+
+                    // Process & Support Card
+                    $('#valAirProsesTotal').text(`${Number(proses.total_pemakaian || 0).toLocaleString('id-ID')} m³`);
+                    $('#valAirProsesTopArea').text(proses.top_area || '-').attr('title', proses.top_area || '-');
+                    $('#valAirProsesTopVal').text(`${Number(proses.top_pemakaian || 0).toLocaleString('id-ID')} m³`);
+                    $('#valAirProsesCount').text(proses.count || 0);
+
+                    // Raw Water Card
+                    $('#valAirRawTotal').text(`${aktualFormatted} m³`);
+                    $('#valAirRawQuota').text(`${quotaFormatted} m³`);
+                    $('#valAirRawDaysMeta').text(
+                        `${raw.days_count || 1} Hari (${(totalQuota / (raw.days_count || 1)).toFixed(0)} m³/hari)`);
+
+                    const varFormatted = (raw.total_variance > 0 ? '+' : '') + Number(raw.total_variance || 0)
+                        .toLocaleString('id-ID', {
+                            maximumFractionDigits: 1
+                        }) + ' m³';
+                    $('#valAirRawVariance').text(varFormatted);
+                    if (raw.total_variance > 0) {
+                        $('#valAirRawVariance').removeClass('text-info text-success').addClass('text-danger');
+                    } else {
+                        $('#valAirRawVariance').removeClass('text-danger').addClass('text-info');
+                    }
+
+                    $('#valAirRawPercent').text(`${raw.total_percentage || 0}%`);
+                    if (raw.status === 'exceeded') {
+                        $('#valAirRawPercent').removeClass('text-warning text-cyan text-success').addClass(
+                            'text-danger');
+                        $('#valAirRawStatusMeta').html(
+                            '<span class="text-danger fw-bold"><i class="mdi mdi-alert"></i> Over Quota</span>');
+                    } else {
+                        $('#valAirRawPercent').removeClass('text-danger').addClass('text-cyan');
+                        $('#valAirRawStatusMeta').html(
+                            '<span class="text-success"><i class="mdi mdi-check-circle"></i> Normal (≤ Quota)</span>'
+                        );
+                    }
+                }
+
+                async function loadWaterUsageSection() {
+                    const data = await fetchMachineSection('water_usage');
+                    if (!data || !data.water_usage) return;
+                    updateWaterUsageUI(data.water_usage);
+                    renderAirProsesChart(data.water_usage.proses);
+                    renderAirRawChart(data.water_usage.raw);
                 }
 
                 // Master Loader: Parallel Asynchronous Execution
@@ -1763,7 +2141,9 @@
                             loadMdpSection(),
                             loadCoolingTowerSection(),
                             loadGensetSection(),
-                            loadWaterSection()
+                            loadWaterUsageSection(),
+                            loadWaterSection(),
+                            loadCostSmkpSection()
                         ]);
                     } catch (e) {
                         console.error('Error running asynchronous telemetry loaders:', e);
@@ -2803,6 +3183,428 @@
                     ];
                     renderWaterSystemChart('#chartWaterFw', 'waterFw', fwPh, fwTds, fwHardness, '#06b6d4', '#38bdf8',
                         '#f59e0b', '#0891b2');
+                }
+
+                // 7. AIR PROSES & SUPPORT CHART RENDERER
+                function renderAirProsesChart(prosesData) {
+                    if (!prosesData) return;
+                    const chartTheme = getChartTheme();
+                    const items = prosesData.items || [];
+                    const categories = items.length > 0 ? items.map(d => d.jenis_pemakaian) : ['Tidak Ada Data'];
+                    const seriesData = items.length > 0 ? items.map(d => Number(d.total_pemakaian)) : [0];
+
+                    const options = {
+                        series: [{
+                            name: 'Pemakaian (m³)',
+                            data: seriesData
+                        }],
+                        chart: {
+                            type: 'bar',
+                            height: 200,
+                            toolbar: {
+                                show: false
+                            },
+                            background: 'transparent'
+                        },
+                        theme: chartTheme,
+                        colors: ['#3b82f6'],
+                        plotOptions: {
+                            bar: {
+                                borderRadius: 4,
+                                columnWidth: '50%',
+                                dataLabels: {
+                                    position: 'top'
+                                }
+                            }
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: val => (val > 0 ? Number(val).toLocaleString('id-ID') : '0'),
+                            offsetY: -16,
+                            style: {
+                                fontSize: '8.5px',
+                                fontFamily: 'JetBrains Mono, monospace',
+                                fontWeight: 600,
+                                colors: isThemeLight() ? ['#1e40af'] : ['#93c5fd']
+                            }
+                        },
+                        xaxis: {
+                            categories: categories,
+                            labels: {
+                                rotate: -30,
+                                rotateAlways: false,
+                                hideOverlappingLabels: true,
+                                style: {
+                                    fontSize: '8px',
+                                    fontFamily: 'Inter, sans-serif'
+                                }
+                            }
+                        },
+                        yaxis: {
+                            labels: {
+                                style: {
+                                    fontSize: '8px'
+                                },
+                                formatter: val => Math.round(val)
+                            },
+                            title: {
+                                text: 'm³',
+                                style: {
+                                    fontSize: '8px',
+                                    color: '#64748b'
+                                }
+                            }
+                        },
+                        grid: {
+                            borderColor: isThemeLight() ? '#e2e8f0' : '#1e293b',
+                            padding: {
+                                top: 14,
+                                bottom: 0,
+                                left: 6,
+                                right: 6
+                            }
+                        },
+                        tooltip: {
+                            theme: chartTheme.mode,
+                            y: {
+                                formatter: val => Number(val).toLocaleString('id-ID', {
+                                    maximumFractionDigits: 2
+                                }) + ' m³'
+                            }
+                        }
+                    };
+
+                    if (charts.airProses) charts.airProses.destroy();
+                    charts.airProses = new ApexCharts($('#chartAirProses')[0], options);
+                    charts.airProses.render();
+                }
+
+                // 8. AIR MENTAH / RAW WATER CHART RENDERER (AKTUAL VS QUOTA)
+                function renderAirRawChart(rawData) {
+                    if (!rawData) return;
+                    const chartTheme = getChartTheme();
+                    const items = rawData.items || [];
+                    const categories = items.length > 0 ? items.map(d => d.jenis_pemakaian) : ['Tidak Ada Data'];
+                    const actualData = items.length > 0 ? items.map(d => Number(d.total_pemakaian)) : [0];
+                    const quotaData = items.length > 0 ? items.map(d => Number(d.expected_quota)) : [0];
+
+                    const options = {
+                        series: [{
+                                name: 'Aktual (m³)',
+                                data: actualData
+                            },
+                            {
+                                name: 'Target Quota (m³)',
+                                data: quotaData
+                            }
+                        ],
+                        chart: {
+                            type: 'bar',
+                            height: 200,
+                            toolbar: {
+                                show: false
+                            },
+                            background: 'transparent'
+                        },
+                        theme: chartTheme,
+                        colors: ['#06b6d4', isThemeLight() ? '#94a3b8' : '#475569'],
+                        plotOptions: {
+                            bar: {
+                                borderRadius: 4,
+                                columnWidth: '55%',
+                                dataLabels: {
+                                    position: 'top'
+                                }
+                            }
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: val => (val > 0 ? Number(val).toLocaleString('id-ID') : '0'),
+                            offsetY: -16,
+                            style: {
+                                fontSize: '8px',
+                                fontFamily: 'JetBrains Mono, monospace',
+                                fontWeight: 600,
+                                colors: isThemeLight() ? ['#0891b2', '#475569'] : ['#22d3ee', '#cbd5e1']
+                            }
+                        },
+                        xaxis: {
+                            categories: categories,
+                            labels: {
+                                style: {
+                                    fontSize: '8.5px',
+                                    fontFamily: 'Inter, sans-serif'
+                                }
+                            }
+                        },
+                        yaxis: {
+                            labels: {
+                                style: {
+                                    fontSize: '8px'
+                                },
+                                formatter: val => Math.round(val)
+                            },
+                            title: {
+                                text: 'm³',
+                                style: {
+                                    fontSize: '8px',
+                                    color: '#64748b'
+                                }
+                            }
+                        },
+                        grid: {
+                            borderColor: isThemeLight() ? '#e2e8f0' : '#1e293b',
+                            padding: {
+                                top: 14,
+                                bottom: 0,
+                                left: 6,
+                                right: 6
+                            }
+                        },
+                        legend: {
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '9px',
+                            fontFamily: 'Inter, sans-serif',
+                            labels: {
+                                colors: isThemeLight() ? '#475569' : '#94a3b8'
+                            },
+                            markers: {
+                                radius: 3,
+                                width: 8,
+                                height: 8
+                            }
+                        },
+                        tooltip: {
+                            theme: chartTheme.mode,
+                            y: {
+                                formatter: function(val, {
+                                    seriesIndex,
+                                    dataPointIndex
+                                }) {
+                                    const item = items[dataPointIndex];
+                                    if (!item) return val + ' m³';
+                                    if (seriesIndex === 0) {
+                                        const statusBadge = item.status === 'exceeded' ?
+                                            `<span style="color: #ef4444; font-weight: 600;">⚠️ Over +${Math.abs(item.variance).toFixed(1)} m³</span>` :
+                                            `<span style="color: #10b981; font-weight: 600;">✓ Normal</span>`;
+                                        return `${Number(val).toLocaleString('id-ID')} m³ (${item.percentage}% dari kuota)<br/>${statusBadge}`;
+                                    } else {
+                                        return `${Number(val).toLocaleString('id-ID')} m³ (Target ${item.daily_quota} m³/hari)`;
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    if (charts.airRaw) charts.airRaw.destroy();
+                    charts.airRaw = new ApexCharts($('#chartAirRaw')[0], options);
+                    charts.airRaw.render();
+                }
+
+                // 9. COST SMKP & UTILITY SECTION (TREN 1 TAHUN)
+                function updateCostSmkpUI(costSmkp) {
+                    if (!costSmkp || !costSmkp.summary) return;
+                    const s = costSmkp.summary;
+
+                    if (costSmkp.available_years && costSmkp.available_years.length > 0) {
+                        const $yearSelect = $('#costSmkpYearSelect');
+                        if ($yearSelect.children().length <= 1) {
+                            $yearSelect.empty();
+                            $.each(costSmkp.available_years, function(_, yr) {
+                                $yearSelect.append($('<option>', {
+                                    value: yr,
+                                    text: yr,
+                                    selected: (yr == costSmkp.year)
+                                }));
+                            });
+                        }
+                    }
+
+                    $('#costSmkpBadge').text(`Tahun ${costSmkp.year}`);
+                    $('#valCostSmkpBb').text(Number(s.avg_bb_per_fg || 0).toLocaleString('id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 2
+                    }));
+                    $('#valCostSmkpListrik').text(Number(s.avg_listrik_per_km || 0).toLocaleString('id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 2
+                    }));
+                    $('#valCostSmkpCost').text(
+                        `Rp ${Number(s.total_utility_cost_jt || 0).toLocaleString('id-ID', { maximumFractionDigits: 1 })} Jt`
+                    );
+                    $('#metaCostSmkpMonth').text(
+                        `Avg: Rp ${Number(s.avg_utility_cost_jt || 0).toLocaleString('id-ID', { maximumFractionDigits: 1 })} Jt/bln`
+                    );
+                }
+
+                function renderCostSmkpChart(costSmkp) {
+                    if (!costSmkp || !costSmkp.months) return;
+                    const chartTheme = getChartTheme();
+                    const months = costSmkp.months;
+
+                    const categories = months.map(m => m.month_name);
+                    const bbData = months.map(m => m.bb_per_fg);
+                    const listrikData = months.map(m => m.listrik_per_km);
+                    const costData = months.map(m => m.utility_cost_jt);
+
+                    const options = {
+                        series: [{
+                                name: 'BB / FG (Kg/Ton)',
+                                type: 'column',
+                                data: bbData
+                            },
+                            {
+                                name: 'Listrik / KM (kWh/Ton)',
+                                type: 'column',
+                                data: listrikData
+                            },
+                            {
+                                name: 'Cost Utility (Jt Rp)',
+                                type: 'line',
+                                data: costData
+                            }
+                        ],
+                        chart: {
+                            height: 200,
+                            type: 'line',
+                            stacked: false,
+                            toolbar: {
+                                show: false
+                            },
+                            background: 'transparent'
+                        },
+                        theme: chartTheme,
+                        stroke: {
+                            width: [0, 0, 3],
+                            curve: 'smooth'
+                        },
+                        plotOptions: {
+                            bar: {
+                                columnWidth: '50%',
+                                borderRadius: 3
+                            }
+                        },
+                        colors: ['#f59e0b', '#06b6d4', '#10b981'],
+                        fill: {
+                            opacity: [0.85, 0.85, 1],
+                            gradient: {
+                                inverseColors: false,
+                                shade: 'light',
+                                type: 'vertical',
+                                opacityFrom: 0.85,
+                                opacityTo: 0.55,
+                                stops: [0, 100]
+                            }
+                        },
+                        labels: categories,
+                        markers: {
+                            size: [0, 0, 4],
+                            strokeWidth: 2,
+                            hover: {
+                                size: 6
+                            }
+                        },
+                        xaxis: {
+                            categories: categories,
+                            labels: {
+                                style: {
+                                    fontSize: '8px',
+                                    fontFamily: 'Inter, sans-serif'
+                                }
+                            }
+                        },
+                        yaxis: [{
+                                title: {
+                                    text: 'Ratio (Kg/Ton & kWh/Ton)',
+                                    style: {
+                                        fontSize: '8px',
+                                        color: '#64748b'
+                                    }
+                                },
+                                labels: {
+                                    style: {
+                                        fontSize: '8px'
+                                    },
+                                    formatter: val => (val !== null && val !== undefined) ? Math.round(val) : ''
+                                }
+                            },
+                            {
+                                opposite: true,
+                                title: {
+                                    text: 'Cost (Jt Rp)',
+                                    style: {
+                                        fontSize: '8px',
+                                        color: '#10b981'
+                                    }
+                                },
+                                labels: {
+                                    style: {
+                                        fontSize: '8px'
+                                    },
+                                    formatter: val => (val !== null && val !== undefined) ? Math.round(val) +
+                                        ' Jt' : ''
+                                }
+                            }
+                        ],
+                        grid: {
+                            borderColor: isThemeLight() ? '#e2e8f0' : '#1e293b',
+                            padding: {
+                                top: 10,
+                                bottom: 0,
+                                left: 6,
+                                right: 6
+                            }
+                        },
+                        legend: {
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '8.5px',
+                            fontFamily: 'Inter, sans-serif',
+                            labels: {
+                                colors: isThemeLight() ? '#475569' : '#94a3b8'
+                            },
+                            markers: {
+                                radius: 3,
+                                width: 8,
+                                height: 8
+                            }
+                        },
+                        tooltip: {
+                            theme: chartTheme.mode,
+                            shared: true,
+                            intersect: false,
+                            y: {
+                                formatter: function(val, {
+                                    seriesIndex
+                                }) {
+                                    if (val === null || val === undefined) return 'Tidak ada data';
+                                    if (seriesIndex === 0) return Number(val).toLocaleString('id-ID', {
+                                        maximumFractionDigits: 2
+                                    }) + ' Kg/Ton FG';
+                                    if (seriesIndex === 1) return Number(val).toLocaleString('id-ID', {
+                                        maximumFractionDigits: 2
+                                    }) + ' kWh/Ton KM';
+                                    return 'Rp ' + Number(val).toLocaleString('id-ID', {
+                                        maximumFractionDigits: 1
+                                    }) + ' Juta';
+                                }
+                            }
+                        }
+                    };
+
+                    if (charts.costSmkp) charts.costSmkp.destroy();
+                    charts.costSmkp = new ApexCharts($('#chartCostSmkp')[0], options);
+                    charts.costSmkp.render();
+                }
+
+                async function loadCostSmkpSection() {
+                    const data = await fetchMachineSection('cost_smkp');
+                    if (!data || !data.cost_smkp) return;
+                    updateCostSmkpUI(data.cost_smkp);
+                    renderCostSmkpChart(data.cost_smkp);
                 }
 
                 // Initial trigger

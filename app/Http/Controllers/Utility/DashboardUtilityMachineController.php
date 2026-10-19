@@ -10,6 +10,10 @@ use App\Models\Utility\WarmingUpGenset;
 use App\Models\Utility\CoolingTowerDetails;
 use App\Models\Utility\AnalisisUtilityDetails;
 use App\Models\Utility\CapacitorBankMachineData;
+use App\Models\Utility\PemakaianAirModel;
+use App\Models\Utility\AirArea;
+use App\Models\Utility\KpiModel;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -37,6 +41,7 @@ class DashboardUtilityMachineController extends Controller
             AnalisisUtilityDetails::max('tanggal'),
             WarmingUpGenset::max('tanggal_laporan'),
             CapacitorBankMachineData::max('tanggal'),
+            PemakaianAirModel::max('tanggal'),
         ]);
         $defaultDate = !empty($latestDates) ? max($latestDates) : Carbon::today()->toDateString();
 
@@ -84,6 +89,11 @@ class DashboardUtilityMachineController extends Controller
             $gensetYear = Carbon::parse($selectedDate)->year;
         }
 
+        $costYear = (int)$request->query('cost_year', 0);
+        if ($costYear === 0) {
+            $costYear = Carbon::parse($startDate)->year;
+        }
+
         $baseResponse = [
             'status' => 'success',
             'section' => $section,
@@ -126,6 +136,16 @@ class DashboardUtilityMachineController extends Controller
                     'analisis_utility' => $this->getWaterAnalysisData($startDate, $endDate, $selectedDate, $mode),
                 ]));
 
+            case 'water_usage':
+                return response()->json(array_merge($baseResponse, [
+                    'water_usage' => $this->getWaterUsageData($startDate, $endDate, $selectedDate, $mode),
+                ]));
+
+            case 'cost_smkp':
+                return response()->json(array_merge($baseResponse, [
+                    'cost_smkp' => $this->getCostSmkpYearlyData($costYear),
+                ]));
+
             case 'all':
             default:
                 return response()->json(array_merge($baseResponse, [
@@ -135,6 +155,8 @@ class DashboardUtilityMachineController extends Controller
                     'genset' => $this->getGensetData($gensetYear),
                     'cooling_tower' => $this->getCoolingTowerData($startDate, $endDate, $selectedDate, $mode),
                     'analisis_utility' => $this->getWaterAnalysisData($startDate, $endDate, $selectedDate, $mode),
+                    'water_usage' => $this->getWaterUsageData($startDate, $endDate, $selectedDate, $mode),
+                    'cost_smkp' => $this->getCostSmkpYearlyData($costYear),
                 ]));
         }
     }
@@ -477,6 +499,116 @@ class DashboardUtilityMachineController extends Controller
 
         $cosPhiAvg = !empty($dailyCosPhiList) ? round(array_sum($dailyCosPhiList) / count($dailyCosPhiList), 2) : 0;
 
+        // ── Perhitungan Power House: PLN (E-Del), PLTS (iSolarCloud API Dummy), Invoice ──
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        $daysCount = max(1, $start->diffInDays($end) + 1);
+
+        $edelQuery = MdpMonitoring::whereNotNull('e_del')
+            ->where('e_del', '>', 0);
+
+        $plnKwh = 0;
+        $edelStart = 0;
+        $edelLatest = 0;
+        $edelStartDate = null;
+        $edelLatestDate = null;
+
+        if ($mode === 'harian') {
+            $dayEdelRecords = (clone $edelQuery)
+                ->whereDate('tanggal_laporan', $selectedDate)
+                ->orderBy('jam_pencatatan', 'asc')
+                ->get();
+
+            if ($dayEdelRecords->count() > 1) {
+                $edelStartRecord = $dayEdelRecords->first();
+                $edelLatestRecord = $dayEdelRecords->last();
+                $edelStart = (float)$edelStartRecord->e_del;
+                $edelLatest = (float)$edelLatestRecord->e_del;
+                $edelStartDate = $selectedDate . ' ' . substr($edelStartRecord->jam_pencatatan, 0, 5);
+                $edelLatestDate = $selectedDate . ' ' . substr($edelLatestRecord->jam_pencatatan, 0, 5);
+                $plnKwh = max(0, round($edelLatest - $edelStart, 2));
+            } elseif ($dayEdelRecords->count() === 1) {
+                $edelLatestRecord = $dayEdelRecords->first();
+                $edelLatest = (float)$edelLatestRecord->e_del;
+                $edelLatestDate = $selectedDate;
+
+                // Cari data e_del terakhir sebelum tanggal terpilih untuk mencari baseline data awal
+                $prevEdelRecord = (clone $edelQuery)
+                    ->where('tanggal_laporan', '<', $selectedDate)
+                    ->orderBy('tanggal_laporan', 'desc')
+                    ->orderBy('jam_pencatatan', 'desc')
+                    ->first();
+
+                if ($prevEdelRecord) {
+                    $edelStart = (float)$prevEdelRecord->e_del;
+                    $edelStartDate = is_string($prevEdelRecord->tanggal_laporan) ? $prevEdelRecord->tanggal_laporan : Carbon::parse($prevEdelRecord->tanggal_laporan)->format('Y-m-d');
+                    $plnKwh = max(0, round($edelLatest - $edelStart, 2));
+                } else {
+                    $edelStart = $edelLatest;
+                    $edelStartDate = $selectedDate;
+                    $plnKwh = 0;
+                }
+            }
+        } else {
+            // Mode mingguan / bulanan / custom:
+            $periodEdelRecords = (clone $edelQuery)
+                ->whereBetween('tanggal_laporan', [$startDate, $endDate])
+                ->orderBy('tanggal_laporan', 'asc')
+                ->orderBy('jam_pencatatan', 'asc')
+                ->get();
+
+            if ($periodEdelRecords->count() > 1) {
+                $edelStartRecord = $periodEdelRecords->first();
+                $edelLatestRecord = $periodEdelRecords->last();
+                $edelStart = (float)$edelStartRecord->e_del;
+                $edelLatest = (float)$edelLatestRecord->e_del;
+                $edelStartDate = is_string($edelStartRecord->tanggal_laporan) ? $edelStartRecord->tanggal_laporan : Carbon::parse($edelStartRecord->tanggal_laporan)->format('Y-m-d');
+                $edelLatestDate = is_string($edelLatestRecord->tanggal_laporan) ? $edelLatestRecord->tanggal_laporan : Carbon::parse($edelLatestRecord->tanggal_laporan)->format('Y-m-d');
+                $plnKwh = max(0, round($edelLatest - $edelStart, 2));
+            } elseif ($periodEdelRecords->count() === 1) {
+                $edelLatestRecord = $periodEdelRecords->first();
+                $edelLatest = (float)$edelLatestRecord->e_del;
+                $edelLatestDate = is_string($edelLatestRecord->tanggal_laporan) ? $edelLatestRecord->tanggal_laporan : Carbon::parse($edelLatestRecord->tanggal_laporan)->format('Y-m-d');
+
+                $prevEdelRecord = (clone $edelQuery)
+                    ->where('tanggal_laporan', '<', $startDate)
+                    ->orderBy('tanggal_laporan', 'desc')
+                    ->orderBy('jam_pencatatan', 'desc')
+                    ->first();
+
+                if ($prevEdelRecord) {
+                    $edelStart = (float)$prevEdelRecord->e_del;
+                    $edelStartDate = is_string($prevEdelRecord->tanggal_laporan) ? $prevEdelRecord->tanggal_laporan : Carbon::parse($prevEdelRecord->tanggal_laporan)->format('Y-m-d');
+                    $plnKwh = max(0, round($edelLatest - $edelStart, 2));
+                } else {
+                    $edelStart = $edelLatest;
+                    $edelStartDate = $edelLatestDate;
+                    $plnKwh = 0;
+                }
+            }
+        }
+
+        // ── PLTS (iSolarCloud Dummy API Data) ──
+        $pltsDailyRate = 185.4;
+        $pltsKwh = ($mode === 'harian') ? $pltsDailyRate : round($pltsDailyRate * $daysCount, 1);
+
+        // ── Invoice (Tarif Listrik kWh / Rp) ──
+        $tarifPerKwh = 1444.70;
+        $invoiceTotal = round($plnKwh * $tarifPerKwh, 0);
+
+        $powerHouse = [
+            'pln_kwh' => $plnKwh,
+            'edel_start' => $edelStart,
+            'edel_latest' => $edelLatest,
+            'edel_start_date' => $edelStartDate,
+            'edel_latest_date' => $edelLatestDate,
+            'plts_kwh' => $pltsKwh,
+            'plts_source' => 'iSolarCloud (Dummy API)',
+            'tarif_per_kwh' => $tarifPerKwh,
+            'invoice_total' => $invoiceTotal,
+            'total_energy_kwh' => round($plnKwh + $pltsKwh, 2),
+        ];
+
         $mdpSummary = [
             'arus_rata_rata' => round($mdpTarget->avg('arus_rata_rata') ?? 0, 2),
             'tegangan_rata_rata' => round($mdpTarget->avg('tegangan_rata_rata') ?? 0, 2),
@@ -487,6 +619,7 @@ class DashboardUtilityMachineController extends Controller
             'cos_phi' => $cosPhiAvg,
             'cos_phi_status' => !empty($dailyCosPhiList) ? ($cosPhiAvg >= 0.85 && $cosPhiAvg <= 1.00 ? 'normal' : 'danger') : 'no_data',
             'has_cos_phi_data' => !empty($dailyCosPhiList),
+            'power_house' => $powerHouse,
             'latest' => $latestMdp ? [
                 'jam' => substr($latestMdp->jam_pencatatan, 0, 5),
                 'arus_i1' => (float)$latestMdp->arus_i1,
@@ -612,8 +745,16 @@ class DashboardUtilityMachineController extends Controller
                 'tanggal' => $dt,
                 'temp_out_avg' => round($rows->avg('temp_ct_out') ?? 0, 2),
                 'pressure_out_avg' => round($rows->avg('pressure_ct_out') ?? 0, 2),
+                'count' => $rows->count(),
             ];
         }
+
+        $validDailyTrends = array_values(array_filter($ctDailyTrends, function ($t) {
+            return ($t['count'] ?? 0) > 0;
+        }));
+        $latestTrend = !empty($validDailyTrends) ? $validDailyTrends[count($validDailyTrends) - 1] : null;
+        $latestDate = $latestTrend ? $latestTrend['tanggal'] : null;
+        $latestDateFormatted = $latestDate ? Carbon::parse($latestDate)->translatedFormat('d M Y') : null;
 
         $ctTarget = ($mode === 'harian') ? $selectedDayCt : $ctDetails;
         $ctSummary = [
@@ -623,6 +764,10 @@ class DashboardUtilityMachineController extends Controller
             'pressure_out_avg' => round($ctTarget->avg('pressure_ct_out') ?? 0, 2),
             'pressure_out_min' => $ctTarget->count() ? (float)$ctTarget->min('pressure_ct_out') : 0,
             'pressure_out_max' => $ctTarget->count() ? (float)$ctTarget->max('pressure_ct_out') : 0,
+            'temp_out_latest_avg' => $latestTrend ? (float)$latestTrend['temp_out_avg'] : round($ctTarget->avg('temp_ct_out') ?? 0, 2),
+            'pressure_out_latest_avg' => $latestTrend ? (float)$latestTrend['pressure_out_avg'] : round($ctTarget->avg('pressure_ct_out') ?? 0, 2),
+            'latest_date' => $latestDate,
+            'latest_date_formatted' => $latestDateFormatted,
             'count' => $ctTarget->count(),
         ];
 
@@ -724,6 +869,230 @@ class DashboardUtilityMachineController extends Controller
             'water_systems' => $waterAnalysis,
             'daily_trends' => $analisisDailyTrends,
             'count' => $analisisDetails->count(),
+        ];
+    }
+
+    /**
+     * 7. WATER USAGE (PROSES & SUPPORT & AIR MENTAH)
+     */
+    private function getWaterUsageData($startDate, $endDate, $selectedDate, $mode)
+    {
+        // Raw water sources list (Sumur 1, 2, 4, 5, PDAM)
+        $rawSources = ['Sumur 1', 'Sumur 2', 'Sumur 4', 'Sumur 5', 'PDAM'];
+
+        // Get dynamic quotas from AirArea
+        $quotas = AirArea::whereIn('nama_area', $rawSources)
+            ->pluck('quota_target', 'nama_area')
+            ->toArray();
+
+        // Fallback default quotas if not set in DB
+        $defaultQuotas = [
+            'Sumur 1' => 59.00,
+            'Sumur 2' => 73.00,
+            'Sumur 4' => 28.00,
+            'Sumur 5' => 32.00,
+            'PDAM'    => 14.00,
+        ];
+
+        // Calculate days difference
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        $daysCount = $start->diffInDays($end) + 1;
+
+        // 1. Air Proses & Support Query (excluding raw sources)
+        $prosesData = PemakaianAirModel::query()
+            ->select('jenis_pemakaian', DB::raw('SUM(pemakaian_akhir - pemakaian_awal) AS total_pemakaian'))
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->whereNotIn('jenis_pemakaian', $rawSources)
+            ->groupBy('jenis_pemakaian')
+            ->orderByDesc('total_pemakaian')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'jenis_pemakaian' => $item->jenis_pemakaian,
+                    'total_pemakaian' => round((float)$item->total_pemakaian, 2),
+                ];
+            });
+
+        $totalProsesUsage = $prosesData->sum('total_pemakaian');
+        $topProsesArea = $prosesData->first();
+
+        // 2. Air Mentah (Raw Water) Query
+        $rawRecords = PemakaianAirModel::query()
+            ->select('jenis_pemakaian', DB::raw('SUM(pemakaian_akhir - pemakaian_awal) AS total_pemakaian'))
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->whereIn('jenis_pemakaian', $rawSources)
+            ->groupBy('jenis_pemakaian')
+            ->orderByDesc('total_pemakaian')
+            ->get()
+            ->keyBy('jenis_pemakaian');
+
+        $rawData = [];
+        $totalRawAktual = 0;
+        $totalRawQuota = 0;
+
+        foreach ($rawSources as $source) {
+            $actual = isset($rawRecords[$source]) ? round((float)$rawRecords[$source]->total_pemakaian, 2) : 0.0;
+            $dailyQuota = isset($quotas[$source]) && $quotas[$source] !== null ? (float)$quotas[$source] : ($defaultQuotas[$source] ?? 0.0);
+            $expectedQuota = round($dailyQuota * $daysCount, 2);
+            $variance = round($actual - $expectedQuota, 2);
+            $pct = $expectedQuota > 0 ? round(($actual / $expectedQuota) * 100, 1) : 0.0;
+
+            $totalRawAktual += $actual;
+            $totalRawQuota += $expectedQuota;
+
+            $rawData[] = [
+                'jenis_pemakaian' => $source,
+                'total_pemakaian' => $actual,
+                'daily_quota'     => $dailyQuota,
+                'expected_quota'  => $expectedQuota,
+                'variance'        => $variance,
+                'percentage'      => $pct,
+                'status'          => $actual > $expectedQuota ? 'exceeded' : 'normal',
+            ];
+        }
+
+        $totalVariance = round($totalRawAktual - $totalRawQuota, 2);
+        $totalPercentage = $totalRawQuota > 0 ? round(($totalRawAktual / $totalRawQuota) * 100, 1) : 0.0;
+
+        return [
+            'proses' => [
+                'items' => $prosesData,
+                'total_pemakaian' => round($totalProsesUsage, 2),
+                'top_area' => $topProsesArea ? $topProsesArea['jenis_pemakaian'] : '-',
+                'top_pemakaian' => $topProsesArea ? $topProsesArea['total_pemakaian'] : 0.0,
+                'count' => $prosesData->count(),
+            ],
+            'raw' => [
+                'items' => $rawData,
+                'total_aktual' => round($totalRawAktual, 2),
+                'total_quota'  => round($totalRawQuota, 2),
+                'total_variance' => $totalVariance,
+                'total_percentage' => $totalPercentage,
+                'days_count'   => $daysCount,
+                'status'       => $totalRawAktual > $totalRawQuota ? 'exceeded' : 'normal',
+            ]
+        ];
+    }
+
+    /**
+     * 8. COST SMKP & UTILITY (TREN 1 TAHUN BULANAN: BB/FG, LISTRIK BAS/KM, UTILITY COST)
+     */
+    private function getCostSmkpYearlyData($year)
+    {
+        $yearStr = (string)$year;
+
+        // Ambil semua data KPI bulanan pada tahun tersebut
+        $kpiRecords = KpiModel::where('periode_tipe', 'monthly')
+            ->where('month', 'like', $yearStr . '-%')
+            ->get()
+            ->keyBy('month');
+
+        // Available years for dropdown
+        $allYears = KpiModel::where('periode_tipe', 'monthly')
+            ->selectRaw('SUBSTRING(month, 1, 4) as yr')
+            ->distinct()
+            ->pluck('yr')
+            ->filter()
+            ->sortDesc()
+            ->values()
+            ->toArray();
+
+        if (!in_array((string)Carbon::today()->year, $allYears)) {
+            array_unshift($allYears, (string)Carbon::today()->year);
+        }
+
+        $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+        $monthsData = [];
+        $validBbList = [];
+        $validListrikList = [];
+        $validCostList = [];
+        $latestRecord = null;
+
+        for ($m = 1; $m <= 12; $m++) {
+            $monthKey = sprintf('%s-%02d', $yearStr, $m);
+            $monthLabel = $monthNames[$m - 1];
+
+            if ($kpiRecords->has($monthKey)) {
+                $rec = $kpiRecords->get($monthKey);
+                $latestRecord = $rec;
+
+                $fg = (float)($rec->finish_goods ?? 0);
+                $km = (float)($rec->kecap_matang ?? 0);
+                $bb = (float)($rec->batubara ?? 0);
+                $lBas = (float)($rec->listrik_bas ?? 0);
+                $cost = (float)($rec->utility_cost ?? 0);
+
+                $bbPerFg = $fg > 0 ? round($bb / $fg, 2) : 0;
+                $listrikPerKm = $km > 0 ? round($lBas / $km, 2) : 0;
+                $costJt = round($cost / 1000000, 2);
+
+                if ($bbPerFg > 0) $validBbList[] = $bbPerFg;
+                if ($listrikPerKm > 0) $validListrikList[] = $listrikPerKm;
+                if ($cost > 0) $validCostList[] = $cost;
+
+                $monthsData[] = [
+                    'month_key' => $monthKey,
+                    'month_name' => $monthLabel,
+                    'has_data' => true,
+                    'bb_per_fg' => $bbPerFg,
+                    'listrik_per_km' => $listrikPerKm,
+                    'utility_cost' => $cost,
+                    'utility_cost_jt' => $costJt,
+                    'utility_cost_formatted' => 'Rp ' . number_format($cost, 0, ',', '.'),
+                    'finish_goods' => $fg,
+                    'kecap_matang' => $km,
+                ];
+            } else {
+                $monthsData[] = [
+                    'month_key' => $monthKey,
+                    'month_name' => $monthLabel,
+                    'has_data' => false,
+                    'bb_per_fg' => null,
+                    'listrik_per_km' => null,
+                    'utility_cost' => null,
+                    'utility_cost_jt' => null,
+                    'utility_cost_formatted' => 'Rp 0',
+                    'finish_goods' => 0,
+                    'kecap_matang' => 0,
+                ];
+            }
+        }
+
+        $avgBb = !empty($validBbList) ? round(array_sum($validBbList) / count($validBbList), 2) : 0;
+        $avgListrik = !empty($validListrikList) ? round(array_sum($validListrikList) / count($validListrikList), 2) : 0;
+        $totalCost = !empty($validCostList) ? round(array_sum($validCostList), 0) : 0;
+        $avgCost = !empty($validCostList) ? round($totalCost / count($validCostList), 0) : 0;
+
+        $latestBb = 0;
+        $latestListrik = 0;
+        $latestCost = 0;
+        if ($latestRecord) {
+            $fg = (float)($latestRecord->finish_goods ?? 0);
+            $km = (float)($latestRecord->kecap_matang ?? 0);
+            $bb = (float)($latestRecord->batubara ?? 0);
+            $lBas = (float)($latestRecord->listrik_bas ?? 0);
+            $latestCost = (float)($latestRecord->utility_cost ?? 0);
+            $latestBb = $fg > 0 ? round($bb / $fg, 2) : 0;
+            $latestListrik = $km > 0 ? round($lBas / $km, 2) : 0;
+        }
+
+        return [
+            'year' => (int)$year,
+            'available_years' => array_values(array_unique($allYears)),
+            'summary' => [
+                'avg_bb_per_fg' => $avgBb,
+                'avg_listrik_per_km' => $avgListrik,
+                'total_utility_cost' => $totalCost,
+                'total_utility_cost_jt' => round($totalCost / 1000000, 1),
+                'avg_utility_cost_jt' => round($avgCost / 1000000, 1),
+                'latest_bb_per_fg' => $latestBb,
+                'latest_listrik_per_km' => $latestListrik,
+                'latest_utility_cost' => $latestCost,
+                'latest_utility_cost_jt' => round($latestCost / 1000000, 1),
+                'latest_month' => $latestRecord ? Carbon::parse($latestRecord->month . '-01')->translatedFormat('M Y') : '-',
+            ],
+            'months' => $monthsData,
         ];
     }
 }
