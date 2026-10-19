@@ -440,15 +440,9 @@ class DashboardUtilityMachineController extends Controller
 
         $dailyCosPhiList = [];
         foreach ($capDailyGroup as $dt => $rows) {
-            $rowCosPhis = [];
-            foreach ($rows as $r) {
-                $phases = array_filter([(float)$r->cosphi_dPFa, (float)$r->cosphi_dPFb, (float)$r->cosphi_dPFc], fn($v) => !is_null($v) && is_numeric($v));
-                if (!empty($phases)) {
-                    $rowCosPhis[] = array_sum($phases) / count($phases);
-                }
-            }
-            if (!empty($rowCosPhis)) {
-                $dailyCosPhiList[] = array_sum($rowCosPhis) / count($rowCosPhis);
+            $validA = $rows->pluck('cosphi_dPFa')->filter(fn($v) => !is_null($v) && is_numeric($v))->map(fn($v) => (float)$v);
+            if ($validA->isNotEmpty()) {
+                $dailyCosPhiList[] = $validA->avg();
             }
         }
 
