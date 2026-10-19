@@ -619,7 +619,7 @@
 
             body.wco-light-mode .wco-table td {
                 border-bottom: 1px solid #f1f5f9 !important;
-                color: #334155 !important;
+                color: #334155;
             }
 
             body.wco-light-mode .wco-table tr:hover td {
@@ -637,7 +637,48 @@
             }
 
             body.wco-light-mode .kpi-top-val {
-                color: #0f172a !important;
+                color: #0f172a;
+            }
+
+            /* Preserve vibrant status colors for metrics & numbers in light mode */
+            body.wco-light-mode .text-success,
+            body.wco-light-mode .wco-table td.text-success,
+            body.wco-light-mode .wco-table td span.text-success,
+            body.wco-light-mode .kpi-top-val.text-success,
+            body.wco-light-mode .kpi-top-sub.text-success,
+            body.wco-light-mode span.text-success {
+                color: #16a34a !important;
+            }
+
+            body.wco-light-mode .text-danger,
+            body.wco-light-mode .wco-table td.text-danger,
+            body.wco-light-mode .wco-table td span.text-danger,
+            body.wco-light-mode .kpi-top-val.text-danger,
+            body.wco-light-mode .kpi-top-sub.text-danger,
+            body.wco-light-mode span.text-danger {
+                color: #dc2626 !important;
+            }
+
+            body.wco-light-mode .text-warning,
+            body.wco-light-mode .wco-table td.text-warning,
+            body.wco-light-mode .wco-table td span.text-warning,
+            body.wco-light-mode .kpi-top-val.text-warning,
+            body.wco-light-mode span.text-warning {
+                color: #d97706 !important;
+            }
+
+            body.wco-light-mode .text-cyan,
+            body.wco-light-mode .wco-table td.text-cyan,
+            body.wco-light-mode .wco-table td span.text-cyan,
+            body.wco-light-mode span.text-cyan {
+                color: #0891b2 !important;
+            }
+
+            body.wco-light-mode .text-info,
+            body.wco-light-mode .wco-table td.text-info,
+            body.wco-light-mode .wco-table td span.text-info,
+            body.wco-light-mode span.text-info {
+                color: #0284c7 !important;
             }
 
             body.wco-light-mode .kpi-top-label {
@@ -859,8 +900,12 @@
                         <div
                             class="col-xl-5 col-lg-4 col-md-12 d-flex align-items-center justify-content-end gap-2 flex-wrap">
                             <select id="wcoPeriodSelect" class="form-select form-select-sm filter-ctrl"
-                                style="width: 110px;">
-                                <option value="this_month" selected>Bulan Ini</option>
+                                style="width: 120px;">
+                                @if(isset($defaultStartDate))
+                                    <option value="latest_data" selected>Data Terakhir</option>
+                                @endif
+                                <option value="this_month" {{ !isset($defaultStartDate) ? 'selected' : '' }}>Bulan Ini</option>
+                                <option value="last_month">Bulan Lalu</option>
                                 <option value="last_7_days">7 Hari</option>
                                 <option value="last_30_days">30 Hari</option>
                                 <option value="custom">Custom</option>
@@ -962,7 +1007,7 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">BIAYA PER KUBIK</div>
-                                    <div class="text-muted" style="font-size: 8.5px;">BIAYA CHEMICAL</div>
+                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostM3SubLabel">BULAN: <span class="text-cyan fw-bold" id="topCostM3Month">-</span></div>
                                 </div>
                             </div>
                             <div class="my-auto">
@@ -984,7 +1029,7 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">TOTAL COST CHEMICAL</div>
-                                    <div class="text-muted" style="font-size: 8.5px;">PER BULAN</div>
+                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostTotalSubLabel">BULAN: <span class="text-cyan fw-bold" id="topCostTotalMonth">-</span></div>
                                 </div>
                             </div>
                             <div class="my-auto">
@@ -1426,45 +1471,45 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td class="text-muted" style="padding: 4px 4px;">Drain Lumpur</td>
+                                            <td class="text-white" style="padding: 4px 4px;">Drain Lumpur</td>
                                             <td class="text-end font-monospace" style="padding: 4px 4px;"><span
                                                     id="sludgeDrainVal">0</span></td>
-                                            <td class="text-end font-monospace text-muted" style="padding: 4px 4px;">≤
+                                            <td class="text-end font-monospace text-white" style="padding: 4px 4px;">≤
                                                 19</td>
-                                            <td class="text-center text-muted" style="padding: 4px 4px;">m³</td>
+                                            <td class="text-center text-white" style="padding: 4px 4px;">m³</td>
                                             <td class="text-center" style="padding: 4px 4px;"><span
                                                     id="sludgeDrainStatus" class="badge-ok">OK</span></td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted" style="padding: 4px 4px;">Running Hour SCP</td>
+                                            <td class="text-white" style="padding: 4px 4px;">Running Hour SCP</td>
                                             <td class="text-end font-monospace" style="padding: 4px 4px;"><span
                                                     id="sludgeRunningVal">0</span></td>
-                                            <td class="text-end font-monospace text-muted" style="padding: 4px 4px;">≤
+                                            <td class="text-end font-monospace text-white" style="padding: 4px 4px;">≤
                                                 6</td>
-                                            <td class="text-center text-muted" style="padding: 4px 4px;">Jam</td>
+                                            <td class="text-center text-white" style="padding: 4px 4px;">Jam</td>
                                             <td class="text-center" style="padding: 4px 4px;"><span
                                                     id="sludgeRunningStatus" class="badge-ok">OK</span></td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted" style="padding: 4px 4px;">Hasil Lumpur</td>
+                                            <td class="text-white" style="padding: 4px 4px;">Hasil Lumpur</td>
                                             <td class="text-end font-monospace" style="padding: 4px 4px;"><span
                                                     id="sludgeHasilVal">0</span></td>
-                                            <td class="text-end font-monospace text-muted" style="padding: 4px 4px;">≤
+                                            <td class="text-end font-monospace text-white" style="padding: 4px 4px;">≤
                                                 1.2
                                             </td>
-                                            <td class="text-center text-muted" style="padding: 4px 4px;"
+                                            <td class="text-center text-white" style="padding: 4px 4px;"
                                                 id="sludgeHasilSat">
                                                 Ton</td>
                                             <td class="text-center" style="padding: 4px 4px;"><span
                                                     id="sludgeHasilStatus" class="badge-ok">OK</span></td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted" style="padding: 4px 4px;">Content Sludge</td>
+                                            <td class="text-white" style="padding: 4px 4px;">Content Sludge</td>
                                             <td class="text-end font-monospace" style="padding: 4px 4px;"><span
                                                     id="sludgeContentVal">0</span></td>
-                                            <td class="text-end font-monospace text-muted" style="padding: 4px 4px;">≥
+                                            <td class="text-end font-monospace text-white" style="padding: 4px 4px;">≥
                                                 20</td>
-                                            <td class="text-center text-muted" style="padding: 4px 4px;">%</td>
+                                            <td class="text-center text-white" style="padding: 4px 4px;">%</td>
                                             <td class="text-center" style="padding: 4px 4px;"><span
                                                     id="sludgeContentStatus" class="badge-ok">OK</span></td>
                                         </tr>
@@ -1668,14 +1713,19 @@
             }
 
             function initDefaultDates() {
-                const today = new Date();
-                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                @if(isset($defaultStartDate) && isset($defaultEndDate))
+                    document.getElementById('wcoStartDate').value = '{{ $defaultStartDate }}';
+                    document.getElementById('wcoEndDate').value = '{{ $defaultEndDate }}';
+                @else
+                    const today = new Date();
+                    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-                const fmt = d =>
-                    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                document.getElementById('wcoStartDate').value = fmt(firstDay);
-                document.getElementById('wcoEndDate').value = fmt(lastDay);
+                    const fmt = d =>
+                        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    document.getElementById('wcoStartDate').value = fmt(firstDay);
+                    document.getElementById('wcoEndDate').value = fmt(lastDay);
+                @endif
             }
 
             function setDatesByPeriod(period) {
@@ -1683,9 +1733,19 @@
                 const fmt = d =>
                     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-                if (period === 'this_month') {
+                if (period === 'latest_data') {
+                    @if(isset($defaultStartDate) && isset($defaultEndDate))
+                        document.getElementById('wcoStartDate').value = '{{ $defaultStartDate }}';
+                        document.getElementById('wcoEndDate').value = '{{ $defaultEndDate }}';
+                    @endif
+                } else if (period === 'this_month') {
                     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
                     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    document.getElementById('wcoStartDate').value = fmt(firstDay);
+                    document.getElementById('wcoEndDate').value = fmt(lastDay);
+                } else if (period === 'last_month') {
+                    const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
                     document.getElementById('wcoStartDate').value = fmt(firstDay);
                     document.getElementById('wcoEndDate').value = fmt(lastDay);
                 } else if (period === 'last_7_days') {
@@ -1760,6 +1820,25 @@
                 const data = await fetchWcoSection('biaya', start, end);
                 if (!data) return;
 
+                const monthLabel = data.biaya_bulan || (data.card2_total_cost_chem ? data.card2_total_cost_chem.bulan : '');
+                const hasData = (data.has_biaya_data !== false);
+
+                const m3MonthEl = document.getElementById('topCostM3Month');
+                if (m3MonthEl) {
+                    m3MonthEl.textContent = monthLabel || '-';
+                    m3MonthEl.className = hasData ? 'text-cyan fw-bold' : 'text-warning fw-semibold';
+                }
+                const totalMonthEl = document.getElementById('topCostTotalMonth');
+                if (totalMonthEl) {
+                    totalMonthEl.textContent = monthLabel || '-';
+                    totalMonthEl.className = hasData ? 'text-cyan fw-bold' : 'text-warning fw-semibold';
+                }
+                const badgeConsEl = document.getElementById('badgeChemConsPeriod');
+                if (badgeConsEl) {
+                    badgeConsEl.textContent = monthLabel || 'THIS MONTH';
+                    badgeConsEl.className = hasData ? 'badge bg-warning-subtle text-warning' : 'badge bg-secondary-subtle text-muted';
+                }
+
                 if (data.card1_biaya_per_m3) {
                     const c1 = data.card1_biaya_per_m3;
                     const valEl = document.getElementById('topCostM3Val');
@@ -1771,39 +1850,54 @@
                         valEl.innerHTML = `${c1.formatted}`;
                     }
 
-                    const isOverM3 = c1.is_over !== undefined ?
-                        c1.is_over :
-                        (Number(c1.value) > 20000);
-
-                    if (isOverM3) {
-                        if (valEl) valEl.className = 'kpi-top-val text-danger';
+                    if (!hasData) {
+                        if (valEl) valEl.className = 'kpi-top-val text-muted';
                         if (subEl) {
-                            subEl.className = 'kpi-top-sub text-danger';
-                            subEl.innerHTML =
-                                `<i class="mdi mdi-arrow-up-bold"></i> ${c1.target || 'TARGET ≤ Rp 20.000 / m³'}`;
+                            subEl.className = 'kpi-top-sub text-muted';
+                            subEl.innerHTML = `<i class="mdi mdi-alert-circle-outline"></i> Belum ada data input`;
                         }
                         if (iconEl) {
-                            iconEl.style.background = 'rgba(239, 68, 68, 0.15)';
-                            iconEl.style.color = '#ef4444';
+                            iconEl.style.background = 'rgba(148, 163, 184, 0.15)';
+                            iconEl.style.color = '#94a3b8';
                         }
                         if (cardEl) {
-                            cardEl.classList.remove('border-success-subtle');
-                            cardEl.classList.add('border-danger-subtle');
+                            cardEl.classList.remove('border-danger-subtle', 'border-success-subtle');
                         }
                     } else {
-                        if (valEl) valEl.className = 'kpi-top-val text-success';
-                        if (subEl) {
-                            subEl.className = 'kpi-top-sub text-success';
-                            subEl.innerHTML =
-                                `<i class="mdi mdi-arrow-down-bold"></i> ${c1.target || 'TARGET ≤ Rp 20.000 / m³'}`;
-                        }
-                        if (iconEl) {
-                            iconEl.style.background = 'rgba(16, 185, 129, 0.15)';
-                            iconEl.style.color = '#10b981';
-                        }
-                        if (cardEl) {
-                            cardEl.classList.remove('border-danger-subtle');
-                            cardEl.classList.add('border-success-subtle');
+                        const isOverM3 = c1.is_over !== undefined ?
+                            c1.is_over :
+                            (Number(c1.value) > 20000);
+
+                        if (isOverM3) {
+                            if (valEl) valEl.className = 'kpi-top-val text-danger';
+                            if (subEl) {
+                                subEl.className = 'kpi-top-sub text-danger';
+                                subEl.innerHTML =
+                                    `<i class="mdi mdi-arrow-up-bold"></i> ${c1.target || 'TARGET ≤ Rp 20.000 / m³'}`;
+                            }
+                            if (iconEl) {
+                                iconEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                                iconEl.style.color = '#ef4444';
+                            }
+                            if (cardEl) {
+                                cardEl.classList.remove('border-success-subtle');
+                                cardEl.classList.add('border-danger-subtle');
+                            }
+                        } else {
+                            if (valEl) valEl.className = 'kpi-top-val text-success';
+                            if (subEl) {
+                                subEl.className = 'kpi-top-sub text-success';
+                                subEl.innerHTML =
+                                    `<i class="mdi mdi-arrow-down-bold"></i> ${c1.target || 'TARGET ≤ Rp 20.000 / m³'}`;
+                            }
+                            if (iconEl) {
+                                iconEl.style.background = 'rgba(16, 185, 129, 0.15)';
+                                iconEl.style.color = '#10b981';
+                            }
+                            if (cardEl) {
+                                cardEl.classList.remove('border-danger-subtle');
+                                cardEl.classList.add('border-success-subtle');
+                            }
                         }
                     }
                 }
@@ -1819,67 +1913,86 @@
                         valEl.textContent = totalChem.formatted;
                     }
 
-                    const isOverTotal = totalChem.is_over !== undefined ?
-                        totalChem.is_over :
-                        (Number(totalChem.value) > 45000000);
-
-                    if (isOverTotal) {
-                        if (valEl) valEl.className = 'kpi-top-val text-danger';
+                    if (!hasData) {
+                        if (valEl) valEl.className = 'kpi-top-val text-muted';
                         if (subEl) {
-                            subEl.className = 'kpi-top-sub text-danger';
-                            subEl.innerHTML = `<i class="mdi mdi-arrow-up-bold"></i> STANDAR ≤ Rp 45 Jt`;
+                            subEl.className = 'kpi-top-sub text-muted';
+                            subEl.innerHTML = `<i class="mdi mdi-alert-circle-outline"></i> Belum ada data input`;
                         }
                         if (iconEl) {
-                            iconEl.style.background = 'rgba(239, 68, 68, 0.15)';
-                            iconEl.style.color = '#ef4444';
+                            iconEl.style.background = 'rgba(148, 163, 184, 0.15)';
+                            iconEl.style.color = '#94a3b8';
                         }
                         if (cardEl) {
-                            cardEl.classList.remove('border-success-subtle');
-                            cardEl.classList.add('border-danger-subtle');
+                            cardEl.classList.remove('border-danger-subtle', 'border-success-subtle');
                         }
                     } else {
-                        if (valEl) valEl.className = 'kpi-top-val text-success';
-                        if (subEl) {
-                            subEl.className = 'kpi-top-sub text-success';
-                            subEl.innerHTML = `<i class="mdi mdi-check-circle-outline"></i> STANDAR ≤ Rp 45 Jt`;
-                        }
-                        if (iconEl) {
-                            iconEl.style.background = 'rgba(16, 185, 129, 0.15)';
-                            iconEl.style.color = '#10b981';
-                        }
-                        if (cardEl) {
-                            cardEl.classList.remove('border-danger-subtle');
-                            cardEl.classList.add('border-success-subtle');
+                        const isOverTotal = totalChem.is_over !== undefined ?
+                            totalChem.is_over :
+                            (Number(totalChem.value) > 45000000);
+
+                        if (isOverTotal) {
+                            if (valEl) valEl.className = 'kpi-top-val text-danger';
+                            if (subEl) {
+                                subEl.className = 'kpi-top-sub text-danger';
+                                subEl.innerHTML = `<i class="mdi mdi-arrow-up-bold"></i> STANDAR ≤ Rp 45 Jt`;
+                            }
+                            if (iconEl) {
+                                iconEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                                iconEl.style.color = '#ef4444';
+                            }
+                            if (cardEl) {
+                                cardEl.classList.remove('border-success-subtle');
+                                cardEl.classList.add('border-danger-subtle');
+                            }
+                        } else {
+                            if (valEl) valEl.className = 'kpi-top-val text-success';
+                            if (subEl) {
+                                subEl.className = 'kpi-top-sub text-success';
+                                subEl.innerHTML = `<i class="mdi mdi-check-circle-outline"></i> STANDAR ≤ Rp 45 Jt`;
+                            }
+                            if (iconEl) {
+                                iconEl.style.background = 'rgba(16, 185, 129, 0.15)';
+                                iconEl.style.color = '#10b981';
+                            }
+                            if (cardEl) {
+                                cardEl.classList.remove('border-danger-subtle');
+                                cardEl.classList.add('border-success-subtle');
+                            }
                         }
                     }
                 }
 
                 if (data.card9_chem_consumption && Array.isArray(data.card9_chem_consumption)) {
                     let tbodyHtml = '';
-                    data.card9_chem_consumption.forEach(item => {
-                        const isOver = item.is_over !== undefined ?
-                            item.is_over :
-                            (item.standard !== undefined ? (Number(item.qty) > Number(item.standard)) : false);
-                        const qtyColor = isOver ? 'text-danger fw-bold' : 'text-success fw-bold';
-                        const badgeClass = isOver ? 'badge-danger' : 'badge-ok';
-                        const statusText = item.status || (isOver ? 'OVER' : 'AMAN');
-                        const stdText = (item.standard !== undefined && item.standard !== null) ?
-                            `${Number(item.standard).toLocaleString('id-ID')} kg` :
-                            (item.standard_text || '-');
-                        const costM3Text = (item.cost_m3 !== undefined && item.cost_m3 !== null) ?
-                            `Rp ${Number(item.cost_m3).toLocaleString('id-ID')}` :
-                            '-';
+                    if (!hasData) {
+                        tbodyHtml = `<tr><td colspan="5" class="text-center text-muted py-3" style="font-size: 9px;"><i class="mdi mdi-information-outline me-1"></i>Belum ada data biaya chemical untuk periode ${monthLabel}</td></tr>`;
+                    } else {
+                        data.card9_chem_consumption.forEach(item => {
+                            const isOver = item.is_over !== undefined ?
+                                item.is_over :
+                                (item.standard !== undefined ? (Number(item.qty) > Number(item.standard)) : false);
+                            const qtyColor = isOver ? 'text-danger fw-bold' : 'text-success fw-bold';
+                            const badgeClass = isOver ? 'badge-danger' : 'badge-ok';
+                            const statusText = item.status || (isOver ? 'OVER' : 'AMAN');
+                            const stdText = (item.standard !== undefined && item.standard !== null) ?
+                                `${Number(item.standard).toLocaleString('id-ID')} kg` :
+                                (item.standard_text || '-');
+                            const costM3Text = (item.cost_m3 !== undefined && item.cost_m3 !== null) ?
+                                `Rp ${Number(item.cost_m3).toLocaleString('id-ID')}` :
+                                '-';
 
-                        tbodyHtml += `
-                    <tr>
-                        <td class="fw-semibold text-white" style="font-size: 9px; padding: 3px 4px; white-space: nowrap;">${item.chemical_name}</td>
-                        <td class="text-end font-monospace ${qtyColor}" style="font-size: 9px; padding: 3px 4px;">${Number(item.qty).toLocaleString('id-ID')} kg</td>
-                        <td class="text-end font-monospace text-muted" style="font-size: 9px; padding: 3px 4px;">${stdText}</td>
-                        <td class="text-end font-monospace text-muted" style="font-size: 8.5px; padding: 3px 4px;">${costM3Text}</td>
-                        <td class="text-center" style="padding: 3px 4px;"><span class="${badgeClass}">${statusText}</span></td>
-                    </tr>
-                `;
-                    });
+                            tbodyHtml += `
+                        <tr>
+                            <td class="fw-semibold text-white" style="font-size: 9px; padding: 3px 4px; white-space: nowrap;">${item.chemical_name}</td>
+                            <td class="text-end font-monospace ${qtyColor}" style="font-size: 9px; padding: 3px 4px;">${Number(item.qty).toLocaleString('id-ID')} kg</td>
+                            <td class="text-end font-monospace text-muted" style="font-size: 9px; padding: 3px 4px;">${stdText}</td>
+                            <td class="text-end font-monospace text-muted" style="font-size: 8.5px; padding: 3px 4px;">${costM3Text}</td>
+                            <td class="text-center" style="padding: 3px 4px;"><span class="${badgeClass}">${statusText}</span></td>
+                        </tr>
+                    `;
+                        });
+                    }
                     document.getElementById('tableChemConsBody').innerHTML = tbodyHtml;
                 }
             }

@@ -1417,21 +1417,19 @@ class WWTPController extends Controller
 
     private function getWcoBiayaData($startCarbon, $endCarbon)
     {
+        $startMonth = $startCarbon->copy()->startOfMonth()->toDateString();
+        $endMonth   = $endCarbon->copy()->endOfMonth()->toDateString();
+
+        // Cari data biaya chemical pada rentang bulan filter
         $biayaRecord = WwtpBiayaChemicalRecord::with(['details.chemicalStandard'])
-            ->where(function ($q) use ($startCarbon, $endCarbon) {
-                $q->whereBetween('tanggal', [$startCarbon->toDateString(), $endCarbon->toDateString()])
-                    ->orWhere(function ($sub) use ($startCarbon) {
-                        $sub->whereYear('tanggal', $startCarbon->year)
-                            ->whereMonth('tanggal', $startCarbon->month);
-                    });
-            })
+            ->whereBetween('tanggal', [$startMonth, $endMonth])
             ->orderBy('tanggal', 'desc')
             ->first();
 
-        if (!$biayaRecord) {
-            $biayaRecord = WwtpBiayaChemicalRecord::with(['details.chemicalStandard'])
-                ->orderBy('tanggal', 'desc')
-                ->first();
+        // Format nama bulan berdasarkan filter
+        $filterMonthName = $startCarbon->locale('id')->isoFormat('MMMM Y');
+        if ($startCarbon->format('Y-m') !== $endCarbon->format('Y-m')) {
+            $filterMonthName = $startCarbon->locale('id')->isoFormat('MMM Y') . ' - ' . $endCarbon->locale('id')->isoFormat('MMM Y');
         }
 
         $allStandards = WwtpChemicalStandard::orderBy('id', 'asc')->get()->sortBy(function ($std) {
@@ -1446,88 +1444,115 @@ class WWTPController extends Controller
             return 100 + $std->id;
         })->values();
 
+        $chemicalsUsageList = [];
         $totalCost = 0;
         $totalCostM3 = 0;
-        $limbahDiOlah = $biayaRecord ? (float) $biayaRecord->limbah_di_olah : 1725;
-        $chemicalsUsageList = [];
-        $matchedStandardIds = [];
 
-        foreach ($allStandards as $std) {
-            $qty = 0;
-            $price = (float) $std->harga_standar;
-            $standardQuota = (float) ($std->standar_pemakaian ?? 0);
+        if ($biayaRecord) {
+            $monthLabel = Carbon::parse($biayaRecord->tanggal)->locale('id')->isoFormat('MMMM Y');
+            $hasData = true;
+            $limbahDiOlah = (float) $biayaRecord->limbah_di_olah;
+            $matchedStandardIds = [];
 
-            // Cari dari detail biaya chemical bulanan jika ada
-            if ($biayaRecord && $biayaRecord->details) {
-                $detail = $biayaRecord->details->first(function ($d) use ($std) {
-                    if ($d->chemical_standard_id == $std->id) return true;
-                    if ($d->chemicalStandard && strcasecmp(trim($d->chemicalStandard->chemical_name), trim($std->chemical_name)) === 0) {
-                        return true;
+            foreach ($allStandards as $std) {
+                $qty = 0;
+                $price = (float) $std->harga_standar;
+                $standardQuota = (float) ($std->standar_pemakaian ?? 0);
+
+                if ($biayaRecord->details) {
+                    $detail = $biayaRecord->details->first(function ($d) use ($std) {
+                        if ($d->chemical_standard_id == $std->id) return true;
+                        if ($d->chemicalStandard && strcasecmp(trim($d->chemicalStandard->chemical_name), trim($std->chemical_name)) === 0) {
+                            return true;
+                        }
+                        return false;
+                    });
+
+                    if ($detail) {
+                        $qty = (float) $detail->qty;
+                        $matchedStandardIds[] = $detail->chemical_standard_id;
+                        if ($detail->chemicalStandard && (float)$detail->chemicalStandard->harga_standar > 0) {
+                            $price = (float)$detail->chemicalStandard->harga_standar;
+                        }
                     }
-                    return false;
-                });
+                }
+                $matchedStandardIds[] = $std->id;
 
-                if ($detail) {
-                    $qty = (float) $detail->qty;
-                    $matchedStandardIds[] = $detail->chemical_standard_id;
-                    if ($detail->chemicalStandard && (float)$detail->chemicalStandard->harga_standar > 0) {
-                        $price = (float)$detail->chemicalStandard->harga_standar;
+                $cost = $qty * $price;
+                $costM3 = $limbahDiOlah > 0 ? ($cost / $limbahDiOlah) : 0;
+                $totalCost += $cost;
+
+                $isOver = ($qty > $standardQuota);
+                $status = $isOver ? 'OVER' : 'AMAN';
+
+                $chemicalsUsageList[] = [
+                    'chemical_name' => $std->chemical_name,
+                    'qty'           => $qty,
+                    'standard'      => $standardQuota,
+                    'standard_text' => number_format($standardQuota, 0, ',', '.') . ' kg',
+                    'cost'          => $cost,
+                    'cost_m3'       => round($costM3, 2),
+                    'price'         => $price,
+                    'is_over'       => $isOver,
+                    'status'        => $status,
+                ];
+            }
+
+            if ($biayaRecord->details) {
+                foreach ($biayaRecord->details as $d) {
+                    if (in_array($d->chemical_standard_id, $matchedStandardIds)) continue;
+                    if ($d->chemicalStandard) {
+                        $cPrice = (float) $d->chemicalStandard->harga_standar;
+                        $cQty   = (float) $d->qty;
+                        $totalCost += ($cQty * $cPrice);
                     }
                 }
             }
-            $matchedStandardIds[] = $std->id;
 
-            $cost = $qty * $price;
-            $costM3 = $limbahDiOlah > 0 ? ($cost / $limbahDiOlah) : 0;
-            $totalCost += $cost;
+            $totalCostM3 = $limbahDiOlah > 0 ? ($totalCost / $limbahDiOlah) : 0;
+        } else {
+            // Belum ada data untuk bulan yang difilter
+            $monthLabel = $filterMonthName . ' (Belum Ada Data)';
+            $hasData = false;
 
-            // Standar: di atas merah (OVER), di bawah / sama hijau (AMAN)
-            $isOver = ($qty > $standardQuota);
-            $status = $isOver ? 'OVER' : 'AMAN';
-
-            $chemicalsUsageList[] = [
-                'chemical_name' => $std->chemical_name,
-                'qty'           => $qty,
-                'standard'      => $standardQuota,
-                'standard_text' => number_format($standardQuota, 0, ',', '.') . ' kg',
-                'cost'          => $cost,
-                'cost_m3'       => round($costM3, 2),
-                'price'         => $price,
-                'is_over'       => $isOver,
-                'status'        => $status,
-            ];
-        }
-
-        // Tambahan biaya dari chemical lain di record jika ada yang belum tercover di atas
-        if ($biayaRecord && $biayaRecord->details) {
-            foreach ($biayaRecord->details as $d) {
-                if (in_array($d->chemical_standard_id, $matchedStandardIds)) continue;
-                if ($d->chemicalStandard) {
-                    $cPrice = (float) $d->chemicalStandard->harga_standar;
-                    $cQty   = (float) $d->qty;
-                    $totalCost += ($cQty * $cPrice);
-                }
+            foreach ($allStandards as $std) {
+                $standardQuota = (float) ($std->standar_pemakaian ?? 0);
+                $chemicalsUsageList[] = [
+                    'chemical_name' => $std->chemical_name,
+                    'qty'           => 0,
+                    'standard'      => $standardQuota,
+                    'standard_text' => number_format($standardQuota, 0, ',', '.') . ' kg',
+                    'cost'          => 0,
+                    'cost_m3'       => 0,
+                    'price'         => (float) $std->harga_standar,
+                    'is_over'       => false,
+                    'status'        => 'AMAN',
+                ];
             }
         }
-
-        $totalCostM3 = $limbahDiOlah > 0 ? ($totalCost / $limbahDiOlah) : 0;
 
         return [
+            'biaya_bulan'        => $monthLabel,
+            'has_biaya_data'     => $hasData,
             'card1_biaya_per_m3' => [
                 'value'        => $totalCostM3,
-                'formatted'    => 'Rp ' . number_format($totalCostM3, 0, ',', '.') . ' / m³',
+                'formatted'    => $hasData ? ('Rp ' . number_format($totalCostM3, 0, ',', '.') . ' / m³') : 'Rp 0 / m³',
                 'target'       => 'TARGET ≤ Rp 20.000 / m³',
                 'target_value' => 20000,
                 'is_over'      => ($totalCostM3 > 20000),
-                'trend_up'     => ($totalCostM3 > 20000)
+                'trend_up'     => ($totalCostM3 > 20000),
+                'bulan'        => $monthLabel,
+                'has_data'     => $hasData,
             ],
             'card2_total_cost_chem' => [
                 'value'        => $totalCost,
-                'formatted'    => 'Rp ' . number_format($totalCost, 0, ',', '.'),
+                'formatted'    => $hasData ? ('Rp ' . number_format($totalCost, 0, ',', '.')) : 'Rp 0',
                 'standard'     => 45000000,
                 'target'       => 'STANDAR ≤ Rp 45 Jt',
                 'is_over'      => ($totalCost > 45000000),
-                'trend_up'     => ($totalCost > 45000000)
+                'trend_up'     => ($totalCost > 45000000),
+                'bulan'        => $monthLabel,
+                'has_data'     => $hasData,
             ],
             'card9_chem_consumption' => $chemicalsUsageList,
         ];
