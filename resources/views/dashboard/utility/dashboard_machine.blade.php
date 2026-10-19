@@ -1773,8 +1773,7 @@
                             size: 4,
                             hover: {
                                 size: 6
-                            },
-                            showNullDataPoints: false
+                            }
                         },
                         dataLabels: {
                             enabled: true,

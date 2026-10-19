@@ -195,13 +195,13 @@ class DashboardUtilityMachineController extends Controller
                     'count' => $rows->count(),
                 ];
             } else {
-                // Hari tanpa data (misal hari Minggu / libur operasional)
+                // Hari tanpa data (misal hari Minggu / libur operasional) -> nolkan (sama seperti Cooling Tower)
                 $compDailyTrends[] = [
                     'tanggal' => $dt,
-                    'rh1_avg' => null,
-                    'ga57_avg' => null,
-                    'ir55_avg' => null,
-                    'ga55_avg' => null,
+                    'rh1_avg' => 0,
+                    'ga57_avg' => 0,
+                    'ir55_avg' => 0,
+                    'ga55_avg' => 0,
                     'count' => 0,
                 ];
             }
