@@ -657,7 +657,7 @@
                         </div>
                     </div>
 
-                    <!-- Card 5: Genset Warming Up -->
+                    <!-- Card 5: Genset Warming Up / RH Genset -->
                     <div class="col-xl-2 col-md-4 col-6">
                         <div class="kpi-top-card">
                             <div class="kpi-top-header">
@@ -666,15 +666,16 @@
                                     <i class="mdi mdi-generator-mobile"></i>
                                 </div>
                                 <div>
-                                    <div class="kpi-top-label">GENSET STATUS</div>
-                                    <div class="text-muted" style="font-size: 8px;">WARMING UP TAHUNAN</div>
+                                    <div class="kpi-top-label">RH GENSET</div>
+                                    <div class="text-muted" style="font-size: 8px;">RUNNING HOUR TAHUNAN</div>
                                 </div>
                             </div>
                             <div class="kpi-top-val" id="kpiGensetVal">0 <span
-                                    style="font-size: 11px; font-weight: normal; color: #94a3b8;">RPM</span></div>
-                            <div class="kpi-top-sub" id="kpiGensetSub">
-                                <i class="mdi mdi-history"></i> <span id="kpiGensetRuns">0</span> Runs | Oil: <span
-                                    id="kpiGensetOil">-</span> Bar
+                                    style="font-size: 11px; font-weight: normal; color: #94a3b8;">h</span></div>
+                            <div class="kpi-top-sub" id="kpiGensetSub"
+                                style="font-size: 8px; gap: 3px; flex-wrap: wrap;">
+                                <i class="mdi mdi-clock-outline"></i> Awal: <span id="kpiGensetRhStart">-</span> |
+                                Akhir: <span id="kpiGensetRhLatest">-</span>
                             </div>
                         </div>
                     </div>
@@ -1607,11 +1608,23 @@
                         }
                     }
 
+                    const rhDelta = (genset.running_hour_delta !== undefined) ? genset.running_hour_delta : 0;
+                    const rhStart = (genset.running_hour_start !== undefined) ? genset.running_hour_start : 0;
+                    const rhLatest = (genset.running_hour_latest !== undefined) ? genset.running_hour_latest : 0;
+
+                    const rhDeltaFormatted = Number(rhDelta).toLocaleString('id-ID', {
+                        minimumFractionDigits: (rhDelta % 1 === 0 ? 0 : 1),
+                        maximumFractionDigits: 2
+                    });
+
                     $('#kpiGensetVal').html(
-                        `${genset.avg_speed} <span style="font-size: 11px; font-weight: normal; color: #94a3b8;">RPM</span>`
+                        `${rhDeltaFormatted} <span style="font-size: 11px; font-weight: normal; color: #94a3b8;">h</span>`
                     );
-                    $('#kpiGensetRuns').text(genset.total_runs);
-                    $('#kpiGensetOil').text(genset.avg_oil_pressure);
+                    $('#kpiGensetRhStart').text(`${rhStart}h`);
+                    $('#kpiGensetRhLatest').text(`${rhLatest}h`);
+                    if ($('#kpiGensetRuns').length) $('#kpiGensetRuns').text(genset.total_runs);
+                    if ($('#kpiGensetOil').length) $('#kpiGensetOil').text(genset.avg_oil_pressure);
+                    $('#kpiGensetSub').attr('title', `RH Awal: ${rhStart}h (${genset.rh_start_date || '-'}) | RH Akhir: ${rhLatest}h (${genset.rh_latest_date || '-'}) | Runs: ${genset.total_runs}`);
 
                     $('#gensetHeaderYearBadge').text(`Tahun ${genset.year}`);
                     $('#gensetSpeedVal').text(genset.avg_speed);
@@ -2431,7 +2444,7 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: ['#06b6d4', '#f59e0b', '#ec4899'],
+                        colors: ['#06b6d4', '#f59e0b', '#10b981'],
                         stroke: {
                             curve: 'smooth',
                             width: 2.5
@@ -2452,8 +2465,8 @@
                                 fontSize: '8px',
                                 fontFamily: 'JetBrains Mono, monospace',
                                 fontWeight: '600',
-                                colors: isThemeLight() ? ['#0891b2', '#d97706', '#db2777'] : ['#22d3ee', '#fbbf24',
-                                    '#f472b6'
+                                colors: isThemeLight() ? ['#0891b2', '#d97706', '#059669'] : ['#22d3ee', '#fbbf24',
+                                    '#34d399'
                                 ]
                             },
                             formatter: function(val, opt) {

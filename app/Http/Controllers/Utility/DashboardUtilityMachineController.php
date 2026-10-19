@@ -62,7 +62,10 @@ class DashboardUtilityMachineController extends Controller
             } elseif ($mode === 'bulanan') {
                 $carbonSel = Carbon::parse($selectedDate);
                 $startDate = $carbonSel->copy()->startOfMonth()->toDateString();
-                $endDate = $carbonSel->copy()->endOfMonth()->toDateString();
+                $endOfMonth = $carbonSel->copy()->endOfMonth()->toDateString();
+                $todayStr = Carbon::today()->toDateString();
+                // Batasi endDate maksimal sampai hari ini (today) agar tidak menampilkan hari masa depan
+                $endDate = $endOfMonth > $todayStr ? $todayStr : $endOfMonth;
             } else { // custom
                 $startDate = $startDateStr ? Carbon::parse($startDateStr)->toDateString() : $selectedDate;
                 $endDate = $endDateStr ? Carbon::parse($endDateStr)->toDateString() : $selectedDate;
@@ -170,6 +173,11 @@ class DashboardUtilityMachineController extends Controller
         // Generate continuous date range from $startDate to $endDate (agar hari Minggu/libur tetap tampil di chart)
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
+        // Pastikan tidak pernah meng-generate tanggal yang melebihi hari ini
+        $today = Carbon::today();
+        if ($end->gt($today)) {
+            $end = $today;
+        }
         $allDates = [];
         for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
             $allDates[] = $d->format('Y-m-d');
@@ -445,6 +453,19 @@ class DashboardUtilityMachineController extends Controller
             ->orderBy('jam_pencatatan', 'asc')
             ->get();
 
+        // Validasi running hour genset di tahun terpilih
+        $validRhGenset = $allGensetRuns->filter(function ($item) {
+            return !is_null($item->running_hour) && is_numeric($item->running_hour) && (float)$item->running_hour > 0;
+        })->values();
+
+        $firstRun = $validRhGenset->first();
+        $latestRun = $validRhGenset->last();
+
+        $rhStart = $firstRun ? (float)$firstRun->running_hour : 0;
+        $rhLatest = $latestRun ? (float)$latestRun->running_hour : 0;
+        // Data terbaru dikurangin paling awal
+        $rhDelta = ($firstRun && $latestRun) ? round(max(0, $rhLatest - $rhStart), 2) : 0;
+
         // Ambil 7 data warming up terakhir untuk grafik timeline
         $gensetRuns = $allGensetRuns->take(-7)->values();
 
@@ -455,6 +476,11 @@ class DashboardUtilityMachineController extends Controller
             'avg_speed' => round($allGensetRuns->avg('engine_speed') ?? 0, 2),
             'avg_temperature' => round($allGensetRuns->avg('engine_temperature') ?? 0, 2),
             'avg_oil_pressure' => round($allGensetRuns->avg('engine_oil_pressure') ?? 0, 2),
+            'running_hour_delta' => $rhDelta,
+            'running_hour_start' => $rhStart,
+            'running_hour_latest' => $rhLatest,
+            'rh_start_date' => $firstRun ? (is_string($firstRun->tanggal_laporan) ? $firstRun->tanggal_laporan : Carbon::parse($firstRun->tanggal_laporan)->format('Y-m-d')) : null,
+            'rh_latest_date' => $latestRun ? (is_string($latestRun->tanggal_laporan) ? $latestRun->tanggal_laporan : Carbon::parse($latestRun->tanggal_laporan)->format('Y-m-d')) : null,
             'latest_run' => $allGensetRuns->last(),
             'runs' => $gensetRuns->map(function ($item) {
                 return [
