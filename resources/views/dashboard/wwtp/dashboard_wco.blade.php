@@ -1297,7 +1297,7 @@
                                 <h5 class="wco-card-title">
                                     <i class="mdi mdi-flask text-warning"></i> CHEMICAL USAGE
                                 </h5>
-                                <span class="badge bg-warning-subtle text-warning" style="font-size: 8.5px;">THIS
+                                <span class="badge bg-warning-subtle text-warning" style="font-size: 8.5px;" id="badgeChemConsPeriod">THIS
                                     MONTH</span>
                             </div>
                             <div class="wco-card-body p-0">
@@ -1306,8 +1306,8 @@
                                         <thead>
                                             <tr>
                                                 <th style="padding: 4px 4px;">Chemical</th>
-                                                <th class="text-end" style="padding: 4px 4px;">Qty</th>
-                                                <th class="text-end" style="padding: 4px 4px;">Std</th>
+                                                <th class="text-end" style="padding: 4px 4px;" title="Rata-rata Pemakaian Harian (kg/hari)">Qty</th>
+                                                <th class="text-end" style="padding: 4px 4px;" title="Standar Kuota Harian (kg/hari)">Std</th>
                                                 <th class="text-end" style="padding: 4px 4px;">Cost/m³</th>
                                                 <th class="text-center" style="padding: 4px 4px;">Status</th>
                                             </tr>
@@ -1975,7 +1975,7 @@
                             const qtyColor = isOver ? 'text-danger fw-bold' : 'text-success fw-bold';
                             const badgeClass = isOver ? 'badge-danger' : 'badge-ok';
                             const statusText = item.status || (isOver ? 'OVER' : 'AMAN');
-                            const stdText = (item.standard !== undefined && item.standard !== null) ?
+                            const stdText = (item.standard !== undefined && item.standard !== null && Number(item.standard) > 0) ?
                                 `${Number(item.standard).toLocaleString('id-ID')} kg` :
                                 (item.standard_text || '-');
                             const costM3Text = (item.cost_m3 !== undefined && item.cost_m3 !== null) ?
