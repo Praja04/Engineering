@@ -71,15 +71,8 @@ class DashboardUtilityController extends Controller
     }
     public function wwtp_wco()
     {
-        $latestBiaya = DB::table('wwtp_biaya_chemical_records')->orderBy('tanggal', 'desc')->first();
-        if ($latestBiaya && $latestBiaya->tanggal) {
-            $baseCarbon = Carbon::parse($latestBiaya->tanggal);
-            $defaultStartDate = $baseCarbon->copy()->startOfMonth()->toDateString();
-            $defaultEndDate   = $baseCarbon->copy()->endOfMonth()->toDateString();
-        } else {
-            $defaultStartDate = Carbon::today()->startOfMonth()->toDateString();
-            $defaultEndDate   = Carbon::today()->endOfMonth()->toDateString();
-        }
+        $defaultStartDate = Carbon::today()->startOfMonth()->toDateString();
+        $defaultEndDate   = Carbon::today()->endOfMonth()->toDateString();
 
         return view('dashboard.wwtp.dashboard_wco', compact('defaultStartDate', 'defaultEndDate'));
     }
