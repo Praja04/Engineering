@@ -1004,17 +1004,11 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">BIAYA PER KUBIK</div>
-                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostM3SubLabel">PERIODE: <span class="text-cyan fw-bold" id="topCostM3Month">-</span></div>
+                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostM3SubLabel">BULAN: <span class="text-cyan fw-bold" id="topCostM3Month">-</span></div>
                                 </div>
                             </div>
                             <div class="my-auto">
                                 <div class="kpi-top-val text-success" id="topCostM3Val">Rp 0</div>
-                                <div class="d-flex align-items-center justify-content-between mt-1 px-1" style="font-size: 8px;">
-                                    <span class="badge bg-dark border border-secondary text-info px-1 py-0" id="topCostM3ShiftInfo" title="Data shift yang sudah masuk">
-                                        <i class="mdi mdi-clock-check-outline me-1"></i><span id="topCostM3ShiftText">-</span>
-                                    </span>
-                                    <span class="text-muted font-monospace" id="topCostM3Vol" title="Total akumulasi Pit Produksi Step 3">- m³</span>
-                                </div>
                             </div>
                             <div class="kpi-top-sub text-success" id="topCostM3Sub">
                                 <i class="mdi mdi-arrow-down-bold"></i> TARGET ≤ Rp 20.000 / m³
@@ -1032,7 +1026,7 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">TOTAL COST CHEMICAL</div>
-                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostTotalSubLabel">PERIODE: <span class="text-cyan fw-bold" id="topCostTotalMonth">-</span></div>
+                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostTotalSubLabel">BULAN: <span class="text-cyan fw-bold" id="topCostTotalMonth">-</span></div>
                                 </div>
                             </div>
                             <div class="my-auto">
@@ -1841,24 +1835,6 @@
 
                     if (valEl) {
                         valEl.innerHTML = `${c1.formatted}`;
-                    }
-
-                    const shiftTextEl = document.getElementById('topCostM3ShiftText');
-                    const volEl = document.getElementById('topCostM3Vol');
-                    const shiftBadgeEl = document.getElementById('topCostM3ShiftInfo');
-
-                    if (shiftTextEl) {
-                        shiftTextEl.textContent = c1.shifts_text || 'Shift: -';
-                    }
-                    if (volEl) {
-                        volEl.textContent = c1.pit_step3_formatted || (c1.total_pit_step3 ? `${c1.total_pit_step3} m³` : '- m³');
-                    }
-                    if (shiftBadgeEl) {
-                        if (!hasData || !c1.shifts_text || c1.shifts_text === 'Belum Ada Shift') {
-                            shiftBadgeEl.className = 'badge bg-dark border border-secondary text-muted px-1 py-0';
-                        } else {
-                            shiftBadgeEl.className = 'badge bg-info-subtle border border-info-subtle text-info px-1 py-0';
-                        }
                     }
 
                     if (!hasData) {

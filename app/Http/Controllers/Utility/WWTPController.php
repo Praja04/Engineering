@@ -1413,6 +1413,8 @@ class WWTPController extends Controller
     {
         $startDate = $startCarbon->copy()->toDateString();
         $endDate   = $endCarbon->copy()->toDateString();
+        $startMonth = $startCarbon->copy()->startOfMonth()->toDateString();
+        $endMonth   = $endCarbon->copy()->endOfMonth()->toDateString();
         $daysInMonth = $startCarbon->daysInMonth ?: 30;
 
         // Format label periode berdasarkan filter
@@ -1456,16 +1458,6 @@ class WWTPController extends Controller
         }
 
         $chemicalWWTP = $masterChemicals->pluck('nama_chemical')->toArray();
-
-        // 1. Ambil data harian dari pemakaian_chemical pada rentang filter
-        $dailyRecords = PemakaianChemicalModel::query()
-            ->whereBetween('tanggal', [$startDate, $endDate])
-            ->where(function ($q) use ($chemicalWWTP) {
-                $q->whereIn('jenis_pemakaian', $chemicalWWTP)
-                  ->orWhere('chemical_area', 'like', '%wwtp%');
-            })
-            ->get();
-
         $allStandards = WwtpChemicalStandard::orderBy('id', 'asc')->get();
 
         // Helper untuk mencocokkan master chemical dengan standar harga dan kuota WWTP
@@ -1487,7 +1479,82 @@ class WWTPController extends Controller
             });
         };
 
-        // 2. Ambil data volume pit_produksi_step3 dari proses harian WWTP (menjumlahkan seluruh shift per hari)
+        // =========================================================================
+        // 1. DATA BIAYA CHEMICAL & BIAYA PER KUBIK BULANAN (Ditampilkan di Dashboard)
+        // Sumber: WwtpBiayaChemicalRecord & Details (Riwayat Data Biaya Chemical WWTP)
+        // =========================================================================
+        $biayaRecord = WwtpBiayaChemicalRecord::with(['details.chemicalStandard'])
+            ->whereBetween('tanggal', [$startMonth, $endMonth])
+            ->orderBy('tanggal', 'desc')
+            ->first();
+
+        // Jika pada rentang bulan filter belum ada data, fallback ke data bulan terakhir yang tersedia
+        if (!$biayaRecord) {
+            $biayaRecord = WwtpBiayaChemicalRecord::with(['details.chemicalStandard'])
+                ->orderBy('tanggal', 'desc')
+                ->first();
+        }
+
+        $monthlyTotalCost = 0;
+        $monthlyTotalCostM3 = 0;
+        $limbahDiOlah = $biayaRecord ? (float) $biayaRecord->limbah_di_olah : 0;
+        $biayaMonthLabel = $biayaRecord
+            ? Carbon::parse($biayaRecord->tanggal)->locale('id')->isoFormat('MMMM Y')
+            : $filterMonthName;
+
+        $monthlyUsageList = [];
+
+        if ($biayaRecord) {
+            foreach ($masterChemicals as $mChem) {
+                $cName = trim($mChem->nama_chemical);
+                $matchedStd = $findStandard($cName);
+                $qty = 0;
+                $price = $matchedStd ? (float) $matchedStd->harga_standar : 0;
+                $standardQuota = $matchedStd ? (float) ($matchedStd->standar_pemakaian ?? 0) : 0;
+
+                if ($biayaRecord->details && $matchedStd) {
+                    $detail = $biayaRecord->details->first(function ($d) use ($matchedStd) {
+                        return $d->chemical_standard_id == $matchedStd->id;
+                    });
+                    if ($detail) {
+                        $qty = (float) $detail->qty;
+                    }
+                }
+
+                $cost = $qty * $price;
+                $costM3 = $limbahDiOlah > 0 ? ($cost / $limbahDiOlah) : 0;
+                $monthlyTotalCost += $cost;
+
+                $isOver = ($standardQuota > 0 && $qty > $standardQuota);
+                $status = $isOver ? 'OVER' : 'AMAN';
+
+                $monthlyUsageList[] = [
+                    'chemical_name' => $cName,
+                    'qty'           => $qty,
+                    'standard'      => $standardQuota,
+                    'standard_text' => $standardQuota > 0 ? (number_format($standardQuota, 0, ',', '.') . ' kg') : '-',
+                    'cost'          => $cost,
+                    'cost_m3'       => round($costM3, 2),
+                    'price'         => $price,
+                    'is_over'       => $isOver,
+                    'status'        => $status,
+                ];
+            }
+
+            $monthlyTotalCostM3 = $limbahDiOlah > 0 ? ($monthlyTotalCost / $limbahDiOlah) : 0;
+        }
+
+        // =========================================================================
+        // 2. PERHITUNGAN HARIAN (TETAP DISIMPAN LENGKAP UNTUK DISKUSI LEBIH LANJUT)
+        // =========================================================================
+        $dailyRecords = PemakaianChemicalModel::query()
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->where(function ($q) use ($chemicalWWTP) {
+                $q->whereIn('jenis_pemakaian', $chemicalWWTP)
+                  ->orWhere('chemical_area', 'like', '%wwtp%');
+            })
+            ->get();
+
         $influentRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])
             ->orderBy('tanggal', 'asc')
             ->orderByRaw("CASE 
@@ -1529,7 +1596,6 @@ class WWTPController extends Controller
         } elseif ($startDate === $endDate || $influentRecords->pluck('tanggal')->unique()->count() <= 1) {
             $shiftsText = $allShifts->isNotEmpty() ? $allShifts->join(', ') : 'Belum Ada Shift';
         } else {
-            // Periode rentang beberapa hari
             if ($latestShifts->isNotEmpty() && $latestShifts->count() < 3) {
                 $shiftsText = $latestShifts->join(', ') . ' (' . Carbon::parse($latestDate)->locale('id')->isoFormat('D MMM') . ')';
             } elseif ($allShifts->count() >= 3) {
@@ -1541,7 +1607,6 @@ class WWTPController extends Controller
 
         $chemicalTypesMap = ChemicalType::all()->keyBy(fn($c) => strtolower(trim($c->nama_chemical)));
 
-        // Kelompokkan data per [tanggal][jenis_pemakaian]
         $dailyUsageByDateAndChem = [];
         $totalUsageByChem = [];
 
@@ -1565,19 +1630,14 @@ class WWTPController extends Controller
         }
 
         $uniqueDaysCount = count($dailyUsageByDateAndChem) > 0 ? count($dailyUsageByDateAndChem) : 1;
-        $hasData = $dailyRecords->isNotEmpty();
-        $monthLabel = $hasData ? $filterMonthName : ($filterMonthName . ' (Belum Ada Data)');
+        $dailyUsageList = [];
+        $dailyTotalCost = 0;
+        $processedDailyChemNames = [];
 
-        $chemicalsUsageList = [];
-        $totalCost = 0;
-        $processedChemNames = [];
-
-        // Iterasi SEMUA sampel chemical dari Master Data Area WWTP
         foreach ($masterChemicals as $mChem) {
             $cName = trim($mChem->nama_chemical);
-            $processedChemNames[strtolower($cName)] = true;
+            $processedDailyChemNames[strtolower($cName)] = true;
 
-            // Ambil pemakaian harian untuk chemical ini
             $dailyVals = [];
             foreach ($dailyUsageByDateAndChem as $tgl => $chemMap) {
                 foreach ($chemMap as $jName => $uVal) {
@@ -1588,9 +1648,8 @@ class WWTPController extends Controller
             }
 
             $totUsage = array_sum($dailyVals);
-            $avgDailyQty = ($hasData && $uniqueDaysCount > 0) ? ($totUsage / $uniqueDaysCount) : 0;
+            $avgDailyQty = ($dailyRecords->isNotEmpty() && $uniqueDaysCount > 0) ? ($totUsage / $uniqueDaysCount) : 0;
 
-            // Standar harga dan standar kuota harian dari master standard
             $matchedStd = $findStandard($cName);
             $price = $matchedStd ? (float) $matchedStd->harga_standar : 0;
             $standardQuota = $matchedStd ? (float) ($matchedStd->standar_pemakaian ?? 0) : 0;
@@ -1598,12 +1657,12 @@ class WWTPController extends Controller
 
             $chemTotalCost = $totUsage * $price;
             $costM3 = $totalPitProduksiStep3 > 0 ? ($chemTotalCost / $totalPitProduksiStep3) : 0;
-            $totalCost += $chemTotalCost;
+            $dailyTotalCost += $chemTotalCost;
 
             $isOver = ($standardDaily > 0 && $avgDailyQty > $standardDaily);
             $status = $isOver ? 'OVER' : 'AMAN';
 
-            $chemicalsUsageList[] = [
+            $dailyUsageList[] = [
                 'chemical_name' => $cName,
                 'qty'           => round($avgDailyQty, 2),
                 'tot_qty'       => round($totUsage, 2),
@@ -1617,10 +1676,9 @@ class WWTPController extends Controller
             ];
         }
 
-        // Tambahkan chemical harian lain jika ada data input di luar master
         foreach ($totalUsageByChem as $jenis => $totUsage) {
-            if (isset($processedChemNames[strtolower(trim($jenis))])) continue;
-            $avgDailyQty = ($hasData && $uniqueDaysCount > 0) ? ($totUsage / $uniqueDaysCount) : 0;
+            if (isset($processedDailyChemNames[strtolower(trim($jenis))])) continue;
+            $avgDailyQty = ($dailyRecords->isNotEmpty() && $uniqueDaysCount > 0) ? ($totUsage / $uniqueDaysCount) : 0;
             $matchedStd = $findStandard($jenis);
             $price = $matchedStd ? (float) $matchedStd->harga_standar : 0;
             $standardQuota = $matchedStd ? (float) ($matchedStd->standar_pemakaian ?? 0) : 0;
@@ -1628,10 +1686,10 @@ class WWTPController extends Controller
 
             $chemTotalCost = $totUsage * $price;
             $costM3 = $totalPitProduksiStep3 > 0 ? ($chemTotalCost / $totalPitProduksiStep3) : 0;
-            $totalCost += $chemTotalCost;
+            $dailyTotalCost += $chemTotalCost;
             $isOver = ($standardDaily > 0 && $avgDailyQty > $standardDaily);
 
-            $chemicalsUsageList[] = [
+            $dailyUsageList[] = [
                 'chemical_name' => $jenis,
                 'qty'           => round($avgDailyQty, 2),
                 'tot_qty'       => round($totUsage, 2),
@@ -1645,39 +1703,61 @@ class WWTPController extends Controller
             ];
         }
 
-        // Hitung Biaya Per Kubik = Total Cost Chemical / pit_produksi_step3
-        $totalCostM3 = $totalPitProduksiStep3 > 0 ? ($totalCost / $totalPitProduksiStep3) : 0;
+        $dailyTotalCostM3 = $totalPitProduksiStep3 > 0 ? ($dailyTotalCost / $totalPitProduksiStep3) : 0;
+
+        // Tampilkan di dashboard: data bulanan (Biaya Chemical & Biaya Per Kubik Bulanan)
+        $hasData = ($biayaRecord !== null);
 
         return [
-            'biaya_bulan'        => $monthLabel,
+            'biaya_bulan'        => $biayaMonthLabel,
             'has_biaya_data'     => $hasData,
             'total_pit_step3'    => round($totalPitProduksiStep3, 2),
+            // Card 1: BIAYA PER KUBIK (Data Bulanan)
             'card1_biaya_per_m3' => [
-                'value'               => round($totalCostM3, 2),
-                'formatted'           => $hasData ? ('Rp ' . number_format($totalCostM3, 0, ',', '.') . ' / m³') : 'Rp 0 / m³',
+                'value'               => round($monthlyTotalCostM3, 2),
+                'formatted'           => $hasData ? ('Rp ' . number_format($monthlyTotalCostM3, 0, ',', '.') . ' / m³') : 'Rp 0 / m³',
                 'target'              => 'TARGET ≤ Rp 20.000 / m³',
                 'target_value'        => 20000,
-                'is_over'             => ($totalCostM3 > 20000),
-                'trend_up'            => ($totalCostM3 > 20000),
-                'bulan'               => $monthLabel,
+                'is_over'             => ($monthlyTotalCostM3 > 20000),
+                'trend_up'            => ($monthlyTotalCostM3 > 20000),
+                'bulan'               => $biayaMonthLabel,
                 'has_data'            => $hasData,
+                'limbah_di_olah'      => $limbahDiOlah,
+                'shifts_text'         => $shiftsText,
+            ],
+            // Card 2: TOTAL COST CHEMICAL (Data Bulanan)
+            'card2_total_cost_chem' => [
+                'value'        => round($monthlyTotalCost, 2),
+                'formatted'    => $hasData ? ('Rp ' . number_format($monthlyTotalCost, 0, ',', '.')) : 'Rp 0',
+                'standard'     => 45000000,
+                'target'       => 'STANDAR ≤ Rp 45 Jt',
+                'is_over'      => ($monthlyTotalCost > 45000000),
+                'trend_up'     => ($monthlyTotalCost > 45000000),
+                'bulan'        => $biayaMonthLabel,
+                'has_data'     => $hasData,
+            ],
+            // Card 9: Tabel Konsumsi Chemical (ambil harian jika ada input, fallback bulanan)
+            'card9_chem_consumption' => $dailyRecords->isNotEmpty() ? $dailyUsageList : $monthlyUsageList,
+            // Struktur data perhitungan harian tetap disimpan lengkap
+            'perhitungan_harian'     => [
+                'total_cost'          => round($dailyTotalCost, 2),
+                'total_cost_m3'       => round($dailyTotalCostM3, 2),
+                'total_pit_step3'     => round($totalPitProduksiStep3, 2),
                 'shifts_text'         => $shiftsText,
                 'shifts_list'         => $allShifts->toArray(),
                 'latest_shifts'       => $latestShifts->toArray(),
-                'total_pit_step3'     => round($totalPitProduksiStep3, 2),
                 'pit_step3_formatted' => number_format($totalPitProduksiStep3, 1, ',', '.') . ' m³',
+                'usage_list'          => $dailyUsageList,
             ],
-            'card2_total_cost_chem' => [
-                'value'        => round($totalCost, 2),
-                'formatted'    => $hasData ? ('Rp ' . number_format($totalCost, 0, ',', '.')) : 'Rp 0',
-                'standard'     => 45000000,
-                'target'       => 'STANDAR ≤ Rp 45 Jt',
-                'is_over'      => ($totalCost > 45000000),
-                'trend_up'     => ($totalCost > 45000000),
-                'bulan'        => $monthLabel,
-                'has_data'     => $hasData,
+            'perhitungan_bulanan'    => [
+                'record_id'      => $biayaRecord ? $biayaRecord->id : null,
+                'tanggal'        => $biayaRecord ? $biayaRecord->tanggal : null,
+                'bulan'          => $biayaMonthLabel,
+                'limbah_di_olah' => $limbahDiOlah,
+                'total_cost'     => round($monthlyTotalCost, 2),
+                'total_cost_m3'  => round($monthlyTotalCostM3, 2),
+                'usage_list'     => $monthlyUsageList,
             ],
-            'card9_chem_consumption' => $chemicalsUsageList,
         ];
     }
 
