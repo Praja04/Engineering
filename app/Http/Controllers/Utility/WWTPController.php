@@ -1505,31 +1505,20 @@ class WWTPController extends Controller
         $monthlyUsageList = [];
 
         if ($biayaRecord) {
-            foreach ($masterChemicals as $mChem) {
-                $cName = trim($mChem->nama_chemical);
-                $matchedStd = $findStandard($cName);
-                $qty = 0;
-                $price = $matchedStd ? (float) $matchedStd->harga_standar : 0;
-                $standardQuota = $matchedStd ? (float) ($matchedStd->standar_pemakaian ?? 0) : 0;
-
-                if ($biayaRecord->details && $matchedStd) {
-                    $detail = $biayaRecord->details->first(function ($d) use ($matchedStd) {
-                        return $d->chemical_standard_id == $matchedStd->id;
-                    });
-                    if ($detail) {
-                        $qty = (float) $detail->qty;
-                    }
-                }
-
+            foreach ($allStandards as $std) {
+                $detail = $biayaRecord->details ? $biayaRecord->details->firstWhere('chemical_standard_id', $std->id) : null;
+                $qty = $detail ? (float) $detail->qty : 0;
+                $price = (float) $std->harga_standar;
                 $cost = $qty * $price;
                 $costM3 = $limbahDiOlah > 0 ? ($cost / $limbahDiOlah) : 0;
                 $monthlyTotalCost += $cost;
 
+                $standardQuota = (float) ($std->standar_pemakaian ?? 0);
                 $isOver = ($standardQuota > 0 && $qty > $standardQuota);
                 $status = $isOver ? 'OVER' : 'AMAN';
 
                 $monthlyUsageList[] = [
-                    'chemical_name' => $cName,
+                    'chemical_name' => $std->chemical_name,
                     'qty'           => $qty,
                     'standard'      => $standardQuota,
                     'standard_text' => $standardQuota > 0 ? (number_format($standardQuota, 0, ',', '.') . ' kg') : '-',
@@ -1736,8 +1725,8 @@ class WWTPController extends Controller
                 'bulan'        => $biayaMonthLabel,
                 'has_data'     => $hasData,
             ],
-            // Card 9: Tabel Konsumsi Chemical (ambil harian jika ada input, fallback bulanan)
-            'card9_chem_consumption' => $dailyRecords->isNotEmpty() ? $dailyUsageList : $monthlyUsageList,
+            // Card 9: Tabel Konsumsi Chemical (Data Bulanan)
+            'card9_chem_consumption' => !empty($monthlyUsageList) ? $monthlyUsageList : $dailyUsageList,
             // Struktur data perhitungan harian tetap disimpan lengkap
             'perhitungan_harian'     => [
                 'total_cost'          => round($dailyTotalCost, 2),
