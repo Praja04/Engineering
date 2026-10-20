@@ -1484,9 +1484,16 @@ class WWTPController extends Controller
         // Sumber: WwtpBiayaChemicalRecord & Details (Riwayat Data Biaya Chemical WWTP)
         // =========================================================================
         $biayaRecord = WwtpBiayaChemicalRecord::with(['details.chemicalStandard'])
-            ->whereBetween('tanggal', [$startMonth, $endMonth])
-            ->orderBy('tanggal', 'desc')
+            ->whereYear('tanggal', $startCarbon->year)
+            ->whereMonth('tanggal', $startCarbon->month)
             ->first();
+
+        if (!$biayaRecord) {
+            $biayaRecord = WwtpBiayaChemicalRecord::with(['details.chemicalStandard'])
+                ->whereBetween('tanggal', [$startMonth, $endMonth])
+                ->orderBy('tanggal', 'desc')
+                ->first();
+        }
 
         // Jika pada rentang bulan filter belum ada data, fallback ke data bulan terakhir yang tersedia
         if (!$biayaRecord) {
@@ -1536,10 +1543,12 @@ class WWTPController extends Controller
         // =========================================================================
         // 2. PERHITUNGAN HARIAN (TETAP DISIMPAN LENGKAP UNTUK DISKUSI LEBIH LANJUT)
         // =========================================================================
+        $wwtpAreaId = $wwtpArea ? $wwtpArea->id : 2;
         $dailyRecords = PemakaianChemicalModel::query()
             ->whereBetween('tanggal', [$startDate, $endDate])
-            ->where(function ($q) use ($chemicalWWTP) {
+            ->where(function ($q) use ($chemicalWWTP, $wwtpAreaId) {
                 $q->whereIn('jenis_pemakaian', $chemicalWWTP)
+                  ->orWhere('chemical_area', (string)$wwtpAreaId)
                   ->orWhere('chemical_area', 'like', '%wwtp%');
             })
             ->get();
@@ -1725,8 +1734,9 @@ class WWTPController extends Controller
                 'bulan'        => $biayaMonthLabel,
                 'has_data'     => $hasData,
             ],
-            // Card 9: Tabel Konsumsi Chemical (Data Bulanan)
-            'card9_chem_consumption' => !empty($monthlyUsageList) ? $monthlyUsageList : $dailyUsageList,
+            // Card 9: Tabel Konsumsi Chemical (Data Harian Pemakaian Chemical)
+            'chem_cons_period'       => $filterMonthName,
+            'card9_chem_consumption' => $dailyUsageList,
             // Struktur data perhitungan harian tetap disimpan lengkap
             'perhitungan_harian'     => [
                 'total_cost'          => round($dailyTotalCost, 2),

@@ -1950,10 +1950,15 @@
                     }
                 }
 
+                const badgeChemConsPeriodEl = document.getElementById('badgeChemConsPeriod');
+                if (badgeChemConsPeriodEl) {
+                    badgeChemConsPeriodEl.textContent = (data.chem_cons_period || 'HARIAN').toUpperCase();
+                }
+
                 if (data.card9_chem_consumption && Array.isArray(data.card9_chem_consumption)) {
                     let tbodyHtml = '';
-                    if (!hasData) {
-                        tbodyHtml = `<tr><td colspan="5" class="text-center text-muted py-3" style="font-size: 9px;"><i class="mdi mdi-information-outline me-1"></i>Belum ada data biaya chemical untuk periode ${monthLabel}</td></tr>`;
+                    if (data.card9_chem_consumption.length === 0) {
+                        tbodyHtml = `<tr><td colspan="5" class="text-center text-muted py-3" style="font-size: 9px;"><i class="mdi mdi-information-outline me-1"></i>Belum ada data pemakaian chemical untuk periode ${monthLabel}</td></tr>`;
                     } else {
                         data.card9_chem_consumption.forEach(item => {
                             const isOver = item.is_over !== undefined ?
@@ -1965,7 +1970,7 @@
                             const stdText = (item.standard !== undefined && item.standard !== null && Number(item.standard) > 0) ?
                                 `${Number(item.standard).toLocaleString('id-ID')} kg` :
                                 (item.standard_text || '-');
-                            const costM3Text = (item.cost_m3 !== undefined && item.cost_m3 !== null) ?
+                            const costM3Text = (item.cost_m3 !== undefined && item.cost_m3 !== null && Number(item.cost_m3) > 0) ?
                                 `Rp ${Number(item.cost_m3).toLocaleString('id-ID')}` :
                                 '-';
 
