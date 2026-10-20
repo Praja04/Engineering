@@ -871,7 +871,12 @@ class ChemicalController extends Controller
             ];
         }
 
-        return response()->json(collect($result)->values());
+        $sorted = collect($result)->sortBy([
+            ['total_pemakaian', 'desc'],
+            ['jenis_pemakaian', 'asc'],
+        ])->values();
+
+        return response()->json($sorted);
     }
 
     public function getTopOperatorPemakaianChemical(Request $request)

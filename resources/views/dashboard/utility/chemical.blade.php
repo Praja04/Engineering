@@ -330,6 +330,13 @@
             if (!data || data.length === 0) {
                 showEmptyState(selector, key, `Tidak ada data ${area.toUpperCase()} di rentang tanggal ini`);
             } else {
+                // Pastikan data terurut dari pemakaian tertinggi ke terendah (kiri ke kanan)
+                data.sort((a, b) => {
+                    const diff = (+b.total_pemakaian) - (+a.total_pemakaian);
+                    if (diff !== 0) return diff;
+                    return (a.jenis_pemakaian || '').localeCompare(b.jenis_pemakaian || '');
+                });
+
                 renderBar(
                     data.map(d => d.jenis_pemakaian),
                     data.map(d => +d.total_pemakaian),
