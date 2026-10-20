@@ -51,7 +51,30 @@ class DashboardUtilityController extends Controller
     }
     public function chemical()
     {
-        return view('dashboard.utility.chemical');
+        $wwtpArea = \App\Models\Utility\ChemicalArea::where('nama_area', 'like', '%wwtp%')->first();
+        $utilityArea = \App\Models\Utility\ChemicalArea::where('nama_area', 'like', '%utility%')->first();
+
+        $wwtpChemicals = \App\Models\Utility\ChemicalType::when($wwtpArea, fn($q) => $q->where('chemical_area_id', $wwtpArea->id))
+            ->where('is_active', true)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        if ($wwtpChemicals->isEmpty()) {
+            $wwtpChemicals = \App\Models\Utility\ChemicalType::where('is_active', true)
+                ->whereIn('nama_chemical', [
+                    'PAC powder 1', 'PAC powder 2', 'BE-100', 'C-204', 'C-9040 step 1',
+                    'C-9040 step 2', 'Denfloc 260 PA', 'Denfloc 945', 'NaOH', 'Defoamer', 'NPK'
+                ])
+                ->orderBy('id', 'asc')
+                ->get();
+        }
+
+        $utilityChemicals = \App\Models\Utility\ChemicalType::when($utilityArea, fn($q) => $q->where('chemical_area_id', $utilityArea->id))
+            ->where('is_active', true)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        return view('dashboard.utility.chemical', compact('wwtpChemicals', 'utilityChemicals'));
     }
     public function wwtp_proses()
     {

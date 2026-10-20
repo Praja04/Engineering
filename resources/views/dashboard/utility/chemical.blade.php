@@ -34,7 +34,11 @@
                                 <h5 class="card-title mb-1 fw-semibold">
                                     <i class="ri-drop-line text-primary me-2"></i>Pemakaian Chemical Utility
                                 </h5>
-                                <p class="text-muted mb-0 small">SCF, SRTF, PT-100, SMBS, B4, SRF, Chlorin</p>
+                                <p class="text-muted mb-0 small">
+                                    {{ isset($utilityChemicals) && $utilityChemicals->isNotEmpty() 
+                                        ? $utilityChemicals->pluck('nama_chemical')->join(', ') 
+                                        : 'SCF, SRTF, PT-100, SMBS, B4, SRF, Chlorin' }}
+                                </p>
                             </div>
                             <div class="dropdown">
                                 <button class="btn btn-outline btn-sm dropdown-toggle border-0" type="button" data-bs-toggle="dropdown">
@@ -82,7 +86,11 @@
                                 <h5 class="card-title mb-1 fw-semibold">
                                     <i class="ri-water-flash-line text-success me-2"></i>Pemakaian Chemical WWTP
                                 </h5>
-                                <p class="text-muted mb-0 small">PAC, BE-100, C-204, C-9040, Denfloc, NaOH, dll</p>
+                                <p class="text-muted mb-0 small">
+                                    {{ isset($wwtpChemicals) && $wwtpChemicals->isNotEmpty() 
+                                        ? $wwtpChemicals->pluck('nama_chemical')->join(', ') 
+                                        : 'PAC powder 1, PAC powder 2, BE-100, C-204, C-9040 step 1, C-9040 step 2, Denfloc 260 PA, Denfloc 945, NaOH, Defoamer, NPK' }}
+                                </p>
                             </div>
                             <div class="dropdown">
                                 <button class="btn btn-outline btn-sm dropdown-toggle border-0" type="button" data-bs-toggle="dropdown">
@@ -267,9 +275,9 @@
 
         options.chart.height = 350;
 
-        const maxValue = Math.max(...values);
+        const maxValue = Math.max(0, ...values);
         options.yaxis = {
-            max: maxValue * 1.15,
+            max: maxValue > 0 ? Math.ceil(maxValue * 1.15) : 10,
             title: {
                 text: `Pemakaian (${unit})`
             },

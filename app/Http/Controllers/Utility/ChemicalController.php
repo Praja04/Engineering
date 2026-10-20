@@ -602,21 +602,36 @@ class ChemicalController extends Controller
         $bulan   = $request->query('bulan');   // format: YYYY-MM
         $area    = $request->query('area');    // 'utility' atau 'wwtp'
 
-        // Definisi chemical berdasarkan area
-        $chemicalUtility = ['SCF', 'SRTF', 'PT-100', 'PT100', 'SMBS', 'B4', 'SRF', 'Chlorin'];
-        $chemicalWWTP = [
-            'PAC powder 1',
-            'PAC powder 2',
-            'BE-100',
-            'C-204',
-            'C-9040 step 1',
-            'C-9040 step 2',
-            'Denfloc 260 PA',
-            'Denfloc 945',
-            'NaOH',
-            'Defoamer',
-            'NPK'
-        ];
+        // Ambil master chemical dinamis dari database berdasarkan area
+        $wwtpArea = ChemicalArea::where('nama_area', 'like', '%wwtp%')->first();
+        $utilityArea = ChemicalArea::where('nama_area', 'like', '%utility%')->first();
+
+        $masterWwtp = ChemicalType::when($wwtpArea, fn($q) => $q->where('chemical_area_id', $wwtpArea->id))
+            ->where('is_active', true)
+            ->orderBy('id', 'asc')
+            ->get();
+        if ($masterWwtp->isEmpty()) {
+            $masterWwtp = ChemicalType::where('is_active', true)
+                ->whereIn('nama_chemical', [
+                    'PAC powder 1', 'PAC powder 2', 'BE-100', 'C-204', 'C-9040 step 1',
+                    'C-9040 step 2', 'Denfloc 260 PA', 'Denfloc 945', 'NaOH', 'Defoamer', 'NPK'
+                ])
+                ->orderBy('id', 'asc')
+                ->get();
+        }
+        $chemicalWWTP = $masterWwtp->pluck('nama_chemical')->toArray();
+
+        $masterUtility = ChemicalType::when($utilityArea, fn($q) => $q->where('chemical_area_id', $utilityArea->id))
+            ->where('is_active', true)
+            ->orderBy('id', 'asc')
+            ->get();
+        if ($masterUtility->isEmpty()) {
+            $masterUtility = ChemicalType::where('is_active', true)
+                ->whereIn('nama_chemical', ['SCF', 'SRTF', 'PT-100', 'PT100', 'SMBS', 'B4', 'SRF', 'Chlorin'])
+                ->orderBy('id', 'asc')
+                ->get();
+        }
+        $chemicalUtility = $masterUtility->pluck('nama_chemical')->toArray();
 
         $query = PemakaianChemicalModel::query()
             ->join('chemical_types', function ($join) {
@@ -629,9 +644,21 @@ class ChemicalController extends Controller
 
         // Filter berdasarkan area
         if ($area === 'utility') {
-            $query->whereIn('pemakaian_chemical.jenis_pemakaian', $chemicalUtility);
+            $query->where(function ($q) use ($chemicalUtility, $utilityArea) {
+                $q->whereIn('pemakaian_chemical.jenis_pemakaian', $chemicalUtility);
+                if ($utilityArea) {
+                    $q->orWhere('pemakaian_chemical.chemical_area', (string)$utilityArea->id)
+                      ->orWhere('pemakaian_chemical.chemical_area', 'like', '%utility%');
+                }
+            });
         } elseif ($area === 'wwtp') {
-            $query->whereIn('pemakaian_chemical.jenis_pemakaian', $chemicalWWTP);
+            $query->where(function ($q) use ($chemicalWWTP, $wwtpArea) {
+                $q->whereIn('pemakaian_chemical.jenis_pemakaian', $chemicalWWTP);
+                if ($wwtpArea) {
+                    $q->orWhere('pemakaian_chemical.chemical_area', (string)$wwtpArea->id)
+                      ->orWhere('pemakaian_chemical.chemical_area', 'like', '%wwtp%');
+                }
+            });
         }
 
         // Filter tanggal
@@ -710,51 +737,113 @@ class ChemicalController extends Controller
             $end = now()->endOfMonth()->format('Y-m-d');
         }
 
-        // Definisi chemical berdasarkan area
-        $chemicalUtility = ['SCF', 'SRTF', 'PT-100', 'PT100', 'SMBS', 'B4', 'SRF', 'Chlorin'];
-        $chemicalWWTP = [
-            'PAC powder 1',
-            'PAC powder 2',
-            'BE-100',
-            'C-204',
-            'C-9040 step 1',
-            'C-9040 step 2',
-            'Denfloc 260 PA',
-            'Denfloc 945',
-            'NaOH',
-            'Defoamer',
-            'NPK'
-        ];
+        // Ambil master chemical dinamis dari database berdasarkan area
+        $wwtpArea = ChemicalArea::where('nama_area', 'like', '%wwtp%')->first();
+        $utilityArea = ChemicalArea::where('nama_area', 'like', '%utility%')->first();
 
-        $data = PemakaianChemicalModel::whereBetween('tanggal', [$start, $end])->get();
+        $masterWwtp = ChemicalType::when($wwtpArea, fn($q) => $q->where('chemical_area_id', $wwtpArea->id))
+            ->where('is_active', true)
+            ->orderBy('id', 'asc')
+            ->get();
+        if ($masterWwtp->isEmpty()) {
+            $masterWwtp = ChemicalType::where('is_active', true)
+                ->whereIn('nama_chemical', [
+                    'PAC powder 1', 'PAC powder 2', 'BE-100', 'C-204', 'C-9040 step 1',
+                    'C-9040 step 2', 'Denfloc 260 PA', 'Denfloc 945', 'NaOH', 'Defoamer', 'NPK'
+                ])
+                ->orderBy('id', 'asc')
+                ->get();
+        }
+        $chemicalWWTP = $masterWwtp->pluck('nama_chemical')->toArray();
 
-        // Filter berdasarkan area jika diminta
+        $masterUtility = ChemicalType::when($utilityArea, fn($q) => $q->where('chemical_area_id', $utilityArea->id))
+            ->where('is_active', true)
+            ->orderBy('id', 'asc')
+            ->get();
+        if ($masterUtility->isEmpty()) {
+            $masterUtility = ChemicalType::where('is_active', true)
+                ->whereIn('nama_chemical', ['SCF', 'SRTF', 'PT-100', 'PT100', 'SMBS', 'B4', 'SRF', 'Chlorin'])
+                ->orderBy('id', 'asc')
+                ->get();
+        }
+        $chemicalUtility = $masterUtility->pluck('nama_chemical')->toArray();
+
+        $query = PemakaianChemicalModel::whereBetween('tanggal', [$start, $end]);
+
         if ($area === 'utility') {
-            $data = $data->filter(function ($item) use ($chemicalUtility) {
-                return in_array($item->jenis_pemakaian, $chemicalUtility);
+            $query->where(function ($q) use ($chemicalUtility, $utilityArea) {
+                $q->whereIn('jenis_pemakaian', $chemicalUtility);
+                if ($utilityArea) {
+                    $q->orWhere('chemical_area', (string)$utilityArea->id)
+                      ->orWhere('chemical_area', 'like', '%utility%');
+                }
             });
         } elseif ($area === 'wwtp') {
-            $data = $data->filter(function ($item) use ($chemicalWWTP) {
-                return in_array($item->jenis_pemakaian, $chemicalWWTP);
+            $query->where(function ($q) use ($chemicalWWTP, $wwtpArea) {
+                $q->whereIn('jenis_pemakaian', $chemicalWWTP);
+                if ($wwtpArea) {
+                    $q->orWhere('chemical_area', (string)$wwtpArea->id)
+                      ->orWhere('chemical_area', 'like', '%wwtp%');
+                }
             });
         }
 
+        $data = $query->get();
+
         // Normalisasi satuan dan map model dari chemical_types
         $chemicalTypesMap = ChemicalType::all()->keyBy(fn($c) => strtolower(trim($c->nama_chemical)));
-        $satuanMap = $chemicalTypesMap->mapWithKeys(function ($item, $key) {
-            $normalizedKey = preg_replace('/[^a-z0-9]/', '', $key);
-            return [$normalizedKey => $item->satuan];
-        });
 
-        $grouped = $data->groupBy('jenis_pemakaian');
+        $targetMaster = ($area === 'wwtp') ? $masterWwtp : (($area === 'utility') ? $masterUtility : null);
         $result = [];
+        $processed = [];
 
+        if ($targetMaster && $targetMaster->isNotEmpty()) {
+            // Tampilkan seluruh master chemical (11 chemical untuk WWTP) agar nama dan bar muncul lengkap
+            foreach ($targetMaster as $mChem) {
+                $cName = trim($mChem->nama_chemical);
+                $processed[strtolower($cName)] = true;
+
+                $matchingEntries = $data->filter(function ($item) use ($cName) {
+                    return strcasecmp(trim($item->jenis_pemakaian), $cName) === 0;
+                });
+
+                $totalPemakaian = 0;
+                $hasCustomRumus = false;
+
+                foreach ($matchingEntries as $entry) {
+                    $nilai = is_numeric($entry->nilai_pemakaian)
+                        ? floatval($entry->nilai_pemakaian)
+                        : floatval(preg_replace('/[^\d.]+/', '', $entry->nilai_pemakaian));
+                    $rh = $entry->running_hour ?? 1;
+
+                    if ($mChem->tipe_perhitungan === 'rumus' && !empty($mChem->rumus_formula)) {
+                        $totalPemakaian += $mChem->calculateUsage($nilai, (float) $rh);
+                        $hasCustomRumus = true;
+                    } else {
+                        $totalPemakaian += $nilai;
+                    }
+                }
+
+                $result[] = [
+                    'jenis_pemakaian' => $cName,
+                    'total_pemakaian' => round($totalPemakaian, 3),
+                    'satuan'          => $hasCustomRumus ? 'kg/hari' : ($mChem->satuan ?? 'Kg'),
+                    'area'            => ucfirst($area),
+                    'start_date'      => $start,
+                    'end_date'        => $end
+                ];
+            }
+        }
+
+        // Tambahkan jika ada data inputan yang belum terdaftar di master di atas
+        $grouped = $data->groupBy('jenis_pemakaian');
         foreach ($grouped as $jenis => $entries) {
+            $jClean = strtolower(trim($jenis));
+            if (isset($processed[$jClean])) continue;
+
             $totalPemakaian = 0;
             $hasCustomRumus = false;
-            $lookupKey = strtolower(preg_replace('/[^a-z0-9]/', '', $jenis));
-            $satuanAsli = $satuanMap[$lookupKey] ?? null;
-            $chemModel = $chemicalTypesMap->get(strtolower(trim($jenis)));
+            $chemModel = $chemicalTypesMap->get($jClean);
 
             foreach ($entries as $entry) {
                 $nilai = is_numeric($entry->nilai_pemakaian)
@@ -770,20 +859,19 @@ class ChemicalController extends Controller
                 }
             }
 
-            // Tentukan kategori area
             $areaCategory = in_array($jenis, $chemicalUtility) ? 'Utility' : 'WWTP';
 
             $result[] = [
                 'jenis_pemakaian' => $jenis,
                 'total_pemakaian' => round($totalPemakaian, 3),
-                'satuan'          => $hasCustomRumus ? 'kg/hari' : ($satuanAsli ?? '-'),
+                'satuan'          => $hasCustomRumus ? 'kg/hari' : ($chemModel->satuan ?? '-'),
                 'area'            => $areaCategory,
                 'start_date'      => $start,
                 'end_date'        => $end
             ];
         }
 
-        return response()->json(collect($result)->sortByDesc('total_pemakaian')->values());
+        return response()->json(collect($result)->values());
     }
 
     public function getTopOperatorPemakaianChemical(Request $request)
