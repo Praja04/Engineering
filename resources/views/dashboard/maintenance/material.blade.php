@@ -64,7 +64,7 @@
                                         <select id="filterJenisMtc" name="jenis_mtc" class="form-select border">
                                             <option value="">Semua Jenis</option>
                                             @foreach ($jenisMtcList as $jenis)
-                                                <option value="{{ $jenis }}">{{ $jenis }}</option>
+                                                <option value="{{ $jenis }}" {{ request('jenis_mtc') == $jenis ? 'selected' : '' }}>{{ $jenis }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -958,8 +958,9 @@
                     filteredLedgerData = rawLedgerData.slice();
                 } else {
                     filteredLedgerData = rawLedgerData.filter(item => {
+                        const isMhe = ['electric engine', 'diesel engine'].includes((item.jenis_mtc || '').toLowerCase());
                         const searchStr =
-                            `${item.kode_mesin || ''} ${item.nama_mesin || ''} ${item.jenis_mtc || ''} ${item.lokasi || ''}`
+                            `${item.kode_mesin || ''} ${item.nama_mesin || ''} ${item.jenis_mtc || ''} ${isMhe ? 'mhe' : ''} ${item.lokasi || ''}`
                             .toLowerCase();
                         return searchStr.includes(q);
                     });
@@ -1005,6 +1006,11 @@
                         `<span class="badge bg-warning-subtle text-dark border border-warning-subtle me-1"><i class="ri-truck-line me-1"></i>Forklift</span>` :
                         '';
 
+                    const isMhe = ['electric engine', 'diesel engine'].includes((item.jenis_mtc || '').toLowerCase());
+                    const jenisBadge = isMhe ?
+                        `<span class="badge bg-primary-subtle text-primary fw-bold" title="${item.jenis_mtc}">MHE</span> <small class="text-muted d-block" style="font-size: 10px;">${item.jenis_mtc}</small>` :
+                        `<span class="badge bg-secondary-subtle text-secondary">${item.jenis_mtc || '-'}</span>`;
+
                     rowsHtml += `
                         <tr>
                             <td class="ps-4 text-secondary fw-semibold">${rowNo}</td>
@@ -1015,7 +1021,7 @@
                                 ${forkliftTag}<span class="fw-bold text-dark">${item.nama_mesin}</span>
                             </td>
                             <td>
-                                <span class="badge bg-secondary-subtle text-secondary">${item.jenis_mtc || '-'}</span>
+                                ${jenisBadge}
                             </td>
                             <td class="text-muted small">${item.lokasi || '-'}</td>
                             <td class="text-end">${kebBadge}</td>
@@ -1078,8 +1084,9 @@
                 const loc = $(this).data('location');
                 const mainIds = $(this).data('main-ids');
 
+                const isMhe = ['electric engine', 'diesel engine'].includes((jenis || '').toLowerCase());
                 $('#modalMachineName').text(name || '-');
-                $('#modalJenisMtc').text(jenis || '-');
+                $('#modalJenisMtc').text(isMhe ? `MHE (${jenis})` : (jenis || '-'));
                 $('#modalLocation').text(loc || '-');
                 $('#modalSearch').val('');
                 modalActiveCategory = 'all';
@@ -1194,11 +1201,16 @@
                         `<span class="fw-bold text-danger">${item.total_harga}</span>` :
                         '<span class="text-muted">—</span>';
 
+                    const itemIsMhe = ['electric engine', 'diesel engine'].includes((item.jenis_mtc || '').toLowerCase());
+                    const itemJenisBadge = itemIsMhe ?
+                        `<span class="badge bg-primary-subtle text-primary fw-bold">MHE</span> <small class="text-muted d-block" style="font-size: 10px;">${item.jenis_mtc}</small>` :
+                        `<span class="text-muted">${item.jenis_mtc}</span>`;
+
                     rowsHtml += `
                         <tr>
                             <td class="ps-3 text-secondary fw-semibold">${rowNo}</td>
                             <td class="fw-medium">${item.tanggal}</td>
-                            <td><span class="text-muted">${item.jenis_mtc}</span></td>
+                            <td>${itemJenisBadge}</td>
                             <td>${pktBadge}</td>
                             <td>${katBadge}</td>
                             <td><span class="font-monospace text-muted">${item.mid}</span></td>

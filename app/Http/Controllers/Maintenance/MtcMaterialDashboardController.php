@@ -19,7 +19,7 @@ class MtcMaterialDashboardController extends Controller
     public function index()
     {
         // Get unique maintenance types that have material requirements or replacements
-        $jenisMtcList = MtcMainModel::where(function ($query) {
+        $rawJenisList = MtcMainModel::where(function ($query) {
             $query->whereHas('kebutuhanMaterial', function ($q) {
                 $q->where('qty', '>', 0);
             })->orWhereHas('penggantianMaterial', function ($q) {
@@ -30,7 +30,27 @@ class MtcMaterialDashboardController extends Controller
             ->whereNotNull('jenis_mtc')
             ->distinct()
             ->orderBy('jenis_mtc')
-            ->pluck('jenis_mtc');
+            ->pluck('jenis_mtc')
+            ->toArray();
+
+        // Check if either Electric Engine or Diesel Engine exists in mtc_main
+        $hasMhe = MtcMainModel::whereIn('jenis_mtc', ['Electric Engine', 'Diesel Engine'])->exists();
+
+        $filteredJenis = [];
+        foreach ($rawJenisList as $jenis) {
+            if (in_array(strtolower(trim($jenis)), ['electric engine', 'diesel engine'])) {
+                $hasMhe = true;
+            } else {
+                $filteredJenis[] = $jenis;
+            }
+        }
+
+        if ($hasMhe) {
+            $filteredJenis[] = 'MHE';
+        }
+
+        sort($filteredJenis, SORT_NATURAL | SORT_FLAG_CASE);
+        $jenisMtcList = collect(array_values(array_unique($filteredJenis)));
 
         // Simplified 2 options for Paket Filter: Maintenance & Korektif
         $paketList = ['Maintenance', 'Korektif'];
@@ -46,7 +66,12 @@ class MtcMaterialDashboardController extends Controller
         $query->whereBetween('mtc_main.tanggal', [$startDate, $endDate]);
 
         if ($request->filled('jenis_mtc')) {
-            $query->where('mtc_main.jenis_mtc', $request->jenis_mtc);
+            $jenisMtc = trim($request->jenis_mtc);
+            if (strcasecmp($jenisMtc, 'MHE') === 0) {
+                $query->whereIn('mtc_main.jenis_mtc', ['Electric Engine', 'Diesel Engine']);
+            } else {
+                $query->where('mtc_main.jenis_mtc', $jenisMtc);
+            }
         }
 
         if ($request->filled('paket')) {
@@ -97,18 +122,18 @@ class MtcMaterialDashboardController extends Controller
             $machineCode = $mObj->kode_mesin ?? '-';
             if ($mObj->lokasi) $location = $mObj->lokasi;
 
-            // Electric Engine is the primary module for Forklifts
+            // Electric Engine & Diesel Engine are MHE / Forklifts
             if (
-                $main->jenis_mtc === 'Electric Engine' ||
+                in_array($main->jenis_mtc, ['Electric Engine', 'Diesel Engine']) ||
                 stripos($mObj->nama_mesin, 'forklift') !== false ||
                 stripos($mObj->kode_mesin ?? '', 'F') === 0 ||
                 stripos($mObj->nama_mesin, 'pallet mover') !== false
             ) {
                 $isForklift = true;
             }
-        } elseif ($main->jenis_mtc === 'Electric Engine') {
+        } elseif (in_array($main->jenis_mtc, ['Electric Engine', 'Diesel Engine'])) {
             $machineKey  = "main_" . $main->id;
-            $machineName = $main->area ? "Unit: {$main->area}" : "Forklift #" . $main->id;
+            $machineName = $main->area ? "Unit: {$main->area}" : ($main->jenis_mtc . ' #' . $main->id);
             $machineCode = '-';
             $isForklift  = true;
         } elseif ($main->jenis_mtc === 'Battery' && $main->battery) {
@@ -235,12 +260,13 @@ class MtcMaterialDashboardController extends Controller
             });
 
         // ═════════════════════════════════════════════════════════════════
-        // 6. FORKLIFT ANALYTICS (PENGGANTIAN PART & COST - KHUSUS MTC ELECTRIC ENGINE)
+        // 6. FORKLIFT ANALYTICS (PENGGANTIAN PART & COST - KHUSUS MTC ELECTRIC ENGINE & DIESEL ENGINE / MHE)
         // ═════════════════════════════════════════════════════════════════
         $forkliftMainsQuery = MtcMainModel::whereBetween('tanggal', [$startDate, $endDate])
             ->where(function ($q) {
-                $q->where('jenis_mtc', 'Electric Engine')
-                  ->orWhereHas('electricEngine');
+                $q->whereIn('jenis_mtc', ['Electric Engine', 'Diesel Engine'])
+                  ->orWhereHas('electricEngine')
+                  ->orWhereHas('dieselEngine');
             })
             ->where(function ($q) {
                 $q->whereHas('penggantianMaterial', function ($p) {
@@ -251,9 +277,19 @@ class MtcMaterialDashboardController extends Controller
             })
             ->with([
                 'electricEngine.mesin',
+                'dieselEngine.mesin',
                 'penggantianMaterial',
                 'kebutuhanMaterial',
             ]);
+
+        if ($request->filled('jenis_mtc')) {
+            $jenisMtc = trim($request->jenis_mtc);
+            if (strcasecmp($jenisMtc, 'MHE') === 0) {
+                $forkliftMainsQuery->whereIn('jenis_mtc', ['Electric Engine', 'Diesel Engine']);
+            } elseif (!in_array($jenisMtc, ['Electric Engine', 'Diesel Engine'])) {
+                $forkliftMainsQuery->where('jenis_mtc', $jenisMtc);
+            }
+        }
 
         if ($request->filled('paket')) {
             $paket = trim($request->paket);
@@ -283,8 +319,8 @@ class MtcMaterialDashboardController extends Controller
         $activeForklifts       = [];
 
         foreach ($allForkliftMains as $main) {
-            $mesinObj = $main->electricEngine?->mesin;
-            $unitName = $mesinObj?->nama_mesin ?? ($main->area ? "Unit: {$main->area}" : "Forklift #{$main->id}");
+            $mesinObj = $main->electricEngine?->mesin ?? $main->dieselEngine?->mesin;
+            $unitName = $mesinObj?->nama_mesin ?? ($main->area ? "Unit: {$main->area}" : ($main->jenis_mtc . " #{$main->id}"));
             $unitCode = $mesinObj?->kode_mesin ?? '-';
 
             // Determine if WRH (Warehouse) or PRD (Produksi)
@@ -487,7 +523,12 @@ class MtcMaterialDashboardController extends Controller
             ]);
 
         if ($request->filled('jenis_mtc')) {
-            $mainQuery->where('jenis_mtc', $request->jenis_mtc);
+            $jenisMtc = trim($request->jenis_mtc);
+            if (strcasecmp($jenisMtc, 'MHE') === 0) {
+                $mainQuery->whereIn('jenis_mtc', ['Electric Engine', 'Diesel Engine']);
+            } else {
+                $mainQuery->where('jenis_mtc', $jenisMtc);
+            }
         }
 
         if ($request->filled('paket')) {
