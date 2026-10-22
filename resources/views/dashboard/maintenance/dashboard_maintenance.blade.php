@@ -1468,11 +1468,25 @@
 
                 // Chart 3: Total Downtime
                 function renderTotalDowntimeChart(chartData) {
+                    const dataVals = (chartData.series && chartData.series[0] && chartData.series[0].data)
+                        ? chartData.series[0].data.map(v => Number(v) || 0)
+                        : [];
+                    const maxData = dataVals.length ? Math.max(...dataVals) : 0;
+                    const targetVal = Number(chartData.target) || 2.0;
+                    const highestVal = Math.max(maxData, targetVal, 3.0);
+                    // Add 25% headroom so highest points and datalabels are never clipped at the ceiling
+                    const yMax = Math.ceil(highestVal * 1.25);
+
+                    if (chartData.average !== undefined) {
+                        $('#downtimeAvgBadge').text('Avg: ' + chartData.average + '%');
+                    }
+
                     const options = {
                         series: chartData.series,
                         chart: {
                             type: 'area',
                             height: 260,
+                            parentHeightOffset: 0,
                             toolbar: {
                                 show: false
                             },
@@ -1480,13 +1494,13 @@
                                 enabled: true
                             }
                         },
-                        colors: ['#38bdf8'],
+                        colors: ['#10b981'],
                         fill: {
                             type: 'gradient',
                             gradient: {
                                 shadeIntensity: 1,
-                                opacityFrom: 0.4,
-                                opacityTo: 0.04,
+                                opacityFrom: 0.35,
+                                opacityTo: 0.05,
                                 stops: [0, 95, 100]
                             }
                         },
@@ -1497,6 +1511,7 @@
                         dataLabels: {
                             enabled: true,
                             formatter: val => val + '%',
+                            offsetY: -6,
                             style: {
                                 fontSize: '9.5px',
                                 fontWeight: 600,
@@ -1505,8 +1520,8 @@
                             background: {
                                 enabled: true,
                                 foreColor: '#080c16',
-                                padding: 2,
-                                borderRadius: 2,
+                                padding: 3,
+                                borderRadius: 3,
                                 borderWidth: 0
                             }
                         },
@@ -1557,6 +1572,9 @@
                             }
                         },
                         yaxis: {
+                            min: 0,
+                            max: yMax,
+                            forceNiceScale: true,
                             title: {
                                 text: 'Downtime (%)',
                                 style: {
@@ -1569,13 +1587,18 @@
                                     colors: '#94a3b8',
                                     fontSize: '10.5px'
                                 },
-                                formatter: val => val + '%'
-                            },
-                            max: 3.0
+                                formatter: val => (typeof val === 'number' ? (val % 1 === 0 ? val : val.toFixed(1)) : val) + '%'
+                            }
                         },
                         grid: {
                             borderColor: 'rgba(255, 255, 255, 0.06)',
-                            strokeDashArray: 3
+                            strokeDashArray: 3,
+                            padding: {
+                                top: 20,
+                                right: 15,
+                                left: 10,
+                                bottom: 0
+                            }
                         },
                         tooltip: {
                             theme: 'dark',
