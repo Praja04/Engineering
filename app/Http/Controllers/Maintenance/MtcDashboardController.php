@@ -65,16 +65,16 @@ class MtcDashboardController extends Controller
         $scheduleData = $this->getScheduleMaintenanceData($startDate, $endDate, $weeksList, $year, $month);
 
         // 2. KPI & Chart: Breakdown (Paket Korektif)
-        $breakdownData = $this->getBreakdownData($startDate, $endDate, $weeksList);
+        $breakdownData = $this->getBreakdownData($startDate, $endDate, $weeksList, $filterType);
 
         // 3. KPI & Chart: Downtime (Hours & Percentage)
-        $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours']);
+        $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours'], $filterType);
 
         // 4. KPI: MTTR (Mean Time To Repair)
-        $mttrData = $this->getMttrData($breakdownData, $downtimeData['total_downtime_hours']);
+        $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
 
         // 5. KPI: MTBF (Mean Time Between Failures)
-        $mtbfData = $this->getMtbfData($breakdownData['total_breakdowns'], $downtimeData['total_downtime_hours'], $dateRange['operating_hours']);
+        $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns'], $downtimeData['kpi_downtime_hours'], $dateRange['operating_hours']);
 
         // 6. KPI & Chart: Cost Maintenance (Dummy & Projected)
         $costData = $this->getCostMaintenanceData($weeksList, $breakdownData['total_breakdowns']);
@@ -106,17 +106,17 @@ class MtcDashboardController extends Controller
                     'completed_count' => $scheduleData['kpi_total_completed'],
                 ],
                 'total_breakdown' => [
-                    'value' => $breakdownData['total_breakdowns'],
+                    'value' => $breakdownData['kpi_breakdowns'],
                     'target' => 5,
-                    'status' => $breakdownData['total_breakdowns'] <= 5 ? 'optimal' : 'danger',
+                    'status' => $breakdownData['kpi_breakdowns'] <= 5 ? 'optimal' : 'danger',
                     'subtext' => 'Paket Korektif (Target <5x)',
                 ],
                 'downtime' => [
-                    'percentage' => $downtimeData['total_downtime_percentage'],
-                    'hours' => $downtimeData['total_downtime_hours'],
+                    'percentage' => $downtimeData['kpi_downtime_percentage'],
+                    'hours' => $downtimeData['kpi_downtime_hours'],
                     'target_percentage' => 2.0,
                     'target_hours' => round($dateRange['operating_hours'] * 0.02, 1),
-                    'status' => $downtimeData['total_downtime_percentage'] <= 2.0 ? 'optimal' : 'danger',
+                    'status' => $downtimeData['kpi_downtime_percentage'] <= 2.0 ? 'optimal' : 'danger',
                     'subtext' => 'Target <2% dari ' . $dateRange['operating_hours'] . ' Jam',
                 ],
                 'mttr' => [
@@ -442,19 +442,21 @@ class MtcDashboardController extends Controller
     /**
      * Compute Breakdown data (Total maintenance with paket = 'Korektif')
      */
-    private function getBreakdownData($startDate, $endDate, array $weeksList): array
+    private function getBreakdownData($startDate, $endDate, array $weeksList, string $filterType): array
     {
+        $chartStart = count($weeksList) > 0 ? $weeksList[0]['start']->format('Y-m-d') : $startDate->format('Y-m-d');
+        $chartEnd = count($weeksList) > 0 ? end($weeksList)['end']->format('Y-m-d') : $endDate->format('Y-m-d');
+
+        // Query strictly records where paket is 'Korektif'
         $korektifRecords = DB::table('mtc_main')
-            ->where(function ($q) {
-                $q->where('paket', 'LIKE', '%Korektif%')
-                  ->orWhereNotNull('korektif');
-            })
-            ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) = 'korektif'")
+            ->whereBetween('tanggal', [$chartStart, $chartEnd])
             ->get();
 
         $chartCategories = [];
         $seriesBreakdown = [];
-        $totalBreakdowns = 0;
+        $totalPeriodBreakdowns = 0;
+        $selectedWeekBreakdowns = 0;
 
         foreach ($weeksList as $idx => $wk) {
             $wStart = $wk['start']->format('Y-m-d');
@@ -466,14 +468,20 @@ class MtcDashboardController extends Controller
             });
 
             $realCount = $wRecords->count();
-            // Fallback realistic demo curve when no database entries exist yet
-            $count = $realCount > 0 ? $realCount : [1, 0, 1, 3, 0, 1][$idx % 6];
-            $seriesBreakdown[] = $count;
-            $totalBreakdowns += $count;
+            $seriesBreakdown[] = $realCount;
+            $totalPeriodBreakdowns += $realCount;
+
+            if (!empty($wk['is_selected'])) {
+                $selectedWeekBreakdowns = $realCount;
+            }
         }
 
+        // For weekly filter, KPI displays the breakdown of the selected week; for monthly/custom, total of period
+        $kpiBreakdowns = ($filterType === 'weekly') ? $selectedWeekBreakdowns : $totalPeriodBreakdowns;
+
         return [
-            'total_breakdowns' => $totalBreakdowns,
+            'kpi_breakdowns' => $kpiBreakdowns,
+            'total_breakdowns' => $totalPeriodBreakdowns,
             'records' => $korektifRecords,
             'chart' => [
                 'categories' => $chartCategories,
@@ -491,21 +499,22 @@ class MtcDashboardController extends Controller
 
     /**
      * Compute Downtime data: jam mulai sampai jam selesai dari paket korektif
-     * Target < 2% dari 624 jam (atau jam operasi per periode)
+     * Target < 2% dari operating hours
      */
-    private function getDowntimeData(array $breakdownData, array $weeksList, float $operatingHours): array
+    private function getDowntimeData(array $breakdownData, array $weeksList, float $operatingHours, string $filterType): array
     {
         $chartCategories = [];
         $seriesDowntimePct = [];
         $seriesDowntimeHours = [];
         $totalDowntimeHours = 0;
+        $selectedWeekHours = 0;
+        $selectedWeekPct = 0;
 
         $targetPct = 2.0;
 
         foreach ($weeksList as $idx => $wk) {
             $chartCategories[] = $wk['label'];
 
-            // Calculate duration in hours if actual records have waktu_mulai & waktu_selesai
             $wRecords = $breakdownData['records']->filter(function ($item) use ($wk) {
                 $wStart = $wk['start']->format('Y-m-d');
                 $wEnd = $wk['end']->format('Y-m-d');
@@ -522,29 +531,34 @@ class MtcDashboardController extends Controller
                 }
             }
 
-            // Fallback realistic hours per week matching industrial profile (0.5 to 2.8 hrs)
-            if ($weekHours === 0) {
-                $sampleHours = [1.8, 0.8, 2.4, 2.9, 1.2, 0.9];
-                $weekHours = $sampleHours[$idx % count($sampleHours)];
+            // If there were breakdown records but waktu_mulai/waktu_selesai was not filled, estimate 1.5h per event
+            if ($wRecords->count() > 0 && $weekHours === 0) {
+                $weekHours = round($wRecords->count() * 1.5, 1);
             }
 
-            // Standard weekly operating hours is 156 hours (approx 624 hours / 4 weeks)
-            $weeklyOperatingHours = 156;
+            // Standard weekly operating hours: 168 hours (7d * 24h)
+            $weeklyOperatingHours = 168;
             $pct = round(($weekHours / $weeklyOperatingHours) * 100, 2);
 
             $seriesDowntimeHours[] = round($weekHours, 1);
             $seriesDowntimePct[] = $pct;
             $totalDowntimeHours += $weekHours;
+
+            if (!empty($wk['is_selected'])) {
+                $selectedWeekHours = round($weekHours, 1);
+                $selectedWeekPct = $pct;
+            }
         }
 
-        // For KPI: if weekly, use the selected/latest week, otherwise total for the period
-        $activeDowntimeHours = round($weekHours, 1);
-        $activeDowntimePct = $pct;
-
         $overallPct = round(($totalDowntimeHours / max(1, $operatingHours)) * 100, 2);
-        $avgPct = count($seriesDowntimePct) > 0 ? round(array_sum($seriesDowntimePct) / count($seriesDowntimePct), 2) : 1.5;
+        $avgPct = count($seriesDowntimePct) > 0 ? round(array_sum($seriesDowntimePct) / count($seriesDowntimePct), 2) : 0.0;
+
+        $kpiHours = ($filterType === 'weekly') ? $selectedWeekHours : round($totalDowntimeHours, 1);
+        $kpiPct   = ($filterType === 'weekly') ? $selectedWeekPct : $overallPct;
 
         return [
+            'kpi_downtime_hours' => $kpiHours,
+            'kpi_downtime_percentage' => $kpiPct,
             'total_downtime_hours' => round($totalDowntimeHours, 1),
             'total_downtime_percentage' => $avgPct,
             'avg_percentage' => $avgPct,
@@ -567,38 +581,36 @@ class MtcDashboardController extends Controller
     /**
      * Compute MTTR: waktu mulai dan waktu selesai lalu di-average
      */
-    private function getMttrData(array $breakdownData, float $totalDowntimeHours): array
+    private function getMttrData(array $breakdownData, float $downtimeHours): array
     {
-        $breakdowns = max(1, $breakdownData['total_breakdowns']);
-        $mttr = round($totalDowntimeHours / $breakdowns, 1);
-
-        // Sanity fallback within 1.8 - 2.8 hours
-        if ($mttr <= 0 || $mttr > 24) {
-            $mttr = 2.4;
+        $breakdowns = $breakdownData['kpi_breakdowns'];
+        if ($breakdowns <= 0) {
+            return [
+                'value' => 0.0,
+            ];
         }
 
+        $mttr = round($downtimeHours / $breakdowns, 1);
         return [
-            'value' => $mttr,
+            'value' => (float) max(0.1, $mttr),
         ];
     }
 
     /**
      * Compute MTBF: Total operating time dibagi banyak Korektif
-     * Standard: 624 jam operasi standar per bulan dibagi jumlah kejadian breakdown
      */
-    private function getMtbfData(int $totalBreakdowns, float $totalDowntimeHours, float $operatingHours): array
+    private function getMtbfData(int $kpiBreakdowns, float $downtimeHours, float $operatingHours): array
     {
-        // Standardize base operating hours to 624h baseline if less
-        $baseHours = max(624, $operatingHours);
-        $breakdowns = max(1, $totalBreakdowns);
-        $mtbf = round(($baseHours - $totalDowntimeHours) / $breakdowns, 0);
-
-        if ($mtbf <= 0 || $mtbf > 1000) {
-            $mtbf = 412;
+        $baseHours = max(168, $operatingHours);
+        if ($kpiBreakdowns <= 0) {
+            return [
+                'value' => (int) $baseHours,
+            ];
         }
 
+        $mtbf = round(($baseHours - $downtimeHours) / $kpiBreakdowns, 0);
         return [
-            'value' => (int) $mtbf,
+            'value' => (int) max(1, $mtbf),
         ];
     }
 
@@ -965,9 +977,7 @@ class MtcDashboardController extends Controller
         $seriesMtbf = [];
         $seriesMttr = [];
 
-        $sampleMtbf = [380, 425, 340, 460, 412];
-        $sampleMttr = [2.4, 1.8, 3.1, 2.0, 1.9];
-        $weeklyOperatingHours = 156;
+        $weeklyOperatingHours = 168;
 
         foreach ($weeksList as $idx => $wk) {
             $categories[] = $wk['label'];
@@ -990,12 +1000,15 @@ class MtcDashboardController extends Controller
                 }
             }
 
-            if ($breakdownCount > 0 && $downtimeHours > 0) {
+            if ($breakdownCount > 0) {
+                if ($downtimeHours <= 0) {
+                    $downtimeHours = round($breakdownCount * 1.5, 1);
+                }
                 $weekMttr = round($downtimeHours / $breakdownCount, 1);
-                $weekMtbf = round(($weeklyOperatingHours - $downtimeHours) / $breakdownCount, 0);
+                $weekMtbf = round(max(1, $weeklyOperatingHours - $downtimeHours) / $breakdownCount, 0);
             } else {
-                $weekMttr = $sampleMttr[$idx % count($sampleMttr)];
-                $weekMtbf = $sampleMtbf[$idx % count($sampleMtbf)];
+                $weekMttr = 0.0;
+                $weekMtbf = $weeklyOperatingHours;
             }
 
             $seriesMtbf[] = (int) $weekMtbf;

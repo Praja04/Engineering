@@ -1125,7 +1125,7 @@
                 $('#btnRefresh').on('click', function() {
                     const $icon = $('#refreshIcon');
                     $icon.addClass('mdi-spin');
-                    fetchDashboardData().finally(() => {
+                    fetchDashboardData().always(() => {
                         setTimeout(() => $icon.removeClass('mdi-spin'), 600);
                     });
                 });
@@ -1737,8 +1737,7 @@
                                 color: 'rgba(255, 255, 255, 0.1)'
                             }
                         },
-                        yaxis: [
-                            {
+                        yaxis: [{
                                 title: {
                                     text: 'MTBF (Jam)',
                                     style: {
@@ -1796,8 +1795,11 @@
                             shared: true,
                             intersect: false,
                             y: {
-                                formatter: function(val, { seriesIndex }) {
-                                    return seriesIndex === 0 ? val + ' Jam (Reliability)' : val + ' Jam (Recovery)';
+                                formatter: function(val, {
+                                    seriesIndex
+                                }) {
+                                    return seriesIndex === 0 ? val + ' Jam (Reliability)' : val +
+                                        ' Jam (Recovery)';
                                 }
                             }
                         }
