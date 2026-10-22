@@ -73,8 +73,8 @@ class MtcDashboardController extends Controller
         // 4. KPI: MTTR (Mean Time To Repair)
         $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
 
-        // 5. KPI: MTBF (Mean Time Between Failures)
-        $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns'], $downtimeData['kpi_downtime_hours'], $dateRange['operating_hours']);
+        // 5. KPI: MTBF (Mean Time Between Failures: 624 Jam / Total Mesin Korektif)
+        $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns']);
 
         // 6. KPI & Chart: Cost Maintenance (Dummy & Projected)
         $costData = $this->getCostMaintenanceData($weeksList, $breakdownData['total_breakdowns']);
@@ -115,9 +115,9 @@ class MtcDashboardController extends Controller
                     'percentage' => $downtimeData['kpi_downtime_percentage'],
                     'hours' => $downtimeData['kpi_downtime_hours'],
                     'target_percentage' => 2.0,
-                    'target_hours' => round($dateRange['operating_hours'] * 0.02, 1),
+                    'target_hours' => 12.5,
                     'status' => $downtimeData['kpi_downtime_percentage'] <= 2.0 ? 'optimal' : 'danger',
-                    'subtext' => 'Target <2% dari ' . $dateRange['operating_hours'] . ' Jam',
+                    'subtext' => 'Target <2% dari 624 Jam (Max 12.5 Jam)',
                 ],
                 'mttr' => [
                     'value' => $mttrData['value'],
@@ -131,7 +131,7 @@ class MtcDashboardController extends Controller
                     'unit' => 'Jam',
                     'target' => 250,
                     'status' => $mtbfData['value'] >= 250 ? 'optimal' : 'danger',
-                    'subtext' => 'Mean Time Between Failures',
+                    'subtext' => '624 Jam / Total Mesin Korektif',
                 ],
                 'cost' => [
                     'value' => $costData['total_cost_formatted'],
@@ -597,20 +597,20 @@ class MtcDashboardController extends Controller
     }
 
     /**
-     * Compute MTBF: Total operating time dibagi banyak Korektif
+     * Compute MTBF: 624 Jam dibagi total mesin/kejadian korektif
      */
-    private function getMtbfData(int $kpiBreakdowns, float $downtimeHours, float $operatingHours): array
+    private function getMtbfData(int $kpiBreakdowns): array
     {
-        $baseHours = max(168, $operatingHours);
+        $baseHours = 624;
         if ($kpiBreakdowns <= 0) {
             return [
-                'value' => (int) $baseHours,
+                'value' => $baseHours,
             ];
         }
 
-        $mtbf = round(($baseHours - $downtimeHours) / $kpiBreakdowns, 0);
+        $mtbf = round($baseHours / $kpiBreakdowns, 0);
         return [
-            'value' => (int) max(1, $mtbf),
+            'value' => (int) $mtbf,
         ];
     }
 
@@ -977,7 +977,7 @@ class MtcDashboardController extends Controller
         $seriesMtbf = [];
         $seriesMttr = [];
 
-        $weeklyOperatingHours = 168;
+        $baseHours = 624;
 
         foreach ($weeksList as $idx => $wk) {
             $categories[] = $wk['label'];
@@ -1005,10 +1005,10 @@ class MtcDashboardController extends Controller
                     $downtimeHours = round($breakdownCount * 1.5, 1);
                 }
                 $weekMttr = round($downtimeHours / $breakdownCount, 1);
-                $weekMtbf = round(max(1, $weeklyOperatingHours - $downtimeHours) / $breakdownCount, 0);
+                $weekMtbf = round($baseHours / $breakdownCount, 0);
             } else {
                 $weekMttr = 0.0;
-                $weekMtbf = $weeklyOperatingHours;
+                $weekMtbf = $baseHours;
             }
 
             $seriesMtbf[] = (int) $weekMtbf;

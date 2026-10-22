@@ -20,15 +20,6 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 
         <style>
-            /* ──────────────────────────────────────────────────────────
-           MTC MAINTENANCE DASHBOARD - COHESIVE TITANIUM PALETTE
-           Minimal, Professional Color Palette:
-           - Base: Slate Dark (#080c16 / #0f172a)
-           - Primary Accent: Electric Sky (#38bdf8 / #0284c7)
-           - Status Normal / Target Met: Emerald (#10b981)
-           - Status Alert / Losses: Crimson (#f43f5e)
-           - Neutrals: Slate Grayscale (#64748b / #94a3b8 / #f8fafc)
-        ────────────────────────────────────────────────────────── */
             :root {
                 --mtc-bg: #080c16;
                 --mtc-card-bg: rgba(15, 23, 42, 0.82);
@@ -487,12 +478,9 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <h4 class="mb-0 fw-bold" style="letter-spacing: 0.6px; font-size: 14px;">MAINTENANCE
                                         DASHBOARD</h4>
-                                    <span class="badge-stream-pulse">
-                                        <span class="pulse-dot"></span> LIVE
-                                    </span>
                                 </div>
                                 <div style="font-size: 9px; color: #38bdf8; font-weight: 700; letter-spacing: 0.5px;">
-                                    PT BANGUN ANUGERAH SEJAHTERA • ENG-MTC
+                                    ENGINEERING - MTC
                                 </div>
                             </div>
                         </div>
@@ -749,8 +737,8 @@
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-2"
                                     style="font-size: 10px;">
-                                    <span class="text-muted">Mean Time Failure:</span>
-                                    <span class="text-light">Operasi / Korektif</span>
+                                    <span class="text-muted">Formula:</span>
+                                    <span class="text-light font-mono">624 Jam / Korektif</span>
                                 </div>
                             </div>
                         </div>
