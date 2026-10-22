@@ -20,6 +20,16 @@
         <div class="collapse menu-dropdown {{ request()->is('mtc/dashboard/*') || request()->is('mtc/dashboard/agenda') ? 'show' : '' }}"
             id="sidebarMtcDashboard">
             <ul class="nav nav-sm flex-column">
+                @if ($jabatan === 'admin')
+                    <li class="nav-item">
+                        <a href="{{ route('mtc.dashboard.index') }}"
+                            class="nav-link {{ request()->routeIs('mtc.dashboard.index') ? 'active' : '' }}"
+                            data-key="t-maintenance-dashboard">
+                            <i class="mdi mdi-view-dashboard-outline me-2"></i> Maintenance Dashboard
+                        </a>
+                    </li>
+                @endif
+
                 <li class="nav-item">
                     <a href="{{ url('mtc/dashboard/agenda') }}"
                         class="nav-link {{ request()->is('mtc/dashboard/agenda') ? 'active' : '' }}"

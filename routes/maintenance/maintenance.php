@@ -18,6 +18,7 @@ use App\Http\Controllers\Maintenance\MtcMainController;
 use App\Http\Controllers\Maintenance\MtcMasterMesinController;
 use App\Http\Controllers\Maintenance\MtcMasterMaterialController;
 use App\Http\Controllers\Maintenance\MtcMaterialDashboardController;
+use App\Http\Controllers\Maintenance\MtcDashboardController;
 use App\Http\Controllers\Maintenance\MtcP2hController;
 
 Route::middleware(['auth'])->group(function () {
@@ -152,6 +153,10 @@ Route::middleware(['auth'])->group(function () {
 
         // Material Requirements Dashboard
         Route::prefix('dashboard')->group(function () {
+            // MTC Maintenance Analytics Dashboard
+            Route::get('/maintenance', [MtcDashboardController::class, 'index'])->name('mtc.dashboard.index');
+            Route::get('/maintenance/data', [MtcDashboardController::class, 'getData'])->name('mtc.dashboard.data');
+
             Route::get('/material', [MtcMaterialDashboardController::class, 'index'])->name('mtc.dashboard.material');
             Route::get('/material/charts', [MtcMaterialDashboardController::class, 'getDashboardCharts'])->name('mtc.dashboard.material.charts');
             Route::get('/material/ledger', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.ledger');
