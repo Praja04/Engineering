@@ -167,7 +167,7 @@ class MtcDashboardController extends Controller
 
         // 4. Asynchronous Section: Top Machines (MTBF, MTTR, Cost)
         if ($section === 'top_machines') {
-            $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate);
+            $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate, $dateRange['operating_hours']);
             return response()->json([
                 'status' => true,
                 'section' => 'top_machines',
@@ -203,7 +203,7 @@ class MtcDashboardController extends Controller
         $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
         $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns']);
         $costData = $this->getCostMaintenanceData($weeksList, $breakdownData['total_breakdowns']);
-        $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate);
+        $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate, $dateRange['operating_hours']);
         $unitOffData = $this->getUnitOffData($startDate, $endDate);
         $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
 
@@ -810,122 +810,193 @@ class MtcDashboardController extends Controller
     }
 
     /**
-     * Top Machines Analytics: Top Mesin MTBF Terendah, Top MTTR Terlama, Top Cost Tertinggi
+     * Helper to resolve machine info from a MtcMainModel instance
      */
-    private function getTopMachinesAnalytics($startDate, $endDate): array
+    private function resolveMachineInfo($main): array
     {
-        // Get master machines for name and area lookup
-        $machines = MtcMasterMesinModel::where('aktif', true)
-            ->select('id', 'nama_mesin', 'kode_mesin', 'jenis_mtc', 'lokasi', 'dept')
+        $rel = match ($main->jenis_mtc) {
+            'Motor Pompa'                  => 'motorPump',
+            'Utility'                      => 'utility',
+            'Electrical'                   => 'electrical',
+            'Refrigerasi'                  => 'refrigerasi',
+            'Electric Engine'              => 'electricEngine',
+            'Diesel Engine'                => 'dieselEngine',
+            'Electric P2h', 'Electric P2H' => 'electricP2h',
+            'Diesel P2h', 'Diesel P2H'     => 'dieselP2h',
+            'Genset P2h', 'Genset P2H'     => 'gensetP2h',
+            default                        => null
+        };
+
+        $machineKey  = 'unknown';
+        $machineName = '-';
+        $machineCode = '-';
+        $location    = $main->lokasi ?? $main->area ?? '-';
+
+        if ($rel && $main->$rel && $main->$rel->mesin) {
+            $mObj        = $main->$rel->mesin;
+            $machineKey  = "mesin_{$mObj->id}";
+            $machineName = $mObj->nama_mesin;
+            $machineCode = $mObj->kode_mesin ?? '-';
+            $location    = $mObj->lokasi ?? $mObj->dept ?? $location;
+        } elseif (in_array($main->jenis_mtc, ['Electric Engine', 'Diesel Engine'])) {
+            $machineKey  = "main_" . $main->id;
+            $machineName = $main->area ? "Unit: {$main->area}" : ($main->jenis_mtc . ' #' . $main->id);
+            $machineCode = '-';
+        } elseif ($main->jenis_mtc === 'Battery' && $main->battery) {
+            $machineKey  = "battery_" . ($main->battery->id ?? $main->id);
+            $machineName = 'Unit: ' . ($main->battery->no_unit ?? '-') . ' (Seri: ' . ($main->battery->no_seri ?? '-') . ')';
+            $machineCode = 'BATTERY';
+        } elseif ($main->jenis_mtc === 'Sipil') {
+            $areaVal     = $main->area ?? 'Umum';
+            $machineKey  = "sipil_" . strtolower(trim($areaVal));
+            $machineName = 'Sipil: ' . $areaVal;
+            $machineCode = 'SIPIL';
+        } else {
+            $machineKey  = "main_" . $main->id;
+            $machineName = $main->area ? "Area: {$main->area}" : ($main->jenis_mtc ? $main->jenis_mtc . ' #' . $main->id : 'Mesin #' . $main->id);
+            $machineCode = '-';
+        }
+
+        return [
+            'key'        => $machineKey,
+            'nama_mesin' => $machineName,
+            'kode_mesin' => $machineCode,
+            'area'       => $location ?: '-',
+        ];
+    }
+
+    /**
+     * Top Machines Analytics: Top Mesin MTBF Terendah, Top MTTR Terlama, Top Cost Tertinggi
+     * Real calculation based on paket 'Korektif' in mtc_main (waktu_mulai s.d. waktu_selesai)
+     */
+    private function getTopMachinesAnalytics($startDate, $endDate, float $operatingHours = 624): array
+    {
+        // 1. Ambil data korektif dalam rentang waktu filter
+        $korektifRecords = MtcMainModel::with([
+                'motorPump.mesin',
+                'utility.mesin',
+                'electrical.mesin',
+                'refrigerasi.mesin',
+                'electricEngine.mesin',
+                'dieselEngine.mesin',
+                'electricP2h.mesin',
+                'dieselP2h.mesin',
+                'gensetP2h.mesin',
+                'battery',
+            ])
+            ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) LIKE '%korektif%'")
+            ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->get();
 
-        // 1. Top Mesin MTBF Terendah (Reliability Risk)
-        $topMtbf = [
-            [
-                'rank' => 1,
-                'nama_mesin' => 'Conveyor Line 3',
-                'kode_mesin' => 'CV-03',
-                'area' => 'MHE / Otomotif',
-                'nilai_mtbf' => 45,
-                'breakdown_freq' => 5,
-                'status' => 'Critical',
-                'status_color' => 'danger',
-            ],
-            [
-                'rank' => 2,
-                'nama_mesin' => 'Pompa Utama Air Bersih',
-                'kode_mesin' => 'P-1002',
-                'area' => 'Motor Pompa',
-                'nilai_mtbf' => 72,
-                'breakdown_freq' => 4,
-                'status' => 'Warning',
-                'status_color' => 'warning',
-            ],
-            [
-                'rank' => 3,
-                'nama_mesin' => 'Chiller Unit 02 (Refrigerasi)',
-                'kode_mesin' => 'CHL-02',
-                'area' => 'Utility',
-                'nilai_mtbf' => 95,
-                'breakdown_freq' => 3,
-                'status' => 'Warning',
-                'status_color' => 'warning',
-            ],
-            [
-                'rank' => 4,
-                'nama_mesin' => 'Forklift Electric Unit 04',
-                'kode_mesin' => 'FL-E04',
-                'area' => 'MHE',
-                'nilai_mtbf' => 110,
-                'breakdown_freq' => 3,
-                'status' => 'Attention',
-                'status_color' => 'info',
-            ],
-            [
-                'rank' => 5,
-                'nama_mesin' => 'Compressor Atlas Copco GA37',
-                'kode_mesin' => 'GA-37',
-                'area' => 'Utility',
-                'nilai_mtbf' => 128,
-                'breakdown_freq' => 2,
-                'status' => 'Optimal',
-                'status_color' => 'success',
-            ],
-        ];
+        $machinesGrouped = [];
 
-        // 2. Top MTTR Terlama (Maintenance Efficiency Bottleneck)
-        $topMttr = [
-            [
-                'rank' => 1,
-                'nama_mesin' => 'Robot Welding R-4',
-                'kode_mesin' => 'RW-04',
-                'area' => 'MHE / Robotic',
-                'rata_mttr' => 8.5,
-                'keterangan' => 'Tunggu Sparepart PCB Driver dari Vendor Luar',
-                'status' => 'Critical',
-                'status_color' => 'danger',
-            ],
-            [
-                'rank' => 2,
-                'nama_mesin' => 'Compressor Utama 01 (AQ55VSD)',
-                'kode_mesin' => 'AQ-55',
-                'area' => 'Utility',
-                'rata_mttr' => 6.2,
-                'keterangan' => 'Kompleksitas Overhaul Screw & Inverter Tuning',
-                'status' => 'High',
-                'status_color' => 'warning',
-            ],
-            [
-                'rank' => 3,
-                'nama_mesin' => 'AHU Ruang Produksi B',
-                'kode_mesin' => 'AHU-02',
-                'area' => 'Utility / Sipil',
-                'rata_mttr' => 5.0,
-                'keterangan' => 'Troubleshooting Kebocoran Evaporator & V-Belt',
-                'status' => 'Attention',
-                'status_color' => 'info',
-            ],
-            [
-                'rank' => 4,
-                'nama_mesin' => 'Centrifugal Transfer Pump 10000P2',
-                'kode_mesin' => 'PMP-10P2',
-                'area' => 'Motor Pompa',
-                'rata_mttr' => 4.4,
-                'keterangan' => 'Penggantian Mechanical Seal & Alignment Motor',
-                'status' => 'Attention',
-                'status_color' => 'info',
-            ],
-            [
-                'rank' => 5,
-                'nama_mesin' => 'Forklift Diesel TCM 3 Ton',
-                'kode_mesin' => 'FL-D02',
-                'area' => 'MHE',
-                'rata_mttr' => 3.8,
-                'keterangan' => 'Gasket Cylinder Head & Injector Bleeding',
-                'status' => 'Optimal',
-                'status_color' => 'success',
-            ],
-        ];
+        foreach ($korektifRecords as $rec) {
+            $mInfo = $this->resolveMachineInfo($rec);
+            $mKey = $mInfo['key'];
+
+            // Hitung durasi perbaikan dari waktu_mulai s.d. waktu_selesai
+            $durationHours = 0;
+            if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
+                $tDate = $rec->tanggal ? Carbon::parse($rec->tanggal)->format('Y-m-d') : date('Y-m-d');
+                $tDateEnd = !empty($rec->tanggal_selesai) ? Carbon::parse($rec->tanggal_selesai)->format('Y-m-d') : $tDate;
+                $startT = Carbon::parse($tDate . ' ' . $rec->waktu_mulai);
+                $endT = Carbon::parse($tDateEnd . ' ' . $rec->waktu_selesai);
+                if ($endT->lessThan($startT)) {
+                    $endT->addDay();
+                }
+                $durationHours = max(0.1, $startT->diffInMinutes($endT) / 60);
+            } else {
+                $durationHours = 1.5; // fallback estimasi jika waktu tidak diisi
+            }
+
+            $kendala = trim($rec->keterangan ?: ($rec->korektif ?: ''));
+
+            if (!isset($machinesGrouped[$mKey])) {
+                $machinesGrouped[$mKey] = [
+                    'nama_mesin'     => $mInfo['nama_mesin'],
+                    'kode_mesin'     => $mInfo['kode_mesin'],
+                    'area'           => $mInfo['area'],
+                    'breakdown_freq' => 0,
+                    'total_downtime' => 0.0,
+                    'keterangan'     => [],
+                ];
+            }
+
+            $machinesGrouped[$mKey]['breakdown_freq'] += 1;
+            $machinesGrouped[$mKey]['total_downtime'] += $durationHours;
+            if ($kendala && !in_array($kendala, $machinesGrouped[$mKey]['keterangan'])) {
+                $machinesGrouped[$mKey]['keterangan'][] = $kendala;
+            }
+        }
+
+        // Kalkulasi MTBF & MTTR per mesin
+        $evaluatedMachines = [];
+        $baseHours = max(1, $operatingHours);
+
+        foreach ($machinesGrouped as $key => $m) {
+            $freq = $m['breakdown_freq'];
+            $downtime = $m['total_downtime'];
+
+            $mttr = round($downtime / max(1, $freq), 1);
+            $mtbf = round($baseHours / max(1, $freq), 0);
+
+            $ket = !empty($m['keterangan']) ? implode(', ', $m['keterangan']) : 'Perbaikan Kerusakan Korektif';
+
+            $evaluatedMachines[] = [
+                'nama_mesin'     => $m['nama_mesin'],
+                'kode_mesin'     => $m['kode_mesin'],
+                'area'           => $m['area'],
+                'breakdown_freq' => $freq,
+                'total_downtime' => round($downtime, 1),
+                'nilai_mtbf'     => (int) $mtbf,
+                'rata_mttr'      => (float) $mttr,
+                'keterangan'     => $ket,
+            ];
+        }
+
+        // 1. Top Mesin MTBF Terendah (Reliability Risk - Paling sering rusak / frekuensi breakdown terbanyak)
+        $sortedByMtbf = collect($evaluatedMachines)->sortBy(function ($item) {
+            return [$item['nilai_mtbf'], -$item['breakdown_freq']];
+        })->values()->take(5);
+
+        $topMtbf = [];
+        foreach ($sortedByMtbf as $idx => $item) {
+            $mtbfVal = $item['nilai_mtbf'];
+            $status = $mtbfVal < 100 ? 'Critical' : ($mtbfVal < 250 ? 'Warning' : 'Optimal');
+            $statusColor = $mtbfVal < 100 ? 'danger' : ($mtbfVal < 250 ? 'warning' : 'success');
+
+            $topMtbf[] = [
+                'rank'           => $idx + 1,
+                'nama_mesin'     => $item['nama_mesin'],
+                'kode_mesin'     => $item['kode_mesin'],
+                'area'           => $item['area'],
+                'nilai_mtbf'     => $mtbfVal,
+                'breakdown_freq' => $item['breakdown_freq'],
+                'status'         => $status,
+                'status_color'   => $statusColor,
+            ];
+        }
+
+        // 2. Top MTTR Terlama (Maintenance Bottleneck - Perbaikan paling lama)
+        $sortedByMttr = collect($evaluatedMachines)->sortByDesc('rata_mttr')->values()->take(5);
+
+        $topMttr = [];
+        foreach ($sortedByMttr as $idx => $item) {
+            $mttrVal = $item['rata_mttr'];
+            $status = $mttrVal > 5.0 ? 'Critical' : ($mttrVal > 3.0 ? 'Warning' : 'Optimal');
+            $statusColor = $mttrVal > 5.0 ? 'danger' : ($mttrVal > 3.0 ? 'warning' : 'success');
+
+            $topMttr[] = [
+                'rank'         => $idx + 1,
+                'nama_mesin'   => $item['nama_mesin'],
+                'kode_mesin'   => $item['kode_mesin'],
+                'area'         => $item['area'],
+                'rata_mttr'    => $mttrVal,
+                'keterangan'   => $item['keterangan'],
+                'status'       => $status,
+                'status_color' => $statusColor,
+            ];
+        }
 
         // 3. Top Cost Tertinggi (Budget Impact - Dummy data)
         $topCost = [

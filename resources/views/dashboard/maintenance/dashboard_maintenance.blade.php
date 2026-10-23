@@ -465,9 +465,17 @@
             }
 
             @keyframes kpiPulse {
-                0% { opacity: 0.3; }
-                50% { opacity: 0.7; }
-                100% { opacity: 0.3; }
+                0% {
+                    opacity: 0.3;
+                }
+
+                50% {
+                    opacity: 0.7;
+                }
+
+                100% {
+                    opacity: 0.3;
+                }
             }
 
             .chart-loading-overlay {
@@ -1068,7 +1076,7 @@
                 {{-- ═══════════════════════════════════════════════════════════════
                  7. LIVE UNIT OFF DETAILED TABLE SECTION
             ═══════════════════════════════════════════════════════════════ --}}
-                <div class="row g-2 mb-3" id="tableOfflineUnitsSection">
+                {{-- <div class="row g-2 mb-3" id="tableOfflineUnitsSection">
                     <div class="col-12">
                         <div class="mtc-chart-card">
                             <div class="mtc-card-header">
@@ -1078,10 +1086,12 @@
                                         Unit Mesin Sedang Offline / Dalam Perbaikan
                                     </h4>
                                     <div class="mtc-card-subtitle">
-                                        Daftar unit breakdown aktif, durasi downtime, dan kendala perbaikan (Live Telemetri)
+                                        Daftar unit breakdown aktif, durasi downtime, dan kendala perbaikan (Live
+                                        Telemetri)
                                     </div>
                                 </div>
-                                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25 font-mono px-2 py-1"
+                                <span
+                                    class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25 font-mono px-2 py-1"
                                     style="font-size: 10px;">
                                     Live Telemetri
                                 </span>
@@ -1101,13 +1111,12 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tbodyUnitOffDetails">
-                                        {{-- Injected dynamically --}}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
             </div>
         </div>
@@ -1257,11 +1266,12 @@
                 }
 
                 function setKpiLoading() {
-                    $('#kpiCompletionVal, #kpiBreakdownVal, #kpiDowntimeVal, #kpiMttrVal, #kpiMtbfVal, #kpiCostVal').each(function() {
-                        if (!$(this).find('.kpi-skeleton-pulse').length) {
-                            $(this).html('<span class="kpi-skeleton-pulse">--</span>');
-                        }
-                    });
+                    $('#kpiCompletionVal, #kpiBreakdownVal, #kpiDowntimeVal, #kpiMttrVal, #kpiMtbfVal, #kpiCostVal')
+                        .each(function() {
+                            if (!$(this).find('.kpi-skeleton-pulse').length) {
+                                $(this).html('<span class="kpi-skeleton-pulse">--</span>');
+                            }
+                        });
                 }
 
                 // ─────────────────────────────────────────────────────────────
@@ -1427,7 +1437,9 @@
                 }
 
                 function fetchSection(sectionName, params, loadSeq) {
-                    const sectionParams = Object.assign({}, params, { section: sectionName });
+                    const sectionParams = Object.assign({}, params, {
+                        section: sectionName
+                    });
                     const xhr = $.ajax({
                         url: "{{ route('mtc.dashboard.data') }}",
                         type: "GET",
@@ -1454,7 +1466,8 @@
                             } else if (sectionName === 'reliability') {
                                 updateReliabilityUI(res.kpi, res.charts);
                             } else if (sectionName === 'schedule') {
-                                updateScheduleUI(res.kpi?.schedule_completion, res.charts?.schedule_maintenance);
+                                updateScheduleUI(res.kpi?.schedule_completion, res.charts
+                                    ?.schedule_maintenance);
                             }
                         },
                         error: function(err) {
@@ -1717,9 +1730,8 @@
 
                 // Chart 3: Total Downtime
                 function renderTotalDowntimeChart(chartData) {
-                    const dataVals = (chartData.series && chartData.series[0] && chartData.series[0].data)
-                        ? chartData.series[0].data.map(v => Number(v) || 0)
-                        : [];
+                    const dataVals = (chartData.series && chartData.series[0] && chartData.series[0].data) ?
+                        chartData.series[0].data.map(v => Number(v) || 0) : [];
                     const maxData = dataVals.length ? Math.max(...dataVals) : 0;
                     const targetVal = Number(chartData.target) || 2.0;
                     const highestVal = Math.max(maxData, targetVal, 3.0);
@@ -1836,7 +1848,8 @@
                                     colors: '#94a3b8',
                                     fontSize: '10.5px'
                                 },
-                                formatter: val => (typeof val === 'number' ? (val % 1 === 0 ? val : val.toFixed(1)) : val) + '%'
+                                formatter: val => (typeof val === 'number' ? (val % 1 === 0 ? val : val.toFixed(
+                                    1)) : val) + '%'
                             }
                         },
                         grid: {
@@ -2177,6 +2190,11 @@
 
                 function renderTopMtbfTable(rows) {
                     let html = '';
+                    if (!rows || rows.length === 0) {
+                        html = `<tr><td colspan="5" class="text-center text-secondary py-3 small"><i class="mdi mdi-information-outline"></i> Tidak ada catatan korektif pada periode ini</td></tr>`;
+                        $('#tbodyTopMtbf').html(html);
+                        return;
+                    }
                     rows.forEach(item => {
                         const rankClass = item.rank === 1 ? 'top-1' : '';
                         const badgeClass = item.status === 'Critical' ? 'danger' : (item.status === 'Warning' ?
@@ -2201,8 +2219,14 @@
 
                 function renderTopMttrTable(rows) {
                     let html = '';
+                    if (!rows || rows.length === 0) {
+                        html = `<tr><td colspan="5" class="text-center text-secondary py-3 small"><i class="mdi mdi-information-outline"></i> Tidak ada catatan korektif pada periode ini</td></tr>`;
+                        $('#tbodyTopMttr').html(html);
+                        return;
+                    }
                     rows.forEach(item => {
                         const rankClass = item.rank === 1 ? 'top-1' : '';
+                        const ket = item.keterangan || '-';
                         html += `
                     <tr>
                         <td><span class="rank-badge ${rankClass}">${item.rank}</span></td>
@@ -2213,8 +2237,8 @@
                         <td><span class="badge bg-dark text-secondary border border-secondary border-opacity-25" style="font-size: 9.5px;">${item.area}</span></td>
                         <td class="text-end font-mono fw-bold text-info">${item.rata_mttr} Jam</td>
                         <td>
-                            <span class="text-secondary small" title="${item.keterangan}">
-                                ${item.keterangan.length > 30 ? item.keterangan.substring(0, 30) + '...' : item.keterangan}
+                            <span class="text-secondary small" title="${ket}">
+                                ${ket.length > 30 ? ket.substring(0, 30) + '...' : ket}
                             </span>
                         </td>
                     </tr>
@@ -2225,6 +2249,11 @@
 
                 function renderTopCostTable(rows) {
                     let html = '';
+                    if (!rows || rows.length === 0) {
+                        html = `<tr><td colspan="5" class="text-center text-secondary py-3 small"><i class="mdi mdi-information-outline"></i> Tidak ada data biaya pada periode ini</td></tr>`;
+                        $('#tbodyTopCost').html(html);
+                        return;
+                    }
                     rows.forEach(item => {
                         const rankClass = item.rank === 1 ? 'top-1' : '';
                         html += `
