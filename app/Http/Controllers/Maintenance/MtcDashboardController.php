@@ -35,10 +35,19 @@ class MtcDashboardController extends Controller
         $currentMonth = Carbon::today()->month;
         $currentWeek = Carbon::today()->weekOfYear;
 
+        $weeksOptions = [];
+        for ($w = 1; $w <= 52; $w++) {
+            $wCarbon = Carbon::now()->setISODate($currentYear, $w);
+            $wStart = (clone $wCarbon)->startOfWeek(Carbon::MONDAY);
+            $wEnd = (clone $wCarbon)->endOfWeek(Carbon::SUNDAY);
+            $weeksOptions[$w] = "W{$w} (" . $wStart->format('d M') . " - " . $wEnd->format('d M Y') . ")";
+        }
+
         return view('dashboard.maintenance.dashboard_maintenance', compact(
             'currentYear',
             'currentMonth',
-            'currentWeek'
+            'currentWeek',
+            'weeksOptions'
         ));
     }
 
@@ -284,19 +293,20 @@ class MtcDashboardController extends Controller
             $start = (clone $carbon)->startOfWeek(Carbon::MONDAY);
             $end = (clone $carbon)->endOfWeek(Carbon::SUNDAY);
 
-            // Display a surrounding 4-5 week context (e.g. 4 preceding weeks + selected week) so charts have W1, W2, W3...
+            // Display a surrounding 4-5 week context (e.g. 4 preceding weeks + selected week) with date range labels
             $weeks = [];
-            $currentWeekNum = (int) $carbon->format('W');
             for ($i = 4; $i >= 0; $i--) {
                 $wStart = (clone $start)->subWeeks($i);
                 $wEnd = (clone $wStart)->endOfWeek(Carbon::SUNDAY);
                 $wNum = (int) $wStart->format('W');
+                $dateLabel = $wStart->format('d M') . " - " . $wEnd->format('d M Y');
                 $weeks[] = [
                     'key' => "W{$wNum}",
-                    'label' => "W{$wNum}",
+                    'label' => $dateLabel,
+                    'short_label' => "W{$wNum}",
                     'start' => $wStart->copy(),
                     'end' => $wEnd->copy(),
-                    'display' => "W{$wNum} (" . $wStart->format('d M') . " - " . $wEnd->format('d M') . ")",
+                    'display' => "W{$wNum} ({$dateLabel})",
                     'is_selected' => ($i === 0),
                 ];
             }
@@ -305,7 +315,7 @@ class MtcDashboardController extends Controller
                 'start' => $start,
                 'end' => $end,
                 'weeks' => $weeks,
-                'operating_hours' => 168, // 7 days * 24 hrs
+                'operating_hours' => 624, // 624 hours company standard reference
                 'label' => "Minggu ke-{$week} ({$start->format('d M Y')} - {$end->format('d M Y')})",
             ];
         }
@@ -315,45 +325,61 @@ class MtcDashboardController extends Controller
             $end = (clone $start)->endOfMonth()->endOfDay();
             $daysInMonth = $start->daysInMonth;
 
-            // Divide month into standard operational weeks (W1: 1-7, W2: 8-14, W3: 15-21, W4: 22-28, W5: 29-end)
+            // Divide month into standard operational weeks with date range labels
+            $w1Start = Carbon::createFromDate($year, $month, 1)->startOfDay();
+            $w1End = Carbon::createFromDate($year, $month, 7)->endOfDay();
+            $w2Start = Carbon::createFromDate($year, $month, 8)->startOfDay();
+            $w2End = Carbon::createFromDate($year, $month, 14)->endOfDay();
+            $w3Start = Carbon::createFromDate($year, $month, 15)->startOfDay();
+            $w3End = Carbon::createFromDate($year, $month, 21)->endOfDay();
+            $w4Start = Carbon::createFromDate($year, $month, 22)->startOfDay();
+            $w4End = Carbon::createFromDate($year, $month, 28)->endOfDay();
+
             $weeks = [
                 [
                     'key' => 'W1',
-                    'label' => 'W1',
-                    'start' => Carbon::createFromDate($year, $month, 1)->startOfDay(),
-                    'end' => Carbon::createFromDate($year, $month, 7)->endOfDay(),
-                    'display' => "W1 (01 - 07 " . $start->format('M') . ")",
+                    'label' => $w1Start->format('d M') . ' - ' . $w1End->format('d M Y'),
+                    'short_label' => 'W1',
+                    'start' => $w1Start,
+                    'end' => $w1End,
+                    'display' => "W1 (" . $w1Start->format('d M') . " - " . $w1End->format('d M Y') . ")",
                 ],
                 [
                     'key' => 'W2',
-                    'label' => 'W2',
-                    'start' => Carbon::createFromDate($year, $month, 8)->startOfDay(),
-                    'end' => Carbon::createFromDate($year, $month, 14)->endOfDay(),
-                    'display' => "W2 (08 - 14 " . $start->format('M') . ")",
+                    'label' => $w2Start->format('d M') . ' - ' . $w2End->format('d M Y'),
+                    'short_label' => 'W2',
+                    'start' => $w2Start,
+                    'end' => $w2End,
+                    'display' => "W2 (" . $w2Start->format('d M') . " - " . $w2End->format('d M Y') . ")",
                 ],
                 [
                     'key' => 'W3',
-                    'label' => 'W3',
-                    'start' => Carbon::createFromDate($year, $month, 15)->startOfDay(),
-                    'end' => Carbon::createFromDate($year, $month, 21)->endOfDay(),
-                    'display' => "W3 (15 - 21 " . $start->format('M') . ")",
+                    'label' => $w3Start->format('d M') . ' - ' . $w3End->format('d M Y'),
+                    'short_label' => 'W3',
+                    'start' => $w3Start,
+                    'end' => $w3End,
+                    'display' => "W3 (" . $w3Start->format('d M') . " - " . $w3End->format('d M Y') . ")",
                 ],
                 [
                     'key' => 'W4',
-                    'label' => 'W4',
-                    'start' => Carbon::createFromDate($year, $month, 22)->startOfDay(),
-                    'end' => Carbon::createFromDate($year, $month, 28)->endOfDay(),
-                    'display' => "W4 (22 - 28 " . $start->format('M') . ")",
+                    'label' => $w4Start->format('d M') . ' - ' . $w4End->format('d M Y'),
+                    'short_label' => 'W4',
+                    'start' => $w4Start,
+                    'end' => $w4End,
+                    'display' => "W4 (" . $w4Start->format('d M') . " - " . $w4End->format('d M Y') . ")",
                 ],
             ];
 
             if ($daysInMonth > 28) {
+                $w5Start = Carbon::createFromDate($year, $month, 29)->startOfDay();
+                $w5End = Carbon::createFromDate($year, $month, $daysInMonth)->endOfDay();
                 $weeks[] = [
                     'key' => 'W5',
-                    'label' => 'W5',
-                    'start' => Carbon::createFromDate($year, $month, 29)->startOfDay(),
-                    'end' => Carbon::createFromDate($year, $month, $daysInMonth)->endOfDay(),
-                    'display' => "W5 (29 - {$daysInMonth} " . $start->format('M') . ")",
+                    'label' => $w5Start->format('d M') . ' - ' . $w5End->format('d M Y'),
+                    'short_label' => 'W5',
+                    'start' => $w5Start,
+                    'end' => $w5End,
+                    'display' => "W5 (" . $w5Start->format('d M') . " - " . $w5End->format('d M Y') . ")",
                 ];
             }
 
@@ -370,7 +396,7 @@ class MtcDashboardController extends Controller
         $start = !empty($startDateStr) ? Carbon::parse($startDateStr)->startOfDay() : Carbon::today()->subDays(30)->startOfDay();
         $end = !empty($endDateStr) ? Carbon::parse($endDateStr)->endOfDay() : Carbon::today()->endOfDay();
 
-        // Slice custom date range into weekly chunks (up to 8 weeks)
+        // Slice custom date range into weekly chunks (up to 12 weeks)
         $weeks = [];
         $tempStart = $start->copy();
         $idx = 1;
@@ -379,33 +405,33 @@ class MtcDashboardController extends Controller
             if ($tempEnd->gt($end)) {
                 $tempEnd = $end->copy();
             }
+            $dateLabel = $tempStart->format('d M') . " - " . $tempEnd->format('d M Y');
             $weeks[] = [
                 'key' => "W{$idx}",
-                'label' => "W{$idx}",
+                'label' => $dateLabel,
+                'short_label' => "W{$idx}",
                 'start' => $tempStart->copy(),
                 'end' => $tempEnd->copy(),
-                'display' => "W{$idx} (" . $tempStart->format('d/m') . " - " . $tempEnd->format('d/m') . ")",
+                'display' => "W{$idx} ({$dateLabel})",
             ];
             $tempStart = (clone $tempEnd)->addSecond()->startOfDay();
             $idx++;
             if ($idx > 12) break; // cap at 12 slices
         }
 
-        $diffDays = max(1, $start->diffInDays($end) + 1);
-        $operatingHours = $diffDays * 24;
-
         return [
             'start' => $start,
             'end' => $end,
             'weeks' => $weeks,
-            'operating_hours' => $operatingHours,
+            'operating_hours' => 624,
             'label' => "{$start->format('d M Y')} - {$end->format('d M Y')}",
         ];
     }
 
     /**
      * Compute Schedule Maintenance Completion data
-     * Jenis: MHE (Diesel Engine + Electric Engine), Motor Pompa, Sipil, Utility
+     * Xaxis: per Unit (MHE, Motor Pompa, Utility, Sipil)
+     * Series: per Week (W1, W2, W3... sesuai filter)
      */
     private function getScheduleMaintenanceData($startDate, $endDate, array $weeksList, int $year, int $month): array
     {
@@ -425,20 +451,9 @@ class MtcDashboardController extends Controller
             ->select('id', 'jenis_mtc', 'paket', 'tanggal', 'status')
             ->get();
 
-        $actualCountByJenis = [];
-        foreach ($actualInspections as $act) {
-            $cat = $this->normalizeJenisCategory($act->jenis_mtc);
-            $actualCountByJenis[$cat] = ($actualCountByJenis[$cat] ?? 0) + 1;
-        }
-
-        $categories = ['MHE', 'Motor Pompa', 'Sipil', 'Utility'];
-
-        // Aggregate per week for the chart
-        $chartCategories = [];
-        $seriesMhe = [];
-        $seriesMotorPompa = [];
-        $seriesSipil = [];
-        $seriesUtility = [];
+        $units = ['MHE', 'Motor Pompa', 'Utility', 'Sipil'];
+        $series = [];
+        $weekColors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'];
 
         $totalPlannedOverall = 0;
         $totalCompletedOverall = 0;
@@ -446,7 +461,7 @@ class MtcDashboardController extends Controller
         foreach ($weeksList as $idx => $wk) {
             $wStart = $wk['start']->format('Y-m-d');
             $wEnd = $wk['end']->format('Y-m-d');
-            $chartCategories[] = $wk['label'];
+            $wName = (!empty($wk['short_label']) ? $wk['short_label'] . ' (' . $wk['label'] . ')' : $wk['label']);
 
             // Filter agenda for this week
             $wAgendas = $agendaRecords->filter(function ($item) use ($wStart, $wEnd) {
@@ -458,12 +473,12 @@ class MtcDashboardController extends Controller
                 return $item->tanggal >= $wStart && $item->tanggal <= $wEnd;
             });
 
-            // Category counts
+            // Category counts per Unit
             $counts = [
                 'MHE' => 0,
                 'Motor Pompa' => 0,
-                'Sipil' => 0,
                 'Utility' => 0,
+                'Sipil' => 0,
             ];
 
             foreach ($wAgendas as $ag) {
@@ -476,13 +491,16 @@ class MtcDashboardController extends Controller
             // Real count or realistic benchmark distribution when data is in progress
             $mheVal = $counts['MHE'] > 0 ? $counts['MHE'] : [22, 25, 24, 26, 23][$idx % 5];
             $pumpVal = $counts['Motor Pompa'] > 0 ? $counts['Motor Pompa'] : [45, 42, 48, 44, 46][$idx % 5];
-            $sipilVal = $counts['Sipil'] > 0 ? $counts['Sipil'] : [12, 14, 11, 15, 12][$idx % 5];
             $utilityVal = $counts['Utility'] > 0 ? $counts['Utility'] : [18, 16, 19, 17, 18][$idx % 5];
+            $sipilVal = $counts['Sipil'] > 0 ? $counts['Sipil'] : [12, 14, 11, 15, 12][$idx % 5];
 
-            $seriesMhe[] = $mheVal;
-            $seriesMotorPompa[] = $pumpVal;
-            $seriesSipil[] = $sipilVal;
-            $seriesUtility[] = $utilityVal;
+            $series[] = [
+                'name' => $wName,
+                'short_name' => $wk['short_label'] ?? "W" . ($idx + 1),
+                'date_range' => $wk['label'],
+                'data' => [$mheVal, $pumpVal, $utilityVal, $sipilVal],
+                'color' => $weekColors[$idx % count($weekColors)],
+            ];
 
             $weekPlanned = $mheVal + $pumpVal + $sipilVal + $utilityVal;
             $totalPlannedOverall += $weekPlanned;
@@ -507,29 +525,8 @@ class MtcDashboardController extends Controller
             'kpi_total_planned' => $totalPlannedOverall,
             'kpi_total_completed' => $totalCompletedOverall,
             'chart' => [
-                'categories' => $chartCategories,
-                'series' => [
-                    [
-                        'name' => 'MHE (Electric & Diesel)',
-                        'data' => $seriesMhe,
-                        'color' => '#38bdf8', // Electric Cyan Blue
-                    ],
-                    [
-                        'name' => 'Motor Pompa',
-                        'data' => $seriesMotorPompa,
-                        'color' => '#10b981', // Vibrant Emerald Green
-                    ],
-                    [
-                        'name' => 'Utility Plant',
-                        'data' => $seriesUtility,
-                        'color' => '#f59e0b', // Vibrant Amber Yellow/Orange
-                    ],
-                    [
-                        'name' => 'Sipil & Building',
-                        'data' => $seriesSipil,
-                        'color' => '#a855f7', // Vibrant Amethyst Purple
-                    ],
-                ],
+                'categories' => $units, // ['MHE', 'Motor Pompa', 'Utility', 'Sipil']
+                'series' => $series,
             ],
         ];
     }
@@ -612,7 +609,8 @@ class MtcDashboardController extends Controller
 
     /**
      * Compute Downtime data: jam mulai sampai jam selesai dari paket korektif
-     * Target < 2% dari operating hours
+     * Rumus Downtime persentase: Total jam korektif / 624 * 100
+     * Target < 2% dari 624 jam
      */
     private function getDowntimeData(array $breakdownData, array $weeksList, float $operatingHours, string $filterType): array
     {
@@ -624,6 +622,7 @@ class MtcDashboardController extends Controller
         $selectedWeekPct = 0;
 
         $targetPct = 2.0;
+        $baseHours = 624.0; // Rumus resmi perusahaan: Total jam korektif / 624 * 100
 
         foreach ($weeksList as $idx => $wk) {
             $chartCategories[] = $wk['label'];
@@ -649,9 +648,8 @@ class MtcDashboardController extends Controller
                 $weekHours = round($wRecords->count() * 1.5, 1);
             }
 
-            // Standard weekly operating hours: 168 hours (7d * 24h)
-            $weeklyOperatingHours = 168;
-            $pct = round(($weekHours / $weeklyOperatingHours) * 100, 2);
+            // Rumus Downtime persentase: Total jam korektif / 624 * 100
+            $pct = round(($weekHours / $baseHours) * 100, 2);
 
             $seriesDowntimeHours[] = round($weekHours, 1);
             $seriesDowntimePct[] = $pct;
@@ -663,18 +661,17 @@ class MtcDashboardController extends Controller
             }
         }
 
-        $overallPct = round(($totalDowntimeHours / max(1, $operatingHours)) * 100, 2);
-        $avgPct = count($seriesDowntimePct) > 0 ? round(array_sum($seriesDowntimePct) / count($seriesDowntimePct), 2) : 0.0;
-
+        // Overall Downtime persentase: Total jam korektif / 624 * 100
         $kpiHours = ($filterType === 'weekly') ? $selectedWeekHours : round($totalDowntimeHours, 1);
-        $kpiPct   = ($filterType === 'weekly') ? $selectedWeekPct : $overallPct;
+        $kpiPct   = round(($kpiHours / $baseHours) * 100, 2);
+        $overallPct = round(($totalDowntimeHours / $baseHours) * 100, 2);
 
         return [
             'kpi_downtime_hours' => $kpiHours,
             'kpi_downtime_percentage' => $kpiPct,
             'total_downtime_hours' => round($totalDowntimeHours, 1),
-            'total_downtime_percentage' => $avgPct,
-            'avg_percentage' => $avgPct,
+            'total_downtime_percentage' => $overallPct,
+            'avg_percentage' => $overallPct,
             'chart' => [
                 'categories' => $chartCategories,
                 'series' => [
@@ -686,7 +683,7 @@ class MtcDashboardController extends Controller
                 ],
                 'hours_series' => $seriesDowntimeHours,
                 'target' => $targetPct,
-                'average' => $avgPct,
+                'average' => $overallPct,
             ],
         ];
     }
@@ -1152,16 +1149,17 @@ class MtcDashboardController extends Controller
     }
 
     /**
-     * MTBF vs MTTR Correlation Line Chart (Trend per week in hours)
-     * Comparing 2 metrics: MTBF (Jam) vs MTTR (Jam)
+     * MTBF vs MTTR & Downtime Correlation Line Chart (Trend per week)
+     * Comparing: MTBF (Jam), MTTR (Jam), and Downtime (%) [Jam Korektif / 624 * 100]
      */
     private function getMttrMtbfCorrelation(array $weeksList, array $breakdownData, array $downtimeData): array
     {
         $categories = [];
         $seriesMtbf = [];
         $seriesMttr = [];
+        $seriesDowntimePct = [];
 
-        $baseHours = 624;
+        $baseHours = 624.0; // Rumus standar: Jam korektif / 624 * 100
 
         foreach ($weeksList as $idx => $wk) {
             $categories[] = $wk['label'];
@@ -1192,11 +1190,15 @@ class MtcDashboardController extends Controller
                 $weekMtbf = round($baseHours / $breakdownCount, 0);
             } else {
                 $weekMttr = 0.0;
-                $weekMtbf = $baseHours;
+                $weekMtbf = (int) $baseHours;
             }
+
+            // Rumus Downtime persentase: Total jam korektif / 624 * 100
+            $weekDowntimePct = round(($downtimeHours / $baseHours) * 100, 2);
 
             $seriesMtbf[] = (int) $weekMtbf;
             $seriesMttr[] = (float) $weekMttr;
+            $seriesDowntimePct[] = (float) $weekDowntimePct;
         }
 
         return [
@@ -1210,10 +1212,15 @@ class MtcDashboardController extends Controller
                     'name' => 'MTTR (Jam)',
                     'data' => $seriesMttr,
                 ],
+                [
+                    'name' => 'Downtime (%)',
+                    'data' => $seriesDowntimePct,
+                ],
             ],
             'benchmark' => [
                 'target_mttr' => 3.0,
                 'target_mtbf' => 250,
+                'target_downtime' => 2.0,
             ],
         ];
     }

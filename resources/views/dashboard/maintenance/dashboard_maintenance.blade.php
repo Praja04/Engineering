@@ -558,12 +558,20 @@
                                     id="btnPrevWeek" title="Minggu Sebelumnya">
                                     <i class="mdi mdi-chevron-left"></i>
                                 </button>
-                                <select id="selectWeek" class="filter-ctrl font-mono" style="min-width: 120px;">
-                                    @for ($w = 1; $w <= 52; $w++)
-                                        <option value="{{ $w }}" {{ $w == $currentWeek ? 'selected' : '' }}>
-                                            Week {{ $w }} (2026)
-                                        </option>
-                                    @endfor
+                                <select id="selectWeek" class="filter-ctrl font-mono" style="min-width: 220px;">
+                                    @if (!empty($weeksOptions))
+                                        @foreach ($weeksOptions as $wNum => $wText)
+                                            <option value="{{ $wNum }}" {{ $wNum == $currentWeek ? 'selected' : '' }}>
+                                                {{ $wText }}
+                                            </option>
+                                        @endforeach
+                                    @else
+                                        @for ($w = 1; $w <= 52; $w++)
+                                            <option value="{{ $w }}" {{ $w == $currentWeek ? 'selected' : '' }}>
+                                                Week {{ $w }} (2026)
+                                            </option>
+                                        @endfor
+                                    @endif
                                 </select>
                                 <button type="button"
                                     class="btn btn-sm btn-dark border border-secondary border-opacity-25 px-1 py-1"
@@ -721,7 +729,7 @@
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-2"
                                     style="font-size: 10px;">
-                                    <span class="text-muted">Total Jam Lost:</span>
+                                    <span class="text-muted" title="Rumus: Total Jam Korektif / 624 × 100%">Jam Lost / 624:</span>
                                     <span class="text-light font-mono" id="kpiDowntimeHours">-- Jam</span>
                                 </div>
                             </div>
@@ -1034,15 +1042,15 @@
                                 <div>
                                     <h4 class="mtc-card-title">
                                         <i class="mdi mdi-chart-line text-info"></i>
-                                        Korelasi MTBF vs MTTR
+                                        Korelasi MTBF, MTTR & Downtime
                                     </h4>
                                     <div class="mtc-card-subtitle">
-                                        Tren perbandingan MTBF vs MTTR dalam satuan Jam (Hours)
+                                        Keandalan (MTBF Jam), Pemulihan (MTTR Jam) & Downtime % (Jam/624)
                                     </div>
                                 </div>
                                 <span class="badge bg-dark text-info border border-info border-opacity-25"
                                     style="font-size: 10px;">
-                                    Dual Axis (Jam)
+                                    Jam & % (Jam/624)
                                 </span>
                             </div>
                             <div id="chartMttrMtbfCorrelation" style="min-height: 280px;"></div>
@@ -1536,12 +1544,13 @@
 
                 // Chart 1: Schedule Maintenance
                 function renderScheduleMaintenanceChart(chartData) {
+                    const seriesLen = (chartData.series && chartData.series.length) ? chartData.series.length : 1;
                     const options = {
                         series: chartData.series,
                         chart: {
                             type: 'bar',
                             height: 290,
-                            stacked: true,
+                            stacked: false,
                             toolbar: {
                                 show: false
                             },
@@ -1555,30 +1564,39 @@
                             bar: {
                                 horizontal: false,
                                 borderRadius: 3,
-                                columnWidth: '40%',
+                                columnWidth: seriesLen > 4 ? '70%' : (seriesLen > 2 ? '55%' : '40%'),
                                 dataLabels: {
-                                    total: {
-                                        enabled: true,
-                                        style: {
-                                            color: '#f8fafc',
-                                            fontSize: '10px',
-                                            fontWeight: 700
-                                        }
-                                    }
+                                    position: 'top'
                                 }
                             }
                         },
-                        colors: ['#38bdf8', '#10b981', '#f59e0b', '#a855f7'],
+                        colors: ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'],
                         dataLabels: {
-                            enabled: false
+                            enabled: true,
+                            offsetY: -16,
+                            style: {
+                                fontSize: '9px',
+                                fontFamily: 'JetBrains Mono',
+                                fontWeight: 700,
+                                colors: ['#cbd5e1']
+                            },
+                            background: {
+                                enabled: true,
+                                foreColor: '#080c16',
+                                padding: 2,
+                                borderRadius: 2,
+                                borderWidth: 0
+                            },
+                            formatter: val => val ? val : ''
                         },
                         xaxis: {
-                            categories: chartData.categories,
+                            categories: chartData.categories, // ['MHE', 'Motor Pompa', 'Utility', 'Sipil']
                             labels: {
                                 style: {
                                     colors: '#94a3b8',
-                                    fontSize: '10.5px',
-                                    fontFamily: 'JetBrains Mono'
+                                    fontSize: '11px',
+                                    fontFamily: 'JetBrains Mono',
+                                    fontWeight: 600
                                 }
                             },
                             axisBorder: {
@@ -1605,8 +1623,8 @@
                             strokeDashArray: 3
                         },
                         legend: {
-                            position: 'top',
-                            horizontalAlign: 'right',
+                            position: 'bottom',
+                            horizontalAlign: 'center',
                             labels: {
                                 colors: '#cbd5e1'
                             },
@@ -1620,7 +1638,7 @@
                             shared: true,
                             intersect: false,
                             y: {
-                                formatter: val => val + ' Unit Mesin'
+                                formatter: val => (val || 0) + ' Unit Mesin'
                             }
                         }
                     };
@@ -1865,7 +1883,7 @@
                         tooltip: {
                             theme: 'dark',
                             y: {
-                                formatter: val => val + '% dari Waktu Operasi'
+                                formatter: val => val + '% (Jam Korektif / 624 × 100)'
                             }
                         }
                     };
@@ -1965,29 +1983,32 @@
                                 enabled: true
                             }
                         },
-                        colors: ['#38bdf8', '#f59e0b'],
+                        colors: ['#38bdf8', '#f59e0b', '#10b981'],
                         stroke: {
                             curve: 'smooth',
-                            width: [3, 3]
+                            width: [3, 3, 2.5],
+                            dashArray: [0, 0, 4]
                         },
                         markers: {
-                            size: 5,
+                            size: [4, 4, 4],
                             strokeWidth: 2,
                             strokeColors: '#080c16',
                             hover: {
-                                size: 7
+                                size: 6
                             }
                         },
                         dataLabels: {
                             enabled: true,
                             formatter: function(val, opt) {
-                                return opt.seriesIndex === 0 ? val + 'h' : Number(val).toFixed(1) + 'h';
+                                if (opt.seriesIndex === 0) return Math.round(val) + 'h';
+                                if (opt.seriesIndex === 1) return Number(val).toFixed(1) + 'h';
+                                return Number(val).toFixed(1) + '%';
                             },
                             style: {
-                                fontSize: '9.5px',
+                                fontSize: '9px',
                                 fontFamily: 'JetBrains Mono',
                                 fontWeight: 700,
-                                colors: ['#38bdf8', '#f59e0b']
+                                colors: ['#38bdf8', '#f59e0b', '#10b981']
                             },
                             background: {
                                 enabled: true,
@@ -2031,7 +2052,7 @@
                             {
                                 opposite: true,
                                 title: {
-                                    text: 'MTTR (Jam)',
+                                    text: 'MTTR (Jam) & Downtime (%)',
                                     style: {
                                         color: '#f59e0b',
                                         fontSize: '10px',
@@ -2039,7 +2060,7 @@
                                     }
                                 },
                                 labels: {
-                                    formatter: val => Number(val).toFixed(1) + 'h',
+                                    formatter: val => Number(val).toFixed(1),
                                     style: {
                                         colors: '#f59e0b',
                                         fontSize: '10px',
@@ -2071,8 +2092,9 @@
                                 formatter: function(val, {
                                     seriesIndex
                                 }) {
-                                    return seriesIndex === 0 ? val + ' Jam (Reliability)' : val +
-                                        ' Jam (Recovery)';
+                                    if (seriesIndex === 0) return val + ' Jam (MTBF Keandalan)';
+                                    if (seriesIndex === 1) return val + ' Jam (MTTR Pemulihan)';
+                                    return val + '% (Downtime: Jam/624*100)';
                                 }
                             }
                         }
