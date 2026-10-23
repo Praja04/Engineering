@@ -1004,7 +1004,8 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">BIAYA PER KUBIK</div>
-                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostM3SubLabel">BULAN: <span class="text-cyan fw-bold" id="topCostM3Month">-</span></div>
+                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostM3SubLabel">BULAN:
+                                        <span class="text-cyan fw-bold" id="topCostM3Month">-</span></div>
                                 </div>
                             </div>
                             <div class="my-auto">
@@ -1026,7 +1027,8 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">TOTAL COST CHEMICAL</div>
-                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostTotalSubLabel">BULAN: <span class="text-cyan fw-bold" id="topCostTotalMonth">-</span></div>
+                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostTotalSubLabel">
+                                        BULAN: <span class="text-cyan fw-bold" id="topCostTotalMonth">-</span></div>
                                 </div>
                             </div>
                             <div class="my-auto">
@@ -1294,7 +1296,8 @@
                                 <h5 class="wco-card-title">
                                     <i class="mdi mdi-flask text-warning"></i> CHEMICAL USAGE
                                 </h5>
-                                <span class="badge bg-warning-subtle text-warning" style="font-size: 8.5px;" id="badgeChemConsPeriod">THIS
+                                <span class="badge bg-warning-subtle text-warning" style="font-size: 8.5px;"
+                                    id="badgeChemConsPeriod">THIS
                                     MONTH</span>
                             </div>
                             <div class="wco-card-body p-0">
@@ -1303,8 +1306,10 @@
                                         <thead>
                                             <tr>
                                                 <th style="padding: 4px 4px;">Chemical</th>
-                                                <th class="text-end" style="padding: 4px 4px;" title="Rata-rata Pemakaian Harian (kg/hari)">Qty</th>
-                                                <th class="text-end" style="padding: 4px 4px;" title="Standar Kuota Harian (kg/hari)">Std</th>
+                                                <th class="text-end" style="padding: 4px 4px;"
+                                                    title="Rata-rata Pemakaian Harian (kg/hari)">Qty</th>
+                                                <th class="text-end" style="padding: 4px 4px;"
+                                                    title="Standar Kuota Harian (kg/hari)">Std</th>
                                                 <th class="text-end" style="padding: 4px 4px;">Cost/m³</th>
                                                 <th class="text-center" style="padding: 4px 4px;">Status</th>
                                             </tr>
@@ -1578,6 +1583,17 @@
             }
         </script>
 
+        <!-- PPTX Presentation Dependencies -->
+        <script src="{{ asset('material/assets/libs/pptxgenjs/jszip.min.js') }}"></script>
+        <script src="{{ asset('material/assets/libs/pptxgenjs/pptxgen.bundle.js') }}"></script>
+        <script>
+            if (typeof PptxGenJS === 'undefined') {
+                document.write('<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"><\/script>');
+            }
+        </script>
+        <script src="{{ asset('material/assets/js/pptx-common-theme.js') }}"></script>
+        <script src="{{ asset('material/assets/js/dashboard-wco-pptx.js') }}"></script>
+
         <script>
             // Fullscreen toggle logic
             document.addEventListener('DOMContentLoaded', function() {
@@ -1823,7 +1839,8 @@
                 const badgeConsEl = document.getElementById('badgeChemConsPeriod');
                 if (badgeConsEl) {
                     badgeConsEl.textContent = monthLabel || 'THIS MONTH';
-                    badgeConsEl.className = hasData ? 'badge bg-warning-subtle text-warning' : 'badge bg-secondary-subtle text-muted';
+                    badgeConsEl.className = hasData ? 'badge bg-warning-subtle text-warning' :
+                        'badge bg-secondary-subtle text-muted';
                 }
 
                 if (data.card1_biaya_per_m3) {
@@ -1958,7 +1975,8 @@
                 if (data.card9_chem_consumption && Array.isArray(data.card9_chem_consumption)) {
                     let tbodyHtml = '';
                     if (data.card9_chem_consumption.length === 0) {
-                        tbodyHtml = `<tr><td colspan="5" class="text-center text-muted py-3" style="font-size: 9px;"><i class="mdi mdi-information-outline me-1"></i>Belum ada data pemakaian chemical untuk periode ${monthLabel}</td></tr>`;
+                        tbodyHtml =
+                            `<tr><td colspan="5" class="text-center text-muted py-3" style="font-size: 9px;"><i class="mdi mdi-information-outline me-1"></i>Belum ada data pemakaian chemical untuk periode ${monthLabel}</td></tr>`;
                     } else {
                         data.card9_chem_consumption.forEach(item => {
                             const isOver = item.is_over !== undefined ?
@@ -1967,10 +1985,12 @@
                             const qtyColor = isOver ? 'text-danger fw-bold' : 'text-success fw-bold';
                             const badgeClass = isOver ? 'badge-danger' : 'badge-ok';
                             const statusText = item.status || (isOver ? 'OVER' : 'AMAN');
-                            const stdText = (item.standard !== undefined && item.standard !== null && Number(item.standard) > 0) ?
+                            const stdText = (item.standard !== undefined && item.standard !== null && Number(item
+                                    .standard) > 0) ?
                                 `${Number(item.standard).toLocaleString('id-ID')} kg` :
                                 (item.standard_text || '-');
-                            const costM3Text = (item.cost_m3 !== undefined && item.cost_m3 !== null && Number(item.cost_m3) > 0) ?
+                            const costM3Text = (item.cost_m3 !== undefined && item.cost_m3 !== null && Number(item
+                                    .cost_m3) > 0) ?
                                 `Rp ${Number(item.cost_m3).toLocaleString('id-ID')}` :
                                 '-';
 
@@ -2617,7 +2637,8 @@
                         const sviOk = s.svi_ok !== undefined ? s.svi_ok : (!isNaN(svi) ? (svi >= 90 && svi <= 150) :
                             true);
                         // 4. DO: 2 - 4 ppm (jika < 2 merah, 2-4 hijau, > 4 merah)
-                        const doOk = s.do_ok !== undefined ? s.do_ok : (!isNaN(doVal) ? (doVal >= 2.0 && doVal <= 4.0) : true);
+                        const doOk = s.do_ok !== undefined ? s.do_ok : (!isNaN(doVal) ? (doVal >= 2.0 && doVal <=
+                            4.0) : true);
                         // 5. pH: 7 - 9
                         const phOk = s.ph_ok !== undefined ? s.ph_ok : (!isNaN(ph) ? (ph >= 7.0 && ph <= 9.0) :
                             true);
@@ -2631,7 +2652,8 @@
                         const sviColor = sviOk ? 'text-warning' : 'text-danger fw-bold';
                         let doColor = 'text-muted';
                         if (!isNaN(doVal)) {
-                            doColor = (doVal >= 2.0 && doVal <= 4.0) ? 'text-success fw-bold' : 'text-danger fw-bold';
+                            doColor = (doVal >= 2.0 && doVal <= 4.0) ? 'text-success fw-bold' :
+                                'text-danger fw-bold';
                         }
                         const phColor = phOk ? 'text-muted' : 'text-danger fw-bold';
 

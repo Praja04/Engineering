@@ -774,7 +774,7 @@
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
                                                 <span class="stat-tile-label text-warning"
-                                                    style="font-size: 8px;">AVG. RH 1 (rh1)</span>
+                                                    style="font-size: 8px;">AVG. AQ55 (rh1)</span>
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center text-warning" id="valCompRh1"
                                                 style="font-size: 13px;">0.00</div>
@@ -787,7 +787,7 @@
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
                                                 <span class="stat-tile-label text-cyan" style="font-size: 8px;">AVG.
-                                                    GA57
+                                                    GA37
                                                     (rh2)</span>
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center" id="valCompGa57"
@@ -1559,6 +1559,17 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
+        <!-- PPTX Presentation Dependencies -->
+        <script src="{{ asset('material/assets/libs/pptxgenjs/jszip.min.js') }}"></script>
+        <script src="{{ asset('material/assets/libs/pptxgenjs/pptxgen.bundle.js') }}"></script>
+        <script>
+            if (typeof PptxGenJS === 'undefined') {
+                document.write('<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"><\/script>');
+            }
+        </script>
+        <script src="{{ asset('material/assets/js/pptx-common-theme.js') }}"></script>
+        <script src="{{ asset('material/assets/js/dashboard-utility-pptx.js') }}"></script>
+
         <!-- Dashboard Core Script (jQuery) -->
         <script>
             $(document).ready(function() {
@@ -2165,11 +2176,11 @@
                     if (isHourly) {
                         compCategories = compData.hourly.map(h => h.jam);
                         compSeries = [{
-                                name: 'RH 1 (rh1)',
+                                name: 'AQ55 (rh1)',
                                 data: compData.hourly.map(h => h.rh1)
                             },
                             {
-                                name: 'GA57 (rh2)',
+                                name: 'GA37 (rh2)',
                                 data: compData.hourly.map(h => h.ga57)
                             },
                             {
@@ -2184,11 +2195,11 @@
                     } else {
                         compCategories = compData.daily_trends.map(t => t.tanggal);
                         compSeries = [{
-                                name: 'RH 1 Avg (rh1)',
+                                name: 'AQ55 Avg (rh1)',
                                 data: compData.daily_trends.map(t => t.rh1_avg)
                             },
                             {
-                                name: 'GA57 Avg (rh2)',
+                                name: 'GA37 Avg (rh2)',
                                 data: compData.daily_trends.map(t => t.ga57_avg)
                             },
                             {
