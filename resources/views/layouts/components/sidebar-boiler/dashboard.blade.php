@@ -57,7 +57,17 @@
                         data-key="t-analytics">
                         <i class="mdi mdi-chart-bar me-2"></i> Engineering Utility Dashboard </a>
                 </li>
+                @if ($jabatan === 'admin')
+                    <li class="nav-item">
+                        <a href="javascript:void(0);" class="nav-link text-warning fw-semibold" data-bs-toggle="modal"
+                            data-bs-target="#modalFilterPptxWeekly" data-key="t-pptx-weekly">
+                            <i class="mdi mdi-file-powerpoint-box text-warning me-2 fs-15"></i> PPTX Weekly Utility
+                        </a>
+                    </li>
+                @endif
             </ul>
         </div>
     </li>
+
+    @include('layouts.components.modal-pptx-weekly')
 @endif

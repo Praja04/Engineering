@@ -18,3 +18,7 @@ Route::get('dashboard/wwtp/wco', [DashboardUtilityController::class, 'wwtp_wco']
 Route::get('dashboard/wwtp/wco-data', [WWTPController::class, 'wwtp_wco_data'])->name('wwtp.dashboard_wco_data');
 Route::get('dashboard/engineering-utility', [DashboardUtilityMachineController::class, 'machine'])->name('utility.dashboard_machine');
 Route::get('utility/dashboard/machine-data', [DashboardUtilityMachineController::class, 'machine_data'])->name('utility.dashboard_machine_data');
+Route::match(['get', 'post'], 'dashboard/engineering-utility/export-pptx', [DashboardUtilityMachineController::class, 'export_pptx'])->name('utility.dashboard_machine_export_pptx');
+Route::get('dashboard/utility/pptx-weekly', [DashboardUtilityMachineController::class, 'export_pptx'])->name('utility.pptx_weekly');
+Route::match(['get', 'post'], 'dashboard/wwtp/wco-export-pptx', [WWTPController::class, 'export_pptx'])->name('wwtp.dashboard_wco_export_pptx');
+
