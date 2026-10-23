@@ -456,6 +456,40 @@
                 border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
                 font-weight: 700 !important;
             }
+
+            /* ── Asynchronous Skeleton & Loader ── */
+            .kpi-skeleton-pulse {
+                display: inline-block;
+                opacity: 0.45;
+                animation: kpiPulse 1.2s infinite ease-in-out;
+            }
+
+            @keyframes kpiPulse {
+                0% { opacity: 0.3; }
+                50% { opacity: 0.7; }
+                100% { opacity: 0.3; }
+            }
+
+            .chart-loading-overlay {
+                position: absolute;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.78);
+                backdrop-filter: blur(3px);
+                -webkit-backdrop-filter: blur(3px);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 15;
+                border-radius: 10px;
+                transition: opacity 0.25s ease, visibility 0.25s ease;
+            }
+
+            .chart-loading-overlay.hidden {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
         </style>
     </head>
 
@@ -1034,7 +1068,45 @@
                 {{-- ═══════════════════════════════════════════════════════════════
                  7. LIVE UNIT OFF DETAILED TABLE SECTION
             ═══════════════════════════════════════════════════════════════ --}}
-                <div class="row g-2" id="tableOfflineUnitsSection">
+                <div class="row g-2 mb-3" id="tableOfflineUnitsSection">
+                    <div class="col-12">
+                        <div class="mtc-chart-card">
+                            <div class="mtc-card-header">
+                                <div>
+                                    <h4 class="mtc-card-title">
+                                        <i class="mdi mdi-alert-octagon-outline text-danger"></i>
+                                        Unit Mesin Sedang Offline / Dalam Perbaikan
+                                    </h4>
+                                    <div class="mtc-card-subtitle">
+                                        Daftar unit breakdown aktif, durasi downtime, dan kendala perbaikan (Live Telemetri)
+                                    </div>
+                                </div>
+                                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25 font-mono px-2 py-1"
+                                    style="font-size: 10px;">
+                                    Live Telemetri
+                                </span>
+                            </div>
+                            <div class="table-scrollable">
+                                <table class="table mtc-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Unit ID</th>
+                                            <th>Nama Mesin / Aset</th>
+                                            <th>Kategori</th>
+                                            <th>Lokasi Area</th>
+                                            <th>Off Sejak</th>
+                                            <th>Downtime</th>
+                                            <th>Penyebab Kendala</th>
+                                            <th class="text-center">Status Unit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyUnitOffDetails">
+                                        {{-- Injected dynamically --}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -1113,7 +1185,7 @@
                 $('#btnRefresh').on('click', function() {
                     const $icon = $('#refreshIcon');
                     $icon.addClass('mdi-spin');
-                    fetchDashboardData().always(() => {
+                    fetchDashboardData().finally(() => {
                         setTimeout(() => $icon.removeClass('mdi-spin'), 600);
                     });
                 });
@@ -1142,9 +1214,263 @@
                 });
 
                 // ─────────────────────────────────────────────────────────────
-                // FETCH DATA VIA AJAX
+                // ASYNC LOADING HELPERS & SKELETONS
                 // ─────────────────────────────────────────────────────────────
+                function showChartLoading(selector, label) {
+                    const $card = $(selector).closest('.mtc-chart-card');
+                    let $overlay = $card.find('.chart-loading-overlay');
+                    if (!$overlay.length) {
+                        $overlay = $(`
+                            <div class="chart-loading-overlay">
+                                <div class="spinner-border spinner-border-sm text-info mb-1" role="status"></div>
+                                <span class="text-secondary small font-mono" style="font-size: 10px;">${label || 'Memuat...'}</span>
+                            </div>
+                        `);
+                        $card.append($overlay);
+                    } else {
+                        $overlay.find('span').text(label || 'Memuat...');
+                        $overlay.stop(true, true).removeClass('hidden').fadeIn(150);
+                    }
+                }
+
+                function hideChartLoading(selector) {
+                    const $card = $(selector).closest('.mtc-chart-card');
+                    const $overlay = $card.find('.chart-loading-overlay');
+                    if ($overlay.length) {
+                        $overlay.stop(true, true).fadeOut(200, function() {
+                            $(this).addClass('hidden');
+                        });
+                    }
+                }
+
+                function setTableLoading(tbodyId, colCount, message) {
+                    $(tbodyId).html(`
+                        <tr>
+                            <td colspan="${colCount}" class="text-center py-4 text-muted">
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <div class="spinner-border spinner-border-sm text-info" role="status"></div>
+                                    <span style="font-size: 11px;">${message || 'Memuat data...'}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                }
+
+                function setKpiLoading() {
+                    $('#kpiCompletionVal, #kpiBreakdownVal, #kpiDowntimeVal, #kpiMttrVal, #kpiMtbfVal, #kpiCostVal').each(function() {
+                        if (!$(this).find('.kpi-skeleton-pulse').length) {
+                            $(this).html('<span class="kpi-skeleton-pulse">--</span>');
+                        }
+                    });
+                }
+
+                // ─────────────────────────────────────────────────────────────
+                // MODULAR UI UPDATERS (Rendered as soon as section data arrives)
+                // ─────────────────────────────────────────────────────────────
+                function updateMetaUI(filterMeta) {
+                    if (!filterMeta) return;
+                    $('#activeFilterLabel').text(filterMeta.label);
+                    if (filterMeta.operating_hours) {
+                        $('#operatingHoursLabel').text(filterMeta.operating_hours + ' Jam');
+                    }
+                    $('#lastUpdatedTime').text(new Date().toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    }) + ' WIB');
+                }
+
+                // 1. Schedule Maintenance
+                function updateScheduleUI(sc, chartData) {
+                    if (sc) {
+                        $('#kpiCompletionVal').html(`${sc.value}<span class="unit">%</span>`);
+                        $('#kpiCompletionBar').css('width', `${Math.min(100, sc.value)}%`);
+                        $('#kpiCompletionCount').text(`${sc.completed_count} / ${sc.planned_count} Unit`);
+                        $('#kpiCompletionBadge')
+                            .toggleClass('optimal', sc.status === 'optimal')
+                            .toggleClass('danger', sc.status !== 'optimal')
+                            .text(`Target >${sc.target}% (${sc.value >= sc.target ? 'Achieved' : 'Need Focus'})`);
+                    }
+                    if (chartData) {
+                        renderScheduleMaintenanceChart(chartData);
+                        hideChartLoading('#chartScheduleMaintenance');
+                    }
+                }
+
+                // 2. Reliability (Breakdown, Downtime, MTTR, MTBF, Correlation)
+                function updateReliabilityUI(kpi, chartsData) {
+                    if (kpi) {
+                        if (kpi.total_breakdown) {
+                            const bd = kpi.total_breakdown;
+                            $('#kpiBreakdownVal').html(`${bd.value}<span class="unit">x</span>`);
+                            const bdPct = Math.min(100, (bd.value / (bd.target * 2)) * 100);
+                            $('#kpiBreakdownBar').css('width', `${bdPct}%`);
+                            $('#kpiBreakdownBadge')
+                                .toggleClass('optimal', bd.status === 'optimal')
+                                .toggleClass('danger', bd.status !== 'optimal')
+                                .text(bd.status === 'optimal' ? `Aman (<${bd.target}x)` : `Alarm (>${bd.target}x)`);
+                        }
+                        if (kpi.downtime) {
+                            const dt = kpi.downtime;
+                            $('#kpiDowntimeVal').html(`${dt.percentage}<span class="unit">%</span>`);
+                            $('#kpiDowntimeHours').text(`${dt.hours} Jam`);
+                            const dtPct = Math.min(100, (dt.percentage / (dt.target_percentage * 2)) * 100);
+                            $('#kpiDowntimeBar').css('width', `${dtPct}%`);
+                            $('#kpiDowntimeBadge')
+                                .toggleClass('optimal', dt.status === 'optimal')
+                                .toggleClass('danger', dt.status !== 'optimal')
+                                .text(`Target <${dt.target_percentage}%`);
+                        }
+                        if (kpi.mttr) {
+                            const mttr = kpi.mttr;
+                            $('#kpiMttrVal').html(`${mttr.value}<span class="unit">${mttr.unit}</span>`);
+                            const mttrPct = Math.min(100, (mttr.value / (mttr.target * 2)) * 100);
+                            $('#kpiMttrBar').css('width', `${mttrPct}%`);
+                            $('#kpiMttrBadge')
+                                .toggleClass('neutral', mttr.status === 'optimal')
+                                .toggleClass('danger', mttr.status !== 'optimal')
+                                .text(`Target <${mttr.target} Jam`);
+                        }
+                        if (kpi.mtbf) {
+                            const mtbf = kpi.mtbf;
+                            $('#kpiMtbfVal').html(`${mtbf.value}<span class="unit">${mtbf.unit}</span>`);
+                            const mtbfPct = Math.min(100, (mtbf.value / 600) * 100);
+                            $('#kpiMtbfBar').css('width', `${mtbfPct}%`);
+                            $('#kpiMtbfBadge')
+                                .toggleClass('optimal', mtbf.status === 'optimal')
+                                .toggleClass('danger', mtbf.status !== 'optimal')
+                                .text(`Target >${mtbf.target} Jam`);
+                        }
+                    }
+                    if (chartsData) {
+                        if (chartsData.total_breakdown) {
+                            renderTotalBreakdownChart(chartsData.total_breakdown);
+                            hideChartLoading('#chartTotalBreakdown');
+                        }
+                        if (chartsData.total_downtime) {
+                            renderTotalDowntimeChart(chartsData.total_downtime);
+                            hideChartLoading('#chartTotalDowntime');
+                        }
+                        if (chartsData.mttr_mtbf_correlation) {
+                            renderMttrMtbfCorrelationChart(chartsData.mttr_mtbf_correlation);
+                            hideChartLoading('#chartMttrMtbfCorrelation');
+                        }
+                    }
+                }
+
+                // 3. Maintenance Cost
+                function updateCostUI(cost, chartData) {
+                    if (cost) {
+                        $('#kpiCostVal').text(cost.value);
+                        $('#kpiCostUtil').text(`${cost.budget_utilization}%`);
+                        $('#kpiCostBar').css('width', `${Math.min(100, cost.budget_utilization)}%`);
+                        $('#kpiCostBadge').text(`Budget ${cost.budget}`);
+                    }
+                    if (chartData) {
+                        renderCostMaintenanceChart(chartData);
+                        hideChartLoading('#chartCostMaintenance');
+                    }
+                }
+
+                // 4. Top Machines Analytics
+                function updateTopMachinesUI(tables) {
+                    if (!tables) return;
+                    if (tables.top_mtbf) renderTopMtbfTable(tables.top_mtbf);
+                    if (tables.top_mttr) renderTopMttrTable(tables.top_mttr);
+                    if (tables.top_cost) renderTopCostTable(tables.top_cost);
+                }
+
+                // 5. Unit Off
+                function updateUnitOffUI(chartData, unitList) {
+                    if (chartData) {
+                        renderUnitOffChart(chartData);
+                        hideChartLoading('#chartUnitOff');
+                    }
+                    if (unitList) {
+                        renderUnitOffDetailsTable(unitList);
+                    }
+                }
+
+                // Full Dashboard UI Updater (fallback)
+                function updateDashboardUI(data) {
+                    if (data.filter_meta) updateMetaUI(data.filter_meta);
+                    if (data.kpi?.schedule_completion && data.charts?.schedule_maintenance) {
+                        updateScheduleUI(data.kpi.schedule_completion, data.charts.schedule_maintenance);
+                    }
+                    if (data.kpi?.total_breakdown) {
+                        updateReliabilityUI(data.kpi, data.charts);
+                    }
+                    if (data.kpi?.cost && data.charts?.cost_maintenance) {
+                        updateCostUI(data.kpi.cost, data.charts.cost_maintenance);
+                    }
+                    if (data.tables) {
+                        updateTopMachinesUI(data.tables);
+                    }
+                    if (data.charts?.unit_off || data.tables?.unit_off_list) {
+                        updateUnitOffUI(data.charts?.unit_off, data.tables?.unit_off_list);
+                    }
+                }
+
+                // ─────────────────────────────────────────────────────────────
+                // ASYNC MODULAR FETCH (Fastest responses render immediately)
+                // ─────────────────────────────────────────────────────────────
+                let currentLoadSeq = 0;
+                let activeXhrRequests = [];
+
+                function abortActiveRequests() {
+                    activeXhrRequests.forEach(xhr => {
+                        if (xhr && xhr.abort && xhr.readyState !== 4) {
+                            xhr.abort();
+                        }
+                    });
+                    activeXhrRequests = [];
+                }
+
+                function fetchSection(sectionName, params, loadSeq) {
+                    const sectionParams = Object.assign({}, params, { section: sectionName });
+                    const xhr = $.ajax({
+                        url: "{{ route('mtc.dashboard.data') }}",
+                        type: "GET",
+                        data: sectionParams,
+                        success: function(res) {
+                            if (loadSeq !== currentLoadSeq) return;
+                            if (!res || !res.status) {
+                                console.error(`Invalid response for section: ${sectionName}`, res);
+                                return;
+                            }
+
+                            // Instantly update meta on first arriving packet
+                            if (res.filter_meta) {
+                                updateMetaUI(res.filter_meta);
+                            }
+
+                            // Immediately populate the section that arrived
+                            if (sectionName === 'cost') {
+                                updateCostUI(res.kpi?.cost, res.charts?.cost_maintenance);
+                            } else if (sectionName === 'unit_off') {
+                                updateUnitOffUI(res.charts?.unit_off, res.tables?.unit_off_list);
+                            } else if (sectionName === 'top_machines') {
+                                updateTopMachinesUI(res.tables);
+                            } else if (sectionName === 'reliability') {
+                                updateReliabilityUI(res.kpi, res.charts);
+                            } else if (sectionName === 'schedule') {
+                                updateScheduleUI(res.kpi?.schedule_completion, res.charts?.schedule_maintenance);
+                            }
+                        },
+                        error: function(err) {
+                            if (loadSeq !== currentLoadSeq || err.statusText === 'abort') return;
+                            console.error(`Failed to load section: ${sectionName}`, err);
+                        }
+                    });
+
+                    activeXhrRequests.push(xhr);
+                    return xhr;
+                }
+
                 function fetchDashboardData() {
+                    abortActiveRequests();
+                    const loadSeq = ++currentLoadSeq;
+
                     const params = {
                         filter_type: activeFilterType,
                         year: $('#selectYear').val() || 2026,
@@ -1161,111 +1487,34 @@
                         }
                     }
 
-                    return $.ajax({
-                        url: "{{ route('mtc.dashboard.data') }}",
-                        type: "GET",
-                        data: params,
-                        beforeSend: function() {
-                            $('#activeFilterLabel').text('Memperbarui data...');
-                        },
-                        success: function(res) {
-                            if (!res || !res.status) {
-                                console.error('Invalid response', res);
-                                return;
-                            }
-                            updateDashboardUI(res);
-                        },
-                        error: function(err) {
-                            console.error('Failed to load dashboard data', err);
-                            $('#activeFilterLabel').text('Error memuat data');
+                    // Set UI to loading state
+                    $('#activeFilterLabel').html('<i class="mdi mdi-loading mdi-spin me-1"></i>Memperbarui data...');
+                    setKpiLoading();
+                    setTableLoading('#tbodyTopMtbf', 5, 'Memuat Top MTBF...');
+                    setTableLoading('#tbodyTopMttr', 5, 'Memuat Top MTTR...');
+                    setTableLoading('#tbodyTopCost', 5, 'Memuat Top Cost...');
+                    setTableLoading('#tbodyUnitOffDetails', 8, 'Memuat status unit offline...');
+
+                    showChartLoading('#chartScheduleMaintenance', 'Memuat Schedule...');
+                    showChartLoading('#chartTotalBreakdown', 'Memuat Breakdown...');
+                    showChartLoading('#chartTotalDowntime', 'Memuat Downtime...');
+                    showChartLoading('#chartUnitOff', 'Memuat Unit Off...');
+                    showChartLoading('#chartMttrMtbfCorrelation', 'Memuat Korelasi MTBF vs MTTR...');
+                    showChartLoading('#chartCostMaintenance', 'Memuat Data Cost...');
+
+                    // Launch all 5 sections asynchronously!
+                    // Fastest sections (Cost, Unit Off, Top Tables, Breakdown) will render first immediately!
+                    const pCost = fetchSection('cost', params, loadSeq);
+                    const pUnitOff = fetchSection('unit_off', params, loadSeq);
+                    const pTopMachines = fetchSection('top_machines', params, loadSeq);
+                    const pReliability = fetchSection('reliability', params, loadSeq);
+                    const pSchedule = fetchSection('schedule', params, loadSeq);
+
+                    return Promise.allSettled([pCost, pUnitOff, pTopMachines, pReliability, pSchedule]).then(() => {
+                        if (loadSeq === currentLoadSeq) {
+                            $('#refreshIcon').removeClass('mdi-spin');
                         }
                     });
-                }
-
-                // ─────────────────────────────────────────────────────────────
-                // UPDATE DASHBOARD UI
-                // ─────────────────────────────────────────────────────────────
-                function updateDashboardUI(data) {
-                    // Meta Labels
-                    $('#activeFilterLabel').text(data.filter_meta.label);
-                    $('#operatingHoursLabel').text(data.filter_meta.operating_hours + ' Jam');
-                    $('#lastUpdatedTime').text(new Date().toLocaleTimeString('id-ID', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    }) + ' WIB');
-
-                    // KPI 1: Schedule Completion
-                    const sc = data.kpi.schedule_completion;
-                    $('#kpiCompletionVal').html(`${sc.value}<span class="unit">%</span>`);
-                    $('#kpiCompletionBar').css('width', `${Math.min(100, sc.value)}%`);
-                    $('#kpiCompletionCount').text(`${sc.completed_count} / ${sc.planned_count} Unit`);
-                    $('#kpiCompletionBadge')
-                        .toggleClass('optimal', sc.status === 'optimal')
-                        .toggleClass('danger', sc.status !== 'optimal')
-                        .text(`Target >${sc.target}% (${sc.value >= sc.target ? 'Achieved' : 'Need Focus'})`);
-
-                    // KPI 2: Total Breakdown
-                    const bd = data.kpi.total_breakdown;
-                    $('#kpiBreakdownVal').html(`${bd.value}<span class="unit">x</span>`);
-                    const bdPct = Math.min(100, (bd.value / (bd.target * 2)) * 100);
-                    $('#kpiBreakdownBar').css('width', `${bdPct}%`);
-                    $('#kpiBreakdownBadge')
-                        .toggleClass('optimal', bd.status === 'optimal')
-                        .toggleClass('danger', bd.status !== 'optimal')
-                        .text(bd.status === 'optimal' ? `Aman (<${bd.target}x)` : `Alarm (>${bd.target}x)`);
-
-                    // KPI 3: Downtime
-                    const dt = data.kpi.downtime;
-                    $('#kpiDowntimeVal').html(`${dt.percentage}<span class="unit">%</span>`);
-                    $('#kpiDowntimeHours').text(`${dt.hours} Jam`);
-                    const dtPct = Math.min(100, (dt.percentage / (dt.target_percentage * 2)) * 100);
-                    $('#kpiDowntimeBar').css('width', `${dtPct}%`);
-                    $('#kpiDowntimeBadge')
-                        .toggleClass('optimal', dt.status === 'optimal')
-                        .toggleClass('danger', dt.status !== 'optimal')
-                        .text(`Target <${dt.target_percentage}%`);
-
-                    // KPI 4: MTTR
-                    const mttr = data.kpi.mttr;
-                    $('#kpiMttrVal').html(`${mttr.value}<span class="unit">${mttr.unit}</span>`);
-                    const mttrPct = Math.min(100, (mttr.value / (mttr.target * 2)) * 100);
-                    $('#kpiMttrBar').css('width', `${mttrPct}%`);
-                    $('#kpiMttrBadge')
-                        .toggleClass('neutral', mttr.status === 'optimal')
-                        .toggleClass('danger', mttr.status !== 'optimal')
-                        .text(`Target <${mttr.target} Jam`);
-
-                    // KPI 5: MTBF
-                    const mtbf = data.kpi.mtbf;
-                    $('#kpiMtbfVal').html(`${mtbf.value}<span class="unit">${mtbf.unit}</span>`);
-                    const mtbfPct = Math.min(100, (mtbf.value / 600) * 100);
-                    $('#kpiMtbfBar').css('width', `${mtbfPct}%`);
-                    $('#kpiMtbfBadge')
-                        .toggleClass('optimal', mtbf.status === 'optimal')
-                        .toggleClass('danger', mtbf.status !== 'optimal')
-                        .text(`Target >${mtbf.target} Jam`);
-
-                    // KPI 6: Cost Maintenance
-                    const cost = data.kpi.cost;
-                    $('#kpiCostVal').text(cost.value);
-                    $('#kpiCostUtil').text(`${cost.budget_utilization}%`);
-                    $('#kpiCostBar').css('width', `${Math.min(100, cost.budget_utilization)}%`);
-                    $('#kpiCostBadge').text(`Budget ${cost.budget}`);
-
-                    // Render Charts
-                    renderScheduleMaintenanceChart(data.charts.schedule_maintenance);
-                    renderTotalBreakdownChart(data.charts.total_breakdown);
-                    renderTotalDowntimeChart(data.charts.total_downtime);
-                    renderUnitOffChart(data.charts.unit_off);
-                    renderMttrMtbfCorrelationChart(data.charts.mttr_mtbf_correlation);
-                    renderCostMaintenanceChart(data.charts.cost_maintenance);
-
-                    // Render Tables
-                    renderTopMtbfTable(data.tables.top_mtbf);
-                    renderTopMttrTable(data.tables.top_mttr);
-                    renderTopCostTable(data.tables.top_cost);
-                    renderUnitOffDetailsTable(data.tables.unit_off_list);
                 }
 
                 // ─────────────────────────────────────────────────────────────

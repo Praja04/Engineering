@@ -44,6 +44,7 @@ class MtcDashboardController extends Controller
 
     /**
      * API: Get aggregated dashboard data based on filters
+     * Supports modular async loading via ?section=schedule|reliability|cost|top_machines|unit_off|all
      * Filter types: 'weekly', 'monthly', 'custom'
      */
     public function getData(Request $request)
@@ -54,6 +55,7 @@ class MtcDashboardController extends Controller
         $week = (int) $request->get('week', Carbon::today()->weekOfYear);
         $startDateStr = $request->get('start_date');
         $endDateStr = $request->get('end_date');
+        $section = $request->get('section', 'all');
 
         // Resolve Date Range based on Filter
         $dateRange = $this->resolveDateRange($filterType, $year, $month, $week, $startDateStr, $endDateStr);
@@ -61,42 +63,153 @@ class MtcDashboardController extends Controller
         $endDate = $dateRange['end'];
         $weeksList = $dateRange['weeks']; // Array of week objects with label, start, end
 
-        // 1. KPI & Chart: Schedule Maintenance Completion
+        $filterMeta = [
+            'type' => $filterType,
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate->format('Y-m-d'),
+            'label' => $dateRange['label'],
+            'operating_hours' => $dateRange['operating_hours'],
+        ];
+
+        // 1. Asynchronous Section: Schedule Maintenance
+        if ($section === 'schedule') {
+            $scheduleData = $this->getScheduleMaintenanceData($startDate, $endDate, $weeksList, $year, $month);
+            return response()->json([
+                'status' => true,
+                'section' => 'schedule',
+                'filter_meta' => $filterMeta,
+                'kpi' => [
+                    'schedule_completion' => [
+                        'value' => $scheduleData['kpi_completion_rate'],
+                        'target' => 95.0,
+                        'status' => $scheduleData['kpi_completion_rate'] >= 95.0 ? 'optimal' : 'warning',
+                        'planned_count' => $scheduleData['kpi_total_planned'],
+                        'completed_count' => $scheduleData['kpi_total_completed'],
+                    ],
+                ],
+                'charts' => [
+                    'schedule_maintenance' => $scheduleData['chart'],
+                ],
+            ]);
+        }
+
+        // 2. Asynchronous Section: Reliability, Breakdown, Downtime, MTTR, MTBF & Correlation
+        if ($section === 'reliability' || $section === 'breakdown') {
+            $breakdownData = $this->getBreakdownData($startDate, $endDate, $weeksList, $filterType);
+            $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours'], $filterType);
+            $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
+            $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns']);
+            $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
+
+            return response()->json([
+                'status' => true,
+                'section' => 'reliability',
+                'filter_meta' => $filterMeta,
+                'kpi' => [
+                    'total_breakdown' => [
+                        'value' => $breakdownData['kpi_breakdowns'],
+                        'target' => 5,
+                        'status' => $breakdownData['kpi_breakdowns'] <= 5 ? 'optimal' : 'danger',
+                        'subtext' => 'Paket Korektif (Target <5x)',
+                    ],
+                    'downtime' => [
+                        'percentage' => $downtimeData['kpi_downtime_percentage'],
+                        'hours' => $downtimeData['kpi_downtime_hours'],
+                        'target_percentage' => 2.0,
+                        'target_hours' => 12.5,
+                        'status' => $downtimeData['kpi_downtime_percentage'] <= 2.0 ? 'optimal' : 'danger',
+                        'subtext' => 'Target <2% dari 624 Jam (Max 12.5 Jam)',
+                    ],
+                    'mttr' => [
+                        'value' => $mttrData['value'],
+                        'unit' => 'Jam',
+                        'target' => 3.0,
+                        'status' => $mttrData['value'] <= 3.0 ? 'optimal' : 'warning',
+                        'subtext' => 'Mean Time To Repair',
+                    ],
+                    'mtbf' => [
+                        'value' => $mtbfData['value'],
+                        'unit' => 'Jam',
+                        'target' => 250,
+                        'status' => $mtbfData['value'] >= 250 ? 'optimal' : 'danger',
+                        'subtext' => '624 Jam / Total Mesin Korektif',
+                    ],
+                ],
+                'charts' => [
+                    'total_breakdown' => $breakdownData['chart'],
+                    'total_downtime' => $downtimeData['chart'],
+                    'mttr_mtbf_correlation' => $correlationData,
+                ],
+            ]);
+        }
+
+        // 3. Asynchronous Section: Maintenance Cost
+        if ($section === 'cost') {
+            $costData = $this->getCostMaintenanceData($weeksList, 0);
+            return response()->json([
+                'status' => true,
+                'section' => 'cost',
+                'filter_meta' => $filterMeta,
+                'kpi' => [
+                    'cost' => [
+                        'value' => $costData['total_cost_formatted'],
+                        'raw_value' => $costData['total_cost'],
+                        'budget' => $costData['budget_formatted'],
+                        'budget_utilization' => $costData['budget_utilization'],
+                        'subtext' => 'Total Maintenance Cost',
+                    ],
+                ],
+                'charts' => [
+                    'cost_maintenance' => $costData['chart'],
+                ],
+            ]);
+        }
+
+        // 4. Asynchronous Section: Top Machines (MTBF, MTTR, Cost)
+        if ($section === 'top_machines') {
+            $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate);
+            return response()->json([
+                'status' => true,
+                'section' => 'top_machines',
+                'filter_meta' => $filterMeta,
+                'tables' => [
+                    'top_mtbf' => $topMachinesData['top_mtbf'],
+                    'top_mttr' => $topMachinesData['top_mttr'],
+                    'top_cost' => $topMachinesData['top_cost'],
+                ],
+            ]);
+        }
+
+        // 5. Asynchronous Section: Unit Off (Donut & Live Offline Units)
+        if ($section === 'unit_off') {
+            $unitOffData = $this->getUnitOffData($startDate, $endDate);
+            return response()->json([
+                'status' => true,
+                'section' => 'unit_off',
+                'filter_meta' => $filterMeta,
+                'charts' => [
+                    'unit_off' => $unitOffData['chart'],
+                ],
+                'tables' => [
+                    'unit_off_list' => $unitOffData['offline_units'],
+                ],
+            ]);
+        }
+
+        // Fallback: Compute all if section is 'all' or not specified
         $scheduleData = $this->getScheduleMaintenanceData($startDate, $endDate, $weeksList, $year, $month);
-
-        // 2. KPI & Chart: Breakdown (Paket Korektif)
         $breakdownData = $this->getBreakdownData($startDate, $endDate, $weeksList, $filterType);
-
-        // 3. KPI & Chart: Downtime (Hours & Percentage)
         $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours'], $filterType);
-
-        // 4. KPI: MTTR (Mean Time To Repair)
         $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
-
-        // 5. KPI: MTBF (Mean Time Between Failures: 624 Jam / Total Mesin Korektif)
         $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns']);
-
-        // 6. KPI & Chart: Cost Maintenance (Dummy & Projected)
         $costData = $this->getCostMaintenanceData($weeksList, $breakdownData['total_breakdowns']);
-
-        // 7. Top Tables: Top Mesin MTBF Terendah, Top MTTR Terlama, Top Cost Tertinggi
         $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate);
-
-        // 8. Unit Off (Area Breakdown & Live Offline Units)
         $unitOffData = $this->getUnitOffData($startDate, $endDate);
-
-        // 9. MTTR vs MTBF Correlation Line Chart (Hours comparison over time)
         $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
 
         return response()->json([
             'status' => true,
-            'filter_meta' => [
-                'type' => $filterType,
-                'start_date' => $startDate->format('Y-m-d'),
-                'end_date' => $endDate->format('Y-m-d'),
-                'label' => $dateRange['label'],
-                'operating_hours' => $dateRange['operating_hours'],
-            ],
+            'filter_meta' => $filterMeta,
             'kpi' => [
                 'schedule_completion' => [
                     'value' => $scheduleData['kpi_completion_rate'],
