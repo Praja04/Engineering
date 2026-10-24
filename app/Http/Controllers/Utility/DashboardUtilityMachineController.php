@@ -24,6 +24,11 @@ class DashboardUtilityMachineController extends Controller
         return view('dashboard.utility.dashboard_machine');
     }
 
+    public function slide_editor(Request $request)
+    {
+        return view('dashboard.utility.slide_editor');
+    }
+
     public function machine_data(Request $request)
     {
         $section = $request->query('section', 'all');
@@ -464,11 +469,11 @@ class DashboardUtilityMachineController extends Controller
         // ── Cos Phi dari Capacitor Bank Mesin (per 30 menit -> rata-rata harian -> rata-rata periode) ──
         $capData = CapacitorBankMachineData::where(function ($q) use ($startDate, $endDate) {
             $q->whereBetween('tanggal', [$startDate, $endDate])
-              ->orWhere(function ($q2) use ($startDate, $endDate) {
-                  $q2->whereNull('tanggal')
-                     ->whereDate('created_at', '>=', $startDate)
-                     ->whereDate('created_at', '<=', $endDate);
-              });
+                ->orWhere(function ($q2) use ($startDate, $endDate) {
+                    $q2->whereNull('tanggal')
+                        ->whereDate('created_at', '>=', $startDate)
+                        ->whereDate('created_at', '<=', $endDate);
+                });
         })->orderBy('created_at', 'asc')->get();
 
         // Jika mode harian, filter tepat ke selectedDate
@@ -741,9 +746,12 @@ class DashboardUtilityMachineController extends Controller
             return is_string($item->tanggal) ? $item->tanggal : Carbon::parse($item->tanggal)->format('Y-m-d');
         });
         foreach ($ctDailyGroup as $dt => $rows) {
+            $validDailyTemp = $rows->filter(function ($item) {
+                return (float)($item->temp_ct_out ?? 0) > 0;
+            });
             $ctDailyTrends[] = [
                 'tanggal' => $dt,
-                'temp_out_avg' => round($rows->avg('temp_ct_out') ?? 0, 2),
+                'temp_out_avg' => $validDailyTemp->count() ? round($validDailyTemp->avg('temp_ct_out'), 2) : 0,
                 'pressure_out_avg' => round($rows->avg('pressure_ct_out') ?? 0, 2),
                 'count' => $rows->count(),
             ];
@@ -757,14 +765,18 @@ class DashboardUtilityMachineController extends Controller
         $latestDateFormatted = $latestDate ? Carbon::parse($latestDate)->translatedFormat('d M Y') : null;
 
         $ctTarget = ($mode === 'harian') ? $selectedDayCt : $ctDetails;
+        $ctValidTemp = $ctTarget->filter(function ($item) {
+            return (float)($item->temp_ct_out ?? 0) > 0;
+        });
+
         $ctSummary = [
-            'temp_out_avg' => round($ctTarget->avg('temp_ct_out') ?? 0, 2),
-            'temp_out_min' => $ctTarget->count() ? (float)$ctTarget->min('temp_ct_out') : 0,
-            'temp_out_max' => $ctTarget->count() ? (float)$ctTarget->max('temp_ct_out') : 0,
+            'temp_out_avg' => $ctValidTemp->count() ? round($ctValidTemp->avg('temp_ct_out'), 2) : 0,
+            'temp_out_min' => $ctValidTemp->count() ? (float)$ctValidTemp->min('temp_ct_out') : 0,
+            'temp_out_max' => $ctValidTemp->count() ? (float)$ctValidTemp->max('temp_ct_out') : 0,
             'pressure_out_avg' => round($ctTarget->avg('pressure_ct_out') ?? 0, 2),
             'pressure_out_min' => $ctTarget->count() ? (float)$ctTarget->min('pressure_ct_out') : 0,
             'pressure_out_max' => $ctTarget->count() ? (float)$ctTarget->max('pressure_ct_out') : 0,
-            'temp_out_latest_avg' => $latestTrend ? (float)$latestTrend['temp_out_avg'] : round($ctTarget->avg('temp_ct_out') ?? 0, 2),
+            'temp_out_latest_avg' => $latestTrend ? (float)$latestTrend['temp_out_avg'] : ($ctValidTemp->count() ? round($ctValidTemp->avg('temp_ct_out'), 2) : 0),
             'pressure_out_latest_avg' => $latestTrend ? (float)$latestTrend['pressure_out_avg'] : round($ctTarget->avg('pressure_ct_out') ?? 0, 2),
             'latest_date' => $latestDate,
             'latest_date_formatted' => $latestDateFormatted,
