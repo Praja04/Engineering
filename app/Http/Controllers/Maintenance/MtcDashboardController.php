@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Maintenance;
 use App\Http\Controllers\Controller;
 use App\Models\Maintenance\MtcAgendaModel;
 use App\Models\Maintenance\MtcMainModel;
+use App\Models\Maintenance\MtcMasterMaterialModel;
 use App\Models\Maintenance\MtcMasterMesinModel;
+use App\Models\Maintenance\MtcPenggantianMaterialModel;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -154,7 +156,7 @@ class MtcDashboardController extends Controller
 
         // 3. Asynchronous Section: Maintenance Cost
         if ($section === 'cost') {
-            $costData = $this->getCostMaintenanceData($weeksList, 0);
+            $costData = $this->getCostMaintenanceData($startDate, $endDate, $weeksList, $filterType);
             return response()->json([
                 'status' => true,
                 'section' => 'cost',
@@ -211,7 +213,7 @@ class MtcDashboardController extends Controller
         $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours'], $filterType);
         $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
         $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns'], $breakdownData['kpi_records'], $dateRange['operating_hours']);
-        $costData = $this->getCostMaintenanceData($weeksList, $breakdownData['total_breakdowns']);
+        $costData = $this->getCostMaintenanceData($startDate, $endDate, $weeksList, $filterType);
         $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate, $dateRange['operating_hours']);
         $unitOffData = $this->getUnitOffData($startDate, $endDate);
         $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
@@ -798,10 +800,22 @@ class MtcDashboardController extends Controller
     }
 
     /**
-     * Maintenance Cost Data (Dummy with realistic projections)
+     * Maintenance Cost Data - Real calculation based on mtc_penggantian_material
+     * and pricing from mtc_master_material
      */
-    private function getCostMaintenanceData(array $weeksList, int $totalBreakdowns): array
+    private function getCostMaintenanceData($startDate, $endDate, array $weeksList, string $filterType): array
     {
+        $chartStart = count($weeksList) > 0 ? $weeksList[0]['start']->format('Y-m-d') : $startDate->format('Y-m-d');
+        $chartEnd = count($weeksList) > 0 ? end($weeksList)['end']->format('Y-m-d') : $endDate->format('Y-m-d');
+
+        // Fetch replacement materials in chart range joined with main and master material
+        $replacementItems = MtcPenggantianMaterialModel::with(['main', 'masterMaterial'])
+            ->whereHas('main', function ($q) use ($chartStart, $chartEnd) {
+                $q->whereBetween('tanggal', [$chartStart, $chartEnd]);
+            })
+            ->where('qty', '>', 0)
+            ->get();
+
         $chartCategories = [];
         $sparepartsSeries = [];
         $consumablesSeries = [];
@@ -812,41 +826,91 @@ class MtcDashboardController extends Controller
         $totalConsumables = 0;
         $totalServices = 0;
         $runningCumulative = 0;
-
-        // Base realistic weekly cost in IDR Millions
-        $sampleCosts = [
-            ['sp' => 14.5, 'cs' => 2.8, 'sv' => 1.9],
-            ['sp' => 11.2, 'cs' => 3.1, 'sv' => 1.2],
-            ['sp' => 18.4, 'cs' => 2.5, 'sv' => 3.4],
-            ['sp' => 12.8, 'cs' => 2.9, 'sv' => 1.8],
-            ['sp' => 13.6, 'cs' => 3.2, 'sv' => 2.1],
-        ];
+        $selectedWeekTotal = 0;
 
         foreach ($weeksList as $idx => $wk) {
             $chartCategories[] = !empty($wk['display']) ? $wk['display'] : $wk['label'];
-            $costRow = $sampleCosts[$idx % count($sampleCosts)];
+            $wStart = $wk['start']->format('Y-m-d');
+            $wEnd = $wk['end']->format('Y-m-d');
 
-            $sparepartsSeries[] = $costRow['sp'];
-            $consumablesSeries[] = $costRow['cs'];
-            $servicesSeries[] = $costRow['sv'];
+            $wItems = $replacementItems->filter(function ($item) use ($wStart, $wEnd) {
+                if (!$item->main || empty($item->main->tanggal)) return false;
+                $t = Carbon::parse($item->main->tanggal)->format('Y-m-d');
+                return $t >= $wStart && $t <= $wEnd;
+            });
 
-            $weekTotal = $costRow['sp'] + $costRow['cs'] + $costRow['sv'];
-            $runningCumulative += $weekTotal;
-            $cumulativeSeries[] = round($runningCumulative, 1);
+            $weekSp = 0.0;
+            $weekCs = 0.0;
+            $weekSv = 0.0;
 
-            $totalSpareparts += $costRow['sp'];
-            $totalConsumables += $costRow['cs'];
-            $totalServices += $costRow['sv'];
+            foreach ($wItems as $item) {
+                $cost = floatval($item->total_harga);
+                if ($cost <= 0) {
+                    $unitPrice = floatval($item->harga_satuan);
+                    if ($unitPrice <= 0 && $item->masterMaterial) {
+                        $unitPrice = floatval($item->masterMaterial->harga);
+                    }
+                    $cost = floatval($item->qty) * $unitPrice;
+                }
+
+                $deskripsi = strtolower($item->deskripsi ?? '');
+                $kategori = strtolower($item->masterMaterial->kategori ?? '');
+
+                if (
+                    $kategori === 'consumable' ||
+                    preg_match('/\b(oli|oil|grease|pelumas|lem|sealant|thinner|cat|chemical|reagent|cleaner|argon|las|baut|mur|washer|gasket|seal tape|microbe)\b/i', $deskripsi)
+                ) {
+                    $weekCs += $cost;
+                } elseif (
+                    preg_match('/\b(jasa|vendor|service|ongkos|bubut|rewinding|kalibrasi|balancing|sewa|overhaul vendor)\b/i', $deskripsi)
+                ) {
+                    $weekSv += $cost;
+                } else {
+                    $weekSp += $cost;
+                }
+            }
+
+            $spM = round($weekSp / 1000000, 2);
+            $csM = round($weekCs / 1000000, 2);
+            $svM = round($weekSv / 1000000, 2);
+
+            $sparepartsSeries[] = $spM;
+            $consumablesSeries[] = $csM;
+            $servicesSeries[] = $svM;
+
+            $weekTotalM = round($spM + $csM + $svM, 2);
+            $runningCumulative += $weekTotalM;
+            $cumulativeSeries[] = round($runningCumulative, 2);
+
+            $totalSpareparts += $weekSp;
+            $totalConsumables += $weekCs;
+            $totalServices += $weekSv;
+
+            if (!empty($wk['is_selected'])) {
+                $selectedWeekTotal = $weekSp + $weekCs + $weekSv;
+            }
         }
 
-        $totalCostM = $totalSpareparts + $totalConsumables + $totalServices;
-        $monthlyBudgetM = 95.0; // 95 Juta IDR budget
+        $totalPeriodCost = $totalSpareparts + $totalConsumables + $totalServices;
+        // In weekly filter, KPI displays selected week cost; in monthly/custom, total of period
+        $kpiCost = ($filterType === 'weekly' && $selectedWeekTotal > 0) ? $selectedWeekTotal : $totalPeriodCost;
+
+        $monthlyBudget = 95000000.0; // 95 Juta IDR budget limit
+        $budgetLimit = ($filterType === 'weekly') ? ($monthlyBudget / 4) : $monthlyBudget;
+        $budgetUtil = $budgetLimit > 0 ? round(($kpiCost / $budgetLimit) * 100, 1) : 0;
+
+        $kpiCostM = round($kpiCost / 1000000, 2);
+        $totalCostFormatted = ($kpiCostM >= 1.0)
+            ? 'IDR ' . number_format($kpiCostM, 1, ',', '.') . ' M'
+            : ($kpiCost > 0 ? 'IDR ' . number_format($kpiCostM, 2, ',', '.') . ' M' : 'IDR 0,0 M');
+
+        $budgetFormatted = ($filterType === 'weekly') ? '23.8M (W)' : '95.0M';
 
         return [
-            'total_cost' => $totalCostM * 1000000,
-            'total_cost_formatted' => 'IDR ' . number_format($totalCostM, 1, ',', '.') . ' M',
-            'budget_formatted' => 'IDR ' . number_format($monthlyBudgetM, 1, ',', '.') . ' M',
-            'budget_utilization' => round(($totalCostM / $monthlyBudgetM) * 100, 1),
+            'total_cost' => $kpiCost,
+            'total_cost_formatted' => $totalCostFormatted,
+            'budget_formatted' => $budgetFormatted,
+            'budget_utilization' => $budgetUtil,
             'chart' => [
                 'categories' => $chartCategories,
                 'series' => [
@@ -1069,59 +1133,83 @@ class MtcDashboardController extends Controller
             ];
         }
 
-        // 3. Top Cost Tertinggi (Budget Impact - Dummy data)
-        $topCost = [
-            [
-                'rank' => 1,
-                'nama_mesin' => 'Main Hydraulic Press 1000T',
-                'kode_mesin' => 'HP-1000',
-                'area' => 'Otomotif / MHE',
-                'total_cost' => 24500000,
-                'total_cost_formatted' => 'IDR 24.5 M',
-                'persentase' => 31.2,
-                'sparepart' => 'Ganti Hydraulic Proportional Valve',
-            ],
-            [
-                'rank' => 2,
-                'nama_mesin' => 'Generator Set Utama Caterpillar 500kVA',
-                'kode_mesin' => 'GEN-500',
-                'area' => 'Utility',
-                'total_cost' => 15000000,
-                'total_cost_formatted' => 'IDR 15.0 M',
-                'persentase' => 19.1,
-                'sparepart' => 'Service Governor & Filter Set Major 1000H',
-            ],
-            [
-                'rank' => 3,
-                'nama_mesin' => 'HVAC Central Chiller System',
-                'kode_mesin' => 'HVAC-01',
-                'area' => 'Sipil / Utility',
-                'total_cost' => 11200000,
-                'total_cost_formatted' => 'IDR 11.2 M',
-                'persentase' => 14.3,
-                'sparepart' => 'Recharging Freon R134a & Oil Compressor POE',
-            ],
-            [
-                'rank' => 4,
-                'nama_mesin' => 'Cooling Tower Fan & Motor Drive',
-                'kode_mesin' => 'CT-01',
-                'area' => 'Utility',
-                'total_cost' => 8400000,
-                'total_cost_formatted' => 'IDR 8.4 M',
-                'persentase' => 10.7,
-                'sparepart' => 'Rewinding Motor 30kW & SKF Deep Groove Bearings',
-            ],
-            [
-                'rank' => 5,
-                'nama_mesin' => 'Electric Reach Truck Linde R14',
-                'kode_mesin' => 'RT-02',
-                'area' => 'MHE',
-                'total_cost' => 6700000,
-                'total_cost_formatted' => 'IDR 6.7 M',
-                'persentase' => 8.5,
-                'sparepart' => 'Replacement Traction Wheels & Mast Hose Reel',
-            ],
-        ];
+        // 3. Top Cost Tertinggi (Budget Impact - Real calculation from mtc_penggantian_material)
+        $costRecords = MtcPenggantianMaterialModel::with([
+                'main.motorPump.mesin',
+                'main.utility.mesin',
+                'main.electrical.mesin',
+                'main.refrigerasi.mesin',
+                'main.electricEngine.mesin',
+                'main.dieselEngine.mesin',
+                'main.electricP2h.mesin',
+                'main.dieselP2h.mesin',
+                'main.gensetP2h.mesin',
+                'main.battery',
+            ])
+            ->whereHas('main', function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+            })
+            ->where('qty', '>', 0)
+            ->get();
+
+        $masterMids = $costRecords->pluck('mid')->filter()->unique();
+        $masterMaterials = MtcMasterMaterialModel::whereIn('mid', $masterMids)->get()->keyBy('mid');
+
+        $machineCosts = [];
+        $grandTotalCost = 0;
+
+        foreach ($costRecords as $rec) {
+            if (!$rec->main) continue;
+            $mInfo = $this->resolveMachineInfo($rec->main);
+            $mKey = $mInfo['key'];
+
+            $cost = floatval($rec->total_harga);
+            if ($cost <= 0) {
+                $unitPrice = floatval($rec->harga_satuan);
+                if ($unitPrice <= 0 && !empty($rec->mid) && isset($masterMaterials[$rec->mid])) {
+                    $unitPrice = floatval($masterMaterials[$rec->mid]->harga);
+                }
+                $cost = floatval($rec->qty) * $unitPrice;
+            }
+
+            if (!isset($machineCosts[$mKey])) {
+                $machineCosts[$mKey] = [
+                    'nama_mesin' => $mInfo['nama_mesin'],
+                    'kode_mesin' => $mInfo['kode_mesin'],
+                    'area'       => $mInfo['area'],
+                    'total_cost' => 0.0,
+                    'spareparts' => [],
+                ];
+            }
+
+            $machineCosts[$mKey]['total_cost'] += $cost;
+            $grandTotalCost += $cost;
+            if (!empty($rec->deskripsi) && !in_array($rec->deskripsi, $machineCosts[$mKey]['spareparts'])) {
+                $machineCosts[$mKey]['spareparts'][] = $rec->deskripsi;
+            }
+        }
+
+        $sortedByCost = collect($machineCosts)->sortByDesc('total_cost')->values()->take(5);
+
+        $topCost = [];
+        foreach ($sortedByCost as $idx => $item) {
+            $mCost = $item['total_cost'];
+            $pct = $grandTotalCost > 0 ? round(($mCost / $grandTotalCost) * 100, 1) : 0;
+            $fmtCost = $mCost >= 1000000 
+                ? 'IDR ' . number_format($mCost / 1000000, 1, ',', '.') . ' M'
+                : 'IDR ' . number_format($mCost / 1000000, 2, ',', '.') . ' M';
+
+            $topCost[] = [
+                'rank'                 => $idx + 1,
+                'nama_mesin'           => $item['nama_mesin'],
+                'kode_mesin'           => $item['kode_mesin'],
+                'area'                 => $item['area'],
+                'total_cost'           => $mCost,
+                'total_cost_formatted' => $fmtCost,
+                'persentase'           => $pct,
+                'sparepart'            => !empty($item['spareparts']) ? implode(', ', array_slice($item['spareparts'], 0, 2)) : '-',
+            ];
+        }
 
         // All active machines representation for correlation
         $allActiveMachines = [

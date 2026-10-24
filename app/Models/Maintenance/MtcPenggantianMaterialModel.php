@@ -56,4 +56,9 @@ class MtcPenggantianMaterialModel extends Model
     {
         return $this->belongsTo(MtcMainModel::class, 'mtc_main_id');
     }
+
+    public function masterMaterial()
+    {
+        return $this->belongsTo(MtcMasterMaterialModel::class, 'mid', 'mid');
+    }
 }
