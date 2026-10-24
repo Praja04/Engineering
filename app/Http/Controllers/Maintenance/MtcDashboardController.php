@@ -818,13 +818,9 @@ class MtcDashboardController extends Controller
 
         $chartCategories = [];
         $sparepartsSeries = [];
-        $consumablesSeries = [];
-        $servicesSeries = [];
         $cumulativeSeries = [];
 
         $totalSpareparts = 0;
-        $totalConsumables = 0;
-        $totalServices = 0;
         $runningCumulative = 0;
         $selectedWeekTotal = 0;
 
@@ -840,8 +836,6 @@ class MtcDashboardController extends Controller
             });
 
             $weekSp = 0.0;
-            $weekCs = 0.0;
-            $weekSv = 0.0;
 
             foreach ($wItems as $item) {
                 $cost = floatval($item->total_harga);
@@ -853,45 +847,24 @@ class MtcDashboardController extends Controller
                     $cost = floatval($item->qty) * $unitPrice;
                 }
 
-                $deskripsi = strtolower($item->deskripsi ?? '');
-                $kategori = strtolower($item->masterMaterial->kategori ?? '');
-
-                if (
-                    $kategori === 'consumable' ||
-                    preg_match('/\b(oli|oil|grease|pelumas|lem|sealant|thinner|cat|chemical|reagent|cleaner|argon|las|baut|mur|washer|gasket|seal tape|microbe)\b/i', $deskripsi)
-                ) {
-                    $weekCs += $cost;
-                } elseif (
-                    preg_match('/\b(jasa|vendor|service|ongkos|bubut|rewinding|kalibrasi|balancing|sewa|overhaul vendor)\b/i', $deskripsi)
-                ) {
-                    $weekSv += $cost;
-                } else {
-                    $weekSp += $cost;
-                }
+                // Satukan semua material (Maintenance & Consumable) menjadi kategori Spareparts
+                $weekSp += $cost;
             }
 
             $spM = round($weekSp / 1000000, 2);
-            $csM = round($weekCs / 1000000, 2);
-            $svM = round($weekSv / 1000000, 2);
-
             $sparepartsSeries[] = $spM;
-            $consumablesSeries[] = $csM;
-            $servicesSeries[] = $svM;
 
-            $weekTotalM = round($spM + $csM + $svM, 2);
-            $runningCumulative += $weekTotalM;
+            $runningCumulative += $spM;
             $cumulativeSeries[] = round($runningCumulative, 2);
 
             $totalSpareparts += $weekSp;
-            $totalConsumables += $weekCs;
-            $totalServices += $weekSv;
 
             if (!empty($wk['is_selected'])) {
-                $selectedWeekTotal = $weekSp + $weekCs + $weekSv;
+                $selectedWeekTotal = $weekSp;
             }
         }
 
-        $totalPeriodCost = $totalSpareparts + $totalConsumables + $totalServices;
+        $totalPeriodCost = $totalSpareparts;
         // In weekly filter, KPI displays selected week cost; in monthly/custom, total of period
         $kpiCost = ($filterType === 'weekly' && $selectedWeekTotal > 0) ? $selectedWeekTotal : $totalPeriodCost;
 
@@ -901,10 +874,10 @@ class MtcDashboardController extends Controller
 
         $kpiCostM = round($kpiCost / 1000000, 2);
         $totalCostFormatted = ($kpiCostM >= 1.0)
-            ? 'IDR ' . number_format($kpiCostM, 1, ',', '.') . ' M'
-            : ($kpiCost > 0 ? 'IDR ' . number_format($kpiCostM, 2, ',', '.') . ' M' : 'IDR 0,0 M');
+            ? 'IDR ' . number_format($kpiCostM, 1, ',', '.') . ' Jt'
+            : ($kpiCost > 0 ? 'IDR ' . number_format($kpiCostM, 2, ',', '.') . ' Jt' : 'IDR 0,0 Jt');
 
-        $budgetFormatted = ($filterType === 'weekly') ? '23.8M (W)' : '95.0M';
+        $budgetFormatted = ($filterType === 'weekly') ? '23.8 Jt (W)' : '95.0 Jt';
 
         return [
             'total_cost' => $kpiCost,
@@ -918,18 +891,6 @@ class MtcDashboardController extends Controller
                         'name' => 'Spareparts',
                         'data' => $sparepartsSeries,
                         'color' => '#38bdf8', // Electric Blue
-                        'type' => 'column',
-                    ],
-                    [
-                        'name' => 'Consumables & Oli',
-                        'data' => $consumablesSeries,
-                        'color' => '#0284c7', // Deep Blue
-                        'type' => 'column',
-                    ],
-                    [
-                        'name' => 'Jasa & Vendor',
-                        'data' => $servicesSeries,
-                        'color' => '#64748b', // Slate Neutral
                         'type' => 'column',
                     ],
                     [
@@ -1196,8 +1157,8 @@ class MtcDashboardController extends Controller
             $mCost = $item['total_cost'];
             $pct = $grandTotalCost > 0 ? round(($mCost / $grandTotalCost) * 100, 1) : 0;
             $fmtCost = $mCost >= 1000000 
-                ? 'IDR ' . number_format($mCost / 1000000, 1, ',', '.') . ' M'
-                : 'IDR ' . number_format($mCost / 1000000, 2, ',', '.') . ' M';
+                ? 'IDR ' . number_format($mCost / 1000000, 1, ',', '.') . ' Jt'
+                : 'IDR ' . number_format($mCost / 1000000, 2, ',', '.') . ' Jt';
 
             $topCost[] = [
                 'rank'                 => $idx + 1,

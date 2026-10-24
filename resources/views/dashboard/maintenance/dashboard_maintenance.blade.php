@@ -791,7 +791,9 @@
                                 <div class="d-flex justify-content-between align-items-center mt-2"
                                     style="font-size: 10px;">
                                     <span class="text-muted">Formula:</span>
-                                    <span class="text-light font-mono" title="Rata-rata MTBF Unit: (624 Jam - Total MTTR) / Korektif">Avg (624 - MTTR) / Korektif</span>
+                                    <span class="text-light font-mono"
+                                        title="Rata-rata MTBF Unit: (624 Jam - Total MTTR) / Korektif">Avg (624 - MTTR)
+                                        / Korektif</span>
                                 </div>
                             </div>
                         </div>
@@ -804,7 +806,7 @@
                                 <div>
                                     <div class="text-secondary fw-bold text-uppercase"
                                         style="font-size: 10px; letter-spacing: 0.04em;">Maintenance Cost</div>
-                                    <span class="kpi-badge neutral mt-1" id="kpiCostBadge">Budget 95M</span>
+                                    <span class="kpi-badge neutral mt-1" id="kpiCostBadge">Budget 95 Jt</span>
                                 </div>
                                 <div class="kpi-icon-pill">
                                     <i class="mdi mdi-cash-multiple"></i>
@@ -1070,13 +1072,13 @@
                                         Detail Maintenance Cost
                                     </h4>
                                     <div class="mtc-card-subtitle">
-                                        Sparepart, Pelumas/Consumable, &amp; Jasa Vendor (W1, W2...)
+                                        Biaya Penggantian Sparepart &amp; Material (W1, W2...)
                                     </div>
                                 </div>
                                 <span
                                     class="badge bg-dark text-secondary border border-secondary border-opacity-25 font-mono"
                                     id="budgetLimitBadge" style="font-size: 10.5px;">
-                                    Budget: 95M
+                                    Budget: 95 Jt
                                 </span>
                             </div>
                             <div id="chartCostMaintenance" style="min-height: 285px;"></div>
@@ -2138,16 +2140,16 @@
                             }
                         },
                         stroke: {
-                            width: [0, 0, 0, 2.5],
+                            width: [0, 2.5],
                             curve: 'smooth'
                         },
                         plotOptions: {
                             bar: {
-                                columnWidth: '40%',
+                                columnWidth: '35%',
                                 borderRadius: 3
                             }
                         },
-                        colors: ['#38bdf8', '#0284c7', '#64748b', '#f43f5e'],
+                        colors: ['#38bdf8', '#f43f5e'],
                         xaxis: {
                             categories: chartData.categories,
                             labels: {
@@ -2179,7 +2181,7 @@
                                         colors: '#94a3b8',
                                         fontSize: '10px'
                                     },
-                                    formatter: val => 'Rp ' + val + 'M'
+                                    formatter: val => 'Rp ' + val + ' Jt'
                                 }
                             },
                             {
@@ -2196,7 +2198,7 @@
                                         colors: '#f43f5e',
                                         fontSize: '10px'
                                     },
-                                    formatter: val => 'Rp ' + val + 'M'
+                                    formatter: val => 'Rp ' + val + ' Jt'
                                 }
                             }
                         ],
@@ -2217,7 +2219,7 @@
                             shared: true,
                             intersect: false,
                             y: {
-                                formatter: val => 'Rp ' + val + ' Juta'
+                                formatter: val => 'Rp ' + val + ' Jt'
                             }
                         }
                     };
