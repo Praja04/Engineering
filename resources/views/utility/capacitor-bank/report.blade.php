@@ -625,7 +625,7 @@
                                             <th>Qtot (kVAR)</th>
                                             <th>Stot (kVA)</th>
                                             <th>PF (Avg)</th>
-                                            <th>CosPhi (Avg)</th>
+                                            <th>CosPhi</th>
                                             <th>Freq (Hz)</th>
                                         </tr>
                                     </thead>
@@ -944,7 +944,7 @@
 
                 const tanggal = $('#inputTanggal').val();
                 let csv =
-                    'Waktu,Kapasitor Aktif,Arus (A),Vab (V),Vbc (V),Vca (V),Van (V),Vbn (V),Vcn (V),Ptot (kW),Qtot (kVAR),Stot (kVA),PF (Avg),CosPhi (Avg),Freq (Hz)\n';
+                    'Waktu,Kapasitor Aktif,Arus (A),Vab (V),Vbc (V),Vca (V),Van (V),Vbn (V),Vcn (V),Ptot (kW),Qtot (kVAR),Stot (kVA),PF (Avg),CosPhi,Freq (Hz)\n';
 
                 rawDataCache.forEach(function(row) {
                     const pf = row.pf !== null ? row.pf.toFixed(3) : '';
