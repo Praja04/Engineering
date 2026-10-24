@@ -107,7 +107,7 @@ class MtcDashboardController extends Controller
             $breakdownData = $this->getBreakdownData($startDate, $endDate, $weeksList, $filterType);
             $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours'], $filterType);
             $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
-            $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns']);
+            $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns'], $breakdownData['kpi_records'], $dateRange['operating_hours']);
             $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
 
             return response()->json([
@@ -141,7 +141,7 @@ class MtcDashboardController extends Controller
                         'unit' => 'Jam',
                         'target' => 250,
                         'status' => $mtbfData['value'] >= 250 ? 'optimal' : 'danger',
-                        'subtext' => '624 Jam / Total Mesin Korektif',
+                        'subtext' => 'Avg ((624 - MTTR) / Korektif)',
                     ],
                 ],
                 'charts' => [
@@ -210,7 +210,7 @@ class MtcDashboardController extends Controller
         $breakdownData = $this->getBreakdownData($startDate, $endDate, $weeksList, $filterType);
         $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours'], $filterType);
         $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
-        $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns']);
+        $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns'], $breakdownData['kpi_records'], $dateRange['operating_hours']);
         $costData = $this->getCostMaintenanceData($weeksList, $breakdownData['total_breakdowns']);
         $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate, $dateRange['operating_hours']);
         $unitOffData = $this->getUnitOffData($startDate, $endDate);
@@ -253,7 +253,7 @@ class MtcDashboardController extends Controller
                     'unit' => 'Jam',
                     'target' => 250,
                     'status' => $mtbfData['value'] >= 250 ? 'optimal' : 'danger',
-                    'subtext' => '624 Jam / Total Mesin Korektif',
+                    'subtext' => 'Avg ((624 - MTTR) / Korektif)',
                 ],
                 'cost' => [
                     'value' => $costData['total_cost_formatted'],
@@ -557,9 +557,20 @@ class MtcDashboardController extends Controller
         $chartStart = count($weeksList) > 0 ? $weeksList[0]['start']->format('Y-m-d') : $startDate->format('Y-m-d');
         $chartEnd = count($weeksList) > 0 ? end($weeksList)['end']->format('Y-m-d') : $endDate->format('Y-m-d');
 
-        // Query strictly records where paket is 'Korektif'
-        $korektifRecords = DB::table('mtc_main')
-            ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) = 'korektif'")
+        // Query strictly records where paket is 'Korektif' with machine relationships
+        $korektifRecords = MtcMainModel::with([
+                'motorPump.mesin',
+                'utility.mesin',
+                'electrical.mesin',
+                'refrigerasi.mesin',
+                'electricEngine.mesin',
+                'dieselEngine.mesin',
+                'electricP2h.mesin',
+                'dieselP2h.mesin',
+                'gensetP2h.mesin',
+                'battery',
+            ])
+            ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) LIKE '%korektif%'")
             ->whereBetween('tanggal', [$chartStart, $chartEnd])
             ->get();
 
@@ -567,11 +578,12 @@ class MtcDashboardController extends Controller
         $seriesBreakdown = [];
         $totalPeriodBreakdowns = 0;
         $selectedWeekBreakdowns = 0;
+        $selectedWeekRecords = collect([]);
 
         foreach ($weeksList as $idx => $wk) {
             $wStart = $wk['start']->format('Y-m-d');
             $wEnd = $wk['end']->format('Y-m-d');
-            $chartCategories[] = $wk['label'];
+            $chartCategories[] = !empty($wk['display']) ? $wk['display'] : $wk['label'];
 
             $wRecords = $korektifRecords->filter(function ($item) use ($wStart, $wEnd) {
                 return $item->tanggal >= $wStart && $item->tanggal <= $wEnd;
@@ -583,14 +595,19 @@ class MtcDashboardController extends Controller
 
             if (!empty($wk['is_selected'])) {
                 $selectedWeekBreakdowns = $realCount;
+                $selectedWeekRecords = $wRecords;
             }
         }
 
         // For weekly filter, KPI displays the breakdown of the selected week; for monthly/custom, total of period
         $kpiBreakdowns = ($filterType === 'weekly') ? $selectedWeekBreakdowns : $totalPeriodBreakdowns;
+        $kpiRecords = ($filterType === 'weekly') ? $selectedWeekRecords : $korektifRecords->filter(function ($item) use ($startDate, $endDate) {
+            return $item->tanggal >= $startDate->format('Y-m-d') && $item->tanggal <= $endDate->format('Y-m-d');
+        });
 
         return [
             'kpi_breakdowns' => $kpiBreakdowns,
+            'kpi_records' => $kpiRecords,
             'total_breakdowns' => $totalPeriodBreakdowns,
             'records' => $korektifRecords,
             'chart' => [
@@ -625,7 +642,7 @@ class MtcDashboardController extends Controller
         $baseHours = 624.0; // Rumus resmi perusahaan: Total jam korektif / 624 * 100
 
         foreach ($weeksList as $idx => $wk) {
-            $chartCategories[] = $wk['label'];
+            $chartCategories[] = !empty($wk['display']) ? $wk['display'] : $wk['label'];
 
             $wRecords = $breakdownData['records']->filter(function ($item) use ($wk) {
                 $wStart = $wk['start']->format('Y-m-d');
@@ -707,21 +724,77 @@ class MtcDashboardController extends Controller
     }
 
     /**
-     * Compute MTBF: 624 Jam dibagi total mesin/kejadian korektif
+     * Compute MTBF for KPI Card:
+     * Average of unit MTBFs: (624 - total MTTR/downtime unit) / berapa kali korektif unit itu
      */
-    private function getMtbfData(int $kpiBreakdowns): array
+    private function getMtbfData(int $kpiBreakdowns, $kpiRecords = null, float $baseHours = 624.0): array
     {
-        $baseHours = 624;
-        if ($kpiBreakdowns <= 0) {
+        if ($kpiBreakdowns <= 0 || !$kpiRecords || $kpiRecords->count() === 0) {
             return [
-                'value' => $baseHours,
+                'value' => (int) $baseHours,
             ];
         }
 
-        $mtbf = round($baseHours / $kpiBreakdowns, 0);
+        $avgMtbf = $this->computeAverageMtbf($kpiRecords, $baseHours);
+
         return [
-            'value' => (int) $mtbf,
+            'value' => (int) round($avgMtbf, 0),
         ];
+    }
+
+    /**
+     * Helper to compute average MTBF across all broken-down units:
+     * Unit MTBF = (624 - total downtime / repair duration) / berapa kali korektif unit itu
+     * Overall = Average of unit MTBFs
+     */
+    private function computeAverageMtbf($records, float $baseHours = 624.0): float
+    {
+        if (!$records || $records->count() === 0) {
+            return $baseHours;
+        }
+
+        $machinesGrouped = [];
+
+        foreach ($records as $rec) {
+            $mInfo = $this->resolveMachineInfo($rec);
+            $mKey = $mInfo['key'];
+
+            $durationHours = 0;
+            if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
+                $tDate = $rec->tanggal ? Carbon::parse($rec->tanggal)->format('Y-m-d') : date('Y-m-d');
+                $tDateEnd = !empty($rec->tanggal_selesai) ? Carbon::parse($rec->tanggal_selesai)->format('Y-m-d') : $tDate;
+                $startT = Carbon::parse($tDate . ' ' . $rec->waktu_mulai);
+                $endT = Carbon::parse($tDateEnd . ' ' . $rec->waktu_selesai);
+                if ($endT->lessThan($startT)) {
+                    $endT->addDay();
+                }
+                $durationHours = max(0.1, $startT->diffInMinutes($endT) / 60);
+            } else {
+                $durationHours = 1.5;
+            }
+
+            if (!isset($machinesGrouped[$mKey])) {
+                $machinesGrouped[$mKey] = [
+                    'freq' => 0,
+                    'downtime' => 0.0,
+                ];
+            }
+
+            $machinesGrouped[$mKey]['freq'] += 1;
+            $machinesGrouped[$mKey]['downtime'] += $durationHours;
+        }
+
+        if (empty($machinesGrouped)) {
+            return $baseHours;
+        }
+
+        $unitMtbfs = [];
+        foreach ($machinesGrouped as $m) {
+            $unitMtbf = max(0, $baseHours - $m['downtime']) / max(1, $m['freq']);
+            $unitMtbfs[] = $unitMtbf;
+        }
+
+        return count($unitMtbfs) > 0 ? round(array_sum($unitMtbfs) / count($unitMtbfs), 1) : $baseHours;
     }
 
     /**
@@ -750,7 +823,7 @@ class MtcDashboardController extends Controller
         ];
 
         foreach ($weeksList as $idx => $wk) {
-            $chartCategories[] = $wk['label'];
+            $chartCategories[] = !empty($wk['display']) ? $wk['display'] : $wk['label'];
             $costRow = $sampleCosts[$idx % count($sampleCosts)];
 
             $sparepartsSeries[] = $costRow['sp'];
@@ -935,7 +1008,8 @@ class MtcDashboardController extends Controller
             $downtime = $m['total_downtime'];
 
             $mttr = round($downtime / max(1, $freq), 1);
-            $mtbf = round($baseHours / max(1, $freq), 0);
+            // Rumus MTBF unit: (624 - total MTTR / total downtime unit) / berapa kali korektif dari unit itu
+            $mtbf = round(max(0, $baseHours - $downtime) / max(1, $freq), 0);
 
             $ket = !empty($m['keterangan']) ? implode(', ', $m['keterangan']) : 'Perbaikan Kerusakan Korektif';
 
@@ -1149,20 +1223,19 @@ class MtcDashboardController extends Controller
     }
 
     /**
-     * MTBF vs MTTR & Downtime Correlation Line Chart (Trend per week)
-     * Comparing: MTBF (Jam), MTTR (Jam), and Downtime (%) [Jam Korektif / 624 * 100]
+     * MTBF vs MTTR Correlation Line Chart (Trend per week)
+     * Comparing: MTBF (Jam) and MTTR (Jam)
      */
     private function getMttrMtbfCorrelation(array $weeksList, array $breakdownData, array $downtimeData): array
     {
         $categories = [];
         $seriesMtbf = [];
         $seriesMttr = [];
-        $seriesDowntimePct = [];
 
-        $baseHours = 624.0; // Rumus standar: Jam korektif / 624 * 100
+        $baseHours = 624.0; // Rumus standar: 624 jam perusahaan
 
         foreach ($weeksList as $idx => $wk) {
-            $categories[] = $wk['label'];
+            $categories[] = !empty($wk['display']) ? $wk['display'] : $wk['label'];
 
             $wStart = $wk['start']->format('Y-m-d');
             $wEnd = $wk['end']->format('Y-m-d');
@@ -1187,18 +1260,14 @@ class MtcDashboardController extends Controller
                     $downtimeHours = round($breakdownCount * 1.5, 1);
                 }
                 $weekMttr = round($downtimeHours / $breakdownCount, 1);
-                $weekMtbf = round($baseHours / $breakdownCount, 0);
+                $weekMtbf = round($this->computeAverageMtbf($wRecords, $baseHours), 0);
             } else {
                 $weekMttr = 0.0;
                 $weekMtbf = (int) $baseHours;
             }
 
-            // Rumus Downtime persentase: Total jam korektif / 624 * 100
-            $weekDowntimePct = round(($downtimeHours / $baseHours) * 100, 2);
-
             $seriesMtbf[] = (int) $weekMtbf;
             $seriesMttr[] = (float) $weekMttr;
-            $seriesDowntimePct[] = (float) $weekDowntimePct;
         }
 
         return [
@@ -1212,15 +1281,10 @@ class MtcDashboardController extends Controller
                     'name' => 'MTTR (Jam)',
                     'data' => $seriesMttr,
                 ],
-                [
-                    'name' => 'Downtime (%)',
-                    'data' => $seriesDowntimePct,
-                ],
             ],
             'benchmark' => [
                 'target_mttr' => 3.0,
                 'target_mtbf' => 250,
-                'target_downtime' => 2.0,
             ],
         ];
     }

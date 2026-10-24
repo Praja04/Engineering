@@ -352,7 +352,7 @@
                 border-radius: 10px;
                 padding: 12px 14px;
                 box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-                margin-bottom: 12px;
+                margin-bottom: 0;
                 position: relative;
                 transition: border-color 0.2s ease;
             }
@@ -561,13 +561,15 @@
                                 <select id="selectWeek" class="filter-ctrl font-mono" style="min-width: 220px;">
                                     @if (!empty($weeksOptions))
                                         @foreach ($weeksOptions as $wNum => $wText)
-                                            <option value="{{ $wNum }}" {{ $wNum == $currentWeek ? 'selected' : '' }}>
+                                            <option value="{{ $wNum }}"
+                                                {{ $wNum == $currentWeek ? 'selected' : '' }}>
                                                 {{ $wText }}
                                             </option>
                                         @endforeach
                                     @else
                                         @for ($w = 1; $w <= 52; $w++)
-                                            <option value="{{ $w }}" {{ $w == $currentWeek ? 'selected' : '' }}>
+                                            <option value="{{ $w }}"
+                                                {{ $w == $currentWeek ? 'selected' : '' }}>
                                                 Week {{ $w }} (2026)
                                             </option>
                                         @endfor
@@ -729,7 +731,8 @@
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-2"
                                     style="font-size: 10px;">
-                                    <span class="text-muted" title="Rumus: Total Jam Korektif / 624 × 100%">Jam Lost / 624:</span>
+                                    <span class="text-muted" title="Rumus: Total Jam Korektif / 624 × 100%">Jam Lost /
+                                        624:</span>
                                     <span class="text-light font-mono" id="kpiDowntimeHours">-- Jam</span>
                                 </div>
                             </div>
@@ -788,7 +791,7 @@
                                 <div class="d-flex justify-content-between align-items-center mt-2"
                                     style="font-size: 10px;">
                                     <span class="text-muted">Formula:</span>
-                                    <span class="text-light font-mono">624 Jam / Korektif</span>
+                                    <span class="text-light font-mono" title="Rata-rata MTBF Unit: (624 Jam - Total MTTR) / Korektif">Avg (624 - MTTR) / Korektif</span>
                                 </div>
                             </div>
                         </div>
@@ -828,10 +831,10 @@
                 {{-- ═══════════════════════════════════════════════════════════════
                  3. CHART 1: SCHEDULE MAINTENANCE (FULL WIDTH)
             ═══════════════════════════════════════════════════════════════ --}}
-                <div class="row g-2 mb-3">
+                <div class="row g-2 gy-3 mb-3">
                     {{-- CHART 1: SCHEDULE MAINTENANCE --}}
                     <div class="col-xl-4 col-lg-4">
-                        <div class="mtc-chart-card">
+                        <div class="mtc-chart-card h-100">
                             <div class="mtc-card-header">
                                 <div>
                                     <h4 class="mtc-card-title">
@@ -848,7 +851,7 @@
                                     Target Realisasi: &gt;95%
                                 </span>
                             </div>
-                            <div id="chartScheduleMaintenance" style="min-height: 290px;"></div>
+                            <div id="chartScheduleMaintenance" style="min-height: 285px;"></div>
                         </div>
                     </div>
 
@@ -872,7 +875,7 @@
                                     Target: &lt;5x
                                 </span>
                             </div>
-                            <div id="chartTotalBreakdown" style="min-height: 260px;"></div>
+                            <div id="chartTotalBreakdown" style="min-height: 285px;"></div>
                         </div>
                     </div>
 
@@ -903,7 +906,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <div id="chartTotalDowntime" style="min-height: 260px;"></div>
+                            <div id="chartTotalDowntime" style="min-height: 285px;"></div>
                         </div>
                     </div>
 
@@ -1042,18 +1045,18 @@
                                 <div>
                                     <h4 class="mtc-card-title">
                                         <i class="mdi mdi-chart-line text-info"></i>
-                                        Korelasi MTBF, MTTR & Downtime
+                                        Korelasi MTBF &amp; MTTR
                                     </h4>
                                     <div class="mtc-card-subtitle">
-                                        Keandalan (MTBF Jam), Pemulihan (MTTR Jam) & Downtime % (Jam/624)
+                                        Keandalan (MTBF Jam) &amp; Pemulihan (MTTR Jam)
                                     </div>
                                 </div>
                                 <span class="badge bg-dark text-info border border-info border-opacity-25"
                                     style="font-size: 10px;">
-                                    Jam & % (Jam/624)
+                                    Jam (MTBF &amp; MTTR)
                                 </span>
                             </div>
-                            <div id="chartMttrMtbfCorrelation" style="min-height: 280px;"></div>
+                            <div id="chartMttrMtbfCorrelation" style="min-height: 285px;"></div>
                         </div>
                     </div>
 
@@ -1076,7 +1079,7 @@
                                     Budget: 95M
                                 </span>
                             </div>
-                            <div id="chartCostMaintenance" style="min-height: 280px;"></div>
+                            <div id="chartCostMaintenance" style="min-height: 285px;"></div>
                         </div>
                     </div>
                 </div>
@@ -1549,7 +1552,7 @@
                         series: chartData.series,
                         chart: {
                             type: 'bar',
-                            height: 290,
+                            height: 285,
                             stacked: false,
                             toolbar: {
                                 show: false
@@ -1655,7 +1658,7 @@
                         series: chartData.series,
                         chart: {
                             type: 'bar',
-                            height: 260,
+                            height: 285,
                             toolbar: {
                                 show: false
                             },
@@ -1703,10 +1706,15 @@
                         xaxis: {
                             categories: chartData.categories,
                             labels: {
+                                rotate: -45,
+                                rotateAlways: true,
+                                hideOverlappingLabels: false,
+                                trim: false,
                                 style: {
                                     colors: '#94a3b8',
-                                    fontSize: '10.5px',
-                                    fontFamily: 'JetBrains Mono'
+                                    fontSize: '10px',
+                                    fontFamily: 'JetBrains Mono',
+                                    fontWeight: 500
                                 }
                             },
                             axisBorder: {
@@ -1764,7 +1772,7 @@
                         series: chartData.series,
                         chart: {
                             type: 'area',
-                            height: 260,
+                            height: 285,
                             parentHeightOffset: 0,
                             toolbar: {
                                 show: false
@@ -1840,10 +1848,15 @@
                         xaxis: {
                             categories: chartData.categories,
                             labels: {
+                                rotate: -45,
+                                rotateAlways: true,
+                                hideOverlappingLabels: false,
+                                trim: false,
                                 style: {
                                     colors: '#94a3b8',
-                                    fontSize: '10.5px',
-                                    fontFamily: 'JetBrains Mono'
+                                    fontSize: '10px',
+                                    fontFamily: 'JetBrains Mono',
+                                    fontWeight: 500
                                 }
                             },
                             axisBorder: {
@@ -1975,7 +1988,7 @@
                         series: chartData.series,
                         chart: {
                             type: 'line',
-                            height: 280,
+                            height: 285,
                             toolbar: {
                                 show: false
                             },
@@ -1983,32 +1996,31 @@
                                 enabled: true
                             }
                         },
-                        colors: ['#38bdf8', '#f59e0b', '#10b981'],
+                        colors: ['#38bdf8', '#f59e0b'],
                         stroke: {
                             curve: 'smooth',
-                            width: [3, 3, 2.5],
-                            dashArray: [0, 0, 4]
+                            width: [3, 3],
+                            dashArray: [0, 0]
                         },
                         markers: {
-                            size: [4, 4, 4],
+                            size: [5, 5],
                             strokeWidth: 2,
                             strokeColors: '#080c16',
                             hover: {
-                                size: 6
+                                size: 7
                             }
                         },
                         dataLabels: {
                             enabled: true,
                             formatter: function(val, opt) {
                                 if (opt.seriesIndex === 0) return Math.round(val) + 'h';
-                                if (opt.seriesIndex === 1) return Number(val).toFixed(1) + 'h';
-                                return Number(val).toFixed(1) + '%';
+                                return Number(val).toFixed(1) + 'h';
                             },
                             style: {
-                                fontSize: '9px',
+                                fontSize: '9.5px',
                                 fontFamily: 'JetBrains Mono',
                                 fontWeight: 700,
-                                colors: ['#38bdf8', '#f59e0b', '#10b981']
+                                colors: ['#38bdf8', '#f59e0b']
                             },
                             background: {
                                 enabled: true,
@@ -2021,10 +2033,15 @@
                         xaxis: {
                             categories: chartData.categories,
                             labels: {
+                                rotate: -45,
+                                rotateAlways: true,
+                                hideOverlappingLabels: false,
+                                trim: false,
                                 style: {
                                     colors: '#94a3b8',
                                     fontSize: '10px',
-                                    fontFamily: 'JetBrains Mono'
+                                    fontFamily: 'JetBrains Mono',
+                                    fontWeight: 500
                                 }
                             },
                             axisBorder: {
@@ -2052,7 +2069,7 @@
                             {
                                 opposite: true,
                                 title: {
-                                    text: 'MTTR (Jam) & Downtime (%)',
+                                    text: 'MTTR (Jam)',
                                     style: {
                                         color: '#f59e0b',
                                         fontSize: '10px',
@@ -2060,7 +2077,7 @@
                                     }
                                 },
                                 labels: {
-                                    formatter: val => Number(val).toFixed(1),
+                                    formatter: val => Number(val).toFixed(1) + 'h',
                                     style: {
                                         colors: '#f59e0b',
                                         fontSize: '10px',
@@ -2093,8 +2110,7 @@
                                     seriesIndex
                                 }) {
                                     if (seriesIndex === 0) return val + ' Jam (MTBF Keandalan)';
-                                    if (seriesIndex === 1) return val + ' Jam (MTTR Pemulihan)';
-                                    return val + '% (Downtime: Jam/624*100)';
+                                    return val + ' Jam (MTTR Pemulihan)';
                                 }
                             }
                         }
@@ -2112,7 +2128,7 @@
                         series: chartData.series,
                         chart: {
                             type: 'line',
-                            height: 290,
+                            height: 285,
                             stacked: false,
                             toolbar: {
                                 show: false
@@ -2135,10 +2151,15 @@
                         xaxis: {
                             categories: chartData.categories,
                             labels: {
+                                rotate: -45,
+                                rotateAlways: true,
+                                hideOverlappingLabels: false,
+                                trim: false,
                                 style: {
                                     colors: '#94a3b8',
-                                    fontSize: '10.5px',
-                                    fontFamily: 'JetBrains Mono'
+                                    fontSize: '10px',
+                                    fontFamily: 'JetBrains Mono',
+                                    fontWeight: 500
                                 }
                             },
                             axisBorder: {
@@ -2213,7 +2234,8 @@
                 function renderTopMtbfTable(rows) {
                     let html = '';
                     if (!rows || rows.length === 0) {
-                        html = `<tr><td colspan="5" class="text-center text-secondary py-3 small"><i class="mdi mdi-information-outline"></i> Tidak ada catatan korektif pada periode ini</td></tr>`;
+                        html =
+                            `<tr><td colspan="5" class="text-center text-secondary py-3 small"><i class="mdi mdi-information-outline"></i> Tidak ada catatan korektif pada periode ini</td></tr>`;
                         $('#tbodyTopMtbf').html(html);
                         return;
                     }
@@ -2242,7 +2264,8 @@
                 function renderTopMttrTable(rows) {
                     let html = '';
                     if (!rows || rows.length === 0) {
-                        html = `<tr><td colspan="5" class="text-center text-secondary py-3 small"><i class="mdi mdi-information-outline"></i> Tidak ada catatan korektif pada periode ini</td></tr>`;
+                        html =
+                            `<tr><td colspan="5" class="text-center text-secondary py-3 small"><i class="mdi mdi-information-outline"></i> Tidak ada catatan korektif pada periode ini</td></tr>`;
                         $('#tbodyTopMttr').html(html);
                         return;
                     }
@@ -2272,7 +2295,8 @@
                 function renderTopCostTable(rows) {
                     let html = '';
                     if (!rows || rows.length === 0) {
-                        html = `<tr><td colspan="5" class="text-center text-secondary py-3 small"><i class="mdi mdi-information-outline"></i> Tidak ada data biaya pada periode ini</td></tr>`;
+                        html =
+                            `<tr><td colspan="5" class="text-center text-secondary py-3 small"><i class="mdi mdi-information-outline"></i> Tidak ada data biaya pada periode ini</td></tr>`;
                         $('#tbodyTopCost').html(html);
                         return;
                     }
