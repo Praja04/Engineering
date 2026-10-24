@@ -566,7 +566,7 @@ class CapacitorBankMachineController extends Controller
                 'q_tot' => $data->power_Qtot,
                 's_tot' => $data->power_Stot,
                 'pf' => $data->pf_PFa !== null ? ($data->pf_PFa + $data->pf_PFb + $data->pf_PFc)/3 : null,
-                'cosphi' => $data->cosphi_dPFa !== null ? ($data->cosphi_dPFa + $data->cosphi_dPFb + $data->cosphi_dPFc)/3 : null,
+                'cosphi' => $data->cosphi_dPFa !== null ? (float) $data->cosphi_dPFa : null,
                 'freq' => $data->freq,
             ];
         }
