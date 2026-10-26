@@ -2442,6 +2442,7 @@
                                 if (opt.seriesIndex === 0) return Math.round(val) + 'h';
                                 return Number(val).toFixed(1) + 'h';
                             },
+                            offsetY: -6,
                             style: {
                                 fontSize: '9.5px',
                                 fontFamily: 'JetBrains Mono',
