@@ -49,8 +49,8 @@ class EngUtilityProjectController extends Controller
         if (!empty($yearFilter) && $yearFilter !== 'all') {
             $query->where(function ($q) use ($yearFilter) {
                 $q->whereYear('finish_date', $yearFilter)
-                  ->orWhereYear('start_date', $yearFilter)
-                  ->orWhereYear('created_at', $yearFilter);
+                    ->orWhereYear('start_date', $yearFilter)
+                    ->orWhereYear('created_at', $yearFilter);
             });
         }
 
@@ -256,12 +256,12 @@ class EngUtilityProjectController extends Controller
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_project', 'like', "%{$search}%")
-                  ->orWhere('nomor_project', 'like', "%{$search}%")
-                  ->orWhere('target_result', 'like', "%{$search}%")
-                  ->orWhere('area', 'like', "%{$search}%")
-                  ->orWhere('kategori', 'like', "%{$search}%")
-                  ->orWhere('priority', 'like', "%{$search}%")
-                  ->orWhere('latest_note', 'like', "%{$search}%");
+                    ->orWhere('nomor_project', 'like', "%{$search}%")
+                    ->orWhere('target_result', 'like', "%{$search}%")
+                    ->orWhere('area', 'like', "%{$search}%")
+                    ->orWhere('kategori', 'like', "%{$search}%")
+                    ->orWhere('priority', 'like', "%{$search}%")
+                    ->orWhere('latest_note', 'like', "%{$search}%");
             });
         }
 
@@ -334,8 +334,17 @@ class EngUtilityProjectController extends Controller
         $categories = EngUtilityProjectCategory::where('is_active', true)->orderBy('nama_kategori')->pluck('nama_kategori')->toArray();
         if (empty($categories)) {
             $categories = [
-                'Maintenance', 'KPI BB dan Steam', 'Baku Mutu', 'Compliance', '5R',
-                'KPI Steam', 'Improvement', 'Cost Saving', 'KPI Air', 'Digitalisasi', 'KPI Korektif'
+                'Maintenance',
+                'KPI BB dan Steam',
+                'Baku Mutu',
+                'Compliance',
+                '5R',
+                'KPI Steam',
+                'Improvement',
+                'Cost Saving',
+                'KPI Air',
+                'Digitalisasi',
+                'KPI Korektif'
             ];
         }
 
@@ -438,8 +447,17 @@ class EngUtilityProjectController extends Controller
         $categories = EngUtilityProjectCategory::where('is_active', true)->orderBy('nama_kategori')->pluck('nama_kategori')->toArray();
         if (empty($categories)) {
             $categories = [
-                'Maintenance', 'KPI BB dan Steam', 'Baku Mutu', 'Compliance', '5R',
-                'KPI Steam', 'Improvement', 'Cost Saving', 'KPI Air', 'Digitalisasi', 'KPI Korektif'
+                'Maintenance',
+                'KPI BB dan Steam',
+                'Baku Mutu',
+                'Compliance',
+                '5R',
+                'KPI Steam',
+                'Improvement',
+                'Cost Saving',
+                'KPI Air',
+                'Digitalisasi',
+                'KPI Korektif'
             ];
         }
 
@@ -633,7 +651,7 @@ class EngUtilityProjectController extends Controller
                     'progress_sebelumnya' => $item->progress_sebelumnya,
                     'progress_baru' => $item->progress_baru,
                     'catatan' => $item->catatan,
-                    'user_nama' => ($item->user && !empty($item->user->name)) ? $item->user->name : 'Engineering Team',
+                    'user_nama' => ($item->user && !empty($item->user->nama_lengkap)) ? $item->user->username : 'Engineering Team',
                 ];
             });
 
@@ -956,8 +974,17 @@ class EngUtilityProjectController extends Controller
         $categories = EngUtilityProjectCategory::where('is_active', true)->orderBy('nama_kategori')->pluck('nama_kategori')->toArray();
         if (empty($categories)) {
             $categories = [
-                'Maintenance', 'KPI BB dan Steam', 'Baku Mutu', 'Compliance', '5R',
-                'KPI Steam', 'Improvement', 'Cost Saving', 'KPI Air', 'Digitalisasi', 'KPI Korektif'
+                'Maintenance',
+                'KPI BB dan Steam',
+                'Baku Mutu',
+                'Compliance',
+                '5R',
+                'KPI Steam',
+                'Improvement',
+                'Cost Saving',
+                'KPI Air',
+                'Digitalisasi',
+                'KPI Korektif'
             ];
         }
 
@@ -1122,7 +1149,8 @@ class EngUtilityProjectController extends Controller
             if (is_numeric($rawVal) && (float)$rawVal > 1000) {
                 try {
                     return ExcelDate::excelToDateTimeObject((float)$rawVal)->format('Y-m-d');
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                }
             }
             try {
                 return Carbon::parse($rawVal)->format('Y-m-d');
@@ -1137,18 +1165,46 @@ class EngUtilityProjectController extends Controller
             $weekStr = trim((string)$weekStr);
 
             $monthsMap = [
-                'jan' => 1, 'januari' => 1, 'january' => 1,
-                'feb' => 2, 'februari' => 2, 'february' => 2,
-                'mar' => 3, 'maret' => 3, 'march' => 3,
-                'apr' => 4, 'april' => 4,
-                'mei' => 5, 'may' => 5,
-                'jun' => 6, 'juni' => 6, 'june' => 6,
-                'jul' => 7, 'juli' => 7, 'july' => 7,
-                'agu' => 8, 'ags' => 8, 'agt' => 8, 'agus' => 8, 'agustus' => 8, 'aug' => 8, 'august' => 8,
-                'sep' => 9, 'sept' => 9, 'september' => 9,
-                'okt' => 10, 'oct' => 10, 'oktober' => 10, 'october' => 10,
-                'nov' => 11, 'nop' => 11, 'november' => 11,
-                'des' => 12, 'dec' => 12, 'desember' => 12, 'december' => 12,
+                'jan' => 1,
+                'januari' => 1,
+                'january' => 1,
+                'feb' => 2,
+                'februari' => 2,
+                'february' => 2,
+                'mar' => 3,
+                'maret' => 3,
+                'march' => 3,
+                'apr' => 4,
+                'april' => 4,
+                'mei' => 5,
+                'may' => 5,
+                'jun' => 6,
+                'juni' => 6,
+                'june' => 6,
+                'jul' => 7,
+                'juli' => 7,
+                'july' => 7,
+                'agu' => 8,
+                'ags' => 8,
+                'agt' => 8,
+                'agus' => 8,
+                'agustus' => 8,
+                'aug' => 8,
+                'august' => 8,
+                'sep' => 9,
+                'sept' => 9,
+                'september' => 9,
+                'okt' => 10,
+                'oct' => 10,
+                'oktober' => 10,
+                'october' => 10,
+                'nov' => 11,
+                'nop' => 11,
+                'november' => 11,
+                'des' => 12,
+                'dec' => 12,
+                'desember' => 12,
+                'december' => 12,
             ];
 
             $weekNum = 1;
