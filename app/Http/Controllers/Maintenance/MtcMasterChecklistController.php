@@ -65,9 +65,17 @@ class MtcMasterChecklistController extends Controller
             });
         }
 
+        $totalFiltered = $query->count();
+
+        $page = max(1, (int)$request->input('page', 1));
+        $perPage = max(1, (int)$request->input('per_page', $request->input('length', 25)));
+        $start = ($page - 1) * $perPage;
+
         $items = $query->orderBy('jenis_mtc')
             ->orderBy('group_id')
             ->orderBy('urutan')
+            ->skip($start)
+            ->take($perPage)
             ->get();
 
         // Summary stats
@@ -77,8 +85,13 @@ class MtcMasterChecklistController extends Controller
         $totalGroups = MtcMasterChecklistGroup::count();
 
         return response()->json([
-            'status'  => true,
-            'data'    => $items,
+            'status'          => true,
+            'data'            => $items,
+            'recordsTotal'    => $totalChecklists,
+            'recordsFiltered' => $totalFiltered,
+            'current_page'    => $page,
+            'per_page'        => $perPage,
+            'total_pages'     => (int)ceil($totalFiltered / $perPage),
             'summary' => [
                 'total'    => $totalChecklists,
                 'active'   => $totalActive,
