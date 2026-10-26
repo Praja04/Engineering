@@ -11,10 +11,12 @@ Route::middleware(['auth'])->prefix('utility/project')->name('utility.project.')
     Route::get('/data', [EngUtilityProjectController::class, 'data'])->name('data');
     Route::get('/', [EngUtilityProjectController::class, 'data'])->name('index');
 
-    // ── 3. Form Project (Input & Edit) ──
+    // ── 3. Form Project (Input & Edit) & Import ──
     Route::get('/form', [EngUtilityProjectController::class, 'create'])->name('form');
     Route::get('/create', [EngUtilityProjectController::class, 'create'])->name('create');
     Route::post('/', [EngUtilityProjectController::class, 'store'])->name('store');
+    Route::get('/template', [EngUtilityProjectController::class, 'downloadTemplate'])->name('template');
+    Route::post('/import', [EngUtilityProjectController::class, 'import'])->name('import');
     Route::get('/{id}/edit', [EngUtilityProjectController::class, 'edit'])->name('edit');
     Route::put('/{id}', [EngUtilityProjectController::class, 'update'])->name('update');
     Route::delete('/{id}', [EngUtilityProjectController::class, 'destroy'])->name('destroy');

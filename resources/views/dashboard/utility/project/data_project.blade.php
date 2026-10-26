@@ -22,11 +22,17 @@
                                     Utility, WWTP, MTC)
                                 </p>
                             </div>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex flex-wrap gap-2">
                                 <a href="{{ route('utility.project.dashboard') }}"
                                     class="btn btn-info fw-semibold shadow-sm">
                                     <i class="ri-dashboard-2-line me-1"></i> Dashboard
                                 </a>
+                                @if (Auth::user()->jabatan === 'admin')
+                                    <button type="button" class="btn btn-success fw-semibold shadow-sm"
+                                        data-bs-toggle="modal" data-bs-target="#modalImportExcel">
+                                        <i class="ri-file-excel-2-line me-1"></i> Upload Excel
+                                    </button>
+                                @endif
                                 <a href="{{ route('utility.project.form') }}" class="btn btn-warning fw-semibold shadow-sm">
                                     <i class="ri-add-line me-1"></i> Tambah Project
                                 </a>
@@ -270,6 +276,108 @@
                 <div class="modal-footer bg-light border-top">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Modal 3: Import & Migrasi Data Excel ── --}}
+    <div class="modal fade" id="modalImportExcel" tabindex="-1" aria-labelledby="modalImportExcelLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-light border-bottom">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0" id="modalImportExcelLabel">
+                            <i class="ri-file-excel-2-line text-success me-2"></i>Upload & Migrasi Data Project (Excel)
+                        </h5>
+                        <small class="text-muted">Import langsung daftar project yang sudah berjalan ke dalam
+                            sistem</small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formImportExcel" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body p-4">
+                        {{-- ── Template Download Banner ── --}}
+                        <div class="card border border-primary-subtle bg-primary-subtle bg-opacity-10 mb-3 rounded-3">
+                            <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fs-20 flex-shrink-0"
+                                        style="width: 42px; height: 42px;">
+                                        <i class="ri-file-download-line"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">Download Template Standar Migrasi</h6>
+                                        <p class="text-muted mb-0 fs-12">Gunakan format Excel standar dengan contoh data
+                                            dan sheet referensi master.</p>
+                                    </div>
+                                </div>
+                                <a href="{{ route('utility.project.template') }}"
+                                    class="btn btn-primary btn-sm fw-semibold shadow-sm text-nowrap">
+                                    <i class="ri-download-2-line me-1"></i> Download Template (.xlsx)
+                                </a>
+                            </div>
+                        </div>
+
+                        {{-- ── Petunjuk Format Kolom ── --}}
+                        <div class="card border border-light-subtle bg-light mb-3 rounded-3">
+                            <div class="card-body p-3">
+                                <h6 class="fw-bold text-dark fs-13 mb-2 d-flex align-items-center">
+                                    <i class="ri-information-line text-info me-1"></i> Ketentuan Pengisian Kolom Excel:
+                                </h6>
+                                <ul class="text-muted fs-12 mb-0 ps-3">
+                                    <li class="mb-1"><strong>Nama Project:</strong> Wajib diisi. Jika nama project sudah
+                                        ada di sistem, data akan diperbarui (update).</li>
+                                    <li class="mb-1"><strong>Area:</strong> Wajib diisi sesuai salah satu dari:
+                                        <code>Boiler</code>, <code>Utility</code>, <code>WWTP</code>, <code>MTC</code>.</li>
+                                    <li class="mb-1"><strong>Kategori:</strong> Maintenance, Baku Mutu, Compliance, 5R,
+                                        KPI BB dan Steam, Digitalisasi, Improvement, dll.</li>
+                                    <li class="mb-1"><strong>Prioritas:</strong> <code>Critical</code>,
+                                        <code>High</code>, <code>Medium</code>, atau <code>Low</code> (default: Medium).
+                                    </li>
+                                    <li class="mb-1"><strong>Nomor Project:</strong> Opsional. Jika kosong, sistem
+                                        otomatis membuat nomor urut (contoh: <code>PRJ-BOI-001</code>).</li>
+                                    <li class="mb-1"><strong>Tanggal & Minggu:</strong> Format tanggal
+                                        <code>YYYY-MM-DD</code> atau format tanggal Excel. Minggu mulai/selesai (contoh:
+                                        <code>W1 Okt 26</code>) otomatis dihitung jika dikosongkan.</li>
+                                    <li><strong>Status & Progress:</strong> Progress angka <code>0 - 100</code>. Status
+                                        otomatis dihitung jika dikosongkan (Selesai, On Progress, atau Terlambat).</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- ── File Upload Input ── --}}
+                        <div class="mb-3">
+                            <label for="import_excel_file" class="form-label fw-bold text-dark">
+                                Pilih File Excel (.xlsx / .xls / .csv) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="import_excel_file" name="file"
+                                    accept=".xlsx, .xls, .csv" required>
+                                <button class="btn btn-outline-secondary" type="button" id="btnClearFile"
+                                    title="Reset file">
+                                    <i class="ri-close-line"></i>
+                                </button>
+                            </div>
+                            <div class="form-text fs-12 text-muted">
+                                Maksimal ukuran file 10 MB. Mendukung file Excel (.xlsx, .xls) maupun CSV.
+                            </div>
+                        </div>
+
+                        {{-- ── Upload Progress State ── --}}
+                        <div id="importLoadingState" class="d-none text-center py-3">
+                            <div class="spinner-border text-primary spinner-border-sm mb-2" role="status"></div>
+                            <div class="fs-13 fw-semibold text-dark">Sedang memproses dan menyimpan data migrasi...</div>
+                            <small class="text-muted">Mohon tunggu, proses parsing spreadsheet sedang berjalan.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success fw-semibold" id="btnSubmitImport">
+                            <i class="ri-upload-cloud-2-line me-1"></i> Mulai Upload & Migrasi
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -811,6 +919,83 @@
                                 }
                                 Swal.fire('Error', msg, 'error');
                             }
+                        });
+                    }
+                });
+            });
+
+            // ── Clear Import File Input ──
+            $('#btnClearFile').on('click', function() {
+                $('#import_excel_file').val('');
+            });
+
+            // ── Submit Import Form via AJAX ──
+            $('#formImportExcel').on('submit', function(e) {
+                e.preventDefault();
+
+                const fileInput = document.getElementById('import_excel_file');
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    Swal.fire('Perhatian', 'Silakan pilih file Excel terlebih dahulu.', 'warning');
+                    return;
+                }
+
+                const formData = new FormData(this);
+                const $btn = $('#btnSubmitImport');
+                const origText = $btn.html();
+
+                $btn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-1"></span> Mengupload...');
+                $('#importLoadingState').removeClass('d-none');
+
+                $.ajax({
+                    url: '{{ route('utility.project.import') }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success: function(res) {
+                        $('#importLoadingState').addClass('d-none');
+                        $btn.prop('disabled', false).html(origText);
+
+                        if (res.success) {
+                            $('#modalImportExcel').modal('hide');
+                            $('#formImportExcel')[0].reset();
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Migrasi Berhasil!',
+                                text: res.message,
+                                confirmButtonColor: '#198754',
+                                confirmButtonText: 'OK, Lihat Data'
+                            }).then(() => {
+                                loadProjectsData();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal Import Data',
+                                text: res.message ||
+                                    'Terjadi kesalahan saat memproses data Excel.'
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#importLoadingState').addClass('d-none');
+                        $btn.prop('disabled', false).html(origText);
+
+                        let msg = 'Gagal memproses file Excel di server.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            const errs = Object.values(xhr.responseJSON.errors).flat();
+                            if (errs.length > 0) msg = errs.join('<br>');
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error Import',
+                            html: msg
                         });
                     }
                 });
