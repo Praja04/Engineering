@@ -132,6 +132,13 @@
             border-color: rgba(239, 68, 68, 0.15);
         }
 
+        .planner-badge.pkg-off,
+        .planner-badge.pkg-OFF {
+            background: rgba(239, 68, 68, 0.15);
+            color: #dc2626;
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+
         .planner-badge.pkg-other {
             background: rgba(100, 116, 139, 0.07);
             color: #475569;
@@ -373,6 +380,7 @@
                                                     <option value="C">Paket C</option>
                                                     <option value="D">Paket D</option>
                                                     <option value="E">Paket E</option>
+                                                    <option value="Off">Paket Off</option>
                                                     <option value="Checkpoint">Checkpoint</option>
                                                     <option value="Korektif">Korektif</option>
                                                 </select>
@@ -681,6 +689,7 @@
                                                         <option value="C">Paket C</option>
                                                         <option value="D">Paket D</option>
                                                         <option value="E">Paket E</option>
+                                                        <option value="Off">Paket Off</option>
                                                         <option value="Checkpoint">Checkpoint</option>
                                                         <option value="Korektif">Korektif</option>
                                                     </select>
@@ -773,6 +782,7 @@
                             <option value="C" ${packageVal === 'C' ? 'selected' : ''}>Paket C</option>
                             <option value="D" ${packageVal === 'D' ? 'selected' : ''}>Paket D</option>
                             <option value="E" ${packageVal === 'E' ? 'selected' : ''}>Paket E</option>
+                            <option value="Off" ${(packageVal || '').toUpperCase() === 'OFF' ? 'selected' : ''}>Paket Off</option>
                             <option value="Checkpoint" ${packageVal === 'Checkpoint' ? 'selected' : ''}>Checkpoint</option>
                             <option value="Korektif" ${packageVal === 'Korektif' ? 'selected' : ''}>Korektif</option>
                         </select>
@@ -810,6 +820,7 @@
                             <option value="C" ${packageVal === 'C' ? 'selected' : ''}>Paket C</option>
                             <option value="D" ${packageVal === 'D' ? 'selected' : ''}>Paket D</option>
                             <option value="E" ${packageVal === 'E' ? 'selected' : ''}>Paket E</option>
+                            <option value="Off" ${(packageVal || '').toUpperCase() === 'OFF' ? 'selected' : ''}>Paket Off</option>
                             <option value="Checkpoint" ${packageVal === 'Checkpoint' ? 'selected' : ''}>Checkpoint</option>
                             <option value="Korektif" ${packageVal === 'Korektif' ? 'selected' : ''}>Korektif</option>
                         </select>
@@ -863,7 +874,15 @@
                 if (mesinIds.length === 1 && bulanNum && loadedPlans[mesinIds[0]] && loadedPlans[mesinIds[0]][bulanNum]) {
                     const plans = loadedPlans[mesinIds[0]][bulanNum];
                     plans.forEach(plan => {
-                        $(`#manualWeek${plan.minggu_ke}`).val(plan.paket.toUpperCase().trim());
+                        const pkg = plan.paket ? plan.paket.trim() : '';
+                        const sel = $(`#manualWeek${plan.minggu_ke}`);
+                        sel.val(pkg);
+                        if (!sel.val()) sel.val(pkg.toUpperCase());
+                        if (!sel.val()) {
+                            sel.find('option').filter(function() {
+                                return $(this).val().toLowerCase() === pkg.toLowerCase();
+                            }).prop('selected', true);
+                        }
                     });
                 }
             }
@@ -1013,6 +1032,7 @@
                                     else if (cleanPkg === 'B') pkgClass = 'pkg-b';
                                     else if (cleanPkg === 'C') pkgClass = 'pkg-c';
                                     else if (cleanPkg === 'D') pkgClass = 'pkg-d';
+                                    else if (cleanPkg === 'OFF') pkgClass = 'pkg-off';
 
                                     let labelText = '';
                                     if (plan.tanggal) {
@@ -1277,7 +1297,15 @@
 
                     // Map database values back to selectors
                     plans.forEach(plan => {
-                        $(`#editWeek${plan.minggu_ke}`).val(plan.paket.toUpperCase().trim());
+                        const pkg = plan.paket ? plan.paket.trim() : '';
+                        const sel = $(`#editWeek${plan.minggu_ke}`);
+                        sel.val(pkg);
+                        if (!sel.val()) sel.val(pkg.toUpperCase());
+                        if (!sel.val()) {
+                            sel.find('option').filter(function() {
+                                return $(this).val().toLowerCase() === pkg.toLowerCase();
+                            }).prop('selected', true);
+                        }
                     });
                 }
 

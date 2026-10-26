@@ -32,6 +32,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('master.mtc.checklist.index') }}"
+                        class="nav-link {{ request()->routeIs('master.mtc.checklist.*') ? 'active' : '' }}">
+                        <i class="mdi mdi-checkbox-marked-circle-outline"></i>Master Checklist
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ url('mtc/master/agenda/master') }}"
                         class="nav-link {{ request()->is('mtc/master/agenda/master') ? 'active' : '' }}">
                         <i class="mdi mdi-chart-bar"></i>Master Agenda

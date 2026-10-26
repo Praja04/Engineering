@@ -139,75 +139,131 @@
                             </div>
                         </div>
 
-                        @php
-                            $coolingTower = [
-                                'cleaning_saringan_cooling_tower' => 'Cleaning Saringan Bak Cooling Tower',
-                                'cleaning_unit_cooling_tower' => 'Cleaning Unit Cooling Tower',
-                                'cleaning_bak_cooling_tower' => 'Cleaning Bak Cooling Tower',
-                            ];
+                        @if(isset($checklistGroups) && $checklistGroups->isNotEmpty())
+                            {{-- DYNAMIC MASTER CHECKLIST RENDERER --}}
+                            @foreach ($checklistGroups as $group)
+                                <h6 class="fw-bold text-primary mb-3 mt-4">{{ $group->nama_group }}</h6>
+                                @foreach ($group->activeChecklists->chunk(2) as $row)
+                                    <div class="row g-3 mb-3">
+                                        @foreach ($row as $chk)
+                                            @php
+                                                $field = $chk->field_key ?: ('chk_' . $chk->id);
+                                            @endphp
+                                            <div class="col-md-6 col-12">
+                                                <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+                                                    <input type="hidden" name="checklist_map[{{ $field }}]" value="{{ $chk->id }}">
 
-                            $ro = [
-                                'check_sensor_tank_farm_ro_produk' => 'Check Sensor Tank Farm RO Produk',
-                                'cleaning_flow_rate_mmf_1' => 'Cleaning Flow Rate MMF #1',
-                                'cleaning_flow_rate_mmf_2' => 'Cleaning Flow Rate MMF #2',
-                                'cleaning_flow_rate_ro_produk' => 'Cleaning Flow Rate RO Produk',
-                                'cleaning_flow_rate_ro_reject' => 'Cleaning Flow Rate RO Reject',
-                                'penggantian_micron_filter_cip' => 'Penggantian Micron Filter CIP',
-                                'penggantian_micron_filter_makeup_water' => 'Penggantian Micron Filter Make Up Water',
-                                'cleaning_cip_tank' => 'Cleaning CIP Tank',
-                                'cip_membrane_reverse_osmosis' => 'CIP Membrane Reverse Osmosis',
-                                'check_fungsi_valve' => 'Check Fungsi Valve',
-                                'cleaning_unit_ro_mesin' => 'Cleaning Unit RO Mesin',
-                            ];
+                                                    <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                        {{ $chk->label }}
+                                                    </label>
 
-                            $compressor = [
-                                'sirkulasi_phe_aq55vsd' => 'Sirkulasi PHE AQ55VSD',
-                                'penggantian_air_ro_aq55vsd' => 'Penggantian Air RO AQ55VSD',
-                                'cleaning_compressor_aq55vsd' => 'Cleaning Compressor AQ55VSD',
-                                'cleaning_jalur_cooling_aq55vsd' => 'Cleaning Jalur Cooling AQ55VSD',
-                                'cleaning_dryer_fd185' => 'Cleaning Dryer FD185',
-                                'cleaning_compressor_ga37' => 'Cleaning Compressor GA37',
-                                'cleaning_dryer_fd120' => 'Cleaning Dryer FD120',
-                                'lubrikasi_motor_compressor_aq55vsd' => 'Lubrikasi Motor Compressor AQ55VSD',
-                                'cleaning_compressor_sm55' => 'Cleaning Compressor SM55',
-                            ];
+                                                    @if($chk->standar)
+                                                        <div class="text-muted small mb-2">{{ $chk->standar }}</div>
+                                                    @endif
 
-                            $tankFarm = [
-                                'cleaning_sensor_level_tank_farm' => 'Cleaning Sensor Level Tank Farm',
-                                'cleaning_sensor_level_fresh_water_menara' =>
-                                    'Cleaning Sensor Level Fresh Water Menara',
-                                'cleaning_sensor_level_ro_reject_menara' => 'Cleaning Sensor Level RO Reject Menara',
-                                'cleaning_sensor_level_intermediate' => 'Cleaning Sensor Level Intermediate',
-                            ];
+                                                    @if($chk->tipe_input === 'boolean_ok_ng')
+                                                        <div class="btn-group btn-group-sm w-100">
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                            <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
 
-                            $boiler = [
-                                'check_safety_valve' => 'Check Safety Valve',
-                                'cleaning_level_gauge' => 'Cleaning Level Gauge',
-                                'cleaning_level_transmitter' => 'Cleaning Level Transmitter',
-                                'check_pressure_transmitter' => 'Check Pressure Transmitter',
-                                'check_temperature_transmitter' => 'Check Temperature Transmitter',
-                                'cleaning_sensor_o2_co2' => 'Cleaning Sensor O2 & CO2',
-                                'check_chaingrate' => 'Check Chaingrate',
-                                'check_ruang_bakar' => 'Check Ruang Bakar',
-                                'check_back_chamber' => 'Check Back Chamber',
-                                'check_guillotine' => 'Check Guillotine',
-                                'check_wet_ash_conveyor' => 'Check Wet Ash Conveyor',
-                                'check_bottom_ash_conveyor' => 'Check Bottom Ash Conveyor',
-                                'check_conveyor_batu_bara' => 'Check Conveyor Batu Bara',
-                                'check_feeder' => 'Check Feeder',
-                                'cleaning_bak_wet_ash_conveyor' => 'Cleaning Bak Wet Ash Conveyor',
-                                'check_feed_tank' => 'Check Feed Tank',
-                            ];
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                            <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak OK</label>
+                                                        </div>
 
-                            $wwtp = [
-                                'check_line_limbah' => 'Check Line Limbah',
-                                'check_line_chemical' => 'Check Line Chemical',
-                                'check_tangki_kotak' => 'Check Tangki Kotak',
-                                'check_tangki_bulat' => 'Check Tangki Bulat',
-                            ];
-                        @endphp
+                                                        <div class="keterangan-wrapper d-none mt-2">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                name="keterangan_{{ $field }}"
+                                                                placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                        </div>
+                                                    @elseif($chk->tipe_input === 'number')
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="number" step="any" class="form-control" name="{{ $field }}" placeholder="Nilai pengukuran">
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <input type="text" class="form-control form-control-sm" name="keterangan_{{ $field }}" placeholder="Catatan tambahan">
+                                                        </div>
+                                                    @else
+                                                        <input type="text" class="form-control form-control-sm" name="{{ $field }}" placeholder="Catatan / keterangan">
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            @endforeach
+                        @else
+                            {{-- FALLBACK HARDCODED (Legacy) --}}
+                            @php
+                                $coolingTower = [
+                                    'cleaning_saringan_cooling_tower' => 'Cleaning Saringan Bak Cooling Tower',
+                                    'cleaning_unit_cooling_tower' => 'Cleaning Unit Cooling Tower',
+                                    'cleaning_bak_cooling_tower' => 'Cleaning Bak Cooling Tower',
+                                ];
 
-                        <h6 class="fw-bold text-primary mb-3">Cooling Tower</h6>
+                                $ro = [
+                                    'check_sensor_tank_farm_ro_produk' => 'Check Sensor Tank Farm RO Produk',
+                                    'cleaning_flow_rate_mmf_1' => 'Cleaning Flow Rate MMF #1',
+                                    'cleaning_flow_rate_mmf_2' => 'Cleaning Flow Rate MMF #2',
+                                    'cleaning_flow_rate_ro_produk' => 'Cleaning Flow Rate RO Produk',
+                                    'cleaning_flow_rate_ro_reject' => 'Cleaning Flow Rate RO Reject',
+                                    'penggantian_micron_filter_cip' => 'Penggantian Micron Filter CIP',
+                                    'penggantian_micron_filter_makeup_water' => 'Penggantian Micron Filter Make Up Water',
+                                    'cleaning_cip_tank' => 'Cleaning CIP Tank',
+                                    'cip_membrane_reverse_osmosis' => 'CIP Membrane Reverse Osmosis',
+                                    'check_fungsi_valve' => 'Check Fungsi Valve',
+                                    'cleaning_unit_ro_mesin' => 'Cleaning Unit RO Mesin',
+                                ];
+
+                                $compressor = [
+                                    'sirkulasi_phe_aq55vsd' => 'Sirkulasi PHE AQ55VSD',
+                                    'penggantian_air_ro_aq55vsd' => 'Penggantian Air RO AQ55VSD',
+                                    'cleaning_compressor_aq55vsd' => 'Cleaning Compressor AQ55VSD',
+                                    'cleaning_jalur_cooling_aq55vsd' => 'Cleaning Jalur Cooling AQ55VSD',
+                                    'cleaning_dryer_fd185' => 'Cleaning Dryer FD185',
+                                    'cleaning_compressor_ga37' => 'Cleaning Compressor GA37',
+                                    'cleaning_dryer_fd120' => 'Cleaning Dryer FD120',
+                                    'lubrikasi_motor_compressor_aq55vsd' => 'Lubrikasi Motor Compressor AQ55VSD',
+                                    'cleaning_compressor_sm55' => 'Cleaning Compressor SM55',
+                                ];
+
+                                $tankFarm = [
+                                    'cleaning_sensor_level_tank_farm' => 'Cleaning Sensor Level Tank Farm',
+                                    'cleaning_sensor_level_fresh_water_menara' =>
+                                        'Cleaning Sensor Level Fresh Water Menara',
+                                    'cleaning_sensor_level_ro_reject_menara' => 'Cleaning Sensor Level RO Reject Menara',
+                                    'cleaning_sensor_level_intermediate' => 'Cleaning Sensor Level Intermediate',
+                                ];
+
+                                $boiler = [
+                                    'check_safety_valve' => 'Check Safety Valve',
+                                    'cleaning_level_gauge' => 'Cleaning Level Gauge',
+                                    'cleaning_level_transmitter' => 'Cleaning Level Transmitter',
+                                    'check_pressure_transmitter' => 'Check Pressure Transmitter',
+                                    'check_temperature_transmitter' => 'Check Temperature Transmitter',
+                                    'cleaning_sensor_o2_co2' => 'Cleaning Sensor O2 & CO2',
+                                    'check_chaingrate' => 'Check Chaingrate',
+                                    'check_ruang_bakar' => 'Check Ruang Bakar',
+                                    'check_back_chamber' => 'Check Back Chamber',
+                                    'check_guillotine' => 'Check Guillotine',
+                                    'check_wet_ash_conveyor' => 'Check Wet Ash Conveyor',
+                                    'check_bottom_ash_conveyor' => 'Check Bottom Ash Conveyor',
+                                    'check_conveyor_batu_bara' => 'Check Conveyor Batu Bara',
+                                    'check_feeder' => 'Check Feeder',
+                                    'cleaning_bak_wet_ash_conveyor' => 'Cleaning Bak Wet Ash Conveyor',
+                                    'check_feed_tank' => 'Check Feed Tank',
+                                ];
+
+                                $wwtp = [
+                                    'check_line_limbah' => 'Check Line Limbah',
+                                    'check_line_chemical' => 'Check Line Chemical',
+                                    'check_tangki_kotak' => 'Check Tangki Kotak',
+                                    'check_tangki_bulat' => 'Check Tangki Bulat',
+                                ];
+                            @endphp
+
+                            <h6 class="fw-bold text-primary mb-3">Cooling Tower</h6>
 
                         @foreach (array_chunk($coolingTower, 2, true) as $row)
                             <div class="row g-3 mb-3">
@@ -439,6 +495,7 @@
                                 @endforeach
                             </div>
                         @endforeach
+                        @endif
 
                         {{-- Korektif --}}
                         <div class="row mt-4">

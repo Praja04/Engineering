@@ -176,4 +176,9 @@ class MtcMainModel extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function checklistResults()
+    {
+        return $this->hasMany(MtcChecklistResult::class, 'mtc_main_id');
+    }
 }

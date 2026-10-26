@@ -17,6 +17,7 @@ use App\Http\Controllers\Maintenance\MtcElectricEngineController;
 use App\Http\Controllers\Maintenance\MtcMainController;
 use App\Http\Controllers\Maintenance\MtcMasterMesinController;
 use App\Http\Controllers\Maintenance\MtcMasterMaterialController;
+use App\Http\Controllers\Maintenance\MtcMasterChecklistController;
 use App\Http\Controllers\Maintenance\MtcMaterialDashboardController;
 use App\Http\Controllers\Maintenance\MtcDashboardController;
 use App\Http\Controllers\Maintenance\MtcP2hController;
@@ -143,6 +144,17 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/download-template', [MtcMasterMaterialController::class, 'downloadTemplate'])->name('master.mtc.material.downloadTemplate');
                 Route::post('/upload-excel', [MtcMasterMaterialController::class, 'uploadExcel'])->name('master.mtc.material.uploadExcel');
                 Route::post('/sync-warehouse', [MtcMasterMaterialController::class, 'syncWarehouse'])->name('master.mtc.material.syncWarehouse');
+            });
+
+            Route::prefix('checklist')->group(function () {
+                Route::get('/index', [MtcMasterChecklistController::class, 'index'])->name('master.mtc.checklist.index');
+                Route::get('/data', [MtcMasterChecklistController::class, 'getData'])->name('master.mtc.checklist.data');
+                Route::get('/groups', [MtcMasterChecklistController::class, 'getGroups'])->name('master.mtc.checklist.groups');
+                Route::post('/store', [MtcMasterChecklistController::class, 'store'])->name('master.mtc.checklist.store');
+                Route::post('/update/{id}', [MtcMasterChecklistController::class, 'update'])->name('master.mtc.checklist.update');
+                Route::delete('/delete/{id}', [MtcMasterChecklistController::class, 'destroy'])->name('master.mtc.checklist.delete');
+                Route::post('/toggle-status/{id}', [MtcMasterChecklistController::class, 'toggleStatus'])->name('master.mtc.checklist.toggle');
+                Route::post('/group/store', [MtcMasterChecklistController::class, 'storeGroup'])->name('master.mtc.checklist.group.store');
             });
 
             Route::get('/agenda/master', [MtcAgendaController::class, 'master'])->name('master.mtc.agenda.master');

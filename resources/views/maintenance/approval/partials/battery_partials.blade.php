@@ -1,18 +1,18 @@
  @php
 
- $batteryItems = [
- 'voltase' => 'Voltase',
- 'level_air_aki' => 'Level Air Aki',
- ];
+     $batteryItems = [
+         'voltase' => 'Voltase',
+         'level_air_aki' => 'Level Air Aki',
+     ];
 
- function badge($v)
- {
- return $v === null
- ? '<span class="badge bg-secondary">No Check</span>'
- : ($v
- ? '<span class="badge bg-success">OK</span>'
- : '<span class="badge bg-danger">NG</span>');
- }
+     function badge($v)
+     {
+         return $v === null
+             ? '<span class="badge bg-secondary">No Check</span>'
+             : ($v
+                 ? '<span class="badge bg-success">OK</span>'
+                 : '<span class="badge bg-danger">NG</span>');
+     }
  @endphp
 
  <h5 class="mb-3">Mtc Battery Inspection</h5>
@@ -65,8 +65,8 @@
      </tr>
      <tr>
          <th>Kondisi Plug Battery</th>
-         <td>: 
-             @if(($data->kondisi_plug_battery ?? '') == 'OK')
+         <td>:
+             @if (($data->kondisi_plug_battery ?? '') == 'OK')
                  <span class="badge bg-success">OK</span>
              @elseif(($data->kondisi_plug_battery ?? '') == 'Tidak OK')
                  <span class="badge bg-danger">Tidak OK</span>
@@ -85,32 +85,36 @@
      </tr>
  </table>
 
- <h6 class="mb-2">Checklist Battery</h6>
+ @if (isset($main->checklistResults) && $main->checklistResults->isNotEmpty())
+     @include('maintenance.approval.partials._dynamic_checklist_table')
+ @endif
+
+ <h6 class="mb-2">Checklist Cell Battery</h6>
 
  <table class="table table-sm table-bordered align-middle text-center">
      <thead class="table-light">
          <tr>
              <th>Cell</th>
              @foreach ($batteryItems as $label)
-             <th>{{ $label }}</th>
+                 <th>{{ $label }}</th>
              @endforeach
          </tr>
      </thead>
      <tbody>
          @forelse ($data->details as $detail)
-         <tr>
-             <td class="fw-bold">{{ $detail->cell }}</td>
+             <tr>
+                 <td class="fw-bold">{{ $detail->cell }}</td>
 
-             @foreach ($batteryItems as $field => $label)
-             <td>{!! badge($detail->$field) !!}</td>
-             @endforeach
-         </tr>
+                 @foreach ($batteryItems as $field => $label)
+                     <td>{!! badge($detail->$field) !!}</td>
+                 @endforeach
+             </tr>
          @empty
-         <tr>
-             <td colspan="{{ count($batteryItems) + 1 }}" class="text-muted text-center">
-                 Tidak ada data inspeksi battery
-             </td>
-         </tr>
+             <tr>
+                 <td colspan="{{ count($batteryItems) + 1 }}" class="text-muted text-center">
+                     Tidak ada data inspeksi battery
+                 </td>
+             </tr>
          @endforelse
      </tbody>
  </table>

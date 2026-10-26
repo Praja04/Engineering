@@ -117,33 +117,37 @@
     </tr>
 </table>
 
-<h6 class="mb-2">Checklist</h6>
+@if(isset($main->checklistResults) && $main->checklistResults->isNotEmpty())
+    @include('maintenance.approval.partials._dynamic_checklist_table')
+@else
+    <h6 class="mb-2">Checklist</h6>
 
-<table class="table table-sm table-bordered align-middle">
-    <thead>
-        <tr class="table-light text-center">
-            <th width="120">Bagian</th>
-            <th>Item</th>
-            <th width="80">Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($checklist as $section => $items)
-            @php $rowspan = count($items); @endphp
-            @foreach ($items as $field => $label)
-                <tr>
-                    @if ($loop->first)
-                        <td rowspan="{{ $rowspan }}" class="fw-bold align-middle text-center">
-                            {{ $section }}
-                        </td>
-                    @endif
-                    <td>{{ $label }}</td>
-                    <td class="text-center">{!! badge($data->$field) !!}</td>
-                </tr>
+    <table class="table table-sm table-bordered align-middle">
+        <thead>
+            <tr class="table-light text-center">
+                <th width="120">Bagian</th>
+                <th>Item</th>
+                <th width="80">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($checklist as $section => $items)
+                @php $rowspan = count($items); @endphp
+                @foreach ($items as $field => $label)
+                    <tr>
+                        @if ($loop->first)
+                            <td rowspan="{{ $rowspan }}" class="fw-bold align-middle text-center">
+                                {{ $section }}
+                            </td>
+                        @endif
+                        <td>{{ $label }}</td>
+                        <td class="text-center">{!! badge($data->$field) !!}</td>
+                    </tr>
+                @endforeach
             @endforeach
-        @endforeach
-    </tbody>
-</table>
+        </tbody>
+    </table>
+@endif
 
 <h6 class="mt-4 mb-2">Kebutuhan Material</h6>
 

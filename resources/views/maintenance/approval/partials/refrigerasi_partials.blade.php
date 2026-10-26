@@ -1,92 +1,92 @@
  @php
- $checklist = [
- 'Unit Indoor' => [
- 'check_filter_udara' => 'Check Filter Udara',
- 'check_cover_filter_udara' => 'Check Cover Filter Udara',
- 'check_electrical_indoor' => 'Check Electrical (Indoor)',
- 'check_suhu_evaporator' => 'Check Suhu Evaporator',
- 'check_indikator_display' => 'Check Indikator Display',
- 'check_motor_blower' => 'Check Motor Blower',
- 'check_fan_belt_blower' => 'Check Fan Belt Blower',
- 'check_pelumasan_blower' => 'Check Pelumasan Blower',
- 'check_pergerakan_motor_swing' => 'Check Pergerakan Motor Swing',
- 'check_kontroler_indoor' => 'Check Kontroler Indoor',
- 'check_saluran_drain_kondensasi' => 'Check Saluran Drain Kondensasi',
- 'sirkulasi_evaporator' => 'Sirkulasi Evaporator',
- ],
+     $checklist = [
+         'Unit Indoor' => [
+             'check_filter_udara' => 'Check Filter Udara',
+             'check_cover_filter_udara' => 'Check Cover Filter Udara',
+             'check_electrical_indoor' => 'Check Electrical (Indoor)',
+             'check_suhu_evaporator' => 'Check Suhu Evaporator',
+             'check_indikator_display' => 'Check Indikator Display',
+             'check_motor_blower' => 'Check Motor Blower',
+             'check_fan_belt_blower' => 'Check Fan Belt Blower',
+             'check_pelumasan_blower' => 'Check Pelumasan Blower',
+             'check_pergerakan_motor_swing' => 'Check Pergerakan Motor Swing',
+             'check_kontroler_indoor' => 'Check Kontroler Indoor',
+             'check_saluran_drain_kondensasi' => 'Check Saluran Drain Kondensasi',
+             'sirkulasi_evaporator' => 'Sirkulasi Evaporator',
+         ],
 
- 'Unit Outdoor' => [
- 'check_kondisi_kondensor' => 'Check Kondisi Kondensor',
- 'check_electrical_outdoor' => 'Check Electrical (Outdoor)',
- 'check_motor_fan' => 'Check Motor Fan',
- 'check_tekanan_freon' => 'Check Tekanan Freon',
- 'pelumasan_motor_fan' => 'Pelumasan Motor Fan',
- 'kebersihan_unit_body_outdoor' => 'Kebersihan Unit & Body Outdoor',
- ],
+         'Unit Outdoor' => [
+             'check_kondisi_kondensor' => 'Check Kondisi Kondensor',
+             'check_electrical_outdoor' => 'Check Electrical (Outdoor)',
+             'check_motor_fan' => 'Check Motor Fan',
+             'check_tekanan_freon' => 'Check Tekanan Freon',
+             'pelumasan_motor_fan' => 'Pelumasan Motor Fan',
+             'kebersihan_unit_body_outdoor' => 'Kebersihan Unit & Body Outdoor',
+         ],
 
- 'Jalur Distribusi' => [
- 'check_jalur_freon' => 'Check Jalur Freon',
- 'check_jalur_distribusi_udara' => 'Check Jalur Distribusi Udara',
- 'check_jalur_return_udara' => 'Check Jalur Return Udara',
- 'check_suhu_supply' => 'Check Suhu Supply',
- 'check_suhu_return' => 'Check Suhu Return',
- 'check_flow_supply' => 'Check Flow Supply',
- 'check_flow_return' => 'Check Flow Return',
- ],
- ];
+         'Jalur Distribusi' => [
+             'check_jalur_freon' => 'Check Jalur Freon',
+             'check_jalur_distribusi_udara' => 'Check Jalur Distribusi Udara',
+             'check_jalur_return_udara' => 'Check Jalur Return Udara',
+             'check_suhu_supply' => 'Check Suhu Supply',
+             'check_suhu_return' => 'Check Suhu Return',
+             'check_flow_supply' => 'Check Flow Supply',
+             'check_flow_return' => 'Check Flow Return',
+         ],
+     ];
 
- $fieldTypes = [
- 'check_filter_udara' => 'both',
- 'check_cover_filter_udara' => 'both',
- 'check_electrical_indoor' => 'both',
- 'check_suhu_evaporator' => 'both',
- 'check_indikator_display' => 'both',
- 'check_motor_blower' => 'both',
- 'check_fan_belt_blower' => 'ahu',
- 'check_pelumasan_blower' => 'ahu',
- 'check_pergerakan_motor_swing' => 'ac',
- 'check_kontroler_indoor' => 'ac',
- 'check_saluran_drain_kondensasi' => 'both',
- 'sirkulasi_evaporator' => 'both',
+     $fieldTypes = [
+         'check_filter_udara' => 'both',
+         'check_cover_filter_udara' => 'both',
+         'check_electrical_indoor' => 'both',
+         'check_suhu_evaporator' => 'both',
+         'check_indikator_display' => 'both',
+         'check_motor_blower' => 'both',
+         'check_fan_belt_blower' => 'ahu',
+         'check_pelumasan_blower' => 'ahu',
+         'check_pergerakan_motor_swing' => 'ac',
+         'check_kontroler_indoor' => 'ac',
+         'check_saluran_drain_kondensasi' => 'both',
+         'sirkulasi_evaporator' => 'both',
 
- 'check_kondisi_kondensor' => 'both',
- 'check_electrical_outdoor' => 'both',
- 'check_motor_fan' => 'ac',
- 'check_tekanan_freon' => 'both',
- 'pelumasan_motor_fan' => 'ac',
- 'kebersihan_unit_body_outdoor' => 'both',
+         'check_kondisi_kondensor' => 'both',
+         'check_electrical_outdoor' => 'both',
+         'check_motor_fan' => 'ac',
+         'check_tekanan_freon' => 'both',
+         'pelumasan_motor_fan' => 'ac',
+         'kebersihan_unit_body_outdoor' => 'both',
 
- 'check_jalur_freon' => 'both',
- 'check_jalur_distribusi_udara' => 'both',
- 'check_jalur_return_udara' => 'both',
- 'check_suhu_supply' => 'ahu',
- 'check_suhu_return' => 'ahu',
- 'check_flow_supply' => 'ahu',
- 'check_flow_return' => 'ahu',
- ];
+         'check_jalur_freon' => 'both',
+         'check_jalur_distribusi_udara' => 'both',
+         'check_jalur_return_udara' => 'both',
+         'check_suhu_supply' => 'ahu',
+         'check_suhu_return' => 'ahu',
+         'check_flow_supply' => 'ahu',
+         'check_flow_return' => 'ahu',
+     ];
 
- $namaMesin = strtoupper($data->mesin->nama_mesin ?? '');
- $isAHU = str_contains($namaMesin, 'AHU');
- $isAC = str_contains($namaMesin, 'AC');
+     $namaMesin = strtoupper($data->mesin->nama_mesin ?? '');
+     $isAHU = str_contains($namaMesin, 'AHU');
+     $isAC = str_contains($namaMesin, 'AC');
 
- $numericFields = [
-      'check_suhu_supply' => true,
-      'check_suhu_return' => true,
-      'check_flow_supply' => true,
-      'check_flow_return' => true,
-  ];
+     $numericFields = [
+         'check_suhu_supply' => true,
+         'check_suhu_return' => true,
+         'check_flow_supply' => true,
+         'check_flow_return' => true,
+     ];
 
-  function badge($v, $isNumeric = false)
-  {
-      if ($isNumeric) {
-          return $v === null ? '-' : '<strong>' . htmlspecialchars($v) . '</strong>';
-      }
-      return $v === null
-          ? '<span class="badge bg-secondary">No Check</span>'
-          : ($v
-              ? '<span class="badge bg-success">OK</span>'
-              : '<span class="badge bg-danger">NG</span>');
-  }
+     function badge($v, $isNumeric = false)
+     {
+         if ($isNumeric) {
+             return $v === null ? '-' : '<strong>' . htmlspecialchars($v) . '</strong>';
+         }
+         return $v === null
+             ? '<span class="badge bg-secondary">No Check</span>'
+             : ($v
+                 ? '<span class="badge bg-success">OK</span>'
+                 : '<span class="badge bg-danger">NG</span>');
+     }
  @endphp
 
  <h5 class="mb-3">Mtc Refrigerasi Inspection</h5>
@@ -130,93 +130,101 @@
      </tr>
  </table>
 
- <h6 class="mb-2">Checklist</h6>
+ @if (isset($main->checklistResults) && $main->checklistResults->isNotEmpty())
+     @include('maintenance.approval.partials._dynamic_checklist_table')
+ @else
+     <h6 class="mb-2">Checklist</h6>
 
- <table class="table table-sm table-bordered align-middle">
-     <thead>
-         <tr class="table-light text-center">
-             <th width="120">Bagian</th>
-             <th>Item</th>
-             <th width="80">Status</th>
-         </tr>
-     </thead>
-     <tbody>
-          @foreach ($checklist as $section => $items)
-          @php
-              $filteredItems = [];
-              foreach ($items as $field => $label) {
-                  $type = $fieldTypes[$field] ?? 'both';
-                  if ($isAHU && !$isAC && $type === 'ac') continue;
-                  if ($isAC && !$isAHU && $type === 'ahu') continue;
-                  $filteredItems[$field] = $label;
-              }
-              $rowspan = count($filteredItems);
-          @endphp
-          @foreach ($filteredItems as $field => $label)
-          <tr>
-              @if ($loop->first)
-              <td rowspan="{{ $rowspan }}" class="fw-bold align-middle text-center">
-                  {{ $section }}
-              </td>
-              @endif
-              <td>{{ $label }}</td>
-              <td class="text-center">{!! badge($data->$field, isset($numericFields[$field])) !!}</td>
-          </tr>
-          @endforeach
-          @endforeach
-     </tbody>
- </table>
+     <table class="table table-sm table-bordered align-middle">
+         <thead>
+             <tr class="table-light text-center">
+                 <th width="120">Bagian</th>
+                 <th>Item</th>
+                 <th width="80">Status</th>
+             </tr>
+         </thead>
+         <tbody>
+             @foreach ($checklist as $section => $items)
+                 @php
+                     $filteredItems = [];
+                     foreach ($items as $field => $label) {
+                         $type = $fieldTypes[$field] ?? 'both';
+                         if ($isAHU && !$isAC && $type === 'ac') {
+                             continue;
+                         }
+                         if ($isAC && !$isAHU && $type === 'ahu') {
+                             continue;
+                         }
+                         $filteredItems[$field] = $label;
+                     }
+                     $rowspan = count($filteredItems);
+                 @endphp
+                 @foreach ($filteredItems as $field => $label)
+                     <tr>
+                         @if ($loop->first)
+                             <td rowspan="{{ $rowspan }}" class="fw-bold align-middle text-center">
+                                 {{ $section }}
+                             </td>
+                         @endif
+                         <td>{{ $label }}</td>
+                         <td class="text-center">{!! badge($data->$field, isset($numericFields[$field])) !!}</td>
+                     </tr>
+                 @endforeach
+             @endforeach
+         </tbody>
+     </table>
+ @endif
 
  <h6 class="mt-4 mb-2">Kebutuhan Material</h6>
 
  @if ($main->kebutuhanMaterial->isEmpty())
- <div class="text-muted fst-italic">
-     Tidak ada kebutuhan material
- </div>
+     <div class="text-muted fst-italic">
+         Tidak ada kebutuhan material
+     </div>
  @else
- <table class="table table-sm table-bordered align-middle">
-     <thead class="table-light text-center">
-         <tr>
-             <th width="120">MID</th>
-             <th>Deskripsi</th>
-             <th width="80">Qty</th>
-         </tr>
-     </thead>
-     <tbody>
-         @foreach ($main->kebutuhanMaterial as $material)
-         <tr>
-             <td class="text-center">{{ $material->mid }}</td>
-             <td>{{ $material->deskripsi }}</td>
-             <td class="text-center">{{ $material->qty }}</td>
-         </tr>
-         @endforeach
-     </tbody>
- </table>
+     <table class="table table-sm table-bordered align-middle">
+         <thead class="table-light text-center">
+             <tr>
+                 <th width="120">MID</th>
+                 <th>Deskripsi</th>
+                 <th width="80">Qty</th>
+             </tr>
+         </thead>
+         <tbody>
+             @foreach ($main->kebutuhanMaterial as $material)
+                 <tr>
+                     <td class="text-center">{{ $material->mid }}</td>
+                     <td>{{ $material->deskripsi }}</td>
+                     <td class="text-center">{{ $material->qty }}</td>
+                 </tr>
+             @endforeach
+         </tbody>
+     </table>
  @endif
 
  <h6 class="mt-4 mb-2">Penggantian Material</h6>
 
  @if ($main->penggantianMaterial->isEmpty())
- <div class="text-muted fst-italic">
-     Tidak ada penggantian material
- </div>
+     <div class="text-muted fst-italic">
+         Tidak ada penggantian material
+     </div>
  @else
- <table class="table table-sm table-bordered align-middle">
-     <thead class="table-light text-center">
-         <tr>
-             <th width="120">MID</th>
-             <th>Deskripsi</th>
-             <th width="80">Qty</th>
-         </tr>
-     </thead>
-     <tbody>
-         @foreach ($main->penggantianMaterial as $replacement)
-         <tr>
-             <td class="text-center">{{ $replacement->mid }}</td>
-             <td>{{ $replacement->deskripsi }}</td>
-             <td class="text-center">{{ $replacement->qty }}</td>
-         </tr>
-         @endforeach
-     </tbody>
- </table>
+     <table class="table table-sm table-bordered align-middle">
+         <thead class="table-light text-center">
+             <tr>
+                 <th width="120">MID</th>
+                 <th>Deskripsi</th>
+                 <th width="80">Qty</th>
+             </tr>
+         </thead>
+         <tbody>
+             @foreach ($main->penggantianMaterial as $replacement)
+                 <tr>
+                     <td class="text-center">{{ $replacement->mid }}</td>
+                     <td>{{ $replacement->deskripsi }}</td>
+                     <td class="text-center">{{ $replacement->qty }}</td>
+                 </tr>
+             @endforeach
+         </tbody>
+     </table>
  @endif

@@ -258,7 +258,8 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Running Hour</label>
-                                <input type="number" step="0.01" class="form-control" name="running_hour" id="editRunningHour" placeholder="0.00">
+                                <input type="number" step="0.01" class="form-control" name="running_hour"
+                                    id="editRunningHour" placeholder="0.00">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Waktu Mulai</label>
@@ -523,57 +524,101 @@
                     `;
                 };
 
-                return `
-                    <div class="detail-meta row g-3 mb-2">
-                        <div class="col-md-3">
-                            <div class="meta-label">Nama Mesin</div>
-                            <div class="meta-value">${row.diesel_engine?.mesin?.nama_mesin ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Kode Mesin</div>
-                            <div class="meta-value">${row.diesel_engine?.mesin?.kode_mesin ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Lokasi</div>
-                            <div class="meta-value">${row.diesel_engine?.mesin?.lokasi ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Tanggal</div>
-                            <div class="meta-value">${fmtDate(row.tanggal)}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Waktu Mulai</div>
-                            <div class="meta-value">${row.waktu_mulai ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Waktu Selesai</div>
-                            <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Running Hour</div>
-                            <div class="meta-value">${row.running_hour ?? '-'}</div>
-                        </div>
-                        ${row.paket === 'Korektif' ? `
-                                                                            <div class="col-md-3">
-                                                                                <div class="meta-label">Tanggal Selesai</div>
-                                                                                <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
-                                                                            </div>
-                                                                            ` : ''}
-                        <div class="col-md-3">
-                            <div class="meta-label">Paket</div>
-                            <div class="meta-value">${row.paket ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Dibuat oleh</div>
-                            <div class="meta-value">${row.created_by.username ?? row.created_by.created_by ?? '-'}</div>
-                        </div>
-                    </div>
+                let checklistContent = '';
+                const results = row.checklist_results || row.checklistResults || [];
+                if (results && results.length > 0) {
+                    const grouped = {};
+                    results.forEach(res => {
+                        const grp = res.checklist?.group?.nama_group || 'Checklist';
+                        if (!grouped[grp]) grouped[grp] = [];
+                        grouped[grp].push(res);
+                    });
 
-                    ${section('Engine', fields.engine)}
-                    ${section('Electric', fields.electric)}
-                    ${section('Transmisi Brake Drive shaft', fields.transmisi_brake_drive_shaft)}
-                    ${section('Hydraulic', fields.hydraulic)}
-                    ${section('General', fields.general)}
+                    checklistContent = Object.keys(grouped).map(groupName => {
+                        const cells = grouped[groupName].map(res => {
+                            let badge = '';
+                            if (res.checklist?.tipe_input === 'boolean_ok_ng' || res.status) {
+                                badge = (res.status || '').toLowerCase() === 'ok' ?
+                                    '<span class="badge bg-success">OK</span>' :
+                                    '<span class="badge bg-danger">Tidak OK</span>';
+                            } else if (res.nilai) {
+                                badge = `<span class="badge bg-info">${res.nilai}</span>`;
+                            } else {
+                                badge = '<span class="badge bg-secondary">-</span>';
+                            }
+                            return `
+                                    <div class="item-cell">
+                                        <div class="item-label">${res.checklist?.label || '-'}</div>
+                                        <div>${badge}</div>
+                                        ${res.keterangan ? `<div class="small text-danger mt-1">Ket: ${res.keterangan}</div>` : ''}
+                                    </div>
+                                `;
+                        }).join('');
+
+                        return `
+                                <div class="mb-3">
+                                    <div class="group-title">${groupName}</div>
+                                    <div class="items-grid">${cells}</div>
+                                </div>
+                            `;
+                    }).join('');
+                } else {
+                    checklistContent = `
+                            ${section('Engine', fields.engine)}
+                            ${section('Electric', fields.electric)}
+                            ${section('Transmisi Brake Drive shaft', fields.transmisi_brake_drive_shaft)}
+                            ${section('Hydraulic', fields.hydraulic)}
+                            ${section('General', fields.general)}
+                        `;
+                }
+
+                return `
+                        <div class="detail-meta row g-3 mb-2">
+                            <div class="col-md-3">
+                                <div class="meta-label">Nama Mesin</div>
+                                <div class="meta-value">${row.diesel_engine?.mesin?.nama_mesin ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Kode Mesin</div>
+                                <div class="meta-value">${row.diesel_engine?.mesin?.kode_mesin ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Lokasi</div>
+                                <div class="meta-value">${row.diesel_engine?.mesin?.lokasi ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Tanggal</div>
+                                <div class="meta-value">${fmtDate(row.tanggal)}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Waktu Mulai</div>
+                                <div class="meta-value">${row.waktu_mulai ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Waktu Selesai</div>
+                                <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Running Hour</div>
+                                <div class="meta-value">${row.running_hour ?? '-'}</div>
+                            </div>
+                            ${row.paket === 'Korektif' ? `
+                                                                                        <div class="col-md-3">
+                                                                                            <div class="meta-label">Tanggal Selesai</div>
+                                                                                            <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
+                                                                                        </div>
+                                                                                        ` : ''}
+                            <div class="col-md-3">
+                                <div class="meta-label">Paket</div>
+                                <div class="meta-value">${row.paket ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Dibuat oleh</div>
+                                <div class="meta-value">${row.created_by.username ?? row.created_by.created_by ?? '-'}</div>
+                            </div>
+                        </div>
+
+                        ${checklistContent}
 
                     <div class="row g-3 mt-2">
                         <div class="col-md-6">
@@ -589,8 +634,8 @@
                            ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                    <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
-                                `).join('')
+                                            <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                        `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -599,8 +644,8 @@
                            ${
                                 row.penggantian_material && row.penggantian_material.length
                                 ? row.penggantian_material.map(m => `
-                                    <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
-                                `).join('')
+                                            <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                        `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -688,7 +733,7 @@
 
                 $('#tbodyDieselEngine').html(`
                     <tr>
-                        <td colspan="9" class="text-center py-4">
+                        <td colspan="10" class="text-center py-4">
                             <div class="spinner-border spinner-border-sm text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
@@ -832,7 +877,7 @@
                     error: function() {
                         $('#tbodyDieselEngine').html(`
                             <tr>
-                                <td colspan="9" class="text-center text-danger py-4">Gagal memuat data</td>
+                                <td colspan="10" class="text-center text-danger py-4">Gagal memuat data</td>
                             </tr>
                         `);
                     }

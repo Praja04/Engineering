@@ -86,8 +86,11 @@ class MtcApprovalController extends Controller
 
     public function detail(MtcMainModel $main)
     {
-        // dd('MASUK CONTROLLER', $main->id, $main->jenis_mtc);
-        $main->load(['kebutuhanMaterial']);
+        $main->load([
+            'kebutuhanMaterial',
+            'penggantianMaterial',
+            'checklistResults.checklist.group'
+        ]);
 
         switch ($main->jenis_mtc) {
 

@@ -171,7 +171,60 @@
                             <div class="alert alert-danger py-2">{{ $message }}</div>
                         @enderror
 
-                        @php
+                        @if(isset($checklistGroups) && $checklistGroups->isNotEmpty())
+                            {{-- DYNAMIC MASTER CHECKLIST RENDERER --}}
+                            @foreach ($checklistGroups as $group)
+                                <h6 class="fw-bold text-primary mb-3 mt-4">{{ $group->nama_group }}</h6>
+                                @foreach ($group->activeChecklists->chunk(2) as $row)
+                                    <div class="row g-3 mb-3">
+                                        @foreach ($row as $chk)
+                                            @php
+                                                $field = $chk->field_key ?: ('chk_' . $chk->id);
+                                            @endphp
+                                            <div class="col-md-6 col-12">
+                                                <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+                                                    <input type="hidden" name="checklist_map[{{ $field }}]" value="{{ $chk->id }}">
+
+                                                    <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                        {{ $chk->label }}
+                                                    </label>
+
+                                                    @if($chk->standar)
+                                                        <div class="text-muted small mb-2">{{ $chk->standar }}</div>
+                                                    @endif
+
+                                                    @if($chk->tipe_input === 'boolean_ok_ng')
+                                                        <div class="btn-group btn-group-sm w-100">
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                            <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
+
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                            <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak OK</label>
+                                                        </div>
+
+                                                        <div class="keterangan-wrapper d-none mt-2">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                name="keterangan_{{ $field }}"
+                                                                placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                        </div>
+                                                    @elseif($chk->tipe_input === 'number')
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="number" step="any" class="form-control" name="{{ $field }}" placeholder="Nilai pengukuran">
+                                                        </div>
+                                                    @else
+                                                        <input type="text" class="form-control form-control-sm" name="{{ $field }}" placeholder="Keterangan / Nilai">
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            @endforeach
+                        @else
+                            {{-- FALLBACK HARDCODED (Legacy) --}}
+                            @php
                             $sipil = [
                                 'plumbing' => [
                                     'label' => 'Plumbing',
@@ -251,6 +304,7 @@
                                 @endforeach
                             </div>
                         @endforeach
+                        @endif
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">

@@ -74,6 +74,7 @@
                                             <option value="">Semua Paket</option>
                                             <option value="Maintenance">Maintenance (A, B, C, D, E, Z, Checkpoint)</option>
                                             <option value="Korektif">Korektif</option>
+                                            <option value="Off">Paket Off</option>
                                             <optgroup label="Paket Spesifik">
                                                 <option value="A">Paket A</option>
                                                 <option value="B">Paket B</option>
@@ -82,6 +83,7 @@
                                                 <option value="E">Paket E</option>
                                                 <option value="Z">Paket Z</option>
                                                 <option value="Checkpoint">Checkpoint</option>
+                                                <option value="Off">Paket Off</option>
                                             </optgroup>
                                         </select>
                                     </div>

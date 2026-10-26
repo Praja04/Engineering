@@ -74,72 +74,115 @@
 
                         <hr>
 
-                        {{-- OVERALL BATTERY CHECKLISTS --}}
-                        <div class="card p-3 mb-3 shadow-sm border-light">
-                            <h6 class="fw-bold mb-3 text-primary">Kondisi Keseluruhan Baterai</h6>
-                            <div class="row g-3">
-                                <!-- Intercell -->
-                                <div class="col-md-3 col-sm-6 col-12">
-                                    <div class="card shadow-sm item-card p-3 item-row-main">
-                                        <label class="form-label fw-semibold">Intercell</label>
-                                        <div class="btn-group btn-group-sm w-100">
-                                            <input type="radio" class="btn-check status-radio" name="intercell"
-                                                value="1" id="intercell_ok">
-                                            <label class="btn btn-outline-success" for="intercell_ok">OK</label>
-                                            <input type="radio" class="btn-check status-radio" name="intercell"
-                                                value="0" id="intercell_ng">
-                                            <label class="btn btn-outline-danger" for="intercell_ng">Tidak OK</label>
-                                        </div>
-                                        <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
+                        @if(isset($checklistGroups) && $checklistGroups->isNotEmpty())
+                            @foreach ($checklistGroups as $group)
+                                <div class="card p-3 mb-3 shadow-sm border-light">
+                                    <h6 class="fw-bold mb-3 text-primary">{{ $group->nama_group }}</h6>
+                                    <div class="row g-3">
+                                        @foreach ($group->activeChecklists as $chk)
+                                            @php
+                                                $field = $chk->field_key ?: ('chk_' . $chk->id);
+                                            @endphp
+                                            <div class="col-md-3 col-sm-6 col-12">
+                                                <div class="card shadow-sm item-card p-3 item-row-main" data-field="{{ $field }}">
+                                                    <input type="hidden" name="checklist_map[{{ $field }}]" value="{{ $chk->id }}">
+                                                    <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                        {{ $chk->label }}
+                                                    </label>
+                                                    @if($chk->standar)
+                                                        <div class="text-muted small mb-1">{{ $chk->standar }}</div>
+                                                    @endif
+
+                                                    @if($chk->tipe_input === 'boolean_ok_ng')
+                                                        <div class="btn-group btn-group-sm w-100">
+                                                            <input type="radio" class="btn-check status-radio" name="{{ $field }}"
+                                                                value="1" id="{{ $field }}_ok">
+                                                            <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
+                                                            <input type="radio" class="btn-check status-radio" name="{{ $field }}"
+                                                                value="0" id="{{ $field }}_ng">
+                                                            <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak OK</label>
+                                                        </div>
+                                                        <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
+                                                    @elseif($chk->tipe_input === 'number')
+                                                        <input type="number" step="any" class="form-control form-control-sm" name="{{ $field }}" placeholder="Nilai...">
+                                                    @else
+                                                        <input type="text" class="form-control form-control-sm" name="{{ $field }}" placeholder="Keterangan...">
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
-                                <!-- Kondisi Skun -->
-                                <div class="col-md-3 col-sm-6 col-12">
-                                    <div class="card shadow-sm item-card p-3 item-row-main">
-                                        <label class="form-label fw-semibold">Kondisi Skun</label>
-                                        <div class="btn-group btn-group-sm w-100">
-                                            <input type="radio" class="btn-check status-radio" name="kondisi_skun"
-                                                value="1" id="kondisi_skun_ok">
-                                            <label class="btn btn-outline-success" for="kondisi_skun_ok">OK</label>
-                                            <input type="radio" class="btn-check status-radio" name="kondisi_skun"
-                                                value="0" id="kondisi_skun_ng">
-                                            <label class="btn btn-outline-danger" for="kondisi_skun_ng">Tidak OK</label>
+                            @endforeach
+                        @else
+                            {{-- FALLBACK HARDCODED (Legacy) --}}
+                            {{-- OVERALL BATTERY CHECKLISTS --}}
+                            <div class="card p-3 mb-3 shadow-sm border-light">
+                                <h6 class="fw-bold mb-3 text-primary">Kondisi Keseluruhan Baterai</h6>
+                                <div class="row g-3">
+                                    <!-- Intercell -->
+                                    <div class="col-md-3 col-sm-6 col-12">
+                                        <div class="card shadow-sm item-card p-3 item-row-main">
+                                            <label class="form-label fw-semibold">Intercell</label>
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <input type="radio" class="btn-check status-radio" name="intercell"
+                                                    value="1" id="intercell_ok">
+                                                <label class="btn btn-outline-success" for="intercell_ok">OK</label>
+                                                <input type="radio" class="btn-check status-radio" name="intercell"
+                                                    value="0" id="intercell_ng">
+                                                <label class="btn btn-outline-danger" for="intercell_ng">Tidak OK</label>
+                                            </div>
+                                            <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
                                         </div>
-                                        <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
                                     </div>
-                                </div>
-                                <!-- Kondisi Unit -->
-                                <div class="col-md-3 col-sm-6 col-12">
-                                    <div class="card shadow-sm item-card p-3 item-row-main">
-                                        <label class="form-label fw-semibold">Kondisi Unit</label>
-                                        <div class="btn-group btn-group-sm w-100">
-                                            <input type="radio" class="btn-check status-radio" name="kondisi_unit"
-                                                value="1" id="kondisi_unit_ok">
-                                            <label class="btn btn-outline-success" for="kondisi_unit_ok">OK</label>
-                                            <input type="radio" class="btn-check status-radio" name="kondisi_unit"
-                                                value="0" id="kondisi_unit_ng">
-                                            <label class="btn btn-outline-danger" for="kondisi_unit_ng">Tidak OK</label>
+                                    <!-- Kondisi Skun -->
+                                    <div class="col-md-3 col-sm-6 col-12">
+                                        <div class="card shadow-sm item-card p-3 item-row-main">
+                                            <label class="form-label fw-semibold">Kondisi Skun</label>
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <input type="radio" class="btn-check status-radio" name="kondisi_skun"
+                                                    value="1" id="kondisi_skun_ok">
+                                                <label class="btn btn-outline-success" for="kondisi_skun_ok">OK</label>
+                                                <input type="radio" class="btn-check status-radio" name="kondisi_skun"
+                                                    value="0" id="kondisi_skun_ng">
+                                                <label class="btn btn-outline-danger" for="kondisi_skun_ng">Tidak OK</label>
+                                            </div>
+                                            <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
                                         </div>
-                                        <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
                                     </div>
-                                </div>
-                                <!-- Kondisi Plug Battery -->
-                                <div class="col-md-3 col-sm-6 col-12">
-                                    <div class="card shadow-sm item-card p-3 item-row-main">
-                                        <label class="form-label fw-semibold">Kondisi Plug Battery</label>
-                                        <div class="btn-group btn-group-sm w-100">
-                                            <input type="radio" class="btn-check status-radio"
-                                                name="kondisi_plug_battery" value="1" id="plug_battery_ok">
-                                            <label class="btn btn-outline-success" for="plug_battery_ok">OK</label>
-                                            <input type="radio" class="btn-check status-radio"
-                                                name="kondisi_plug_battery" value="0" id="plug_battery_ng">
-                                            <label class="btn btn-outline-danger" for="plug_battery_ng">Tidak OK</label>
+                                    <!-- Kondisi Unit -->
+                                    <div class="col-md-3 col-sm-6 col-12">
+                                        <div class="card shadow-sm item-card p-3 item-row-main">
+                                            <label class="form-label fw-semibold">Kondisi Unit</label>
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <input type="radio" class="btn-check status-radio" name="kondisi_unit"
+                                                    value="1" id="kondisi_unit_ok">
+                                                <label class="btn btn-outline-success" for="kondisi_unit_ok">OK</label>
+                                                <input type="radio" class="btn-check status-radio" name="kondisi_unit"
+                                                    value="0" id="kondisi_unit_ng">
+                                                <label class="btn btn-outline-danger" for="kondisi_unit_ng">Tidak OK</label>
+                                            </div>
+                                            <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
                                         </div>
-                                        <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
+                                    </div>
+                                    <!-- Kondisi Plug Battery -->
+                                    <div class="col-md-3 col-sm-6 col-12">
+                                        <div class="card shadow-sm item-card p-3 item-row-main">
+                                            <label class="form-label fw-semibold">Kondisi Plug Battery</label>
+                                            <div class="btn-group btn-group-sm w-100">
+                                                <input type="radio" class="btn-check status-radio"
+                                                    name="kondisi_plug_battery" value="1" id="plug_battery_ok">
+                                                <label class="btn btn-outline-success" for="plug_battery_ok">OK</label>
+                                                <input type="radio" class="btn-check status-radio"
+                                                    name="kondisi_plug_battery" value="0" id="plug_battery_ng">
+                                                <label class="btn btn-outline-danger" for="plug_battery_ng">Tidak OK</label>
+                                            </div>
+                                            <small class="status-label-default fst-italic mt-1 text-muted">Belum dicek</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        @endif
 
                         <hr>
 

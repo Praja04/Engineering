@@ -23,11 +23,6 @@
             vertical-align: middle;
         }
 
-        /*
-                                                                                    #detailModal .modal-dialog {
-                                                                                        max-width: 90%;
-                                                                                    } */
-
         /* BORDER MERAH SAAT NG */
         .check-wrapper.ng-active {
             border-left: 4px solid #dc3545;
@@ -667,6 +662,21 @@
                 $('#modalKondisiSkun').html(statusBadge(battery.kondisi_skun));
                 $('#modalKondisiUnit').html(statusBadge(battery.kondisi_unit));
                 $('#modalKondisiPlugBattery').html(statusBadge(battery.kondisi_plug_battery));
+
+                const chkResults = rowData.checklist_results || rowData.checklistResults || [];
+                if (chkResults && chkResults.length > 0) {
+                    chkResults.forEach(res => {
+                        const key = res.checklist?.field_key;
+                        const badge = (res.status || '').toLowerCase() === 'ok' ?
+                            '<span class="badge bg-success">OK</span>' :
+                            '<span class="badge bg-danger">Tidak OK</span>';
+                        if (key === 'intercell') $('#modalIntercell').html(badge);
+                        if (key === 'kondisi_skun') $('#modalKondisiSkun').html(badge);
+                        if (key === 'kondisi_unit') $('#modalKondisiUnit').html(badge);
+                        if (key === 'kondisi_plug_battery') $('#modalKondisiPlugBattery').html(
+                            badge);
+                    });
+                }
 
                 // User yang create
                 $('#modalUser').text(rowData.created_by?.username || 'Unknown');

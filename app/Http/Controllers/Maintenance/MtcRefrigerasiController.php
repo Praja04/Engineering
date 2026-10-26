@@ -19,6 +19,9 @@ use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
 use App\Models\Maintenance\MtcPenggantianMaterialModel;
 use App\Http\Requests\Maintenance\MtcPenggantianMaterialRequest;
 use App\Http\Requests\Maintenance\MtcRefrigerasiRequest;
+use App\Models\Maintenance\MtcMasterChecklistGroup;
+use App\Models\Maintenance\MtcMasterChecklist;
+use App\Models\Maintenance\MtcChecklistResult;
 use Illuminate\Support\Str;
 
 class MtcRefrigerasiController extends Controller
@@ -48,7 +51,13 @@ class MtcRefrigerasiController extends Controller
         $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Refrigerasi')
             ->orderBy('id')->get();
 
-        return view('maintenance.form.refrigerasi', compact('mesin'));
+        $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Refrigerasi')
+            ->where('is_active', true)
+            ->with(['activeChecklists'])
+            ->orderBy('urutan')
+            ->get();
+
+        return view('maintenance.form.refrigerasi', compact('mesin', 'checklistGroups'));
     }
 
     public function viewData()
@@ -81,6 +90,29 @@ class MtcRefrigerasiController extends Controller
                 ...$detailRequest->validated(),
                 'mtc_main_id' => $main->id,
             ]);
+
+            // Simpan dynamic checklist results (Zero Data Loss compatibility)
+            $checklistMap = request()->input('checklist_map', []);
+            if (!empty($checklistMap) && is_array($checklistMap)) {
+                foreach ($checklistMap as $field => $checklistId) {
+                    $val = request()->input($field);
+                    $keteranganVal = request()->input('keterangan_' . $field);
+
+                    if ($val !== null) {
+                        $status = is_numeric($val) && ($val == 1 || $val == 0) ? ($val == 1 ? 'OK' : 'NG') : 'OK';
+                        $nilai = is_numeric($val) && $val != 1 && $val != 0 ? (string)$val : null;
+
+                        MtcChecklistResult::create([
+                            'mtc_main_id'  => $main->id,
+                            'checklist_id' => $checklistId,
+                            'status'       => $status,
+                            'nilai'        => $nilai,
+                            'keterangan'   => $keteranganVal,
+                            'created_by'   => $userId,
+                        ]);
+                    }
+                }
+            }
 
             foreach ($materials->materials ?? [] as $item) {
                 $uom = $item['uom'] ?? null;
@@ -188,9 +220,9 @@ class MtcRefrigerasiController extends Controller
             ->with([
                 'createdBy:id,username',
                 'refrigerasi.mesin:id,nama_mesin,lokasi,kode_mesin',
-                // ⚠️ optional: comment kalau berat
                 'kebutuhanMaterial',
                 'penggantianMaterial',
+                'checklistResults.checklist.group',
             ]);
 
         // 🔍 filter tanggal

@@ -18,6 +18,9 @@ use App\Models\Maintenance\MtcPenggantianMaterialModel;
 use App\Http\Requests\Maintenance\MtcPenggantianMaterialRequest;
 use App\Http\Requests\Maintenance\MtcMotorPumpRequest;
 use App\Models\Maintenance\MtcMotorPumpModel;
+use App\Models\Maintenance\MtcMasterChecklistGroup;
+use App\Models\Maintenance\MtcMasterChecklist;
+use App\Models\Maintenance\MtcChecklistResult;
 
 class MtcMotorPumpController extends Controller
 {
@@ -26,7 +29,13 @@ class MtcMotorPumpController extends Controller
         $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Motor Pompa')
             ->orderBy('id')->get();
 
-        return view('maintenance.form.motor_pump', compact('mesin'));
+        $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Motor Pompa')
+            ->where('is_active', true)
+            ->with(['activeChecklists'])
+            ->orderBy('urutan')
+            ->get();
+
+        return view('maintenance.form.motor_pump', compact('mesin', 'checklistGroups'));
     }
 
     public function viewData()
@@ -59,6 +68,25 @@ class MtcMotorPumpController extends Controller
                 ...$detailRequest->validated(),
                 'mtc_main_id' => $main->id,
             ]);
+
+            // Simpan dynamic checklist results (Zero Data Loss compatibility)
+            $checklistMap = request()->input('checklist_map', []);
+            if (!empty($checklistMap) && is_array($checklistMap)) {
+                foreach ($checklistMap as $field => $checklistId) {
+                    $statusVal = request()->input($field);
+                    $keteranganVal = request()->input('keterangan_' . $field);
+
+                    if ($statusVal !== null) {
+                        MtcChecklistResult::create([
+                            'mtc_main_id'  => $main->id,
+                            'checklist_id' => $checklistId,
+                            'status'       => $statusVal == 1 ? 'OK' : 'NG',
+                            'keterangan'   => $keteranganVal,
+                            'created_by'   => $userId,
+                        ]);
+                    }
+                }
+            }
 
             foreach ($materials->materials ?? [] as $item) {
                 $uom = $item['uom'] ?? null;
@@ -164,7 +192,8 @@ class MtcMotorPumpController extends Controller
                 'createdBy:id,username',
                 'motorPump.mesin:id,nama_mesin,lokasi,kode_mesin',
                 'kebutuhanMaterial',
-                'penggantianMaterial'
+                'penggantianMaterial',
+                'checklistResults.checklist.group',
             ]);
 
         // 🔍 filter tanggal

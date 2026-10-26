@@ -131,197 +131,254 @@
                             </div>
                         </div>
 
-                        <h6 class="fw-bold text-primary mb-3">Motor</h6>
+                        @if(isset($checklistGroups) && $checklistGroups->isNotEmpty())
+                            {{-- DYNAMIC MASTER CHECKLIST RENDERER --}}
+                            @foreach ($checklistGroups as $group)
+                                <h6 class="fw-bold text-primary mb-3 mt-4">{{ $group->nama_group }}</h6>
+                                @foreach ($group->activeChecklists->chunk(2) as $row)
+                                    <div class="row g-3 mb-3">
+                                        @foreach ($row as $chk)
+                                            @php
+                                                $field = $chk->field_key ?: ('chk_' . $chk->id);
+                                            @endphp
+                                            <div class="col-md-6 col-12">
+                                                <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+                                                    <input type="hidden" name="checklist_map[{{ $field }}]" value="{{ $chk->id }}">
 
-                        @php
-                            $motors = [
-                                'electrical_motor' => 'Kondisi Electrical',
-                                'putaran_motor' => 'Putaran Motor',
-                                'fibrasi_suara_motor' => 'Fibrasi dan Suara Motor',
-                                'bearing_motor' => 'Bearing Motor',
-                                'pelumasan_motor' => 'Pelumasan Motor',
-                                'kebersihan_unit_body_motor' => 'Kebersihan Unit Body Motor',
-                            ];
+                                                    <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                        {{ $chk->label }}
+                                                    </label>
 
-                            $pump = [
-                                'putaran_pompa' => 'Putaran Pompa',
-                                'shaft_karet_coupling_pompa' => 'Shaft & Karet Coupling',
-                                'fan_belt_pompa' => 'Fan Belt',
-                                'pressure_pompa' => 'Pressure Pompa',
-                                'mechanical_seal_pompa' => 'Mechanical Seal',
-                                'gasket_pompa' => 'Gasket Pompa',
-                                'impeler' => 'Kondisi Impeller',
-                                'kebersihan_unit_body_pompa' => 'Kebersihan Unit & Body Pompa',
-                            ];
+                                                    @if($chk->standar)
+                                                        <div class="text-muted small mb-2">{{ $chk->standar }}</div>
+                                                    @endif
 
-                            $aksesoris = [
-                                'valve_aksesoris' => 'Valve',
-                                'cek_valve_aksesoris' => 'Cek Valve',
-                                'flow_meter_aksesoris' => 'Flow Meter',
-                                'strainer_aksesoris' => 'Strainer / Saringan',
-                                'alat_ukur_aksesoris' => 'Alat Ukur',
-                                'kelengkapan_baut_mur_aksesoris' => 'Kelengkapan Baut & Mur',
-                            ];
+                                                    @if($chk->tipe_input === 'boolean_ok_ng')
+                                                        <div class="btn-group btn-group-sm w-100">
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                            <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
 
-                            $gearbox = [
-                                'tambah_ganti_oli_gearbox' => 'Penambahan / Penggantian Oli Gearbox',
-                                'unit_area_gearbox' => 'Unit & Area Gearbox',
-                                'oil_seal_gearbox' => 'Oil Seal Gearbox',
-                                'filter_udara_gearbox' => 'Filter Udara Gearbox',
-                                'bearing_gearbox' => 'Bearing Gearbox',
-                            ];
-                        @endphp
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                            <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak OK</label>
+                                                        </div>
 
-                        @foreach (array_chunk($motors, 2, true) as $row)
-                            <div class="row g-3 mb-3">
-                                @foreach ($row as $field => $label)
-                                    <div class="col-md-6 col-12">
-                                        <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
-
-                                            <label class="form-label fw-semibold" data-label="{{ $field }}">
-                                                {{ $label }}
-                                            </label>
-
-                                            <div class="btn-group btn-group-sm w-100">
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="1" id="{{ $field }}_ok">
-                                                <label class="btn btn-outline-success"
-                                                    for="{{ $field }}_ok">OK</label>
-
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="0" id="{{ $field }}_ng">
-                                                <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
-                                                    OK</label>
+                                                        <div class="keterangan-wrapper d-none mt-2">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                name="keterangan_{{ $field }}"
+                                                                placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                        </div>
+                                                    @elseif($chk->tipe_input === 'number')
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="number" step="any" class="form-control" name="{{ $field }}" placeholder="Nilai pengukuran">
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <input type="text" class="form-control form-control-sm" name="keterangan_{{ $field }}" placeholder="Catatan tambahan">
+                                                        </div>
+                                                    @else
+                                                        <input type="text" class="form-control form-control-sm" name="{{ $field }}" placeholder="Catatan / keterangan">
+                                                    @endif
+                                                </div>
                                             </div>
-
-                                            <div class="keterangan-wrapper d-none mt-2">
-                                                <input type="text" class="form-control form-control-sm"
-                                                    name="keterangan_{{ $field }}"
-                                                    placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
-                                            </div>
-
-                                        </div>
+                                        @endforeach
                                     </div>
                                 @endforeach
-                            </div>
-                        @endforeach
+                            @endforeach
+                        @else
+                            {{-- FALLBACK HARDCODED (Legacy) --}}
+                            <h6 class="fw-bold text-primary mb-3">Motor</h6>
 
-                        <h6 class="fw-bold text-primary mb-3">Pompa</h6>
+                            @php
+                                $motors = [
+                                    'electrical_motor' => 'Kondisi Electrical',
+                                    'putaran_motor' => 'Putaran Motor',
+                                    'fibrasi_suara_motor' => 'Fibrasi dan Suara Motor',
+                                    'bearing_motor' => 'Bearing Motor',
+                                    'pelumasan_motor' => 'Pelumasan Motor',
+                                    'kebersihan_unit_body_motor' => 'Kebersihan Unit Body Motor',
+                                ];
 
-                        @foreach (array_chunk($pump, 2, true) as $row)
-                            <div class="row g-3 mb-3">
-                                @foreach ($row as $field => $label)
-                                    <div class="col-md-6 col-12">
-                                        <div class="card shadow-sm item-card p-3 item-row"
-                                            data-field="{{ $field }}">
+                                $pump = [
+                                    'putaran_pompa' => 'Putaran Pompa',
+                                    'shaft_karet_coupling_pompa' => 'Shaft & Karet Coupling',
+                                    'fan_belt_pompa' => 'Fan Belt',
+                                    'pressure_pompa' => 'Pressure Pompa',
+                                    'mechanical_seal_pompa' => 'Mechanical Seal',
+                                    'gasket_pompa' => 'Gasket Pompa',
+                                    'impeler' => 'Kondisi Impeller',
+                                    'kebersihan_unit_body_pompa' => 'Kebersihan Unit & Body Pompa',
+                                ];
 
-                                            <label class="form-label fw-semibold" data-label="{{ $field }}">
-                                                {{ $label }}
-                                            </label>
+                                $aksesoris = [
+                                    'valve_aksesoris' => 'Valve',
+                                    'cek_valve_aksesoris' => 'Cek Valve',
+                                    'flow_meter_aksesoris' => 'Flow Meter',
+                                    'strainer_aksesoris' => 'Strainer / Saringan',
+                                    'alat_ukur_aksesoris' => 'Alat Ukur',
+                                    'kelengkapan_baut_mur_aksesoris' => 'Kelengkapan Baut & Mur',
+                                ];
 
-                                            <div class="btn-group btn-group-sm w-100">
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="1"
-                                                    id="{{ $field }}_ok">
-                                                <label class="btn btn-outline-success"
-                                                    for="{{ $field }}_ok">OK</label>
+                                $gearbox = [
+                                    'tambah_ganti_oli_gearbox' => 'Penambahan / Penggantian Oli Gearbox',
+                                    'unit_area_gearbox' => 'Unit & Area Gearbox',
+                                    'oil_seal_gearbox' => 'Oil Seal Gearbox',
+                                    'filter_udara_gearbox' => 'Filter Udara Gearbox',
+                                    'bearing_gearbox' => 'Bearing Gearbox',
+                                ];
+                            @endphp
 
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="0"
-                                                    id="{{ $field }}_ng">
-                                                <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
-                                                    OK</label>
+                            @foreach (array_chunk($motors, 2, true) as $row)
+                                <div class="row g-3 mb-3">
+                                    @foreach ($row as $field => $label)
+                                        <div class="col-md-6 col-12">
+                                            <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+
+                                                <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                    {{ $label }}
+                                                </label>
+
+                                                <div class="btn-group btn-group-sm w-100">
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                    <label class="btn btn-outline-success"
+                                                        for="{{ $field }}_ok">OK</label>
+
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                    <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
+                                                        OK</label>
+                                                </div>
+
+                                                <div class="keterangan-wrapper d-none mt-2">
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        name="keterangan_{{ $field }}"
+                                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                </div>
+
                                             </div>
-
-                                            <div class="keterangan-wrapper d-none mt-2">
-                                                <input type="text" class="form-control form-control-sm"
-                                                    name="keterangan_{{ $field }}"
-                                                    placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
-                                            </div>
-
                                         </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endforeach
+                                    @endforeach
+                                </div>
+                            @endforeach
 
-                        <h6 class="fw-bold text-primary mb-3">Aksesoris</h6>
+                            <h6 class="fw-bold text-primary mb-3">Pompa</h6>
 
-                        @foreach (array_chunk($aksesoris, 2, true) as $row)
-                            <div class="row g-3 mb-3">
-                                @foreach ($row as $field => $label)
-                                    <div class="col-md-6 col-12">
-                                        <div class="card shadow-sm item-card p-3 item-row"
-                                            data-field="{{ $field }}">
+                            @foreach (array_chunk($pump, 2, true) as $row)
+                                <div class="row g-3 mb-3">
+                                    @foreach ($row as $field => $label)
+                                        <div class="col-md-6 col-12">
+                                            <div class="card shadow-sm item-card p-3 item-row"
+                                                data-field="{{ $field }}">
 
-                                            <label class="form-label fw-semibold" data-label="{{ $field }}">
-                                                {{ $label }}
-                                            </label>
+                                                <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                    {{ $label }}
+                                                </label>
 
-                                            <div class="btn-group btn-group-sm w-100">
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="1"
-                                                    id="{{ $field }}_ok">
-                                                <label class="btn btn-outline-success"
-                                                    for="{{ $field }}_ok">OK</label>
+                                                <div class="btn-group btn-group-sm w-100">
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="1"
+                                                        id="{{ $field }}_ok">
+                                                    <label class="btn btn-outline-success"
+                                                        for="{{ $field }}_ok">OK</label>
 
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="0"
-                                                    id="{{ $field }}_ng">
-                                                <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
-                                                    OK</label>
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="0"
+                                                        id="{{ $field }}_ng">
+                                                    <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
+                                                        OK</label>
+                                                </div>
+
+                                                <div class="keterangan-wrapper d-none mt-2">
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        name="keterangan_{{ $field }}"
+                                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                </div>
+
                                             </div>
-
-                                            <div class="keterangan-wrapper d-none mt-2">
-                                                <input type="text" class="form-control form-control-sm"
-                                                    name="keterangan_{{ $field }}"
-                                                    placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
-                                            </div>
-
                                         </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endforeach
+                                    @endforeach
+                                </div>
+                            @endforeach
 
-                        <h6 class="fw-bold text-primary mb-3">Gearbox</h6>
+                            <h6 class="fw-bold text-primary mb-3">Aksesoris</h6>
 
-                        @foreach (array_chunk($gearbox, 2, true) as $row)
-                            <div class="row g-3 mb-3">
-                                @foreach ($row as $field => $label)
-                                    <div class="col-md-6 col-12">
-                                        <div class="card shadow-sm item-card p-3 item-row"
-                                            data-field="{{ $field }}">
+                            @foreach (array_chunk($aksesoris, 2, true) as $row)
+                                <div class="row g-3 mb-3">
+                                    @foreach ($row as $field => $label)
+                                        <div class="col-md-6 col-12">
+                                            <div class="card shadow-sm item-card p-3 item-row"
+                                                data-field="{{ $field }}">
 
-                                            <label class="form-label fw-semibold" data-label="{{ $field }}">
-                                                {{ $label }}
-                                            </label>
+                                                <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                    {{ $label }}
+                                                </label>
 
-                                            <div class="btn-group btn-group-sm w-100">
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="1"
-                                                    id="{{ $field }}_ok">
-                                                <label class="btn btn-outline-success"
-                                                    for="{{ $field }}_ok">OK</label>
+                                                <div class="btn-group btn-group-sm w-100">
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="1"
+                                                        id="{{ $field }}_ok">
+                                                    <label class="btn btn-outline-success"
+                                                        for="{{ $field }}_ok">OK</label>
 
-                                                <input type="radio" class="btn-check status-radio"
-                                                    name="{{ $field }}" value="0"
-                                                    id="{{ $field }}_ng">
-                                                <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
-                                                    OK</label>
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="0"
+                                                        id="{{ $field }}_ng">
+                                                    <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
+                                                        OK</label>
+                                                </div>
+
+                                                <div class="keterangan-wrapper d-none mt-2">
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        name="keterangan_{{ $field }}"
+                                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                </div>
+
                                             </div>
-
-                                            <div class="keterangan-wrapper d-none mt-2">
-                                                <input type="text" class="form-control form-control-sm"
-                                                    name="keterangan_{{ $field }}"
-                                                    placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
-                                            </div>
-
                                         </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endforeach
+                                    @endforeach
+                                </div>
+                            @endforeach
+
+                            <h6 class="fw-bold text-primary mb-3">Gearbox</h6>
+
+                            @foreach (array_chunk($gearbox, 2, true) as $row)
+                                <div class="row g-3 mb-3">
+                                    @foreach ($row as $field => $label)
+                                        <div class="col-md-6 col-12">
+                                            <div class="card shadow-sm item-card p-3 item-row"
+                                                data-field="{{ $field }}">
+
+                                                <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                    {{ $label }}
+                                                </label>
+
+                                                <div class="btn-group btn-group-sm w-100">
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="1"
+                                                        id="{{ $field }}_ok">
+                                                    <label class="btn btn-outline-success"
+                                                        for="{{ $field }}_ok">OK</label>
+
+                                                    <input type="radio" class="btn-check status-radio"
+                                                        name="{{ $field }}" value="0"
+                                                        id="{{ $field }}_ng">
+                                                    <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak
+                                                        OK</label>
+                                                </div>
+
+                                                <div class="keterangan-wrapper d-none mt-2">
+                                                    <input type="text" class="form-control form-control-sm"
+                                                        name="keterangan_{{ $field }}"
+                                                        placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        @endif
 
                         {{-- Korektif --}}
                         <div class="row mt-4">

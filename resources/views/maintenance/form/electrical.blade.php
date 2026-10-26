@@ -109,52 +109,107 @@
                             </div>
                         </div>
 
-                        @php
-                            $panel = [
-                                'check_kunci' => 'Check Kunci',
-                                'check_koneksi_kabel' => 'Check Koneksi Kabel',
-                                'check_wiring_panel' => 'Check Wiring Panel',
-                                'check_lampu_indikator' => 'Check Lampu Indikator',
-                                'check_name_plate' => 'Check Name Plate',
-                                'check_unit_electrical' => 'Check Unit Electrical',
-                                'check_grounding' => 'Check Grounding',
-                                'check_kebersihan' => 'Check Kebersihan',
-                                'check_bus_bar' => 'Check Bus Bar',
-                                'check_nilai_grounding' => 'Check Nilai Grounding',
-                            ];
+                        @if(isset($checklistGroups) && $checklistGroups->isNotEmpty())
+                            {{-- DYNAMIC MASTER CHECKLIST RENDERER --}}
+                            @foreach ($checklistGroups as $group)
+                                <h6 class="fw-bold text-primary mb-3 mt-4">{{ $group->nama_group }}</h6>
+                                @foreach ($group->activeChecklists->chunk(2) as $row)
+                                    <div class="row g-3 mb-3">
+                                        @foreach ($row as $chk)
+                                            @php
+                                                $field = $chk->field_key ?: ('chk_' . $chk->id);
+                                            @endphp
+                                            <div class="col-md-6 col-12">
+                                                <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+                                                    <input type="hidden" name="checklist_map[{{ $field }}]" value="{{ $chk->id }}">
 
-                            $penerangan = [
-                                'check_kondisi_lampu' => 'Check Kondisi Lampu',
-                                'check_cover_lampu' => 'Check Cover Lampu',
-                                'check_wiring_penerangan' => 'Check Wiring Penerangan',
-                                'check_saklar' => 'Check Saklar',
-                                'check_penyangga_penerangan' => 'Check Penyangga Penerangan',
-                            ];
+                                                    <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                        {{ $chk->label }}
+                                                    </label>
 
-                            $sistemDistribusi = [
-                                'check_stecker' => 'Check Stecker',
-                                'check_stop_kontak' => 'Check Stop Kontak',
-                                'check_terminal_listrik' => 'Check Terminal Listrik',
-                                'check_pengabelan_distribusi' => 'Check Pengkabelan Distribusi',
-                                'check_support_pelindung_distribusi' => 'Check Support & Pelindung Distribusi',
-                            ];
+                                                    @if($chk->standar)
+                                                        <div class="text-muted small mb-2">{{ $chk->standar }}</div>
+                                                    @endif
 
-                            $capacitorBank = [
-                                'check_kondisi_fisik_capacitor' => 'Check Kondisi Fisik Capacitor',
-                                'check_nilai_farad' => 'Check Nilai Farad',
-                                'check_nilai_ampere' => 'Check Nilai Ampere',
-                                'check_kebersihan_capacitor' => 'Check Kebersihan (Capacitor)',
-                            ];
+                                                    @if($chk->tipe_input === 'boolean_ok_ng')
+                                                        <div class="btn-group btn-group-sm w-100">
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                            <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
 
-                            $trafo = [
-                                'check_kebocoran_oli_sisi_bawah' => 'Check Kebocoran Oli Sisi Bawah',
-                                'check_kebocoran_oli_sisi_atas' => 'Check Kebocoran Oli Sisi Atas',
-                                'check_level_oli' => 'Check Level Oli',
-                            ];
-                        @endphp
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                            <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak OK</label>
+                                                        </div>
 
+                                                        <div class="keterangan-wrapper d-none mt-2">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                name="keterangan_{{ $field }}"
+                                                                placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                        </div>
+                                                    @elseif($chk->tipe_input === 'number')
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="number" step="any" class="form-control" name="{{ $field }}" placeholder="Nilai pengukuran">
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <input type="text" class="form-control form-control-sm" name="keterangan_{{ $field }}" placeholder="Catatan tambahan">
+                                                        </div>
+                                                    @else
+                                                        <input type="text" class="form-control form-control-sm" name="{{ $field }}" placeholder="Catatan / keterangan">
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            @endforeach
+                        @else
+                            {{-- FALLBACK HARDCODED (Legacy) --}}
+                            @php
+                                $panel = [
+                                    'check_kunci' => 'Check Kunci',
+                                    'check_koneksi_kabel' => 'Check Koneksi Kabel',
+                                    'check_wiring_panel' => 'Check Wiring Panel',
+                                    'check_lampu_indikator' => 'Check Lampu Indikator',
+                                    'check_name_plate' => 'Check Name Plate',
+                                    'check_unit_electrical' => 'Check Unit Electrical',
+                                    'check_grounding' => 'Check Grounding',
+                                    'check_kebersihan' => 'Check Kebersihan',
+                                    'check_bus_bar' => 'Check Bus Bar',
+                                    'check_nilai_grounding' => 'Check Nilai Grounding',
+                                ];
 
-                        <h6 class="fw-bold text-primary mb-3">Panel</h6>
+                                $penerangan = [
+                                    'check_kondisi_lampu' => 'Check Kondisi Lampu',
+                                    'check_cover_lampu' => 'Check Cover Lampu',
+                                    'check_wiring_penerangan' => 'Check Wiring Penerangan',
+                                    'check_saklar' => 'Check Saklar',
+                                    'check_penyangga_penerangan' => 'Check Penyangga Penerangan',
+                                ];
+
+                                $sistemDistribusi = [
+                                    'check_stecker' => 'Check Stecker',
+                                    'check_stop_kontak' => 'Check Stop Kontak',
+                                    'check_terminal_listrik' => 'Check Terminal Listrik',
+                                    'check_pengabelan_distribusi' => 'Check Pengkabelan Distribusi',
+                                    'check_support_pelindung_distribusi' => 'Check Support & Pelindung Distribusi',
+                                ];
+
+                                $capacitorBank = [
+                                    'check_kondisi_fisik_capacitor' => 'Check Kondisi Fisik Capacitor',
+                                    'check_nilai_farad' => 'Check Nilai Farad',
+                                    'check_nilai_ampere' => 'Check Nilai Ampere',
+                                    'check_kebersihan_capacitor' => 'Check Kebersihan (Capacitor)',
+                                ];
+
+                                $trafo = [
+                                    'check_kebocoran_oli_sisi_bawah' => 'Check Kebocoran Oli Sisi Bawah',
+                                    'check_kebocoran_oli_sisi_atas' => 'Check Kebocoran Oli Sisi Atas',
+                                    'check_level_oli' => 'Check Level Oli',
+                                ];
+                            @endphp
+
+                            <h6 class="fw-bold text-primary mb-3">Panel</h6>
 
                         @foreach (array_chunk($panel, 2, true) as $row)
                             <div class="row g-3 mb-3">
@@ -345,6 +400,7 @@
                                 @endforeach
                             </div>
                         @endforeach
+                        @endif
 
                         {{-- Korektif --}}
                         <div class="row mt-4">

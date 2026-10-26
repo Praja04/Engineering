@@ -15,12 +15,23 @@ use App\Models\Maintenance\MtcBatteryMainModel;
 use App\Http\Requests\Maintenance\MtcMainRequest;
 use App\Http\Requests\Maintenance\MtcBatteryRequest;
 use App\Http\Requests\Maintenance\MtcBatteryMainRequest;
+use App\Models\Maintenance\MtcMasterChecklistGroup;
+use App\Models\Maintenance\MtcMasterChecklist;
+use App\Models\Maintenance\MtcChecklistResult;
 
 class MtcBatteryController extends Controller
 {
     public function index()
     {
-        return view('maintenance.form.battery');
+        $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Battery')
+            ->where('is_active', true)
+            ->with(['activeChecklists' => function ($q) {
+                $q->orderBy('urutan');
+            }])
+            ->orderBy('urutan')
+            ->get();
+
+        return view('maintenance.form.battery', compact('checklistGroups'));
     }
 
     public function viewData()
@@ -53,6 +64,35 @@ class MtcBatteryController extends Controller
                 ...$batteryRequest->validated(),
                 'mtc_main_id' => $main->id,
             ]);
+
+            // Simpan Checklist Dinamis
+            $checklistMaps = request()->input('checklist_map', []);
+            if (!empty($checklistMaps)) {
+                foreach ($checklistMaps as $fieldName => $checklistId) {
+                    $val = request()->input($fieldName);
+                    $ket = request()->input('keterangan_' . $fieldName);
+
+                    if ($val !== null && $val !== '') {
+                        $chk = MtcMasterChecklist::find($checklistId);
+                        $statusVal = null;
+                        $nilaiVal = null;
+
+                        if ($chk && $chk->tipe_input === 'boolean_ok_ng') {
+                            $statusVal = ((string)$val === '1' || $val === 1 || $val === 'ok') ? 'ok' : 'ng';
+                        } else {
+                            $nilaiVal = (string)$val;
+                        }
+
+                        MtcChecklistResult::create([
+                            'mtc_main_id'  => $main->id,
+                            'checklist_id' => $checklistId,
+                            'status'       => $statusVal,
+                            'nilai'        => $nilaiVal,
+                            'keterangan'   => $ket,
+                        ]);
+                    }
+                }
+            }
 
             // dd($detailRequest->validated()['details']);  // atau Log::info($detailRequest->all());
 
@@ -141,6 +181,7 @@ class MtcBatteryController extends Controller
             ->with([
                 'createdBy:id,username',
                 'battery.details',
+                'checklistResults.checklist.group',
             ]);
 
         // 🔍 filter tanggal

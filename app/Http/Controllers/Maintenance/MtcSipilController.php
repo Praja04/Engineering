@@ -15,6 +15,9 @@ use App\Models\Maintenance\MtcMainModel;
 use App\Models\Maintenance\MtcMasterMesinModel;
 use App\Models\Maintenance\MtcSipilInspectionModel;
 use App\Models\NotificationsModel;
+use App\Models\Maintenance\MtcMasterChecklistGroup;
+use App\Models\Maintenance\MtcMasterChecklist;
+use App\Models\Maintenance\MtcChecklistResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +29,15 @@ class MtcSipilController extends Controller
         $area = MtcMasterMesinModel::where('jenis_mtc', 'Sipil')
             ->orderBy('id')->get();
 
-        return view('maintenance.form.sipil')->with(compact('area'));
+        $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Sipil')
+            ->where('is_active', true)
+            ->with(['activeChecklists' => function ($q) {
+                $q->orderBy('urutan');
+            }])
+            ->orderBy('urutan')
+            ->get();
+
+        return view('maintenance.form.sipil', compact('area', 'checklistGroups'));
     }
 
     public function viewData()
@@ -56,6 +67,35 @@ class MtcSipilController extends Controller
                 ...$detailRequest->validated(),
                 'mtc_main_id' => $main->id,
             ]);
+
+            // Simpan Checklist Dinamis
+            $checklistMaps = request()->input('checklist_map', []);
+            if (!empty($checklistMaps)) {
+                foreach ($checklistMaps as $fieldName => $checklistId) {
+                    $val = request()->input($fieldName);
+                    $ket = request()->input('keterangan_' . $fieldName);
+
+                    if ($val !== null && $val !== '') {
+                        $chk = MtcMasterChecklist::find($checklistId);
+                        $statusVal = null;
+                        $nilaiVal = null;
+
+                        if ($chk && $chk->tipe_input === 'boolean_ok_ng') {
+                            $statusVal = ((string)$val === '1' || $val === 1 || $val === 'ok') ? 'ok' : 'ng';
+                        } else {
+                            $nilaiVal = (string)$val;
+                        }
+
+                        MtcChecklistResult::create([
+                            'mtc_main_id'  => $main->id,
+                            'checklist_id' => $checklistId,
+                            'status'       => $statusVal,
+                            'nilai'        => $nilaiVal,
+                            'keterangan'   => $ket,
+                        ]);
+                    }
+                }
+            }
 
             foreach ($materials->materials ?? [] as $item) {
                 $uom = $item['uom'] ?? null;
@@ -162,6 +202,7 @@ class MtcSipilController extends Controller
                 'Sipil',
                 'kebutuhanMaterial',
                 'penggantianMaterial',
+                'checklistResults.checklist.group',
             ]);
 
         // 🔍 filter tanggal

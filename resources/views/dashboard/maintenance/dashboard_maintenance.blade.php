@@ -1224,38 +1224,26 @@
                         </div>
                     </div>
 
-                    {{-- Table 6: Top Cost Tertinggi --}}
+                    {{-- Chart 6: Cost Maintenance Details --}}
                     <div class="col-xl-4 col-lg-4">
                         <div class="mtc-chart-card h-100">
                             <div class="mtc-card-header">
                                 <div>
                                     <h4 class="mtc-card-title">
-                                        <i class="mdi mdi-cash-fast text-info"></i>
-                                        Top Cost Tertinggi
+                                        <i class="mdi mdi-currency-usd text-info"></i>
+                                        Detail Maintenance Cost
                                     </h4>
-                                    <div class="mtc-card-subtitle">Pengeluaran terbesar (Budget Impact)</div>
+                                    <div class="mtc-card-subtitle">
+                                        Akumulasi Biaya per Kategori (MHE, Pompa, Utility, Sipil)
+                                    </div>
                                 </div>
-                                <span class="badge bg-dark border border-secondary border-opacity-25 font-mono"
-                                    style="font-size: 10px;">
-                                    Top Spender
+                                <span
+                                    class="badge bg-dark text-secondary border border-secondary border-opacity-25 font-mono"
+                                    id="budgetLimitBadge" style="font-size: 10.5px;">
+                                    Budget: 95 Jt
                                 </span>
                             </div>
-                            <div class="table-scrollable">
-                                <table class="table mtc-table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 28px;">#</th>
-                                            <th>Mesin / Aset</th>
-                                            <th>Area</th>
-                                            <th class="text-end">Total Cost</th>
-                                            <th class="text-end">% Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbodyTopCost">
-                                        {{-- Dynamically injected --}}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <div id="chartCostMaintenance" style="min-height: 285px;"></div>
                         </div>
                     </div>
 
@@ -1330,28 +1318,41 @@
                         </div>
                     </div>
 
-                    {{-- Chart 9: Cost Maintenance Details --}}
+                    {{-- Table 9: Top Cost Tertinggi --}}
                     <div class="col-xl-4 col-lg-4">
                         <div class="mtc-chart-card h-100">
                             <div class="mtc-card-header">
                                 <div>
                                     <h4 class="mtc-card-title">
-                                        <i class="mdi mdi-currency-usd text-info"></i>
-                                        Detail Maintenance Cost
+                                        <i class="mdi mdi-cash-fast text-info"></i>
+                                        Top Cost Tertinggi
                                     </h4>
-                                    <div class="mtc-card-subtitle">
-                                        Akumulasi Biaya per Kategori (MHE, Pompa, Utility, Sipil)
-                                    </div>
+                                    <div class="mtc-card-subtitle">Pengeluaran terbesar (Budget Impact)</div>
                                 </div>
-                                <span
-                                    class="badge bg-dark text-secondary border border-secondary border-opacity-25 font-mono"
-                                    id="budgetLimitBadge" style="font-size: 10.5px;">
-                                    Budget: 95 Jt
+                                <span class="badge bg-dark border border-secondary border-opacity-25 font-mono"
+                                    style="font-size: 10px;">
+                                    Top Spender
                                 </span>
                             </div>
-                            <div id="chartCostMaintenance" style="min-height: 285px;"></div>
+                            <div class="table-scrollable">
+                                <table class="table mtc-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 28px;">#</th>
+                                            <th>Mesin / Aset</th>
+                                            <th>Area</th>
+                                            <th class="text-end">Total Cost</th>
+                                            <th class="text-end">% Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyTopCost">
+                                        {{-- Dynamically injected --}}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
+
                 </div>
 
             </div>
