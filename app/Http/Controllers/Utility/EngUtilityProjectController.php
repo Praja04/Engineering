@@ -1279,17 +1279,27 @@ class EngUtilityProjectController extends Controller
                     $finishWeek = 'W' . (int)ceil($cDate->day / 7) . ' ' . $cDate->isoFormat('MMM YY');
                 }
 
-                // Progress persentase
+                // Progress persentase (support format: "100%", "50 %", "0.45", "45", dsb)
                 $progressRaw = isset($headerMap['progress'], $cols[$headerMap['progress']])
                     ? $cols[$headerMap['progress']]
                     : 0;
                 $progress = 0;
-                if (is_numeric($progressRaw)) {
-                    $pVal = (float)$progressRaw;
-                    if ($pVal > 0 && $pVal <= 1) {
-                        $pVal = $pVal * 100;
+                if ($progressRaw !== null && $progressRaw !== '') {
+                    $cleanProg = trim((string)$progressRaw);
+                    $hasPercentSign = str_contains($cleanProg, '%');
+
+                    // Bersihkan karakter persen dan spasi, ganti koma dengan titik (misal "99,5%" -> "99.5")
+                    $cleanProg = str_replace(['%', ' '], '', $cleanProg);
+                    $cleanProg = str_replace(',', '.', $cleanProg);
+
+                    if (is_numeric($cleanProg)) {
+                        $pVal = (float)$cleanProg;
+                        // Jika desimal murni dari Excel tanpa simbol % (misal 0.45 -> 45%)
+                        if (!$hasPercentSign && $pVal > 0 && $pVal < 1) {
+                            $pVal = $pVal * 100;
+                        }
+                        $progress = (int)round(max(0, min(100, $pVal)));
                     }
-                    $progress = (int)round(max(0, min(100, $pVal)));
                 }
 
                 // Status project
