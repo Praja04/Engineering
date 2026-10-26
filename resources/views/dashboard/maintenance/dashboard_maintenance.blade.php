@@ -842,10 +842,9 @@
                                     <h4 class="mtc-card-title">
                                         <i class="mdi mdi-chart-box-outline text-info"></i> Schedule Maintenance
                                     </h4>
-                                    {{-- <div class="mtc-card-subtitle">
-                                        Sebaran rencana &amp; eksekusi: MHE (Electric &amp; Diesel), Motor Pompa, Sipil,
-                                        dan Utility Plant
-                                    </div> --}}
+                                    <div class="mtc-card-subtitle">
+                                        Realisasi vs Total Agenda (Akumulasi Stacked per Minggu)
+                                    </div>
                                 </div>
                                 <span
                                     class="badge bg-dark text-secondary border border-secondary border-opacity-25 font-mono px-2 py-1"
@@ -1547,15 +1546,14 @@
                 // RENDER CHARTS FUNCTIONS (COHESIVE PALETTE)
                 // ─────────────────────────────────────────────────────────────
 
-                // Chart 1: Schedule Maintenance
+                // Chart 1: Schedule Maintenance (Stacked Bar Chart % of Total Agenda)
                 function renderScheduleMaintenanceChart(chartData) {
-                    const seriesLen = (chartData.series && chartData.series.length) ? chartData.series.length : 1;
                     const options = {
                         series: chartData.series,
                         chart: {
                             type: 'bar',
                             height: 285,
-                            stacked: false,
+                            stacked: true,
                             toolbar: {
                                 show: false
                             },
@@ -1568,22 +1566,32 @@
                         plotOptions: {
                             bar: {
                                 horizontal: false,
-                                borderRadius: 3,
-                                columnWidth: seriesLen > 4 ? '70%' : (seriesLen > 2 ? '55%' : '40%'),
+                                borderRadius: 4,
+                                columnWidth: '38%',
                                 dataLabels: {
-                                    position: 'top'
+                                    total: {
+                                        enabled: true,
+                                        formatter: val => Number(val).toFixed(1) + '%',
+                                        style: {
+                                            fontSize: '11px',
+                                            fontFamily: 'JetBrains Mono',
+                                            fontWeight: 800,
+                                            color: '#ffffff'
+                                        },
+                                        offsetY: -6
+                                    }
                                 }
                             }
                         },
                         colors: ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'],
                         dataLabels: {
                             enabled: true,
-                            offsetY: -16,
+                            formatter: val => (val && val >= 6) ? Math.round(val) + '%' : '',
                             style: {
                                 fontSize: '9px',
                                 fontFamily: 'JetBrains Mono',
                                 fontWeight: 700,
-                                colors: ['#cbd5e1']
+                                colors: ['#ffffff']
                             },
                             background: {
                                 enabled: true,
@@ -1591,8 +1599,7 @@
                                 padding: 2,
                                 borderRadius: 2,
                                 borderWidth: 0
-                            },
-                            formatter: val => val ? val : ''
+                            }
                         },
                         xaxis: {
                             categories: chartData.categories, // ['MHE', 'Motor Pompa', 'Utility', 'Sipil']
@@ -1609,19 +1616,40 @@
                             }
                         },
                         yaxis: {
+                            min: 0,
+                            max: 100,
+                            tickAmount: 5,
                             title: {
-                                text: 'Jumlah Unit Mesin',
+                                text: 'Realisasi Agenda (%)',
                                 style: {
                                     color: '#94a3b8',
                                     fontSize: '10.5px'
                                 }
                             },
                             labels: {
+                                formatter: val => Math.round(val) + '%',
                                 style: {
                                     colors: '#94a3b8',
                                     fontSize: '10.5px'
                                 }
                             }
+                        },
+                        annotations: {
+                            yaxis: [{
+                                y: 95,
+                                borderColor: '#10b981',
+                                strokeDashArray: 4,
+                                label: {
+                                    borderColor: '#10b981',
+                                    style: {
+                                        color: '#ffffff',
+                                        background: '#065f46',
+                                        fontSize: '9.5px',
+                                        fontWeight: 600
+                                    },
+                                    text: 'Target: 95%'
+                                }
+                            }]
                         },
                         grid: {
                             borderColor: 'rgba(255, 255, 255, 0.06)',
@@ -1643,7 +1671,15 @@
                             shared: true,
                             intersect: false,
                             y: {
-                                formatter: val => (val || 0) + ' Unit Mesin'
+                                formatter: function(val, { seriesIndex, dataPointIndex, w }) {
+                                    const s = w.config.series[seriesIndex];
+                                    if (s && s.real_units && s.planned_units) {
+                                        const c = s.real_units[dataPointIndex];
+                                        const p = s.planned_units[dataPointIndex];
+                                        return Number(val).toFixed(1) + '% (' + c + '/' + p + ' unit)';
+                                    }
+                                    return Number(val).toFixed(1) + '%';
+                                }
                             }
                         }
                     };
