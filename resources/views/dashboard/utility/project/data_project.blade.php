@@ -220,11 +220,16 @@
                             </div>
                             <input type="range" class="form-range" id="modal_progress_range" min="0"
                                 max="100" step="1" value="0">
-                            <div class="input-grouinput-group-sm mt-2">
-                                <span class="input-group-text bg-light">Input Angka</span>
-                                <input type="number" class="form-control" id="modal_progress_input" name="progress"
-                                    min="0" max="100" value="0" required>
-                                <span class="input-group-text">%</span>
+                            <div class="d-flex align-items-center justify-content-between mt-2 gap-2">
+                                <div class="input-group input-group-sm" style="max-width: 180px;">
+                                    <span class="input-group-text bg-light">Input Angka</span>
+                                    <input type="number" class="form-control text-center fw-bold" id="modal_progress_input" name="progress"
+                                        min="0" max="100" value="0" required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <small id="modal_progress_min_text" class="text-muted fs-11">
+                                    <i class="ri-lock-line me-1 text-warning"></i>Minimal: <strong id="modal_min_val">0%</strong> (tidak boleh mundur)
+                                </small>
                             </div>
                         </div>
 
@@ -672,16 +677,25 @@
             // ── Initial Load on Page Ready ──
             loadProjectsData();
 
-            // ── Progress Range & Input Sync ──
+            // ── Progress Range & Input Sync (Tidak boleh mundur) ──
+            let activeMinProgress = 0;
+
             $('#modal_progress_range').on('input', function() {
-                const val = $(this).val();
+                let val = parseInt($(this).val()) || 0;
+                if (val < activeMinProgress) {
+                    val = activeMinProgress;
+                    $(this).val(val);
+                }
                 $('#modal_progress_input').val(val);
                 $('#modal_slider_val').text(val + '%');
             });
 
-            $('#modal_progress_input').on('input', function() {
+            $('#modal_progress_input').on('input change', function() {
                 let val = parseInt($(this).val()) || 0;
-                if (val < 0) val = 0;
+                if (val < activeMinProgress) {
+                    val = activeMinProgress;
+                    $(this).val(val);
+                }
                 if (val > 100) val = 100;
                 $('#modal_progress_range').val(val);
                 $('#modal_slider_val').text(val + '%');
@@ -693,10 +707,12 @@
                 const nama = $(this).data('nama');
                 const prog = parseInt($(this).data('progress')) || 0;
 
+                activeMinProgress = prog;
                 $('#modal_project_id').val(id);
                 $('#modal_project_nama').text(nama);
-                $('#modal_progress_range').val(prog);
-                $('#modal_progress_input').val(prog);
+                $('#modal_progress_range').attr('min', prog).val(prog);
+                $('#modal_progress_input').attr('min', prog).val(prog);
+                $('#modal_min_val').text(prog + '%');
                 $('#modal_slider_val').text(prog + '%');
                 $('#modal_catatan').val('');
 
@@ -706,6 +722,17 @@
             // ── Submit Progress via Async jQuery AJAX ──
             $('#formUpdateProgress').on('submit', function(e) {
                 e.preventDefault();
+
+                const newProg = parseInt($('#modal_progress_input').val()) || 0;
+                if (newProg < activeMinProgress) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Progress Tidak Valid',
+                        text: `Progress tidak boleh mundur! Minimal progress adalah ${activeMinProgress}%.`
+                    });
+                    return;
+                }
+
                 const id = $('#modal_project_id').val();
                 const $btn = $('#btnSubmitProgress');
                 const origText = $btn.html();

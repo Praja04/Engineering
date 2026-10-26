@@ -258,7 +258,9 @@
 
                                 {{-- ── Progress Persentase & Status ── --}}
                                 @php
+                                    $minProg = $isEdit ? (int) $project->progress : 0;
                                     $initialProg = (int) old('progress', $isEdit ? $project->progress : 0);
+                                    if ($initialProg < $minProg) $initialProg = $minProg;
                                     $currStatus = old('status', $isEdit ? $project->status : 'On Progress');
                                 @endphp
                                 <div class="card border mb-3 bg-light-subtle shadow-none">
@@ -285,22 +287,29 @@
                                                     <div id="visualProgressBar"
                                                         class="progress-bar progress-bar-striped progress-bar-animated {{ $initialProg == 100 ? 'bg-success' : 'bg-primary' }}"
                                                         role="progressbar" style="width: {{ $initialProg }}%;"
-                                                        aria-valuenow="{{ $initialProg }}" aria-valuemin="0"
+                                                        aria-valuenow="{{ $initialProg }}" aria-valuemin="{{ $minProg }}"
                                                         aria-valuemax="100"></div>
                                                 </div>
 
                                                 {{-- Range Slider --}}
                                                 <input type="range" class="form-range mb-2" id="progressRange"
-                                                    min="0" max="100" step="1"
+                                                    min="{{ $minProg }}" max="100" step="1"
                                                     value="{{ $initialProg }}" oninput="syncProgress(this.value)">
 
                                                 {{-- Number Input --}}
-                                                <div class="input-group input-group-sm" style="max-width: 180px;">
-                                                    <span class="input-group-text bg-light text-muted">Input</span>
-                                                    <input type="number" class="form-control text-center fw-bold"
-                                                        id="progressInput" name="progress" min="0" max="100"
-                                                        value="{{ $initialProg }}" oninput="syncProgress(this.value)">
-                                                    <span class="input-group-text fw-semibold">%</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="input-group input-group-sm" style="max-width: 180px;">
+                                                        <span class="input-group-text bg-light text-muted">Input</span>
+                                                        <input type="number" class="form-control text-center fw-bold"
+                                                            id="progressInput" name="progress" min="{{ $minProg }}" max="100"
+                                                            value="{{ $initialProg }}" oninput="syncProgress(this.value)">
+                                                        <span class="input-group-text fw-semibold">%</span>
+                                                    </div>
+                                                    @if ($isEdit && $minProg > 0)
+                                                        <small class="text-muted fs-11">
+                                                            <i class="ri-lock-line me-1 text-warning"></i>Minimal: <strong>{{ $minProg }}%</strong> (tidak boleh mundur)
+                                                        </small>
+                                                    @endif
                                                 </div>
                                             </div>
 
@@ -356,9 +365,11 @@
 
 @section('scripts')
     <script>
+        const minAllowedProgress = {{ $isEdit ? (int) $project->progress : 0 }};
+
         function syncProgress(val) {
             val = parseInt(val) || 0;
-            if (val < 0) val = 0;
+            if (val < minAllowedProgress) val = minAllowedProgress;
             if (val > 100) val = 100;
 
             const $range = $('#progressRange');

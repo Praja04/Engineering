@@ -477,6 +477,16 @@ class EngUtilityProjectController extends Controller
         $oldProgress = (int) $project->progress;
         $newProgress = (int) $request->get('progress', $oldProgress);
 
+        if ($newProgress < $oldProgress) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Progress tidak boleh mundur! Progress saat ini sudah {$oldProgress}%, Anda tidak dapat menurunkannya menjadi {$newProgress}%."
+                ], 422);
+            }
+            return redirect()->back()->withInput()->with('error', "Progress tidak boleh mundur! Progress saat ini sudah {$oldProgress}%.");
+        }
+
         $status = $request->status;
         if (!$status) {
             if ($newProgress >= 100) {
@@ -557,6 +567,14 @@ class EngUtilityProjectController extends Controller
         $userId = Auth::id() ?: 1;
         $oldProgress = (int) $project->progress;
         $newProgress = (int) $request->progress;
+
+        if ($newProgress < $oldProgress) {
+            return response()->json([
+                'success' => false,
+                'message' => "Progress tidak boleh mundur! Progress saat ini sudah {$oldProgress}%, Anda tidak dapat menurunkannya menjadi {$newProgress}%."
+            ], 422);
+        }
+
         $tanggal = $request->tanggal ? Carbon::parse($request->tanggal)->format('Y-m-d') : date('Y-m-d');
 
         $status = $project->status;
