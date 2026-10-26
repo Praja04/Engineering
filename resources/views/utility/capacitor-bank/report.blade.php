@@ -624,7 +624,7 @@
                                             <th>Ptot (kW)</th>
                                             <th>Qtot (kVAR)</th>
                                             <th>Stot (kVA)</th>
-                                            <th>PF (Avg)</th>
+                                            <th>PF (PFa)</th>
                                             <th>CosPhi</th>
                                             <th>Freq (Hz)</th>
                                         </tr>

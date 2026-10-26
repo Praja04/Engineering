@@ -319,7 +319,7 @@ class CapacitorBankMachineController extends Controller
         $avgPFa = $count > 0 ? (float) $machineData->avg('pf_PFa') : 0;
         $avgPFb = $count > 0 ? (float) $machineData->avg('pf_PFb') : 0;
         $avgPFc = $count > 0 ? (float) $machineData->avg('pf_PFc') : 0;
-        $avgPF = $count > 0 ? ($avgPFa + $avgPFb + $avgPFc) / 3 : 0;
+        $avgPF = $avgPFa;
 
         $avgFreq = $count > 0 ? (float) $machineData->avg('freq') : 0;
 
@@ -565,7 +565,7 @@ class CapacitorBankMachineController extends Controller
                 'p_tot' => $data->power_Ptot,
                 'q_tot' => $data->power_Qtot,
                 's_tot' => $data->power_Stot,
-                'pf' => $data->pf_PFa !== null ? ($data->pf_PFa + $data->pf_PFb + $data->pf_PFc)/3 : null,
+                'pf' => $data->pf_PFa !== null ? (float) $data->pf_PFa : null,
                 'cosphi' => $data->cosphi_dPFa !== null ? (float) $data->cosphi_dPFa : null,
                 'freq' => $data->freq,
             ];
