@@ -651,7 +651,7 @@ class EngUtilityProjectController extends Controller
                     'progress_sebelumnya' => $item->progress_sebelumnya,
                     'progress_baru' => $item->progress_baru,
                     'catatan' => $item->catatan,
-                    'user_nama' => ($item->user && !empty($item->user->nama_lengkap)) ? $item->user->username : 'Engineering Team',
+                    'user_nama' => $item->user ? ($item->user->username ?: ($item->user->fullname ?: 'Engineering Team')) : 'Engineering Team',
                 ];
             });
 
