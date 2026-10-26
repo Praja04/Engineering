@@ -747,6 +747,20 @@
                 color: #0f172a !important;
                 font-weight: 700 !important;
             }
+
+            /* ApexCharts DataLabels & Total Labels in Light Mode */
+            body.theme-light .apexcharts-datalabels-group rect,
+            body.theme-light .apexcharts-data-labels rect,
+            body.theme-light .apexcharts-datalabel-bg {
+                fill: transparent !important;
+                stroke: transparent !important;
+            }
+
+            body.theme-light .apexcharts-datalabels-group text,
+            body.theme-light .apexcharts-datalabels text.apexcharts-datalabel-value,
+            body.theme-light .apexcharts-data-labels text.apexcharts-datalabel {
+                fill: #000000 !important;
+            }
         </style>
     </head>
 
@@ -867,7 +881,7 @@
                                     class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
                                     id="btnThemeToggle" title="Beralih Tema (Gelap / Terang)">
                                     <i class="mdi mdi-weather-sunny" id="themeToggleIcon"></i>
-                                    <span class="d-none d-xl-inline" id="themeToggleText">Mode Terang</span>
+                                    <span class="d-none d-xl-inline" id="themeToggleText">Light</span>
                                 </button>
                                 <a href="{{ url('home') }}"
                                     class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
@@ -1442,7 +1456,7 @@
                     $('#themeToggleIcon')
                         .toggleClass('mdi-weather-sunny', !isLight)
                         .toggleClass('mdi-weather-night', isLight);
-                    $('#themeToggleText').text(isLight ? 'Mode Gelap' : 'Mode Terang');
+                    $('#themeToggleText').text(isLight ? 'Dark' : 'Light');
 
                     if (isLight) {
                         $('#flatpickrThemeDark').attr('disabled', 'disabled');
@@ -1918,11 +1932,7 @@
                                 colors: ['#ffffff']
                             },
                             background: {
-                                enabled: true,
-                                foreColor: isLightMode() ? '#334155' : '#080c16',
-                                padding: 2,
-                                borderRadius: 2,
-                                borderWidth: 0
+                                enabled: false
                             }
                         },
                         xaxis: {
@@ -2128,13 +2138,6 @@
                         legend: {
                             show: true,
                             showForSingleSeries: true,
-                            customLegendItems: ['Frekuensi Korektif', 'Target Limit (Max 5x)'],
-                            markers: {
-                                fillColors: ['#f43f5e', '#64748b'],
-                                radius: 3,
-                                width: 10,
-                                height: 10
-                            },
                             position: 'bottom',
                             horizontalAlign: 'center',
                             floating: false,
@@ -2144,15 +2147,14 @@
                             labels: {
                                 colors: theme.legendColor
                             },
+                            markers: {
+                                radius: 3,
+                                width: 10,
+                                height: 10
+                            },
                             itemMargin: {
                                 horizontal: 10,
                                 vertical: 4
-                            },
-                            onItemClick: {
-                                toggleDataSeries: false
-                            },
-                            onItemHover: {
-                                highlightDataSeries: false
                             }
                         },
                         tooltip: {
@@ -2231,45 +2233,25 @@
                                 colors: [isLightMode() ? '#0284c7' : '#38bdf8']
                             },
                             background: {
-                                enabled: true,
-                                foreColor: isLightMode() ? '#ffffff' : '#080c16',
-                                padding: 3,
-                                borderRadius: 3,
-                                borderWidth: 0
+                                enabled: false
                             }
                         },
                         annotations: {
                             yaxis: [{
-                                    y: chartData.target,
+                                y: chartData.target,
+                                borderColor: '#f43f5e',
+                                strokeDashArray: 4,
+                                label: {
                                     borderColor: '#f43f5e',
-                                    strokeDashArray: 4,
-                                    label: {
-                                        borderColor: '#f43f5e',
-                                        style: {
-                                            color: '#ffffff',
-                                            background: '#e11d48',
-                                            fontSize: '9px',
-                                            fontWeight: 700
-                                        },
-                                        text: 'Limit < ' + chartData.target + '%'
-                                    }
-                                },
-                                {
-                                    y: chartData.average,
-                                    borderColor: '#64748b',
-                                    strokeDashArray: 3,
-                                    label: {
-                                        borderColor: '#64748b',
-                                        style: {
-                                            color: '#ffffff',
-                                            background: '#334155',
-                                            fontSize: '9px',
-                                            fontWeight: 700
-                                        },
-                                        text: 'Avg: ' + chartData.average + '%'
-                                    }
+                                    style: {
+                                        color: '#ffffff',
+                                        background: '#e11d48',
+                                        fontSize: '9px',
+                                        fontWeight: 700
+                                    },
+                                    text: 'Limit < ' + chartData.target + '%'
                                 }
-                            ]
+                            }]
                         },
                         xaxis: {
                             categories: chartData.categories,
@@ -2323,13 +2305,6 @@
                         legend: {
                             show: true,
                             showForSingleSeries: true,
-                            customLegendItems: ['Downtime Korektif (%)', 'Limit Target (<2%)', 'Rata-rata Periode'],
-                            markers: {
-                                fillColors: ['#10b981', '#f43f5e', '#64748b'],
-                                radius: 3,
-                                width: 10,
-                                height: 10
-                            },
                             position: 'bottom',
                             horizontalAlign: 'center',
                             floating: false,
@@ -2339,15 +2314,14 @@
                             labels: {
                                 colors: theme.legendColor
                             },
+                            markers: {
+                                radius: 3,
+                                width: 10,
+                                height: 10
+                            },
                             itemMargin: {
                                 horizontal: 10,
                                 vertical: 4
-                            },
-                            onItemClick: {
-                                toggleDataSeries: false
-                            },
-                            onItemHover: {
-                                highlightDataSeries: false
                             }
                         },
                         tooltip: {
@@ -2520,11 +2494,7 @@
                                 colors: isLightMode() ? ['#0284c7', '#d97706'] : ['#38bdf8', '#f59e0b']
                             },
                             background: {
-                                enabled: true,
-                                foreColor: isLightMode() ? '#ffffff' : '#080c16',
-                                padding: 2,
-                                borderRadius: 2,
-                                borderWidth: 0
+                                enabled: false
                             }
                         },
                         xaxis: {
