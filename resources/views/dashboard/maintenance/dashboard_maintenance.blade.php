@@ -2585,7 +2585,8 @@
                                         formatter: function(val) {
                                             const num = Number(val) || 0;
                                             if (num <= 0) return '';
-                                            return 'Rp ' + (num % 1 === 0 ? num.toFixed(0) : num.toFixed(1)) + ' Jt';
+                                            return 'Rp ' + (num % 1 === 0 ? num.toFixed(0) : num.toFixed(1)) +
+                                                ' Jt';
                                         },
                                         style: {
                                             fontSize: '11px',
@@ -2603,7 +2604,8 @@
                             enabled: true,
                             formatter: function(val) {
                                 const num = Number(val) || 0;
-                                return (num >= 2.0) ? (num % 1 === 0 ? num.toFixed(0) : num.toFixed(1)) + 'M' : '';
+                                return (num >= 1.0) ? (num % 1 === 0 ? num.toFixed(0) : num.toFixed(1)) +
+                                    ' Jt' : '';
                             },
                             style: {
                                 fontSize: '9px',
