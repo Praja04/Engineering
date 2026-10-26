@@ -466,6 +466,12 @@ class MtcDashboardController extends Controller
             'Utility'     => 0,
             'Sipil'       => 0,
         ];
+        $totalCompletedPerUnit = [
+            'MHE'         => 0,
+            'Motor Pompa' => 0,
+            'Utility'     => 0,
+            'Sipil'       => 0,
+        ];
 
         $totalPlannedOverall = 0;
         $totalCompletedOverall = 0;
@@ -540,36 +546,77 @@ class MtcDashboardController extends Controller
                 $weekPlannedData[$idx][$u] = $pVal;
                 $weekCompletedData[$idx][$u] = $cVal;
                 $totalPlannedPerUnit[$u] += $pVal;
+                $totalCompletedPerUnit[$u] += $cVal;
 
                 $totalPlannedOverall += $pVal;
                 $totalCompletedOverall += $cVal;
             }
         }
 
-        // Pass 2: Calculate percentage of total agenda contributed by each week (stacked)
+        // Pass 2: Distribute percentage using Largest Remainder Method per Unit
+        // This guarantees that the sum of stacked weeks matches targetTotalPct exactly and NEVER exceeds 100%
+        $weeklyPercentages = []; // [$idx][$u] => float
+
+        foreach ($units as $u) {
+            $unitTotalPlanned = max(1, $totalPlannedPerUnit[$u]);
+            $unitTotalCompleted = min($unitTotalPlanned, $totalCompletedPerUnit[$u]);
+            $targetTotalPct = min(100.0, round(($unitTotalCompleted / $unitTotalPlanned) * 100, 1));
+
+            $floors = [];
+            $remainders = [];
+            $sumFloors = 0.0;
+
+            foreach ($weeksList as $idx => $wk) {
+                $cVal = $weekCompletedData[$idx][$u];
+                $exactPct = ($cVal / $unitTotalPlanned) * 100;
+                $floorVal = floor($exactPct * 10) / 10;
+                $floors[$idx] = $floorVal;
+                $remainders[$idx] = $exactPct - $floorVal;
+                $sumFloors += $floorVal;
+            }
+
+            $diffTenths = (int) round(($targetTotalPct - $sumFloors) * 10);
+            if ($diffTenths > 0) {
+                arsort($remainders);
+                foreach (array_keys($remainders) as $idx) {
+                    if ($diffTenths <= 0) break;
+                    $floors[$idx] = round($floors[$idx] + 0.1, 1);
+                    $diffTenths--;
+                }
+            } elseif ($diffTenths < 0) {
+                asort($remainders);
+                foreach (array_keys($remainders) as $idx) {
+                    if ($diffTenths >= 0) break;
+                    $floors[$idx] = max(0.0, round($floors[$idx] - 0.1, 1));
+                    $diffTenths++;
+                }
+            }
+
+            foreach ($weeksList as $idx => $wk) {
+                $weeklyPercentages[$idx][$u] = $floors[$idx];
+            }
+        }
+
+        // Pass 3: Assemble series for ApexCharts
         foreach ($weeksList as $idx => $wk) {
-            $wName = (!empty($wk['short_label']) ? $wk['short_label'] . ' (' . $wk['label'] . ')' : $wk['label']);
+            $wShort = !empty($wk['short_label']) ? $wk['short_label'] : "W" . ($idx + 1);
+            $wFull = (!empty($wk['short_label']) ? $wk['short_label'] . ' (' . $wk['label'] . ')' : $wk['label']);
 
             $pctData = [];
             $completedUnits = [];
             $plannedUnits = [];
 
             foreach ($units as $u) {
-                $unitTotalPlanned = max(1, $totalPlannedPerUnit[$u]);
-                $cVal = $weekCompletedData[$idx][$u];
-                $pVal = $weekPlannedData[$idx][$u];
-
-                // Percentage contribution of this week's completed agenda towards the unit's total agenda (100%)
-                $pct = round(($cVal / $unitTotalPlanned) * 100, 1);
-                $pctData[] = $pct;
-                $completedUnits[] = $cVal;
-                $plannedUnits[] = $pVal;
+                $pctData[] = $weeklyPercentages[$idx][$u];
+                $completedUnits[] = $weekCompletedData[$idx][$u];
+                $plannedUnits[] = $weekPlannedData[$idx][$u];
             }
 
             $series[] = [
-                'name'          => $wName,
-                'short_name'    => $wk['short_label'] ?? "W" . ($idx + 1),
+                'name'          => $wShort,
+                'short_name'    => $wShort,
                 'date_range'    => $wk['label'],
+                'full_name'     => $wFull,
                 'data'          => $pctData,
                 'real_units'    => $completedUnits,
                 'planned_units' => $plannedUnits,
@@ -578,7 +625,7 @@ class MtcDashboardController extends Controller
         }
 
         $overallRate = $totalPlannedOverall > 0
-            ? round(($totalCompletedOverall / $totalPlannedOverall) * 100, 1)
+            ? min(100.0, round(($totalCompletedOverall / $totalPlannedOverall) * 100, 1))
             : 96.8;
 
         return [
@@ -637,6 +684,8 @@ class MtcDashboardController extends Controller
             ->get();
 
         $chartCategories = [];
+        $dateRanges = [];
+        $categoryDetails = [];
         $seriesBreakdown = [];
         $totalPeriodBreakdowns = 0;
         $selectedWeekBreakdowns = 0;
@@ -645,7 +694,10 @@ class MtcDashboardController extends Controller
         foreach ($weeksList as $idx => $wk) {
             $wStart = $wk['start']->format('Y-m-d');
             $wEnd = $wk['end']->format('Y-m-d');
-            $chartCategories[] = !empty($wk['display']) ? $wk['display'] : $wk['label'];
+            $wShort = !empty($wk['short_label']) ? $wk['short_label'] : $wk['key'];
+            $chartCategories[] = $wShort;
+            $dateRanges[] = $wk['label'];
+            $categoryDetails[] = !empty($wk['display']) ? $wk['display'] : "{$wShort} ({$wk['label']})";
 
             $wRecords = $korektifRecords->filter(function ($item) use ($wStart, $wEnd) {
                 return $item->tanggal >= $wStart && $item->tanggal <= $wEnd;
@@ -674,6 +726,8 @@ class MtcDashboardController extends Controller
             'records' => $korektifRecords,
             'chart' => [
                 'categories' => $chartCategories,
+                'date_ranges' => $dateRanges,
+                'category_details' => $categoryDetails,
                 'series' => [
                     [
                         'name' => 'Breakdown Frequency',
@@ -694,6 +748,8 @@ class MtcDashboardController extends Controller
     private function getDowntimeData(array $breakdownData, array $weeksList, float $operatingHours, string $filterType): array
     {
         $chartCategories = [];
+        $dateRanges = [];
+        $categoryDetails = [];
         $seriesDowntimePct = [];
         $seriesDowntimeHours = [];
         $totalDowntimeHours = 0;
@@ -704,7 +760,10 @@ class MtcDashboardController extends Controller
         $baseHours = 624.0; // Rumus resmi perusahaan: Total jam korektif / 624 * 100
 
         foreach ($weeksList as $idx => $wk) {
-            $chartCategories[] = !empty($wk['display']) ? $wk['display'] : $wk['label'];
+            $wShort = !empty($wk['short_label']) ? $wk['short_label'] : $wk['key'];
+            $chartCategories[] = $wShort;
+            $dateRanges[] = $wk['label'];
+            $categoryDetails[] = !empty($wk['display']) ? $wk['display'] : "{$wShort} ({$wk['label']})";
 
             $wRecords = $breakdownData['records']->filter(function ($item) use ($wk) {
                 $wStart = $wk['start']->format('Y-m-d');
@@ -753,6 +812,8 @@ class MtcDashboardController extends Controller
             'avg_percentage' => $overallPct,
             'chart' => [
                 'categories' => $chartCategories,
+                'date_ranges' => $dateRanges,
+                'category_details' => $categoryDetails,
                 'series' => [
                     [
                         'name' => 'Downtime (%)',
@@ -877,6 +938,8 @@ class MtcDashboardController extends Controller
             ->get();
 
         $chartCategories = [];
+        $dateRanges = [];
+        $categoryDetails = [];
         $sparepartsSeries = [];
         $cumulativeSeries = [];
 
@@ -885,7 +948,10 @@ class MtcDashboardController extends Controller
         $selectedWeekTotal = 0;
 
         foreach ($weeksList as $idx => $wk) {
-            $chartCategories[] = !empty($wk['display']) ? $wk['display'] : $wk['label'];
+            $wShort = !empty($wk['short_label']) ? $wk['short_label'] : $wk['key'];
+            $chartCategories[] = $wShort;
+            $dateRanges[] = $wk['label'];
+            $categoryDetails[] = !empty($wk['display']) ? $wk['display'] : "{$wShort} ({$wk['label']})";
             $wStart = $wk['start']->format('Y-m-d');
             $wEnd = $wk['end']->format('Y-m-d');
 
@@ -946,6 +1012,8 @@ class MtcDashboardController extends Controller
             'budget_utilization' => $budgetUtil,
             'chart' => [
                 'categories' => $chartCategories,
+                'date_ranges' => $dateRanges,
+                'category_details' => $categoryDetails,
                 'series' => [
                     [
                         'name' => 'Spareparts',
@@ -1380,13 +1448,18 @@ class MtcDashboardController extends Controller
     private function getMttrMtbfCorrelation(array $weeksList, array $breakdownData, array $downtimeData): array
     {
         $categories = [];
+        $dateRanges = [];
+        $categoryDetails = [];
         $seriesMtbf = [];
         $seriesMttr = [];
 
         $baseHours = 624.0; // Rumus standar: 624 jam perusahaan
 
         foreach ($weeksList as $idx => $wk) {
-            $categories[] = !empty($wk['display']) ? $wk['display'] : $wk['label'];
+            $wShort = !empty($wk['short_label']) ? $wk['short_label'] : $wk['key'];
+            $categories[] = $wShort;
+            $dateRanges[] = $wk['label'];
+            $categoryDetails[] = !empty($wk['display']) ? $wk['display'] : "{$wShort} ({$wk['label']})";
 
             $wStart = $wk['start']->format('Y-m-d');
             $wEnd = $wk['end']->format('Y-m-d');
@@ -1423,6 +1496,8 @@ class MtcDashboardController extends Controller
 
         return [
             'categories' => $categories,
+            'date_ranges' => $dateRanges,
+            'category_details' => $categoryDetails,
             'series' => [
                 [
                     'name' => 'MTBF (Jam)',

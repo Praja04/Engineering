@@ -833,7 +833,7 @@
                 {{-- ═══════════════════════════════════════════════════════════════
                  3. CHART 1: SCHEDULE MAINTENANCE (FULL WIDTH)
             ═══════════════════════════════════════════════════════════════ --}}
-                <div class="row g-2 gy-3 mb-3">
+                <div class="row g-2 mb-3">
                     {{-- CHART 1: SCHEDULE MAINTENANCE --}}
                     <div class="col-xl-4 col-lg-4">
                         <div class="mtc-chart-card h-100">
@@ -852,7 +852,7 @@
                                     Target Realisasi: &gt;95%
                                 </span>
                             </div>
-                            <div id="chartScheduleMaintenance" style="min-height: 285px;"></div>
+                            <div id="chartScheduleMaintenance" style="min-height: 295px;"></div>
                         </div>
                     </div>
 
@@ -876,7 +876,7 @@
                                     Target: &lt;5x
                                 </span>
                             </div>
-                            <div id="chartTotalBreakdown" style="min-height: 285px;"></div>
+                            <div id="chartTotalBreakdown" style="min-height: 295px;"></div>
                         </div>
                     </div>
 
@@ -907,7 +907,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <div id="chartTotalDowntime" style="min-height: 285px;"></div>
+                            <div id="chartTotalDowntime" style="min-height: 295px;"></div>
                         </div>
                     </div>
 
@@ -1552,7 +1552,7 @@
                         series: chartData.series,
                         chart: {
                             type: 'bar',
-                            height: 285,
+                            height: 295,
                             stacked: true,
                             toolbar: {
                                 show: false
@@ -1571,7 +1571,11 @@
                                 dataLabels: {
                                     total: {
                                         enabled: true,
-                                        formatter: val => Number(val).toFixed(1) + '%',
+                                        formatter: function(val) {
+                                            const num = Math.min(100, Math.round(Number(val) * 10) / 10);
+                                            return (num >= 99.95 ? '100%' : (num % 1 === 0 ? num.toFixed(0) :
+                                                num.toFixed(1)) + '%');
+                                        },
                                         style: {
                                             fontSize: '11px',
                                             fontFamily: 'JetBrains Mono',
@@ -1618,6 +1622,7 @@
                         yaxis: {
                             min: 0,
                             max: 100,
+                            forceNiceScale: false,
                             tickAmount: 5,
                             title: {
                                 text: 'Realisasi Agenda (%)',
@@ -1656,14 +1661,24 @@
                             strokeDashArray: 3
                         },
                         legend: {
+                            show: true,
                             position: 'bottom',
                             horizontalAlign: 'center',
+                            floating: false,
+                            fontSize: '11px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 500,
                             labels: {
                                 colors: '#cbd5e1'
                             },
-                            fontSize: '10.5px',
                             markers: {
-                                radius: 2
+                                radius: 3,
+                                width: 10,
+                                height: 10
+                            },
+                            itemMargin: {
+                                horizontal: 10,
+                                vertical: 4
                             }
                         },
                         tooltip: {
@@ -1671,12 +1686,18 @@
                             shared: true,
                             intersect: false,
                             y: {
-                                formatter: function(val, { seriesIndex, dataPointIndex, w }) {
+                                formatter: function(val, {
+                                    seriesIndex,
+                                    dataPointIndex,
+                                    w
+                                }) {
                                     const s = w.config.series[seriesIndex];
                                     if (s && s.real_units && s.planned_units) {
                                         const c = s.real_units[dataPointIndex];
                                         const p = s.planned_units[dataPointIndex];
-                                        return Number(val).toFixed(1) + '% (' + c + '/' + p + ' unit)';
+                                        const dRange = s.date_range ? ' (' + s.date_range + ')' : '';
+                                        return Number(val).toFixed(1) + '%' + dRange + ' — ' + c + '/' + p +
+                                            ' unit';
                                     }
                                     return Number(val).toFixed(1) + '%';
                                 }
@@ -1696,7 +1717,7 @@
                         series: chartData.series,
                         chart: {
                             type: 'bar',
-                            height: 285,
+                            height: 295,
                             toolbar: {
                                 show: false
                             },
@@ -1744,15 +1765,15 @@
                         xaxis: {
                             categories: chartData.categories,
                             labels: {
-                                rotate: -45,
-                                rotateAlways: true,
+                                rotate: 0,
+                                rotateAlways: false,
                                 hideOverlappingLabels: false,
                                 trim: false,
                                 style: {
                                     colors: '#94a3b8',
-                                    fontSize: '10px',
+                                    fontSize: '11px',
                                     fontFamily: 'JetBrains Mono',
-                                    fontWeight: 500
+                                    fontWeight: 600
                                 }
                             },
                             axisBorder: {
@@ -1781,6 +1802,15 @@
                         },
                         tooltip: {
                             theme: 'dark',
+                            x: {
+                                formatter: function(val, {
+                                    dataPointIndex,
+                                    w
+                                }) {
+                                    const details = chartData.category_details || [];
+                                    return details[dataPointIndex] || val;
+                                }
+                            },
                             y: {
                                 formatter: val => val + ' Kejadian Korektif'
                             }
@@ -1810,7 +1840,7 @@
                         series: chartData.series,
                         chart: {
                             type: 'area',
-                            height: 285,
+                            height: 295,
                             parentHeightOffset: 0,
                             toolbar: {
                                 show: false
@@ -1886,15 +1916,15 @@
                         xaxis: {
                             categories: chartData.categories,
                             labels: {
-                                rotate: -45,
-                                rotateAlways: true,
+                                rotate: 0,
+                                rotateAlways: false,
                                 hideOverlappingLabels: false,
                                 trim: false,
                                 style: {
                                     colors: '#94a3b8',
-                                    fontSize: '10px',
+                                    fontSize: '11px',
                                     fontFamily: 'JetBrains Mono',
-                                    fontWeight: 500
+                                    fontWeight: 600
                                 }
                             },
                             axisBorder: {
@@ -1933,6 +1963,15 @@
                         },
                         tooltip: {
                             theme: 'dark',
+                            x: {
+                                formatter: function(val, {
+                                    dataPointIndex,
+                                    w
+                                }) {
+                                    const details = chartData.category_details || [];
+                                    return details[dataPointIndex] || val;
+                                }
+                            },
                             y: {
                                 formatter: val => val + '% (Jam Korektif / 624 × 100)'
                             }
@@ -1946,7 +1985,8 @@
 
                 // Chart 7: Unit Off (Donut)
                 function renderUnitOffChart(chartData) {
-                    const totalUnits = chartData.total !== undefined ? chartData.total : chartData.series.reduce((a, b) => a + b, 0);
+                    const totalUnits = chartData.total !== undefined ? chartData.total : chartData.series.reduce((a,
+                        b) => a + b, 0);
                     $('#unitOffTotalBadge').text(totalUnits + ' Units Off');
 
                     if (totalUnits === 0) {
@@ -1978,7 +2018,9 @@
                                 enabled: true
                             }
                         },
-                        colors: chartData.colors && chartData.colors.length ? chartData.colors : ['#38bdf8', '#10b981', '#f59e0b', '#a855f7'],
+                        colors: chartData.colors && chartData.colors.length ? chartData.colors : ['#38bdf8',
+                            '#10b981', '#f59e0b', '#a855f7'
+                        ],
                         plotOptions: {
                             pie: {
                                 donut: {
@@ -2090,15 +2132,15 @@
                         xaxis: {
                             categories: chartData.categories,
                             labels: {
-                                rotate: -45,
-                                rotateAlways: true,
+                                rotate: 0,
+                                rotateAlways: false,
                                 hideOverlappingLabels: false,
                                 trim: false,
                                 style: {
                                     colors: '#94a3b8',
-                                    fontSize: '10px',
+                                    fontSize: '11px',
                                     fontFamily: 'JetBrains Mono',
-                                    fontWeight: 500
+                                    fontWeight: 600
                                 }
                             },
                             axisBorder: {
@@ -2162,6 +2204,15 @@
                             theme: 'dark',
                             shared: true,
                             intersect: false,
+                            x: {
+                                formatter: function(val, {
+                                    dataPointIndex,
+                                    w
+                                }) {
+                                    const details = chartData.category_details || [];
+                                    return details[dataPointIndex] || val;
+                                }
+                            },
                             y: {
                                 formatter: function(val, {
                                     seriesIndex
@@ -2208,15 +2259,15 @@
                         xaxis: {
                             categories: chartData.categories,
                             labels: {
-                                rotate: -45,
-                                rotateAlways: true,
+                                rotate: 0,
+                                rotateAlways: false,
                                 hideOverlappingLabels: false,
                                 trim: false,
                                 style: {
                                     colors: '#94a3b8',
-                                    fontSize: '10px',
+                                    fontSize: '11px',
                                     fontFamily: 'JetBrains Mono',
-                                    fontWeight: 500
+                                    fontWeight: 600
                                 }
                             },
                             axisBorder: {
@@ -2273,6 +2324,15 @@
                             theme: 'dark',
                             shared: true,
                             intersect: false,
+                            x: {
+                                formatter: function(val, {
+                                    dataPointIndex,
+                                    w
+                                }) {
+                                    const details = chartData.category_details || [];
+                                    return details[dataPointIndex] || val;
+                                }
+                            },
                             y: {
                                 formatter: val => 'Rp ' + val + ' Jt'
                             }
