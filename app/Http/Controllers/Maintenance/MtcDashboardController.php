@@ -942,11 +942,23 @@ class MtcDashboardController extends Controller
         $chartCategories = [];
         $dateRanges = [];
         $categoryDetails = [];
-        $sparepartsSeries = [];
-        $cumulativeSeries = [];
+
+        $categoriesList = ['MHE', 'Motor Pompa', 'Utility', 'Sipil'];
+        $categoryColors = [
+            'MHE'         => '#38bdf8', // Cyan
+            'Motor Pompa' => '#10b981', // Emerald
+            'Utility'     => '#f59e0b', // Amber
+            'Sipil'       => '#a855f7', // Purple
+        ];
+
+        $costDataByCat = [
+            'MHE'         => [],
+            'Motor Pompa' => [],
+            'Utility'     => [],
+            'Sipil'       => [],
+        ];
 
         $totalSpareparts = 0;
-        $runningCumulative = 0;
         $selectedWeekTotal = 0;
 
         foreach ($weeksList as $idx => $wk) {
@@ -963,7 +975,14 @@ class MtcDashboardController extends Controller
                 return $t >= $wStart && $t <= $wEnd;
             });
 
-            $weekSp = 0.0;
+            $weekCostPerCat = [
+                'MHE'         => 0.0,
+                'Motor Pompa' => 0.0,
+                'Utility'     => 0.0,
+                'Sipil'       => 0.0,
+            ];
+
+            $weekTotal = 0.0;
 
             foreach ($wItems as $item) {
                 $cost = floatval($item->total_harga);
@@ -975,21 +994,32 @@ class MtcDashboardController extends Controller
                     $cost = floatval($item->qty) * $unitPrice;
                 }
 
-                // Satukan semua material (Maintenance & Consumable) menjadi kategori Spareparts
-                $weekSp += $cost;
+                $cat = $this->normalizeJenisCategory($item->main->jenis_mtc ?? '');
+                if (!isset($weekCostPerCat[$cat])) {
+                    $cat = 'Utility';
+                }
+                $weekCostPerCat[$cat] += $cost;
+                $weekTotal += $cost;
             }
 
-            $spM = round($weekSp / 1000000, 2);
-            $sparepartsSeries[] = $spM;
+            foreach ($categoriesList as $cat) {
+                $costDataByCat[$cat][] = round($weekCostPerCat[$cat] / 1000000, 2);
+            }
 
-            $runningCumulative += $spM;
-            $cumulativeSeries[] = round($runningCumulative, 2);
-
-            $totalSpareparts += $weekSp;
+            $totalSpareparts += $weekTotal;
 
             if (!empty($wk['is_selected'])) {
-                $selectedWeekTotal = $weekSp;
+                $selectedWeekTotal = $weekTotal;
             }
+        }
+
+        $series = [];
+        foreach ($categoriesList as $cat) {
+            $series[] = [
+                'name'  => $cat,
+                'data'  => $costDataByCat[$cat],
+                'color' => $categoryColors[$cat],
+            ];
         }
 
         $totalPeriodCost = $totalSpareparts;
@@ -1016,20 +1046,7 @@ class MtcDashboardController extends Controller
                 'categories' => $chartCategories,
                 'date_ranges' => $dateRanges,
                 'category_details' => $categoryDetails,
-                'series' => [
-                    [
-                        'name' => 'Spareparts',
-                        'data' => $sparepartsSeries,
-                        'color' => '#38bdf8', // Electric Blue
-                        'type' => 'column',
-                    ],
-                    [
-                        'name' => 'Kumulatif Biaya',
-                        'data' => $cumulativeSeries,
-                        'color' => '#f43f5e', // Accent Red
-                        'type' => 'line',
-                    ],
-                ],
+                'series' => $series,
             ],
         ];
     }

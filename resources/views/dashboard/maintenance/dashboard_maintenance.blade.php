@@ -916,7 +916,7 @@
                 {{-- ═══════════════════════════════════════════════════════════════
                  2. KPI CARDS GRID (UNIFIED 6 METRICS)
             ═══════════════════════════════════════════════════════════════ --}}
-                <div class="row g-2 mb-3">
+                <div class="row g-2 mb-2">
                     {{-- Card 1: Schedule Completion --}}
                     <div class="col-xl-2 col-md-4 col-sm-6">
                         <div class="kpi-glass-card">
@@ -1102,7 +1102,7 @@
                 {{-- ═══════════════════════════════════════════════════════════════
                  3. CHART 1: SCHEDULE MAINTENANCE (FULL WIDTH)
             ═══════════════════════════════════════════════════════════════ --}}
-                <div class="row g-2 mb-3">
+                <div class="row g-2">
                     {{-- CHART 1: SCHEDULE MAINTENANCE --}}
                     <div class="col-xl-4 col-lg-4">
                         <div class="mtc-chart-card h-100">
@@ -1340,7 +1340,7 @@
                                         Detail Maintenance Cost
                                     </h4>
                                     <div class="mtc-card-subtitle">
-                                        Biaya Penggantian Sparepart &amp; Material (W1, W2...)
+                                        Akumulasi Biaya per Kategori (MHE, Pompa, Utility, Sipil)
                                     </div>
                                 </div>
                                 <span
@@ -1353,51 +1353,6 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- ═══════════════════════════════════════════════════════════════
-                 7. LIVE UNIT OFF DETAILED TABLE SECTION
-            ═══════════════════════════════════════════════════════════════ --}}
-                {{-- <div class="row g-2 mb-3" id="tableOfflineUnitsSection">
-                    <div class="col-12">
-                        <div class="mtc-chart-card">
-                            <div class="mtc-card-header">
-                                <div>
-                                    <h4 class="mtc-card-title">
-                                        <i class="mdi mdi-alert-octagon-outline text-danger"></i>
-                                        Unit Mesin Sedang Offline / Dalam Perbaikan
-                                    </h4>
-                                    <div class="mtc-card-subtitle">
-                                        Daftar unit breakdown aktif, durasi downtime, dan kendala perbaikan (Live
-                                        Telemetri)
-                                    </div>
-                                </div>
-                                <span
-                                    class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25 font-mono px-2 py-1"
-                                    style="font-size: 10px;">
-                                    Live Telemetri
-                                </span>
-                            </div>
-                            <div class="table-scrollable">
-                                <table class="table mtc-table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Unit ID</th>
-                                            <th>Nama Mesin / Aset</th>
-                                            <th>Kategori</th>
-                                            <th>Lokasi Area</th>
-                                            <th>Off Sejak</th>
-                                            <th>Downtime</th>
-                                            <th>Penyebab Kendala</th>
-                                            <th class="text-center">Status Unit</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbodyUnitOffDetails">
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
 
             </div>
         </div>
@@ -2599,7 +2554,7 @@
                     charts.mttrMtbfCorrelation.render();
                 }
 
-                // Chart 9: Cost Maintenance
+                // Chart 9: Cost Maintenance (Stacked Bar Chart by Category)
                 function renderCostMaintenanceChart(chartData) {
                     lastChartData.cost = chartData;
                     const theme = getChartTheme();
@@ -2607,29 +2562,61 @@
                     const options = {
                         series: chartData.series,
                         chart: {
-                            type: 'line',
-                            height: 285,
-                            stacked: false,
+                            type: 'bar',
+                            height: 295,
+                            stacked: true,
                             toolbar: {
                                 show: false
                             },
                             animations: {
-                                enabled: true
+                                enabled: true,
+                                easing: 'easeinout',
+                                speed: 600
                             }
-                        },
-                        stroke: {
-                            width: [0, 2.5],
-                            curve: 'smooth'
                         },
                         plotOptions: {
                             bar: {
-                                columnWidth: '35%',
-                                borderRadius: 3
+                                horizontal: false,
+                                borderRadius: 4,
+                                columnWidth: '38%',
+                                dataLabels: {
+                                    total: {
+                                        enabled: true,
+                                        formatter: function(val) {
+                                            const num = Number(val) || 0;
+                                            if (num <= 0) return '';
+                                            return 'Rp ' + (num % 1 === 0 ? num.toFixed(0) : num.toFixed(1)) + ' Jt';
+                                        },
+                                        style: {
+                                            fontSize: '11px',
+                                            fontFamily: 'JetBrains Mono',
+                                            fontWeight: 800,
+                                            color: theme.totalDataLabelColor
+                                        },
+                                        offsetY: -6
+                                    }
+                                }
                             }
                         },
-                        colors: ['#38bdf8', '#f43f5e'],
+                        colors: ['#38bdf8', '#10b981', '#f59e0b', '#a855f7'],
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function(val) {
+                                const num = Number(val) || 0;
+                                return (num >= 2.0) ? (num % 1 === 0 ? num.toFixed(0) : num.toFixed(1)) + 'M' : '';
+                            },
+                            style: {
+                                fontSize: '9px',
+                                fontFamily: 'JetBrains Mono',
+                                fontWeight: 700,
+                                colors: ['#ffffff']
+                            },
+                            background: {
+                                enabled: false
+                            }
+                        },
                         xaxis: {
-                            categories: chartData.categories,
+                            categories: chartData.categories, // ['W1', 'W2', 'W3', 'W4', 'W5']
                             labels: {
                                 rotate: 0,
                                 rotateAlways: false,
@@ -2646,54 +2633,48 @@
                                 color: theme.axisBorderColor
                             }
                         },
-                        yaxis: [{
-                                title: {
-                                    text: 'Biaya Mingguan (Juta IDR)',
-                                    style: {
-                                        color: theme.textColor,
-                                        fontSize: '10px',
-                                        fontWeight: 600
-                                    }
-                                },
-                                labels: {
-                                    style: {
-                                        colors: theme.textColor,
-                                        fontSize: '10px'
-                                    },
-                                    formatter: val => 'Rp ' + val + ' Jt'
+                        yaxis: {
+                            title: {
+                                text: 'Total Biaya (Juta IDR)',
+                                style: {
+                                    color: theme.textColor,
+                                    fontSize: '10.5px',
+                                    fontWeight: 600
                                 }
                             },
-                            {
-                                opposite: true,
-                                title: {
-                                    text: 'Kumulatif (Juta IDR)',
-                                    style: {
-                                        color: isLightMode() ? '#e11d48' : '#f43f5e',
-                                        fontSize: '10px',
-                                        fontWeight: 700
-                                    }
+                            labels: {
+                                style: {
+                                    colors: theme.textColor,
+                                    fontSize: '10px',
+                                    fontFamily: 'JetBrains Mono'
                                 },
-                                labels: {
-                                    style: {
-                                        colors: isLightMode() ? '#e11d48' : '#f43f5e',
-                                        fontSize: '10px'
-                                    },
-                                    formatter: val => 'Rp ' + val + ' Jt'
-                                }
+                                formatter: val => 'Rp ' + val + ' Jt'
                             }
-                        ],
+                        },
                         grid: {
                             borderColor: theme.borderColor,
                             strokeDashArray: 3
                         },
                         legend: {
-                            position: 'top',
-                            horizontalAlign: 'right',
+                            show: true,
+                            position: 'bottom',
+                            horizontalAlign: 'center',
+                            floating: false,
+                            fontSize: '11px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 600,
                             labels: {
                                 colors: theme.legendColor
                             },
-                            fontSize: '10.5px',
-                            fontWeight: 600
+                            markers: {
+                                radius: 3,
+                                width: 10,
+                                height: 10
+                            },
+                            itemMargin: {
+                                horizontal: 10,
+                                vertical: 4
+                            }
                         },
                         tooltip: {
                             theme: theme.tooltipTheme,
@@ -2709,7 +2690,9 @@
                                 }
                             },
                             y: {
-                                formatter: val => 'Rp ' + val + ' Jt'
+                                formatter: function(val) {
+                                    return 'Rp ' + Number(val).toFixed(2) + ' Jt';
+                                }
                             }
                         }
                     };
