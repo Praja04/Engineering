@@ -1031,7 +1031,29 @@ class EngUtilityProjectController extends Controller
                 $headerRowIdx = $rowIndex;
                 foreach ($cols as $colLetter => $val) {
                     $cleaned = strtolower(trim((string)$val));
-                    if (str_contains($cleaned, 'nomor') || str_contains($cleaned, 'no project') || str_contains($cleaned, 'kode')) {
+
+                    // 1. Status HARUS dicek sebelum progress karena judul status memuat "On Progress"
+                    if (str_contains($cleaned, 'status')) {
+                        $headerMap['status'] = $colLetter;
+                    }
+                    // 2. Progress (%)
+                    elseif (str_contains($cleaned, 'progress') || str_contains($cleaned, 'progres') || str_contains($cleaned, '%') || str_contains($cleaned, 'persen')) {
+                        $headerMap['progress'] = $colLetter;
+                    }
+                    // 3. Tanggal & Minggu Mulai
+                    elseif (str_contains($cleaned, 'mulai') && (str_contains($cleaned, 'minggu') || str_contains($cleaned, 'week'))) {
+                        $headerMap['start_week'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'mulai') || str_contains($cleaned, 'start date') || str_contains($cleaned, 'start_date')) {
+                        $headerMap['start_date'] = $colLetter;
+                    }
+                    // 4. Tanggal & Minggu Selesai / Target Selesai
+                    elseif ((str_contains($cleaned, 'selesai') || str_contains($cleaned, 'finish')) && (str_contains($cleaned, 'minggu') || str_contains($cleaned, 'week'))) {
+                        $headerMap['finish_week'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'selesai') || str_contains($cleaned, 'finish') || str_contains($cleaned, 'deadline') || str_contains($cleaned, 'due') || (str_contains($cleaned, 'target') && !str_contains($cleaned, 'result') && !str_contains($cleaned, 'hasil') && !str_contains($cleaned, 'output'))) {
+                        $headerMap['finish_date'] = $colLetter;
+                    }
+                    // 5. Data Project Lainnya
+                    elseif (str_contains($cleaned, 'nomor') || str_contains($cleaned, 'no project') || str_contains($cleaned, 'kode')) {
                         $headerMap['nomor_project'] = $colLetter;
                     } elseif (str_contains($cleaned, 'nama project') || str_contains($cleaned, 'nama_project') || $cleaned === 'project' || $cleaned === 'nama') {
                         $headerMap['nama_project'] = $colLetter;
@@ -1043,18 +1065,6 @@ class EngUtilityProjectController extends Controller
                         $headerMap['kategori'] = $colLetter;
                     } elseif (str_contains($cleaned, 'prioritas') || str_contains($cleaned, 'priority')) {
                         $headerMap['priority'] = $colLetter;
-                    } elseif (str_contains($cleaned, 'mulai') && (str_contains($cleaned, 'tanggal') || str_contains($cleaned, 'tgl') || str_contains($cleaned, 'date'))) {
-                        $headerMap['start_date'] = $colLetter;
-                    } elseif (str_contains($cleaned, 'mulai') && (str_contains($cleaned, 'minggu') || str_contains($cleaned, 'week'))) {
-                        $headerMap['start_week'] = $colLetter;
-                    } elseif ((str_contains($cleaned, 'selesai') || str_contains($cleaned, 'target') || str_contains($cleaned, 'finish') || str_contains($cleaned, 'deadline') || str_contains($cleaned, 'due')) && (str_contains($cleaned, 'tanggal') || str_contains($cleaned, 'tgl') || str_contains($cleaned, 'date'))) {
-                        $headerMap['finish_date'] = $colLetter;
-                    } elseif ((str_contains($cleaned, 'selesai') || str_contains($cleaned, 'finish')) && (str_contains($cleaned, 'minggu') || str_contains($cleaned, 'week'))) {
-                        $headerMap['finish_week'] = $colLetter;
-                    } elseif (str_contains($cleaned, 'progress') || str_contains($cleaned, 'progres') || str_contains($cleaned, '%') || str_contains($cleaned, 'persen')) {
-                        $headerMap['progress'] = $colLetter;
-                    } elseif (str_contains($cleaned, 'status')) {
-                        $headerMap['status'] = $colLetter;
                     } elseif (str_contains($cleaned, 'catatan') || str_contains($cleaned, 'note') || str_contains($cleaned, 'keterangan') || str_contains($cleaned, 'remark')) {
                         $headerMap['latest_note'] = $colLetter;
                     }
@@ -1116,7 +1126,7 @@ class EngUtilityProjectController extends Controller
                 'mei' => 5, 'may' => 5,
                 'jun' => 6, 'juni' => 6, 'june' => 6,
                 'jul' => 7, 'juli' => 7, 'july' => 7,
-                'agu' => 8, 'agus' => 8, 'agustus' => 8, 'aug' => 8, 'august' => 8,
+                'agu' => 8, 'ags' => 8, 'agt' => 8, 'agus' => 8, 'agustus' => 8, 'aug' => 8, 'august' => 8,
                 'sep' => 9, 'sept' => 9, 'september' => 9,
                 'okt' => 10, 'oct' => 10, 'oktober' => 10, 'october' => 10,
                 'nov' => 11, 'nop' => 11, 'november' => 11,

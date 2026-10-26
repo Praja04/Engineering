@@ -8,7 +8,8 @@
     $jabatan === 'admin' ||
         $jabatan === 'dept_head' ||
         $jabatan === 'supervisor' ||
-        ($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering WWTP'])))
+        ($jabatan === 'foreman' &&
+            in_array($bagian, ['Engineering', 'Engineering WWTP', 'Engineering Maintenance & Improvement'])))
     {{-- ($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering WWTP'])) || --}}
     <li class="nav-item">
         <a class="nav-link menu-link {{ $isProjectActive ? '' : 'collapsed' }}" href="#sidebarUtilityProject"
