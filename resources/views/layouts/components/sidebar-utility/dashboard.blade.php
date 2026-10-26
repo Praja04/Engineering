@@ -58,4 +58,12 @@
             </ul>
         </div>
     </li>
+
+    <li class="nav-item">
+        <a href="{{ route('utility.project.dashboard') }}"
+            class="nav-link menu-link {{ request()->routeIs('utility.project.dashboard') ? 'active' : '' }}"
+            data-key="t-analytics">
+            <i class="ri-dashboard-2-line"></i>Project Utility
+        </a>
+    </li>
 @endif

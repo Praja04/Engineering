@@ -58,13 +58,6 @@
                         data-key="t-analytics">
                         <i class="mdi mdi-chart-bar me-2"></i> Engineering Utility Dashboard </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('utility.project.dashboard') }}"
-                        class="nav-link {{ request()->routeIs('utility.project.dashboard') ? 'active' : '' }}"
-                        data-key="t-analytics">
-                        <i class="ri-dashboard-2-line me-2"></i> Project Utility
-                    </a>
-                </li>
                 @if ($jabatan === 'admin')
                     <li class="nav-item">
                         <a href="javascript:void(0);" class="nav-link text-warning fw-semibold" data-bs-toggle="modal"

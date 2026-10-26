@@ -82,47 +82,27 @@
                                     @method('PUT')
                                 @endif
 
-                                {{-- Area Project Selection --}}
-                                <div class="mb-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <label class="form-label fw-bold text-dark mb-0">
+                                {{-- Area, Kategori & Nomor Project --}}
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold text-dark mb-1">
                                             Area Project <span class="text-danger">*</span>
                                         </label>
+                                        <select name="area" id="select_area" class="form-select select2" required>
+                                            <option value="">-- Pilih Area --</option>
+                                            @foreach ($areas as $area)
+                                                <option value="{{ $area }}"
+                                                    {{ old('area', $isEdit ? $project->area : '') === $area ? 'selected' : '' }}>
+                                                    {{ $area }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                     </div>
-                                    <div class="row g-2">
-                                        @php
-                                            $currentArea = old(
-                                                'area',
-                                                $isEdit ? $project->area : $areas[0] ?? 'Utility',
-                                            );
-                                        @endphp
-                                        @foreach ($areas as $area)
-                                            <div class="col-6 col-sm-3">
-                                                <input type="radio" class="btn-check" name="area"
-                                                    id="area_{{ \Illuminate\Support\Str::slug($area) }}"
-                                                    value="{{ $area }}"
-                                                    {{ $currentArea === $area ? 'checked' : '' }} required>
-                                                <label
-                                                    class="btn btn-outline-primary w-100 py-2 d-flex flex-column align-items-center justify-content-center"
-                                                    for="area_{{ \Illuminate\Support\Str::slug($area) }}">
-                                                    <i
-                                                        class="fs-20 mb-1 {{ $area === 'Boiler' ? 'ri-fire-line' : ($area === 'Utility' ? 'ri-flashlight-line' : ($area === 'WWTP' ? 'ri-water-flash-line' : ($area === 'MTC' ? 'ri-tools-line' : 'ri-community-line'))) }}"></i>
-                                                    <span class="fw-semibold fs-13">{{ $area }}</span>
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-
-                                {{-- Kategori & Nomor Project --}}
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-7">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <label class="form-label fw-bold text-dark mb-0">
-                                                Kategori Project <span class="text-danger">*</span>
-                                            </label>
-                                        </div>
-                                        <select name="kategori" class="form-select" required>
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-bold text-dark mb-1">
+                                            Kategori Project <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="kategori" id="select_kategori" class="form-select select2" required>
                                             <option value="">-- Pilih Kategori --</option>
                                             @foreach ($categories as $cat)
                                                 <option value="{{ $cat }}"
@@ -132,12 +112,12 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-md-5">
+                                    <div class="col-md-3">
                                         <label class="form-label fw-semibold text-muted mb-1">
-                                            Nomor Project (Opsional)
+                                            Nomor Project
                                         </label>
                                         <input type="text" class="form-control" name="nomor_project"
-                                            placeholder="Auto-generate jika kosong"
+                                            placeholder="Auto-generate"
                                             value="{{ old('nomor_project', $isEdit ? $project->nomor_project : '') }}">
                                     </div>
                                 </div>
@@ -409,6 +389,19 @@
         }
 
         $(document).ready(function() {
+            if (typeof $.fn.select2 !== 'undefined') {
+                $('#select_area').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: '-- Pilih Area --',
+                    width: '100%'
+                });
+                $('#select_kategori').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: '-- Pilih Kategori --',
+                    width: '100%'
+                });
+            }
+
             $('#progressRange').on('input', function() {
                 syncProgress($(this).val());
             });
