@@ -590,7 +590,7 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">COMPRESSOR</div>
-                                    <div class="text-muted" style="font-size: 8px;">TOTAL AVG RUNNING HOUR</div>
+                                    <div class="text-muted" style="font-size: 8px;">TOTAL RUNNING HOUR</div>
                                 </div>
                             </div>
                             <div class="kpi-top-val" id="kpiCompVal">0 <span
@@ -598,7 +598,8 @@
                             <div class="kpi-top-sub" id="kpiCompSub"
                                 style="font-size: 8px; gap: 3px; flex-wrap: wrap;">
                                 <i class="mdi mdi-check-circle-outline"></i> RH1: <span id="kpiCompRh1">-</span> |
-                                RH3: <span id="kpiCompIr55">-</span> | RH4: <span id="kpiCompGa55">-</span>
+                                RH2: <span id="kpiCompGa57">-</span> | RH3: <span id="kpiCompIr55">-</span> | RH4:
+                                <span id="kpiCompGa55">-</span>
                             </div>
                         </div>
                     </div>
@@ -774,7 +775,7 @@
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
                                                 <span class="stat-tile-label text-warning"
-                                                    style="font-size: 8px;">AVG. AQ55 (rh1)</span>
+                                                    style="font-size: 8px;">AQ55 (rh1)</span>
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center text-warning" id="valCompRh1"
                                                 style="font-size: 13px;">0.00</div>
@@ -786,8 +787,7 @@
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
-                                                <span class="stat-tile-label text-cyan" style="font-size: 8px;">AVG.
-                                                    GA37
+                                                <span class="stat-tile-label text-cyan" style="font-size: 8px;">GA37
                                                     (rh2)</span>
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center" id="valCompGa57"
@@ -800,8 +800,7 @@
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
-                                                <span class="stat-tile-label text-info" style="font-size: 8px;">AVG.
-                                                    IR55
+                                                <span class="stat-tile-label text-info" style="font-size: 8px;">IR55
                                                     (rh3)</span>
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center" id="valCompIr55"
@@ -815,7 +814,7 @@
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
                                                 <span class="stat-tile-label text-success"
-                                                    style="font-size: 8px;">AVG. GA55 (rh4)</span>
+                                                    style="font-size: 8px;">GA55 (rh4)</span>
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center" id="valCompGa55"
                                                 style="font-size: 13px;">0.00</div>
@@ -1126,7 +1125,67 @@
                         </div>
                     </div>
 
-                    <!-- 7. PEMAKAIAN AIR PROSES & SUPPORT (col-xl-6) -->
+                    <!-- 7. PEMAKAIAN AIR MENTAH / RAW WATER (col-xl-6) -->
+                    <div class="col-xl-4 col-lg-6 col-12">
+                        <div class="wco-card h-100">
+                            <div class="wco-card-header">
+                                <div class="wco-card-title">
+                                    <i class="mdi mdi-water-pump text-cyan"></i>
+                                    <span>AIR MENTAH (AKTUAL VS QUOTA)</span>
+                                </div>
+                                <span class="badge bg-dark border border-secondary text-cyan"
+                                    id="airRawPeriodBadge">Sumur 1,2,4,5 & PDAM</span>
+                            </div>
+                            <div class="wco-card-body p-2 d-flex flex-column">
+                                <!-- 4 Stat Tiles -->
+                                <div class="row g-1 mb-2">
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-cyan" style="font-size: 8px;">AKTUAL
+                                                RAW</span>
+                                            <div class="stat-tile-val mt-1 text-cyan" id="valAirRawTotal"
+                                                style="font-size: 12px;">0 m³</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Total
+                                                Aktual</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-muted" style="font-size: 8px;">TARGET
+                                                QUOTA</span>
+                                            <div class="stat-tile-val mt-1 text-secondary" id="valAirRawQuota"
+                                                style="font-size: 12px;">0 m³</div>
+                                            <div class="stat-tile-meta text-muted" id="valAirRawDaysMeta"
+                                                style="font-size: 7px;">1 Hari</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-info"
+                                                style="font-size: 8px;">VARIANSI</span>
+                                            <div class="stat-tile-val mt-1" id="valAirRawVariance"
+                                                style="font-size: 12px;">0 m³</div>
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Aktual -
+                                                Quota</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="stat-tile py-1 px-1 text-center">
+                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">%
+                                                PENCAPAIAN</span>
+                                            <div class="stat-tile-val mt-1" id="valAirRawPercent"
+                                                style="font-size: 12px;">0%</div>
+                                            <div class="stat-tile-meta" id="valAirRawStatusMeta"
+                                                style="font-size: 7px;">Status: Normal</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="chartAirRaw" style="min-height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 8. PEMAKAIAN AIR PROSES & SUPPORT (col-xl-6) -->
                     <div class="col-xl-4 col-lg-6 col-12">
                         <div class="wco-card h-100">
                             <div class="wco-card-header">
@@ -1183,66 +1242,6 @@
                                     </div>
                                 </div>
                                 <div id="chartAirProses" style="min-height: 200px;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 8. PEMAKAIAN AIR MENTAH / RAW WATER (col-xl-6) -->
-                    <div class="col-xl-4 col-lg-6 col-12">
-                        <div class="wco-card h-100">
-                            <div class="wco-card-header">
-                                <div class="wco-card-title">
-                                    <i class="mdi mdi-water-pump text-cyan"></i>
-                                    <span>AIR MENTAH (AKTUAL VS QUOTA)</span>
-                                </div>
-                                <span class="badge bg-dark border border-secondary text-cyan"
-                                    id="airRawPeriodBadge">Sumur 1,2,4,5 & PDAM</span>
-                            </div>
-                            <div class="wco-card-body p-2 d-flex flex-column">
-                                <!-- 4 Stat Tiles -->
-                                <div class="row g-1 mb-2">
-                                    <div class="col-3">
-                                        <div class="stat-tile py-1 px-1 text-center">
-                                            <span class="stat-tile-label text-cyan" style="font-size: 8px;">AKTUAL
-                                                RAW</span>
-                                            <div class="stat-tile-val mt-1 text-cyan" id="valAirRawTotal"
-                                                style="font-size: 12px;">0 m³</div>
-                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Total
-                                                Aktual</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-3">
-                                        <div class="stat-tile py-1 px-1 text-center">
-                                            <span class="stat-tile-label text-muted" style="font-size: 8px;">TARGET
-                                                QUOTA</span>
-                                            <div class="stat-tile-val mt-1 text-secondary" id="valAirRawQuota"
-                                                style="font-size: 12px;">0 m³</div>
-                                            <div class="stat-tile-meta text-muted" id="valAirRawDaysMeta"
-                                                style="font-size: 7px;">1 Hari</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-3">
-                                        <div class="stat-tile py-1 px-1 text-center">
-                                            <span class="stat-tile-label text-info"
-                                                style="font-size: 8px;">VARIANSI</span>
-                                            <div class="stat-tile-val mt-1" id="valAirRawVariance"
-                                                style="font-size: 12px;">0 m³</div>
-                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Aktual -
-                                                Quota</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-3">
-                                        <div class="stat-tile py-1 px-1 text-center">
-                                            <span class="stat-tile-label text-warning" style="font-size: 8px;">%
-                                                PENCAPAIAN</span>
-                                            <div class="stat-tile-val mt-1" id="valAirRawPercent"
-                                                style="font-size: 12px;">0%</div>
-                                            <div class="stat-tile-meta" id="valAirRawStatusMeta"
-                                                style="font-size: 7px;">Status: Normal</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="chartAirRaw" style="min-height: 200px;"></div>
                             </div>
                         </div>
                     </div>
@@ -1519,7 +1518,7 @@
                                                 / FG</span>
                                             <div class="stat-tile-val mt-1 text-warning" style="font-size: 12px;"
                                                 id="valCostSmkpBb">0.00</div>
-                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Kg/Ton FG
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Target: 66 Kg/Ton
                                             </div>
                                         </div>
                                     </div>
@@ -1529,7 +1528,7 @@
                                                 LISTRIK/KM</span>
                                             <div class="stat-tile-val mt-1 text-cyan" style="font-size: 12px;"
                                                 id="valCostSmkpListrik">0.00</div>
-                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">kWh/Ton KM
+                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Target: 75 kWh/Ton
                                             </div>
                                         </div>
                                     </div>
@@ -1732,12 +1731,22 @@
 
                 // 1. COMPRESSOR UI & LOADER
                 function updateCompressorUI(comp) {
+                    const totalDelta = (comp.total_rh_delta !== undefined) ? comp.total_rh_delta : 0;
                     $('#kpiCompVal').html(
-                        `${comp.ga57_avg} <span style="font-size: 11px; font-weight: normal; color: #94a3b8;">h</span>`
+                        `${Number(totalDelta).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 })} <span style="font-size: 11px; font-weight: normal; color: #94a3b8;">h</span>`
                     );
-                    $('#kpiCompRh1').text(comp.rh1_avg ? `${comp.rh1_avg}h` : '-');
-                    $('#kpiCompIr55').text(`${comp.ir55_avg}h`);
-                    $('#kpiCompGa55').text(`${comp.ga55_avg}h`);
+                    $('#kpiCompRh1').text(comp.rh1_delta !== undefined ?
+                        `${Number(comp.rh1_delta).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}h` :
+                        '0h');
+                    $('#kpiCompGa57').text(comp.ga57_delta !== undefined ?
+                        `${Number(comp.ga57_delta).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}h` :
+                        '0h');
+                    $('#kpiCompIr55').text(comp.ir55_delta !== undefined ?
+                        `${Number(comp.ir55_delta).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}h` :
+                        '0h');
+                    $('#kpiCompGa55').text(comp.ga55_delta !== undefined ?
+                        `${Number(comp.ga55_delta).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}h` :
+                        '0h');
 
                     // Card metric tiles: tampilkan AVG data tanggal terbaru (bukan total periode)
                     const rh1Val = (comp.rh1_latest_avg !== undefined) ? comp.rh1_latest_avg : (comp.rh1_avg || 0);
@@ -2254,7 +2263,19 @@
                             }
                         },
                         legend: {
-                            show: false
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '9px',
+                            fontFamily: 'Inter, sans-serif',
+                            labels: {
+                                colors: isThemeLight() ? '#475569' : '#94a3b8'
+                            },
+                            markers: {
+                                radius: 3,
+                                width: 8,
+                                height: 8
+                            }
                         },
                         xaxis: {
                             categories: compCategories,
@@ -2386,7 +2407,19 @@
                             curve: 'smooth'
                         },
                         legend: {
-                            show: false
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '9px',
+                            fontFamily: 'Inter, sans-serif',
+                            labels: {
+                                colors: isThemeLight() ? '#475569' : '#94a3b8'
+                            },
+                            markers: {
+                                radius: 3,
+                                width: 8,
+                                height: 8
+                            }
                         },
                         xaxis: {
                             categories: ahuCategories,
@@ -2546,7 +2579,19 @@
                             }
                         },
                         legend: {
-                            show: false
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '9px',
+                            fontFamily: 'Inter, sans-serif',
+                            labels: {
+                                colors: isThemeLight() ? '#475569' : '#94a3b8'
+                            },
+                            markers: {
+                                radius: 3,
+                                width: 8,
+                                height: 8
+                            }
                         },
                         xaxis: {
                             categories: mdpCategories,
@@ -2673,7 +2718,19 @@
                             }
                         },
                         legend: {
-                            show: false
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '9px',
+                            fontFamily: 'Inter, sans-serif',
+                            labels: {
+                                colors: isThemeLight() ? '#475569' : '#94a3b8'
+                            },
+                            markers: {
+                                radius: 3,
+                                width: 8,
+                                height: 8
+                            }
                         },
                         xaxis: {
                             categories: mdpCategories,
@@ -2802,7 +2859,19 @@
                             }
                         },
                         legend: {
-                            show: false
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '9px',
+                            fontFamily: 'Inter, sans-serif',
+                            labels: {
+                                colors: isThemeLight() ? '#475569' : '#94a3b8'
+                            },
+                            markers: {
+                                radius: 3,
+                                width: 8,
+                                height: 8
+                            }
                         },
                         xaxis: {
                             categories: ctCategories,
@@ -2928,7 +2997,19 @@
                             }
                         },
                         legend: {
-                            show: false
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '9px',
+                            fontFamily: 'Inter, sans-serif',
+                            labels: {
+                                colors: isThemeLight() ? '#475569' : '#94a3b8'
+                            },
+                            markers: {
+                                radius: 3,
+                                width: 8,
+                                height: 8
+                            }
                         },
                         xaxis: {
                             categories: gensetCategories,
@@ -3129,7 +3210,19 @@
                                 }
                             },
                             legend: {
-                                show: false
+                                show: true,
+                                position: 'top',
+                                horizontalAlign: 'right',
+                                fontSize: '9px',
+                                fontFamily: 'Inter, sans-serif',
+                                labels: {
+                                    colors: isThemeLight() ? '#475569' : '#94a3b8'
+                                },
+                                markers: {
+                                    radius: 3,
+                                    width: 8,
+                                    height: 8
+                                }
                             },
                             tooltip: {
                                 theme: chartTheme.mode,
@@ -3273,6 +3366,21 @@
                                 bottom: 0,
                                 left: 6,
                                 right: 6
+                            }
+                        },
+                        legend: {
+                            show: true,
+                            position: 'top',
+                            horizontalAlign: 'right',
+                            fontSize: '9px',
+                            fontFamily: 'Inter, sans-serif',
+                            labels: {
+                                colors: isThemeLight() ? '#475569' : '#94a3b8'
+                            },
+                            markers: {
+                                radius: 3,
+                                width: 8,
+                                height: 8
                             }
                         },
                         tooltip: {
@@ -3459,6 +3567,8 @@
                     const bbData = months.map(m => m.bb_per_fg);
                     const listrikData = months.map(m => m.listrik_per_km);
                     const costData = months.map(m => m.utility_cost_jt);
+                    const targetBbData = months.map(() => 66);
+                    const targetListrikData = months.map(() => 75);
 
                     const options = {
                         series: [{
@@ -3467,9 +3577,19 @@
                                 data: bbData
                             },
                             {
-                                name: 'Listrik / KM (kWh/Ton)',
+                                name: 'Target BB / FG (66 Kg/Ton)',
+                                type: 'line',
+                                data: targetBbData
+                            },
+                            {
+                                name: 'Listrik / Kecap Matang (kWh/Ton)',
                                 type: 'column',
                                 data: listrikData
+                            },
+                            {
+                                name: 'Target Listrik / KM (75 kWh/Ton)',
+                                type: 'line',
+                                data: targetListrikData
                             },
                             {
                                 name: 'Cost Utility (Jt Rp)',
@@ -3488,18 +3608,19 @@
                         },
                         theme: chartTheme,
                         stroke: {
-                            width: [0, 0, 3],
-                            curve: 'smooth'
+                            width: [0, 2, 0, 2, 3],
+                            dashArray: [0, 4, 0, 4, 0],
+                            curve: ['smooth', 'straight', 'smooth', 'straight', 'smooth']
                         },
                         plotOptions: {
                             bar: {
-                                columnWidth: '50%',
+                                columnWidth: '46%',
                                 borderRadius: 3
                             }
                         },
-                        colors: ['#f59e0b', '#06b6d4', '#10b981'],
+                        colors: ['#f59e0b', '#dc2626', '#06b6d4', '#2563eb', '#10b981'],
                         fill: {
-                            opacity: [0.85, 0.85, 1],
+                            opacity: [0.85, 1, 0.85, 1, 1],
                             gradient: {
                                 inverseColors: false,
                                 shade: 'light',
@@ -3511,10 +3632,10 @@
                         },
                         labels: categories,
                         markers: {
-                            size: [0, 0, 4],
+                            size: [0, 0, 0, 0, 4],
                             strokeWidth: 2,
                             hover: {
-                                size: 6
+                                size: 5
                             }
                         },
                         xaxis: {
@@ -3527,6 +3648,7 @@
                             }
                         },
                         yaxis: [{
+                                seriesName: 'BB / FG (Kg/Ton)',
                                 title: {
                                     text: 'Ratio (Kg/Ton & kWh/Ton)',
                                     style: {
@@ -3542,7 +3664,20 @@
                                 }
                             },
                             {
+                                seriesName: 'BB / FG (Kg/Ton)',
+                                show: false
+                            },
+                            {
+                                seriesName: 'BB / FG (Kg/Ton)',
+                                show: false
+                            },
+                            {
+                                seriesName: 'BB / FG (Kg/Ton)',
+                                show: false
+                            },
+                            {
                                 opposite: true,
+                                seriesName: 'Cost Utility (Jt Rp)',
                                 title: {
                                     text: 'Cost (Jt Rp)',
                                     style: {
@@ -3559,6 +3694,44 @@
                                 }
                             }
                         ],
+                        annotations: {
+                            yaxis: [
+                                {
+                                    y: 66,
+                                    yAxisIndex: 0,
+                                    borderColor: '#dc2626',
+                                    strokeDashArray: 0,
+                                    borderWidth: 0,
+                                    label: {
+                                        borderColor: '#dc2626',
+                                        style: {
+                                            color: '#fff',
+                                            background: '#dc2626',
+                                            fontSize: '7.5px',
+                                            fontWeight: '600'
+                                        },
+                                        text: 'Target BB: 66'
+                                    }
+                                },
+                                {
+                                    y: 75,
+                                    yAxisIndex: 0,
+                                    borderColor: '#2563eb',
+                                    strokeDashArray: 0,
+                                    borderWidth: 0,
+                                    label: {
+                                        borderColor: '#2563eb',
+                                        style: {
+                                            color: '#fff',
+                                            background: '#2563eb',
+                                            fontSize: '7.5px',
+                                            fontWeight: '600'
+                                        },
+                                        text: 'Target Listrik: 75'
+                                    }
+                                }
+                            ]
+                        },
                         grid: {
                             borderColor: isThemeLight() ? '#e2e8f0' : '#1e293b',
                             padding: {
@@ -3572,7 +3745,7 @@
                             show: true,
                             position: 'top',
                             horizontalAlign: 'right',
-                            fontSize: '8.5px',
+                            fontSize: '8px',
                             fontFamily: 'Inter, sans-serif',
                             labels: {
                                 colors: isThemeLight() ? '#475569' : '#94a3b8'
@@ -3596,8 +3769,14 @@
                                         maximumFractionDigits: 2
                                     }) + ' Kg/Ton FG';
                                     if (seriesIndex === 1) return Number(val).toLocaleString('id-ID', {
+                                        maximumFractionDigits: 0
+                                    }) + ' Kg/Ton (Target)';
+                                    if (seriesIndex === 2) return Number(val).toLocaleString('id-ID', {
                                         maximumFractionDigits: 2
-                                    }) + ' kWh/Ton KM';
+                                    }) + ' kWh/Ton Kecap Matang';
+                                    if (seriesIndex === 3) return Number(val).toLocaleString('id-ID', {
+                                        maximumFractionDigits: 0
+                                    }) + ' kWh/Ton (Target)';
                                     return 'Rp ' + Number(val).toLocaleString('id-ID', {
                                         maximumFractionDigits: 1
                                     }) + ' Juta';

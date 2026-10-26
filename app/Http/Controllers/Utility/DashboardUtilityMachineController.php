@@ -290,7 +290,53 @@ class DashboardUtilityMachineController extends Controller
         $latestDate = $latestTrend ? $latestTrend['tanggal'] : null;
         $latestDateFormatted = $latestDate ? Carbon::parse($latestDate)->translatedFormat('d M Y') : null;
 
+        // Hitung Delta Running Hour (RH akhir periode - RH awal periode) untuk masing-masing mesin
+        $sortedTarget = $compTarget->sortBy([
+            ['tanggal', 'asc'],
+            ['id', 'asc'],
+        ])->values();
+
+        $calcDelta = function ($col) use ($sortedTarget) {
+            $valid = $sortedTarget->filter(function ($r) use ($col) {
+                return !is_null($r->{$col}) && (float)$r->{$col} > 0;
+            })->values();
+
+            if ($valid->count() < 1) {
+                return 0;
+            }
+
+            if ($valid->count() === 1) {
+                $prevRecord = CompressorDetails::where('tanggal', '<', $sortedTarget->first()->tanggal)
+                    ->whereNotNull($col)
+                    ->where($col, '>', 0)
+                    ->orderBy('tanggal', 'desc')
+                    ->orderBy('id', 'desc')
+                    ->first();
+                if ($prevRecord) {
+                    $diff = (float)$valid->last()->{$col} - (float)$prevRecord->{$col};
+                    return $diff >= 0 ? round($diff, 2) : 0;
+                }
+                return 0;
+            }
+
+            $firstVal = (float)$valid->first()->{$col};
+            $lastVal = (float)$valid->last()->{$col};
+            $diff = $lastVal - $firstVal;
+            return $diff >= 0 ? round($diff, 2) : 0;
+        };
+
+        $rh1Delta = $calcDelta('running_hour_1');
+        $rh2Delta = $calcDelta('running_hour_2');
+        $rh3Delta = $calcDelta('running_hour_3');
+        $rh4Delta = $calcDelta('running_hour_4');
+        $totalRhDelta = round($rh1Delta + $rh2Delta + $rh3Delta + $rh4Delta, 2);
+
         $compSummary = [
+            'rh1_delta' => $rh1Delta,
+            'ga57_delta' => $rh2Delta,
+            'ir55_delta' => $rh3Delta,
+            'ga55_delta' => $rh4Delta,
+            'total_rh_delta' => $totalRhDelta,
             'rh1_avg' => round($compTarget->whereNotNull('running_hour_1')->avg('running_hour_1') ?: ($currentRh1 ?? 0), 2),
             'ga57_avg' => round($compTarget->avg('running_hour_2') ?? 0, 2),
             'ir55_avg' => round($compTarget->avg('running_hour_3') ?? 0, 2),
@@ -305,9 +351,6 @@ class DashboardUtilityMachineController extends Controller
             'ga57_latest' => (float)($selectedDayComp->last()->running_hour_2 ?? ($compDetails->last()->running_hour_2 ?? 0)),
             'ir55_latest' => (float)($selectedDayComp->last()->running_hour_3 ?? ($compDetails->last()->running_hour_3 ?? 0)),
             'ga55_latest' => (float)($selectedDayComp->last()->running_hour_4 ?? ($compDetails->last()->running_hour_4 ?? 0)),
-            'ga57_delta' => $selectedDayComp->count() > 1 ? round(($selectedDayComp->max('running_hour_2') - $selectedDayComp->min('running_hour_2')), 2) : 0,
-            'ir55_delta' => $selectedDayComp->count() > 1 ? round(($selectedDayComp->max('running_hour_3') - $selectedDayComp->min('running_hour_3')), 2) : 0,
-            'ga55_delta' => $selectedDayComp->count() > 1 ? round(($selectedDayComp->max('running_hour_4') - $selectedDayComp->min('running_hour_4')), 2) : 0,
             'count' => $compTarget->count(),
         ];
 
@@ -1035,7 +1078,7 @@ class DashboardUtilityMachineController extends Controller
                 $lBas = (float)($rec->listrik_bas ?? 0);
                 $cost = (float)($rec->utility_cost ?? 0);
 
-                $bbPerFg = $fg > 0 ? round($bb / $fg, 2) : 0;
+                $bbPerFg = $fg > 0 ? round(($bb * 1000) / $fg, 2) : 0;
                 $listrikPerKm = $km > 0 ? round($lBas / $km, 2) : 0;
                 $costJt = round($cost / 1000000, 2);
 
@@ -1085,7 +1128,7 @@ class DashboardUtilityMachineController extends Controller
             $bb = (float)($latestRecord->batubara ?? 0);
             $lBas = (float)($latestRecord->listrik_bas ?? 0);
             $latestCost = (float)($latestRecord->utility_cost ?? 0);
-            $latestBb = $fg > 0 ? round($bb / $fg, 2) : 0;
+            $latestBb = $fg > 0 ? round(($bb * 1000) / $fg, 2) : 0;
             $latestListrik = $km > 0 ? round($lBas / $km, 2) : 0;
         }
 
@@ -1095,6 +1138,8 @@ class DashboardUtilityMachineController extends Controller
             'summary' => [
                 'avg_bb_per_fg' => $avgBb,
                 'avg_listrik_per_km' => $avgListrik,
+                'target_bb' => 66,
+                'target_listrik' => 75,
                 'total_utility_cost' => $totalCost,
                 'total_utility_cost_jt' => round($totalCost / 1000000, 1),
                 'avg_utility_cost_jt' => round($avgCost / 1000000, 1),

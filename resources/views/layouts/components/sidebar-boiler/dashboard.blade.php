@@ -62,7 +62,7 @@
                     <a href="{{ route('utility.project.dashboard') }}"
                         class="nav-link {{ request()->routeIs('utility.project.dashboard') ? 'active' : '' }}"
                         data-key="t-analytics">
-                        <i class="ri-dashboard-2-line me-2"></i> Dashboard Project Utility
+                        <i class="ri-dashboard-2-line me-2"></i> Project Utility
                     </a>
                 </li>
                 @if ($jabatan === 'admin')
