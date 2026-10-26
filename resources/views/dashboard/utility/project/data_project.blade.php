@@ -269,7 +269,7 @@
                         <div class="spinner-border text-primary" role="status"></div>
                         <p class="text-muted mt-2 fs-13">Memuat riwayat...</p>
                     </div>
-                    <div id="history_container" class="timeline-2 d-none">
+                    <div id="history_container" class="d-none">
                         {{-- Dinamis diisi via JavaScript --}}
                     </div>
                 </div>
@@ -827,29 +827,33 @@
                             return;
                         }
 
-                        let html = '<div class="list-group list-group-flush">';
+                        let html = '<div class="d-flex flex-column gap-2">';
                         $.each(res.logs, function(i, log) {
                             const diff = log.progress_baru - log.progress_sebelumnya;
                             const diffBadge = diff > 0 ?
-                                `<span class="badge bg-success-subtle text-success">+${diff}%</span>` :
+                                `<span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">+${diff}%</span>` :
                                 (diff < 0 ?
-                                    `<span class="badge bg-danger-subtle text-danger">${diff}%</span>` :
-                                    `<span class="badge bg-light text-muted">0%</span>`
+                                    `<span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">${diff}%</span>` :
+                                    `<span class="badge bg-secondary-subtle text-muted border">0%</span>`
                                 );
 
                             html += `
-                        <div class="list-group-item px-0 py-3 border-bottom">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-primary-subtle text-primary">${log.progress_sebelumnya}% &rarr; ${log.progress_baru}%</span>
-                                    ${diffBadge}
+                                <div class="card border border-light-subtle shadow-none bg-light bg-opacity-50 mb-0 rounded-3">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge bg-primary fs-12 px-2 py-1">${log.progress_sebelumnya}% &rarr; ${log.progress_baru}%</span>
+                                                ${diffBadge}
+                                            </div>
+                                            <span class="text-muted fs-12"><i class="ri-calendar-line me-1"></i>${log.tanggal} ${log.jam}</span>
+                                        </div>
+                                        <div class="text-dark fs-13 mb-2 text-break">${escapeHtml(log.catatan)}</div>
+                                        <div class="text-muted fs-12 border-top pt-2 mt-1">
+                                            <i class="ri-user-line me-1"></i>Diupdate oleh: <strong class="text-dark">${escapeHtml(log.user_nama)}</strong>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span class="text-muted fs-12"><i class="ri-calendar-line me-1"></i>${log.tanggal} ${log.jam}</span>
-                            </div>
-                            <div class="text-dark fs-13 mb-1 mt-2">${log.catatan}</div>
-                            <small class="text-muted"><i class="ri-user-line me-1"></i>Diupdate oleh: <strong>${log.user_nama}</strong></small>
-                        </div>
-                    `;
+                            `;
                         });
                         html += '</div>';
                         $container.html(html);
