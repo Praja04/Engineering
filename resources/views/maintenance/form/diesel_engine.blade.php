@@ -107,6 +107,7 @@
                                     <option>C</option>
                                     <option>D</option>
                                     <option>E</option>
+                                    <option>Off</option>
                                     <option>Korektif</option>
                                     <option>Checkpoint</option>
                                 </select>

@@ -164,6 +164,7 @@
                                 <option value="C">C</option>
                                 <option value="D">D</option>
                                 <option value="E">E</option>
+                                <option value="Off">Off</option>
                                 <option value="Korektif">Korektif</option>
                                 <option value="Checkpoint">Checkpoint</option>
                             </select>
@@ -279,6 +280,7 @@
                                     <option>C</option>
                                     <option>D</option>
                                     <option>E</option>
+                                    <option>Off</option>
                                     <option>Korektif</option>
                                     <option>Checkpoint</option>
                                 </select>

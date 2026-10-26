@@ -1024,16 +1024,16 @@
                             <div class="mtc-card-header">
                                 <div>
                                     <h4 class="mtc-card-title">
-                                        <i class="mdi mdi-power-plug-off"></i>
+                                        <i class="mdi mdi-power-plug-off text-danger"></i>
                                         Unit Off (Area Breakdown)
                                     </h4>
                                     <div class="mtc-card-subtitle">
-                                        Proporsi unit maintenance/breakdown yang sedang offline
+                                        Proporsi unit maintenance dengan Paket = Off
                                     </div>
                                 </div>
                                 <span class="badge bg-danger bg-opacity-20 border border-danger border-opacity-25"
                                     id="unitOffTotalBadge" style="font-size: 10.5px;">
-                                    4 Units Off
+                                    0 Units Off
                                 </span>
                             </div>
                             <div id="chartUnitOff" style="min-height: 280px;"></div>
@@ -1910,8 +1910,27 @@
 
                 // Chart 7: Unit Off (Donut)
                 function renderUnitOffChart(chartData) {
-                    const totalUnits = chartData.series.reduce((a, b) => a + b, 0);
+                    const totalUnits = chartData.total !== undefined ? chartData.total : chartData.series.reduce((a, b) => a + b, 0);
                     $('#unitOffTotalBadge').text(totalUnits + ' Units Off');
+
+                    if (totalUnits === 0) {
+                        if (charts.unitOff) {
+                            charts.unitOff.destroy();
+                            charts.unitOff = null;
+                        }
+                        $('#chartUnitOff').html(`
+                            <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 text-muted" style="min-height: 280px;">
+                                <div class="rounded-circle p-3 mb-2" style="background: rgba(16, 185, 129, 0.1);">
+                                    <i class="mdi mdi-check-circle-outline text-success" style="font-size: 32px;"></i>
+                                </div>
+                                <div class="fw-semibold text-white mb-1">Tidak Ada Unit Off</div>
+                                <div class="small text-secondary">Tidak ada unit dengan Paket = Off pada periode ini.</div>
+                            </div>
+                        `);
+                        return;
+                    }
+
+                    $('#chartUnitOff').empty();
 
                     const options = {
                         series: chartData.series,
@@ -1923,7 +1942,7 @@
                                 enabled: true
                             }
                         },
-                        colors: ['#38bdf8', '#10b981', '#f59e0b', '#a855f7'],
+                        colors: chartData.colors && chartData.colors.length ? chartData.colors : ['#38bdf8', '#10b981', '#f59e0b', '#a855f7'],
                         plotOptions: {
                             pie: {
                                 donut: {

@@ -1202,71 +1202,113 @@ class MtcDashboardController extends Controller
 
     /**
      * Unit Off (Area Breakdown & Live Offline Units)
-     * Breakdown units currently or historically off: MHE vs Lainnya
+     * Breakdown units where paket = 'Off'
      */
     private function getUnitOffData($startDate, $endDate): array
     {
-        // Distribution of offline events across areas
-        $chartData = [
-            'labels' => ['MHE (Diesel & Electric)', 'Motor Pompa', 'Utility Plant', 'Sipil & Building'],
-            'series' => [4, 2, 2, 1], // Counts of off occurrences
-            'colors' => ['#38bdf8', '#10b981', '#f59e0b', '#a855f7'],
+        $offRecords = MtcMainModel::with([
+                'motorPump.mesin',
+                'utility.mesin',
+                'electrical.mesin',
+                'refrigerasi.mesin',
+                'electricEngine.mesin',
+                'dieselEngine.mesin',
+                'electricP2h.mesin',
+                'dieselP2h.mesin',
+                'gensetP2h.mesin',
+                'battery',
+            ])
+            ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) = 'off'")
+            ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->orderByDesc('tanggal')
+            ->orderByDesc('waktu_mulai')
+            ->get();
+
+        $areaCounts = [
+            'MHE (Diesel & Electric)' => 0,
+            'Motor Pompa'             => 0,
+            'Utility Plant'           => 0,
+            'Sipil & Building'        => 0,
         ];
 
-        // Specific units currently or recently off
-        $offlineUnits = [
-            [
-                'unit_id' => 'CV-03',
-                'name' => 'Conveyor Line 3 (Motor Inverter)',
-                'category' => 'MHE',
-                'category_badge' => 'primary',
-                'lokasi' => 'Gudang Finished Goods',
-                'off_since' => Carbon::now()->subHours(3)->subMinutes(25)->format('H:i') . ' WIB',
-                'downtime_str' => '3 Jam 25 Menit',
-                'cause' => 'Overheat Motor & Tripping Inverter VFD',
-                'status' => 'Sedang Diperbaiki',
-                'status_badge' => 'warning',
-            ],
-            [
-                'unit_id' => 'RW-04',
-                'name' => 'Robot Welding R-4',
-                'category' => 'MHE',
-                'category_badge' => 'primary',
-                'lokasi' => 'Line Fabrikasi Logam',
-                'off_since' => Carbon::now()->subHours(6)->subMinutes(10)->format('H:i') . ' WIB',
-                'downtime_str' => '6 Jam 10 Menit',
-                'cause' => 'Tunggu Pengiriman Sparepart PCB Encoder',
-                'status' => 'Waiting Sparepart',
-                'status_badge' => 'danger',
-            ],
-            [
-                'unit_id' => 'P-1002',
-                'name' => 'Pompa Utama Air Bersih',
-                'category' => 'Motor Pompa',
-                'category_badge' => 'success',
-                'lokasi' => 'Water Treatment Station',
-                'off_since' => Carbon::now()->subHours(1)->subMinutes(45)->format('H:i') . ' WIB',
-                'downtime_str' => '1 Jam 45 Menit',
-                'cause' => 'Kebocoran Mechanical Seal & Vibrasi Tinggi',
-                'status' => 'Sedang Diperbaiki',
-                'status_badge' => 'warning',
-            ],
-            [
-                'unit_id' => 'AQ-55',
-                'name' => 'Compressor Utama AQ55VSD',
-                'category' => 'Utility',
-                'category_badge' => 'purple',
-                'lokasi' => 'Ruang Mesin Kompresor',
-                'off_since' => Carbon::now()->subHours(2)->subMinutes(15)->format('H:i') . ' WIB',
-                'downtime_str' => '2 Jam 15 Menit',
-                'cause' => 'Alarm High Discharge Temperature (104°C)',
-                'status' => 'Troubleshooting',
-                'status_badge' => 'info',
-            ],
+        $palette = [
+            'MHE (Diesel & Electric)' => '#38bdf8',
+            'Motor Pompa'             => '#10b981',
+            'Utility Plant'           => '#f59e0b',
+            'Sipil & Building'        => '#a855f7',
+        ];
+
+        $offlineUnits = [];
+
+        foreach ($offRecords as $rec) {
+            $cat = $this->normalizeJenisCategory($rec->jenis_mtc);
+            $areaLabel = match ($cat) {
+                'MHE'         => 'MHE (Diesel & Electric)',
+                'Motor Pompa' => 'Motor Pompa',
+                'Sipil'       => 'Sipil & Building',
+                default       => 'Utility Plant',
+            };
+
+            $areaCounts[$areaLabel]++;
+
+            $mInfo = $this->resolveMachineInfo($rec);
+
+            $catBadge = match ($cat) {
+                'MHE'         => 'primary',
+                'Motor Pompa' => 'success',
+                'Utility'     => 'purple',
+                'Sipil'       => 'warning',
+                default       => 'secondary',
+            };
+
+            // Calculate duration or time
+            $downtimeStr = '-';
+            if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
+                $tDate = $rec->tanggal ? Carbon::parse($rec->tanggal)->format('Y-m-d') : date('Y-m-d');
+                $tDateEnd = !empty($rec->tanggal_selesai) ? Carbon::parse($rec->tanggal_selesai)->format('Y-m-d') : $tDate;
+                $startT = Carbon::parse($tDate . ' ' . $rec->waktu_mulai);
+                $endT = Carbon::parse($tDateEnd . ' ' . $rec->waktu_selesai);
+                if ($endT->lessThan($startT)) {
+                    $endT->addDay();
+                }
+                $diffMin = $startT->diffInMinutes($endT);
+                $hours = floor($diffMin / 60);
+                $mins = $diffMin % 60;
+                $downtimeStr = "{$hours} Jam {$mins} Menit";
+            } elseif (!empty($rec->waktu_mulai)) {
+                $downtimeStr = Carbon::parse($rec->waktu_mulai)->format('H:i') . ' WIB';
+            }
+
+            $offSince = $rec->tanggal ? Carbon::parse($rec->tanggal)->format('d M Y') : '-';
+            if (!empty($rec->waktu_mulai)) {
+                $offSince .= ' ' . Carbon::parse($rec->waktu_mulai)->format('H:i');
+            }
+
+            $offlineUnits[] = [
+                'unit_id'        => ($mInfo['kode_mesin'] && $mInfo['kode_mesin'] !== '-') ? $mInfo['kode_mesin'] : 'MTC-' . $rec->id,
+                'name'           => $mInfo['nama_mesin'],
+                'category'       => $cat,
+                'category_badge' => $catBadge,
+                'lokasi'         => $mInfo['area'],
+                'off_since'      => $offSince,
+                'downtime_str'   => $downtimeStr,
+                'cause'          => $rec->keterangan ?: ($rec->korektif ?: 'Paket Off'),
+                'status'         => $rec->status ? ucfirst($rec->status) : 'Off',
+                'status_badge'   => 'danger',
+            ];
+        }
+
+        $totalOff = $offRecords->count();
+
+        $chartData = [
+            'labels' => array_keys($areaCounts),
+            'series' => array_values($areaCounts),
+            'colors' => array_values($palette),
+            'total'  => $totalOff,
         ];
 
         return [
-            'chart' => $chartData,
+            'chart'         => $chartData,
             'offline_units' => $offlineUnits,
         ];
     }
