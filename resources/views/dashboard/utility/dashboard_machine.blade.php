@@ -147,6 +147,11 @@
                 box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
             }
 
+            /* Hide ApexCharts Legend globally on this dashboard */
+            .apexcharts-legend {
+                display: none !important;
+            }
+
             .wco-card-header {
                 background-color: var(--wco-card-header);
                 border-bottom: 1px solid var(--wco-border);
@@ -410,11 +415,41 @@
                 border-bottom: 1px solid #e2e8f0 !important;
             }
 
-            body.wco-light-mode .wco-card-title,
-            body.wco-light-mode .kpi-top-val,
-            body.wco-light-mode .stat-tile-val {
+            body.wco-light-mode .wco-card-title {
                 color: #0f172a !important;
             }
+
+            body.wco-light-mode .kpi-top-val:not([class*="text-"]):not([style*="color"]) {
+                color: #0f172a !important;
+            }
+
+            body.wco-light-mode .stat-tile-val:not([class*="text-"]):not([class*="val-"]):not([style*="color"]) {
+                color: #0f172a !important;
+            }
+
+            /* Dedicated metric classes matching chart series */
+            .val-ahu-1 { color: #0284c7 !important; }
+            .val-ahu-2 { color: #06b6d4 !important; }
+            .val-ahu-3 { color: #3b82f6 !important; }
+            .val-ahu-4 { color: #8b5cf6 !important; }
+            .val-ahu-suhu { color: #ef4444 !important; }
+            .val-comp-ir55 { color: #3b82f6 !important; }
+
+            /* Light mode high-contrast adaptive colors for metrics */
+            body.wco-light-mode .val-ahu-1 { color: #0369a1 !important; }
+            body.wco-light-mode .val-ahu-2 { color: #0891b2 !important; }
+            body.wco-light-mode .val-ahu-3 { color: #2563eb !important; }
+            body.wco-light-mode .val-ahu-4 { color: #7c3aed !important; }
+            body.wco-light-mode .val-ahu-suhu { color: #dc2626 !important; }
+            body.wco-light-mode .val-comp-ir55 { color: #2563eb !important; }
+
+            body.wco-light-mode .text-cyan { color: #0891b2 !important; }
+            body.wco-light-mode .text-warning { color: #d97706 !important; }
+            body.wco-light-mode .text-info { color: #0284c7 !important; }
+            body.wco-light-mode .text-success { color: #059669 !important; }
+            body.wco-light-mode .text-danger { color: #dc2626 !important; }
+            body.wco-light-mode .text-pink { color: #db2777 !important; }
+            body.wco-light-mode .text-purple { color: #7c3aed !important; }
 
             body.wco-light-mode .stat-tile {
                 background: #f8fafc !important;
@@ -770,7 +805,7 @@
                             <div class="wco-card-body p-2 d-flex flex-column">
                                 <!-- 4 Machine Metric Tiles -->
                                 <div class="row g-1 mb-2">
-                                    <!-- RH 1 (rh1) -->
+                                    <!-- RH 1 (rh1) - #f59e0b -->
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
@@ -783,40 +818,40 @@
                                                 style="font-size: 7.5px; line-height: 1.1;">Tgl Terbaru</div>
                                         </div>
                                     </div>
-                                    <!-- GA57 (rh2) -->
+                                    <!-- GA57 (rh2) - #06b6d4 -->
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
                                                 <span class="stat-tile-label text-cyan" style="font-size: 8px;">GA37
                                                     (rh2)</span>
                                             </div>
-                                            <div class="stat-tile-val mt-1 text-center" id="valCompGa57"
+                                            <div class="stat-tile-val mt-1 text-center text-cyan" id="valCompGa57"
                                                 style="font-size: 13px;">0.00</div>
                                             <div class="text-center text-muted" id="compMetaGa57"
                                                 style="font-size: 7.5px; line-height: 1.1;">Tgl Terbaru</div>
                                         </div>
                                     </div>
-                                    <!-- IR55 (rh3) -->
+                                    <!-- IR55 (rh3) - #3b82f6 (Dark) / #2563eb (Light) -->
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
-                                                <span class="stat-tile-label text-info" style="font-size: 8px;">IR55
+                                                <span class="stat-tile-label val-comp-ir55" style="font-size: 8px;">IR55
                                                     (rh3)</span>
                                             </div>
-                                            <div class="stat-tile-val mt-1 text-center" id="valCompIr55"
+                                            <div class="stat-tile-val mt-1 text-center val-comp-ir55" id="valCompIr55"
                                                 style="font-size: 13px;">0.00</div>
                                             <div class="text-center text-muted" id="compMetaIr55"
                                                 style="font-size: 7.5px; line-height: 1.1;">Tgl Terbaru</div>
                                         </div>
                                     </div>
-                                    <!-- GA55 (rh4) -->
+                                    <!-- GA55 (rh4) - #10b981 -->
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
                                                 <span class="stat-tile-label text-success"
                                                     style="font-size: 8px;">GA55 (rh4)</span>
                                             </div>
-                                            <div class="stat-tile-val mt-1 text-center" id="valCompGa55"
+                                            <div class="stat-tile-val mt-1 text-center text-success" id="valCompGa55"
                                                 style="font-size: 13px;">0.00</div>
                                             <div class="text-center text-muted" id="compMetaGa55"
                                                 style="font-size: 7.5px; line-height: 1.1;">Tgl Terbaru</div>
@@ -842,44 +877,44 @@
                                     id="ahuPeriodBadge">AHU 1 - 4</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
-                                <!-- Top: Ampere AHU 1 - 4 & Suhu combined in 1 row -->
+                                <!-- Top: Ampere AHU 1 - 4 & Suhu combined in 1 row (matching chart colors) -->
                                 <div class="row g-1 mb-2 align-items-stretch">
                                     <div class="col-8">
                                         <div class="row g-1">
                                             <div class="col-3">
                                                 <div class="stat-tile text-center py-1 px-0">
-                                                    <div class="stat-tile-label" style="font-size: 7.5px;">AVG. AHU 1
+                                                    <div class="stat-tile-label val-ahu-1" style="font-size: 7.5px; font-weight: 600;">AVG. AHU 1
                                                     </div>
-                                                    <div class="stat-tile-val mt-1 text-info" id="valAhuAmp1"
+                                                    <div class="stat-tile-val mt-1 val-ahu-1" id="valAhuAmp1"
                                                         style="font-size: 11px;">0</div>
-                                                    <div class="stat-tile-meta" style="font-size: 7px;">Amp</div>
+                                                    <div class="stat-tile-meta val-ahu-1" style="font-size: 7px;">Amp</div>
                                                 </div>
                                             </div>
                                             <div class="col-3">
                                                 <div class="stat-tile text-center py-1 px-0">
-                                                    <div class="stat-tile-label" style="font-size: 7.5px;">AVG. AHU 2
+                                                    <div class="stat-tile-label val-ahu-2" style="font-size: 7.5px; font-weight: 600;">AVG. AHU 2
                                                     </div>
-                                                    <div class="stat-tile-val mt-1 text-info" id="valAhuAmp2"
+                                                    <div class="stat-tile-val mt-1 val-ahu-2" id="valAhuAmp2"
                                                         style="font-size: 11px;">0</div>
-                                                    <div class="stat-tile-meta" style="font-size: 7px;">Amp</div>
+                                                    <div class="stat-tile-meta val-ahu-2" style="font-size: 7px;">Amp</div>
                                                 </div>
                                             </div>
                                             <div class="col-3">
                                                 <div class="stat-tile text-center py-1 px-0">
-                                                    <div class="stat-tile-label" style="font-size: 7.5px;">AVG. AHU 3
+                                                    <div class="stat-tile-label val-ahu-3" style="font-size: 7.5px; font-weight: 600;">AVG. AHU 3
                                                     </div>
-                                                    <div class="stat-tile-val mt-1 text-info" id="valAhuAmp3"
+                                                    <div class="stat-tile-val mt-1 val-ahu-3" id="valAhuAmp3"
                                                         style="font-size: 11px;">0</div>
-                                                    <div class="stat-tile-meta" style="font-size: 7px;">Amp</div>
+                                                    <div class="stat-tile-meta val-ahu-3" style="font-size: 7px;">Amp</div>
                                                 </div>
                                             </div>
                                             <div class="col-3">
                                                 <div class="stat-tile text-center py-1 px-0">
-                                                    <div class="stat-tile-label" style="font-size: 7.5px;">AVG. AHU 4
+                                                    <div class="stat-tile-label val-ahu-4" style="font-size: 7.5px; font-weight: 600;">AVG. AHU 4
                                                     </div>
-                                                    <div class="stat-tile-val mt-1 text-info" id="valAhuAmp4"
+                                                    <div class="stat-tile-val mt-1 val-ahu-4" id="valAhuAmp4"
                                                         style="font-size: 11px;">0</div>
-                                                    <div class="stat-tile-meta" style="font-size: 7px;">Amp</div>
+                                                    <div class="stat-tile-meta val-ahu-4" style="font-size: 7px;">Amp</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -887,10 +922,10 @@
                                     <div class="col-4">
                                         <div
                                             class="stat-tile text-center py-1 px-1 h-100 d-flex flex-column justify-content-center">
-                                            <div class="stat-tile-label" style="font-size: 7.5px;">AVG. SUHU OUT</div>
-                                            <div class="stat-tile-val mt-1 text-cyan" id="valAhuTempOut"
+                                            <div class="stat-tile-label val-ahu-suhu" style="font-size: 7.5px; font-weight: 600;">AVG. SUHU OUT</div>
+                                            <div class="stat-tile-val mt-1 val-ahu-suhu" id="valAhuTempOut"
                                                 style="font-size: 11px;">0.0 °C</div>
-                                            <div class="stat-tile-meta" style="font-size: 7px;" id="ahuTempOutMeta">
+                                            <div class="stat-tile-meta val-ahu-suhu" style="font-size: 7px;" id="ahuTempOutMeta">
                                                 Min: 0° | Max: 0°</div>
                                         </div>
                                     </div>
@@ -1518,7 +1553,8 @@
                                                 / FG</span>
                                             <div class="stat-tile-val mt-1 text-warning" style="font-size: 12px;"
                                                 id="valCostSmkpBb">0.00</div>
-                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Target: 66 Kg/Ton
+                                            <div class="stat-tile-meta" style="font-size: 7px; color: #dc2626;">Target: 66
+                                                Kg/Ton
                                             </div>
                                         </div>
                                     </div>
@@ -1528,7 +1564,8 @@
                                                 LISTRIK/KM</span>
                                             <div class="stat-tile-val mt-1 text-cyan" style="font-size: 12px;"
                                                 id="valCostSmkpListrik">0.00</div>
-                                            <div class="stat-tile-meta text-muted" style="font-size: 7px;">Target: 75 kWh/Ton
+                                            <div class="stat-tile-meta" style="font-size: 7px; color: #2563eb;">Target: 75
+                                                kWh/Ton
                                             </div>
                                         </div>
                                     </div>
@@ -2233,7 +2270,7 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: ['#f59e0b', '#06b6d4', '#3b82f6', '#10b981'],
+                        colors: isThemeLight() ? ['#d97706', '#0891b2', '#2563eb', '#059669'] : ['#f59e0b', '#06b6d4', '#3b82f6', '#10b981'],
                         stroke: {
                             curve: 'smooth',
                             width: 2.5
@@ -2263,19 +2300,7 @@
                             }
                         },
                         legend: {
-                            show: true,
-                            position: 'top',
-                            horizontalAlign: 'right',
-                            fontSize: '9px',
-                            fontFamily: 'Inter, sans-serif',
-                            labels: {
-                                colors: isThemeLight() ? '#475569' : '#94a3b8'
-                            },
-                            markers: {
-                                radius: 3,
-                                width: 8,
-                                height: 8
-                            }
+                            show: false
                         },
                         xaxis: {
                             categories: compCategories,
@@ -2356,7 +2381,7 @@
                                 data: ahuData.hourly.map(h => h.ampere_4)
                             },
                             {
-                                name: 'Suhu Temp Out (°C)',
+                                name: 'Suhu (°C)',
                                 type: 'line',
                                 data: ahuData.hourly.map(h => h.temp_out)
                             }
@@ -2384,7 +2409,7 @@
                                 data: ahuData.daily_trends.map(t => t.ampere_4)
                             },
                             {
-                                name: 'Suhu Temp Out Avg (°C)',
+                                name: 'Suhu (°C)',
                                 type: 'line',
                                 data: ahuData.daily_trends.map(t => t.temp_out_avg)
                             }
@@ -2401,25 +2426,13 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: ['#0284c7', '#06b6d4', '#3b82f6', '#8b5cf6', '#ef4444'],
+                        colors: isThemeLight() ? ['#0369a1', '#0891b2', '#2563eb', '#7c3aed', '#dc2626'] : ['#0284c7', '#06b6d4', '#3b82f6', '#8b5cf6', '#ef4444'],
                         stroke: {
                             width: [0, 0, 0, 0, 3],
                             curve: 'smooth'
                         },
                         legend: {
-                            show: true,
-                            position: 'top',
-                            horizontalAlign: 'right',
-                            fontSize: '9px',
-                            fontFamily: 'Inter, sans-serif',
-                            labels: {
-                                colors: isThemeLight() ? '#475569' : '#94a3b8'
-                            },
-                            markers: {
-                                radius: 3,
-                                width: 8,
-                                height: 8
-                            }
+                            show: false
                         },
                         xaxis: {
                             categories: ahuCategories,
@@ -2453,7 +2466,7 @@
                             {
                                 opposite: true,
                                 title: {
-                                    text: 'Temp Out (°C)'
+                                    text: 'Suhu (°C)'
                                 },
                                 labels: {
                                     formatter: val => val ? val.toFixed(1) : 0
@@ -2541,7 +2554,7 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: ['#10b981', '#f59e0b', '#06b6d4'],
+                        colors: isThemeLight() ? ['#059669', '#d97706', '#0891b2'] : ['#10b981', '#f59e0b', '#06b6d4'],
                         stroke: {
                             width: [2, 2.5, 2.5],
                             curve: 'smooth'
@@ -2579,19 +2592,7 @@
                             }
                         },
                         legend: {
-                            show: true,
-                            position: 'top',
-                            horizontalAlign: 'right',
-                            fontSize: '9px',
-                            fontFamily: 'Inter, sans-serif',
-                            labels: {
-                                colors: isThemeLight() ? '#475569' : '#94a3b8'
-                            },
-                            markers: {
-                                radius: 3,
-                                width: 8,
-                                height: 8
-                            }
+                            show: false
                         },
                         xaxis: {
                             categories: mdpCategories,
@@ -2680,7 +2681,7 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: ['#ef4444', '#f59e0b', '#ec4899'],
+                        colors: isThemeLight() ? ['#dc2626', '#d97706', '#db2777'] : ['#ef4444', '#f59e0b', '#ec4899'],
                         stroke: {
                             width: [2, 2.5, 2.5],
                             curve: 'smooth'
@@ -2718,19 +2719,7 @@
                             }
                         },
                         legend: {
-                            show: true,
-                            position: 'top',
-                            horizontalAlign: 'right',
-                            fontSize: '9px',
-                            fontFamily: 'Inter, sans-serif',
-                            labels: {
-                                colors: isThemeLight() ? '#475569' : '#94a3b8'
-                            },
-                            markers: {
-                                radius: 3,
-                                width: 8,
-                                height: 8
-                            }
+                            show: false
                         },
                         xaxis: {
                             categories: mdpCategories,
@@ -2820,7 +2809,7 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: ['#06b6d4', '#10b981'],
+                        colors: isThemeLight() ? ['#0891b2', '#059669'] : ['#06b6d4', '#10b981'],
                         stroke: {
                             width: [2, 3],
                             curve: 'smooth'
@@ -2859,19 +2848,7 @@
                             }
                         },
                         legend: {
-                            show: true,
-                            position: 'top',
-                            horizontalAlign: 'right',
-                            fontSize: '9px',
-                            fontFamily: 'Inter, sans-serif',
-                            labels: {
-                                colors: isThemeLight() ? '#475569' : '#94a3b8'
-                            },
-                            markers: {
-                                radius: 3,
-                                width: 8,
-                                height: 8
-                            }
+                            show: false
                         },
                         xaxis: {
                             categories: ctCategories,
@@ -3080,6 +3057,10 @@
                             }
                         ];
 
+                        const finalPh = isThemeLight() ? lightPh : phColor;
+                        const finalTds = isThemeLight() ? '#0284c7' : tdsColor;
+                        const finalHardness = isThemeLight() ? (hardnessColor === '#ef4444' ? '#dc2626' : '#d97706') : hardnessColor;
+
                         const options = {
                             series: series,
                             chart: {
@@ -3090,7 +3071,7 @@
                                 background: 'transparent'
                             },
                             theme: chartTheme,
-                            colors: [phColor, tdsColor, hardnessColor],
+                            colors: [finalPh, finalTds, finalHardness],
                             stroke: {
                                 width: [2.5, 1.8, 2],
                                 curve: 'smooth'
@@ -3210,19 +3191,7 @@
                                 }
                             },
                             legend: {
-                                show: true,
-                                position: 'top',
-                                horizontalAlign: 'right',
-                                fontSize: '9px',
-                                fontFamily: 'Inter, sans-serif',
-                                labels: {
-                                    colors: isThemeLight() ? '#475569' : '#94a3b8'
-                                },
-                                markers: {
-                                    radius: 3,
-                                    width: 8,
-                                    height: 8
-                                }
+                                show: false
                             },
                             tooltip: {
                                 theme: chartTheme.mode,
@@ -3369,19 +3338,7 @@
                             }
                         },
                         legend: {
-                            show: true,
-                            position: 'top',
-                            horizontalAlign: 'right',
-                            fontSize: '9px',
-                            fontFamily: 'Inter, sans-serif',
-                            labels: {
-                                colors: isThemeLight() ? '#475569' : '#94a3b8'
-                            },
-                            markers: {
-                                radius: 3,
-                                width: 8,
-                                height: 8
-                            }
+                            show: false
                         },
                         tooltip: {
                             theme: chartTheme.mode,
@@ -3481,19 +3438,7 @@
                             }
                         },
                         legend: {
-                            show: true,
-                            position: 'top',
-                            horizontalAlign: 'right',
-                            fontSize: '9px',
-                            fontFamily: 'Inter, sans-serif',
-                            labels: {
-                                colors: isThemeLight() ? '#475569' : '#94a3b8'
-                            },
-                            markers: {
-                                radius: 3,
-                                width: 8,
-                                height: 8
-                            }
+                            show: false
                         },
                         tooltip: {
                             theme: chartTheme.mode,
@@ -3572,27 +3517,27 @@
 
                     const options = {
                         series: [{
-                                name: 'BB / FG (Kg/Ton)',
+                                name: 'BB / FG',
                                 type: 'column',
                                 data: bbData
                             },
                             {
-                                name: 'Target BB / FG (66 Kg/Ton)',
+                                name: 'Target BB (66)',
                                 type: 'line',
                                 data: targetBbData
                             },
                             {
-                                name: 'Listrik / Kecap Matang (kWh/Ton)',
+                                name: 'Listrik / KM',
                                 type: 'column',
                                 data: listrikData
                             },
                             {
-                                name: 'Target Listrik / KM (75 kWh/Ton)',
+                                name: 'Target Listrik (75)',
                                 type: 'line',
                                 data: targetListrikData
                             },
                             {
-                                name: 'Cost Utility (Jt Rp)',
+                                name: 'Cost Utility',
                                 type: 'line',
                                 data: costData
                             }
@@ -3618,7 +3563,7 @@
                                 borderRadius: 3
                             }
                         },
-                        colors: ['#f59e0b', '#dc2626', '#06b6d4', '#2563eb', '#10b981'],
+                        colors: isThemeLight() ? ['#d97706', '#dc2626', '#0891b2', '#2563eb', '#059669'] : ['#f59e0b', '#dc2626', '#06b6d4', '#2563eb', '#10b981'],
                         fill: {
                             opacity: [0.85, 1, 0.85, 1, 1],
                             gradient: {
@@ -3695,8 +3640,7 @@
                             }
                         ],
                         annotations: {
-                            yaxis: [
-                                {
+                            yaxis: [{
                                     y: 66,
                                     yAxisIndex: 0,
                                     borderColor: '#dc2626',
@@ -3742,19 +3686,7 @@
                             }
                         },
                         legend: {
-                            show: true,
-                            position: 'top',
-                            horizontalAlign: 'right',
-                            fontSize: '8px',
-                            fontFamily: 'Inter, sans-serif',
-                            labels: {
-                                colors: isThemeLight() ? '#475569' : '#94a3b8'
-                            },
-                            markers: {
-                                radius: 3,
-                                width: 8,
-                                height: 8
-                            }
+                            show: false
                         },
                         tooltip: {
                             theme: chartTheme.mode,
