@@ -295,20 +295,22 @@ class MtcDashboardController extends Controller
             $start = (clone $carbon)->startOfWeek(Carbon::MONDAY);
             $end = (clone $carbon)->endOfWeek(Carbon::SUNDAY);
 
-            // Display a surrounding 4-5 week context (e.g. 4 preceding weeks + selected week) with date range labels
+            // Display a surrounding 5-week context (4 preceding weeks + selected week) labeled consistently as W1 - W5
             $weeks = [];
             for ($i = 4; $i >= 0; $i--) {
                 $wStart = (clone $start)->subWeeks($i);
                 $wEnd = (clone $wStart)->endOfWeek(Carbon::SUNDAY);
+                $stepIdx = 5 - $i; // Always 1, 2, 3, 4, 5
                 $wNum = (int) $wStart->format('W');
                 $dateLabel = $wStart->format('d M') . " - " . $wEnd->format('d M Y');
                 $weeks[] = [
-                    'key' => "W{$wNum}",
+                    'key' => "W{$stepIdx}",
                     'label' => $dateLabel,
-                    'short_label' => "W{$wNum}",
+                    'short_label' => "W{$stepIdx}",
                     'start' => $wStart->copy(),
                     'end' => $wEnd->copy(),
-                    'display' => "W{$wNum} ({$dateLabel})",
+                    'display' => "W{$stepIdx} ({$dateLabel})",
+                    'week_iso' => "W{$wNum}",
                     'is_selected' => ($i === 0),
                 ];
             }

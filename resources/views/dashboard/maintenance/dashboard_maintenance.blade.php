@@ -17,7 +17,8 @@
             href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
             rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css"
+            id="flatpickrThemeDark">
 
         <style>
             :root {
@@ -498,6 +499,254 @@
                 visibility: hidden;
                 pointer-events: none;
             }
+
+            /* ═══════════════════════════════════════════════════════════════
+               LIGHT MODE THEME
+            ═══════════════════════════════════════════════════════════════ */
+            body.theme-light {
+                --mtc-bg: #f8fafc;
+                --mtc-card-bg: #ffffff;
+                --mtc-card-header: #ffffff;
+                --mtc-border: #e2e8f0;
+                --mtc-border-hover: rgba(2, 132, 199, 0.4);
+                --mtc-text-primary: #0f172a;
+                --mtc-text-secondary: #000000;
+                --mtc-text-muted: #000000;
+                background-color: var(--mtc-bg) !important;
+                color: var(--mtc-text-primary) !important;
+            }
+
+            body.theme-light .dashboard-wrapper {
+                background: radial-gradient(circle at 10% 8%, rgba(226, 232, 240, 0.7) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 50%, rgba(241, 245, 249, 0.85) 0%, transparent 50%),
+                    #f1f5f9 !important;
+            }
+
+            body.theme-light::-webkit-scrollbar-track {
+                background: #f1f5f9 !important;
+            }
+
+            body.theme-light::-webkit-scrollbar-thumb {
+                background: #cbd5e1 !important;
+            }
+
+            body.theme-light::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8 !important;
+            }
+
+            /* Header in Light Mode */
+            body.theme-light .mtc-header {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+            }
+
+            body.theme-light .mtc-header-title {
+                color: #0f172a !important;
+            }
+
+            body.theme-light .mtc-header-motto {
+                color: #000000 !important;
+                font-weight: 500;
+            }
+
+            /* Text in Light Mode: Grey text transformed into solid black */
+            body.theme-light .text-secondary,
+            body.theme-light .text-muted,
+            body.theme-light .mtc-card-subtitle,
+            body.theme-light .kpi-glass-card .text-secondary,
+            body.theme-light .kpi-glass-card .text-muted,
+            body.theme-light .text-secondary.small,
+            body.theme-light .mtc-header .text-secondary,
+            body.theme-light .mtc-header .text-muted {
+                color: #000000 !important;
+                font-weight: 600;
+            }
+
+            /* Elements with light/white text adapt to dark */
+            body.theme-light .text-white,
+            body.theme-light .text-light,
+            body.theme-light .mtc-card-title,
+            body.theme-light .kpi-val.text-white,
+            body.theme-light #kpiBreakdownVal,
+            body.theme-light #kpiDowntimeVal,
+            body.theme-light #kpiMtbfVal,
+            body.theme-light #kpiCostVal,
+            body.theme-light .kpi-val .unit {
+                color: #0f172a !important;
+            }
+
+            /* Cards in Light Mode */
+            body.theme-light .kpi-glass-card,
+            body.theme-light .mtc-chart-card {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+            }
+
+            body.theme-light .kpi-glass-card:hover {
+                border-color: rgba(2, 132, 199, 0.35) !important;
+                box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.08), 0 0 12px -2px rgba(56, 189, 248, 0.2) !important;
+            }
+
+            body.theme-light .mtc-chart-card:hover {
+                border-color: #cbd5e1 !important;
+            }
+
+            body.theme-light .mtc-card-header {
+                border-bottom: 1px solid #f1f5f9 !important;
+            }
+
+            body.theme-light .kpi-progress-bar {
+                background: #e2e8f0 !important;
+            }
+
+            /* Filter Controls in Light Mode */
+            body.theme-light .filter-pill-container {
+                background: #e2e8f0 !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+
+            body.theme-light .filter-pill-btn {
+                color: #000000 !important;
+            }
+
+            body.theme-light .filter-pill-btn:hover {
+                color: #0f172a !important;
+                background: rgba(0, 0, 0, 0.05) !important;
+            }
+
+            body.theme-light .filter-pill-btn.active {
+                background: #ffffff !important;
+                color: #0284c7 !important;
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+            }
+
+            body.theme-light .filter-ctrl {
+                background: #ffffff !important;
+                border: 1px solid #cbd5e1 !important;
+                color: #0f172a !important;
+            }
+
+            body.theme-light .filter-ctrl:focus {
+                border-color: #0284c7 !important;
+                box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2) !important;
+            }
+
+            /* Action Buttons & Badges in Light Mode */
+            body.theme-light .btn-dark {
+                background: #ffffff !important;
+                color: #000000 !important;
+                border-color: #cbd5e1 !important;
+            }
+
+            body.theme-light .btn-dark:hover {
+                background: #f1f5f9 !important;
+            }
+
+            body.theme-light .btn-outline-secondary {
+                border-color: #cbd5e1 !important;
+                color: #1e293b !important;
+            }
+
+            body.theme-light .btn-outline-secondary:hover {
+                background: #e2e8f0 !important;
+                color: #000000 !important;
+            }
+
+            body.theme-light .btn-outline-info {
+                border-color: #0284c7 !important;
+                color: #0284c7 !important;
+            }
+
+            body.theme-light .btn-outline-info:hover {
+                background: #0284c7 !important;
+                color: #ffffff !important;
+            }
+
+            body.theme-light .badge.bg-dark {
+                background-color: #f1f5f9 !important;
+                color: #000000 !important;
+                border-color: #cbd5e1 !important;
+            }
+
+            body.theme-light .badge.bg-dark.text-secondary {
+                color: #000000 !important;
+            }
+
+            body.theme-light .badge.bg-dark.text-info {
+                color: #0284c7 !important;
+            }
+
+            body.theme-light .badge.bg-dark.text-danger {
+                color: #e11d48 !important;
+            }
+
+            /* Tables in Light Mode */
+            body.theme-light .mtc-table {
+                color: #0f172a !important;
+            }
+
+            body.theme-light .mtc-table th {
+                background: #f8fafc !important;
+                color: #000000 !important;
+                border-bottom: 2px solid #e2e8f0 !important;
+                font-weight: 800 !important;
+            }
+
+            body.theme-light .mtc-table td {
+                border-bottom: 1px solid #f1f5f9 !important;
+                color: #0f172a !important;
+            }
+
+            body.theme-light .mtc-table td .text-secondary {
+                color: #000000 !important;
+            }
+
+            body.theme-light .mtc-table td .fw-bold.text-white {
+                color: #0f172a !important;
+            }
+
+            body.theme-light .mtc-table td .font-mono.text-light {
+                color: #0f172a !important;
+            }
+
+            body.theme-light .mtc-table tbody tr:hover {
+                background: rgba(2, 132, 199, 0.04) !important;
+            }
+
+            body.theme-light .rank-badge {
+                background: #f1f5f9 !important;
+                color: #0f172a !important;
+                border-color: #cbd5e1 !important;
+            }
+
+            body.theme-light .rank-badge.top-1 {
+                background: rgba(56, 189, 248, 0.18) !important;
+                color: #0284c7 !important;
+                border-color: #38bdf8 !important;
+            }
+
+            /* Tooltips and Overlays in Light Mode */
+            body.theme-light .chart-loading-overlay {
+                background: rgba(255, 255, 255, 0.85) !important;
+            }
+
+            body.theme-light .apexcharts-tooltip.apexcharts-theme-light {
+                background: #ffffff !important;
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.15) !important;
+                border-radius: 6px !important;
+                color: #0f172a !important;
+            }
+
+            body.theme-light .apexcharts-tooltip-title {
+                background: #f8fafc !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+                color: #0f172a !important;
+                font-weight: 700 !important;
+            }
         </style>
     </head>
 
@@ -613,6 +862,12 @@
                                     class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
                                     id="btnFullscreen" title="Layar Penuh (Wallboard)">
                                     <i class="mdi mdi-fullscreen" id="fsIcon"></i>
+                                </button>
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+                                    id="btnThemeToggle" title="Beralih Tema (Gelap / Terang)">
+                                    <i class="mdi mdi-weather-sunny" id="themeToggleIcon"></i>
+                                    <span class="d-none d-xl-inline" id="themeToggleText">Mode Terang</span>
                                 </button>
                                 <a href="{{ url('home') }}"
                                     class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
@@ -911,74 +1166,47 @@
                         </div>
                     </div>
 
-                    {{-- Table 4: Top Mesin MTBF Terendah --}}
+                    {{-- Chart 4: Unit Off --}}
                     <div class="col-xl-4 col-lg-4">
                         <div class="mtc-chart-card h-100">
                             <div class="mtc-card-header">
                                 <div>
                                     <h4 class="mtc-card-title">
-                                        <i class="mdi mdi-alert-circle-outline"></i>
-                                        Top Mesin MTBF Terendah
+                                        <i class="mdi mdi-power-plug-off text-danger"></i>
+                                        Unit Off (Area Breakdown)
                                     </h4>
-                                    <div class="mtc-card-subtitle">Mesin paling sering rusak (Reliability Risk)</div>
+                                    <div class="mtc-card-subtitle">
+                                        Proporsi unit maintenance dengan Paket = Off
+                                    </div>
                                 </div>
-                                <span
-                                    class="badge bg-danger bg-opacity-20 border border-danger border-opacity-25 font-mono"
-                                    style="font-size: 10px;">
-                                    Risk Watch
+                                <span class="badge bg-danger bg-opacity-20 border border-danger border-opacity-25"
+                                    id="unitOffTotalBadge" style="font-size: 10.5px;">
+                                    0 Units Off
                                 </span>
                             </div>
-                            <div class="table-scrollable">
-                                <table class="table mtc-table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 28px;">#</th>
-                                            <th>Mesin / Aset</th>
-                                            <th>Area</th>
-                                            <th class="text-end">MTBF</th>
-                                            <th class="text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbodyTopMtbf">
-                                        {{-- Dynamically injected --}}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <div id="chartUnitOff" style="min-height: 280px;"></div>
                         </div>
                     </div>
 
-                    {{-- Table 5: Top MTTR Terlama --}}
+                    {{-- Chart 5: MTTR vs MTBF Correlation --}}
                     <div class="col-xl-4 col-lg-4">
                         <div class="mtc-chart-card h-100">
                             <div class="mtc-card-header">
                                 <div>
                                     <h4 class="mtc-card-title">
-                                        <i class="mdi mdi-clock-alert-outline"></i>
-                                        Top MTTR Terlama
+                                        <i class="mdi mdi-chart-line text-info"></i>
+                                        Korelasi MTBF &amp; MTTR
                                     </h4>
-                                    <div class="mtc-card-subtitle">Perbaikan paling lama (Maintenance Bottleneck)</div>
+                                    <div class="mtc-card-subtitle">
+                                        Keandalan (MTBF Jam) &amp; Pemulihan (MTTR Jam)
+                                    </div>
                                 </div>
-                                <span class="badge bg-dark text-info border border-info border-opacity-25 font-mono"
+                                <span class="badge bg-dark text-info border border-info border-opacity-25"
                                     style="font-size: 10px;">
-                                    Bottleneck
+                                    Jam (MTBF &amp; MTTR)
                                 </span>
                             </div>
-                            <div class="table-scrollable">
-                                <table class="table mtc-table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 28px;">#</th>
-                                            <th>Mesin / Aset</th>
-                                            <th>Area</th>
-                                            <th class="text-end">MTTR</th>
-                                            <th>Kendala / Keterangan</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbodyTopMttr">
-                                        {{-- Dynamically injected --}}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <div id="chartMttrMtbfCorrelation" style="min-height: 285px;"></div>
                         </div>
                     </div>
 
@@ -1017,47 +1245,74 @@
                         </div>
                     </div>
 
-                    {{-- Chart 7: Unit Off --}}
+                    {{-- Table 7: Top Mesin MTBF Terendah --}}
                     <div class="col-xl-4 col-lg-4">
                         <div class="mtc-chart-card h-100">
                             <div class="mtc-card-header">
                                 <div>
                                     <h4 class="mtc-card-title">
-                                        <i class="mdi mdi-power-plug-off text-danger"></i>
-                                        Unit Off (Area Breakdown)
+                                        <i class="mdi mdi-alert-circle-outline"></i>
+                                        Top Mesin MTBF Terendah
                                     </h4>
-                                    <div class="mtc-card-subtitle">
-                                        Proporsi unit maintenance dengan Paket = Off
-                                    </div>
+                                    <div class="mtc-card-subtitle">Mesin paling sering rusak (Reliability Risk)</div>
                                 </div>
-                                <span class="badge bg-danger bg-opacity-20 border border-danger border-opacity-25"
-                                    id="unitOffTotalBadge" style="font-size: 10.5px;">
-                                    0 Units Off
+                                <span
+                                    class="badge bg-danger bg-opacity-20 border border-danger border-opacity-25 font-mono"
+                                    style="font-size: 10px;">
+                                    Risk Watch
                                 </span>
                             </div>
-                            <div id="chartUnitOff" style="min-height: 280px;"></div>
+                            <div class="table-scrollable">
+                                <table class="table mtc-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 28px;">#</th>
+                                            <th>Mesin / Aset</th>
+                                            <th>Area</th>
+                                            <th class="text-end">MTBF</th>
+                                            <th class="text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyTopMtbf">
+                                        {{-- Dynamically injected --}}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Chart 8: MTTR vs MTBF Correlation --}}
+                    {{-- Table 8: Top MTTR Terlama --}}
                     <div class="col-xl-4 col-lg-4">
                         <div class="mtc-chart-card h-100">
                             <div class="mtc-card-header">
                                 <div>
                                     <h4 class="mtc-card-title">
-                                        <i class="mdi mdi-chart-line text-info"></i>
-                                        Korelasi MTBF &amp; MTTR
+                                        <i class="mdi mdi-clock-alert-outline"></i>
+                                        Top MTTR Terlama
                                     </h4>
-                                    <div class="mtc-card-subtitle">
-                                        Keandalan (MTBF Jam) &amp; Pemulihan (MTTR Jam)
-                                    </div>
+                                    <div class="mtc-card-subtitle">Perbaikan paling lama (Maintenance Bottleneck)</div>
                                 </div>
-                                <span class="badge bg-dark text-info border border-info border-opacity-25"
+                                <span class="badge bg-dark text-info border border-info border-opacity-25 font-mono"
                                     style="font-size: 10px;">
-                                    Jam (MTBF &amp; MTTR)
+                                    Bottleneck
                                 </span>
                             </div>
-                            <div id="chartMttrMtbfCorrelation" style="min-height: 285px;"></div>
+                            <div class="table-scrollable">
+                                <table class="table mtc-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 28px;">#</th>
+                                            <th>Mesin / Aset</th>
+                                            <th>Area</th>
+                                            <th class="text-end">MTTR</th>
+                                            <th>Kendala / Keterangan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyTopMttr">
+                                        {{-- Dynamically injected --}}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -1153,6 +1408,68 @@
                     mttrMtbfCorrelation: null,
                     costMaintenance: null
                 };
+
+                let lastChartData = {
+                    schedule: null,
+                    breakdown: null,
+                    downtime: null,
+                    correlation: null,
+                    cost: null,
+                    unitOff: null
+                };
+
+                function isLightMode() {
+                    return $('body').hasClass('theme-light');
+                }
+
+                function getChartTheme() {
+                    const light = isLightMode();
+                    return {
+                        textColor: light ? '#000000' : '#94a3b8',
+                        textBoldColor: light ? '#000000' : '#ffffff',
+                        borderColor: light ? '#e2e8f0' : 'rgba(255, 255, 255, 0.06)',
+                        axisBorderColor: light ? '#cbd5e1' : 'rgba(255, 255, 255, 0.1)',
+                        legendColor: light ? '#000000' : '#cbd5e1',
+                        tooltipTheme: light ? 'light' : 'dark',
+                        totalDataLabelColor: light ? '#000000' : '#ffffff',
+                        cardBg: light ? '#ffffff' : '#0f172a'
+                    };
+                }
+
+                // Theme Toggle Functionality
+                function applyTheme(isLight) {
+                    $('body').toggleClass('theme-light', isLight);
+                    $('#themeToggleIcon')
+                        .toggleClass('mdi-weather-sunny', !isLight)
+                        .toggleClass('mdi-weather-night', isLight);
+                    $('#themeToggleText').text(isLight ? 'Mode Gelap' : 'Mode Terang');
+
+                    if (isLight) {
+                        $('#flatpickrThemeDark').attr('disabled', 'disabled');
+                    } else {
+                        $('#flatpickrThemeDark').removeAttr('disabled');
+                    }
+
+                    // Re-render cached charts with the theme palette
+                    if (lastChartData.schedule) renderScheduleMaintenanceChart(lastChartData.schedule);
+                    if (lastChartData.breakdown) renderTotalBreakdownChart(lastChartData.breakdown);
+                    if (lastChartData.downtime) renderTotalDowntimeChart(lastChartData.downtime);
+                    if (lastChartData.correlation) renderMttrMtbfCorrelationChart(lastChartData.correlation);
+                    if (lastChartData.cost) renderCostMaintenanceChart(lastChartData.cost);
+                    if (lastChartData.unitOff) renderUnitOffChart(lastChartData.unitOff);
+                }
+
+                // Restore saved theme on initial load
+                const savedTheme = localStorage.getItem('mtc_theme');
+                if (savedTheme === 'light') {
+                    applyTheme(true);
+                }
+
+                $('#btnThemeToggle').on('click', function() {
+                    const willBeLight = !$('body').hasClass('theme-light');
+                    localStorage.setItem('mtc_theme', willBeLight ? 'light' : 'dark');
+                    applyTheme(willBeLight);
+                });
 
                 // Initialize Flatpickr for custom range
                 const fpCustom = flatpickr("#customDateRange", {
@@ -1548,6 +1865,9 @@
 
                 // Chart 1: Schedule Maintenance (Stacked Bar Chart % of Total Agenda)
                 function renderScheduleMaintenanceChart(chartData) {
+                    lastChartData.schedule = chartData;
+                    const theme = getChartTheme();
+
                     const options = {
                         series: chartData.series,
                         chart: {
@@ -1580,7 +1900,7 @@
                                             fontSize: '11px',
                                             fontFamily: 'JetBrains Mono',
                                             fontWeight: 800,
-                                            color: '#ffffff'
+                                            color: theme.totalDataLabelColor
                                         },
                                         offsetY: -6
                                     }
@@ -1599,7 +1919,7 @@
                             },
                             background: {
                                 enabled: true,
-                                foreColor: '#080c16',
+                                foreColor: isLightMode() ? '#334155' : '#080c16',
                                 padding: 2,
                                 borderRadius: 2,
                                 borderWidth: 0
@@ -1609,14 +1929,14 @@
                             categories: chartData.categories, // ['MHE', 'Motor Pompa', 'Utility', 'Sipil']
                             labels: {
                                 style: {
-                                    colors: '#94a3b8',
+                                    colors: theme.textColor,
                                     fontSize: '11px',
                                     fontFamily: 'JetBrains Mono',
                                     fontWeight: 600
                                 }
                             },
                             axisBorder: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: theme.axisBorderColor
                             }
                         },
                         yaxis: {
@@ -1627,14 +1947,15 @@
                             title: {
                                 text: 'Realisasi Agenda (%)',
                                 style: {
-                                    color: '#94a3b8',
-                                    fontSize: '10.5px'
+                                    color: theme.textColor,
+                                    fontSize: '10.5px',
+                                    fontWeight: 600
                                 }
                             },
                             labels: {
                                 formatter: val => Math.round(val) + '%',
                                 style: {
-                                    colors: '#94a3b8',
+                                    colors: theme.textColor,
                                     fontSize: '10.5px'
                                 }
                             }
@@ -1657,7 +1978,7 @@
                             }]
                         },
                         grid: {
-                            borderColor: 'rgba(255, 255, 255, 0.06)',
+                            borderColor: theme.borderColor,
                             strokeDashArray: 3
                         },
                         legend: {
@@ -1667,9 +1988,9 @@
                             floating: false,
                             fontSize: '11px',
                             fontFamily: 'Inter, sans-serif',
-                            fontWeight: 500,
+                            fontWeight: 600,
                             labels: {
-                                colors: '#cbd5e1'
+                                colors: theme.legendColor
                             },
                             markers: {
                                 radius: 3,
@@ -1682,7 +2003,7 @@
                             }
                         },
                         tooltip: {
-                            theme: 'dark',
+                            theme: theme.tooltipTheme,
                             shared: true,
                             intersect: false,
                             y: {
@@ -1713,6 +2034,9 @@
 
                 // Chart 2: Total Breakdown
                 function renderTotalBreakdownChart(chartData) {
+                    lastChartData.breakdown = chartData;
+                    const theme = getChartTheme();
+
                     const options = {
                         series: chartData.series,
                         chart: {
@@ -1742,7 +2066,7 @@
                             style: {
                                 fontSize: '10px',
                                 fontWeight: 700,
-                                colors: ['#ffffff']
+                                colors: [theme.textBoldColor]
                             }
                         },
                         annotations: {
@@ -1770,38 +2094,69 @@
                                 hideOverlappingLabels: false,
                                 trim: false,
                                 style: {
-                                    colors: '#94a3b8',
+                                    colors: theme.textColor,
                                     fontSize: '11px',
                                     fontFamily: 'JetBrains Mono',
                                     fontWeight: 600
                                 }
                             },
                             axisBorder: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: theme.axisBorderColor
                             }
                         },
                         yaxis: {
                             title: {
                                 text: 'Frekuensi Breakdown',
                                 style: {
-                                    color: '#94a3b8',
-                                    fontSize: '10.5px'
+                                    color: theme.textColor,
+                                    fontSize: '10.5px',
+                                    fontWeight: 600
                                 }
                             },
                             labels: {
                                 style: {
-                                    colors: '#94a3b8',
+                                    colors: theme.textColor,
                                     fontSize: '10.5px'
                                 }
                             },
                             max: Math.max(6, Math.max(...chartData.series[0].data) + 2)
                         },
                         grid: {
-                            borderColor: 'rgba(255, 255, 255, 0.06)',
+                            borderColor: theme.borderColor,
                             strokeDashArray: 3
                         },
+                        legend: {
+                            show: true,
+                            showForSingleSeries: true,
+                            customLegendItems: ['Frekuensi Korektif', 'Target Limit (Max 5x)'],
+                            markers: {
+                                fillColors: ['#f43f5e', '#64748b'],
+                                radius: 3,
+                                width: 10,
+                                height: 10
+                            },
+                            position: 'bottom',
+                            horizontalAlign: 'center',
+                            floating: false,
+                            fontSize: '11px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 600,
+                            labels: {
+                                colors: theme.legendColor
+                            },
+                            itemMargin: {
+                                horizontal: 10,
+                                vertical: 4
+                            },
+                            onItemClick: {
+                                toggleDataSeries: false
+                            },
+                            onItemHover: {
+                                highlightDataSeries: false
+                            }
+                        },
                         tooltip: {
-                            theme: 'dark',
+                            theme: theme.tooltipTheme,
                             x: {
                                 formatter: function(val, {
                                     dataPointIndex,
@@ -1824,6 +2179,9 @@
 
                 // Chart 3: Total Downtime
                 function renderTotalDowntimeChart(chartData) {
+                    lastChartData.downtime = chartData;
+                    const theme = getChartTheme();
+
                     const dataVals = (chartData.series && chartData.series[0] && chartData.series[0].data) ?
                         chartData.series[0].data.map(v => Number(v) || 0) : [];
                     const maxData = dataVals.length ? Math.max(...dataVals) : 0;
@@ -1869,12 +2227,12 @@
                             offsetY: -6,
                             style: {
                                 fontSize: '9.5px',
-                                fontWeight: 600,
-                                colors: ['#38bdf8']
+                                fontWeight: 700,
+                                colors: [isLightMode() ? '#0284c7' : '#38bdf8']
                             },
                             background: {
                                 enabled: true,
-                                foreColor: '#080c16',
+                                foreColor: isLightMode() ? '#ffffff' : '#080c16',
                                 padding: 3,
                                 borderRadius: 3,
                                 borderWidth: 0
@@ -1921,14 +2279,14 @@
                                 hideOverlappingLabels: false,
                                 trim: false,
                                 style: {
-                                    colors: '#94a3b8',
+                                    colors: theme.textColor,
                                     fontSize: '11px',
                                     fontFamily: 'JetBrains Mono',
                                     fontWeight: 600
                                 }
                             },
                             axisBorder: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: theme.axisBorderColor
                             }
                         },
                         yaxis: {
@@ -1938,13 +2296,14 @@
                             title: {
                                 text: 'Downtime (%)',
                                 style: {
-                                    color: '#94a3b8',
-                                    fontSize: '10.5px'
+                                    color: theme.textColor,
+                                    fontSize: '10.5px',
+                                    fontWeight: 600
                                 }
                             },
                             labels: {
                                 style: {
-                                    colors: '#94a3b8',
+                                    colors: theme.textColor,
                                     fontSize: '10.5px'
                                 },
                                 formatter: val => (typeof val === 'number' ? (val % 1 === 0 ? val : val.toFixed(
@@ -1952,7 +2311,7 @@
                             }
                         },
                         grid: {
-                            borderColor: 'rgba(255, 255, 255, 0.06)',
+                            borderColor: theme.borderColor,
                             strokeDashArray: 3,
                             padding: {
                                 top: 20,
@@ -1961,8 +2320,38 @@
                                 bottom: 0
                             }
                         },
+                        legend: {
+                            show: true,
+                            showForSingleSeries: true,
+                            customLegendItems: ['Downtime Korektif (%)', 'Limit Target (<2%)', 'Rata-rata Periode'],
+                            markers: {
+                                fillColors: ['#10b981', '#f43f5e', '#64748b'],
+                                radius: 3,
+                                width: 10,
+                                height: 10
+                            },
+                            position: 'bottom',
+                            horizontalAlign: 'center',
+                            floating: false,
+                            fontSize: '11px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 600,
+                            labels: {
+                                colors: theme.legendColor
+                            },
+                            itemMargin: {
+                                horizontal: 10,
+                                vertical: 4
+                            },
+                            onItemClick: {
+                                toggleDataSeries: false
+                            },
+                            onItemHover: {
+                                highlightDataSeries: false
+                            }
+                        },
                         tooltip: {
-                            theme: 'dark',
+                            theme: theme.tooltipTheme,
                             x: {
                                 formatter: function(val, {
                                     dataPointIndex,
@@ -1985,6 +2374,9 @@
 
                 // Chart 7: Unit Off (Donut)
                 function renderUnitOffChart(chartData) {
+                    lastChartData.unitOff = chartData;
+                    const theme = getChartTheme();
+
                     const totalUnits = chartData.total !== undefined ? chartData.total : chartData.series.reduce((a,
                         b) => a + b, 0);
                     $('#unitOffTotalBadge').text(totalUnits + ' Units Off');
@@ -1994,13 +2386,15 @@
                             charts.unitOff.destroy();
                             charts.unitOff = null;
                         }
+                        const titleClass = isLightMode() ? 'fw-bold text-dark' : 'fw-semibold text-white';
+                        const subtitleClass = isLightMode() ? 'small text-dark' : 'small text-secondary';
                         $('#chartUnitOff').html(`
-                            <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 text-muted" style="min-height: 280px;">
+                            <div class="d-flex flex-column align-items-center justify-content-center text-center p-4" style="min-height: 280px;">
                                 <div class="rounded-circle p-3 mb-2" style="background: rgba(16, 185, 129, 0.1);">
                                     <i class="mdi mdi-check-circle-outline text-success" style="font-size: 32px;"></i>
                                 </div>
-                                <div class="fw-semibold text-white mb-1">Tidak Ada Unit Off</div>
-                                <div class="small text-secondary">Tidak ada unit dengan Paket = Off pada periode ini.</div>
+                                <div class="${titleClass} mb-1">Tidak Ada Unit Off</div>
+                                <div class="${subtitleClass}">Tidak ada unit dengan Paket = Off pada periode ini.</div>
                             </div>
                         `);
                         return;
@@ -2030,20 +2424,20 @@
                                         name: {
                                             show: true,
                                             fontSize: '11px',
-                                            color: '#94a3b8'
+                                            color: theme.textColor
                                         },
                                         value: {
                                             show: true,
                                             fontSize: '18px',
                                             fontFamily: 'JetBrains Mono',
                                             fontWeight: 800,
-                                            color: '#ffffff',
+                                            color: theme.textBoldColor,
                                             formatter: val => val + ' Unit'
                                         },
                                         total: {
                                             show: true,
                                             label: 'Total Off',
-                                            color: '#94a3b8',
+                                            color: theme.textColor,
                                             fontSize: '10px',
                                             formatter: () => totalUnits + ' Unit'
                                         }
@@ -2057,19 +2451,20 @@
                         legend: {
                             position: 'bottom',
                             fontSize: '10.5px',
+                            fontWeight: 600,
                             labels: {
-                                colors: '#cbd5e1'
+                                colors: theme.legendColor
                             },
                             markers: {
                                 radius: 2
                             }
                         },
                         stroke: {
-                            colors: ['#0f172a'],
+                            colors: [theme.cardBg],
                             width: 2
                         },
                         tooltip: {
-                            theme: 'dark',
+                            theme: theme.tooltipTheme,
                             y: {
                                 formatter: val => val + ' Unit Off'
                             }
@@ -2083,6 +2478,9 @@
 
                 // Chart 8: MTBF vs MTTR Correlation Line Chart
                 function renderMttrMtbfCorrelationChart(chartData) {
+                    lastChartData.correlation = chartData;
+                    const theme = getChartTheme();
+
                     const options = {
                         series: chartData.series,
                         chart: {
@@ -2104,7 +2502,7 @@
                         markers: {
                             size: [5, 5],
                             strokeWidth: 2,
-                            strokeColors: '#080c16',
+                            strokeColors: theme.cardBg,
                             hover: {
                                 size: 7
                             }
@@ -2119,11 +2517,11 @@
                                 fontSize: '9.5px',
                                 fontFamily: 'JetBrains Mono',
                                 fontWeight: 700,
-                                colors: ['#38bdf8', '#f59e0b']
+                                colors: isLightMode() ? ['#0284c7', '#d97706'] : ['#38bdf8', '#f59e0b']
                             },
                             background: {
                                 enabled: true,
-                                foreColor: '#080c16',
+                                foreColor: isLightMode() ? '#ffffff' : '#080c16',
                                 padding: 2,
                                 borderRadius: 2,
                                 borderWidth: 0
@@ -2137,29 +2535,29 @@
                                 hideOverlappingLabels: false,
                                 trim: false,
                                 style: {
-                                    colors: '#94a3b8',
+                                    colors: theme.textColor,
                                     fontSize: '11px',
                                     fontFamily: 'JetBrains Mono',
                                     fontWeight: 600
                                 }
                             },
                             axisBorder: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: theme.axisBorderColor
                             }
                         },
                         yaxis: [{
                                 title: {
                                     text: 'MTBF (Jam)',
                                     style: {
-                                        color: '#38bdf8',
+                                        color: isLightMode() ? '#0284c7' : '#38bdf8',
                                         fontSize: '10px',
-                                        fontWeight: 600
+                                        fontWeight: 700
                                     }
                                 },
                                 labels: {
                                     formatter: val => Math.round(val) + 'h',
                                     style: {
-                                        colors: '#38bdf8',
+                                        colors: isLightMode() ? '#0284c7' : '#38bdf8',
                                         fontSize: '10px',
                                         fontFamily: 'JetBrains Mono'
                                     }
@@ -2170,15 +2568,15 @@
                                 title: {
                                     text: 'MTTR (Jam)',
                                     style: {
-                                        color: '#f59e0b',
+                                        color: isLightMode() ? '#d97706' : '#f59e0b',
                                         fontSize: '10px',
-                                        fontWeight: 600
+                                        fontWeight: 700
                                     }
                                 },
                                 labels: {
                                     formatter: val => Number(val).toFixed(1) + 'h',
                                     style: {
-                                        colors: '#f59e0b',
+                                        colors: isLightMode() ? '#d97706' : '#f59e0b',
                                         fontSize: '10px',
                                         fontFamily: 'JetBrains Mono'
                                     }
@@ -2186,22 +2584,23 @@
                             }
                         ],
                         grid: {
-                            borderColor: 'rgba(255, 255, 255, 0.06)',
+                            borderColor: theme.borderColor,
                             strokeDashArray: 3
                         },
                         legend: {
                             position: 'top',
                             horizontalAlign: 'right',
                             labels: {
-                                colors: '#cbd5e1'
+                                colors: theme.legendColor
                             },
                             fontSize: '10.5px',
+                            fontWeight: 600,
                             markers: {
                                 radius: 2
                             }
                         },
                         tooltip: {
-                            theme: 'dark',
+                            theme: theme.tooltipTheme,
                             shared: true,
                             intersect: false,
                             x: {
@@ -2232,6 +2631,9 @@
 
                 // Chart 9: Cost Maintenance
                 function renderCostMaintenanceChart(chartData) {
+                    lastChartData.cost = chartData;
+                    const theme = getChartTheme();
+
                     const options = {
                         series: chartData.series,
                         chart: {
@@ -2264,27 +2666,28 @@
                                 hideOverlappingLabels: false,
                                 trim: false,
                                 style: {
-                                    colors: '#94a3b8',
+                                    colors: theme.textColor,
                                     fontSize: '11px',
                                     fontFamily: 'JetBrains Mono',
                                     fontWeight: 600
                                 }
                             },
                             axisBorder: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: theme.axisBorderColor
                             }
                         },
                         yaxis: [{
                                 title: {
                                     text: 'Biaya Mingguan (Juta IDR)',
                                     style: {
-                                        color: '#94a3b8',
-                                        fontSize: '10px'
+                                        color: theme.textColor,
+                                        fontSize: '10px',
+                                        fontWeight: 600
                                     }
                                 },
                                 labels: {
                                     style: {
-                                        colors: '#94a3b8',
+                                        colors: theme.textColor,
                                         fontSize: '10px'
                                     },
                                     formatter: val => 'Rp ' + val + ' Jt'
@@ -2295,13 +2698,14 @@
                                 title: {
                                     text: 'Kumulatif (Juta IDR)',
                                     style: {
-                                        color: '#f43f5e',
-                                        fontSize: '10px'
+                                        color: isLightMode() ? '#e11d48' : '#f43f5e',
+                                        fontSize: '10px',
+                                        fontWeight: 700
                                     }
                                 },
                                 labels: {
                                     style: {
-                                        colors: '#f43f5e',
+                                        colors: isLightMode() ? '#e11d48' : '#f43f5e',
                                         fontSize: '10px'
                                     },
                                     formatter: val => 'Rp ' + val + ' Jt'
@@ -2309,19 +2713,20 @@
                             }
                         ],
                         grid: {
-                            borderColor: 'rgba(255, 255, 255, 0.06)',
+                            borderColor: theme.borderColor,
                             strokeDashArray: 3
                         },
                         legend: {
                             position: 'top',
                             horizontalAlign: 'right',
                             labels: {
-                                colors: '#cbd5e1'
+                                colors: theme.legendColor
                             },
-                            fontSize: '10.5px'
+                            fontSize: '10.5px',
+                            fontWeight: 600
                         },
                         tooltip: {
-                            theme: 'dark',
+                            theme: theme.tooltipTheme,
                             shared: true,
                             intersect: false,
                             x: {
