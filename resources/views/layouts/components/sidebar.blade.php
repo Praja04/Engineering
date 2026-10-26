@@ -55,6 +55,7 @@
                     <li class="menu-title"><span data-key="t-menu">Engineering Menu</span></li>
                     @include('layouts.components.sidebar-utility.kpi')
                     @include('layouts.components.sidebar-utility.utility')
+                    @include('layouts.components.sidebar-utility.utility_project')
                     @include('layouts.components.sidebar-epr.menu-epr')
                     @include('layouts.components.sidebar-utility.wwtp')
                     @include('layouts.components.sidebar-boiler.menu-boiler')
