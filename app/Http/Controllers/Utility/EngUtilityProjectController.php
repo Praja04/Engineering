@@ -1103,6 +1103,77 @@ class EngUtilityProjectController extends Controller
             }
         };
 
+        // Helper to convert week string (e.g. 'W1 Okt 26', 'W3 Jun 26', 'W4 Agus 2026', 'Januari-26') to a real Date
+        $parseWeekToDate = function ($weekStr, $isEndOfWeek = false) {
+            if (empty($weekStr)) return null;
+            $weekStr = trim((string)$weekStr);
+
+            $monthsMap = [
+                'jan' => 1, 'januari' => 1, 'january' => 1,
+                'feb' => 2, 'februari' => 2, 'february' => 2,
+                'mar' => 3, 'maret' => 3, 'march' => 3,
+                'apr' => 4, 'april' => 4,
+                'mei' => 5, 'may' => 5,
+                'jun' => 6, 'juni' => 6, 'june' => 6,
+                'jul' => 7, 'juli' => 7, 'july' => 7,
+                'agu' => 8, 'agus' => 8, 'agustus' => 8, 'aug' => 8, 'august' => 8,
+                'sep' => 9, 'sept' => 9, 'september' => 9,
+                'okt' => 10, 'oct' => 10, 'oktober' => 10, 'october' => 10,
+                'nov' => 11, 'nop' => 11, 'november' => 11,
+                'des' => 12, 'dec' => 12, 'desember' => 12, 'december' => 12,
+            ];
+
+            $weekNum = 1;
+            $month = null;
+            $year = Carbon::now()->year;
+
+            // Pattern 1: W1 Okt 26 or W3 Jun 2026 or W2 Juni
+            if (preg_match('/W([1-5])\s*([a-zA-Z]+)(?:\s*[-_\/]?\s*(\d{2,4}))?/i', $weekStr, $matches)) {
+                $weekNum = (int)$matches[1];
+                $mStr = strtolower($matches[2]);
+                if (isset($monthsMap[$mStr])) {
+                    $month = $monthsMap[$mStr];
+                }
+                if (!empty($matches[3])) {
+                    $yVal = (int)$matches[3];
+                    $year = ($yVal < 100) ? 2000 + $yVal : $yVal;
+                }
+            }
+            // Pattern 2: Januari-26 or Mei 2026 or Sep-26
+            elseif (preg_match('/([a-zA-Z]+)(?:\s*[-_\/]?\s*(\d{2,4}))?/i', $weekStr, $matches)) {
+                $mStr = strtolower($matches[1]);
+                if (isset($monthsMap[$mStr])) {
+                    $month = $monthsMap[$mStr];
+                }
+                if (!empty($matches[2])) {
+                    $yVal = (int)$matches[2];
+                    $year = ($yVal < 100) ? 2000 + $yVal : $yVal;
+                }
+                $weekNum = $isEndOfWeek ? 4 : 1;
+            }
+
+            if (!$month) {
+                return null;
+            }
+
+            $daysInMonth = Carbon::create($year, $month, 1)->daysInMonth;
+
+            if ($weekNum === 1) {
+                $day = $isEndOfWeek ? min(7, $daysInMonth) : 1;
+            } elseif ($weekNum === 2) {
+                $day = $isEndOfWeek ? min(14, $daysInMonth) : 8;
+            } elseif ($weekNum === 3) {
+                $day = $isEndOfWeek ? min(21, $daysInMonth) : 15;
+            } elseif ($weekNum === 4) {
+                $day = $isEndOfWeek ? min(28, $daysInMonth) : 22;
+            } else {
+                $day = $isEndOfWeek ? $daysInMonth : 29;
+                if ($day > $daysInMonth) $day = $daysInMonth;
+            }
+
+            return Carbon::create($year, $month, $day)->format('Y-m-d');
+        };
+
         // Cache existing areas & categories
         $activeAreas = EngUtilityProjectArea::pluck('nama_area')->toArray();
         if (empty($activeAreas)) $activeAreas = ['Boiler', 'Utility', 'WWTP', 'MTC'];
@@ -1160,17 +1231,21 @@ class EngUtilityProjectController extends Controller
                     }
                 }
 
+                // Prioritas: default ke 'Medium' jika kosong atau tidak cocok
                 $priorityRaw = isset($headerMap['priority'], $cols[$headerMap['priority']])
                     ? trim((string)$cols[$headerMap['priority']])
-                    : 'Medium';
+                    : '';
                 $priority = 'Medium';
-                foreach (['Critical', 'High', 'Medium', 'Low'] as $p) {
-                    if (strcasecmp($p, $priorityRaw) === 0) {
-                        $priority = $p;
-                        break;
+                if (!empty($priorityRaw)) {
+                    foreach (['Critical', 'High', 'Medium', 'Low'] as $p) {
+                        if (strcasecmp($p, $priorityRaw) === 0) {
+                            $priority = $p;
+                            break;
+                        }
                     }
                 }
 
+                // Tanggal & Minggu Mulai
                 $startDate = isset($headerMap['start_date'], $cols[$headerMap['start_date']])
                     ? $parseDate($cols[$headerMap['start_date']])
                     : null;
@@ -1178,11 +1253,16 @@ class EngUtilityProjectController extends Controller
                 $startWeek = isset($headerMap['start_week'], $cols[$headerMap['start_week']])
                     ? trim((string)$cols[$headerMap['start_week']])
                     : null;
-                if (empty($startWeek) && $startDate) {
+
+                // Jika tanggal mulai kosong tapi ada minggu mulai -> ambil tanggal awal minggu
+                if (empty($startDate) && !empty($startWeek)) {
+                    $startDate = $parseWeekToDate($startWeek, false);
+                } elseif (!empty($startDate) && empty($startWeek)) {
                     $cDate = Carbon::parse($startDate);
                     $startWeek = 'W' . (int)ceil($cDate->day / 7) . ' ' . $cDate->isoFormat('MMM YY');
                 }
 
+                // Tanggal & Minggu Selesai
                 $finishDate = isset($headerMap['finish_date'], $cols[$headerMap['finish_date']])
                     ? $parseDate($cols[$headerMap['finish_date']])
                     : null;
@@ -1190,11 +1270,16 @@ class EngUtilityProjectController extends Controller
                 $finishWeek = isset($headerMap['finish_week'], $cols[$headerMap['finish_week']])
                     ? trim((string)$cols[$headerMap['finish_week']])
                     : null;
-                if (empty($finishWeek) && $finishDate) {
+
+                // Jika target selesai kosong tapi ada minggu selesai -> ambil tanggal akhir minggu
+                if (empty($finishDate) && !empty($finishWeek)) {
+                    $finishDate = $parseWeekToDate($finishWeek, true);
+                } elseif (!empty($finishDate) && empty($finishWeek)) {
                     $cDate = Carbon::parse($finishDate);
                     $finishWeek = 'W' . (int)ceil($cDate->day / 7) . ' ' . $cDate->isoFormat('MMM YY');
                 }
 
+                // Progress persentase
                 $progressRaw = isset($headerMap['progress'], $cols[$headerMap['progress']])
                     ? $cols[$headerMap['progress']]
                     : 0;
@@ -1207,6 +1292,7 @@ class EngUtilityProjectController extends Controller
                     $progress = (int)round(max(0, min(100, $pVal)));
                 }
 
+                // Status project
                 $statusRaw = isset($headerMap['status'], $cols[$headerMap['status']])
                     ? trim((string)$cols[$headerMap['status']])
                     : null;
@@ -1222,14 +1308,17 @@ class EngUtilityProjectController extends Controller
                     }
                 }
 
-                // Auto calculate status if empty
+                // Jika status kosong: tentukan otomatis dari persentase dan deadline minggu/tanggal target selesai
                 if (!$status) {
                     if ($progress >= 100) {
                         $status = 'Selesai';
-                    } elseif ($finishDate && Carbon::parse($finishDate)->isPast() && $progress < 100) {
-                        $status = 'Terlambat';
                     } else {
-                        $status = 'On Progress';
+                        $deadline = $finishDate ?: ($finishWeek ? $parseWeekToDate($finishWeek, true) : null);
+                        if ($deadline && Carbon::parse($deadline)->endOfDay()->isPast()) {
+                            $status = 'Terlambat';
+                        } else {
+                            $status = 'On Progress';
+                        }
                     }
                 }
 

@@ -332,16 +332,10 @@
                                         <code>Boiler</code>, <code>Utility</code>, <code>WWTP</code>, <code>MTC</code>.</li>
                                     <li class="mb-1"><strong>Kategori:</strong> Maintenance, Baku Mutu, Compliance, 5R,
                                         KPI BB dan Steam, Digitalisasi, Improvement, dll.</li>
-                                    <li class="mb-1"><strong>Prioritas:</strong> <code>Critical</code>,
-                                        <code>High</code>, <code>Medium</code>, atau <code>Low</code> (default: Medium).
-                                    </li>
-                                    <li class="mb-1"><strong>Nomor Project:</strong> Opsional. Jika kosong, sistem
-                                        otomatis membuat nomor urut (contoh: <code>PRJ-BOI-001</code>).</li>
-                                    <li class="mb-1"><strong>Tanggal & Minggu:</strong> Format tanggal
-                                        <code>YYYY-MM-DD</code> atau format tanggal Excel. Minggu mulai/selesai (contoh:
-                                        <code>W1 Okt 26</code>) otomatis dihitung jika dikosongkan.</li>
-                                    <li><strong>Status & Progress:</strong> Progress angka <code>0 - 100</code>. Status
-                                        otomatis dihitung jika dikosongkan (Selesai, On Progress, atau Terlambat).</li>
+                                    <li class="mb-1"><strong>Prioritas:</strong> <code>Critical</code>, <code>High</code>, <code>Medium</code>, <code>Low</code>. Jika kosong, otomatis diatur ke <code>Medium</code>.</li>
+                                    <li class="mb-1"><strong>Nomor Project:</strong> Opsional. Jika kosong, sistem otomatis membuat nomor urut (contoh: <code>PRJ-BOI-001</code>).</li>
+                                    <li class="mb-1"><strong>Tanggal & Minggu:</strong> Jika tanggal mulai/selesai kosong tetapi kolom Minggu terisi (contoh: <code>W1 Okt 26</code>, <code>W3 Nov 26</code>), sistem otomatis mengambil tanggal awal/akhir minggu tersebut.</li>
+                                    <li><strong>Status & Progress:</strong> Progress angka <code>0 - 100</code>. Jika status kosong, otomatis dihitung dari persentase (100% = <code>Selesai</code>) dan batas minggu selesai (<code>Terlambat</code> jika sudah lewat waktu saat ini, atau <code>On Progress</code> jika masih berjalan).</li>
                                 </ul>
                             </div>
                         </div>
