@@ -695,17 +695,17 @@ class MtcDashboardController extends Controller
 
         // Query strictly records where paket is 'Korektif' with machine relationships
         $korektifRecords = MtcMainModel::with([
-                'motorPump.mesin',
-                'utility.mesin',
-                'electrical.mesin',
-                'refrigerasi.mesin',
-                'electricEngine.mesin',
-                'dieselEngine.mesin',
-                'electricP2h.mesin',
-                'dieselP2h.mesin',
-                'gensetP2h.mesin',
-                'battery',
-            ])
+            'motorPump.mesin',
+            'utility.mesin',
+            'electrical.mesin',
+            'refrigerasi.mesin',
+            'electricEngine.mesin',
+            'dieselEngine.mesin',
+            'electricP2h.mesin',
+            'dieselP2h.mesin',
+            'gensetP2h.mesin',
+            'battery',
+        ])
             ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) LIKE '%korektif%'")
             ->whereBetween('tanggal', [$chartStart, $chartEnd])
             ->get();
@@ -1140,17 +1140,17 @@ class MtcDashboardController extends Controller
     {
         // 1. Ambil data korektif dalam rentang waktu filter
         $korektifRecords = MtcMainModel::with([
-                'motorPump.mesin',
-                'utility.mesin',
-                'electrical.mesin',
-                'refrigerasi.mesin',
-                'electricEngine.mesin',
-                'dieselEngine.mesin',
-                'electricP2h.mesin',
-                'dieselP2h.mesin',
-                'gensetP2h.mesin',
-                'battery',
-            ])
+            'motorPump.mesin',
+            'utility.mesin',
+            'electrical.mesin',
+            'refrigerasi.mesin',
+            'electricEngine.mesin',
+            'dieselEngine.mesin',
+            'electricP2h.mesin',
+            'dieselP2h.mesin',
+            'gensetP2h.mesin',
+            'battery',
+        ])
             ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) LIKE '%korektif%'")
             ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->get();
@@ -1268,17 +1268,17 @@ class MtcDashboardController extends Controller
 
         // 3. Top Cost Tertinggi (Budget Impact - Real calculation from mtc_penggantian_material)
         $costRecords = MtcPenggantianMaterialModel::with([
-                'main.motorPump.mesin',
-                'main.utility.mesin',
-                'main.electrical.mesin',
-                'main.refrigerasi.mesin',
-                'main.electricEngine.mesin',
-                'main.dieselEngine.mesin',
-                'main.electricP2h.mesin',
-                'main.dieselP2h.mesin',
-                'main.gensetP2h.mesin',
-                'main.battery',
-            ])
+            'main.motorPump.mesin',
+            'main.utility.mesin',
+            'main.electrical.mesin',
+            'main.refrigerasi.mesin',
+            'main.electricEngine.mesin',
+            'main.dieselEngine.mesin',
+            'main.electricP2h.mesin',
+            'main.dieselP2h.mesin',
+            'main.gensetP2h.mesin',
+            'main.battery',
+        ])
             ->whereHas('main', function ($q) use ($startDate, $endDate) {
                 $q->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
             })
@@ -1328,7 +1328,7 @@ class MtcDashboardController extends Controller
         foreach ($sortedByCost as $idx => $item) {
             $mCost = $item['total_cost'];
             $pct = $grandTotalCost > 0 ? round(($mCost / $grandTotalCost) * 100, 1) : 0;
-            $fmtCost = $mCost >= 1000000 
+            $fmtCost = $mCost >= 1000000
                 ? 'IDR ' . number_format($mCost / 1000000, 1, ',', '.') . ' Jt'
                 : 'IDR ' . number_format($mCost / 1000000, 2, ',', '.') . ' Jt';
 
@@ -1379,17 +1379,17 @@ class MtcDashboardController extends Controller
     private function getUnitOffData($startDate, $endDate): array
     {
         $offRecords = MtcMainModel::with([
-                'motorPump.mesin',
-                'utility.mesin',
-                'electrical.mesin',
-                'refrigerasi.mesin',
-                'electricEngine.mesin',
-                'dieselEngine.mesin',
-                'electricP2h.mesin',
-                'dieselP2h.mesin',
-                'gensetP2h.mesin',
-                'battery',
-            ])
+            'motorPump.mesin',
+            'utility.mesin',
+            'electrical.mesin',
+            'refrigerasi.mesin',
+            'electricEngine.mesin',
+            'dieselEngine.mesin',
+            'electricP2h.mesin',
+            'dieselP2h.mesin',
+            'gensetP2h.mesin',
+            'battery',
+        ])
             ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) = 'off'")
             ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->orderByDesc('tanggal')
