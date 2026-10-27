@@ -1004,7 +1004,7 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">BIAYA PER KUBIK</div>
-                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostM3SubLabel">BULAN:
+                                    <div class="text-muted" style="font-size: 8.5px;" id="topCostM3SubLabel">PERIODE:
                                         <span class="text-cyan fw-bold" id="topCostM3Month">-</span></div>
                                 </div>
                             </div>
@@ -1028,7 +1028,7 @@
                                 <div>
                                     <div class="kpi-top-label">TOTAL COST CHEMICAL</div>
                                     <div class="text-muted" style="font-size: 8.5px;" id="topCostTotalSubLabel">
-                                        BULAN: <span class="text-cyan fw-bold" id="topCostTotalMonth">-</span></div>
+                                        PERIODE: <span class="text-cyan fw-bold" id="topCostTotalMonth">-</span></div>
                                 </div>
                             </div>
                             <div class="my-auto">

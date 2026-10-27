@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Utility\WwtpChemicalStandard;
 use App\Models\Utility\WwtpBiayaChemicalRecord;
 use App\Models\Utility\WwtpBiayaChemicalDetail;
+use App\Models\Utility\WwtpPitProduksiHarian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,11 @@ use Illuminate\Support\Facades\DB;
 
 class WWTPControllerBiayaChemical extends Controller
 {
+    public function form_pit_produksi()
+    {
+        return view('utility.wwtp.form_pit_produksi');
+    }
+
     public function form_biaya_chemical()
     {
         $standards = WwtpChemicalStandard::orderBy('chemical_name', 'asc')->get();
@@ -309,6 +315,131 @@ class WWTPControllerBiayaChemical extends Controller
         return response()->json([
             'status'  => 'success',
             'message' => "Chemical {$standard->chemical_name} berhasil dihapus dari master."
+        ]);
+    }
+
+    // --- API FOR PIT PRODUKSI HARIAN ---
+
+    public function indexPitProduksi(Request $request)
+    {
+        $perPage = $request->input('per_page', 15);
+        $tahun   = $request->input('tahun');
+        $bulan   = $request->input('bulan'); // 1-12
+        $search  = $request->input('search');
+
+        $query = WwtpPitProduksiHarian::with(['createdBy:id,username', 'updatedBy:id,username'])
+            ->orderBy('tanggal', 'desc');
+
+        if ($tahun) {
+            $query->whereYear('tanggal', $tahun);
+        }
+
+        if ($bulan) {
+            $query->whereMonth('tanggal', $bulan);
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('tanggal', 'like', "%{$search}%")
+                  ->orWhere('nilai_pit_produksi', 'like', "%{$search}%")
+                  ->orWhere('catatan', 'like', "%{$search}%");
+            });
+        }
+
+        $statsQuery = clone $query;
+        $totalM3 = (float) $statsQuery->sum('nilai_pit_produksi');
+        $countDays = $statsQuery->count();
+        $avgM3 = $countDays > 0 ? round($totalM3 / $countDays, 2) : 0;
+
+        $records = $query->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $records,
+            'stats'  => [
+                'total_m3'   => $totalM3,
+                'avg_m3'     => $avgM3,
+                'days_count' => $countDays,
+            ]
+        ]);
+    }
+
+    public function storePitProduksi(Request $request)
+    {
+        $request->validate([
+            'tanggal'            => 'required|date|unique:wwtp_pit_produksi_harian,tanggal',
+            'nilai_pit_produksi' => 'required|numeric|min:0',
+            'catatan'            => 'nullable|string|max:500',
+        ], [
+            'tanggal.required'            => 'Tanggal wajib diisi.',
+            'tanggal.unique'              => 'Data pit produksi untuk tanggal ini sudah ada. Silakan edit data yang ada.',
+            'nilai_pit_produksi.required' => 'Nilai pit produksi wajib diisi.',
+            'nilai_pit_produksi.numeric'  => 'Nilai pit produksi harus berupa angka.',
+            'nilai_pit_produksi.min'      => 'Nilai pit produksi tidak boleh kurang dari 0.',
+        ]);
+
+        $record = WwtpPitProduksiHarian::create([
+            'tanggal'            => $request->tanggal,
+            'nilai_pit_produksi' => $request->nilai_pit_produksi,
+            'catatan'            => $request->catatan,
+            'created_by'         => Auth::id() ?? 1,
+            'updated_by'         => Auth::id() ?? 1,
+        ]);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Data pit produksi harian berhasil disimpan.',
+            'data'    => $record
+        ]);
+    }
+
+    public function showPitProduksi($id)
+    {
+        $record = WwtpPitProduksiHarian::with(['createdBy:id,username', 'updatedBy:id,username'])->findOrFail($id);
+        return response()->json([
+            'status' => 'success',
+            'data'   => $record
+        ]);
+    }
+
+    public function updatePitProduksi(Request $request, $id)
+    {
+        $record = WwtpPitProduksiHarian::findOrFail($id);
+
+        $request->validate([
+            'tanggal'            => 'required|date|unique:wwtp_pit_produksi_harian,tanggal,' . $id,
+            'nilai_pit_produksi' => 'required|numeric|min:0',
+            'catatan'            => 'nullable|string|max:500',
+        ], [
+            'tanggal.required'            => 'Tanggal wajib diisi.',
+            'tanggal.unique'              => 'Data pit produksi untuk tanggal ini sudah ada.',
+            'nilai_pit_produksi.required' => 'Nilai pit produksi wajib diisi.',
+            'nilai_pit_produksi.numeric'  => 'Nilai pit produksi harus berupa angka.',
+            'nilai_pit_produksi.min'      => 'Nilai pit produksi tidak boleh kurang dari 0.',
+        ]);
+
+        $record->update([
+            'tanggal'            => $request->tanggal,
+            'nilai_pit_produksi' => $request->nilai_pit_produksi,
+            'catatan'            => $request->catatan,
+            'updated_by'         => Auth::id() ?? 1,
+        ]);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Data pit produksi harian berhasil diperbarui.',
+            'data'    => $record
+        ]);
+    }
+
+    public function destroyPitProduksi($id)
+    {
+        $record = WwtpPitProduksiHarian::findOrFail($id);
+        $record->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Data pit produksi harian berhasil dihapus.'
         ]);
     }
 }

@@ -19,6 +19,7 @@ use App\Models\Utility\WwtpSludge;
 use App\Models\Utility\WwtpBiayaChemicalRecord;
 use App\Models\Utility\WwtpBiayaChemicalDetail;
 use App\Models\Utility\WwtpChemicalStandard;
+use App\Models\Utility\WwtpPitProduksiHarian;
 use App\Models\Utility\WwtpKoloni;
 use App\Models\Utility\WwtpKoloniDetail;
 use App\Models\Utility\WwtpMasterKoloni;
@@ -1567,6 +1568,15 @@ class WWTPController extends Controller
             return $carry + max(0, (float)($rec->pit_produksi_step3 ?? 0) - (float)($rec->pit_produksi_step3_awal ?? 0));
         }, 0);
 
+        // Ambil akumulasi volume pit produksi dari input form harian pit produksi baru
+        $totalPitProduksiDaily = (float) WwtpPitProduksiHarian::whereBetween('tanggal', [$startDate, $endDate])
+            ->sum('nilai_pit_produksi');
+
+        // Prioritas utama: input harian pit produksi. Fallback ke step 3 influent atau limbah diolah bulanan
+        $pitProduksiUsed = $totalPitProduksiDaily > 0 
+            ? $totalPitProduksiDaily 
+            : ($totalPitProduksiStep3 > 0 ? $totalPitProduksiStep3 : $limbahDiOlah);
+
         // Identifikasi shift apa saja yang datanya sudah masuk
         $shiftNameMap = [
             'shift1' => 'Shift 1',
@@ -1654,7 +1664,7 @@ class WWTPController extends Controller
             $standardDaily = $standardQuota > 0 ? round($standardQuota / $daysInMonth, 1) : 0;
 
             $chemTotalCost = $totUsage * $price;
-            $costM3 = $totalPitProduksiStep3 > 0 ? ($chemTotalCost / $totalPitProduksiStep3) : 0;
+            $costM3 = $pitProduksiUsed > 0 ? ($chemTotalCost / $pitProduksiUsed) : 0;
             $dailyTotalCost += $chemTotalCost;
 
             $isOver = ($standardDaily > 0 && $avgDailyQty > $standardDaily);
@@ -1683,7 +1693,7 @@ class WWTPController extends Controller
             $standardDaily = $standardQuota > 0 ? round($standardQuota / $daysInMonth, 1) : 0;
 
             $chemTotalCost = $totUsage * $price;
-            $costM3 = $totalPitProduksiStep3 > 0 ? ($chemTotalCost / $totalPitProduksiStep3) : 0;
+            $costM3 = $pitProduksiUsed > 0 ? ($chemTotalCost / $pitProduksiUsed) : 0;
             $dailyTotalCost += $chemTotalCost;
             $isOver = ($standardDaily > 0 && $avgDailyQty > $standardDaily);
 
@@ -1701,51 +1711,55 @@ class WWTPController extends Controller
             ];
         }
 
-        $dailyTotalCostM3 = $totalPitProduksiStep3 > 0 ? ($dailyTotalCost / $totalPitProduksiStep3) : 0;
+        $dailyTotalCostM3 = $pitProduksiUsed > 0 ? ($dailyTotalCost / $pitProduksiUsed) : 0;
 
-        // Tampilkan di dashboard: data bulanan (Biaya Chemical & Biaya Per Kubik Bulanan)
-        $hasData = ($biayaRecord !== null);
+        // Cek ketersediaan data harian maupun bulanan
+        $hasData = ($dailyTotalCost > 0 || $dailyRecords->isNotEmpty() || $totalPitProduksiDaily > 0 || $biayaRecord !== null);
 
         return [
-            'biaya_bulan'        => $biayaMonthLabel,
+            'biaya_bulan'        => $filterMonthName,
             'has_biaya_data'     => $hasData,
+            'total_pit_produksi' => round($pitProduksiUsed, 2),
             'total_pit_step3'    => round($totalPitProduksiStep3, 2),
-            // Card 1: BIAYA PER KUBIK (Data Bulanan)
+            // Card 1: BIAYA PER KUBIK (Menggunakan Total Cost Harian / Total Pit Produksi Harian)
             'card1_biaya_per_m3' => [
-                'value'               => round($monthlyTotalCostM3, 2),
-                'formatted'           => $hasData ? ('Rp ' . number_format($monthlyTotalCostM3, 0, ',', '.') . ' / m³') : 'Rp 0 / m³',
+                'value'               => round($dailyTotalCostM3, 2),
+                'formatted'           => ($dailyTotalCostM3 > 0 || $dailyTotalCost > 0) ? ('Rp ' . number_format($dailyTotalCostM3, 0, ',', '.') . ' / m³') : 'Rp 0 / m³',
                 'target'              => 'TARGET ≤ Rp 20.000 / m³',
                 'target_value'        => 20000,
-                'is_over'             => ($monthlyTotalCostM3 > 20000),
-                'trend_up'            => ($monthlyTotalCostM3 > 20000),
-                'bulan'               => $biayaMonthLabel,
+                'is_over'             => ($dailyTotalCostM3 > 20000),
+                'trend_up'            => ($dailyTotalCostM3 > 20000),
+                'bulan'               => $filterMonthName,
                 'has_data'            => $hasData,
-                'limbah_di_olah'      => $limbahDiOlah,
+                'limbah_di_olah'      => round($pitProduksiUsed, 2),
+                'pit_produksi_daily'  => round($totalPitProduksiDaily, 2),
                 'shifts_text'         => $shiftsText,
             ],
-            // Card 2: TOTAL COST CHEMICAL (Data Bulanan)
+            // Card 2: TOTAL COST CHEMICAL (Menggunakan Logic Harian Pemakaian Chemical)
             'card2_total_cost_chem' => [
-                'value'        => round($monthlyTotalCost, 2),
-                'formatted'    => $hasData ? ('Rp ' . number_format($monthlyTotalCost, 0, ',', '.')) : 'Rp 0',
+                'value'        => round($dailyTotalCost, 2),
+                'formatted'    => ($dailyTotalCost > 0 || $dailyRecords->isNotEmpty()) ? ('Rp ' . number_format($dailyTotalCost, 0, ',', '.')) : 'Rp 0',
                 'standard'     => 45000000,
                 'target'       => 'STANDAR ≤ Rp 45 Jt',
-                'is_over'      => ($monthlyTotalCost > 45000000),
-                'trend_up'     => ($monthlyTotalCost > 45000000),
-                'bulan'        => $biayaMonthLabel,
+                'is_over'      => ($dailyTotalCost > 45000000),
+                'trend_up'     => ($dailyTotalCost > 45000000),
+                'bulan'        => $filterMonthName,
                 'has_data'     => $hasData,
             ],
             // Card 9: Tabel Konsumsi Chemical (Data Harian Pemakaian Chemical)
             'chem_cons_period'       => $filterMonthName,
             'card9_chem_consumption' => $dailyUsageList,
-            // Struktur data perhitungan harian tetap disimpan lengkap
+            // Struktur data perhitungan harian
             'perhitungan_harian'     => [
                 'total_cost'          => round($dailyTotalCost, 2),
                 'total_cost_m3'       => round($dailyTotalCostM3, 2),
+                'total_pit_produksi'  => round($pitProduksiUsed, 2),
+                'total_pit_daily'     => round($totalPitProduksiDaily, 2),
                 'total_pit_step3'     => round($totalPitProduksiStep3, 2),
                 'shifts_text'         => $shiftsText,
                 'shifts_list'         => $allShifts->toArray(),
                 'latest_shifts'       => $latestShifts->toArray(),
-                'pit_step3_formatted' => number_format($totalPitProduksiStep3, 1, ',', '.') . ' m³',
+                'pit_step3_formatted' => number_format($pitProduksiUsed, 1, ',', '.') . ' m³',
                 'usage_list'          => $dailyUsageList,
             ],
             'perhitungan_bulanan'    => [

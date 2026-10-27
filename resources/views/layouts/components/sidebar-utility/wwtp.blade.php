@@ -213,17 +213,24 @@
 
                 <!-- Biaya Chemical WWTP -->
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('wwtp/form_biaya_chemical') || request()->is('wwtp/data_biaya_chemical') || request()->is('wwtp/master_biaya_chemical') ? '' : 'collapsed' }}"
+                    <a class="nav-link {{ request()->is('wwtp/form_biaya_chemical') || request()->is('wwtp/data_biaya_chemical') || request()->is('wwtp/master_biaya_chemical') || request()->is('wwtp/form_pit_produksi*') ? '' : 'collapsed' }}"
                         href="#sidebarBiayaChemicalWWTP" data-bs-toggle="collapse" role="button"
-                        aria-expanded="{{ request()->is('wwtp/form_biaya_chemical') || request()->is('wwtp/data_biaya_chemical') || request()->is('wwtp/master_biaya_chemical') ? 'true' : 'false' }}"
+                        aria-expanded="{{ request()->is('wwtp/form_biaya_chemical') || request()->is('wwtp/data_biaya_chemical') || request()->is('wwtp/master_biaya_chemical') || request()->is('wwtp/form_pit_produksi*') ? 'true' : 'false' }}"
                         aria-controls="sidebarBiayaChemicalWWTP">
                         <i class="mdi mdi-cash-multiple"></i>
                         <span data-key="t-widgets">Biaya Chemical</span>
                     </a>
 
-                    <div class="collapse menu-dropdown {{ request()->is('wwtp/form_biaya_chemical') || request()->is('wwtp/data_biaya_chemical') || request()->is('wwtp/master_biaya_chemical') ? 'show' : '' }}"
+                    <div class="collapse menu-dropdown {{ request()->is('wwtp/form_biaya_chemical') || request()->is('wwtp/data_biaya_chemical') || request()->is('wwtp/master_biaya_chemical') || request()->is('wwtp/form_pit_produksi*') ? 'show' : '' }}"
                         id="sidebarBiayaChemicalWWTP">
                         <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('wwtp/form_pit_produksi*') ? 'active' : '' }}"
+                                    href="{{ url('wwtp/form_pit_produksi') }}">
+                                    <i class="mdi mdi-cube-outline"></i>
+                                    <span data-key="t-widgets">Pit Produksi Harian</span>
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->is('wwtp/form_biaya_chemical') ? 'active' : '' }}"
                                     href="{{ url('wwtp/form_biaya_chemical') }}">

@@ -106,4 +106,12 @@ Route::middleware('auth')->group(function () {
   Route::post('/api/wwtp-biaya-chemical/standards', [WWTPControllerBiayaChemical::class, 'storeStandard'])->name('api.wwtp-biaya-chemical.standards.store');
   Route::put('/api/wwtp-biaya-chemical/standards/{id}', [WWTPControllerBiayaChemical::class, 'updateStandard'])->name('api.wwtp-biaya-chemical.standards.update');
   Route::delete('/api/wwtp-biaya-chemical/standards/{id}', [WWTPControllerBiayaChemical::class, 'destroyStandard'])->name('api.wwtp-biaya-chemical.standards.destroy');
+
+  // WWTP Pit Produksi Harian Routes
+  Route::get('/wwtp/form_pit_produksi', [WWTPControllerBiayaChemical::class, 'form_pit_produksi'])->name('wwtp.form_pit_produksi');
+  Route::get('/api/wwtp-pit-produksi', [WWTPControllerBiayaChemical::class, 'indexPitProduksi'])->name('api.wwtp-pit-produksi.index');
+  Route::post('/api/wwtp-pit-produksi', [WWTPControllerBiayaChemical::class, 'storePitProduksi'])->name('api.wwtp-pit-produksi.store');
+  Route::get('/api/wwtp-pit-produksi/{id}', [WWTPControllerBiayaChemical::class, 'showPitProduksi'])->name('api.wwtp-pit-produksi.show');
+  Route::put('/api/wwtp-pit-produksi/{id}', [WWTPControllerBiayaChemical::class, 'updatePitProduksi'])->name('api.wwtp-pit-produksi.update');
+  Route::delete('/api/wwtp-pit-produksi/{id}', [WWTPControllerBiayaChemical::class, 'destroyPitProduksi'])->name('api.wwtp-pit-produksi.destroy');
 });
