@@ -1451,8 +1451,17 @@ class WWTPController extends Controller
         if ($masterChemicals->isEmpty()) {
             $masterChemicals = ChemicalType::where('is_active', true)
                 ->whereIn('nama_chemical', [
-                    'PAC powder 1', 'PAC powder 2', 'BE-100', 'C-204', 'C-9040 step 1',
-                    'C-9040 step 2', 'Denfloc 260 PA', 'Denfloc 945', 'NaOH', 'Defoamer', 'NPK'
+                    'PAC powder 1',
+                    'PAC powder 2',
+                    'BE-100',
+                    'C-204',
+                    'C-9040 step 1',
+                    'C-9040 step 2',
+                    'Denfloc 260 PA',
+                    'Denfloc 945',
+                    'NaOH',
+                    'Defoamer',
+                    'NPK'
                 ])
                 ->orderBy('id', 'asc')
                 ->get();
@@ -1549,8 +1558,8 @@ class WWTPController extends Controller
             ->whereBetween('tanggal', [$startDate, $endDate])
             ->where(function ($q) use ($chemicalWWTP, $wwtpAreaId) {
                 $q->whereIn('jenis_pemakaian', $chemicalWWTP)
-                  ->orWhere('chemical_area', (string)$wwtpAreaId)
-                  ->orWhere('chemical_area', 'like', '%wwtp%');
+                    ->orWhere('chemical_area', (string)$wwtpAreaId)
+                    ->orWhere('chemical_area', 'like', '%wwtp%');
             })
             ->get();
 
@@ -1573,9 +1582,11 @@ class WWTPController extends Controller
             ->sum('nilai_pit_produksi');
 
         // Prioritas utama: input harian pit produksi. Fallback ke step 3 influent atau limbah diolah bulanan
-        $pitProduksiUsed = $totalPitProduksiDaily > 0 
-            ? $totalPitProduksiDaily 
-            : ($totalPitProduksiStep3 > 0 ? $totalPitProduksiStep3 : $limbahDiOlah);
+        // $pitProduksiUsed = $totalPitProduksiDaily > 0 
+        //     ? $totalPitProduksiDaily 
+        //     : ($totalPitProduksiStep3 > 0 ? $totalPitProduksiStep3 : $limbahDiOlah);
+
+        $pitProduksiUsed = $totalPitProduksiStep3 > 0 ? $totalPitProduksiStep3 : $limbahDiOlah;
 
         // Identifikasi shift apa saja yang datanya sudah masuk
         $shiftNameMap = [
