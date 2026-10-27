@@ -116,9 +116,10 @@
                                         <label class="form-label fw-semibold text-muted mb-1">
                                             Nomor Project
                                         </label>
-                                        <input type="text" class="form-control" name="nomor_project"
+                                        <input type="text" class="form-control bg-light" name="nomor_project"
                                             placeholder="Auto-generate"
-                                            value="{{ old('nomor_project', $isEdit ? $project->nomor_project : '') }}">
+                                            value="{{ old('nomor_project', $isEdit ? $project->nomor_project : '') }}"
+                                            readonly>
                                     </div>
                                 </div>
 
@@ -128,22 +129,49 @@
                                         Tingkat Prioritas (Priority) <span class="text-danger">*</span>
                                     </label>
                                     @php
-                                        $currPriority = old('priority', $isEdit ? ($project->priority ?? 'Medium') : 'Medium');
+                                        $currPriority = old(
+                                            'priority',
+                                            $isEdit ? $project->priority ?? 'Medium' : 'Medium',
+                                        );
                                         $priorities = [
-                                            ['val' => 'Critical', 'label' => 'Critical', 'color' => 'danger', 'icon' => 'ri-alarm-warning-fill', 'desc' => 'Mendesak & Urgent'],
-                                            ['val' => 'High', 'label' => 'High', 'color' => 'warning', 'icon' => 'ri-arrow-up-circle-fill', 'desc' => 'Prioritas Tinggi'],
-                                            ['val' => 'Medium', 'label' => 'Medium', 'color' => 'primary', 'icon' => 'ri-equal-circle-fill', 'desc' => 'Prioritas Reguler'],
-                                            ['val' => 'Low', 'label' => 'Low', 'color' => 'secondary', 'icon' => 'ri-arrow-down-circle-line', 'desc' => 'Prioritas Rendah']
+                                            [
+                                                'val' => 'Critical',
+                                                'label' => 'Critical',
+                                                'color' => 'danger',
+                                                'icon' => 'ri-alarm-warning-fill',
+                                                'desc' => 'Mendesak & Urgent',
+                                            ],
+                                            [
+                                                'val' => 'High',
+                                                'label' => 'High',
+                                                'color' => 'warning',
+                                                'icon' => 'ri-arrow-up-circle-fill',
+                                                'desc' => 'Prioritas Tinggi',
+                                            ],
+                                            [
+                                                'val' => 'Medium',
+                                                'label' => 'Medium',
+                                                'color' => 'primary',
+                                                'icon' => 'ri-equal-circle-fill',
+                                                'desc' => 'Prioritas Reguler',
+                                            ],
+                                            [
+                                                'val' => 'Low',
+                                                'label' => 'Low',
+                                                'color' => 'secondary',
+                                                'icon' => 'ri-arrow-down-circle-line',
+                                                'desc' => 'Prioritas Rendah',
+                                            ],
                                         ];
                                     @endphp
                                     <div class="row g-2">
                                         @foreach ($priorities as $p)
                                             <div class="col-6 col-md-3">
                                                 <input type="radio" class="btn-check" name="priority"
-                                                    id="priority_{{ strtolower($p['val']) }}"
-                                                    value="{{ $p['val'] }}"
+                                                    id="priority_{{ strtolower($p['val']) }}" value="{{ $p['val'] }}"
                                                     {{ $currPriority === $p['val'] ? 'checked' : '' }} required>
-                                                <label class="btn btn-outline-{{ $p['color'] }} w-100 py-2 text-start d-flex flex-column justify-content-between h-100"
+                                                <label
+                                                    class="btn btn-outline-{{ $p['color'] }} w-100 py-2 text-start d-flex flex-column justify-content-between h-100"
                                                     for="priority_{{ strtolower($p['val']) }}">
                                                     <div class="d-flex align-items-center mb-1">
                                                         <i class="{{ $p['icon'] }} me-1 fs-15"></i>
@@ -260,7 +288,9 @@
                                 @php
                                     $minProg = $isEdit ? (int) $project->progress : 0;
                                     $initialProg = (int) old('progress', $isEdit ? $project->progress : 0);
-                                    if ($initialProg < $minProg) $initialProg = $minProg;
+                                    if ($initialProg < $minProg) {
+                                        $initialProg = $minProg;
+                                    }
                                     $currStatus = old('status', $isEdit ? $project->status : 'On Progress');
                                 @endphp
                                 <div class="card border mb-3 bg-light-subtle shadow-none">
@@ -287,8 +317,8 @@
                                                     <div id="visualProgressBar"
                                                         class="progress-bar progress-bar-striped progress-bar-animated {{ $initialProg == 100 ? 'bg-success' : 'bg-primary' }}"
                                                         role="progressbar" style="width: {{ $initialProg }}%;"
-                                                        aria-valuenow="{{ $initialProg }}" aria-valuemin="{{ $minProg }}"
-                                                        aria-valuemax="100"></div>
+                                                        aria-valuenow="{{ $initialProg }}"
+                                                        aria-valuemin="{{ $minProg }}" aria-valuemax="100"></div>
                                                 </div>
 
                                                 {{-- Range Slider --}}
@@ -301,13 +331,15 @@
                                                     <div class="input-group input-group-sm" style="max-width: 180px;">
                                                         <span class="input-group-text bg-light text-muted">Input</span>
                                                         <input type="number" class="form-control text-center fw-bold"
-                                                            id="progressInput" name="progress" min="{{ $minProg }}" max="100"
-                                                            value="{{ $initialProg }}" oninput="syncProgress(this.value)">
+                                                            id="progressInput" name="progress" min="{{ $minProg }}"
+                                                            max="100" value="{{ $initialProg }}"
+                                                            oninput="syncProgress(this.value)">
                                                         <span class="input-group-text fw-semibold">%</span>
                                                     </div>
                                                     @if ($isEdit && $minProg > 0)
                                                         <small class="text-muted fs-11">
-                                                            <i class="ri-lock-line me-1 text-warning"></i>Minimal: <strong>{{ $minProg }}%</strong> (tidak boleh mundur)
+                                                            <i class="ri-lock-line me-1 text-warning"></i>Minimal:
+                                                            <strong>{{ $minProg }}%</strong> (tidak boleh mundur)
                                                         </small>
                                                     @endif
                                                 </div>

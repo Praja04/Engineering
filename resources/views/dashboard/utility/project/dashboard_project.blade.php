@@ -160,7 +160,7 @@
                                     <h3 class="mb-0 fw-bold text-dark" id="kpiTotal">{{ $kpis['total'] }}</h3>
                                 </div>
                                 <div class="avatar-sm flex-shrink-0">
-                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                    <span class="avatar-title bg-primary-subtle rounded-circle fs-3">
                                         <i class="ri-folders-line"></i>
                                     </span>
                                 </div>
@@ -367,7 +367,8 @@
                         <div class="card-body p-0">
                             <div class="table-responsive" style="max-height: 312px; overflow-y: auto;">
                                 <table class="table table-hover align-middle mb-0 text-nowrap" style="min-width: 500px;">
-                                    <thead class="table-light fs-12 text-muted sticky-top" style="position: sticky; top: 0; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                    <thead class="table-light fs-12 text-muted sticky-top"
+                                        style="position: sticky; top: 0; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                                         <tr>
                                             <th style="min-width: 170px;">Project</th>
                                             <th style="width: 90px;" class="text-center">Prioritas</th>

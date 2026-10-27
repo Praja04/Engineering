@@ -229,28 +229,47 @@ class EngUtilityProjectController extends Controller
      */
     public function data(Request $request)
     {
-        $statusFilter = $request->get('status');
-        $kategoriFilter = $request->get('kategori');
-        $areaFilter = $request->get('area');
-        $priorityFilter = $request->get('priority');
+        // Helper to normalize array / string / comma-separated filter values
+        $normalizeFilter = function ($val) {
+            if (is_array($val)) {
+                $items = $val;
+            } elseif (is_string($val) && strlen(trim($val)) > 0) {
+                $items = explode(',', $val);
+            } else {
+                return [];
+            }
+            return array_values(array_filter(array_map('trim', $items), function ($v) {
+                return $v !== '' && strtolower($v) !== 'all';
+            }));
+        };
+
+        $statusList = $normalizeFilter($request->input('status'));
+        $kategoriList = $normalizeFilter($request->input('kategori'));
+        $areaList = $normalizeFilter($request->input('area'));
+        $priorityList = $normalizeFilter($request->input('priority'));
         $search = $request->get('search');
+
+        $statusFilter = !empty($statusList) ? (count($statusList) === 1 ? $statusList[0] : implode(',', $statusList)) : 'all';
+        $kategoriFilter = !empty($kategoriList) ? (count($kategoriList) === 1 ? $kategoriList[0] : implode(',', $kategoriList)) : 'all';
+        $areaFilter = !empty($areaList) ? (count($areaList) === 1 ? $areaList[0] : implode(',', $areaList)) : 'all';
+        $priorityFilter = !empty($priorityList) ? (count($priorityList) === 1 ? $priorityList[0] : implode(',', $priorityList)) : 'all';
 
         $query = EngUtilityProject::with(['logs.user', 'creator'])->orderBy('created_at', 'desc');
 
-        if (!empty($statusFilter) && $statusFilter !== 'all') {
-            $query->where('status', $statusFilter);
+        if (!empty($statusList)) {
+            $query->whereIn('status', $statusList);
         }
 
-        if (!empty($kategoriFilter) && $kategoriFilter !== 'all') {
-            $query->where('kategori', $kategoriFilter);
+        if (!empty($kategoriList)) {
+            $query->whereIn('kategori', $kategoriList);
         }
 
-        if (!empty($areaFilter) && $areaFilter !== 'all') {
-            $query->where('area', $areaFilter);
+        if (!empty($areaList)) {
+            $query->whereIn('area', $areaList);
         }
 
-        if (!empty($priorityFilter) && $priorityFilter !== 'all') {
-            $query->where('priority', $priorityFilter);
+        if (!empty($priorityList)) {
+            $query->whereIn('priority', $priorityList);
         }
 
         if (!empty($search)) {
@@ -322,6 +341,10 @@ class EngUtilityProjectController extends Controller
             'kategoriFilter',
             'areaFilter',
             'priorityFilter',
+            'statusList',
+            'kategoriList',
+            'areaList',
+            'priorityList',
             'search'
         ));
     }

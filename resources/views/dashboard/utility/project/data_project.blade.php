@@ -2,6 +2,61 @@
 
 @section('title', 'Data Project Engineering Utility')
 
+@section('styles')
+    <style>
+        .custom-filter-dropdown .filter-btn {
+            height: 38px;
+            font-size: 13px;
+            border-color: #ced4da;
+            transition: all 0.2s ease;
+        }
+        .custom-filter-dropdown .filter-btn:hover,
+        .custom-filter-dropdown .filter-btn:focus {
+            background-color: #f8f9fa;
+            border-color: #b1b8be;
+        }
+        .custom-filter-dropdown .filter-btn.is-active {
+            border-color: #0d6efd;
+            background-color: #f0f7ff;
+            color: #0d6efd !important;
+            font-weight: 600;
+        }
+        .custom-filter-dropdown .dropdown-menu {
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            z-index: 1050;
+        }
+        .custom-filter-dropdown .dropdown-item {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        .custom-filter-dropdown .option-item {
+            display: flex !important;
+            align-items: center;
+        }
+        .custom-filter-dropdown .option-item.d-none {
+            display: none !important;
+        }
+        .custom-filter-dropdown .dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+        .custom-filter-dropdown .dropdown-item:active {
+            background-color: #e2e8f0;
+            color: inherit;
+        }
+        .cursor-pointer {
+            cursor: pointer !important;
+        }
+        .filter-options-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .filter-options-list::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
@@ -58,69 +113,179 @@
                                     </div>
                                 </div>
 
-                                {{-- Area Filter --}}
+                                {{-- Area Filter (Dropdown Multi-Select) --}}
                                 <div class="col-lg-2 col-md-3 col-sm-6">
-                                    <select id="filterArea" name="area" class="form-select">
-                                        <option value="all">Semua Area</option>
-                                        @foreach ($areasList as $ar)
-                                            <option value="{{ $ar }}" {{ $areaFilter === $ar ? 'selected' : '' }}>
-                                                {{ $ar }}</option>
-                                        @endforeach
-                                    </select>
+                                    <div class="dropdown custom-filter-dropdown" data-filter="area">
+                                        <button class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                            type="button" id="dropdownAreaBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                            <span class="filter-btn-text text-truncate me-1">
+                                                <i class="ri-map-pin-line text-muted me-1"></i><span class="label-text">Semua Area</span>
+                                            </span>
+                                            <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                        </button>
+                                        <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 230px;" aria-labelledby="dropdownAreaBtn">
+                                            <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                                <small class="fw-bold text-muted text-uppercase fs-11">Filter Area</small>
+                                                <div class="d-flex gap-2">
+                                                    <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="area">Pilih Semua</a>
+                                                    <span class="text-muted fs-11">|</span>
+                                                    <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="area">Reset</a>
+                                                </div>
+                                            </div>
+                                            <div class="filter-options-list" style="max-height: 220px; overflow-y: auto;">
+                                                @foreach ($areasList as $ar)
+                                                    <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center gap-2 cursor-pointer mb-0 option-item">
+                                                        <input class="form-check-input mt-0 filter-checkbox filter-checkbox-area" type="checkbox" value="{{ $ar }}"
+                                                            {{ in_array($ar, $areaList ?? []) ? 'checked' : '' }}>
+                                                        <span class="fs-12 text-dark">{{ $ar }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {{-- Kategori Filter --}}
+                                {{-- Kategori Filter (Dropdown Multi-Select) --}}
                                 <div class="col-lg-2 col-md-3 col-sm-6">
-                                    <select id="filterKategori" name="kategori" class="form-select">
-                                        <option value="all">Semua Kategori</option>
-                                        @foreach ($categoriesList as $cat)
-                                            <option value="{{ $cat }}"
-                                                {{ $kategoriFilter === $cat ? 'selected' : '' }}>{{ $cat }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <div class="dropdown custom-filter-dropdown" data-filter="kategori">
+                                        <button class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                            type="button" id="dropdownKategoriBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                            <span class="filter-btn-text text-truncate me-1">
+                                                <i class="ri-price-tag-3-line text-muted me-1"></i><span class="label-text">Semua Kategori</span>
+                                            </span>
+                                            <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                        </button>
+                                        <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 250px;" aria-labelledby="dropdownKategoriBtn">
+                                            <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                                <small class="fw-bold text-muted text-uppercase fs-11">Filter Kategori</small>
+                                                <div class="d-flex gap-2">
+                                                    <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="kategori">Pilih Semua</a>
+                                                    <span class="text-muted fs-11">|</span>
+                                                    <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="kategori">Reset</a>
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-light border-end-0 py-1"><i class="ri-search-line fs-11"></i></span>
+                                                    <input type="text" class="form-control form-control-sm border-start-0 filter-search-input"
+                                                        placeholder="Cari kategori..." data-filter="kategori" autocomplete="off">
+                                                </div>
+                                            </div>
+                                            <div class="filter-options-list" style="max-height: 200px; overflow-y: auto;">
+                                                @foreach ($categoriesList as $cat)
+                                                    <label class="dropdown-item px-2 py-1 rounded-2 gap-2 cursor-pointer mb-0 option-item">
+                                                        <input class="form-check-input mt-0 filter-checkbox filter-checkbox-kategori" type="checkbox" value="{{ $cat }}"
+                                                            {{ in_array($cat, $kategoriList ?? []) ? 'checked' : '' }}>
+                                                        <span class="fs-12 text-dark text-truncate">{{ $cat }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {{-- Status Filter --}}
+                                {{-- Status Filter (Dropdown Multi-Select) --}}
                                 <div class="col-lg-2 col-md-3 col-sm-6">
-                                    <select id="filterStatus" name="status" class="form-select">
-                                        <option value="all">Semua Status</option>
-                                        <option value="Selesai" {{ $statusFilter === 'Selesai' ? 'selected' : '' }}>Selesai
-                                        </option>
-                                        <option value="On Progress"
-                                            {{ $statusFilter === 'On Progress' ? 'selected' : '' }}>On Progress</option>
-                                        <option value="Terlambat" {{ $statusFilter === 'Terlambat' ? 'selected' : '' }}>
-                                            Terlambat</option>
-                                    </select>
+                                    <div class="dropdown custom-filter-dropdown" data-filter="status">
+                                        <button class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                            type="button" id="dropdownStatusBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                            <span class="filter-btn-text text-truncate me-1">
+                                                <i class="ri-checkbox-circle-line text-muted me-1"></i><span class="label-text">Semua Status</span>
+                                            </span>
+                                            <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                        </button>
+                                        <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 220px;" aria-labelledby="dropdownStatusBtn">
+                                            <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                                <small class="fw-bold text-muted text-uppercase fs-11">Filter Status</small>
+                                                <div class="d-flex gap-2">
+                                                    <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="status">Pilih Semua</a>
+                                                    <span class="text-muted fs-11">|</span>
+                                                    <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="status">Reset</a>
+                                                </div>
+                                            </div>
+                                            <div class="filter-options-list">
+                                                @php
+                                                    $statuses = [
+                                                        'Selesai' => ['class' => 'bg-success-subtle text-success border border-success-subtle', 'icon' => 'ri-checkbox-circle-line'],
+                                                        'On Progress' => ['class' => 'bg-warning-subtle text-warning border border-warning-subtle', 'icon' => 'ri-time-line'],
+                                                        'Terlambat' => ['class' => 'bg-danger-subtle text-danger border border-danger-subtle', 'icon' => 'ri-alert-line']
+                                                    ];
+                                                @endphp
+                                                @foreach ($statuses as $stKey => $stMeta)
+                                                    <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <input class="form-check-input mt-0 filter-checkbox filter-checkbox-status" type="checkbox" value="{{ $stKey }}"
+                                                                {{ in_array($stKey, $statusList ?? []) ? 'checked' : '' }}>
+                                                            <span class="fs-12 text-dark">{{ $stKey }}</span>
+                                                        </div>
+                                                        <span class="badge {{ $stMeta['class'] }} fs-10 px-2 py-0"><i class="{{ $stMeta['icon'] }} me-1"></i>{{ $stKey }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {{-- Priority Filter --}}
+                                {{-- Priority Filter (Dropdown Multi-Select) --}}
                                 <div class="col-lg-2 col-md-3 col-sm-6">
-                                    <select id="filterPriority" name="priority" class="form-select">
-                                        <option value="all">Semua Prioritas</option>
-                                        <option value="Critical"
-                                            {{ isset($priorityFilter) && $priorityFilter === 'Critical' ? 'selected' : '' }}>
-                                            Critical</option>
-                                        <option value="High"
-                                            {{ isset($priorityFilter) && $priorityFilter === 'High' ? 'selected' : '' }}>
-                                            High</option>
-                                        <option value="Medium"
-                                            {{ isset($priorityFilter) && $priorityFilter === 'Medium' ? 'selected' : '' }}>
-                                            Medium</option>
-                                        <option value="Low"
-                                            {{ isset($priorityFilter) && $priorityFilter === 'Low' ? 'selected' : '' }}>
-                                            Low</option>
-                                    </select>
+                                    <div class="dropdown custom-filter-dropdown" data-filter="priority">
+                                        <button class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                            type="button" id="dropdownPriorityBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                            <span class="filter-btn-text text-truncate me-1">
+                                                <i class="ri-flag-line text-muted me-1"></i><span class="label-text">Semua Prioritas</span>
+                                            </span>
+                                            <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                        </button>
+                                        <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 220px;" aria-labelledby="dropdownPriorityBtn">
+                                            <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                                <small class="fw-bold text-muted text-uppercase fs-11">Filter Prioritas</small>
+                                                <div class="d-flex gap-2">
+                                                    <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="priority">Pilih Semua</a>
+                                                    <span class="text-muted fs-11">|</span>
+                                                    <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="priority">Reset</a>
+                                                </div>
+                                            </div>
+                                            <div class="filter-options-list">
+                                                @php
+                                                    $priorities = [
+                                                        'Critical' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                                        'High' => 'bg-warning-subtle text-warning border border-warning-subtle',
+                                                        'Medium' => 'bg-info-subtle text-info border border-info-subtle',
+                                                        'Low' => 'bg-secondary-subtle text-secondary border border-secondary-subtle'
+                                                    ];
+                                                @endphp
+                                                @foreach ($priorities as $prKey => $prClass)
+                                                    <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <input class="form-check-input mt-0 filter-checkbox filter-checkbox-priority" type="checkbox" value="{{ $prKey }}"
+                                                                {{ in_array($prKey, $priorityList ?? []) ? 'checked' : '' }}>
+                                                            <span class="fs-12 text-dark">{{ $prKey }}</span>
+                                                        </div>
+                                                        <span class="badge {{ $prClass }} fs-10 px-2 py-0">{{ $prKey }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {{-- Buttons --}}
                                 <div class="col-lg-1 col-md-3 col-sm-6 d-flex gap-1">
-                                    <button type="button" id="btnResetFilter" class="btn btn-outline-danger w-100"
-                                        title="Reset filter secara async">
+                                    <button type="button" id="btnResetFilter" class="btn btn-outline-danger w-100 py-2 filter-btn"
+                                        title="Reset semua filter">
                                         <i class="ri-refresh-line"></i>
                                     </button>
                                 </div>
                             </form>
+
+                            {{-- Active Filter Badges Row --}}
+                            <div id="activeFiltersRow" class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top d-none">
+                                <span class="fs-12 text-muted me-1"><i class="ri-filter-3-line me-1"></i>Filter Aktif:</span>
+                                <div id="activeFilterBadges" class="d-flex flex-wrap gap-1 align-items-center"></div>
+                                <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none p-0 ms-2 fs-12 fw-semibold" id="btnClearAllActive">
+                                    <i class="ri-close-circle-line me-1"></i>Hapus Semua
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -497,15 +662,148 @@
                 });
             }
 
+            // ── Multi-Select Filter Helpers ──
+            const defaultFilterLabels = {
+                area: 'Semua Area',
+                kategori: 'Semua Kategori',
+                status: 'Semua Status',
+                priority: 'Semua Prioritas'
+            };
+
+            // ── LocalStorage Filter Persistence Helpers ──
+            const FILTER_STORAGE_KEY = 'utility_project_filters';
+
+            function saveFiltersToStorage() {
+                try {
+                    const state = {
+                        search: $('#filterSearch').val() || '',
+                        area: getSelectedFilterValues('area'),
+                        kategori: getSelectedFilterValues('kategori'),
+                        status: getSelectedFilterValues('status'),
+                        priority: getSelectedFilterValues('priority')
+                    };
+                    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(state));
+                } catch (e) {
+                    console.warn('Gagal menyimpan filter ke localStorage:', e);
+                }
+            }
+
+            function restoreFiltersFromStorage() {
+                try {
+                    const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+                    if (!raw) return false;
+                    const state = JSON.parse(raw);
+                    if (!state) return false;
+
+                    if (typeof state.search === 'string' && state.search.length > 0) {
+                        $('#filterSearch').val(state.search);
+                    }
+
+                    ['area', 'kategori', 'status', 'priority'].forEach(function(f) {
+                        const vals = state[f];
+                        if (Array.isArray(vals) && vals.length > 0) {
+                            $(`.filter-checkbox-${f}`).each(function() {
+                                const isChecked = vals.includes($(this).val());
+                                $(this).prop('checked', isChecked);
+                            });
+                        }
+                    });
+                    return true;
+                } catch (e) {
+                    console.warn('Gagal membaca filter dari localStorage:', e);
+                    return false;
+                }
+            }
+
+            function clearFiltersStorage() {
+                try {
+                    localStorage.removeItem(FILTER_STORAGE_KEY);
+                } catch (e) {}
+            }
+
+            function getSelectedFilterValues(filterName) {
+                const vals = [];
+                $(`.filter-checkbox-${filterName}:checked`).each(function() {
+                    vals.push($(this).val());
+                });
+                return vals;
+            }
+
+            function updateDropdownLabels() {
+                const filters = ['area', 'kategori', 'status', 'priority'];
+                filters.forEach(function(f) {
+                    const $container = $(`.custom-filter-dropdown[data-filter="${f}"]`);
+                    const $btn = $container.find('.filter-btn');
+                    const $label = $container.find('.label-text');
+                    const $badge = $container.find('.filter-count-badge');
+                    const vals = getSelectedFilterValues(f);
+
+                    if (vals.length === 0) {
+                        $label.text(defaultFilterLabels[f]);
+                        $badge.addClass('d-none').text('0');
+                        $btn.removeClass('is-active');
+                    } else if (vals.length === 1) {
+                        $label.text(vals[0]);
+                        $badge.removeClass('d-none').text('1');
+                        $btn.addClass('is-active');
+                    } else {
+                        const titleName = f === 'priority' ? 'Prioritas' : f.charAt(0).toUpperCase() + f.slice(1);
+                        $label.text(`${titleName}`);
+                        $badge.removeClass('d-none').text(vals.length);
+                        $btn.addClass('is-active');
+                    }
+                });
+            }
+
+            function updateActiveFilterBadges() {
+                const $badgesContainer = $('#activeFilterBadges');
+                $badgesContainer.empty();
+                let totalActive = 0;
+
+                const filters = ['area', 'kategori', 'status', 'priority'];
+                filters.forEach(function(f) {
+                    const titleName = f === 'priority' ? 'Prioritas' : f.charAt(0).toUpperCase() + f.slice(1);
+                    const vals = getSelectedFilterValues(f);
+                    totalActive += vals.length;
+
+                    vals.forEach(function(val) {
+                        let colorClass = 'bg-primary-subtle text-primary border-primary-subtle';
+                        if (f === 'status') {
+                            if (val === 'Selesai') colorClass = 'bg-success-subtle text-success border-success-subtle';
+                            else if (val === 'Terlambat') colorClass = 'bg-danger-subtle text-danger border-danger-subtle';
+                            else colorClass = 'bg-warning-subtle text-warning border-warning-subtle';
+                        } else if (f === 'priority') {
+                            if (val === 'Critical') colorClass = 'bg-danger-subtle text-danger border-danger-subtle';
+                            else if (val === 'High') colorClass = 'bg-warning-subtle text-warning border-warning-subtle';
+                            else if (val === 'Medium') colorClass = 'bg-info-subtle text-info border-info-subtle';
+                            else colorClass = 'bg-secondary-subtle text-secondary border-secondary-subtle';
+                        }
+
+                        $badgesContainer.append(`
+                            <span class="badge ${colorClass} border d-inline-flex align-items-center gap-1 py-1 px-2 fs-11">
+                                <span class="text-muted">${titleName}:</span> <strong>${escapeHtml(val)}</strong>
+                                <i class="ri-close-line cursor-pointer text-danger ms-1 btn-remove-active-tag" data-filter="${f}" data-value="${escapeHtml(val)}" title="Hapus filter"></i>
+                            </span>
+                        `);
+                    });
+                });
+
+                if (totalActive > 0) {
+                    $('#activeFiltersRow').removeClass('d-none');
+                } else {
+                    $('#activeFiltersRow').addClass('d-none');
+                }
+            }
+
             // ── Load Data Project via Async jQuery AJAX ──
             function loadProjectsData() {
                 const filters = {
                     format: 'json',
                     search: $('#filterSearch').val(),
-                    area: $('#filterArea').val(),
-                    kategori: $('#filterKategori').val(),
-                    priority: $('#filterPriority').val(),
-                    status: $('#filterStatus').val()
+                    area: getSelectedFilterValues('area'),
+                    kategori: getSelectedFilterValues('kategori'),
+                    priority: getSelectedFilterValues('priority'),
+                    status: getSelectedFilterValues('status')
                 };
 
                 if ($.fn.DataTable.isDataTable('#projectTable')) {
@@ -650,12 +948,91 @@
             $('#filterSearch').on('input keyup', function() {
                 clearTimeout(searchDebounceTimer);
                 searchDebounceTimer = setTimeout(function() {
+                    saveFiltersToStorage();
                     loadProjectsData();
                 }, 400);
             });
 
-            $('#filterArea, #filterKategori, #filterPriority, #filterStatus').on('change', function() {
+            // Checkbox multi-select change
+            $(document).on('change', '.filter-checkbox', function() {
+                saveFiltersToStorage();
+                updateDropdownLabels();
+                updateActiveFilterBadges();
                 loadProjectsData();
+            });
+
+            // Remove tag from active filters bar
+            $(document).on('click', '.btn-remove-active-tag', function(e) {
+                e.preventDefault();
+                const filter = $(this).data('filter');
+                const val = String($(this).data('value'));
+                $(`.filter-checkbox-${filter}`).filter(function() {
+                    return $(this).val() === val;
+                }).prop('checked', false);
+                saveFiltersToStorage();
+                updateDropdownLabels();
+                updateActiveFilterBadges();
+                loadProjectsData();
+            });
+
+            // Select all options in a dropdown
+            $('.btn-select-all').on('click', function(e) {
+                e.preventDefault();
+                const target = $(this).data('target');
+                $(`.filter-checkbox-${target}`).prop('checked', true);
+                saveFiltersToStorage();
+                updateDropdownLabels();
+                updateActiveFilterBadges();
+                loadProjectsData();
+            });
+
+            // Clear options in a single dropdown
+            $('.btn-clear-filter').on('click', function(e) {
+                e.preventDefault();
+                const target = $(this).data('target');
+                $(`.filter-checkbox-${target}`).prop('checked', false);
+                saveFiltersToStorage();
+                updateDropdownLabels();
+                updateActiveFilterBadges();
+                loadProjectsData();
+            });
+
+            // Prevent Bootstrap dropdown from intercepting typing/spacebar inside search inputs
+            $(document).on('click keydown keypress', '.filter-search-input', function(e) {
+                e.stopPropagation();
+            });
+
+            // Search filter inside dropdown (e.g. Kategori)
+            $(document).on('input keyup', '.filter-search-input', function(e) {
+                e.stopPropagation();
+                const query = $(this).val().toLowerCase().trim();
+                const filter = $(this).data('filter');
+                const $container = $(`.custom-filter-dropdown[data-filter="${filter}"]`);
+                let visibleCount = 0;
+
+                $container.find('.option-item').each(function() {
+                    const text = $(this).find('span').text().toLowerCase();
+                    const isMatch = text.indexOf(query) !== -1;
+                    if (isMatch) {
+                        $(this).removeClass('d-none');
+                        visibleCount++;
+                    } else {
+                        $(this).addClass('d-none');
+                    }
+                });
+
+                let $emptyMsg = $container.find('.filter-no-results');
+                if (visibleCount === 0) {
+                    if ($emptyMsg.length === 0) {
+                        $container.find('.filter-options-list').append(
+                            '<div class="filter-no-results text-center py-2 text-muted fs-11">Tidak ditemukan</div>'
+                        );
+                    } else {
+                        $emptyMsg.removeClass('d-none');
+                    }
+                } else {
+                    $emptyMsg.addClass('d-none');
+                }
             });
 
             $('#filterForm').on('submit', function(e) {
@@ -663,18 +1040,32 @@
                 loadProjectsData();
             });
 
-            // ── Reset Filter Async ──
-            $('#btnResetFilter').on('click', function(e) {
+            // ── Reset All Filters Async (Clears LocalStorage) ──
+            $('#btnResetFilter, #btnClearAllActive').on('click', function(e) {
                 e.preventDefault();
+                clearFiltersStorage();
                 $('#filterSearch').val('');
-                $('#filterArea').val('all');
-                $('#filterKategori').val('all');
-                $('#filterPriority').val('all');
-                $('#filterStatus').val('all');
+                $('.filter-checkbox').prop('checked', false);
+                $('.filter-search-input').val('').trigger('input');
+                updateDropdownLabels();
+                updateActiveFilterBadges();
                 loadProjectsData();
             });
 
-            // ── Initial Load on Page Ready ──
+            // ── Initial Load on Page Ready with LocalStorage ──
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasUrlFilters = urlParams.has('status') || urlParams.has('area') ||
+                urlParams.has('kategori') || urlParams.has('priority') ||
+                urlParams.has('search');
+
+            if (!hasUrlFilters) {
+                restoreFiltersFromStorage();
+            } else {
+                saveFiltersToStorage();
+            }
+
+            updateDropdownLabels();
+            updateActiveFilterBadges();
             loadProjectsData();
 
             // ── Progress Range & Input Sync (Tidak boleh mundur) ──
