@@ -439,14 +439,29 @@ class MtcDashboardController extends Controller
      */
     private function getScheduleMaintenanceData($startDate, $endDate, array $weeksList, int $year, int $month): array
     {
-        // 1. Query agenda records from mtc_agenda
+        $startYear = (int) $startDate->year;
+        $startMonth = (int) $startDate->month;
+        $endYear = (int) $endDate->year;
+        $endMonth = (int) $endDate->month;
+
+        // 1. Query agenda records from mtc_agenda (baik yang berbasis tanggal maupun tahun+bulan+minggu_ke)
         $agendaRecords = DB::table('mtc_agenda')
             ->join('mtc_master_mesin', 'mtc_master_mesin.id', '=', 'mtc_agenda.mesin_id')
-            ->whereBetween('mtc_agenda.tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->where('mtc_master_mesin.aktif', true)
+            ->where(function ($q) use ($startDate, $endDate, $startYear, $startMonth, $endYear, $endMonth) {
+                $q->whereBetween('mtc_agenda.tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                    ->orWhere(function ($sub) use ($startYear, $startMonth, $endYear, $endMonth) {
+                        $sub->whereNull('mtc_agenda.tanggal')
+                            ->whereRaw('(mtc_agenda.tahun * 100 + mtc_agenda.bulan) BETWEEN ? AND ?', [
+                                $startYear * 100 + $startMonth,
+                                $endYear * 100 + $endMonth
+                            ]);
+                    });
+            })
             ->select('mtc_agenda.*', 'mtc_master_mesin.jenis_mtc', 'mtc_master_mesin.nama_mesin')
             ->get();
 
-        // 2. Query completed maintenance form records in date range
+        // 2. Query completed maintenance form records in date range (exclude Korektif)
         $actualInspections = DB::table('mtc_main')
             ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->where(function ($q) {
@@ -459,47 +474,44 @@ class MtcDashboardController extends Controller
         $series = [];
         $weekColors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'];
 
-        // Pass 1: Collect planned and completed units per week and per category
+        // Pass 1: Collect planned and actual units per week and per category
         $weekPlannedData = [];
-        $weekCompletedData = [];
-        $totalPlannedPerUnit = [
-            'MHE'         => 0,
-            'Motor Pompa' => 0,
-            'Utility'     => 0,
-            'Sipil'       => 0,
-        ];
-        $totalCompletedPerUnit = [
-            'MHE'         => 0,
-            'Motor Pompa' => 0,
-            'Utility'     => 0,
-            'Sipil'       => 0,
-        ];
-
-        $totalPlannedOverall = 0;
-        $totalCompletedOverall = 0;
+        $weekActualData = [];
+        $totalPlannedPerUnit = array_fill_keys($units, 0);
+        $totalActualPerUnit = array_fill_keys($units, 0);
 
         foreach ($weeksList as $idx => $wk) {
             $wStart = $wk['start']->format('Y-m-d');
             $wEnd = $wk['end']->format('Y-m-d');
+            $wYear = (int) $wk['start']->year;
+            $wMonth = (int) $wk['start']->month;
+            $targetMingguKe = $idx + 1;
 
             // Filter agenda for this week
-            $wAgendas = $agendaRecords->filter(function ($item) use ($wStart, $wEnd) {
-                return $item->tanggal >= $wStart && $item->tanggal <= $wEnd;
+            $wAgendas = $agendaRecords->filter(function ($item) use ($wStart, $wEnd, $wYear, $wMonth, $targetMingguKe, $wk) {
+                if ($item->tanggal !== null) {
+                    $tgl = Carbon::parse($item->tanggal)->format('Y-m-d');
+                    return $tgl >= $wStart && $tgl <= $wEnd;
+                } else {
+                    // Match by week of month
+                    $planStartDay = ($item->minggu_ke - 1) * 7 + 1;
+                    $planStartDate = Carbon::createFromDate($item->tahun, $item->bulan, $planStartDay)->startOfDay();
+                    $planEndDate = ($item->minggu_ke >= 5)
+                        ? (clone $planStartDate)->endOfMonth()
+                        : (clone $planStartDate)->addDays(6)->endOfDay();
+
+                    return $planStartDate->lte($wk['end']) && $planEndDate->gte($wk['start']);
+                }
             });
 
             // Filter actuals for this week
             $wActuals = $actualInspections->filter(function ($item) use ($wStart, $wEnd) {
-                return $item->tanggal >= $wStart && $item->tanggal <= $wEnd;
+                $tgl = Carbon::parse($item->tanggal)->format('Y-m-d');
+                return $tgl >= $wStart && $tgl <= $wEnd;
             });
 
-            // Category counts per Unit from agenda
-            $agendaCounts = [
-                'MHE'         => 0,
-                'Motor Pompa' => 0,
-                'Utility'     => 0,
-                'Sipil'       => 0,
-            ];
-
+            // Count planned per category
+            $agendaCounts = array_fill_keys($units, 0);
             foreach ($wAgendas as $ag) {
                 $cat = $this->normalizeJenisCategory($ag->jenis_mtc);
                 if (isset($agendaCounts[$cat])) {
@@ -507,14 +519,8 @@ class MtcDashboardController extends Controller
                 }
             }
 
-            // Actual counts per Unit from inspection forms
-            $actualCounts = [
-                'MHE'         => 0,
-                'Motor Pompa' => 0,
-                'Utility'     => 0,
-                'Sipil'       => 0,
-            ];
-
+            // Count actuals per category
+            $actualCounts = array_fill_keys($units, 0);
             foreach ($wActuals as $act) {
                 $cat = $this->normalizeJenisCategory($act->jenis_mtc);
                 if (isset($actualCounts[$cat])) {
@@ -522,36 +528,41 @@ class MtcDashboardController extends Controller
                 }
             }
 
-            // Fallback benchmarks if database agenda not yet created for this period
-            $benchmarks = [
-                'MHE'         => [22, 25, 24, 26, 23][$idx % 5],
-                'Motor Pompa' => [45, 42, 48, 44, 46][$idx % 5],
-                'Utility'     => [18, 16, 19, 17, 18][$idx % 5],
-                'Sipil'       => [12, 14, 11, 15, 12][$idx % 5],
-            ];
-
-            $completionRatio = [0.965, 0.972, 0.961, 0.975, 0.968][$idx % 5];
-
             $weekPlannedData[$idx] = [];
-            $weekCompletedData[$idx] = [];
+            $weekActualData[$idx] = [];
 
             foreach ($units as $u) {
-                $pVal = $agendaCounts[$u] > 0 ? $agendaCounts[$u] : $benchmarks[$u];
+                $pVal = $agendaCounts[$u];
                 $actVal = $actualCounts[$u];
 
-                if ($wActuals->count() > 0 && $actVal > 0) {
-                    $cVal = min($pVal, $actVal);
-                } else {
-                    $cVal = (int) round($pVal * $completionRatio);
-                }
-
                 $weekPlannedData[$idx][$u] = $pVal;
-                $weekCompletedData[$idx][$u] = $cVal;
+                $weekActualData[$idx][$u] = $actVal;
                 $totalPlannedPerUnit[$u] += $pVal;
-                $totalCompletedPerUnit[$u] += $cVal;
+                $totalActualPerUnit[$u] += $actVal;
+            }
+        }
 
-                $totalPlannedOverall += $pVal;
-                $totalCompletedOverall += $cVal;
+        // Pass 1.5: Hitung realisasi completed per minggu berdasarkan realisasi aktual riil (capped at planned)
+        $weekCompletedData = [];
+        $totalCompletedPerUnit = [];
+        $totalPlannedOverall = 0;
+        $totalCompletedOverall = 0;
+
+        foreach ($units as $u) {
+            $uPlanned = $totalPlannedPerUnit[$u];
+            $uActual = $totalActualPerUnit[$u];
+            $uCompleted = ($uPlanned > 0) ? min($uPlanned, $uActual) : $uActual;
+            $totalCompletedPerUnit[$u] = $uCompleted;
+
+            $totalPlannedOverall += $uPlanned;
+            $totalCompletedOverall += $uCompleted;
+
+            $remainingCap = $uCompleted;
+            foreach ($weeksList as $idx => $wk) {
+                $actVal = $weekActualData[$idx][$u];
+                $cVal = min($actVal, $remainingCap);
+                $remainingCap -= $cVal;
+                $weekCompletedData[$idx][$u] = $cVal;
             }
         }
 
@@ -560,8 +571,16 @@ class MtcDashboardController extends Controller
         $weeklyPercentages = []; // [$idx][$u] => float
 
         foreach ($units as $u) {
-            $unitTotalPlanned = max(1, $totalPlannedPerUnit[$u]);
-            $unitTotalCompleted = min($unitTotalPlanned, $totalCompletedPerUnit[$u]);
+            $unitTotalPlanned = $totalPlannedPerUnit[$u];
+            $unitTotalCompleted = $totalCompletedPerUnit[$u];
+
+            if ($unitTotalPlanned <= 0) {
+                foreach ($weeksList as $idx => $wk) {
+                    $weeklyPercentages[$idx][$u] = 0.0;
+                }
+                continue;
+            }
+
             $targetTotalPct = min(100.0, round(($unitTotalCompleted / $unitTotalPlanned) * 100, 1));
 
             $floors = [];
@@ -628,13 +647,14 @@ class MtcDashboardController extends Controller
 
         $overallRate = $totalPlannedOverall > 0
             ? min(100.0, round(($totalCompletedOverall / $totalPlannedOverall) * 100, 1))
-            : 96.8;
+            : 0.0;
 
         return [
-            'kpi_completion_rate'  => $overallRate,
-            'kpi_total_planned'    => $totalPlannedOverall,
-            'kpi_total_completed'  => $totalCompletedOverall,
+            'kpi_completion_rate'   => $overallRate,
+            'kpi_total_planned'     => $totalPlannedOverall,
+            'kpi_total_completed'   => $totalCompletedOverall,
             'total_planned_by_unit' => $totalPlannedPerUnit,
+            'total_completed_by_unit' => $totalCompletedPerUnit,
             'chart' => [
                 'categories' => $units, // ['MHE', 'Motor Pompa', 'Utility', 'Sipil']
                 'series'     => $series,
@@ -648,7 +668,12 @@ class MtcDashboardController extends Controller
     private function normalizeJenisCategory($jenis): string
     {
         $jenis = trim($jenis ?? '');
-        if (in_array($jenis, ['Diesel Engine', 'Electric Engine', 'Electric P2H', 'Diesel P2H', 'Battery', 'MHE'])) {
+        if (
+            in_array($jenis, ['Diesel Engine', 'Electric Engine', 'Electric P2H', 'Electrical P2H', 'Diesel P2H', 'Battery', 'MHE'])
+            || stripos($jenis, 'P2H') !== false
+            || stripos($jenis, 'Engine') !== false
+            || stripos($jenis, 'Battery') !== false
+        ) {
             return 'MHE';
         }
         if (stripos($jenis, 'Pompa') !== false || stripos($jenis, 'Pump') !== false) {
