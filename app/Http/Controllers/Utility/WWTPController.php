@@ -1470,23 +1470,27 @@ class WWTPController extends Controller
         $chemicalWWTP = $masterChemicals->pluck('nama_chemical')->toArray();
         $allStandards = WwtpChemicalStandard::orderBy('id', 'asc')->get();
 
-        // Helper untuk mencocokkan master chemical dengan standar harga dan kuota WWTP
+        // Helper untuk mencocokkan master chemical dengan standar harga dan kuota WWTP (WwtpChemicalStandard)
         $findStandard = function ($chemName) use ($allStandards) {
-            $nameUpper = strtoupper(trim($chemName));
-            return $allStandards->first(function ($std) use ($nameUpper, $chemName) {
-                $stdUpper = strtoupper(trim($std->chemical_name));
-                if (strcasecmp($chemName, $std->chemical_name) === 0) return true;
-                if (str_contains($nameUpper, 'NAOH') && str_contains($stdUpper, 'NAOH')) return true;
-                if (str_contains($nameUpper, 'PAC') && str_contains($stdUpper, 'PAC')) return true;
-                if (str_contains($nameUpper, 'BE') && str_contains($stdUpper, 'BE')) return true;
-                if (str_contains($nameUpper, '204') && str_contains($stdUpper, '204')) return true;
-                if (str_contains($nameUpper, '9040') && str_contains($stdUpper, '9040')) return true;
-                if (str_contains($nameUpper, '260') && (str_contains($stdUpper, 'DAF') || str_contains($stdUpper, '260'))) return true;
-                if (str_contains($nameUpper, '945') && str_contains($stdUpper, '945')) return true;
-                if (str_contains($nameUpper, 'DAF') && str_contains($stdUpper, 'DAF')) return true;
-                if (str_contains($nameUpper, 'DENFLOC') && str_contains($stdUpper, 'DENFLOC')) return true;
-                return false;
-            });
+            $cleanName = strtoupper(trim($chemName));
+            $alphaName = preg_replace('/[^A-Z0-9]/', '', $cleanName);
+
+            foreach ($allStandards as $std) {
+                $stdClean = strtoupper(trim($std->chemical_name));
+                $stdAlpha = preg_replace('/[^A-Z0-9]/', '', $stdClean);
+
+                if (strcasecmp($cleanName, $stdClean) === 0 || $alphaName === $stdAlpha) {
+                    return $std;
+                }
+
+                if (str_contains($cleanName, 'NAOH') && str_contains($stdClean, 'NAOH')) return $std;
+                if (str_contains($cleanName, 'PAC') && str_contains($stdClean, 'PAC')) return $std;
+                if ((str_starts_with($cleanName, 'BE-') || str_starts_with($cleanName, 'BE ') || $cleanName === 'BE') && $stdClean === 'BE') return $std;
+                if (str_contains($cleanName, '204') && str_contains($stdClean, '204')) return $std;
+                if (str_contains($cleanName, '9040') && str_contains($stdClean, '9040')) return $std;
+                if ((str_contains($cleanName, '945') || str_contains($cleanName, '260') || str_contains($cleanName, 'DENFLOC')) && (str_contains($stdClean, '945') || str_contains($stdClean, 'DAF') || str_contains($stdClean, '260'))) return $std;
+            }
+            return null;
         };
 
         // =========================================================================
@@ -1626,11 +1630,19 @@ class WWTPController extends Controller
 
         $chemicalTypesMap = ChemicalType::all()->keyBy(fn($c) => strtolower(trim($c->nama_chemical)));
 
-        $dailyUsageByDateAndChem = [];
-        $totalUsageByChem = [];
+        $dailyUsageByStandardAndDate = [];
+        $totalUsageByStandard = [];
+        $activeDates = [];
 
         foreach ($dailyRecords as $record) {
             $jenis = trim($record->jenis_pemakaian);
+            $matchedStd = $findStandard($jenis);
+
+            // Hanya proses chemical yang sesuai dengan master WwtpChemicalStandard
+            if (!$matchedStd) {
+                continue;
+            }
+
             $tgl   = Carbon::parse($record->tanggal)->toDateString();
             $nilai = is_numeric($record->nilai_pemakaian)
                 ? floatval($record->nilai_pemakaian)
@@ -1644,34 +1656,25 @@ class WWTPController extends Controller
                 $usage = $nilai;
             }
 
-            $dailyUsageByDateAndChem[$tgl][$jenis] = ($dailyUsageByDateAndChem[$tgl][$jenis] ?? 0) + $usage;
-            $totalUsageByChem[$jenis] = ($totalUsageByChem[$jenis] ?? 0) + $usage;
+            $stdId = $matchedStd->id;
+            $dailyUsageByStandardAndDate[$stdId][$tgl] = ($dailyUsageByStandardAndDate[$stdId][$tgl] ?? 0) + $usage;
+            $totalUsageByStandard[$stdId] = ($totalUsageByStandard[$stdId] ?? 0) + $usage;
+            $activeDates[$tgl] = true;
         }
 
-        $uniqueDaysCount = count($dailyUsageByDateAndChem) > 0 ? count($dailyUsageByDateAndChem) : 1;
+        $uniqueDaysCount = count($activeDates) > 0 ? count($activeDates) : 1;
         $dailyUsageList = [];
         $dailyTotalCost = 0;
-        $processedDailyChemNames = [];
 
-        foreach ($masterChemicals as $mChem) {
-            $cName = trim($mChem->nama_chemical);
-            $processedDailyChemNames[strtolower($cName)] = true;
-
-            $dailyVals = [];
-            foreach ($dailyUsageByDateAndChem as $tgl => $chemMap) {
-                foreach ($chemMap as $jName => $uVal) {
-                    if (strcasecmp(trim($jName), $cName) === 0) {
-                        $dailyVals[$tgl] = ($dailyVals[$tgl] ?? 0) + $uVal;
-                    }
-                }
-            }
-
-            $totUsage = array_sum($dailyVals);
+        // Ambil master chemical langsung dari WwtpChemicalStandard
+        foreach ($allStandards as $std) {
+            $stdId = $std->id;
+            $stdName = trim($std->chemical_name);
+            $totUsage = (float) ($totalUsageByStandard[$stdId] ?? 0);
             $avgDailyQty = ($dailyRecords->isNotEmpty() && $uniqueDaysCount > 0) ? ($totUsage / $uniqueDaysCount) : 0;
 
-            $matchedStd = $findStandard($cName);
-            $price = $matchedStd ? (float) $matchedStd->harga_standar : 0;
-            $standardQuota = $matchedStd ? (float) ($matchedStd->standar_pemakaian ?? 0) : 0;
+            $price = (float) $std->harga_standar;
+            $standardQuota = (float) ($std->standar_pemakaian ?? 0);
             $standardDaily = $standardQuota > 0 ? round($standardQuota / $daysInMonth, 1) : 0;
 
             $chemTotalCost = $totUsage * $price;
@@ -1682,7 +1685,7 @@ class WWTPController extends Controller
             $status = $isOver ? 'OVER' : 'AMAN';
 
             $dailyUsageList[] = [
-                'chemical_name' => $cName,
+                'chemical_name' => $stdName,
                 'qty'           => round($avgDailyQty, 2),
                 'tot_qty'       => round($totUsage, 2),
                 'standard'      => $standardDaily,
@@ -1692,33 +1695,6 @@ class WWTPController extends Controller
                 'price'         => $price,
                 'is_over'       => $isOver,
                 'status'        => $status,
-            ];
-        }
-
-        foreach ($totalUsageByChem as $jenis => $totUsage) {
-            if (isset($processedDailyChemNames[strtolower(trim($jenis))])) continue;
-            $avgDailyQty = ($dailyRecords->isNotEmpty() && $uniqueDaysCount > 0) ? ($totUsage / $uniqueDaysCount) : 0;
-            $matchedStd = $findStandard($jenis);
-            $price = $matchedStd ? (float) $matchedStd->harga_standar : 0;
-            $standardQuota = $matchedStd ? (float) ($matchedStd->standar_pemakaian ?? 0) : 0;
-            $standardDaily = $standardQuota > 0 ? round($standardQuota / $daysInMonth, 1) : 0;
-
-            $chemTotalCost = $totUsage * $price;
-            $costM3 = $pitProduksiUsed > 0 ? ($chemTotalCost / $pitProduksiUsed) : 0;
-            $dailyTotalCost += $chemTotalCost;
-            $isOver = ($standardDaily > 0 && $avgDailyQty > $standardDaily);
-
-            $dailyUsageList[] = [
-                'chemical_name' => $jenis,
-                'qty'           => round($avgDailyQty, 2),
-                'tot_qty'       => round($totUsage, 2),
-                'standard'      => $standardDaily,
-                'standard_text' => $standardDaily > 0 ? (number_format($standardDaily, 1, ',', '.') . ' kg') : '-',
-                'cost'          => round($chemTotalCost, 2),
-                'cost_m3'       => round($costM3, 2),
-                'price'         => $price,
-                'is_over'       => $isOver,
-                'status'        => $isOver ? 'OVER' : 'AMAN',
             ];
         }
 
