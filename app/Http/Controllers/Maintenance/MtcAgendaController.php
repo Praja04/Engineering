@@ -451,6 +451,7 @@ class MtcAgendaController extends Controller
 
                         foreach ($monthActuals as $key => $act) {
                             if (in_array($key, $usedActualKeys)) continue;
+                            if (stripos(trim($act['paket'] ?? ''), 'korektif') !== false) continue;
 
                             if (strcasecmp(trim($act['paket']), trim($paket)) === 0) {
                                 $planPairing["{$wk}_{$pIdx}"] = $act;
@@ -469,6 +470,7 @@ class MtcAgendaController extends Controller
 
                         foreach ($monthActuals as $key => $act) {
                             if (in_array($key, $usedActualKeys)) continue;
+                            if (stripos(trim($act['paket'] ?? ''), 'korektif') !== false) continue;
 
                             $planPairing["{$wk}_{$pIdx}"] = $act;
                             $usedActualKeys[] = $key;
@@ -673,6 +675,7 @@ class MtcAgendaController extends Controller
             foreach ($machinePlans as $idx => $plan) {
                 foreach ($actualInspections as $key => $act) {
                     if (in_array($key, $usedActualKeys)) continue;
+                    if (stripos(trim($act['paket'] ?? ''), 'korektif') !== false) continue;
                     if (strcasecmp(trim($act['paket']), trim($plan->paket)) === 0) {
                         $planPairing[$idx] = $act;
                         $usedActualKeys[] = $key;
@@ -686,6 +689,7 @@ class MtcAgendaController extends Controller
                 if (isset($planPairing[$idx])) continue;
                 foreach ($actualInspections as $key => $act) {
                     if (in_array($key, $usedActualKeys)) continue;
+                    if (stripos(trim($act['paket'] ?? ''), 'korektif') !== false) continue;
                     $planPairing[$idx] = $act;
                     $usedActualKeys[] = $key;
                     break;

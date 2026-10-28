@@ -589,7 +589,7 @@ class MtcDashboardController extends Controller
             foreach ($wAgendas as $ag) {
                 $cat = $this->normalizeJenisCategory($ag->jenis_mtc);
                 if (!isset($plannedMachines[$cat])) {
-                    $cat = 'Utility';
+                    continue; // Pure hanya ambil kategori yang sesuai (MHE, Motor Pompa, Utility, Sipil)
                 }
 
                 $agYear = !empty($ag->tahun) ? (int)$ag->tahun : ($ag->tanggal ? (int)Carbon::parse($ag->tanggal)->year : (int)$wk['start']->year);
@@ -829,7 +829,13 @@ class MtcDashboardController extends Controller
         if (stripos($jenis, 'Sipil') !== false) {
             return 'Sipil';
         }
-        return 'Utility';
+        if (strcasecmp($jenis, 'Utility') === 0 || stripos($jenis, 'Utility') !== false) {
+            return 'Utility';
+        }
+        if (stripos($jenis, 'Refrigerasi') !== false) {
+            return 'Refrigerasi';
+        }
+        return $jenis;
     }
 
     /**
