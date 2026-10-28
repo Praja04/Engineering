@@ -84,7 +84,7 @@ class MtcDashboardController extends Controller
 
         // 1. Asynchronous Section: Schedule Maintenance
         if ($section === 'schedule') {
-            $scheduleData = $this->getScheduleMaintenanceData($startDate, $endDate, $weeksList, $year, $month);
+            $scheduleData = $this->getScheduleMaintenanceData($startDate, $endDate, $weeksList, $year, $month, $filterType);
             return response()->json([
                 'status' => true,
                 'section' => 'schedule',
@@ -208,7 +208,7 @@ class MtcDashboardController extends Controller
         }
 
         // Fallback: Compute all if section is 'all' or not specified
-        $scheduleData = $this->getScheduleMaintenanceData($startDate, $endDate, $weeksList, $year, $month);
+        $scheduleData = $this->getScheduleMaintenanceData($startDate, $endDate, $weeksList, $year, $month, $filterType);
         $breakdownData = $this->getBreakdownData($startDate, $endDate, $weeksList, $filterType);
         $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours'], $filterType);
         $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
@@ -437,19 +437,23 @@ class MtcDashboardController extends Controller
      * Xaxis: per Unit (MHE, Motor Pompa, Utility, Sipil)
      * Series: per Week (W1, W2, W3... sesuai filter)
      */
-    private function getScheduleMaintenanceData($startDate, $endDate, array $weeksList, int $year, int $month): array
+    private function getScheduleMaintenanceData($startDate, $endDate, array $weeksList, int $year, int $month, string $filterType = 'weekly'): array
     {
-        $startYear = (int) $startDate->year;
-        $startMonth = (int) $startDate->month;
-        $endYear = (int) $endDate->year;
-        $endMonth = (int) $endDate->month;
+        // Spanning seluruh weeksList agar filter weekly menampilkan data minggu-minggu sebelumnya
+        $queryStart = count($weeksList) > 0 ? $weeksList[0]['start']->copy()->startOfDay() : $startDate->copy()->startOfDay();
+        $queryEnd = count($weeksList) > 0 ? end($weeksList)['end']->copy()->endOfDay() : $endDate->copy()->endOfDay();
 
-        // 1. Query agenda records from mtc_agenda (baik yang berbasis tanggal maupun tahun+bulan+minggu_ke)
+        $startYear = (int) $queryStart->year;
+        $startMonth = (int) $queryStart->month;
+        $endYear = (int) $queryEnd->year;
+        $endMonth = (int) $queryEnd->month;
+
+        // 1. Query agenda records from mtc_agenda
         $agendaRecords = DB::table('mtc_agenda')
             ->join('mtc_master_mesin', 'mtc_master_mesin.id', '=', 'mtc_agenda.mesin_id')
             ->where('mtc_master_mesin.aktif', true)
-            ->where(function ($q) use ($startDate, $endDate, $startYear, $startMonth, $endYear, $endMonth) {
-                $q->whereBetween('mtc_agenda.tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->where(function ($q) use ($queryStart, $queryEnd, $startYear, $startMonth, $endYear, $endMonth) {
+                $q->whereBetween('mtc_agenda.tanggal', [$queryStart->format('Y-m-d'), $queryEnd->format('Y-m-d')])
                     ->orWhere(function ($sub) use ($startYear, $startMonth, $endYear, $endMonth) {
                         $sub->whereNull('mtc_agenda.tanggal')
                             ->whereRaw('(mtc_agenda.tahun * 100 + mtc_agenda.bulan) BETWEEN ? AND ?', [
@@ -458,111 +462,185 @@ class MtcDashboardController extends Controller
                             ]);
                     });
             })
-            ->select('mtc_agenda.*', 'mtc_master_mesin.jenis_mtc', 'mtc_master_mesin.nama_mesin')
+            ->select('mtc_agenda.*', 'mtc_master_mesin.jenis_mtc', 'mtc_master_mesin.nama_mesin', 'mtc_master_mesin.kode_mesin', 'mtc_master_mesin.lokasi as mesin_lokasi')
             ->get();
 
         // 2. Query completed maintenance form records in date range (exclude Korektif)
-        $actualInspections = DB::table('mtc_main')
-            ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+        $mtcStart = $queryStart->copy()->startOfMonth()->format('Y-m-d');
+        $mtcEnd = $queryEnd->copy()->endOfMonth()->format('Y-m-d');
+
+        $mainRecords = MtcMainModel::with([
+            'motorPump.mesin',
+            'utility.mesin',
+            'electrical.mesin',
+            'refrigerasi.mesin',
+            'electricEngine.mesin',
+            'dieselEngine.mesin',
+            'electricP2h.mesin',
+            'dieselP2h.mesin',
+            'gensetP2h.mesin',
+            'battery'
+        ])
+            ->whereBetween('tanggal', [$mtcStart, $mtcEnd])
             ->where(function ($q) {
-                $q->whereNull('paket')->orWhere('paket', '!=', 'Korektif');
+                $q->whereNull('paket')->orWhereRaw("LOWER(TRIM(paket)) NOT LIKE '%korektif%'");
             })
-            ->select('id', 'jenis_mtc', 'paket', 'tanggal', 'status')
             ->get();
+
+        // Master mesin map untuk fallback matching by name/code
+        $allMesin = DB::table('mtc_master_mesin')->where('aktif', true)->get();
+        $mesinByName = [];
+        $mesinByCode = [];
+        foreach ($allMesin as $m) {
+            if ($m->nama_mesin) $mesinByName[trim(strtolower($m->nama_mesin))] = $m;
+            if ($m->kode_mesin) $mesinByCode[trim(strtolower($m->kode_mesin))] = $m;
+        }
+
+        // Pre-parse mtc_main records
+        $parsedMains = [];
+        foreach ($mainRecords as $main) {
+            $mObj = null;
+            foreach (['motorPump', 'utility', 'electrical', 'refrigerasi', 'electricEngine', 'dieselEngine', 'electricP2h', 'dieselP2h', 'gensetP2h'] as $rel) {
+                if ($main->$rel && $main->$rel->mesin) {
+                    $mObj = $main->$rel->mesin;
+                    break;
+                }
+            }
+            if (!$mObj && !empty($main->area)) {
+                $k = trim(strtolower($main->area));
+                $mObj = $mesinByName[$k] ?? ($mesinByCode[$k] ?? null);
+            }
+            if (!$mObj && !empty($main->lokasi)) {
+                $k = trim(strtolower($main->lokasi));
+                $mObj = $mesinByName[$k] ?? ($mesinByCode[$k] ?? null);
+            }
+
+            $tglObj = $main->tanggal ? Carbon::parse($main->tanggal) : null;
+
+            $parsedMains[] = [
+                'id' => $main->id,
+                'mesin_id' => $mObj ? $mObj->id : null,
+                'nama_mesin' => $mObj ? $mObj->nama_mesin : '',
+                'kode_mesin' => $mObj ? $mObj->kode_mesin : '',
+                'area' => trim($main->area ?? ''),
+                'lokasi' => trim($main->lokasi ?? ''),
+                'jenis_mtc' => $main->jenis_mtc,
+                'paket' => trim($main->paket ?? ''),
+                'tanggal' => $tglObj ? $tglObj->format('Y-m-d') : null,
+                'year' => $tglObj ? (int)$tglObj->year : null,
+                'month' => $tglObj ? (int)$tglObj->month : null,
+            ];
+        }
 
         $units = ['MHE', 'Motor Pompa', 'Utility', 'Sipil'];
         $series = [];
         $weekColors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'];
 
-        // Pass 1: Collect planned and actual units per week and per category
+        // Cek apakah mode monthly filter (W1: 1-7, W2: 8-14, dst)
+        $isMonthlyFilter = count($weeksList) === 5 && $weeksList[0]['start']->day === 1 && $weeksList[0]['end']->day === 7;
+
         $weekPlannedData = [];
-        $weekActualData = [];
+        $weekCompletedData = [];
         $totalPlannedPerUnit = array_fill_keys($units, 0);
-        $totalActualPerUnit = array_fill_keys($units, 0);
+        $totalCompletedPerUnit = array_fill_keys($units, 0);
+        $totalPlannedOverall = 0;
+        $totalCompletedOverall = 0;
+        $usedMainIds = [];
 
         foreach ($weeksList as $idx => $wk) {
             $wStart = $wk['start']->format('Y-m-d');
             $wEnd = $wk['end']->format('Y-m-d');
-            $wYear = (int) $wk['start']->year;
-            $wMonth = (int) $wk['start']->month;
-            $targetMingguKe = $idx + 1;
+            $wMingguKe = $idx + 1;
 
-            // Filter agenda for this week
-            $wAgendas = $agendaRecords->filter(function ($item) use ($wStart, $wEnd, $wYear, $wMonth, $targetMingguKe, $wk) {
+            // Filter agenda untuk minggu ini
+            $wAgendas = $agendaRecords->filter(function ($item) use ($wStart, $wEnd, $wMingguKe, $isMonthlyFilter, $wk) {
                 if ($item->tanggal !== null) {
                     $tgl = Carbon::parse($item->tanggal)->format('Y-m-d');
                     return $tgl >= $wStart && $tgl <= $wEnd;
                 } else {
-                    // Match by week of month
-                    $planStartDay = ($item->minggu_ke - 1) * 7 + 1;
-                    $planStartDate = Carbon::createFromDate($item->tahun, $item->bulan, $planStartDay)->startOfDay();
-                    $planEndDate = ($item->minggu_ke >= 5)
-                        ? (clone $planStartDate)->endOfMonth()
-                        : (clone $planStartDate)->addDays(6)->endOfDay();
-
-                    return $planStartDate->lte($wk['end']) && $planEndDate->gte($wk['start']);
+                    if ($isMonthlyFilter) {
+                        return (int)$item->minggu_ke === $wMingguKe && (int)$item->bulan === (int)$wk['start']->month && (int)$item->tahun === (int)$wk['start']->year;
+                    } else {
+                        $daysInMonth = Carbon::createFromDate($item->tahun, $item->bulan, 1)->daysInMonth;
+                        $midDay = min($daysInMonth, ($item->minggu_ke - 1) * 7 + 4);
+                        $planMidDate = Carbon::createFromDate($item->tahun, $item->bulan, $midDay)->startOfDay();
+                        return $planMidDate->betweenIncluded($wk['start'], $wk['end']);
+                    }
                 }
             });
 
-            // Filter actuals for this week
-            $wActuals = $actualInspections->filter(function ($item) use ($wStart, $wEnd) {
-                $tgl = Carbon::parse($item->tanggal)->format('Y-m-d');
-                return $tgl >= $wStart && $tgl <= $wEnd;
-            });
-
-            // Count planned per category
             $agendaCounts = array_fill_keys($units, 0);
+            $completedCounts = array_fill_keys($units, 0);
+
             foreach ($wAgendas as $ag) {
                 $cat = $this->normalizeJenisCategory($ag->jenis_mtc);
                 if (isset($agendaCounts[$cat])) {
                     $agendaCounts[$cat]++;
                 }
-            }
 
-            // Count actuals per category
-            $actualCounts = array_fill_keys($units, 0);
-            foreach ($wActuals as $act) {
-                $cat = $this->normalizeJenisCategory($act->jenis_mtc);
-                if (isset($actualCounts[$cat])) {
-                    $actualCounts[$cat]++;
+                $agYear = (int)$ag->tahun;
+                $agMonth = (int)$ag->bulan;
+                $agMesinId = (int)$ag->mesin_id;
+                $agNama = trim(strtolower($ag->nama_mesin ?? ''));
+                $agKode = trim(strtolower($ag->kode_mesin ?? ''));
+                $agPaket = trim(strtolower($ag->paket ?? ''));
+                $agLokasi = trim(strtolower($ag->mesin_lokasi ?? ''));
+
+                // Cari kecocokan mtc_main di bulan yang sama (terlaksana jika minggu sama, sebelum, atau sesudah)
+                foreach ($parsedMains as $pm) {
+                    if (in_array($pm['id'], $usedMainIds)) continue;
+
+                    // Harus di bulan & tahun yang sama dengan jadwal agenda
+                    if ($pm['year'] !== $agYear || $pm['month'] !== $agMonth) continue;
+
+                    // Match mesin (ID, Kode, Nama, atau Lokasi dengan jenis_mtc sesuai)
+                    $machineMatches = false;
+                    if ($pm['mesin_id'] !== null && $pm['mesin_id'] === $agMesinId) {
+                        $machineMatches = true;
+                    } elseif ($agKode !== '' && (strcasecmp($agKode, $pm['kode_mesin']) === 0 || strcasecmp($agKode, $pm['area']) === 0 || strcasecmp($agKode, $pm['lokasi']) === 0)) {
+                        $machineMatches = true;
+                    } elseif ($agNama !== '' && (strcasecmp($agNama, $pm['nama_mesin']) === 0 || strcasecmp($agNama, $pm['area']) === 0 || strcasecmp($agNama, $pm['lokasi']) === 0)) {
+                        $machineMatches = true;
+                    } elseif ($agLokasi !== '' && (strcasecmp($agLokasi, $pm['lokasi']) === 0 || strcasecmp($agLokasi, $pm['area']) === 0) && $this->normalizeJenisCategory($pm['jenis_mtc']) === $cat) {
+                        $machineMatches = true;
+                    }
+
+                    if (!$machineMatches) continue;
+
+                    // Match paket
+                    $pmPaket = trim(strtolower($pm['paket']));
+                    $paketMatches = false;
+                    if ($agPaket === '' || $pmPaket === '') {
+                        $paketMatches = true;
+                    } elseif ($agPaket === $pmPaket) {
+                        $paketMatches = true;
+                    } elseif ($pmPaket === 'maintenance' || $agPaket === 'maintenance') {
+                        $paketMatches = true;
+                    }
+
+                    if ($paketMatches) {
+                        $usedMainIds[] = $pm['id'];
+                        if (isset($completedCounts[$cat])) {
+                            $completedCounts[$cat]++;
+                        }
+                        break;
+                    }
                 }
             }
 
             $weekPlannedData[$idx] = [];
-            $weekActualData[$idx] = [];
+            $weekCompletedData[$idx] = [];
 
             foreach ($units as $u) {
                 $pVal = $agendaCounts[$u];
-                $actVal = $actualCounts[$u];
+                $cVal = $completedCounts[$u];
 
                 $weekPlannedData[$idx][$u] = $pVal;
-                $weekActualData[$idx][$u] = $actVal;
-                $totalPlannedPerUnit[$u] += $pVal;
-                $totalActualPerUnit[$u] += $actVal;
-            }
-        }
-
-        // Pass 1.5: Hitung realisasi completed per minggu berdasarkan realisasi aktual riil (capped at planned)
-        $weekCompletedData = [];
-        $totalCompletedPerUnit = [];
-        $totalPlannedOverall = 0;
-        $totalCompletedOverall = 0;
-
-        foreach ($units as $u) {
-            $uPlanned = $totalPlannedPerUnit[$u];
-            $uActual = $totalActualPerUnit[$u];
-            $uCompleted = ($uPlanned > 0) ? min($uPlanned, $uActual) : $uActual;
-            $totalCompletedPerUnit[$u] = $uCompleted;
-
-            $totalPlannedOverall += $uPlanned;
-            $totalCompletedOverall += $uCompleted;
-
-            $remainingCap = $uCompleted;
-            foreach ($weeksList as $idx => $wk) {
-                $actVal = $weekActualData[$idx][$u];
-                $cVal = min($actVal, $remainingCap);
-                $remainingCap -= $cVal;
                 $weekCompletedData[$idx][$u] = $cVal;
+                $totalPlannedPerUnit[$u] += $pVal;
+                $totalCompletedPerUnit[$u] += $cVal;
+                $totalPlannedOverall += $pVal;
+                $totalCompletedOverall += $cVal;
             }
         }
 
