@@ -510,10 +510,6 @@ class MtcDashboardController extends Controller
                 $k = trim(strtolower($main->area));
                 $mObj = $mesinByName[$k] ?? ($mesinByCode[$k] ?? null);
             }
-            if (!$mObj && !empty($main->lokasi)) {
-                $k = trim(strtolower($main->lokasi));
-                $mObj = $mesinByName[$k] ?? ($mesinByCode[$k] ?? null);
-            }
 
             $tglObj = $main->tanggal ? Carbon::parse($main->tanggal) : null;
 
@@ -523,7 +519,6 @@ class MtcDashboardController extends Controller
                 'nama_mesin' => $mObj ? $mObj->nama_mesin : '',
                 'kode_mesin' => $mObj ? $mObj->kode_mesin : '',
                 'area' => trim($main->area ?? ''),
-                'lokasi' => trim($main->lokasi ?? ''),
                 'jenis_mtc' => $main->jenis_mtc,
                 'paket' => trim($main->paket ?? ''),
                 'tanggal' => $tglObj ? $tglObj->format('Y-m-d') : null,
@@ -555,75 +550,123 @@ class MtcDashboardController extends Controller
             // Filter agenda untuk minggu ini
             $wAgendas = $agendaRecords->filter(function ($item) use ($wStart, $wEnd, $wMingguKe, $isMonthlyFilter, $wk) {
                 if ($item->tanggal !== null) {
-                    $tgl = Carbon::parse($item->tanggal)->format('Y-m-d');
-                    return $tgl >= $wStart && $tgl <= $wEnd;
+                    $tglObj = Carbon::parse($item->tanggal);
+                    if ($isMonthlyFilter) {
+                        $day = $tglObj->day;
+                        $computedWk = ($day <= 7) ? 1 : (($day <= 14) ? 2 : (($day <= 21) ? 3 : (($day <= 28) ? 4 : 5)));
+                        return $computedWk === $wMingguKe
+                            && (int)$tglObj->month === (int)$wk['start']->month
+                            && (int)$tglObj->year === (int)$wk['start']->year;
+                    } else {
+                        $tgl = $tglObj->format('Y-m-d');
+                        return $tgl >= $wStart && $tgl <= $wEnd;
+                    }
                 } else {
                     if ($isMonthlyFilter) {
-                        return (int)$item->minggu_ke === $wMingguKe && (int)$item->bulan === (int)$wk['start']->month && (int)$item->tahun === (int)$wk['start']->year;
+                        return (int)$item->minggu_ke === $wMingguKe
+                            && (int)$item->bulan === (int)$wk['start']->month
+                            && (int)$item->tahun === (int)$wk['start']->year;
                     } else {
+                        // Date range of (tahun, bulan, minggu_ke) as standard 7-day buckets
                         $daysInMonth = Carbon::createFromDate($item->tahun, $item->bulan, 1)->daysInMonth;
-                        $midDay = min($daysInMonth, ($item->minggu_ke - 1) * 7 + 4);
-                        $planMidDate = Carbon::createFromDate($item->tahun, $item->bulan, $midDay)->startOfDay();
-                        return $planMidDate->betweenIncluded($wk['start'], $wk['end']);
+                        $dStart = ($item->minggu_ke - 1) * 7 + 1;
+                        $dEnd = $item->minggu_ke == 5 ? $daysInMonth : min($daysInMonth, $item->minggu_ke * 7);
+                        $midDay = (int) floor(($dStart + $dEnd) / 2);
+                        $midDate = Carbon::createFromDate($item->tahun, $item->bulan, min($daysInMonth, $midDay))->startOfDay();
+                        return $midDate->betweenIncluded($wk['start'], $wk['end']);
                     }
                 }
             });
 
-            $agendaCounts = array_fill_keys($units, 0);
-            $completedCounts = array_fill_keys($units, 0);
+            // Group planned machines strictly per unique machine to avoid duplicate count on multi-package
+            $plannedMachines = [
+                'MHE'         => [],
+                'Motor Pompa' => [],
+                'Utility'     => [],
+                'Sipil'       => []
+            ];
 
             foreach ($wAgendas as $ag) {
                 $cat = $this->normalizeJenisCategory($ag->jenis_mtc);
-                if (isset($agendaCounts[$cat])) {
-                    $agendaCounts[$cat]++;
+                if (!isset($plannedMachines[$cat])) {
+                    $cat = 'Utility';
                 }
 
-                $agYear = (int)$ag->tahun;
-                $agMonth = (int)$ag->bulan;
-                $agMesinId = (int)$ag->mesin_id;
-                $agNama = trim(strtolower($ag->nama_mesin ?? ''));
-                $agKode = trim(strtolower($ag->kode_mesin ?? ''));
-                $agPaket = trim(strtolower($ag->paket ?? ''));
-                $agLokasi = trim(strtolower($ag->mesin_lokasi ?? ''));
+                $agYear = !empty($ag->tahun) ? (int)$ag->tahun : ($ag->tanggal ? (int)Carbon::parse($ag->tanggal)->year : (int)$wk['start']->year);
+                $agMonth = !empty($ag->bulan) ? (int)$ag->bulan : ($ag->tanggal ? (int)Carbon::parse($ag->tanggal)->month : (int)$wk['start']->month);
 
-                // Cari kecocokan mtc_main di bulan yang sama (terlaksana jika minggu sama, sebelum, atau sesudah)
-                foreach ($parsedMains as $pm) {
-                    if (in_array($pm['id'], $usedMainIds)) continue;
+                // Use mesin_id as primary key to group plans per machine
+                if (!isset($plannedMachines[$cat][$ag->mesin_id])) {
+                    $plannedMachines[$cat][$ag->mesin_id] = [
+                        'mesin_id'   => $ag->mesin_id,
+                        'nama_mesin' => trim(strtolower($ag->nama_mesin ?? '')),
+                        'kode_mesin' => trim(strtolower($ag->kode_mesin ?? '')),
+                        'paket'      => trim(strtolower($ag->paket ?? '')),
+                        'tahun'      => $agYear,
+                        'bulan'      => $agMonth,
+                    ];
+                }
+            }
 
-                    // Harus di bulan & tahun yang sama dengan jadwal agenda
-                    if ($pm['year'] !== $agYear || $pm['month'] !== $agMonth) continue;
+            $agendaCounts = array_fill_keys($units, 0);
+            $completedCounts = array_fill_keys($units, 0);
 
-                    // Match mesin (ID, Kode, Nama, atau Lokasi dengan jenis_mtc sesuai)
-                    $machineMatches = false;
-                    if ($pm['mesin_id'] !== null && $pm['mesin_id'] === $agMesinId) {
-                        $machineMatches = true;
-                    } elseif ($agKode !== '' && (strcasecmp($agKode, $pm['kode_mesin']) === 0 || strcasecmp($agKode, $pm['area']) === 0 || strcasecmp($agKode, $pm['lokasi']) === 0)) {
-                        $machineMatches = true;
-                    } elseif ($agNama !== '' && (strcasecmp($agNama, $pm['nama_mesin']) === 0 || strcasecmp($agNama, $pm['area']) === 0 || strcasecmp($agNama, $pm['lokasi']) === 0)) {
-                        $machineMatches = true;
-                    } elseif ($agLokasi !== '' && (strcasecmp($agLokasi, $pm['lokasi']) === 0 || strcasecmp($agLokasi, $pm['area']) === 0) && $this->normalizeJenisCategory($pm['jenis_mtc']) === $cat) {
-                        $machineMatches = true;
-                    }
+            foreach ($units as $u) {
+                $agendaCounts[$u] = count($plannedMachines[$u]);
 
-                    if (!$machineMatches) continue;
+                foreach ($plannedMachines[$u] as $agMesinId => $agInfo) {
+                    $agYear  = $agInfo['tahun'];
+                    $agMonth = $agInfo['bulan'];
+                    $agNama  = $agInfo['nama_mesin'];
+                    $agKode  = $agInfo['kode_mesin'];
+                    $agPaket = $agInfo['paket'];
 
-                    // Match paket
-                    $pmPaket = trim(strtolower($pm['paket']));
-                    $paketMatches = false;
-                    if ($agPaket === '' || $pmPaket === '') {
-                        $paketMatches = true;
-                    } elseif ($agPaket === $pmPaket) {
-                        $paketMatches = true;
-                    } elseif ($pmPaket === 'maintenance' || $agPaket === 'maintenance') {
-                        $paketMatches = true;
-                    }
+                    // Strict matching dengan mtc_main pada bulan & tahun yang sesuai
+                    $isDone = false;
+                    foreach ($parsedMains as $pm) {
+                        if (in_array($pm['id'], $usedMainIds)) continue;
 
-                    if ($paketMatches) {
-                        $usedMainIds[] = $pm['id'];
-                        if (isset($completedCounts[$cat])) {
-                            $completedCounts[$cat]++;
+                        // Harus di bulan & tahun yang sama dengan jadwal agenda
+                        if ($pm['year'] !== $agYear || $pm['month'] !== $agMonth) continue;
+
+                        // Strict Machine Match:
+                        $machineMatches = false;
+                        if ($pm['mesin_id'] !== null && $pm['mesin_id'] === $agMesinId) {
+                            $machineMatches = true;
+                        } elseif ($agKode !== '' && strcasecmp($agKode, $pm['kode_mesin']) === 0) {
+                            $machineMatches = true;
+                        } elseif ($agNama !== '' && strcasecmp($agNama, $pm['nama_mesin']) === 0) {
+                            $machineMatches = true;
+                        } elseif ($u === 'Sipil') {
+                            if ($agNama !== '' && strcasecmp($agNama, $pm['area']) === 0) {
+                                $machineMatches = true;
+                            } elseif ($agKode !== '' && strcasecmp($agKode, $pm['area']) === 0) {
+                                $machineMatches = true;
+                            }
                         }
-                        break;
+
+                        if (!$machineMatches) continue;
+
+                        // Match paket:
+                        $pmPaket = trim(strtolower($pm['paket']));
+                        $paketMatches = false;
+                        if ($agPaket === '' || $pmPaket === '') {
+                            $paketMatches = true;
+                        } elseif ($agPaket === $pmPaket) {
+                            $paketMatches = true;
+                        } elseif ($pmPaket === 'maintenance' || $agPaket === 'maintenance') {
+                            $paketMatches = true;
+                        }
+
+                        if ($paketMatches) {
+                            $usedMainIds[] = $pm['id'];
+                            $isDone = true;
+                            break;
+                        }
+                    }
+
+                    if ($isDone) {
+                        $completedCounts[$u]++;
                     }
                 }
             }
