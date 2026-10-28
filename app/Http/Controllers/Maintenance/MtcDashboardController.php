@@ -621,7 +621,7 @@ class MtcDashboardController extends Controller
                     $agKode  = $agInfo['kode_mesin'];
                     $agPaket = $agInfo['paket'];
 
-                    // Strict matching dengan mtc_main pada bulan & tahun yang sesuai
+                    // Pass 1: Strict Machine Match + Paket Match
                     $isDone = false;
                     foreach ($parsedMains as $pm) {
                         if (in_array($pm['id'], $usedMainIds)) continue;
@@ -662,6 +662,35 @@ class MtcDashboardController extends Controller
                             $usedMainIds[] = $pm['id'];
                             $isDone = true;
                             break;
+                        }
+                    }
+
+                    // Pass 2: Fallback ke realisasi mesin yang sama di bulan & tahun tersebut (sesuai Dashboard Agenda)
+                    if (!$isDone) {
+                        foreach ($parsedMains as $pm) {
+                            if (in_array($pm['id'], $usedMainIds)) continue;
+                            if ($pm['year'] !== $agYear || $pm['month'] !== $agMonth) continue;
+
+                            $machineMatches = false;
+                            if ($pm['mesin_id'] !== null && $pm['mesin_id'] === $agMesinId) {
+                                $machineMatches = true;
+                            } elseif ($agKode !== '' && strcasecmp($agKode, $pm['kode_mesin']) === 0) {
+                                $machineMatches = true;
+                            } elseif ($agNama !== '' && strcasecmp($agNama, $pm['nama_mesin']) === 0) {
+                                $machineMatches = true;
+                            } elseif ($u === 'Sipil') {
+                                if ($agNama !== '' && strcasecmp($agNama, $pm['area']) === 0) {
+                                    $machineMatches = true;
+                                } elseif ($agKode !== '' && strcasecmp($agKode, $pm['area']) === 0) {
+                                    $machineMatches = true;
+                                }
+                            }
+
+                            if ($machineMatches) {
+                                $usedMainIds[] = $pm['id'];
+                                $isDone = true;
+                                break;
+                            }
                         }
                     }
 
