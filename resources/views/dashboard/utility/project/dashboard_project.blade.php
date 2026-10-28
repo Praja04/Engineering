@@ -2,12 +2,159 @@
 
 @section('title', 'Dashboard Project Engineering Utility')
 
+@section('styles')
+    <style>
+        /* Fix Sticky Header in Dark Theme & Light Theme */
+        .table-sticky-header th {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            background-color: #f3f6f9 !important;
+            color: #495057 !important;
+            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        [data-layout-mode="dark"] .table-sticky-header th,
+        [data-bs-theme="dark"] .table-sticky-header th {
+            background-color: #262a2f !important;
+            color: #ced4da !important;
+            box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Apexcharts data labels high contrast */
+        .apexcharts-datalabel,
+        .apexcharts-datalabel text,
+        .apexcharts-datalabels text {
+            fill: #ffffff !important;
+            font-weight: 700 !important;
+        }
+
+        /* Apexcharts tooltip text color */
+        .apexcharts-tooltip,
+        .apexcharts-tooltip * {
+            color: #ffffff !important;
+        }
+
+        .apexcharts-tooltip span,
+        .apexcharts-tooltip div,
+        .apexcharts-tooltip-text,
+        .apexcharts-tooltip-text-y-label,
+        .apexcharts-tooltip-text-y-value,
+        .apexcharts-tooltip-title {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+
+        .apexcharts-tooltip.apexcharts-theme-light,
+        .apexcharts-tooltip.apexcharts-theme-dark {
+            border: none !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+            border-radius: 6px !important;
+        }
+
+        /* Multi-select Dropdown Custom Styles */
+        .custom-filter-dropdown .filter-btn {
+            height: 38px;
+            font-size: 13px;
+            border-color: #ced4da;
+            transition: all 0.2s ease;
+        }
+
+        .custom-filter-dropdown .filter-btn:hover,
+        .custom-filter-dropdown .filter-btn:focus {
+            background-color: #f8f9fa;
+            border-color: #b1b8be;
+        }
+
+        .custom-filter-dropdown .filter-btn.is-active {
+            border-color: #0d6efd;
+            background-color: #f0f7ff;
+            color: #0d6efd !important;
+            font-weight: 600;
+        }
+
+        .custom-filter-dropdown .dropdown-menu {
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            z-index: 1050;
+        }
+
+        .custom-filter-dropdown .dropdown-item {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .custom-filter-dropdown .option-item {
+            display: flex !important;
+            align-items: center;
+        }
+
+        .custom-filter-dropdown .option-item.d-none {
+            display: none !important;
+        }
+
+        .custom-filter-dropdown .dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        .custom-filter-dropdown .dropdown-item:active {
+            background-color: #e2e8f0;
+            color: inherit;
+        }
+
+        .cursor-pointer {
+            cursor: pointer !important;
+        }
+
+        .filter-options-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .filter-options-list::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        [data-layout-mode="dark"] .custom-filter-dropdown .filter-btn,
+        [data-bs-theme="dark"] .custom-filter-dropdown .filter-btn {
+            background-color: #212529 !important;
+            border-color: #32383e !important;
+            color: #ced4da !important;
+        }
+
+        [data-layout-mode="dark"] .custom-filter-dropdown .filter-btn:hover,
+        [data-bs-theme="dark"] .custom-filter-dropdown .filter-btn:hover {
+            background-color: #2a3036 !important;
+        }
+
+        [data-layout-mode="dark"] .custom-filter-dropdown .filter-btn.is-active,
+        [data-bs-theme="dark"] .custom-filter-dropdown .filter-btn.is-active {
+            border-color: #0d6efd !important;
+            background-color: rgba(13, 110, 253, 0.15) !important;
+            color: #3b82f6 !important;
+        }
+
+        [data-layout-mode="dark"] .custom-filter-dropdown .dropdown-menu,
+        [data-bs-theme="dark"] .custom-filter-dropdown .dropdown-menu {
+            background-color: #212529 !important;
+            border: 1px solid #32383e !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        [data-layout-mode="dark"] .custom-filter-dropdown .dropdown-item:hover,
+        [data-bs-theme="dark"] .custom-filter-dropdown .dropdown-item:hover {
+            background-color: #2a3036 !important;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
 
             {{-- ── Header Banner ── --}}
-            <div class="row mb-3">
+            <div class="row">
                 <div class="col-12">
                     <div class="card border-0 shadow-sm"
                         style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 12px;">
@@ -55,101 +202,288 @@
                 </a>
             </div>
 
-            {{-- ── Filter Dashboard Panel ── --}}
-            <div class="card border-0 shadow-sm mb-4">
+            {{-- ── Filter Dashboard Panel (Multi-Select) ── --}}
+            <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body p-3">
                     <form id="dashFilterForm" class="row g-2 align-items-center">
-                        <div class="col-12 col-md-auto d-flex align-items-center text-dark fw-bold fs-13 me-1">
-                            <i class="ri-filter-3-line text-primary me-1 fs-16"></i> Filter Dashboard:
+
+                        {{-- Tahun Filter (Dropdown Multi-Select) --}}
+                        <div class="col-xl-2 col-md-4 col-sm-6">
+                            <div class="dropdown custom-filter-dropdown" data-filter="year">
+                                <button
+                                    class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                    type="button" id="dropdownYearBtn" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" aria-expanded="false">
+                                    <span class="filter-btn-text text-truncate me-1">
+                                        <i class="ri-calendar-line text-muted me-1"></i><span class="label-text">Semua Tahun</span>
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                </button>
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 200px;" aria-labelledby="dropdownYearBtn">
+                                    <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                        <small class="fw-bold text-muted text-uppercase fs-11">Filter Tahun</small>
+                                        <div class="d-flex gap-2">
+                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="year">Pilih Semua</a>
+                                            <span class="text-muted fs-11">|</span>
+                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="year">Reset</a>
+                                        </div>
+                                    </div>
+                                    <div class="filter-options-list">
+                                        @foreach ($yearsList as $yr)
+                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center gap-2 cursor-pointer mb-0 option-item">
+                                                <input class="form-check-input mt-0 filter-checkbox filter-checkbox-year" type="checkbox" value="{{ $yr }}" {{ in_array($yr, $yearList ?? []) ? 'checked' : '' }}>
+                                                <span class="fs-12 text-dark">Tahun {{ $yr }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Filter Tahun --}}
-                        <div class="col-6 col-sm-4 col-md-2">
-                            <select id="dashFilterYear" name="year" class="form-select form-select-sm">
-                                <option value="all">Semua Tahun</option>
-                                @foreach ($yearsList as $yr)
-                                    <option value="{{ $yr }}"
-                                        {{ isset($yearFilter) && (string) $yearFilter === (string) $yr ? 'selected' : '' }}>
-                                        Tahun {{ $yr }}
-                                    </option>
-                                @endforeach
-                            </select>
+                        {{-- Fase Filter (Dropdown Multi-Select) --}}
+                        <div class="col-xl-2 col-md-4 col-sm-6">
+                            <div class="dropdown custom-filter-dropdown" data-filter="fase">
+                                <button
+                                    class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                    type="button" id="dropdownFaseBtn" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" aria-expanded="false">
+                                    <span class="filter-btn-text text-truncate me-1">
+                                        <i class="ri-git-commit-line text-muted me-1"></i><span class="label-text">Semua Fase</span>
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                </button>
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 250px;" aria-labelledby="dropdownFaseBtn">
+                                    <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                        <small class="fw-bold text-muted text-uppercase fs-11">Filter Fase</small>
+                                        <div class="d-flex gap-2">
+                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="fase">Pilih Semua</a>
+                                            <span class="text-muted fs-11">|</span>
+                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="fase">Reset</a>
+                                        </div>
+                                    </div>
+                                    <div class="filter-options-list">
+                                        @php
+                                            $faseListConfig = [
+                                                'Fase 1' => [
+                                                    'label' => 'Fase 1: Konsep Project',
+                                                    'badge' => 'bg-info-subtle text-info border border-info-subtle',
+                                                    'icon' => 'ri-lightbulb-line',
+                                                ],
+                                                'Fase 2' => [
+                                                    'label' => 'Fase 2: Administrasi (IO/ PR/ PO)',
+                                                    'badge' => 'bg-warning-subtle text-warning border border-warning-subtle',
+                                                    'icon' => 'ri-file-list-3-line',
+                                                ],
+                                                'Fase 3' => [
+                                                    'label' => 'Fase 3: Proses Pekerjaan',
+                                                    'badge' => 'bg-primary-subtle text-primary border border-primary-subtle',
+                                                    'icon' => 'ri-tools-line',
+                                                ],
+                                            ];
+                                        @endphp
+                                        @foreach ($faseListConfig as $fKey => $fCfg)
+                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input class="form-check-input mt-0 filter-checkbox filter-checkbox-fase" type="checkbox" value="{{ $fKey }}" {{ in_array($fKey, $faseList ?? []) ? 'checked' : '' }}>
+                                                    <span class="fs-12 text-dark">{{ $fKey }}</span>
+                                                </div>
+                                                <span class="badge {{ $fCfg['badge'] }} fs-10 px-2 py-0"><i class="{{ $fCfg['icon'] }} me-1"></i>{{ $fKey }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Filter Area --}}
-                        <div class="col-6 col-sm-4 col-md-2">
-                            <select id="dashFilterArea" name="area" class="form-select form-select-sm">
-                                <option value="all">Semua Area</option>
-                                @foreach ($areasList as $ar)
-                                    <option value="{{ $ar }}"
-                                        {{ isset($areaFilter) && $areaFilter === $ar ? 'selected' : '' }}>
-                                        {{ $ar }}
-                                    </option>
-                                @endforeach
-                            </select>
+                        {{-- Area Filter (Dropdown Multi-Select) --}}
+                        <div class="col-xl-2 col-md-4 col-sm-6">
+                            <div class="dropdown custom-filter-dropdown" data-filter="area">
+                                <button
+                                    class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                    type="button" id="dropdownAreaBtn" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" aria-expanded="false">
+                                    <span class="filter-btn-text text-truncate me-1">
+                                        <i class="ri-map-pin-line text-muted me-1"></i><span class="label-text">Semua Area</span>
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                </button>
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 230px;" aria-labelledby="dropdownAreaBtn">
+                                    <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                        <small class="fw-bold text-muted text-uppercase fs-11">Filter Area</small>
+                                        <div class="d-flex gap-2">
+                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="area">Pilih Semua</a>
+                                            <span class="text-muted fs-11">|</span>
+                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="area">Reset</a>
+                                        </div>
+                                    </div>
+                                    <div class="filter-options-list" style="max-height: 220px; overflow-y: auto;">
+                                        @foreach ($areasList as $ar)
+                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center gap-2 cursor-pointer mb-0 option-item">
+                                                <input class="form-check-input mt-0 filter-checkbox filter-checkbox-area" type="checkbox" value="{{ $ar }}" {{ in_array($ar, $areaList ?? []) ? 'checked' : '' }}>
+                                                <span class="fs-12 text-dark">{{ $ar }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Filter Kategori --}}
-                        <div class="col-6 col-sm-4 col-md-2">
-                            <select id="dashFilterKategori" name="kategori" class="form-select form-select-sm">
-                                <option value="all">Semua Kategori</option>
-                                @foreach ($categoriesList as $cat)
-                                    <option value="{{ $cat }}"
-                                        {{ isset($kategoriFilter) && $kategoriFilter === $cat ? 'selected' : '' }}>
-                                        {{ $cat }}
-                                    </option>
-                                @endforeach
-                            </select>
+                        {{-- Kategori Filter (Dropdown Multi-Select) --}}
+                        <div class="col-xl-2 col-md-4 col-sm-6">
+                            <div class="dropdown custom-filter-dropdown" data-filter="kategori">
+                                <button
+                                    class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                    type="button" id="dropdownKategoriBtn" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" aria-expanded="false">
+                                    <span class="filter-btn-text text-truncate me-1">
+                                        <i class="ri-price-tag-3-line text-muted me-1"></i><span class="label-text">Semua Kategori</span>
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                </button>
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 250px;" aria-labelledby="dropdownKategoriBtn">
+                                    <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                        <small class="fw-bold text-muted text-uppercase fs-11">Filter Kategori</small>
+                                        <div class="d-flex gap-2">
+                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="kategori">Pilih Semua</a>
+                                            <span class="text-muted fs-11">|</span>
+                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="kategori">Reset</a>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light border-end-0 py-1"><i class="ri-search-line fs-11"></i></span>
+                                            <input type="text" class="form-control form-control-sm border-start-0 filter-search-input" placeholder="Cari kategori..." data-filter="kategori" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="filter-options-list" style="max-height: 200px; overflow-y: auto;">
+                                        @foreach ($categoriesList as $cat)
+                                            <label class="dropdown-item px-2 py-1 rounded-2 gap-2 cursor-pointer mb-0 option-item">
+                                                <input class="form-check-input mt-0 filter-checkbox filter-checkbox-kategori" type="checkbox" value="{{ $cat }}" {{ in_array($cat, $kategoriList ?? []) ? 'checked' : '' }}>
+                                                <span class="fs-12 text-dark text-truncate">{{ $cat }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Filter Prioritas --}}
-                        <div class="col-6 col-sm-4 col-md-2">
-                            <select id="dashFilterPriority" name="priority" class="form-select form-select-sm">
-                                <option value="all">Semua Prioritas</option>
-                                <option value="Critical"
-                                    {{ isset($priorityFilter) && $priorityFilter === 'Critical' ? 'selected' : '' }}>
-                                    Critical</option>
-                                <option value="High"
-                                    {{ isset($priorityFilter) && $priorityFilter === 'High' ? 'selected' : '' }}>High
-                                </option>
-                                <option value="Medium"
-                                    {{ isset($priorityFilter) && $priorityFilter === 'Medium' ? 'selected' : '' }}>Medium
-                                </option>
-                                <option value="Low"
-                                    {{ isset($priorityFilter) && $priorityFilter === 'Low' ? 'selected' : '' }}>Low
-                                </option>
-                            </select>
+                        {{-- Prioritas Filter (Dropdown Multi-Select) --}}
+                        <div class="col-xl-2 col-md-4 col-sm-6">
+                            <div class="dropdown custom-filter-dropdown" data-filter="priority">
+                                <button
+                                    class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                    type="button" id="dropdownPriorityBtn" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" aria-expanded="false">
+                                    <span class="filter-btn-text text-truncate me-1">
+                                        <i class="ri-flag-line text-muted me-1"></i><span class="label-text">Semua Prioritas</span>
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                </button>
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 220px;" aria-labelledby="dropdownPriorityBtn">
+                                    <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                        <small class="fw-bold text-muted text-uppercase fs-11">Filter Prioritas</small>
+                                        <div class="d-flex gap-2">
+                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="priority">Pilih Semua</a>
+                                            <span class="text-muted fs-11">|</span>
+                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="priority">Reset</a>
+                                        </div>
+                                    </div>
+                                    <div class="filter-options-list">
+                                        @php
+                                            $priorities = [
+                                                'Critical' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                                'High' => 'bg-warning-subtle text-warning border border-warning-subtle',
+                                                'Medium' => 'bg-info-subtle text-info border border-info-subtle',
+                                                'Low' => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
+                                            ];
+                                        @endphp
+                                        @foreach ($priorities as $prKey => $prClass)
+                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input class="form-check-input mt-0 filter-checkbox filter-checkbox-priority" type="checkbox" value="{{ $prKey }}" {{ in_array($prKey, $priorityList ?? []) ? 'checked' : '' }}>
+                                                    <span class="fs-12 text-dark">{{ $prKey }}</span>
+                                                </div>
+                                                <span class="badge {{ $prClass }} fs-10 px-2 py-0">{{ $prKey }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Filter Status --}}
-                        <div class="col-6 col-sm-4 col-md-2">
-                            <select id="dashFilterStatus" name="status" class="form-select form-select-sm">
-                                <option value="all">Semua Status</option>
-                                <option value="On Progress"
-                                    {{ isset($statusFilter) && $statusFilter === 'On Progress' ? 'selected' : '' }}>On
-                                    Progress</option>
-                                <option value="Terlambat"
-                                    {{ isset($statusFilter) && $statusFilter === 'Terlambat' ? 'selected' : '' }}>
-                                    Terlambat</option>
-                                <option value="Selesai"
-                                    {{ isset($statusFilter) && $statusFilter === 'Selesai' ? 'selected' : '' }}>Selesai
-                                </option>
-                            </select>
+                        {{-- Status Filter (Dropdown Multi-Select) --}}
+                        <div class="col-xl-1 col-md-3 col-sm-6">
+                            <div class="dropdown custom-filter-dropdown" data-filter="status">
+                                <button
+                                    class="btn btn-outline-light text-dark bg-white border w-100 d-flex justify-content-between align-items-center text-truncate dropdown-toggle shadow-none py-2 px-2 filter-btn"
+                                    type="button" id="dropdownStatusBtn" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" aria-expanded="false">
+                                    <span class="filter-btn-text text-truncate me-1">
+                                        <i class="ri-checkbox-circle-line text-muted me-1"></i><span class="label-text">Status</span>
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
+                                </button>
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 220px;" aria-labelledby="dropdownStatusBtn">
+                                    <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                                        <small class="fw-bold text-muted text-uppercase fs-11">Filter Status</small>
+                                        <div class="d-flex gap-2">
+                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="status">Pilih Semua</a>
+                                            <span class="text-muted fs-11">|</span>
+                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="status">Reset</a>
+                                        </div>
+                                    </div>
+                                    <div class="filter-options-list">
+                                        @php
+                                            $statuses = [
+                                                'Selesai' => [
+                                                    'class' => 'bg-success-subtle text-success border border-success-subtle',
+                                                    'icon' => 'ri-checkbox-circle-line',
+                                                ],
+                                                'On Progress' => [
+                                                    'class' => 'bg-warning-subtle text-warning border border-warning-subtle',
+                                                    'icon' => 'ri-time-line',
+                                                ],
+                                                'Terlambat' => [
+                                                    'class' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                                    'icon' => 'ri-alert-line',
+                                                ],
+                                            ];
+                                        @endphp
+                                        @foreach ($statuses as $stKey => $stMeta)
+                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input class="form-check-input mt-0 filter-checkbox filter-checkbox-status" type="checkbox" value="{{ $stKey }}" {{ in_array($stKey, $statusList ?? []) ? 'checked' : '' }}>
+                                                    <span class="fs-12 text-dark">{{ $stKey }}</span>
+                                                </div>
+                                                <span class="badge {{ $stMeta['class'] }} fs-10 px-2 py-0"><i class="{{ $stMeta['icon'] }} me-1"></i>{{ $stKey }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Reset Button --}}
-                        <div class="col-auto">
-                            <button type="button" id="btnDashResetFilter" class="btn btn-sm btn-outline-danger"
-                                title="Reset Semua Filter">
-                                <i class="ri-refresh-line me-1"></i> Reset
+                        <div class="col-xl-1 col-md-3 col-sm-6 d-flex gap-1">
+                            <button type="button" id="btnDashResetFilter" class="btn btn-outline-danger w-100 py-2 filter-btn" title="Reset Semua Filter">
+                                <i class="ri-refresh-line"></i>
                             </button>
                         </div>
                     </form>
+
+                    {{-- Active Filter Badges Row --}}
+                    <div id="activeFiltersRow" class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top d-none">
+                        <span class="fs-12 text-muted me-1"><i class="ri-filter-3-line me-1"></i>Filter Aktif:</span>
+                        <div id="activeFilterBadges" class="d-flex flex-wrap gap-1 align-items-center"></div>
+                        <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none p-0 ms-2 fs-12 fw-semibold" id="btnClearAllActive">
+                            <i class="ri-close-circle-line me-1"></i>Hapus Semua
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {{-- ── 5 KPI Cards (Light Bootstrap) ── --}}
-            <div class="row g-3 mb-4">
+            <div class="row g-3 mb-3">
                 {{-- Total Project --}}
                 <div class="col-xl-2 col-md-4 col-sm-6">
                     <div class="card card-animate border-0 shadow-sm h-100">
@@ -275,10 +609,10 @@
                 </div>
             </div>
 
-            {{-- ── Charts Row 1: Summary Status & Status per Kategori ── --}}
-            <div class="row g-3 mb-4">
+            {{-- ── Charts Row 1: Summary Status, Summary Fase & Status per Kategori ── --}}
+            <div class="row g-3 mb-3">
                 {{-- Donut Chart: Status Summary --}}
-                <div class="col-lg-4">
+                <div class="col-xl-3 col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header border-bottom py-3">
                             <div class="d-flex align-items-center justify-content-between">
@@ -296,16 +630,64 @@
                                     <span class="d-block text-muted fs-11">Selesai</span>
                                     <span class="fw-bold text-success fs-13"
                                         id="summaryPctSelesai">{{ $chartStatusSummary['percentages']['selesai'] }}%</span>
+                                    <small class="text-muted d-block fs-10"
+                                        id="summaryCountSelesai">({{ $chartStatusSummary['counts']['selesai'] ?? $kpis['selesai'] }})</small>
                                 </div>
                                 <div class="col-4 border-start border-end">
                                     <span class="d-block text-muted fs-11">On Progress</span>
                                     <span class="fw-bold text-warning fs-13"
                                         id="summaryPctOnProgress">{{ $chartStatusSummary['percentages']['on_progress'] }}%</span>
+                                    <small class="text-muted d-block fs-10"
+                                        id="summaryCountOnProgress">({{ $chartStatusSummary['counts']['on_progress'] ?? $kpis['on_progress'] }})</small>
                                 </div>
                                 <div class="col-4">
                                     <span class="d-block text-muted fs-11">Terlambat</span>
                                     <span class="fw-bold text-danger fs-13"
                                         id="summaryPctTerlambat">{{ $chartStatusSummary['percentages']['terlambat'] }}%</span>
+                                    <small class="text-muted d-block fs-10"
+                                        id="summaryCountTerlambat">({{ $chartStatusSummary['counts']['terlambat'] ?? $kpis['terlambat'] }})</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Donut Chart: Summary Fase --}}
+                <div class="col-xl-3 col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header border-bottom py-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h6 class="card-title mb-0 fw-bold text-dark">
+                                    <i class="ri-git-commit-line text-info me-2"></i>Summary Fase
+                                </h6>
+                                <span class="badge bg-light text-muted border" id="faseTotalBadge">Total:
+                                    {{ $kpis['total'] }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <div id="chartFaseSummary" style="min-height: 280px;"></div>
+                            <div class="row text-center mt-2 g-1 border-top pt-2">
+                                <div class="col-4">
+                                    <span class="d-block text-muted fs-11" title="Fase 1: Konsep Project">Fase 1</span>
+                                    <span class="fw-bold text-info fs-13"
+                                        id="fasePct1">{{ $chartFaseSummary['percentages']['fase1'] ?? 0 }}%</span>
+                                    <small class="text-muted d-block fs-10"
+                                        id="faseCount1">({{ $chartFaseSummary['counts']['fase1'] ?? 0 }})</small>
+                                </div>
+                                <div class="col-4 border-start border-end">
+                                    <span class="d-block text-muted fs-11" title="Fase 2: Administrasi (IO/PR/PO)">Fase
+                                        2</span>
+                                    <span class="fw-bold text-warning fs-13"
+                                        id="fasePct2">{{ $chartFaseSummary['percentages']['fase2'] ?? 0 }}%</span>
+                                    <small class="text-muted d-block fs-10"
+                                        id="faseCount2">({{ $chartFaseSummary['counts']['fase2'] ?? 0 }})</small>
+                                </div>
+                                <div class="col-4">
+                                    <span class="d-block text-muted fs-11" title="Fase 3: Pekerjaan Project">Fase 3</span>
+                                    <span class="fw-bold text-primary fs-13"
+                                        id="fasePct3">{{ $chartFaseSummary['percentages']['fase3'] ?? 0 }}%</span>
+                                    <small class="text-muted d-block fs-10"
+                                        id="faseCount3">({{ $chartFaseSummary['counts']['fase3'] ?? 0 }})</small>
                                 </div>
                             </div>
                         </div>
@@ -313,7 +695,7 @@
                 </div>
 
                 {{-- Horizontal Stacked Bar: Status by Kategori --}}
-                <div class="col-lg-8">
+                <div class="col-xl-6 col-lg-12">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header border-bottom py-3">
                             <div class="d-flex align-items-center justify-content-between">
@@ -329,10 +711,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- ── Charts Row 2: Status per Area Plant & Project Perlu Perhatian ── --}}
-            <div class="row g-3 mb-4">
                 {{-- Stacked Bar: Status per Area (Boiler, Utility, WWTP, MTC) --}}
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
@@ -367,8 +746,7 @@
                         <div class="card-body p-0">
                             <div class="table-responsive" style="max-height: 312px; overflow-y: auto;">
                                 <table class="table table-hover align-middle mb-0 text-nowrap" style="min-width: 500px;">
-                                    <thead class="table-light fs-12 text-muted sticky-top"
-                                        style="position: sticky; top: 0; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                    <thead class="fs-12 text-muted table-sticky-header">
                                         <tr>
                                             <th style="min-width: 170px;">Project</th>
                                             <th style="width: 90px;" class="text-center">Prioritas</th>
@@ -433,9 +811,22 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold text-dark">Tanggal Update</label>
-                            <input type="date" class="form-control" name="tanggal" value="{{ date('Y-m-d') }}">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-dark">Tanggal Update</label>
+                                <input type="date" class="form-control" name="tanggal" value="{{ date('Y-m-d') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-dark">
+                                    Fase Project <small class="text-muted fw-normal fs-11">(Opsional)</small>
+                                </label>
+                                <select class="form-select" id="quick_fase" name="fase">
+                                    <option value="">-- Tetap (Tidak Diubah) --</option>
+                                    @foreach ($faseOptions ?? [] as $fKey => $fLabel)
+                                        <option value="{{ $fKey }}">{{ $fLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -469,6 +860,7 @@
             });
 
             let chartSummary = null;
+            let chartFase = null;
             let chartKategori = null;
             let chartArea = null;
 
@@ -516,7 +908,7 @@
                                     label: 'Total Project',
                                     fontSize: '12px',
                                     fontWeight: 600,
-                                    color: '#74788d',
+                                    color: '#495057',
                                     formatter: function(w) {
                                         return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                                     }
@@ -538,15 +930,18 @@
                 },
                 dataLabels: {
                     enabled: true,
-                    dropShadow: {
-                        enabled: false
+                    style: {
+                        fontSize: '12px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 700,
+                        colors: ['#ffffff']
                     },
                     formatter: function(val) {
                         return Math.round(val) + "%";
                     }
                 },
                 tooltip: {
-                    theme: 'light',
+                    theme: 'dark',
                     y: {
                         formatter: function(val) {
                             return val + " Project";
@@ -557,6 +952,100 @@
             if (document.querySelector("#chartStatusSummary")) {
                 chartSummary = new ApexCharts(document.querySelector("#chartStatusSummary"), summaryOptions);
                 chartSummary.render();
+            }
+
+            // ── 1b. Chart Fase Summary (Donut Chart) ──
+            const faseData = @json($chartFaseSummary ?? null);
+            const faseOptions = {
+                series: (faseData && faseData.series) ? faseData.series : [0, 0, 0],
+                labels: (faseData && faseData.labels) ? faseData.labels : ['Fase 1: Konsep',
+                    'Fase 2: Administrasi',
+                    'Fase 3: Pekerjaan'
+                ],
+                chart: {
+                    type: 'donut',
+                    height: 280,
+                    fontFamily: 'Inter, sans-serif'
+                },
+                colors: ['#299cdb', '#f7b84b', '#405189'],
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '65%',
+                            labels: {
+                                show: true,
+                                name: {
+                                    show: true,
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    color: '#495057'
+                                },
+                                value: {
+                                    show: true,
+                                    fontSize: '20px',
+                                    fontWeight: 700,
+                                    color: '#212529',
+                                    formatter: function(val) {
+                                        return val + ' prj';
+                                    }
+                                },
+                                total: {
+                                    show: true,
+                                    label: 'Total Project',
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    color: '#495057',
+                                    formatter: function(w) {
+                                        return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                stroke: {
+                    width: 2,
+                    colors: ['#fff']
+                },
+                legend: {
+                    position: 'bottom',
+                    fontSize: '12px',
+                    markers: {
+                        radius: 12
+                    }
+                },
+                dataLabels: {
+                    enabled: true,
+                    style: {
+                        fontSize: '12px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 700,
+                        colors: ['#ffffff']
+                    },
+                    dropShadow: {
+                        enabled: true,
+                        top: 1,
+                        left: 1,
+                        blur: 2,
+                        color: '#000000',
+                        opacity: 0.75
+                    },
+                    formatter: function(val) {
+                        return Math.round(val) + "%";
+                    }
+                },
+                tooltip: {
+                    theme: 'dark',
+                    y: {
+                        formatter: function(val) {
+                            return val + " Project";
+                        }
+                    }
+                }
+            };
+            if (document.querySelector("#chartFaseSummary")) {
+                chartFase = new ApexCharts(document.querySelector("#chartFaseSummary"), faseOptions);
+                chartFase.render();
             }
 
             // ── 2. Chart Status by Kategori (Horizontal Stacked Bar) ──
@@ -612,7 +1101,7 @@
                     fontSize: '12px'
                 },
                 tooltip: {
-                    theme: 'light',
+                    theme: 'dark',
                     y: {
                         formatter: function(val) {
                             return val + " Project";
@@ -685,7 +1174,7 @@
                     fontSize: '12px'
                 },
                 tooltip: {
-                    theme: 'light',
+                    theme: 'dark',
                     y: {
                         formatter: function(val) {
                             return val + " Project";
@@ -772,7 +1261,8 @@
                         <button type="button" class="btn btn-sm btn-outline-primary btn-update-progress"
                             data-id="${prj.id}"
                             data-nama="${escapeHtml(prj.nama_project)}"
-                            data-progress="${prj.progress}">
+                            data-progress="${prj.progress}"
+                            data-fase="${escapeHtml(prj.fase || '')}">
                             <i class="ri-edit-line"></i> Update
                         </button>
                     </td>
@@ -785,6 +1275,122 @@
             // Initial render of Attention Projects
             renderAttentionProjects(@json($attentionProjects));
 
+            // ── Multi-Select Helpers ──
+            const defaultFilterLabels = {
+                year: 'Semua Tahun',
+                fase: 'Semua Fase',
+                area: 'Semua Area',
+                kategori: 'Semua Kategori',
+                priority: 'Semua Prioritas',
+                status: 'Status'
+            };
+
+            function getSelectedFilterValues(filterName) {
+                const vals = [];
+                $(`.filter-checkbox-${filterName}:checked`).each(function() {
+                    vals.push($(this).val());
+                });
+                return vals;
+            }
+
+            function updateDropdownLabels() {
+                const filters = ['year', 'fase', 'area', 'kategori', 'priority', 'status'];
+                filters.forEach(function(f) {
+                    const $container = $(`.custom-filter-dropdown[data-filter="${f}"]`);
+                    const $btn = $container.find('.filter-btn');
+                    const $label = $container.find('.label-text');
+                    const $badge = $container.find('.filter-count-badge');
+                    const vals = getSelectedFilterValues(f);
+
+                    if (vals.length === 0) {
+                        $label.text(defaultFilterLabels[f]);
+                        $badge.addClass('d-none').text('0');
+                        $btn.removeClass('is-active');
+                    } else if (vals.length === 1) {
+                        $label.text(f === 'year' ? `Tahun ${vals[0]}` : vals[0]);
+                        $badge.removeClass('d-none').text('1');
+                        $btn.addClass('is-active');
+                    } else {
+                        const titleNames = {
+                            year: 'Tahun',
+                            fase: 'Fase',
+                            area: 'Area',
+                            kategori: 'Kategori',
+                            priority: 'Prioritas',
+                            status: 'Status'
+                        };
+                        $label.text(titleNames[f]);
+                        $badge.removeClass('d-none').text(vals.length);
+                        $btn.addClass('is-active');
+                    }
+                });
+            }
+
+            function updateActiveFilterBadges() {
+                const $badgesContainer = $('#activeFilterBadges');
+                $badgesContainer.empty();
+                let totalActive = 0;
+
+                const filters = ['year', 'fase', 'area', 'kategori', 'priority', 'status'];
+                const titleNames = {
+                    year: 'Tahun',
+                    fase: 'Fase',
+                    area: 'Area',
+                    kategori: 'Kategori',
+                    priority: 'Prioritas',
+                    status: 'Status'
+                };
+
+                filters.forEach(function(f) {
+                    const titleName = titleNames[f];
+                    const vals = getSelectedFilterValues(f);
+                    totalActive += vals.length;
+
+                    vals.forEach(function(val) {
+                        let colorClass = 'bg-primary-subtle text-primary border-primary-subtle';
+                        if (f === 'status') {
+                            if (val === 'Selesai') colorClass =
+                                'bg-success-subtle text-success border-success-subtle';
+                            else if (val === 'Terlambat') colorClass =
+                                'bg-danger-subtle text-danger border-danger-subtle';
+                            else colorClass =
+                                'bg-warning-subtle text-warning border-warning-subtle';
+                        } else if (f === 'priority') {
+                            if (val === 'Critical') colorClass =
+                                'bg-danger-subtle text-danger border-danger-subtle';
+                            else if (val === 'High') colorClass =
+                                'bg-warning-subtle text-warning border-warning-subtle';
+                            else if (val === 'Medium') colorClass =
+                                'bg-info-subtle text-info border-info-subtle';
+                            else colorClass =
+                                'bg-secondary-subtle text-secondary border-secondary-subtle';
+                        } else if (f === 'fase') {
+                            if (val === 'Fase 1') colorClass =
+                                'bg-info-subtle text-info border-info-subtle';
+                            else if (val === 'Fase 2') colorClass =
+                                'bg-warning-subtle text-warning border-warning-subtle';
+                            else colorClass =
+                                'bg-primary-subtle text-primary border-primary-subtle';
+                        } else if (f === 'year') {
+                            colorClass = 'bg-dark-subtle text-dark border-dark-subtle';
+                        }
+
+                        $badgesContainer.append(`
+                            <span class="badge ${colorClass} border d-inline-flex align-items-center gap-1 py-1 px-2 fs-11">
+                                <span class="text-muted">${titleName}:</span> <strong>${escapeHtml(val)}</strong>
+                                <i class="ri-close-line cursor-pointer text-danger ms-1 btn-remove-active-tag" data-filter="${f}" data-value="${escapeHtml(val)}" title="Hapus filter"></i>
+                            </span>
+                        `);
+                    });
+                });
+
+                if (totalActive > 0) {
+                    $('#activeFiltersRow').removeClass('d-none');
+                } else {
+                    $('#activeFiltersRow').addClass('d-none');
+                }
+            }
+
             // ── 5. Load Dashboard Data via jQuery AJAX ──
             window.loadDashboardData = function() {
                 const $btnRefresh = $('#btnRefreshDashboard');
@@ -794,11 +1400,12 @@
 
                 const filterParams = {
                     format: 'json',
-                    year: $('#dashFilterYear').val(),
-                    area: $('#dashFilterArea').val(),
-                    kategori: $('#dashFilterKategori').val(),
-                    priority: $('#dashFilterPriority').val(),
-                    status: $('#dashFilterStatus').val()
+                    year: getSelectedFilterValues('year'),
+                    fase: getSelectedFilterValues('fase'),
+                    area: getSelectedFilterValues('area'),
+                    kategori: getSelectedFilterValues('kategori'),
+                    priority: getSelectedFilterValues('priority'),
+                    status: getSelectedFilterValues('status')
                 };
 
                 $.ajax({
@@ -833,7 +1440,7 @@
                             $('#summaryTotalBadge').text('Total: ' + res.kpis.total);
                         }
 
-                        // 3. Status Summary Percentages & Chart
+                        // 3. Status Summary Percentages, Counts & Chart
                         if (res.chartStatusSummary) {
                             if (res.chartStatusSummary.percentages) {
                                 $('#summaryPctSelesai').text((res.chartStatusSummary.percentages
@@ -843,8 +1450,42 @@
                                 $('#summaryPctTerlambat').text((res.chartStatusSummary.percentages
                                     .terlambat || 0) + '%');
                             }
+                            if (res.chartStatusSummary.counts) {
+                                $('#summaryCountSelesai').text('(' + (res.chartStatusSummary.counts
+                                    .selesai || 0) + ')');
+                                $('#summaryCountOnProgress').text('(' + (res.chartStatusSummary
+                                    .counts
+                                    .on_progress || 0) + ')');
+                                $('#summaryCountTerlambat').text('(' + (res.chartStatusSummary
+                                    .counts
+                                    .terlambat || 0) + ')');
+                            }
                             if (chartSummary && res.chartStatusSummary.series) {
                                 chartSummary.updateSeries(res.chartStatusSummary.series);
+                            }
+                        }
+
+                        // 3b. Summary Fase Percentages, Counts & Chart
+                        if (res.chartFaseSummary) {
+                            if (res.chartFaseSummary.percentages) {
+                                $('#fasePct1').text((res.chartFaseSummary.percentages.fase1 || 0) +
+                                    '%');
+                                $('#fasePct2').text((res.chartFaseSummary.percentages.fase2 || 0) +
+                                    '%');
+                                $('#fasePct3').text((res.chartFaseSummary.percentages.fase3 || 0) +
+                                    '%');
+                            }
+                            if (res.chartFaseSummary.counts) {
+                                $('#faseCount1').text('(' + (res.chartFaseSummary.counts.fase1 ||
+                                    0) + ')');
+                                $('#faseCount2').text('(' + (res.chartFaseSummary.counts.fase2 ||
+                                    0) + ')');
+                                $('#faseCount3').text('(' + (res.chartFaseSummary.counts.fase3 ||
+                                    0) + ')');
+                            }
+                            $('#faseTotalBadge').text('Total: ' + (res.kpis ? res.kpis.total : 0));
+                            if (chartFase && res.chartFaseSummary.series) {
+                                chartFase.updateSeries(res.chartFaseSummary.series);
                             }
                         }
 
@@ -880,19 +1521,91 @@
                 });
             };
 
-            // Event listener Filter Dashboard
-            $('#dashFilterYear, #dashFilterArea, #dashFilterKategori, #dashFilterPriority, #dashFilterStatus').on(
-                'change',
-                function() {
-                    window.loadDashboardData();
+            // Event listener Filter Multi-Select Checkboxes
+            $(document).on('change', '.filter-checkbox', function() {
+                updateDropdownLabels();
+                updateActiveFilterBadges();
+                window.loadDashboardData();
+            });
+
+            // Remove tag from active filters bar
+            $(document).on('click', '.btn-remove-active-tag', function(e) {
+                e.preventDefault();
+                const filter = $(this).data('filter');
+                const val = String($(this).data('value'));
+                $(`.filter-checkbox-${filter}`).filter(function() {
+                    return $(this).val() === val;
+                }).prop('checked', false);
+                updateDropdownLabels();
+                updateActiveFilterBadges();
+                window.loadDashboardData();
+            });
+
+            // Select all options in a dropdown
+            $('.btn-select-all').on('click', function(e) {
+                e.preventDefault();
+                const target = $(this).data('target');
+                $(`.filter-checkbox-${target}`).prop('checked', true);
+                updateDropdownLabels();
+                updateActiveFilterBadges();
+                window.loadDashboardData();
+            });
+
+            // Clear options in a single dropdown
+            $('.btn-clear-filter').on('click', function(e) {
+                e.preventDefault();
+                const target = $(this).data('target');
+                $(`.filter-checkbox-${target}`).prop('checked', false);
+                updateDropdownLabels();
+                updateActiveFilterBadges();
+                window.loadDashboardData();
+            });
+
+            // Prevent Bootstrap dropdown from intercepting typing/spacebar inside search inputs
+            $(document).on('click keydown keypress', '.filter-search-input', function(e) {
+                e.stopPropagation();
+            });
+
+            // Search filter inside dropdown (e.g. Kategori)
+            $(document).on('input keyup', '.filter-search-input', function(e) {
+                e.stopPropagation();
+                const query = $(this).val().toLowerCase().trim();
+                const filter = $(this).data('filter');
+                const $container = $(`.custom-filter-dropdown[data-filter="${filter}"]`);
+                let visibleCount = 0;
+
+                $container.find('.option-item').each(function() {
+                    const text = $(this).find('span').text().toLowerCase();
+                    const isMatch = text.indexOf(query) !== -1;
+                    if (isMatch) {
+                        $(this).removeClass('d-none');
+                        visibleCount++;
+                    } else {
+                        $(this).addClass('d-none');
+                    }
                 });
 
-            $('#btnDashResetFilter').on('click', function() {
-                $('#dashFilterYear').val('all');
-                $('#dashFilterArea').val('all');
-                $('#dashFilterKategori').val('all');
-                $('#dashFilterPriority').val('all');
-                $('#dashFilterStatus').val('all');
+                let $emptyMsg = $container.find('.filter-no-results');
+                if (visibleCount === 0) {
+                    if ($emptyMsg.length === 0) {
+                        $container.find('.filter-options-list').append(
+                            '<div class="filter-no-results text-center py-2 text-muted fs-11">Tidak ditemukan</div>'
+                        );
+                    } else {
+                        $emptyMsg.removeClass('d-none');
+                    }
+                } else {
+                    $emptyMsg.addClass('d-none');
+                }
+            });
+
+            // Reset all filters
+            $('#btnDashResetFilter, #btnClearAllActive').on('click', function(e) {
+                e.preventDefault();
+                $('.filter-checkbox').prop('checked', false);
+                $('.filter-search-input').val('').trigger('input');
+                updateDropdownLabels();
+                updateActiveFilterBadges();
                 window.loadDashboardData();
             });
 
@@ -900,6 +1613,10 @@
             $('#btnRefreshDashboard').on('click', function() {
                 window.loadDashboardData();
             });
+
+            // Initial UI update for badges and labels
+            updateDropdownLabels();
+            updateActiveFilterBadges();
 
             // ── 6. Quick Progress Update Modal Interaction ──
             $('#quick_progress_range').on('input', function() {
@@ -920,12 +1637,14 @@
                 const id = $(this).data('id');
                 const nama = $(this).data('nama');
                 const prog = parseInt($(this).data('progress')) || 0;
+                const fase = $(this).data('fase') || '';
 
                 $('#quick_project_id').val(id);
                 $('#quick_project_nama').text(nama);
                 $('#quick_progress_range').val(prog);
                 $('#quick_progress_input').val(prog);
                 $('#quick_slider_val').text(prog + '%');
+                $('#quick_fase').val(fase);
 
                 $('#modalQuickProgress').modal('show');
             });

@@ -26,31 +26,68 @@ class EngUtilityProjectController extends Controller
      */
     public function dashboard(Request $request)
     {
-        $areaFilter = $request->get('area');
-        $kategoriFilter = $request->get('kategori');
-        $priorityFilter = $request->get('priority');
-        $statusFilter = $request->get('status');
-        $yearFilter = $request->get('year');
+        // Helper to normalize array / string / comma-separated filter values
+        $normalizeFilter = function ($val) {
+            if (is_array($val)) {
+                $items = $val;
+            } elseif (is_string($val) && strlen(trim($val)) > 0) {
+                $items = explode(',', $val);
+            } else {
+                return [];
+            }
+            return array_values(array_filter(array_map('trim', $items), function ($v) {
+                return $v !== '' && strtolower($v) !== 'all';
+            }));
+        };
+
+        $statusList = $normalizeFilter($request->input('status'));
+        $kategoriList = $normalizeFilter($request->input('kategori'));
+        $areaList = $normalizeFilter($request->input('area'));
+        $priorityList = $normalizeFilter($request->input('priority'));
+        $faseList = $normalizeFilter($request->input('fase'));
+        $yearList = $normalizeFilter($request->input('year'));
+
+        $statusFilter = !empty($statusList) ? (count($statusList) === 1 ? $statusList[0] : implode(',', $statusList)) : 'all';
+        $kategoriFilter = !empty($kategoriList) ? (count($kategoriList) === 1 ? $kategoriList[0] : implode(',', $kategoriList)) : 'all';
+        $areaFilter = !empty($areaList) ? (count($areaList) === 1 ? $areaList[0] : implode(',', $areaList)) : 'all';
+        $priorityFilter = !empty($priorityList) ? (count($priorityList) === 1 ? $priorityList[0] : implode(',', $priorityList)) : 'all';
+        $faseFilter = !empty($faseList) ? (count($faseList) === 1 ? $faseList[0] : implode(',', $faseList)) : 'all';
+        $yearFilter = !empty($yearList) ? (count($yearList) === 1 ? $yearList[0] : implode(',', $yearList)) : 'all';
 
         $query = EngUtilityProject::query();
 
-        if (!empty($areaFilter) && $areaFilter !== 'all') {
-            $query->where('area', $areaFilter);
+        if (!empty($statusList)) {
+            $query->whereIn('status', $statusList);
         }
-        if (!empty($kategoriFilter) && $kategoriFilter !== 'all') {
-            $query->where('kategori', $kategoriFilter);
+        if (!empty($kategoriList)) {
+            $query->whereIn('kategori', $kategoriList);
         }
-        if (!empty($priorityFilter) && $priorityFilter !== 'all') {
-            $query->where('priority', $priorityFilter);
+        if (!empty($areaList)) {
+            $query->whereIn('area', $areaList);
         }
-        if (!empty($statusFilter) && $statusFilter !== 'all') {
-            $query->where('status', $statusFilter);
+        if (!empty($priorityList)) {
+            $query->whereIn('priority', $priorityList);
         }
-        if (!empty($yearFilter) && $yearFilter !== 'all') {
-            $query->where(function ($q) use ($yearFilter) {
-                $q->whereYear('finish_date', $yearFilter)
-                    ->orWhereYear('start_date', $yearFilter)
-                    ->orWhereYear('created_at', $yearFilter);
+        if (!empty($faseList)) {
+            $query->whereIn('fase', $faseList);
+        }
+        if (!empty($yearList)) {
+            $query->where(function ($q) use ($yearList) {
+                foreach ($yearList as $idx => $yr) {
+                    if ($idx === 0) {
+                        $q->where(function ($sq) use ($yr) {
+                            $sq->whereYear('finish_date', $yr)
+                                ->orWhereYear('start_date', $yr)
+                                ->orWhereYear('created_at', $yr);
+                        });
+                    } else {
+                        $q->orWhere(function ($sq) use ($yr) {
+                            $sq->whereYear('finish_date', $yr)
+                                ->orWhereYear('start_date', $yr)
+                                ->orWhereYear('created_at', $yr);
+                        });
+                    }
+                }
             });
         }
 
@@ -85,10 +122,39 @@ class EngUtilityProjectController extends Controller
         $chartStatusSummary = [
             'series' => [$selesaiCount, $onProgressCount, $terlambatCount],
             'labels' => ['Selesai', 'On Progress', 'Terlambat'],
+            'counts' => [
+                'selesai' => $selesaiCount,
+                'on_progress' => $onProgressCount,
+                'terlambat' => $terlambatCount,
+            ],
             'percentages' => [
                 'selesai' => $selesaiPct,
                 'on_progress' => $onProgressPct,
                 'terlambat' => $terlambatPct,
+            ]
+        ];
+
+        // Chart 1b: Summary Fase (Donut)
+        $fase1Count = $allProjects->filter(fn($p) => empty($p->fase) || $p->fase === 'Fase 1')->count();
+        $fase2Count = $allProjects->where('fase', 'Fase 2')->count();
+        $fase3Count = $allProjects->where('fase', 'Fase 3')->count();
+
+        $fase1Pct = $totalProjects > 0 ? round(($fase1Count / $totalProjects) * 100, 1) : 0;
+        $fase2Pct = $totalProjects > 0 ? round(($fase2Count / $totalProjects) * 100, 1) : 0;
+        $fase3Pct = $totalProjects > 0 ? round(($fase3Count / $totalProjects) * 100, 1) : 0;
+
+        $chartFaseSummary = [
+            'series' => [$fase1Count, $fase2Count, $fase3Count],
+            'labels' => ['Fase 1: Konsep', 'Fase 2: Administrasi', 'Fase 3: Pekerjaan'],
+            'counts' => [
+                'fase1' => $fase1Count,
+                'fase2' => $fase2Count,
+                'fase3' => $fase3Count,
+            ],
+            'percentages' => [
+                'fase1' => $fase1Pct,
+                'fase2' => $fase2Pct,
+                'fase3' => $fase3Pct,
             ]
         ];
 
@@ -148,7 +214,7 @@ class EngUtilityProjectController extends Controller
 
         // Priority Projects: Diurutkan secara spesifik berdasarkan PRIORITY (Critical -> High -> Medium -> Low), lalu finish_date / progress
         $attentionQuery = (clone $query);
-        if (empty($statusFilter) || $statusFilter === 'all') {
+        if (empty($statusList)) {
             $attentionQuery->where('status', '!=', 'Selesai');
         }
 
@@ -169,6 +235,7 @@ class EngUtilityProjectController extends Controller
                 'success' => true,
                 'kpis' => $kpis,
                 'chartStatusSummary' => $chartStatusSummary,
+                'chartFaseSummary' => $chartFaseSummary,
                 'chartStatusByKategori' => $chartStatusByKategori,
                 'chartStatusByArea' => $chartStatusByArea,
                 'attentionProjects' => $attentionProjects->map(function ($prj) {
@@ -179,6 +246,8 @@ class EngUtilityProjectController extends Controller
                         'area' => $prj->area,
                         'kategori' => $prj->kategori,
                         'priority' => $prj->priority ?: 'Medium',
+                        'fase' => $prj->fase ?: 'Fase 1',
+                        'fase_label' => EngUtilityProject::FASE_OPTIONS[$prj->fase] ?? ($prj->fase ?: 'Fase 1: Konsep Project'),
                         'progress' => (int) $prj->progress,
                         'status' => $prj->status,
                         'finish_date' => $prj->finish_date ? Carbon::parse($prj->finish_date)->format('d/m/Y') : ($prj->finish_week ?: '-'),
@@ -198,6 +267,8 @@ class EngUtilityProjectController extends Controller
             $areasList = ['Boiler', 'Utility', 'WWTP', 'MTC'];
         }
 
+        $faseOptions = EngUtilityProject::FASE_OPTIONS;
+
         // Available years for filter
         $yearsList = collect([
             Carbon::now()->year,
@@ -210,16 +281,25 @@ class EngUtilityProjectController extends Controller
         return view('dashboard.utility.project.dashboard_project', compact(
             'kpis',
             'chartStatusSummary',
+            'chartFaseSummary',
             'chartStatusByKategori',
             'chartStatusByArea',
             'attentionProjects',
             'categoriesList',
             'areasList',
+            'faseOptions',
             'yearsList',
+            'statusList',
+            'kategoriList',
+            'areaList',
+            'priorityList',
+            'faseList',
+            'yearList',
             'areaFilter',
             'kategoriFilter',
             'priorityFilter',
             'statusFilter',
+            'faseFilter',
             'yearFilter'
         ));
     }
@@ -247,14 +327,16 @@ class EngUtilityProjectController extends Controller
         $kategoriList = $normalizeFilter($request->input('kategori'));
         $areaList = $normalizeFilter($request->input('area'));
         $priorityList = $normalizeFilter($request->input('priority'));
+        $faseList = $normalizeFilter($request->input('fase'));
         $search = $request->get('search');
 
         $statusFilter = !empty($statusList) ? (count($statusList) === 1 ? $statusList[0] : implode(',', $statusList)) : 'all';
         $kategoriFilter = !empty($kategoriList) ? (count($kategoriList) === 1 ? $kategoriList[0] : implode(',', $kategoriList)) : 'all';
         $areaFilter = !empty($areaList) ? (count($areaList) === 1 ? $areaList[0] : implode(',', $areaList)) : 'all';
         $priorityFilter = !empty($priorityList) ? (count($priorityList) === 1 ? $priorityList[0] : implode(',', $priorityList)) : 'all';
+        $faseFilter = !empty($faseList) ? (count($faseList) === 1 ? $faseList[0] : implode(',', $faseList)) : 'all';
 
-        $query = EngUtilityProject::with(['logs.user', 'creator'])->orderBy('created_at', 'desc');
+        $query = EngUtilityProject::with(['logs.user', 'creator']);
 
         if (!empty($statusList)) {
             $query->whereIn('status', $statusList);
@@ -272,6 +354,10 @@ class EngUtilityProjectController extends Controller
             $query->whereIn('priority', $priorityList);
         }
 
+        if (!empty($faseList)) {
+            $query->whereIn('fase', $faseList);
+        }
+
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_project', 'like', "%{$search}%")
@@ -280,28 +366,95 @@ class EngUtilityProjectController extends Controller
                     ->orWhere('area', 'like', "%{$search}%")
                     ->orWhere('kategori', 'like', "%{$search}%")
                     ->orWhere('priority', 'like', "%{$search}%")
+                    ->orWhere('fase', 'like', "%{$search}%")
                     ->orWhere('latest_note', 'like', "%{$search}%");
             });
         }
 
-        $projects = $query->get();
-
         $totalProjectsCount = EngUtilityProject::count();
+
+        // Calculate stats on filtered query before pagination
+        $stats = [
+            'total' => $totalProjectsCount,
+            'filtered' => (clone $query)->count(),
+            'selesai' => (clone $query)->where('status', 'Selesai')->count(),
+            'on_progress' => (clone $query)->where('status', 'On Progress')->count(),
+            'terlambat' => (clone $query)->where('status', 'Terlambat')->count(),
+        ];
+
+        // Sorting Handling
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDir = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        switch ($sortBy) {
+            case 'nama_project':
+                $query->orderBy('nama_project', $sortDir);
+                break;
+            case 'area':
+                $query->orderBy('area', $sortDir);
+                break;
+            case 'priority':
+                $query->orderByRaw("CASE 
+                    WHEN priority = 'Critical' THEN 1 
+                    WHEN priority = 'High' THEN 2 
+                    WHEN priority = 'Medium' THEN 3 
+                    WHEN priority = 'Low' THEN 4 
+                    ELSE 5 END {$sortDir}");
+                break;
+            case 'kategori':
+                $query->orderBy('kategori', $sortDir);
+                break;
+            case 'fase':
+                $query->orderBy('fase', $sortDir);
+                break;
+            case 'timeline':
+            case 'finish_date':
+                $query->orderBy('finish_date', $sortDir);
+                break;
+            case 'progress':
+                $query->orderBy('progress', $sortDir);
+                break;
+            case 'status':
+                $query->orderByRaw("CASE 
+                    WHEN status = 'Terlambat' THEN 1 
+                    WHEN status = 'On Progress' THEN 2 
+                    WHEN status = 'Selesai' THEN 3 
+                    ELSE 4 END {$sortDir}");
+                break;
+            case 'latest_note':
+                $query->orderBy('latest_note', $sortDir);
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $query->orderBy('id', 'desc');
+
+        $perPage = (int) $request->get('per_page', 25);
+        if ($perPage <= 0 || $perPage > 500) {
+            $perPage = 25;
+        }
+
+        $paginated = $query->paginate($perPage);
 
         // Support AJAX JSON response for dynamic jQuery table loading
         if ($request->ajax() || $request->wantsJson() || $request->get('format') === 'json') {
             return response()->json([
                 'success' => true,
-                'data' => $projects->map(function ($item, $index) {
+                'data' => collect($paginated->items())->values()->map(function ($item, $index) use ($paginated) {
+                    $itemNumber = ($paginated->currentPage() - 1) * $paginated->perPage() + $index + 1;
                     return [
                         'id' => $item->id,
-                        'no' => $index + 1,
+                        'no' => $itemNumber,
                         'nama_project' => $item->nama_project,
                         'nomor_project' => $item->nomor_project,
                         'target_result' => $item->target_result,
                         'area' => $item->area,
                         'kategori' => $item->kategori,
                         'priority' => $item->priority ?: 'Medium',
+                        'fase' => $item->fase ?: 'Fase 1',
+                        'fase_label' => EngUtilityProject::FASE_OPTIONS[$item->fase] ?? ($item->fase ?: 'Fase 1: Konsep Project'),
                         'start_date' => $item->start_date ? \Carbon\Carbon::parse($item->start_date)->format('d/m/y') : null,
                         'start_week' => $item->start_week,
                         'finish_date' => $item->finish_date ? \Carbon\Carbon::parse($item->finish_date)->format('d/m/y') : null,
@@ -312,15 +465,19 @@ class EngUtilityProjectController extends Controller
                         'edit_url' => route('utility.project.edit', $item->id),
                     ];
                 }),
-                'stats' => [
-                    'total' => $totalProjectsCount,
-                    'filtered' => $projects->count(),
-                    'selesai' => $projects->where('status', 'Selesai')->count(),
-                    'on_progress' => $projects->where('status', 'On Progress')->count(),
-                    'terlambat' => $projects->where('status', 'Terlambat')->count(),
-                ]
+                'pagination' => [
+                    'total' => $paginated->total(),
+                    'per_page' => $paginated->perPage(),
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'from' => $paginated->firstItem() ?: 0,
+                    'to' => $paginated->lastItem() ?: 0,
+                ],
+                'stats' => $stats
             ]);
         }
+
+        $projects = $paginated;
 
         $categoriesList = EngUtilityProjectCategory::where('is_active', true)->orderBy('nama_kategori')->pluck('nama_kategori')->toArray();
         if (empty($categoriesList)) {
@@ -332,19 +489,24 @@ class EngUtilityProjectController extends Controller
             $areasList = ['Boiler', 'Utility', 'WWTP', 'MTC'];
         }
 
+        $faseOptions = EngUtilityProject::FASE_OPTIONS;
+
         return view('dashboard.utility.project.data_project', compact(
             'projects',
             'categoriesList',
             'areasList',
+            'faseOptions',
             'totalProjectsCount',
             'statusFilter',
             'kategoriFilter',
             'areaFilter',
             'priorityFilter',
+            'faseFilter',
             'statusList',
             'kategoriList',
             'areaList',
             'priorityList',
+            'faseList',
             'search'
         ));
     }
@@ -376,7 +538,9 @@ class EngUtilityProjectController extends Controller
             $areas = ['Boiler', 'Utility', 'WWTP', 'MTC'];
         }
 
-        return view('dashboard.utility.project.form_project', compact('categories', 'areas'));
+        $faseOptions = EngUtilityProject::FASE_OPTIONS;
+
+        return view('dashboard.utility.project.form_project', compact('categories', 'areas', 'faseOptions'));
     }
 
     /**
@@ -389,6 +553,7 @@ class EngUtilityProjectController extends Controller
             'area' => 'required|string|max:100',
             'kategori' => 'required|string|max:100',
             'priority' => 'nullable|string|in:Critical,High,Medium,Low',
+            'fase' => 'nullable|string|max:100',
             'target_result' => 'nullable|string',
             'start_date' => 'nullable|date',
             'start_week' => 'nullable|string|max:50',
@@ -402,11 +567,30 @@ class EngUtilityProjectController extends Controller
         $userId = Auth::id() ?: 1;
         $progress = (int) $request->get('progress', 0);
 
+        // Auto Week Calculation if empty
+        $monthNamesId = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        $startWeek = $request->start_week;
+        if (empty($startWeek) && !empty($request->start_date)) {
+            $cDate = Carbon::parse($request->start_date);
+            $wNum = min(5, (int)ceil($cDate->day / 7));
+            $mStr = $monthNamesId[$cDate->month] ?? $cDate->isoFormat('MMM');
+            $startWeek = "W{$wNum} {$mStr} " . $cDate->format('y');
+        }
+
+        $finishWeek = $request->finish_week;
+        if (empty($finishWeek) && !empty($request->finish_date)) {
+            $cDate = Carbon::parse($request->finish_date);
+            $wNum = min(5, (int)ceil($cDate->day / 7));
+            $mStr = $monthNamesId[$cDate->month] ?? $cDate->isoFormat('MMM');
+            $finishWeek = "W{$wNum} {$mStr} " . $cDate->format('y');
+        }
+
         $status = $request->status;
         if (!$status) {
             if ($progress >= 100) {
                 $status = 'Selesai';
-            } elseif ($request->finish_date && Carbon::parse($request->finish_date)->isPast() && $progress < 100) {
+            } elseif ($request->finish_date && Carbon::parse($request->finish_date)->endOfDay()->isPast() && $progress < 100) {
                 $status = 'Terlambat';
             } else {
                 $status = 'On Progress';
@@ -427,10 +611,11 @@ class EngUtilityProjectController extends Controller
             'area' => $request->area,
             'kategori' => $request->kategori,
             'priority' => $request->get('priority', 'Medium') ?: 'Medium',
+            'fase' => $request->get('fase', 'Fase 1') ?: 'Fase 1',
             'start_date' => $request->start_date,
-            'start_week' => $request->start_week,
+            'start_week' => $startWeek,
             'finish_date' => $request->finish_date,
-            'finish_week' => $request->finish_week,
+            'finish_week' => $finishWeek,
             'progress' => $progress,
             'status' => $status,
             'latest_note' => $request->latest_note,
@@ -489,7 +674,9 @@ class EngUtilityProjectController extends Controller
             $areas = ['Boiler', 'Utility', 'WWTP', 'MTC'];
         }
 
-        return view('dashboard.utility.project.form_project', compact('project', 'categories', 'areas'));
+        $faseOptions = EngUtilityProject::FASE_OPTIONS;
+
+        return view('dashboard.utility.project.form_project', compact('project', 'categories', 'areas', 'faseOptions'));
     }
 
     /**
@@ -504,6 +691,7 @@ class EngUtilityProjectController extends Controller
             'area' => 'required|string|max:100',
             'kategori' => 'required|string|max:100',
             'priority' => 'nullable|string|in:Critical,High,Medium,Low',
+            'fase' => 'nullable|string|max:100',
             'target_result' => 'nullable|string',
             'start_date' => 'nullable|date',
             'start_week' => 'nullable|string|max:50',
@@ -512,6 +700,7 @@ class EngUtilityProjectController extends Controller
             'progress' => 'nullable|integer|min:0|max:100',
             'status' => 'nullable|string|in:Selesai,On Progress,Terlambat',
             'latest_note' => 'nullable|string',
+            'catatan_update' => 'nullable|string',
         ]);
 
         $userId = Auth::id() ?: 1;
@@ -528,16 +717,40 @@ class EngUtilityProjectController extends Controller
             return redirect()->back()->withInput()->with('error', "Progress tidak boleh mundur! Progress saat ini sudah {$oldProgress}%.");
         }
 
+        // Auto Week Calculation if empty
+        $monthNamesId = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        $startWeek = $request->start_week;
+        if (empty($startWeek) && !empty($request->start_date)) {
+            $cDate = Carbon::parse($request->start_date);
+            $wNum = min(5, (int)ceil($cDate->day / 7));
+            $mStr = $monthNamesId[$cDate->month] ?? $cDate->isoFormat('MMM');
+            $startWeek = "W{$wNum} {$mStr} " . $cDate->format('y');
+        }
+
+        $finishWeek = $request->finish_week;
+        if (empty($finishWeek) && !empty($request->finish_date)) {
+            $cDate = Carbon::parse($request->finish_date);
+            $wNum = min(5, (int)ceil($cDate->day / 7));
+            $mStr = $monthNamesId[$cDate->month] ?? $cDate->isoFormat('MMM');
+            $finishWeek = "W{$wNum} {$mStr} " . $cDate->format('y');
+        }
+
         $status = $request->status;
         if (!$status) {
             if ($newProgress >= 100) {
                 $status = 'Selesai';
-            } elseif ($request->finish_date && Carbon::parse($request->finish_date)->isPast() && $newProgress < 100) {
+            } elseif ($request->finish_date && Carbon::parse($request->finish_date)->endOfDay()->isPast() && $newProgress < 100) {
                 $status = 'Terlambat';
             } else {
                 $status = 'On Progress';
             }
         }
+
+        // Catatan Terakhir: update jika ada catatan_update atau latest_note baru, jangan biarkan terhapus jadi null
+        $latestNote = !empty($request->catatan_update)
+            ? $request->catatan_update
+            : ($request->filled('latest_note') ? $request->latest_note : $project->latest_note);
 
         $project->update([
             'nomor_project' => $request->nomor_project ?: $project->nomor_project,
@@ -546,13 +759,14 @@ class EngUtilityProjectController extends Controller
             'area' => $request->area,
             'kategori' => $request->kategori,
             'priority' => $request->get('priority', $project->priority ?? 'Medium') ?: 'Medium',
+            'fase' => $request->get('fase', $project->fase ?? 'Fase 1') ?: 'Fase 1',
             'start_date' => $request->start_date,
-            'start_week' => $request->start_week,
+            'start_week' => $startWeek,
             'finish_date' => $request->finish_date,
-            'finish_week' => $request->finish_week,
+            'finish_week' => $finishWeek,
             'progress' => $newProgress,
             'status' => $status,
-            'latest_note' => $request->latest_note,
+            'latest_note' => $latestNote,
             'updated_by' => $userId,
         ]);
 
@@ -561,7 +775,7 @@ class EngUtilityProjectController extends Controller
                 'project_id' => $project->id,
                 'progress_sebelumnya' => $oldProgress,
                 'progress_baru' => $newProgress,
-                'catatan' => $request->catatan_update ?: $request->latest_note,
+                'catatan' => $request->catatan_update ?: $latestNote,
                 'tanggal' => date('Y-m-d'),
                 'created_by' => $userId,
             ]);
@@ -603,6 +817,7 @@ class EngUtilityProjectController extends Controller
             'progress' => 'required|integer|min:0|max:100',
             'catatan' => 'required|string|max:1000',
             'tanggal' => 'nullable|date',
+            'fase' => 'nullable|string|in:Fase 1,Fase 2,Fase 3',
         ]);
 
         $userId = Auth::id() ?: 1;
@@ -621,18 +836,24 @@ class EngUtilityProjectController extends Controller
         $status = $project->status;
         if ($newProgress >= 100) {
             $status = 'Selesai';
-        } elseif ($project->finish_date && Carbon::parse($project->finish_date)->isPast()) {
+        } elseif ($project->finish_date && Carbon::parse($project->finish_date)->endOfDay()->isPast()) {
             $status = 'Terlambat';
         } else {
             $status = 'On Progress';
         }
 
-        $project->update([
+        $updateData = [
             'progress' => $newProgress,
             'status' => $status,
             'latest_note' => $request->catatan,
             'updated_by' => $userId,
-        ]);
+        ];
+
+        if ($request->filled('fase')) {
+            $updateData['fase'] = $request->fase;
+        }
+
+        $project->update($updateData);
 
         $log = EngUtilityProjectLog::create([
             'project_id' => $project->id,
@@ -650,6 +871,7 @@ class EngUtilityProjectController extends Controller
                 'project_id' => $project->id,
                 'progress' => $newProgress,
                 'status' => $status,
+                'fase' => $project->fase,
                 'latest_note' => $request->catatan,
                 'log' => $log,
             ]
@@ -1133,6 +1355,8 @@ class EngUtilityProjectController extends Controller
                         $headerMap['kategori'] = $colLetter;
                     } elseif (str_contains($cleaned, 'prioritas') || str_contains($cleaned, 'priority')) {
                         $headerMap['priority'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'fase') || str_contains($cleaned, 'phase')) {
+                        $headerMap['fase'] = $colLetter;
                     } elseif (str_contains($cleaned, 'catatan') || str_contains($cleaned, 'note') || str_contains($cleaned, 'keterangan') || str_contains($cleaned, 'remark')) {
                         $headerMap['latest_note'] = $colLetter;
                     }
@@ -1443,6 +1667,22 @@ class EngUtilityProjectController extends Controller
                     ? trim((string)$cols[$headerMap['latest_note']])
                     : null;
 
+                // Fase (Fase 1 / Fase 2 / Fase 3)
+                $faseRaw = isset($headerMap['fase'], $cols[$headerMap['fase']])
+                    ? trim((string)$cols[$headerMap['fase']])
+                    : '';
+                $fase = 'Fase 1';
+                if (!empty($faseRaw)) {
+                    $fLower = strtolower($faseRaw);
+                    if (str_contains($fLower, '3') || str_contains($fLower, 'pekerjaan')) {
+                        $fase = 'Fase 3';
+                    } elseif (str_contains($fLower, '2') || str_contains($fLower, 'administrasi') || str_contains($fLower, 'pr') || str_contains($fLower, 'po')) {
+                        $fase = 'Fase 2';
+                    } else {
+                        $fase = 'Fase 1';
+                    }
+                }
+
                 // Check existing project by nomor_project if provided, or exact nama_project
                 $existing = null;
                 if (!empty($nomorProject)) {
@@ -1460,6 +1700,7 @@ class EngUtilityProjectController extends Controller
                         'area' => $area,
                         'kategori' => $kategori,
                         'priority' => $priority,
+                        'fase' => !empty($faseRaw) ? $fase : ($existing->fase ?: 'Fase 1'),
                         'start_date' => $startDate ?: $existing->start_date,
                         'start_week' => $startWeek ?: $existing->start_week,
                         'finish_date' => $finishDate ?: $existing->finish_date,
@@ -1497,6 +1738,7 @@ class EngUtilityProjectController extends Controller
                         'area' => $area,
                         'kategori' => $kategori,
                         'priority' => $priority,
+                        'fase' => $fase,
                         'start_date' => $startDate,
                         'start_week' => $startWeek,
                         'finish_date' => $finishDate,

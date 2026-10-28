@@ -184,6 +184,57 @@
                                     </div>
                                 </div>
 
+                                {{-- Fase Project Selection (3 Fase: Konsep, Administrasi, Pekerjaan) --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-dark mb-1">
+                                        Fase Project <span class="text-danger">*</span>
+                                    </label>
+                                    @php
+                                        $currFase = old('fase', $isEdit ? ($project->fase ?? 'Fase 1') : 'Fase 1');
+                                        $fases = [
+                                            [
+                                                'val' => 'Fase 1',
+                                                'title' => 'Fase 1: Konsep Project',
+                                                'color' => 'info',
+                                                'icon' => 'ri-lightbulb-line',
+                                                'desc' => 'Perencanaan ide, kebutuhan & konsep awal',
+                                            ],
+                                            [
+                                                'val' => 'Fase 2',
+                                                'title' => 'Fase 2: Administrasi Project',
+                                                'color' => 'warning',
+                                                'icon' => 'ri-file-list-3-line',
+                                                'desc' => 'Administrasi proyek (IO / PR / PO & Vendor)',
+                                            ],
+                                            [
+                                                'val' => 'Fase 3',
+                                                'title' => 'Fase 3: Proses Pekerjaan Project',
+                                                'color' => 'primary',
+                                                'icon' => 'ri-tools-line',
+                                                'desc' => 'Eksekusi fisik pengerjaan & implementasi',
+                                            ],
+                                        ];
+                                    @endphp
+                                    <div class="row g-2">
+                                        @foreach ($fases as $f)
+                                            <div class="col-12 col-md-4">
+                                                <input type="radio" class="btn-check" name="fase"
+                                                    id="fase_{{ strtolower(str_replace([' ', '/', '(', ')'], '_', $f['val'])) }}" value="{{ $f['val'] }}"
+                                                    {{ $currFase === $f['val'] ? 'checked' : '' }} required>
+                                                <label
+                                                    class="btn btn-outline-{{ $f['color'] }} w-100 py-2 text-start d-flex flex-column justify-content-between h-100"
+                                                    for="fase_{{ strtolower(str_replace([' ', '/', '(', ')'], '_', $f['val'])) }}">
+                                                    <div class="d-flex align-items-center mb-1">
+                                                        <i class="{{ $f['icon'] }} me-1 fs-15"></i>
+                                                        <span class="fw-bold fs-13">{{ $f['title'] }}</span>
+                                                    </div>
+                                                    <small class="fs-11 opacity-75 d-block">{{ $f['desc'] }}</small>
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+
                                 {{-- Nama Project --}}
                                 <div class="mb-3">
                                     <label class="form-label fw-bold text-dark">
@@ -220,7 +271,7 @@
                                                 <div class="p-3 rounded border h-100 shadow-none">
                                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                                         <span
-                                                            class="badge bg-primary-subtle border text-primary border-primary-subtle fs-11">
+                                                             class="badge bg-primary-subtle border text-primary border-primary-subtle fs-11">
                                                             <i class="ri-play-circle-line me-1"></i> Mulai (Start)
                                                         </span>
                                                     </div>
@@ -230,18 +281,20 @@
                                                         <div class="input-group input-group-sm">
                                                             <span class="input-group-text bg-light text-muted"><i
                                                                     class="ri-calendar-line"></i></span>
-                                                            <input type="date" class="form-control" name="start_date"
+                                                            <input type="date" class="form-control" id="startDateInput" name="start_date"
                                                                 value="{{ old('start_date', $isEdit && $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('Y-m-d') : date('Y-m-d')) }}">
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label class="form-label text-muted fs-12 mb-1">Minggu Mulai
-                                                            (Week)</label>
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <label class="form-label text-muted fs-12 mb-0">Minggu Mulai (Week)</label>
+                                                            <span class="badge bg-light text-muted border fs-10" id="badgeAutoStartWeek">Auto dari tanggal</span>
+                                                        </div>
                                                         <div class="input-group input-group-sm">
                                                             <span class="input-group-text bg-light text-muted"><i
                                                                     class="ri-time-line"></i></span>
-                                                            <input type="text" class="form-control" name="start_week"
-                                                                placeholder="Contoh: W1 Jan / W4 Okt"
+                                                            <input type="text" class="form-control" id="startWeekInput" name="start_week"
+                                                                placeholder="Contoh: W1 Jan 26 / W4 Okt 26"
                                                                 value="{{ old('start_week', $isEdit ? $project->start_week : '') }}">
                                                         </div>
                                                     </div>
@@ -263,18 +316,20 @@
                                                         <div class="input-group input-group-sm">
                                                             <span class="input-group-text bg-light text-muted"><i
                                                                     class="ri-calendar-check-line"></i></span>
-                                                            <input type="date" class="form-control" name="finish_date"
+                                                            <input type="date" class="form-control" id="finishDateInput" name="finish_date"
                                                                 value="{{ old('finish_date', $isEdit && $project->finish_date ? \Carbon\Carbon::parse($project->finish_date)->format('Y-m-d') : '') }}">
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label class="form-label text-muted fs-12 mb-1">Minggu Selesai
-                                                            (Week)</label>
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <label class="form-label text-muted fs-12 mb-0">Minggu Selesai (Week)</label>
+                                                            <span class="badge bg-light text-muted border fs-10" id="badgeAutoFinishWeek">Auto dari tanggal</span>
+                                                        </div>
                                                         <div class="input-group input-group-sm">
                                                             <span class="input-group-text bg-light text-muted"><i
                                                                     class="ri-time-line"></i></span>
-                                                            <input type="text" class="form-control" name="finish_week"
-                                                                placeholder="Contoh: W4 Nov / W2 Des"
+                                                            <input type="text" class="form-control" id="finishWeekInput" name="finish_week"
+                                                                placeholder="Contoh: W4 Nov 26 / W2 Des 26"
                                                                 value="{{ old('finish_week', $isEdit ? $project->finish_week : '') }}">
                                                         </div>
                                                     </div>
@@ -346,7 +401,12 @@
                                             </div>
 
                                             <div class="col-md-5">
-                                                <label class="form-label fw-bold text-dark mb-1">Status Project</label>
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <label class="form-label fw-bold text-dark mb-0">Status Project</label>
+                                                    <span class="badge bg-light text-muted border fs-10" id="statusDinamisBadge">
+                                                        <i class="ri-flashlight-line text-warning me-1"></i>Dinamis
+                                                    </span>
+                                                </div>
                                                 <select name="status" id="statusSelect" class="form-select">
                                                     <option value="On Progress"
                                                         {{ $currStatus === 'On Progress' ? 'selected' : '' }}>On Progress
@@ -357,9 +417,8 @@
                                                         {{ $currStatus === 'Terlambat' ? 'selected' : '' }}>Terlambat
                                                     </option>
                                                 </select>
-                                                <small class="text-muted fs-11 mt-1 d-block">
-                                                    <i class="ri-information-line me-1"></i>Otomatis
-                                                    <strong>Selesai</strong> jika progress mencapai 100%.
+                                                <small class="text-muted fs-11 mt-1 d-block" id="statusHelperText">
+                                                    <i class="ri-information-line me-1"></i>Otomatis <strong>Selesai</strong> jika 100%, <strong>Terlambat</strong> jika melewati target selesai.
                                                 </small>
                                             </div>
                                         </div>
@@ -369,10 +428,16 @@
                                 {{-- Catatan / Progress Note --}}
                                 <div class="mb-4">
                                     <label class="form-label fw-semibold text-dark">
-                                        {{ $isEdit ? 'Catatan Tambahan untuk Pembaruan' : 'Catatan Awal / Perkembangan Pekerjaan' }}
+                                        {{ $isEdit ? 'Catatan Pembaruan Terakhir' : 'Catatan Awal / Perkembangan Pekerjaan' }}
                                     </label>
+                                    @if ($isEdit && !empty($project->latest_note))
+                                        <div class="alert alert-light border fs-12 mb-2 p-2 rounded">
+                                            <div class="text-muted mb-1"><i class="ri-history-line text-primary me-1"></i><strong>Catatan Terakhir Sebelumnya:</strong></div>
+                                            <div class="text-dark ps-2 border-start border-2 border-primary fw-medium">{{ $project->latest_note }}</div>
+                                        </div>
+                                    @endif
                                     <textarea class="form-control" name="{{ $isEdit ? 'catatan_update' : 'latest_note' }}" rows="3"
-                                        placeholder="Tuliskan catatan kemajuan pekerjaan, vendor terkait, atau kendala lapangan...">{{ old($isEdit ? 'catatan_update' : 'latest_note', $isEdit ? '' : '') }}</textarea>
+                                        placeholder="{{ $isEdit ? 'Tuliskan perkembangan terbaru untuk memperbarui catatan terakhir (kosongkan jika tidak ada update)...' : 'Tuliskan catatan kemajuan pekerjaan, vendor terkait, atau kendala lapangan...' }}">{{ old($isEdit ? 'catatan_update' : 'latest_note', '') }}</textarea>
                                 </div>
 
                                 {{-- Action Buttons --}}
@@ -398,6 +463,54 @@
 @section('scripts')
     <script>
         const minAllowedProgress = {{ $isEdit ? (int) $project->progress : 0 }};
+        const INDO_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        /**
+         * 1. Hitung minggu otomatis dari tanggal (Format: W1 Okt 26)
+         */
+        function calculateWeekString(dateVal) {
+            if (!dateVal) return '';
+            const parts = dateVal.split('-');
+            if (parts.length !== 3) return '';
+            const year = parseInt(parts[0], 10);
+            const monthIdx = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+
+            if (isNaN(year) || isNaN(monthIdx) || isNaN(day) || monthIdx < 0 || monthIdx > 11) return '';
+
+            const weekNum = Math.min(5, Math.ceil(day / 7));
+            const monthShort = INDO_MONTHS[monthIdx];
+            const yearShort = String(year).slice(-2);
+
+            return `W${weekNum} ${monthShort} ${yearShort}`;
+        }
+
+        /**
+         * 2. Status Dinamis:
+         * - Progress 100% -> Selesai
+         * - Progress < 100% & Hari ini > Tanggal Selesai -> Terlambat
+         * - Progress < 100% & Hari ini <= Tanggal Selesai -> On Progress
+         */
+        function adjustDynamicStatus() {
+            const prog = parseInt($('#progressInput').val()) || 0;
+            const finishDate = $('#finishDateInput').val();
+            const $status = $('#statusSelect');
+
+            if (prog >= 100) {
+                $status.val('Selesai');
+            } else {
+                if (finishDate) {
+                    const todayStr = new Date().toISOString().slice(0, 10);
+                    if (todayStr > finishDate) {
+                        $status.val('Terlambat');
+                    } else {
+                        $status.val('On Progress');
+                    }
+                } else {
+                    $status.val('On Progress');
+                }
+            }
+        }
 
         function syncProgress(val) {
             val = parseInt(val) || 0;
@@ -408,7 +521,6 @@
             const $input = $('#progressInput');
             const $badge = $('#sliderBadge');
             const $bar = $('#visualProgressBar');
-            const $status = $('#statusSelect');
 
             if ($range.val() != val) $range.val(val);
             if ($input.val() != val) $input.val(val);
@@ -417,18 +529,13 @@
             if (val === 100) {
                 $badge.attr('class', 'badge bg-success fs-12');
                 $bar.attr('class', 'progress-bar progress-bar-striped progress-bar-animated bg-success');
-                if ($status.val() !== 'Terlambat') {
-                    $status.val('Selesai');
-                }
             } else {
                 $badge.attr('class', 'badge bg-primary fs-12');
                 $bar.attr('class', 'progress-bar progress-bar-striped progress-bar-animated bg-primary');
-                if ($status.val() === 'Selesai') {
-                    $status.val('On Progress');
-                }
             }
 
             $bar.css('width', val + '%').attr('aria-valuenow', val);
+            adjustDynamicStatus();
         }
 
         $(document).ready(function() {
@@ -452,6 +559,35 @@
             $('#progressInput').on('input', function() {
                 syncProgress($(this).val());
             });
+
+            // 1. Auto-hitung week saat tanggal mulai diisi / diubah
+            $('#startDateInput').on('change input', function() {
+                const autoWeek = calculateWeekString($(this).val());
+                if (autoWeek) {
+                    $('#startWeekInput').val(autoWeek);
+                }
+            });
+
+            // 2. Auto-hitung week saat tanggal selesai diisi / diubah & sesuaikan status dinamis
+            $('#finishDateInput').on('change input', function() {
+                const autoWeek = calculateWeekString($(this).val());
+                if (autoWeek) {
+                    $('#finishWeekInput').val(autoWeek);
+                }
+                adjustDynamicStatus();
+            });
+
+            // Inisialisasi awal week jika tanggal sudah ada tapi week kosong
+            if (!$('#startWeekInput').val() && $('#startDateInput').val()) {
+                $('#startWeekInput').val(calculateWeekString($('#startDateInput').val()));
+            }
+            if (!$('#finishWeekInput').val() && $('#finishDateInput').val()) {
+                $('#finishWeekInput').val(calculateWeekString($('#finishDateInput').val()));
+            }
+
+            @if (!$isEdit)
+                adjustDynamicStatus();
+            @endif
         });
     </script>
 @endsection

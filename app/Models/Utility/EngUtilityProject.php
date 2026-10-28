@@ -20,6 +20,7 @@ class EngUtilityProject extends Model
         'area',
         'kategori',
         'priority',
+        'fase',
         'start_date',
         'start_week',
         'finish_date',
@@ -29,6 +30,12 @@ class EngUtilityProject extends Model
         'latest_note',
         'created_by',
         'updated_by',
+    ];
+
+    public const FASE_OPTIONS = [
+        'Fase 1' => 'Fase 1: Konsep Project',
+        'Fase 2' => 'Fase 2: Administrasi Project (IO/ PR/ PO)',
+        'Fase 3' => 'Fase 3: Proses Pekerjaan Project',
     ];
 
     protected $casts = [
