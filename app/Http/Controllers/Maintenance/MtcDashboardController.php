@@ -747,10 +747,7 @@ class MtcDashboardController extends Controller
     {
         $jenis = trim($jenis ?? '');
         if (
-            in_array($jenis, ['Diesel Engine', 'Electric Engine', 'Electric P2H', 'Electrical P2H', 'Diesel P2H', 'Battery', 'MHE'])
-            || stripos($jenis, 'P2H') !== false
-            || stripos($jenis, 'Engine') !== false
-            || stripos($jenis, 'Battery') !== false
+            in_array($jenis, ['Diesel Engine', 'Electric Engine'])
         ) {
             return 'MHE';
         }
