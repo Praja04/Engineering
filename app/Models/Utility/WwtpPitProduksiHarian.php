@@ -21,7 +21,7 @@ class WwtpPitProduksiHarian extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'nilai_pit_produksi' => 'double',
     ];
 
