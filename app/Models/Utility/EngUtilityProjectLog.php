@@ -22,7 +22,7 @@ class EngUtilityProjectLog extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:d-m-Y',
         'progress_sebelumnya' => 'integer',
         'progress_baru' => 'integer',
     ];

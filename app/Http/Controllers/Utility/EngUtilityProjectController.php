@@ -1073,6 +1073,240 @@ class EngUtilityProjectController extends Controller
     }
 
     /**
+     * Export project utility data to Excel (supports filtering & sorting)
+     */
+    public function exportExcel(Request $request)
+    {
+        $normalizeFilter = function ($val) {
+            if (is_array($val)) {
+                $items = $val;
+            } elseif (is_string($val) && strlen(trim($val)) > 0) {
+                $items = explode(',', $val);
+            } else {
+                return [];
+            }
+            return array_values(array_filter(array_map('trim', $items), function ($v) {
+                return $v !== '' && strtolower($v) !== 'all';
+            }));
+        };
+
+        $statusList = $normalizeFilter($request->input('status'));
+        $kategoriList = $normalizeFilter($request->input('kategori'));
+        $areaList = $normalizeFilter($request->input('area'));
+        $priorityList = $normalizeFilter($request->input('priority'));
+        $faseList = $normalizeFilter($request->input('fase'));
+        $yearList = $normalizeFilter($request->input('year'));
+
+        $query = EngUtilityProject::with(['latestLog']);
+
+        if (!empty($statusList)) {
+            $query->whereIn('status', $statusList);
+        }
+        if (!empty($kategoriList)) {
+            $query->whereIn('kategori', $kategoriList);
+        }
+        if (!empty($areaList)) {
+            $query->whereIn('area', $areaList);
+        }
+        if (!empty($priorityList)) {
+            $query->whereIn('priority', $priorityList);
+        }
+        if (!empty($faseList)) {
+            $query->whereIn('fase', $faseList);
+        }
+        if (!empty($yearList)) {
+            $query->where(function ($q) use ($yearList) {
+                foreach ($yearList as $idx => $yr) {
+                    if ($idx === 0) {
+                        $q->where(function ($sq) use ($yr) {
+                            $sq->whereYear('finish_date', $yr)
+                                ->orWhereYear('start_date', $yr)
+                                ->orWhereYear('created_at', $yr);
+                        });
+                    } else {
+                        $q->orWhere(function ($sq) use ($yr) {
+                            $sq->whereYear('finish_date', $yr)
+                                ->orWhereYear('start_date', $yr)
+                                ->orWhereYear('created_at', $yr);
+                        });
+                    }
+                }
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_project', 'like', "%{$search}%")
+                    ->orWhere('nomor_project', 'like', "%{$search}%")
+                    ->orWhere('target_result', 'like', "%{$search}%")
+                    ->orWhere('area', 'like', "%{$search}%")
+                    ->orWhere('kategori', 'like', "%{$search}%")
+                    ->orWhere('priority', 'like', "%{$search}%")
+                    ->orWhere('fase', 'like', "%{$search}%")
+                    ->orWhere('latest_note', 'like', "%{$search}%");
+            });
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDir = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        switch ($sortBy) {
+            case 'nama_project':
+            case 'nomor_project':
+            case 'area':
+            case 'kategori':
+            case 'fase':
+            case 'start_date':
+            case 'finish_date':
+            case 'progress':
+            case 'status':
+            case 'created_at':
+                $query->orderBy($sortBy, $sortDir);
+                break;
+            case 'priority':
+                $query->orderByRaw("CASE 
+                    WHEN priority = 'Critical' THEN 1 
+                    WHEN priority = 'High' THEN 2 
+                    WHEN priority = 'Medium' THEN 3 
+                    WHEN priority = 'Low' THEN 4 
+                    ELSE 5 END {$sortDir}");
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $projects = $query->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data Project');
+
+        $headers = [
+            'A1' => 'No',
+            'B1' => 'Nomor Project',
+            'C1' => 'Nama Project',
+            'D1' => 'Target Result / Output',
+            'E1' => 'Area',
+            'F1' => 'Kategori',
+            'G1' => 'Prioritas',
+            'H1' => 'Fase',
+            'I1' => 'Tanggal Mulai',
+            'J1' => 'Minggu Mulai',
+            'K1' => 'Target Selesai',
+            'L1' => 'Minggu Selesai',
+            'M1' => 'Progress (%)',
+            'N1' => 'Status',
+            'O1' => 'Catatan Terakhir',
+        ];
+
+        foreach ($headers as $cell => $val) {
+            $sheet->setCellValue($cell, $val);
+        }
+
+        // Style Header
+        $sheet->getStyle('A1:O1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size' => 11,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '1E3C72'], // Deep Navy Blue
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'CBD5E1'],
+                ],
+            ],
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(28);
+
+        $rowIdx = 2;
+        foreach ($projects as $idx => $p) {
+            $startDate = $p->start_date ? Carbon::parse($p->start_date)->format('Y-m-d') : '-';
+            $finishDate = $p->finish_date ? Carbon::parse($p->finish_date)->format('Y-m-d') : '-';
+            $note = !empty($p->latest_note) ? $p->latest_note : ($p->latestLog?->catatan ?? '-');
+
+            $sheet->setCellValue('A' . $rowIdx, $idx + 1);
+            $sheet->setCellValueExplicit('B' . $rowIdx, (string) ($p->nomor_project ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('C' . $rowIdx, $p->nama_project);
+            $sheet->setCellValue('D' . $rowIdx, $p->target_result ?? '-');
+            $sheet->setCellValue('E' . $rowIdx, $p->area ?? '-');
+            $sheet->setCellValue('F' . $rowIdx, $p->kategori ?? '-');
+            $sheet->setCellValue('G' . $rowIdx, $p->priority ?? 'Medium');
+            $sheet->setCellValue('H' . $rowIdx, $p->fase ?? 'Fase 1');
+            $sheet->setCellValueExplicit('I' . $rowIdx, $startDate, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('J' . $rowIdx, $p->start_week ?? '-');
+            $sheet->setCellValueExplicit('K' . $rowIdx, $finishDate, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('L' . $rowIdx, $p->finish_week ?? '-');
+            $sheet->setCellValue('M' . $rowIdx, (int) $p->progress);
+            $sheet->setCellValue('N' . $rowIdx, $p->status);
+            $sheet->setCellValue('O' . $rowIdx, $note);
+
+            // Alternate zebra row
+            if ($rowIdx % 2 === 1) {
+                $sheet->getStyle("A{$rowIdx}:O{$rowIdx}")->getFill()->applyFromArray([
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'F8FAFC'],
+                ]);
+            }
+
+            $sheet->getRowDimension($rowIdx)->setRowHeight(22);
+            $rowIdx++;
+        }
+
+        $lastRow = max(2, $rowIdx - 1);
+
+        // General borders & alignment
+        $sheet->getStyle("A2:O{$lastRow}")->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'E2E8F0'],
+                ],
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+        $sheet->getStyle("A2:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("B2:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("E2:H{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("I2:L{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("M2:N{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Auto filter
+        $sheet->setAutoFilter("A1:O{$lastRow}");
+
+        // Auto column width
+        foreach (range('A', 'O') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $fileName = 'Data_Project_Engineering_Utility_' . date('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    /**
      * Download Excel template for project utility migration
      */
     public function downloadTemplate()

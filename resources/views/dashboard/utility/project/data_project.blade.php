@@ -126,10 +126,14 @@
                                     class="btn btn-info fw-semibold shadow-sm">
                                     <i class="ri-dashboard-2-line me-1"></i> Dashboard
                                 </a>
+                                <button type="button" class="btn btn-success fw-semibold shadow-sm btn-export-excel"
+                                    title="Download seluruh data project ke format Excel (.xlsx)">
+                                    <i class="ri-file-excel-2-line me-1"></i> Download Excel
+                                </button>
                                 @if (Auth::user()->jabatan === 'admin')
-                                    <button type="button" class="btn btn-success fw-semibold shadow-sm"
+                                    <button type="button" class="btn btn-outline-light fw-semibold shadow-sm"
                                         data-bs-toggle="modal" data-bs-target="#modalImportExcel">
-                                        <i class="ri-file-excel-2-line me-1"></i> Upload Excel
+                                        <i class="ri-upload-2-line me-1"></i> Upload Excel
                                     </button>
                                 @endif
                                 <a href="{{ route('utility.project.form') }}" class="btn btn-warning fw-semibold shadow-sm">
@@ -496,19 +500,25 @@
                                     <small class="text-muted">Menampilkan <strong id="displayCount">-</strong> dari
                                         total {{ $totalProjectsCount }} project</small>
                                 </div>
-                                <div class="d-flex gap-1 flex-wrap">
-                                    <span id="badgeCountSelesai"
-                                        class="badge bg-success-subtle text-success border border-success-subtle">
-                                        Selesai: -
-                                    </span>
-                                    <span id="badgeCountOnProgress"
-                                        class="badge bg-warning-subtle text-warning border border-warning-subtle">
-                                        On Progress: -
-                                    </span>
-                                    <span id="badgeCountTerlambat"
-                                        class="badge bg-danger-subtle text-danger border border-danger-subtle">
-                                        Terlambat: -
-                                    </span>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        <span id="badgeCountSelesai"
+                                            class="badge bg-success-subtle text-success border border-success-subtle">
+                                            Selesai: -
+                                        </span>
+                                        <span id="badgeCountOnProgress"
+                                            class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                                            On Progress: -
+                                        </span>
+                                        <span id="badgeCountTerlambat"
+                                            class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                            Terlambat: -
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-success fw-semibold btn-export-excel shadow-sm"
+                                        title="Download data project ke Excel">
+                                        <i class="ri-file-excel-line me-1"></i> Export Excel
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1480,6 +1490,36 @@
                 updateDropdownLabels();
                 updateActiveFilterBadges();
                 loadProjectsData(1);
+            });
+
+            // ── Download Data to Excel (Filtered / Sorted) ──
+            $(document).on('click', '.btn-export-excel', function(e) {
+                e.preventDefault();
+                const params = new URLSearchParams();
+
+                const search = $('#filterSearch').val();
+                if (search) params.append('search', search);
+
+                const fase = getSelectedFilterValues('fase');
+                if (fase.length > 0) params.append('fase', fase.join(','));
+
+                const area = getSelectedFilterValues('area');
+                if (area.length > 0) params.append('area', area.join(','));
+
+                const kategori = getSelectedFilterValues('kategori');
+                if (kategori.length > 0) params.append('kategori', kategori.join(','));
+
+                const priority = getSelectedFilterValues('priority');
+                if (priority.length > 0) params.append('priority', priority.join(','));
+
+                const status = getSelectedFilterValues('status');
+                if (status.length > 0) params.append('status', status.join(','));
+
+                if (currentSortBy) params.append('sort_by', currentSortBy);
+                if (currentSortDir) params.append('sort_dir', currentSortDir);
+
+                const exportUrl = '{{ route('utility.project.export') }}?' + params.toString();
+                window.location.href = exportUrl;
             });
 
             // ── Initial Load on Page Ready with LocalStorage ──

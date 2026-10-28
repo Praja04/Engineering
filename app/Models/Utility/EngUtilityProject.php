@@ -39,8 +39,8 @@ class EngUtilityProject extends Model
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'finish_date' => 'date',
+        'start_date' => 'date:d-m-Y',
+        'finish_date' => 'date:d-m-Y',
         'progress' => 'integer',
     ];
 
