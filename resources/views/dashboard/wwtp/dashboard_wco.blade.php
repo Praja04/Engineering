@@ -1005,7 +1005,8 @@
                                 <div>
                                     <div class="kpi-top-label">BIAYA PER KUBIK</div>
                                     <div class="text-muted" style="font-size: 8.5px;" id="topCostM3SubLabel">PERIODE:
-                                        <span class="text-cyan fw-bold" id="topCostM3Month">-</span></div>
+                                        <span class="text-cyan fw-bold" id="topCostM3Month">-</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="my-auto">
@@ -2660,16 +2661,16 @@
                         const sviDisplay = !isNaN(svi) ? svi : '-';
 
                         aerasiHtml += `
-                    <tr>
-                        <td class="fw-semibold text-white" style="font-size: 9.5px;">${s.nama_sampel}</td>
-                        <td class="text-center font-monospace ${sv30Color}" title="Standar: 300 - 500 ml">${s.sv30 ?? '-'}</td>
-                        <td class="text-center font-monospace ${mlssColor}" title="Standar: 1000 - 5000 ppm">${s.mlss ?? '-'}</td>
-                        <td class="text-center font-monospace ${sviColor}" title="Standar: 90 - 150">${sviDisplay}</td>
-                        <td class="text-center font-monospace ${doColor}" title="Standar: 2 - 4 ppm">${s.do ?? '-'}</td>
-                        <td class="text-center font-monospace ${phColor}" title="Standar: 7 - 9">${s.ph ?? '-'}</td>
-                        <td class="text-center"><span class="${badgeClass}">${rowStatus}</span></td>
-                    </tr>
-                `;
+                            <tr>
+                                <td class="fw-semibold text-white" style="font-size: 9.5px;">${s.nama_sampel}</td>
+                                <td class="text-center font-monospace ${sv30Color}" title="Standar: 300 - 500 ml">${s.sv30 ?? '-'}</td>
+                                <td class="text-center font-monospace ${mlssColor}" title="Standar: 1000 - 5000 ppm">${s.mlss ?? '-'}</td>
+                                <td class="text-center font-monospace ${sviColor}" title="Standar: 90 - 150">${sviDisplay}</td>
+                                <td class="text-center font-monospace ${doColor}" title="Standar: 2 - 4 ppm">${s.do ?? '-'}</td>
+                                <td class="text-center font-monospace ${phColor}" title="Standar: 7 - 9">${s.ph ?? '-'}</td>
+                                <td class="text-center"><span class="${badgeClass}">${rowStatus}</span></td>
+                            </tr>
+                        `;
                     });
                     document.getElementById('tableAerasiBody').innerHTML = aerasiHtml;
                 }

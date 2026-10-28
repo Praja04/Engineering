@@ -2535,15 +2535,20 @@ class WWTPController extends Controller
             });
 
             if ($matched->isNotEmpty()) {
-                $avgSv30 = (float) $matched->avg('sv30');
-                $avgMlss = (float) $matched->avg('mlss');
-                $avgSvl  = (float) $matched->avg('svl');
+                $calcAvg = function ($field) use ($matched) {
+                    $valid = $matched->filter(fn($item) => !is_null($item->{$field}) && (float)$item->{$field} > 0);
+                    return $valid->isNotEmpty() ? (float) $valid->avg($field) : 0;
+                };
+
+                $avgSv30 = $calcAvg('sv30');
+                $avgMlss = $calcAvg('mlss');
+                $avgSvl  = $calcAvg('svl');
                 if ($avgSvl <= 0 && $avgMlss > 0) {
                     $avgSvl = ($avgSv30 * 1000) / $avgMlss;
                 }
-                $avgDo = (float) $matched->avg('do');
-                $avgPh = (float) ($matched->avg('ph'));
-                $avgTss = (float) $matched->avg('tss');
+                $avgDo  = $calcAvg('do');
+                $avgPh  = $calcAvg('ph');
+                $avgTss = $calcAvg('tss');
 
                 $sv30Val = round($avgSv30 ?: 0, 1);
                 $mlssVal = round($avgMlss ?: 0, 1);
