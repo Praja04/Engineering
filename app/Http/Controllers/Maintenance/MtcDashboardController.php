@@ -638,10 +638,12 @@ class MtcDashboardController extends Controller
                         } elseif ($agNama !== '' && strcasecmp($agNama, $pm['nama_mesin']) === 0) {
                             $machineMatches = true;
                         } elseif ($u === 'Sipil') {
-                            if ($agNama !== '' && strcasecmp($agNama, $pm['area']) === 0) {
-                                $machineMatches = true;
-                            } elseif ($agKode !== '' && strcasecmp($agKode, $pm['area']) === 0) {
-                                $machineMatches = true;
+                            if (strcasecmp($pm['jenis_mtc'] ?? '', 'Sipil') === 0 && !empty($pm['area'])) {
+                                if ($agNama !== '' && strcasecmp($agNama, $pm['area']) === 0) {
+                                    $machineMatches = true;
+                                } elseif ($agKode !== '' && strcasecmp($agKode, $pm['area']) === 0) {
+                                    $machineMatches = true;
+                                }
                             }
                         }
 
@@ -679,10 +681,12 @@ class MtcDashboardController extends Controller
                             } elseif ($agNama !== '' && strcasecmp($agNama, $pm['nama_mesin']) === 0) {
                                 $machineMatches = true;
                             } elseif ($u === 'Sipil') {
-                                if ($agNama !== '' && strcasecmp($agNama, $pm['area']) === 0) {
-                                    $machineMatches = true;
-                                } elseif ($agKode !== '' && strcasecmp($agKode, $pm['area']) === 0) {
-                                    $machineMatches = true;
+                                if (strcasecmp($pm['jenis_mtc'] ?? '', 'Sipil') === 0 && !empty($pm['area'])) {
+                                    if ($agNama !== '' && strcasecmp($agNama, $pm['area']) === 0) {
+                                        $machineMatches = true;
+                                    } elseif ($agKode !== '' && strcasecmp($agKode, $pm['area']) === 0) {
+                                        $machineMatches = true;
+                                    }
                                 }
                             }
 

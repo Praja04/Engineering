@@ -413,9 +413,13 @@ class MtcAgendaController extends Controller
             } elseif ($jenisMtc === 'Sipil') {
                 $actualInspections = DB::table('mtc_main')
                     ->where('jenis_mtc', 'Sipil')
+                    ->whereNotNull('area')
+                    ->where('area', '!=', '')
                     ->where(function ($q) use ($mesin) {
-                        $q->where('area', $mesin->nama_mesin)
-                          ->orWhere('area', $mesin->kode_mesin);
+                        $q->where('area', $mesin->nama_mesin);
+                        if (!empty($mesin->kode_mesin)) {
+                            $q->orWhere('area', $mesin->kode_mesin);
+                        }
                     })
                     ->whereYear('tanggal', $tahun)
                     ->select('tanggal', 'paket')
@@ -650,9 +654,13 @@ class MtcAgendaController extends Controller
             } elseif ($jenisMtc === 'Sipil') {
                 $actualInspections = DB::table('mtc_main')
                     ->where('jenis_mtc', 'Sipil')
+                    ->whereNotNull('area')
+                    ->where('area', '!=', '')
                     ->where(function ($q) use ($mesin) {
-                        $q->where('area', $mesin->nama_mesin)
-                          ->orWhere('area', $mesin->kode_mesin);
+                        $q->where('area', $mesin->nama_mesin);
+                        if (!empty($mesin->kode_mesin)) {
+                            $q->orWhere('area', $mesin->kode_mesin);
+                        }
                     })
                     ->whereYear('tanggal', $tahun)
                     ->whereMonth('tanggal', $bulan)
@@ -847,9 +855,13 @@ class MtcAgendaController extends Controller
                     $join->on('approved_main.mtc_main_id', '=', 'mtc_main.id');
                 })
                 ->where('mtc_main.jenis_mtc', 'Sipil')
+                ->whereNotNull('mtc_main.area')
+                ->where('mtc_main.area', '!=', '')
                 ->where(function ($q) use ($mesin) {
-                    $q->where('mtc_main.area', $mesin->nama_mesin)
-                      ->orWhere('mtc_main.area', $mesin->kode_mesin);
+                    $q->where('mtc_main.area', $mesin->nama_mesin);
+                    if (!empty($mesin->kode_mesin)) {
+                        $q->orWhere('mtc_main.area', $mesin->kode_mesin);
+                    }
                 })
                 ->orderByDesc('mtc_main.tanggal')
                 ->select('mtc_main.tanggal')
@@ -858,9 +870,13 @@ class MtcAgendaController extends Controller
             if (!$row) {
                 $row = DB::table('mtc_main')
                     ->where('mtc_main.jenis_mtc', 'Sipil')
+                    ->whereNotNull('mtc_main.area')
+                    ->where('mtc_main.area', '!=', '')
                     ->where(function ($q) use ($mesin) {
-                        $q->where('mtc_main.area', $mesin->nama_mesin)
-                          ->orWhere('mtc_main.area', $mesin->kode_mesin);
+                        $q->where('mtc_main.area', $mesin->nama_mesin);
+                        if (!empty($mesin->kode_mesin)) {
+                            $q->orWhere('mtc_main.area', $mesin->kode_mesin);
+                        }
                     })
                     ->orderByDesc('mtc_main.tanggal')
                     ->select('mtc_main.tanggal')
