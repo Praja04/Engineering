@@ -2549,7 +2549,7 @@ class WWTPController extends Controller
                 $mlssVal = round($avgMlss ?: 0, 1);
                 $sviVal  = round($avgSvl ?: 0, 1);
                 $doVal   = round($avgDo ?: 0, 1);
-                $phVal   = round($avgPh ?: 7.2, 1);
+                $phVal   = round($avgPh ?: 0, 1);
                 $tssVal  = round($avgTss ?: 0, 1);
             } else {
                 $sv30Val = rand(320, 480);
