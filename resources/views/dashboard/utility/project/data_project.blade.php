@@ -461,13 +461,13 @@
                                 </div>
 
                                 {{-- Buttons --}}
-                                <div class="col-lg-1 col-md-3 col-sm-6 d-flex gap-1">
+                                {{-- <div class="col-lg-1 col-md-3 col-sm-6 d-flex gap-1">
                                     <button type="button" id="btnResetFilter"
                                         class="btn btn-outline-danger w-100 py-2 filter-btn"
                                         title="Reset semua filter">
                                         <i class="ri-refresh-line"></i>
                                     </button>
-                                </div>
+                                </div> --}}
                             </form>
 
                             {{-- Active Filter Badges Row --}}
@@ -515,7 +515,8 @@
                                             Terlambat: -
                                         </span>
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-outline-success fw-semibold btn-export-excel shadow-sm"
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-success fw-semibold btn-export-excel shadow-sm"
                                         title="Download data project ke Excel">
                                         <i class="ri-file-excel-line me-1"></i> Export Excel
                                     </button>
@@ -1220,6 +1221,16 @@
                             const progColor = (item.progress == 100) ? 'bg-success' : (item
                                 .status === 'Terlambat' ? 'bg-danger' : 'bg-primary');
 
+                            const latesNote = item.latest_note ? `
+                                    <div class="note-text-${item.id} fs-12 text-dark text-wrap" style="max-width: 230px;" title="${escapeHtml(item.latest_note)}">
+                                        ${escapeHtml(item.latest_note)}
+                                    </div>
+                                ` : `
+                                    <div class="note-text-${item.id} fs-12 text-muted fst-italic" style="max-width: 230px;">
+                                        -
+                                    </div>
+                                `;
+
                             html += `
                                 <tr id="row-project-${item.id}">
                                     <td class="text-center text-muted fw-semibold">${item.no || (idx + 1)}</td>
@@ -1266,15 +1277,7 @@
                                         ${getStatusBadge(item.status)}
                                     </td>
                                     <td>
-                                        ${item.latest_note ? `
-                                                                                                    <div class="note-text-${item.id} fs-12 text-dark text-truncate" style="max-width: 230px;" title="${escapeHtml(item.latest_note)}">
-                                                                                                        <i class="ri-chat-1-line text-primary me-1"></i>${escapeHtml(item.latest_note)}
-                                                                                                    </div>
-                                                                                                ` : `
-                                                                                                    <div class="note-text-${item.id} fs-12 text-muted fst-italic" style="max-width: 230px;">
-                                                                                                        -
-                                                                                                    </div>
-                                                                                                `}
+                                        ${latesNote}
                                     </td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-outline-primary btn-update-progress"
@@ -1656,7 +1659,8 @@
                             // Data attributes
                             $row.find('.btn-update-progress')
                                 .data('progress', prog).attr('data-progress', prog)
-                                .data('fase', res.data.fase || '').attr('data-fase', res.data.fase || '')
+                                .data('fase', res.data.fase || '').attr('data-fase', res.data
+                                    .fase || '')
                                 .data('note', note || '').attr('data-note', note || '');
 
                             // Fase Badge
