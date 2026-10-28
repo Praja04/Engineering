@@ -53,6 +53,14 @@ class EngUtilityProject extends Model
     }
 
     /**
+     * Relationship to the latest progress history log
+     */
+    public function latestLog()
+    {
+        return $this->hasOne(EngUtilityProjectLog::class, 'project_id')->latestOfMany();
+    }
+
+    /**
      * Relationship to user who created
      */
     public function creator()

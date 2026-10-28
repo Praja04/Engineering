@@ -219,6 +219,7 @@ class EngUtilityProjectController extends Controller
         }
 
         $attentionProjects = $attentionQuery
+            ->with(['latestLog'])
             ->orderByRaw("CASE 
                 WHEN priority = 'Critical' THEN 1 
                 WHEN priority = 'High' THEN 2 
@@ -228,6 +229,13 @@ class EngUtilityProjectController extends Controller
             ->orderBy('progress', 'asc')
             ->take(8)
             ->get();
+
+        // Fallback latest_note dari log catatan terakhir jika latest_note pada project kosong
+        $attentionProjects->each(function ($prj) {
+            if (empty($prj->latest_note) && $prj->latestLog) {
+                $prj->latest_note = $prj->latestLog->catatan;
+            }
+        });
 
         // Support AJAX JSON response for dynamic jQuery dashboard loading
         if ($request->ajax() || $request->wantsJson() || $request->get('format') === 'json') {
@@ -251,7 +259,7 @@ class EngUtilityProjectController extends Controller
                         'progress' => (int) $prj->progress,
                         'status' => $prj->status,
                         'finish_date' => $prj->finish_date ? Carbon::parse($prj->finish_date)->format('d/m/Y') : ($prj->finish_week ?: '-'),
-                        'latest_note' => $prj->latest_note,
+                        'latest_note' => !empty($prj->latest_note) ? $prj->latest_note : ($prj->latestLog?->catatan ?? null),
                     ];
                 })
             ]);
@@ -429,7 +437,7 @@ class EngUtilityProjectController extends Controller
                 break;
         }
 
-        $query->orderBy('id', 'desc');
+        $query->with(['latestLog'])->orderBy('id', 'desc');
 
         $perPage = (int) $request->get('per_page', 25);
         if ($perPage <= 0 || $perPage > 500) {
@@ -437,6 +445,13 @@ class EngUtilityProjectController extends Controller
         }
 
         $paginated = $query->paginate($perPage);
+
+        // Fallback latest_note dari log catatan terakhir jika latest_note pada project kosong
+        $paginated->getCollection()->each(function ($item) {
+            if (empty($item->latest_note) && $item->latestLog) {
+                $item->latest_note = $item->latestLog->catatan;
+            }
+        });
 
         // Support AJAX JSON response for dynamic jQuery table loading
         if ($request->ajax() || $request->wantsJson() || $request->get('format') === 'json') {
@@ -461,7 +476,7 @@ class EngUtilityProjectController extends Controller
                         'finish_week' => $item->finish_week,
                         'progress' => (int) $item->progress,
                         'status' => $item->status,
-                        'latest_note' => $item->latest_note,
+                        'latest_note' => !empty($item->latest_note) ? $item->latest_note : ($item->latestLog?->catatan ?? null),
                         'edit_url' => route('utility.project.edit', $item->id),
                     ];
                 }),
