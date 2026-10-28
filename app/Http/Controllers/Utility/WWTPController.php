@@ -2542,7 +2542,7 @@ class WWTPController extends Controller
                     $avgSvl = ($avgSv30 * 1000) / $avgMlss;
                 }
                 $avgDo = (float) $matched->avg('do');
-                $avgPh = (float) ($matched->avg('ph') ?: 7.2);
+                $avgPh = (float) ($matched->avg('ph'));
                 $avgTss = (float) $matched->avg('tss');
 
                 $sv30Val = round($avgSv30 ?: 0, 1);
