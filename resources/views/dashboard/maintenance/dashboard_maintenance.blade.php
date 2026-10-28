@@ -1247,21 +1247,21 @@
                         </div>
                     </div>
 
-                    {{-- Table 7: Top Mesin MTBF Terendah --}}
+                    {{-- Table 7: Top Mesin MTBF --}}
                     <div class="col-xl-4 col-lg-4">
                         <div class="mtc-chart-card h-100">
                             <div class="mtc-card-header">
                                 <div>
                                     <h4 class="mtc-card-title">
-                                        <i class="mdi mdi-alert-circle-outline"></i>
-                                        Top Mesin MTBF Terendah
+                                        <i class="mdi mdi-shield-check-outline"></i>
+                                        Top Mesin MTBF
                                     </h4>
-                                    <div class="mtc-card-subtitle">Mesin paling sering rusak (Reliability Risk)</div>
+                                    <div class="mtc-card-subtitle">Urutan MTBF mesin (Nilai terbesar)</div>
                                 </div>
                                 <span
-                                    class="badge bg-danger bg-opacity-20 border border-danger border-opacity-25 font-mono"
+                                    class="badge bg-info bg-opacity-20 border border-info border-opacity-25 font-mono"
                                     style="font-size: 10px;">
-                                    Risk Watch
+                                    Reliability
                                 </span>
                             </div>
                             <div class="table-scrollable">
@@ -2721,7 +2721,8 @@
                     rows.forEach(item => {
                         const rankClass = item.rank === 1 ? 'top-1' : '';
                         const badgeClass = item.status === 'Critical' ? 'danger' : (item.status === 'Warning' ?
-                            'danger' : 'optimal');
+                            'neutral' : 'optimal');
+                        const mtbfColor = item.status === 'Critical' ? '#f43f5e' : (item.status === 'Warning' ? '#f59e0b' : '#34d399');
                         html += `
                     <tr>
                         <td><span class="rank-badge ${rankClass}">${item.rank}</span></td>
@@ -2730,7 +2731,7 @@
                             <div class="text-secondary small font-mono" style="font-size: 9.5px;">${item.kode_mesin}</div>
                         </td>
                         <td><span class="badge bg-dark text-secondary border border-secondary border-opacity-25" style="font-size: 9.5px;">${item.area}</span></td>
-                        <td class="text-end font-mono fw-bold" style="color: #f43f5e;">${item.nilai_mtbf} Jam</td>
+                        <td class="text-end font-mono fw-bold" style="color: ${mtbfColor};">${item.nilai_mtbf} Jam</td>
                         <td class="text-center">
                             <span class="kpi-badge ${badgeClass}">${item.status}</span>
                         </td>

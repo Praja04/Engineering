@@ -1300,10 +1300,8 @@ class MtcDashboardController extends Controller
             ];
         }
 
-        // 1. Top Mesin MTBF Terendah (Reliability Risk - Paling sering rusak / frekuensi breakdown terbanyak)
-        $sortedByMtbf = collect($evaluatedMachines)->sortBy(function ($item) {
-            return [$item['nilai_mtbf'], -$item['breakdown_freq']];
-        })->values()->take(5);
+        // 1. Top Mesin MTBF (Urut dari nilai terbesar / all data tanpa limit)
+        $sortedByMtbf = collect($evaluatedMachines)->sortByDesc('nilai_mtbf')->values();
 
         $topMtbf = [];
         foreach ($sortedByMtbf as $idx => $item) {
@@ -1323,8 +1321,8 @@ class MtcDashboardController extends Controller
             ];
         }
 
-        // 2. Top MTTR Terlama (Maintenance Bottleneck - Perbaikan paling lama)
-        $sortedByMttr = collect($evaluatedMachines)->sortByDesc('rata_mttr')->values()->take(5);
+        // 2. Top MTTR Terlama (Urut dari nilai terbesar / all data tanpa limit)
+        $sortedByMttr = collect($evaluatedMachines)->sortByDesc('rata_mttr')->values();
 
         $topMttr = [];
         foreach ($sortedByMttr as $idx => $item) {
