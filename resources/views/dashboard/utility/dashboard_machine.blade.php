@@ -428,28 +428,82 @@
             }
 
             /* Dedicated metric classes matching chart series */
-            .val-ahu-1 { color: #0284c7 !important; }
-            .val-ahu-2 { color: #06b6d4 !important; }
-            .val-ahu-3 { color: #3b82f6 !important; }
-            .val-ahu-4 { color: #8b5cf6 !important; }
-            .val-ahu-suhu { color: #ef4444 !important; }
-            .val-comp-ir55 { color: #3b82f6 !important; }
+            .val-ahu-1 {
+                color: #0284c7 !important;
+            }
+
+            .val-ahu-2 {
+                color: #06b6d4 !important;
+            }
+
+            .val-ahu-3 {
+                color: #3b82f6 !important;
+            }
+
+            .val-ahu-4 {
+                color: #8b5cf6 !important;
+            }
+
+            .val-ahu-suhu {
+                color: #ef4444 !important;
+            }
+
+            .val-comp-ir55 {
+                color: #3b82f6 !important;
+            }
 
             /* Light mode high-contrast adaptive colors for metrics */
-            body.wco-light-mode .val-ahu-1 { color: #0369a1 !important; }
-            body.wco-light-mode .val-ahu-2 { color: #0891b2 !important; }
-            body.wco-light-mode .val-ahu-3 { color: #2563eb !important; }
-            body.wco-light-mode .val-ahu-4 { color: #7c3aed !important; }
-            body.wco-light-mode .val-ahu-suhu { color: #dc2626 !important; }
-            body.wco-light-mode .val-comp-ir55 { color: #2563eb !important; }
+            body.wco-light-mode .val-ahu-1 {
+                color: #0369a1 !important;
+            }
 
-            body.wco-light-mode .text-cyan { color: #0891b2 !important; }
-            body.wco-light-mode .text-warning { color: #d97706 !important; }
-            body.wco-light-mode .text-info { color: #0284c7 !important; }
-            body.wco-light-mode .text-success { color: #059669 !important; }
-            body.wco-light-mode .text-danger { color: #dc2626 !important; }
-            body.wco-light-mode .text-pink { color: #db2777 !important; }
-            body.wco-light-mode .text-purple { color: #7c3aed !important; }
+            body.wco-light-mode .val-ahu-2 {
+                color: #0891b2 !important;
+            }
+
+            body.wco-light-mode .val-ahu-3 {
+                color: #2563eb !important;
+            }
+
+            body.wco-light-mode .val-ahu-4 {
+                color: #7c3aed !important;
+            }
+
+            body.wco-light-mode .val-ahu-suhu {
+                color: #dc2626 !important;
+            }
+
+            body.wco-light-mode .val-comp-ir55 {
+                color: #2563eb !important;
+            }
+
+            body.wco-light-mode .text-cyan {
+                color: #0891b2 !important;
+            }
+
+            body.wco-light-mode .text-warning {
+                color: #d97706 !important;
+            }
+
+            body.wco-light-mode .text-info {
+                color: #0284c7 !important;
+            }
+
+            body.wco-light-mode .text-success {
+                color: #059669 !important;
+            }
+
+            body.wco-light-mode .text-danger {
+                color: #dc2626 !important;
+            }
+
+            body.wco-light-mode .text-pink {
+                color: #db2777 !important;
+            }
+
+            body.wco-light-mode .text-purple {
+                color: #7c3aed !important;
+            }
 
             body.wco-light-mode .stat-tile {
                 background: #f8fafc !important;
@@ -835,7 +889,8 @@
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1">
                                             <div class="text-center">
-                                                <span class="stat-tile-label val-comp-ir55" style="font-size: 8px;">IR55
+                                                <span class="stat-tile-label val-comp-ir55"
+                                                    style="font-size: 8px;">IR55
                                                     (rh3)</span>
                                             </div>
                                             <div class="stat-tile-val mt-1 text-center val-comp-ir55" id="valCompIr55"
@@ -883,38 +938,46 @@
                                         <div class="row g-1">
                                             <div class="col-3">
                                                 <div class="stat-tile text-center py-1 px-0">
-                                                    <div class="stat-tile-label val-ahu-1" style="font-size: 7.5px; font-weight: 600;">AVG. AHU 1
+                                                    <div class="stat-tile-label val-ahu-1"
+                                                        style="font-size: 7.5px; font-weight: 600;">AVG. AHU 1
                                                     </div>
                                                     <div class="stat-tile-val mt-1 val-ahu-1" id="valAhuAmp1"
                                                         style="font-size: 11px;">0</div>
-                                                    <div class="stat-tile-meta val-ahu-1" style="font-size: 7px;">Amp</div>
+                                                    <div class="stat-tile-meta val-ahu-1" style="font-size: 7px;">Amp
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="col-3">
                                                 <div class="stat-tile text-center py-1 px-0">
-                                                    <div class="stat-tile-label val-ahu-2" style="font-size: 7.5px; font-weight: 600;">AVG. AHU 2
+                                                    <div class="stat-tile-label val-ahu-2"
+                                                        style="font-size: 7.5px; font-weight: 600;">AVG. AHU 2
                                                     </div>
                                                     <div class="stat-tile-val mt-1 val-ahu-2" id="valAhuAmp2"
                                                         style="font-size: 11px;">0</div>
-                                                    <div class="stat-tile-meta val-ahu-2" style="font-size: 7px;">Amp</div>
+                                                    <div class="stat-tile-meta val-ahu-2" style="font-size: 7px;">Amp
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="col-3">
                                                 <div class="stat-tile text-center py-1 px-0">
-                                                    <div class="stat-tile-label val-ahu-3" style="font-size: 7.5px; font-weight: 600;">AVG. AHU 3
+                                                    <div class="stat-tile-label val-ahu-3"
+                                                        style="font-size: 7.5px; font-weight: 600;">AVG. AHU 3
                                                     </div>
                                                     <div class="stat-tile-val mt-1 val-ahu-3" id="valAhuAmp3"
                                                         style="font-size: 11px;">0</div>
-                                                    <div class="stat-tile-meta val-ahu-3" style="font-size: 7px;">Amp</div>
+                                                    <div class="stat-tile-meta val-ahu-3" style="font-size: 7px;">Amp
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="col-3">
                                                 <div class="stat-tile text-center py-1 px-0">
-                                                    <div class="stat-tile-label val-ahu-4" style="font-size: 7.5px; font-weight: 600;">AVG. AHU 4
+                                                    <div class="stat-tile-label val-ahu-4"
+                                                        style="font-size: 7.5px; font-weight: 600;">AVG. AHU 4
                                                     </div>
                                                     <div class="stat-tile-val mt-1 val-ahu-4" id="valAhuAmp4"
                                                         style="font-size: 11px;">0</div>
-                                                    <div class="stat-tile-meta val-ahu-4" style="font-size: 7px;">Amp</div>
+                                                    <div class="stat-tile-meta val-ahu-4" style="font-size: 7px;">Amp
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -922,10 +985,12 @@
                                     <div class="col-4">
                                         <div
                                             class="stat-tile text-center py-1 px-1 h-100 d-flex flex-column justify-content-center">
-                                            <div class="stat-tile-label val-ahu-suhu" style="font-size: 7.5px; font-weight: 600;">AVG. SUHU OUT</div>
+                                            <div class="stat-tile-label val-ahu-suhu"
+                                                style="font-size: 7.5px; font-weight: 600;">AVG. SUHU OUT</div>
                                             <div class="stat-tile-val mt-1 val-ahu-suhu" id="valAhuTempOut"
                                                 style="font-size: 11px;">0.0 °C</div>
-                                            <div class="stat-tile-meta val-ahu-suhu" style="font-size: 7px;" id="ahuTempOutMeta">
+                                            <div class="stat-tile-meta val-ahu-suhu" style="font-size: 7px;"
+                                                id="ahuTempOutMeta">
                                                 Min: 0° | Max: 0°</div>
                                         </div>
                                     </div>
@@ -1553,7 +1618,8 @@
                                                 / FG</span>
                                             <div class="stat-tile-val mt-1 text-warning" style="font-size: 12px;"
                                                 id="valCostSmkpBb">0.00</div>
-                                            <div class="stat-tile-meta" style="font-size: 7px; color: #dc2626;">Target: 66
+                                            <div class="stat-tile-meta" style="font-size: 7px; color: #dc2626;">
+                                                Target: 66
                                                 Kg/Ton
                                             </div>
                                         </div>
@@ -1564,7 +1630,8 @@
                                                 LISTRIK/KM</span>
                                             <div class="stat-tile-val mt-1 text-cyan" style="font-size: 12px;"
                                                 id="valCostSmkpListrik">0.00</div>
-                                            <div class="stat-tile-meta" style="font-size: 7px; color: #2563eb;">Target: 75
+                                            <div class="stat-tile-meta" style="font-size: 7px; color: #2563eb;">
+                                                Target: 75
                                                 kWh/Ton
                                             </div>
                                         </div>
@@ -1891,12 +1958,12 @@
                                 maximumFractionDigits: 1
                             }) + ' Rb';
                         } else {
-                            invFormatted = 'Rp 1.444';
+                            invFormatted = 'Rp 1.303';
                         }
                         $('#kpiInvoiceVal').text(invFormatted);
                         $('#kpiInvoiceVal').attr('title',
-                            `Estimasi Biaya: Rp ${invVal.toLocaleString('id-ID')} (@Rp 1.444,70 / kWh)`);
-                        $('#kpiInvoiceSub').text(`@1.444/kWh`);
+                            `Estimasi Biaya: Rp ${invVal.toLocaleString('id-ID')} (@Rp 1.303 / kWh)`);
+                        $('#kpiInvoiceSub').text(`@1.303/kWh`);
 
                         // Subtitle Meta
                         $('#kpiTotalEnergy').text(totalEnergy.toLocaleString('id-ID', {
@@ -2270,7 +2337,9 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: isThemeLight() ? ['#d97706', '#0891b2', '#2563eb', '#059669'] : ['#f59e0b', '#06b6d4', '#3b82f6', '#10b981'],
+                        colors: isThemeLight() ? ['#d97706', '#0891b2', '#2563eb', '#059669'] : ['#f59e0b',
+                            '#06b6d4', '#3b82f6', '#10b981'
+                        ],
                         stroke: {
                             curve: 'smooth',
                             width: 2.5
@@ -2426,7 +2495,9 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: isThemeLight() ? ['#0369a1', '#0891b2', '#2563eb', '#7c3aed', '#dc2626'] : ['#0284c7', '#06b6d4', '#3b82f6', '#8b5cf6', '#ef4444'],
+                        colors: isThemeLight() ? ['#0369a1', '#0891b2', '#2563eb', '#7c3aed', '#dc2626'] : [
+                            '#0284c7', '#06b6d4', '#3b82f6', '#8b5cf6', '#ef4444'
+                        ],
                         stroke: {
                             width: [0, 0, 0, 0, 3],
                             curve: 'smooth'
@@ -2554,7 +2625,9 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: isThemeLight() ? ['#059669', '#d97706', '#0891b2'] : ['#10b981', '#f59e0b', '#06b6d4'],
+                        colors: isThemeLight() ? ['#059669', '#d97706', '#0891b2'] : ['#10b981', '#f59e0b',
+                            '#06b6d4'
+                        ],
                         stroke: {
                             width: [2, 2.5, 2.5],
                             curve: 'smooth'
@@ -2681,7 +2754,9 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: isThemeLight() ? ['#dc2626', '#d97706', '#db2777'] : ['#ef4444', '#f59e0b', '#ec4899'],
+                        colors: isThemeLight() ? ['#dc2626', '#d97706', '#db2777'] : ['#ef4444', '#f59e0b',
+                            '#ec4899'
+                        ],
                         stroke: {
                             width: [2, 2.5, 2.5],
                             curve: 'smooth'
@@ -3059,7 +3134,8 @@
 
                         const finalPh = isThemeLight() ? lightPh : phColor;
                         const finalTds = isThemeLight() ? '#0284c7' : tdsColor;
-                        const finalHardness = isThemeLight() ? (hardnessColor === '#ef4444' ? '#dc2626' : '#d97706') : hardnessColor;
+                        const finalHardness = isThemeLight() ? (hardnessColor === '#ef4444' ? '#dc2626' : '#d97706') :
+                            hardnessColor;
 
                         const options = {
                             series: series,
@@ -3563,7 +3639,9 @@
                                 borderRadius: 3
                             }
                         },
-                        colors: isThemeLight() ? ['#d97706', '#dc2626', '#0891b2', '#2563eb', '#059669'] : ['#f59e0b', '#dc2626', '#06b6d4', '#2563eb', '#10b981'],
+                        colors: isThemeLight() ? ['#d97706', '#dc2626', '#0891b2', '#2563eb', '#059669'] : [
+                            '#f59e0b', '#dc2626', '#06b6d4', '#2563eb', '#10b981'
+                        ],
                         fill: {
                             opacity: [0.85, 1, 0.85, 1, 1],
                             gradient: {

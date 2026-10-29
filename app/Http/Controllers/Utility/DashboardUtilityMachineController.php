@@ -641,7 +641,7 @@ class DashboardUtilityMachineController extends Controller
         $pltsKwh = ($mode === 'harian') ? $pltsDailyRate : round($pltsDailyRate * $daysCount, 1);
 
         // ── Invoice (Tarif Listrik kWh / Rp) ──
-        $tarifPerKwh = 1444.70;
+        $tarifPerKwh = 1303;
         $invoiceTotal = round($plnKwh * $tarifPerKwh, 0);
 
         $powerHouse = [
