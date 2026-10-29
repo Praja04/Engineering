@@ -45,6 +45,19 @@ class EngUtilityProject extends Model
     ];
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted()
+    {
+        static::saving(function ($project) {
+            if ((int)$project->progress >= 100) {
+                $project->fase = 'Fase 3';
+                $project->status = 'Selesai';
+            }
+        });
+    }
+
+    /**
      * Relationship to progress history logs
      */
     public function logs()
@@ -82,6 +95,7 @@ class EngUtilityProject extends Model
     public function calculateStatus(): string
     {
         if ($this->progress >= 100) {
+            $this->fase = 'Fase 3';
             return 'Selesai';
         }
 

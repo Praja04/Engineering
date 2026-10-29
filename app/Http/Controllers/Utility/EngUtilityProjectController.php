@@ -602,10 +602,12 @@ class EngUtilityProjectController extends Controller
         }
 
         $status = $request->status;
-        if (!$status) {
-            if ($progress >= 100) {
-                $status = 'Selesai';
-            } elseif ($request->finish_date && Carbon::parse($request->finish_date)->endOfDay()->isPast() && $progress < 100) {
+        $fase = $request->get('fase', 'Fase 1') ?: 'Fase 1';
+        if ($progress >= 100) {
+            $status = 'Selesai';
+            $fase = 'Fase 3';
+        } elseif (!$status) {
+            if ($request->finish_date && Carbon::parse($request->finish_date)->endOfDay()->isPast() && $progress < 100) {
                 $status = 'Terlambat';
             } else {
                 $status = 'On Progress';
@@ -626,7 +628,7 @@ class EngUtilityProjectController extends Controller
             'area' => $request->area,
             'kategori' => $request->kategori,
             'priority' => $request->get('priority', 'Medium') ?: 'Medium',
-            'fase' => $request->get('fase', 'Fase 1') ?: 'Fase 1',
+            'fase' => $fase,
             'start_date' => $request->start_date,
             'start_week' => $startWeek,
             'finish_date' => $request->finish_date,
@@ -752,10 +754,12 @@ class EngUtilityProjectController extends Controller
         }
 
         $status = $request->status;
-        if (!$status) {
-            if ($newProgress >= 100) {
-                $status = 'Selesai';
-            } elseif ($request->finish_date && Carbon::parse($request->finish_date)->endOfDay()->isPast() && $newProgress < 100) {
+        $fase = $request->get('fase', $project->fase ?? 'Fase 1') ?: 'Fase 1';
+        if ($newProgress >= 100) {
+            $status = 'Selesai';
+            $fase = 'Fase 3';
+        } elseif (!$status) {
+            if ($request->finish_date && Carbon::parse($request->finish_date)->endOfDay()->isPast() && $newProgress < 100) {
                 $status = 'Terlambat';
             } else {
                 $status = 'On Progress';
@@ -774,7 +778,7 @@ class EngUtilityProjectController extends Controller
             'area' => $request->area,
             'kategori' => $request->kategori,
             'priority' => $request->get('priority', $project->priority ?? 'Medium') ?: 'Medium',
-            'fase' => $request->get('fase', $project->fase ?? 'Fase 1') ?: 'Fase 1',
+            'fase' => $fase,
             'start_date' => $request->start_date,
             'start_week' => $startWeek,
             'finish_date' => $request->finish_date,
@@ -849,8 +853,10 @@ class EngUtilityProjectController extends Controller
         $tanggal = $request->tanggal ? Carbon::parse($request->tanggal)->format('Y-m-d') : date('Y-m-d');
 
         $status = $project->status;
+        $fase = $project->fase ?: 'Fase 1';
         if ($newProgress >= 100) {
             $status = 'Selesai';
+            $fase = 'Fase 3';
         } elseif ($project->finish_date && Carbon::parse($project->finish_date)->endOfDay()->isPast()) {
             $status = 'Terlambat';
         } else {
@@ -866,6 +872,10 @@ class EngUtilityProjectController extends Controller
 
         if ($request->filled('fase')) {
             $updateData['fase'] = $request->fase;
+        }
+
+        if ($newProgress >= 100) {
+            $updateData['fase'] = 'Fase 3';
         }
 
         $project->update($updateData);

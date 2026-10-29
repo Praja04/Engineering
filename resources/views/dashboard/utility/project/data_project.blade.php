@@ -1160,8 +1160,10 @@
             }
 
             // ── Load Data Project via Async jQuery AJAX with Custom Pagination ──
-            function loadProjectsData(page = 1) {
-                currentPage = page;
+            function loadProjectsData(page = null) {
+                if (page !== null && page !== undefined && !isNaN(page)) {
+                    currentPage = parseInt(page);
+                }
                 const filters = {
                     format: 'json',
                     page: currentPage,
@@ -1191,7 +1193,15 @@
                     data: filters,
                     dataType: 'json',
                     success: function(res) {
+                        if (res.pagination && res.pagination.current_page) {
+                            currentPage = res.pagination.current_page;
+                        }
+
                         if (!res.success || !res.data || res.data.length === 0) {
+                            if (currentPage > 1 && (!res.data || res.data.length === 0)) {
+                                loadProjectsData(currentPage - 1);
+                                return;
+                            }
                             $('#projectTableBody').html(`
                                 <tr>
                                     <td colspan="11" class="text-center py-5 text-muted">
@@ -1540,7 +1550,7 @@
             updateSortHeaderUI();
             updateDropdownLabels();
             updateActiveFilterBadges();
-            loadProjectsData();
+            loadProjectsData(1);
 
             // ── Progress Range & Input Sync (Tidak boleh mundur) ──
             let activeMinProgress = 0;
@@ -1553,6 +1563,9 @@
                 }
                 $('#modal_progress_input').val(val);
                 $('#modal_slider_val').text(val + '%');
+                if (val >= 100) {
+                    $('#modal_fase').val('Fase 3');
+                }
             });
 
             $('#modal_progress_input').on('input change', function() {
@@ -1564,6 +1577,9 @@
                 if (val > 100) val = 100;
                 $('#modal_progress_range').val(val);
                 $('#modal_slider_val').text(val + '%');
+                if (val >= 100) {
+                    $('#modal_fase').val('Fase 3');
+                }
             });
 
             // ── Open Update Progress Modal ──
@@ -1607,6 +1623,10 @@
                         text: `Progress tidak boleh mundur! Minimal progress adalah ${activeMinProgress}%.`
                     });
                     return;
+                }
+
+                if (newProg >= 100) {
+                    $('#modal_fase').val('Fase 3');
                 }
 
                 const id = $('#modal_project_id').val();
@@ -1677,8 +1697,8 @@
                                 updateStatsBadges();
                             }
 
-                            // Refresh data project
-                            loadProjectsData();
+                            // Refresh data project tanpa mereset halaman
+                            loadProjectsData(currentPage);
 
                             Swal.fire({
                                 icon: 'success',
@@ -1821,6 +1841,7 @@
                                         timer: 1500,
                                         showConfirmButton: false
                                     });
+                                    loadProjectsData(currentPage);
                                 } else {
                                     Swal.fire('Gagal!', res.message, 'error');
                                 }

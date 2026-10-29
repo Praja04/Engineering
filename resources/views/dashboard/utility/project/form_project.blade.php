@@ -498,6 +498,7 @@
 
             if (prog >= 100) {
                 $status.val('Selesai');
+                $('#fase_fase_3').prop('checked', true).trigger('change');
             } else {
                 if (finishDate) {
                     const todayStr = new Date().toISOString().slice(0, 10);

@@ -170,6 +170,10 @@
                                 </p>
                             </div>
                             <div class="d-flex flex-wrap gap-2">
+                                <button type="button" id="btnToggleFilterPanel"
+                                    class="btn btn-outline-light btn-sm fw-semibold shadow-sm" title="Sembunyikan / Tampilkan Panel Filter">
+                                    <i class="ri-filter-3-line me-1"></i> <span id="textToggleFilter">Sembunyikan Filter</span>
+                                </button>
                                 <button type="button" id="btnRefreshDashboard"
                                     class="btn btn-outline-light btn-sm fw-semibold shadow-sm">
                                     <i class="ri-refresh-line me-1"></i> Refresh Data
@@ -197,14 +201,36 @@
                     <strong>Perhatian:</strong> Terdapat <strong id="alertTerlambatCount">{{ $kpis['terlambat'] }}
                         project</strong> yang berstatus terlambat (belum selesai melewati batas deadline).
                 </div>
-                <a href="{{ route('utility.project.data', ['status' => 'Terlambat']) }}" class="btn btn-sm btn-danger ms-2">
+                <a href="{{ route('utility.project.data', ['status' => 'Terlambat']) }}" class="btn btn-sm btn-danger ms-2 text-nowrap">
                     Lihat Project Terlambat <i class="ri-arrow-right-s-line"></i>
                 </a>
+                <button type="button" class="btn-close ms-2" id="btnCloseAlertTerlambat" aria-label="Close" title="Sembunyikan Peringatan"></button>
+            </div>
+
+            {{-- ── Bar Mini Tampilkan Filter (Muncul saat Filter di-hide) ── --}}
+            <div id="filterCollapsedBar" class="d-none mb-3">
+                <div class="bg-white border rounded shadow-sm p-2 px-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center text-muted fs-12">
+                        <i class="ri-filter-3-line text-primary me-2 fs-15"></i>
+                        <span>Panel Filter Dashboard sedang disembunyikan.</span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-3 fs-12 fw-semibold" id="btnShowFilterPanel">
+                        <i class="ri-eye-line me-1"></i>Tampilkan Filter
+                    </button>
+                </div>
             </div>
 
             {{-- ── Filter Dashboard Panel (Multi-Select) ── --}}
-            <div class="card border-0 shadow-sm mb-3">
+            <div class="card border-0 shadow-sm mb-3" id="dashFilterCard">
                 <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                        <span class="fs-12 fw-bold text-uppercase text-muted">
+                            <i class="ri-filter-3-line text-primary me-1"></i>Filter Dashboard Project
+                        </span>
+                        <button type="button" class="btn btn-sm btn-light border py-0 px-2 fs-11 text-muted" id="btnHideFilterCard" title="Sembunyikan Panel Filter">
+                            <i class="ri-eye-off-line me-1"></i>Sembunyikan
+                        </button>
+                    </div>
                     <form id="dashFilterForm" class="row g-2 align-items-center">
 
                         {{-- Tahun Filter (Dropdown Multi-Select) --}}
@@ -1618,19 +1644,62 @@
             updateDropdownLabels();
             updateActiveFilterBadges();
 
-            // ── 6. Quick Progress Update Modal Interaction ──
-            $('#quick_progress_range').on('input', function() {
-                const val = $(this).val();
-                $('#quick_progress_input').val(val);
-                $('#quick_slider_val').text(val + '%');
+            // ── 5. Hide / Show Toggle: Alert Terlambat & Filter Dashboard ──
+            // Hide Alert Terlambat (Reset lagi saat reload)
+            $('#btnCloseAlertTerlambat').on('click', function() {
+                $('#alertTerlambatBanner').slideUp(200);
             });
 
-            $('#quick_progress_input').on('input', function() {
+            // Hide / Show Filter Panel Dashboard (Reset lagi saat reload)
+            function hideFilterDashboard() {
+                $('#dashFilterCard').slideUp(200, function() {
+                    $('#filterCollapsedBar').removeClass('d-none').hide().fadeIn(150);
+                    $('#textToggleFilter').text('Tampilkan Filter');
+                });
+            }
+
+            function showFilterDashboard() {
+                $('#filterCollapsedBar').fadeOut(150, function() {
+                    $('#dashFilterCard').slideDown(200);
+                    $('#textToggleFilter').text('Sembunyikan Filter');
+                });
+            }
+
+            $('#btnHideFilterCard').on('click', function() {
+                hideFilterDashboard();
+            });
+
+            $('#btnShowFilterPanel').on('click', function() {
+                showFilterDashboard();
+            });
+
+            $('#btnToggleFilterPanel').on('click', function() {
+                if ($('#dashFilterCard').is(':visible')) {
+                    hideFilterDashboard();
+                } else {
+                    showFilterDashboard();
+                }
+            });
+
+            // ── 6. Quick Progress Update Modal Interaction ──
+            $('#quick_progress_range').on('input', function() {
+                const val = parseInt($(this).val()) || 0;
+                $('#quick_progress_input').val(val);
+                $('#quick_slider_val').text(val + '%');
+                if (val >= 100) {
+                    $('#quick_fase').val('Fase 3');
+                }
+            });
+
+            $('#quick_progress_input').on('input change', function() {
                 let val = parseInt($(this).val()) || 0;
                 if (val < 0) val = 0;
                 if (val > 100) val = 100;
                 $('#quick_progress_range').val(val);
                 $('#quick_slider_val').text(val + '%');
+                if (val >= 100) {
+                    $('#quick_fase').val('Fase 3');
+                }
             });
 
             $(document).on('click', '.btn-update-progress', function() {
@@ -1645,12 +1714,19 @@
                 $('#quick_progress_input').val(prog);
                 $('#quick_slider_val').text(prog + '%');
                 $('#quick_fase').val(fase);
+                if (prog >= 100) {
+                    $('#quick_fase').val('Fase 3');
+                }
 
                 $('#modalQuickProgress').modal('show');
             });
 
             $('#formQuickProgress').on('submit', function(e) {
                 e.preventDefault();
+                const progVal = parseInt($('#quick_progress_input').val()) || 0;
+                if (progVal >= 100) {
+                    $('#quick_fase').val('Fase 3');
+                }
                 const id = $('#quick_project_id').val();
                 const $btn = $('#btnSubmitQuickProgress');
                 const origText = $btn.html();
