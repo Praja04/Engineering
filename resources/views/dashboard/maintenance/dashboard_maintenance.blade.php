@@ -793,7 +793,7 @@
                         <!-- Center: Title -->
                         <div class="col-xl-4 col-lg-4 col-md-12 text-center d-none d-lg-block">
                             <div class="mtc-header-title">MAINTENANCE PERFORMANCE COMMAND CENTER</div>
-                            <div class="mtc-header-sub">MHE • MOTOR POMPA • SIPIL • UTILITY PLANT</div>
+                            <div class="mtc-header-sub">MHE • MOTOR POMPA • AC • UTILITY PLANT</div>
                             <div class="mtc-header-motto">"Reliability &amp; Maintainability (MTTR &bull; MTBF &bull;
                                 Downtime Losses)"</div>
                         </div>
@@ -1234,7 +1234,7 @@
                                         Detail Maintenance Cost
                                     </h4>
                                     <div class="mtc-card-subtitle">
-                                        Akumulasi Biaya per Kategori (MHE, Pompa, Utility, Sipil)
+                                        Akumulasi Biaya per Kategori (MHE, Pompa, Utility, AC)
                                     </div>
                                 </div>
                                 <span
@@ -2601,12 +2601,12 @@
                                 }
                             }
                         },
-                        colors: ['#38bdf8', '#10b981', '#f59e0b', '#a855f7'],
+                        colors: ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'],
                         dataLabels: {
                             enabled: true,
                             formatter: function(val) {
                                 const num = Number(val) || 0;
-                                return (num >= 1.0) ? (num % 1 === 0 ? num.toFixed(0) : num.toFixed(1)) +
+                                return (num >= 0.5) ? (num % 1 === 0 ? num.toFixed(0) : num.toFixed(1)) +
                                     ' Jt' : '';
                             },
                             style: {
@@ -2620,7 +2620,7 @@
                             }
                         },
                         xaxis: {
-                            categories: chartData.categories, // ['W1', 'W2', 'W3', 'W4', 'W5']
+                            categories: chartData.categories, // ['MHE', 'Motor Pompa', 'Utility', 'AC']
                             labels: {
                                 rotate: 0,
                                 rotateAlways: false,
@@ -2685,17 +2685,19 @@
                             shared: true,
                             intersect: false,
                             x: {
-                                formatter: function(val, {
-                                    dataPointIndex,
-                                    w
-                                }) {
-                                    const details = chartData.category_details || [];
-                                    return details[dataPointIndex] || val;
+                                formatter: function(val) {
+                                    return val;
                                 }
                             },
                             y: {
-                                formatter: function(val) {
-                                    return 'Rp ' + Number(val).toFixed(2) + ' Jt';
+                                formatter: function(val, {
+                                    seriesIndex,
+                                    dataPointIndex,
+                                    w
+                                }) {
+                                    const s = w.config.series[seriesIndex];
+                                    const dRange = s && s.date_range ? ' (' + s.date_range + ')' : '';
+                                    return 'Rp ' + Number(val).toFixed(2) + ' Jt' + dRange;
                                 }
                             }
                         }

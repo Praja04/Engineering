@@ -527,7 +527,7 @@ class MtcDashboardController extends Controller
             ];
         }
 
-        $units = ['MHE', 'Motor Pompa', 'Utility', 'Sipil'];
+        $units = ['MHE', 'Motor Pompa', 'Utility', 'AC'];
         $series = [];
         $weekColors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'];
 
@@ -583,13 +583,13 @@ class MtcDashboardController extends Controller
                 'MHE'         => [],
                 'Motor Pompa' => [],
                 'Utility'     => [],
-                'Sipil'       => []
+                'AC'          => []
             ];
 
             foreach ($wAgendas as $ag) {
                 $cat = $this->normalizeJenisCategory($ag->jenis_mtc);
                 if (!isset($plannedMachines[$cat])) {
-                    continue; // Pure hanya ambil kategori yang sesuai (MHE, Motor Pompa, Utility, Sipil)
+                    continue; // Pure hanya ambil kategori yang sesuai (MHE, Motor Pompa, Utility, AC)
                 }
 
                 $agYear = !empty($ag->tahun) ? (int)$ag->tahun : ($ag->tanggal ? (int)Carbon::parse($ag->tanggal)->year : (int)$wk['start']->year);
@@ -637,14 +637,6 @@ class MtcDashboardController extends Controller
                             $machineMatches = true;
                         } elseif ($agNama !== '' && strcasecmp($agNama, $pm['nama_mesin']) === 0) {
                             $machineMatches = true;
-                        } elseif ($u === 'Sipil') {
-                            if (strcasecmp($pm['jenis_mtc'] ?? '', 'Sipil') === 0 && !empty($pm['area'])) {
-                                if ($agNama !== '' && strcasecmp($agNama, $pm['area']) === 0) {
-                                    $machineMatches = true;
-                                } elseif ($agKode !== '' && strcasecmp($agKode, $pm['area']) === 0) {
-                                    $machineMatches = true;
-                                }
-                            }
                         }
 
                         if (!$machineMatches) continue;
@@ -680,14 +672,6 @@ class MtcDashboardController extends Controller
                                 $machineMatches = true;
                             } elseif ($agNama !== '' && strcasecmp($agNama, $pm['nama_mesin']) === 0) {
                                 $machineMatches = true;
-                            } elseif ($u === 'Sipil') {
-                                if (strcasecmp($pm['jenis_mtc'] ?? '', 'Sipil') === 0 && !empty($pm['area'])) {
-                                    if ($agNama !== '' && strcasecmp($agNama, $pm['area']) === 0) {
-                                        $machineMatches = true;
-                                    } elseif ($agKode !== '' && strcasecmp($agKode, $pm['area']) === 0) {
-                                        $machineMatches = true;
-                                    }
-                                }
                             }
 
                             if ($machineMatches) {
@@ -817,7 +801,7 @@ class MtcDashboardController extends Controller
     }
 
     /**
-     * Normalize category to MHE, Motor Pompa, Sipil, Utility
+     * Normalize category to MHE, Motor Pompa, Utility, AC
      */
     private function normalizeJenisCategory($jenis): string
     {
@@ -830,14 +814,14 @@ class MtcDashboardController extends Controller
         if (stripos($jenis, 'Pompa') !== false || stripos($jenis, 'Pump') !== false) {
             return 'Motor Pompa';
         }
-        if (stripos($jenis, 'Sipil') !== false) {
-            return 'Sipil';
+        if (stripos($jenis, 'Refrigerasi') !== false || strcasecmp($jenis, 'AC') === 0) {
+            return 'AC';
         }
         if (strcasecmp($jenis, 'Utility') === 0 || stripos($jenis, 'Utility') !== false) {
             return 'Utility';
         }
-        if (stripos($jenis, 'Refrigerasi') !== false) {
-            return 'Refrigerasi';
+        if (stripos($jenis, 'Sipil') !== false) {
+            return 'Sipil';
         }
         return $jenis;
     }
@@ -884,7 +868,8 @@ class MtcDashboardController extends Controller
             $categoryDetails[] = !empty($wk['display']) ? $wk['display'] : "{$wShort} ({$wk['label']})";
 
             $wRecords = $korektifRecords->filter(function ($item) use ($wStart, $wEnd) {
-                return $item->tanggal >= $wStart && $item->tanggal <= $wEnd;
+                $t = is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : ($item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : null);
+                return $t >= $wStart && $t <= $wEnd;
             });
 
             $realCount = $wRecords->count();
@@ -900,7 +885,10 @@ class MtcDashboardController extends Controller
         // For weekly filter, KPI displays the breakdown of the selected week; for monthly/custom, total of period
         $kpiBreakdowns = ($filterType === 'weekly') ? $selectedWeekBreakdowns : $totalPeriodBreakdowns;
         $kpiRecords = ($filterType === 'weekly') ? $selectedWeekRecords : $korektifRecords->filter(function ($item) use ($startDate, $endDate) {
-            return $item->tanggal >= $startDate->format('Y-m-d') && $item->tanggal <= $endDate->format('Y-m-d');
+            $tStart = $startDate->format('Y-m-d');
+            $tEnd = $endDate->format('Y-m-d');
+            $t = is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : ($item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : null);
+            return $t >= $tStart && $t <= $tEnd;
         });
 
         return [
@@ -952,7 +940,8 @@ class MtcDashboardController extends Controller
             $wRecords = $breakdownData['records']->filter(function ($item) use ($wk) {
                 $wStart = $wk['start']->format('Y-m-d');
                 $wEnd = $wk['end']->format('Y-m-d');
-                return $item->tanggal >= $wStart && $item->tanggal <= $wEnd;
+                $t = is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : ($item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : null);
+                return $t >= $wStart && $t <= $wEnd;
             });
 
             $weekHours = 0;
@@ -1121,49 +1110,34 @@ class MtcDashboardController extends Controller
             ->where('qty', '>', 0)
             ->get();
 
+        $units = ['MHE', 'Motor Pompa', 'Utility', 'AC'];
+        $weekColors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'];
+        $series = [];
+
         $chartCategories = [];
         $dateRanges = [];
         $categoryDetails = [];
-
-        $categoriesList = ['MHE', 'Motor Pompa', 'Utility', 'Sipil'];
-        $categoryColors = [
-            'MHE'         => '#38bdf8', // Cyan
-            'Motor Pompa' => '#10b981', // Emerald
-            'Utility'     => '#f59e0b', // Amber
-            'Sipil'       => '#a855f7', // Purple
-        ];
-
-        $costDataByCat = [
-            'MHE'         => [],
-            'Motor Pompa' => [],
-            'Utility'     => [],
-            'Sipil'       => [],
-        ];
 
         $totalSpareparts = 0;
         $selectedWeekTotal = 0;
 
         foreach ($weeksList as $idx => $wk) {
-            $wShort = !empty($wk['short_label']) ? $wk['short_label'] : $wk['key'];
-            $chartCategories[] = $wShort;
-            $dateRanges[] = $wk['label'];
-            $categoryDetails[] = !empty($wk['display']) ? $wk['display'] : "{$wShort} ({$wk['label']})";
+            $wShort = !empty($wk['short_label']) ? $wk['short_label'] : "W" . ($idx + 1);
+            $wFull = (!empty($wk['short_label']) ? $wk['short_label'] . ' (' . $wk['label'] . ')' : $wk['label']);
             $wStart = $wk['start']->format('Y-m-d');
             $wEnd = $wk['end']->format('Y-m-d');
 
+            $chartCategories[] = $wShort;
+            $dateRanges[] = $wk['label'];
+            $categoryDetails[] = !empty($wk['display']) ? $wk['display'] : "{$wShort} ({$wk['label']})";
+
             $wItems = $replacementItems->filter(function ($item) use ($wStart, $wEnd) {
                 if (!$item->main || empty($item->main->tanggal)) return false;
-                $t = Carbon::parse($item->main->tanggal)->format('Y-m-d');
+                $t = is_string($item->main->tanggal) ? substr($item->main->tanggal, 0, 10) : Carbon::parse($item->main->tanggal)->format('Y-m-d');
                 return $t >= $wStart && $t <= $wEnd;
             });
 
-            $weekCostPerCat = [
-                'MHE'         => 0.0,
-                'Motor Pompa' => 0.0,
-                'Utility'     => 0.0,
-                'Sipil'       => 0.0,
-            ];
-
+            $weekCostPerCat = array_fill_keys($units, 0.0);
             $weekTotal = 0.0;
 
             foreach ($wItems as $item) {
@@ -1177,31 +1151,31 @@ class MtcDashboardController extends Controller
                 }
 
                 $cat = $this->normalizeJenisCategory($item->main->jenis_mtc ?? '');
-                if (!isset($weekCostPerCat[$cat])) {
-                    $cat = 'Utility';
+                if (isset($weekCostPerCat[$cat])) {
+                    $weekCostPerCat[$cat] += $cost;
                 }
-                $weekCostPerCat[$cat] += $cost;
                 $weekTotal += $cost;
             }
 
-            foreach ($categoriesList as $cat) {
-                $costDataByCat[$cat][] = round($weekCostPerCat[$cat] / 1000000, 2);
+            $unitCostMillions = [];
+            foreach ($units as $u) {
+                $unitCostMillions[] = round($weekCostPerCat[$u] / 1000000, 2);
             }
+
+            $series[] = [
+                'name'       => $wShort,
+                'short_name' => $wShort,
+                'date_range' => $wk['label'],
+                'full_name'  => $wFull,
+                'data'       => $unitCostMillions,
+                'color'      => $weekColors[$idx % count($weekColors)],
+            ];
 
             $totalSpareparts += $weekTotal;
 
             if (!empty($wk['is_selected'])) {
                 $selectedWeekTotal = $weekTotal;
             }
-        }
-
-        $series = [];
-        foreach ($categoriesList as $cat) {
-            $series[] = [
-                'name'  => $cat,
-                'data'  => $costDataByCat[$cat],
-                'color' => $categoryColors[$cat],
-            ];
         }
 
         $totalPeriodCost = $totalSpareparts;
@@ -1225,7 +1199,7 @@ class MtcDashboardController extends Controller
             'budget_formatted' => $budgetFormatted,
             'budget_utilization' => $budgetUtil,
             'chart' => [
-                'categories' => $chartCategories,
+                'categories' => $units, // ['MHE', 'Motor Pompa', 'Utility', 'AC']
                 'date_ranges' => $dateRanges,
                 'category_details' => $categoryDetails,
                 'series' => $series,
@@ -1511,12 +1485,12 @@ class MtcDashboardController extends Controller
             ['name' => 'Motor Pompa Booster 01', 'area' => 'Motor Pompa', 'mtbf' => 310, 'mttr' => 1.8],
             ['name' => 'Genset Caterpillar 500kVA', 'area' => 'Utility', 'mtbf' => 380, 'mttr' => 3.5],
             ['name' => 'Compressor GA37', 'area' => 'Utility', 'mtbf' => 420, 'mttr' => 2.1],
-            ['name' => 'Pintu Rolling Door Timur', 'area' => 'Sipil', 'mtbf' => 480, 'mttr' => 1.5],
+            ['name' => 'AC Split Office Lt 2', 'area' => 'AC', 'mtbf' => 480, 'mttr' => 1.5],
             ['name' => 'Hydraulic Press 1000T', 'area' => 'MHE', 'mtbf' => 520, 'mttr' => 3.8],
             ['name' => 'Cooling Tower Unit 03', 'area' => 'Utility', 'mtbf' => 560, 'mttr' => 1.9],
             ['name' => 'Motor Pompa Transfer 02', 'area' => 'Motor Pompa', 'mtbf' => 610, 'mttr' => 1.4],
             ['name' => 'Linde Reach Truck RT-02', 'area' => 'MHE', 'mtbf' => 650, 'mttr' => 2.0],
-            ['name' => 'Plafon & Partisi Produksi', 'area' => 'Sipil', 'mtbf' => 700, 'mttr' => 1.2],
+            ['name' => 'AC Central Produksi', 'area' => 'AC', 'mtbf' => 700, 'mttr' => 1.2],
         ];
 
         return [
@@ -1529,10 +1503,12 @@ class MtcDashboardController extends Controller
 
     /**
      * Unit Off (Area Breakdown & Live Offline Units)
-     * Breakdown units where paket = 'Off'
+     * Real-time / Live offline units: Mengambil seluruh unit yang paketnya 'Off'
+     * dan belum berubah menjadi paket lain di record mtc_main yang lebih baru.
      */
-    private function getUnitOffData($startDate, $endDate): array
+    private function getUnitOffData($startDate = null, $endDate = null): array
     {
+        // Query all records where paket = 'Off' ordered by latest date and id
         $offRecords = MtcMainModel::with([
             'motorPump.mesin',
             'utility.mesin',
@@ -1546,45 +1522,110 @@ class MtcDashboardController extends Controller
             'battery',
         ])
             ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) = 'off'")
-            ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->orderByDesc('tanggal')
             ->orderByDesc('waktu_mulai')
+            ->orderByDesc('id')
             ->get();
 
         $areaCounts = [
             'MHE (Diesel & Electric)' => 0,
             'Motor Pompa'             => 0,
             'Utility Plant'           => 0,
-            'Sipil & Building'        => 0,
+            'AC'                      => 0,
         ];
 
         $palette = [
             'MHE (Diesel & Electric)' => '#38bdf8',
             'Motor Pompa'             => '#10b981',
             'Utility Plant'           => '#f59e0b',
-            'Sipil & Building'        => '#a855f7',
+            'AC'                      => '#a855f7',
         ];
 
         $offlineUnits = [];
+        $processedMachineKeys = [];
+        $mesinIdRels = ['motorPump', 'utility', 'electrical', 'refrigerasi', 'electricEngine', 'dieselEngine', 'dieselP2h', 'gensetP2h'];
 
         foreach ($offRecords as $rec) {
+            $mInfo = $this->resolveMachineInfo($rec);
+            $mKey = $mInfo['key'];
+
+            // Hindari duplikasi jika satu mesin tercatat beberapa kali paket Off di masa lampau
+            if (isset($processedMachineKeys[$mKey])) {
+                continue;
+            }
+            $processedMachineKeys[$mKey] = true;
+
+            // Cari ID master mesin jika ada
+            $mesinId = null;
+            foreach ($mesinIdRels as $rel) {
+                if ($rec->$rel && $rec->$rel->mesin) {
+                    $mesinId = $rec->$rel->mesin->id;
+                    break;
+                }
+            }
+
+            $tglStr = $rec->tanggal ? Carbon::parse($rec->tanggal)->format('Y-m-d') : '2000-01-01';
+
+            // Cek apakah ada record mtc_main yang lebih baru untuk mesin ini
+            $laterQuery = MtcMainModel::where('id', '!=', $rec->id)
+                ->where(function ($q) use ($tglStr, $rec) {
+                    $q->whereDate('tanggal', '>', $tglStr)
+                        ->orWhere(function ($sub) use ($tglStr, $rec) {
+                            $sub->whereDate('tanggal', '=', $tglStr)
+                                ->where('id', '>', $rec->id);
+                        });
+                });
+
+            if ($mesinId) {
+                $laterQuery->where(function ($q) use ($mesinId, $mesinIdRels, $mInfo) {
+                    $first = true;
+                    foreach ($mesinIdRels as $rel) {
+                        if ($first) {
+                            $q->whereHas($rel, function ($sub) use ($mesinId) {
+                                $sub->where('mesin_id', $mesinId);
+                            });
+                            $first = false;
+                        } else {
+                            $q->orWhereHas($rel, function ($sub) use ($mesinId) {
+                                $sub->where('mesin_id', $mesinId);
+                            });
+                        }
+                    }
+                    if (!empty($mInfo['kode_mesin']) && $mInfo['kode_mesin'] !== '-') {
+                        $q->orWhere('area', $mInfo['kode_mesin']);
+                    }
+                    if (!empty($mInfo['nama_mesin']) && $mInfo['nama_mesin'] !== '-') {
+                        $q->orWhere('area', $mInfo['nama_mesin']);
+                    }
+                });
+            } elseif (!empty($rec->area)) {
+                $laterQuery->where('area', $rec->area);
+            } else {
+                $laterQuery->whereRaw('1 = 0');
+            }
+
+            $latestAfter = $laterQuery->orderByDesc('tanggal')->orderByDesc('id')->first();
+
+            // Jika ada record sesudahnya dan paketnya bukan 'off', mesin ini sudah aktif / bukan lagi off
+            if ($latestAfter && strtolower(trim($latestAfter->paket ?? '')) !== 'off') {
+                continue;
+            }
+
             $cat = $this->normalizeJenisCategory($rec->jenis_mtc);
             $areaLabel = match ($cat) {
                 'MHE'         => 'MHE (Diesel & Electric)',
                 'Motor Pompa' => 'Motor Pompa',
-                'Sipil'       => 'Sipil & Building',
+                'AC'          => 'AC',
                 default       => 'Utility Plant',
             };
 
             $areaCounts[$areaLabel]++;
 
-            $mInfo = $this->resolveMachineInfo($rec);
-
             $catBadge = match ($cat) {
                 'MHE'         => 'primary',
                 'Motor Pompa' => 'success',
                 'Utility'     => 'purple',
-                'Sipil'       => 'warning',
+                'AC'          => 'info',
                 default       => 'secondary',
             };
 
@@ -1625,7 +1666,7 @@ class MtcDashboardController extends Controller
             ];
         }
 
-        $totalOff = $offRecords->count();
+        $totalOff = count($offlineUnits);
 
         $chartData = [
             'labels' => array_keys($areaCounts),
@@ -1664,7 +1705,8 @@ class MtcDashboardController extends Controller
             $wEnd = $wk['end']->format('Y-m-d');
 
             $wRecords = $breakdownData['records']->filter(function ($item) use ($wStart, $wEnd) {
-                return $item->tanggal >= $wStart && $item->tanggal <= $wEnd;
+                $t = is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : ($item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : null);
+                return $t >= $wStart && $t <= $wEnd;
             });
 
             $breakdownCount = $wRecords->count();
