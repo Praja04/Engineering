@@ -29,6 +29,11 @@ class MtcMotorPumpController extends Controller
         $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Motor Pompa')
             ->orderBy('id')->get();
 
+        $offMachineMap = MtcMasterMesinModel::getCurrentlyOffMachineMap('Motor Pompa');
+        foreach ($mesin as $item) {
+            $item->is_currently_off = isset($offMachineMap[$item->id]);
+        }
+
         $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Motor Pompa')
             ->where('is_active', true)
             ->with(['activeChecklists'])

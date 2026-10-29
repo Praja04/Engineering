@@ -29,6 +29,11 @@ class MtcUtilityController extends Controller
         $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Utility')
             ->orderBy('id')->get();
 
+        $offMachineMap = MtcMasterMesinModel::getCurrentlyOffMachineMap('Utility');
+        foreach ($mesin as $item) {
+            $item->is_currently_off = isset($offMachineMap[$item->id]);
+        }
+
         $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Utility')
             ->where('is_active', true)
             ->with(['activeChecklists'])

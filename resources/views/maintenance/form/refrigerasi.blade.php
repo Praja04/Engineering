@@ -59,7 +59,8 @@
                                     @foreach ($mesin as $item)
                                         <option value="{{ $item->id }}" data-lokasi="{{ $item->lokasi }}"
                                             data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}"
-                                            data-nama-mesin="{{ $item->nama_mesin }}">
+                                            data-nama-mesin="{{ $item->nama_mesin }}"
+                                            data-is-off="{{ !empty($item->is_currently_off) ? '1' : '0' }}">
                                             {{ $item->nama_mesin }} {{ $item->kode_mesin ? "({$item->kode_mesin})" : '' }} - {{ $item->lokasi }}
                                         </option>
                                     @endforeach
@@ -78,9 +79,9 @@
                                     placeholder="Pilih waktu" required>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Waktu Selesai</label>
+                                <label class="form-label" id="label_waktu_selesai">Waktu Selesai <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="waktu_selesai" id="waktu_selesai"
-                                    placeholder="Pilih waktu">
+                                    placeholder="Pilih waktu" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Kode Mesin </label>
@@ -528,6 +529,36 @@
                     // 🔥 Balikin ke default
                     $('#label_tanggal').html('Tanggal <span class="text-danger">*</span>');
                 }
+
+                if (val === 'Off') {
+                    $('#waktu_selesai').removeAttr('required');
+                    $('#label_waktu_selesai').html('Waktu Selesai');
+                } else {
+                    $('#waktu_selesai').attr('required', true);
+                    $('#label_waktu_selesai').html('Waktu Selesai <span class="text-danger">*</span>');
+                }
+
+                // Cek jika mesin berstatus Off tetapi user mencoba mengubah ke paket lain
+                const selectedMesin = $('#mesin_id').find(':selected');
+                const isMesinOff = selectedMesin.data('is-off') == '1' || selectedMesin.data('is-off') === true;
+
+                if (isMesinOff && val !== 'Off' && val !== '') {
+                    Swal.fire({
+                        icon: 'question',
+                        title: 'Konfirmasi Perubahan Paket',
+                        html: `Mesin ini saat ini masih berstatus <b>OFF</b>.<br>Mengubah paket ke <b>${val}</b> akan mengakhiri status OFF mesin ini. Apakah Anda yakin?`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Lanjut Ubah',
+                        cancelButtonText: 'Batal (Tetap Off)',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6c757d',
+                        allowOutsideClick: false
+                    }).then((res) => {
+                        if (!res.isConfirmed) {
+                            $('select[name="paket"]').val('Off').trigger('change');
+                        }
+                    });
+                }
             });
             let index = 0;
             let replacementIndex = 0;
@@ -539,12 +570,37 @@
                 const departemen = selected.data('departemen') || '';
                 const kodeMesin = selected.data('kode-mesin') || '';
                 const namaMesin = (selected.data('nama-mesin') || '').toUpperCase();
+                const isOff = selected.data('is-off') == '1' || selected.data('is-off') === true;
+                const namaMesinLabel = selected.text().trim();
 
                 $('input[name="kode_mesin"]').val(kodeMesin);
                 $('input[name="lokasi"]').val(lokasi);
                 $('input[name="departemen"]').val(departemen);
 
                 filterChecklistFields(namaMesin);
+
+                if (isOff) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian: Mesin Masih OFF',
+                        html: `Mesin <b>${namaMesinLabel}</b> saat ini masih terjadi <b>OFF</b>.<br><br>Jika ingin melanjutkan pengisian form untuk mesin ini, paket maintenance akan otomatis diatur ke <b>Off</b>.`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Lanjut Isi (Paket Off)',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#ffc107',
+                        cancelButtonColor: '#6c757d',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('select[name="paket"]').val('Off').trigger('change');
+                        } else {
+                            $('#mesin_id').val('').trigger('change.select2');
+                            $('input[name="kode_mesin"]').val('');
+                            $('input[name="lokasi"]').val('');
+                            $('input[name="departemen"]').val('');
+                        }
+                    });
+                }
             });
 
             $('#mesin_id').select2({
@@ -554,7 +610,9 @@
                 width: '100%',
                 templateResult: function(data) {
                     if (!data.id) return data.text;
-                    return $('<span><b>' + data.text.split(' - ')[0] + '</b><br><small>' + data.text
+                    const isOff = $(data.element).data('is-off') == '1';
+                    const offBadge = isOff ? ' <span class="badge bg-danger ms-1">OFF</span>' : '';
+                    return $('<span><b>' + data.text.split(' - ')[0] + '</b>' + offBadge + '<br><small>' + data.text
                         .split(' - ')[1] + '</small></span>');
                 }
             });

@@ -29,6 +29,11 @@ class MtcElectricEngineController extends Controller
         $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Electric Engine')
             ->orderBy('id')->get();
 
+        $offMachineMap = MtcMasterMesinModel::getCurrentlyOffMachineMap('Electric Engine');
+        foreach ($mesin as $item) {
+            $item->is_currently_off = isset($offMachineMap[$item->id]);
+        }
+
         $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Electric Engine')
             ->where('is_active', true)
             ->with(['activeChecklists' => function ($q) {

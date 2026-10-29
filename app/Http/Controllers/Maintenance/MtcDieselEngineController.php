@@ -29,6 +29,11 @@ class MtcDieselEngineController extends Controller
         $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Diesel Engine')
             ->orderBy('id')->get();
 
+        $offMachineMap = MtcMasterMesinModel::getCurrentlyOffMachineMap('Diesel Engine');
+        foreach ($mesin as $item) {
+            $item->is_currently_off = isset($offMachineMap[$item->id]);
+        }
+
         $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Diesel Engine')
             ->where('is_active', true)
             ->with(['activeChecklists' => function ($q) {
