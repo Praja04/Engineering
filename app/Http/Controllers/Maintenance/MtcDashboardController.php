@@ -109,8 +109,34 @@ class MtcDashboardController extends Controller
             $breakdownData = $this->getBreakdownData($startDate, $endDate, $weeksList, $filterType);
             $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours'], $filterType);
             $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
-            $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns'], $breakdownData['kpi_records'], $dateRange['operating_hours']);
-            $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
+
+            $chartStart = count($weeksList) > 0 ? $weeksList[0]['start']->format('Y-m-d') : $startDate->format('Y-m-d');
+            $chartEnd = count($weeksList) > 0 ? end($weeksList)['end']->format('Y-m-d') : $endDate->format('Y-m-d');
+            $allNonOffRecords = MtcMainModel::with([
+                'motorPump.mesin',
+                'utility.mesin',
+                'electrical.mesin',
+                'refrigerasi.mesin',
+                'electricEngine.mesin',
+                'dieselEngine.mesin',
+                'electricP2h.mesin',
+                'dieselP2h.mesin',
+                'gensetP2h.mesin',
+                'battery',
+            ])
+                ->whereBetween('tanggal', [$chartStart, $chartEnd])
+                ->where(function ($q) {
+                    $q->whereNull('paket')->orWhereRaw("LOWER(TRIM(paket)) != 'off'");
+                })
+                ->get();
+
+            $kpiNonOffRecords = $allNonOffRecords->filter(function ($item) use ($startDate, $endDate) {
+                $t = is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : ($item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : null);
+                return $t >= $startDate->format('Y-m-d') && $t <= $endDate->format('Y-m-d');
+            });
+
+            $mtbfData = $this->getMtbfData($kpiNonOffRecords, $dateRange['operating_hours']);
+            $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData, $allNonOffRecords);
 
             return response()->json([
                 'status' => true,
@@ -208,15 +234,40 @@ class MtcDashboardController extends Controller
         }
 
         // Fallback: Compute all if section is 'all' or not specified
+        $chartStart = count($weeksList) > 0 ? $weeksList[0]['start']->format('Y-m-d') : $startDate->format('Y-m-d');
+        $chartEnd = count($weeksList) > 0 ? end($weeksList)['end']->format('Y-m-d') : $endDate->format('Y-m-d');
+        $allNonOffRecords = MtcMainModel::with([
+            'motorPump.mesin',
+            'utility.mesin',
+            'electrical.mesin',
+            'refrigerasi.mesin',
+            'electricEngine.mesin',
+            'dieselEngine.mesin',
+            'electricP2h.mesin',
+            'dieselP2h.mesin',
+            'gensetP2h.mesin',
+            'battery',
+        ])
+            ->whereBetween('tanggal', [$chartStart, $chartEnd])
+            ->where(function ($q) {
+                $q->whereNull('paket')->orWhereRaw("LOWER(TRIM(paket)) != 'off'");
+            })
+            ->get();
+
+        $kpiNonOffRecords = $allNonOffRecords->filter(function ($item) use ($startDate, $endDate) {
+            $t = is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : ($item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : null);
+            return $t >= $startDate->format('Y-m-d') && $t <= $endDate->format('Y-m-d');
+        });
+
         $scheduleData = $this->getScheduleMaintenanceData($startDate, $endDate, $weeksList, $year, $month, $filterType);
         $breakdownData = $this->getBreakdownData($startDate, $endDate, $weeksList, $filterType);
         $downtimeData = $this->getDowntimeData($breakdownData, $weeksList, $dateRange['operating_hours'], $filterType);
         $mttrData = $this->getMttrData($breakdownData, $downtimeData['kpi_downtime_hours']);
-        $mtbfData = $this->getMtbfData($breakdownData['kpi_breakdowns'], $breakdownData['kpi_records'], $dateRange['operating_hours']);
+        $mtbfData = $this->getMtbfData($kpiNonOffRecords, $dateRange['operating_hours']);
         $costData = $this->getCostMaintenanceData($startDate, $endDate, $weeksList, $filterType);
         $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate, $dateRange['operating_hours']);
         $unitOffData = $this->getUnitOffData($startDate, $endDate);
-        $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
+        $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData, $allNonOffRecords);
 
         return response()->json([
             'status' => true,
@@ -1021,17 +1072,13 @@ class MtcDashboardController extends Controller
 
     /**
      * Compute MTBF for KPI Card:
-     * Average of unit MTBFs: (624 - total MTTR/downtime unit) / berapa kali korektif unit itu
+     * Average of unit MTBFs across all machines involved in the period (excluding Off).
+     * If machine has no Korektif in the period -> MTBF = 624 full.
+     * If machine has Korektif -> (624 - total MTTR/downtime unit) / berapa kali korektif unit itu.
      */
-    private function getMtbfData(int $kpiBreakdowns, $kpiRecords = null, float $baseHours = 624.0): array
+    private function getMtbfData($records = null, float $baseHours = 624.0): array
     {
-        if ($kpiBreakdowns <= 0 || !$kpiRecords || $kpiRecords->count() === 0) {
-            return [
-                'value' => (int) $baseHours,
-            ];
-        }
-
-        $avgMtbf = $this->computeAverageMtbf($kpiRecords, $baseHours);
+        $avgMtbf = $this->computeAverageMtbf($records, $baseHours);
 
         return [
             'value' => (int) round($avgMtbf, 0),
@@ -1039,8 +1086,10 @@ class MtcDashboardController extends Controller
     }
 
     /**
-     * Helper to compute average MTBF across all broken-down units:
-     * Unit MTBF = (624 - total downtime / repair duration) / berapa kali korektif unit itu
+     * Helper to compute average MTBF across all machines (excluding Off and Sipil):
+     * Unit MTBF:
+     * - If machine has no Korektif -> 624 full
+     * - If machine has Korektif -> max(0, 624 - total downtime) / freq
      * Overall = Average of unit MTBFs
      */
     private function computeAverageMtbf($records, float $baseHours = 624.0): float
@@ -1052,22 +1101,13 @@ class MtcDashboardController extends Controller
         $machinesGrouped = [];
 
         foreach ($records as $rec) {
+            // Exclude Sipil sesuai aturan dashboard
+            if (strcasecmp($rec->jenis_mtc ?? '', 'Sipil') === 0) {
+                continue;
+            }
+
             $mInfo = $this->resolveMachineInfo($rec);
             $mKey = $mInfo['key'];
-
-            $durationHours = 0;
-            if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
-                $tDate = $rec->tanggal ? Carbon::parse($rec->tanggal)->format('Y-m-d') : date('Y-m-d');
-                $tDateEnd = !empty($rec->tanggal_selesai) ? Carbon::parse($rec->tanggal_selesai)->format('Y-m-d') : $tDate;
-                $startT = Carbon::parse($tDate . ' ' . $rec->waktu_mulai);
-                $endT = Carbon::parse($tDateEnd . ' ' . $rec->waktu_selesai);
-                if ($endT->lessThan($startT)) {
-                    $endT->addDay();
-                }
-                $durationHours = max(0.1, $startT->diffInMinutes($endT) / 60);
-            } else {
-                $durationHours = 1.5;
-            }
 
             if (!isset($machinesGrouped[$mKey])) {
                 $machinesGrouped[$mKey] = [
@@ -1076,8 +1116,25 @@ class MtcDashboardController extends Controller
                 ];
             }
 
-            $machinesGrouped[$mKey]['freq'] += 1;
-            $machinesGrouped[$mKey]['downtime'] += $durationHours;
+            $isKorektif = !empty($rec->paket) && stripos(trim($rec->paket), 'korektif') !== false;
+            if ($isKorektif) {
+                $durationHours = 0;
+                if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
+                    $tDate = $rec->tanggal ? Carbon::parse($rec->tanggal)->format('Y-m-d') : date('Y-m-d');
+                    $tDateEnd = !empty($rec->tanggal_selesai) ? Carbon::parse($rec->tanggal_selesai)->format('Y-m-d') : $tDate;
+                    $startT = Carbon::parse($tDate . ' ' . $rec->waktu_mulai);
+                    $endT = Carbon::parse($tDateEnd . ' ' . $rec->waktu_selesai);
+                    if ($endT->lessThan($startT)) {
+                        $endT->addDay();
+                    }
+                    $durationHours = max(0.1, $startT->diffInMinutes($endT) / 60);
+                } else {
+                    $durationHours = 1.5;
+                }
+
+                $machinesGrouped[$mKey]['freq'] += 1;
+                $machinesGrouped[$mKey]['downtime'] += $durationHours;
+            }
         }
 
         if (empty($machinesGrouped)) {
@@ -1086,8 +1143,11 @@ class MtcDashboardController extends Controller
 
         $unitMtbfs = [];
         foreach ($machinesGrouped as $m) {
-            $unitMtbf = max(0, $baseHours - $m['downtime']) / max(1, $m['freq']);
-            $unitMtbfs[] = $unitMtbf;
+            if ($m['freq'] > 0) {
+                $unitMtbfs[] = max(0, $baseHours - $m['downtime']) / $m['freq'];
+            } else {
+                $unitMtbfs[] = $baseHours; // Jika mesin ini ga pernah ada korektif maka jadikan 624 full
+            }
         }
 
         return count($unitMtbfs) > 0 ? round(array_sum($unitMtbfs) / count($unitMtbfs), 1) : $baseHours;
@@ -1264,13 +1324,13 @@ class MtcDashboardController extends Controller
     }
 
     /**
-     * Top Machines Analytics: Top Mesin MTBF Terendah, Top MTTR Terlama, Top Cost Tertinggi
-     * Real calculation based on paket 'Korektif' in mtc_main (waktu_mulai s.d. waktu_selesai)
+     * Top Machines Analytics: Top Mesin MTBF, Top MTTR Terlama, Top Cost Tertinggi
+     * Real calculation based on all machines in mtc_main (excluding Off)
      */
     private function getTopMachinesAnalytics($startDate, $endDate, float $operatingHours = 624): array
     {
-        // 1. Ambil data korektif dalam rentang waktu filter
-        $korektifRecords = MtcMainModel::with([
+        // 1. Ambil semua data selain Off dalam rentang waktu filter
+        $activeRecords = MtcMainModel::with([
             'motorPump.mesin',
             'utility.mesin',
             'electrical.mesin',
@@ -1282,48 +1342,59 @@ class MtcDashboardController extends Controller
             'gensetP2h.mesin',
             'battery',
         ])
-            ->whereRaw("LOWER(TRIM(COALESCE(paket, ''))) LIKE '%korektif%'")
             ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->where(function ($q) {
+                $q->whereNull('paket')->orWhereRaw("LOWER(TRIM(paket)) != 'off'");
+            })
             ->get();
 
         $machinesGrouped = [];
 
-        foreach ($korektifRecords as $rec) {
+        foreach ($activeRecords as $rec) {
+            // Exclude Sipil sesuai aturan dashboard
+            if (strcasecmp($rec->jenis_mtc ?? '', 'Sipil') === 0) {
+                continue;
+            }
+
             $mInfo = $this->resolveMachineInfo($rec);
             $mKey = $mInfo['key'];
 
-            // Hitung durasi perbaikan dari waktu_mulai s.d. waktu_selesai
-            $durationHours = 0;
-            if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
-                $tDate = $rec->tanggal ? Carbon::parse($rec->tanggal)->format('Y-m-d') : date('Y-m-d');
-                $tDateEnd = !empty($rec->tanggal_selesai) ? Carbon::parse($rec->tanggal_selesai)->format('Y-m-d') : $tDate;
-                $startT = Carbon::parse($tDate . ' ' . $rec->waktu_mulai);
-                $endT = Carbon::parse($tDateEnd . ' ' . $rec->waktu_selesai);
-                if ($endT->lessThan($startT)) {
-                    $endT->addDay();
-                }
-                $durationHours = max(0.1, $startT->diffInMinutes($endT) / 60);
-            } else {
-                $durationHours = 1.5; // fallback estimasi jika waktu tidak diisi
-            }
-
-            $kendala = trim($rec->keterangan ?: ($rec->korektif ?: ''));
-
             if (!isset($machinesGrouped[$mKey])) {
+                $cat = $this->normalizeJenisCategory($rec->jenis_mtc);
                 $machinesGrouped[$mKey] = [
                     'nama_mesin'     => $mInfo['nama_mesin'],
                     'kode_mesin'     => $mInfo['kode_mesin'],
-                    'area'           => $mInfo['area'],
+                    'area'           => $cat,
                     'breakdown_freq' => 0,
                     'total_downtime' => 0.0,
                     'keterangan'     => [],
                 ];
             }
 
-            $machinesGrouped[$mKey]['breakdown_freq'] += 1;
-            $machinesGrouped[$mKey]['total_downtime'] += $durationHours;
-            if ($kendala && !in_array($kendala, $machinesGrouped[$mKey]['keterangan'])) {
-                $machinesGrouped[$mKey]['keterangan'][] = $kendala;
+            $isKorektif = !empty($rec->paket) && stripos(trim($rec->paket), 'korektif') !== false;
+            if ($isKorektif) {
+                // Hitung durasi perbaikan dari waktu_mulai s.d. waktu_selesai
+                $durationHours = 0;
+                if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
+                    $tDate = $rec->tanggal ? Carbon::parse($rec->tanggal)->format('Y-m-d') : date('Y-m-d');
+                    $tDateEnd = !empty($rec->tanggal_selesai) ? Carbon::parse($rec->tanggal_selesai)->format('Y-m-d') : $tDate;
+                    $startT = Carbon::parse($tDate . ' ' . $rec->waktu_mulai);
+                    $endT = Carbon::parse($tDateEnd . ' ' . $rec->waktu_selesai);
+                    if ($endT->lessThan($startT)) {
+                        $endT->addDay();
+                    }
+                    $durationHours = max(0.1, $startT->diffInMinutes($endT) / 60);
+                } else {
+                    $durationHours = 1.5; // fallback estimasi jika waktu tidak diisi
+                }
+
+                $kendala = trim($rec->keterangan ?: ($rec->korektif ?: ''));
+
+                $machinesGrouped[$mKey]['breakdown_freq'] += 1;
+                $machinesGrouped[$mKey]['total_downtime'] += $durationHours;
+                if ($kendala && !in_array($kendala, $machinesGrouped[$mKey]['keterangan'])) {
+                    $machinesGrouped[$mKey]['keterangan'][] = $kendala;
+                }
             }
         }
 
@@ -1335,11 +1406,16 @@ class MtcDashboardController extends Controller
             $freq = $m['breakdown_freq'];
             $downtime = $m['total_downtime'];
 
-            $mttr = round($downtime / max(1, $freq), 1);
-            // Rumus MTBF unit: (624 - total MTTR / total downtime unit) / berapa kali korektif dari unit itu
-            $mtbf = round(max(0, $baseHours - $downtime) / max(1, $freq), 0);
-
-            $ket = !empty($m['keterangan']) ? implode(', ', $m['keterangan']) : 'Perbaikan Kerusakan Korektif';
+            if ($freq > 0) {
+                $mttr = round($downtime / $freq, 1);
+                // Rumus MTBF unit: (624 - total MTTR / total downtime unit) / berapa kali korektif dari unit itu
+                $mtbf = round(max(0, $baseHours - $downtime) / $freq, 0);
+                $ket = !empty($m['keterangan']) ? implode(', ', $m['keterangan']) : 'Perbaikan Kerusakan Korektif';
+            } else {
+                $mttr = 0.0;
+                $mtbf = (int) $baseHours; // Jika mesin ini ga pernah ada Korektif maka jadikan 624 full
+                $ket = 'Beroperasi Normal (Tanpa Korektif)';
+            }
 
             $evaluatedMachines[] = [
                 'nama_mesin'     => $m['nama_mesin'],
@@ -1374,8 +1450,11 @@ class MtcDashboardController extends Controller
             ];
         }
 
-        // 2. Top MTTR Terlama (Urut dari nilai terbesar / all data tanpa limit)
-        $sortedByMttr = collect($evaluatedMachines)->sortByDesc('rata_mttr')->values();
+        // 2. Top MTTR Terlama (Urut dari nilai terbesar, hanya mesin yang pernah korektif / rusak)
+        $sortedByMttr = collect($evaluatedMachines)
+            ->filter(fn($x) => $x['breakdown_freq'] > 0)
+            ->sortByDesc('rata_mttr')
+            ->values();
 
         $topMttr = [];
         foreach ($sortedByMttr as $idx => $item) {
@@ -1685,7 +1764,7 @@ class MtcDashboardController extends Controller
      * MTBF vs MTTR Correlation Line Chart (Trend per week)
      * Comparing: MTBF (Jam) and MTTR (Jam)
      */
-    private function getMttrMtbfCorrelation(array $weeksList, array $breakdownData, array $downtimeData): array
+    private function getMttrMtbfCorrelation(array $weeksList, array $breakdownData, array $downtimeData, $allNonOffRecords = null): array
     {
         $categories = [];
         $dateRanges = [];
@@ -1725,9 +1804,18 @@ class MtcDashboardController extends Controller
                     $downtimeHours = round($breakdownCount * 1.5, 1);
                 }
                 $weekMttr = round($downtimeHours / $breakdownCount, 1);
-                $weekMtbf = round($this->computeAverageMtbf($wRecords, $baseHours), 0);
             } else {
                 $weekMttr = 0.0;
+            }
+
+            // MTBF dihitung dari semua mesin selain Off pada minggu ini
+            if ($allNonOffRecords && $allNonOffRecords->count() > 0) {
+                $wNonOff = $allNonOffRecords->filter(function ($item) use ($wStart, $wEnd) {
+                    $t = is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : ($item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : null);
+                    return $t >= $wStart && $t <= $wEnd;
+                });
+                $weekMtbf = round($this->computeAverageMtbf($wNonOff, $baseHours), 0);
+            } else {
                 $weekMtbf = (int) $baseHours;
             }
 
