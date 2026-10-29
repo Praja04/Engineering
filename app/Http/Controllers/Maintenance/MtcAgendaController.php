@@ -488,8 +488,8 @@ class MtcAgendaController extends Controller
                     $planItemsList = [];
 
                     $wRange   = $weekRanges[$bln][$wk];
-                    $wkStart  = Carbon::createFromDate($tahun, $bln, $wRange['start']);
-                    $wkEnd    = Carbon::createFromDate($tahun, $bln, $wRange['end']);
+                    $wkStart  = Carbon::createFromDate($tahun, $bln, $wRange['start'])->startOfDay();
+                    $wkEnd    = Carbon::createFromDate($tahun, $bln, $wRange['end'])->endOfDay();
 
                     foreach ($weekPlansList as $pIdx => $planData) {
                         $paket = $planData['paket'];
@@ -542,7 +542,8 @@ class MtcAgendaController extends Controller
                     // 2. Calculate Actual Items (all inspections in this week range, if any)
                     $actualItemsList = [];
                     foreach ($monthActuals as $act) {
-                        if ($act['tanggal']->between($wkStart, $wkEnd)) {
+                        $actDay = (int) $act['tanggal']->day;
+                        if ($actDay >= $wRange['start'] && $actDay <= $wRange['end']) {
                             $actualItemsList[] = [
                                 'tanggal' => $act['tanggal']->format('Y-m-d'),
                                 'paket'   => $act['paket'],
@@ -745,8 +746,8 @@ class MtcAgendaController extends Controller
                     $wRange  = $weekRanges[$wk] ?? null;
                     if (!$wRange) continue;
 
-                    $wkStart = Carbon::createFromDate($tahun, $bulan, $wRange['start']);
-                    $wkEnd   = Carbon::createFromDate($tahun, $bulan, $wRange['end']);
+                    $wkStart = Carbon::createFromDate($tahun, $bulan, $wRange['start'])->startOfDay();
+                    $wkEnd   = Carbon::createFromDate($tahun, $bulan, $wRange['end'])->endOfDay();
 
                     $pairedActual = $planPairing[$idx] ?? null;
                     if ($pairedActual) {
