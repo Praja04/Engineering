@@ -1996,14 +1996,14 @@
                                 '-';
 
                             tbodyHtml += `
-                        <tr>
-                            <td class="fw-semibold text-white" style="font-size: 9px; padding: 3px 4px; white-space: nowrap;">${item.chemical_name}</td>
-                            <td class="text-end font-monospace ${qtyColor}" style="font-size: 9px; padding: 3px 4px;">${Number(item.qty).toLocaleString('id-ID')} kg</td>
-                            <td class="text-end font-monospace text-muted" style="font-size: 9px; padding: 3px 4px;">${stdText}</td>
-                            <td class="text-end font-monospace text-muted" style="font-size: 8.5px; padding: 3px 4px;">${costM3Text}</td>
-                            <td class="text-center" style="padding: 3px 4px;"><span class="${badgeClass}">${statusText}</span></td>
-                        </tr>
-                    `;
+                                <tr>
+                                    <td class="fw-semibold text-white" style="font-size: 9px; padding: 3px 4px; white-space: nowrap;">${item.chemical_name}</td>
+                                    <td class="text-end font-monospace ${qtyColor}" style="font-size: 9px; padding: 3px 4px;">${Number(item.qty).toLocaleString('id-ID')} kg</td>
+                                    <td class="text-end font-monospace text-muted" style="font-size: 9px; padding: 3px 4px;">${stdText}</td>
+                                    <td class="text-end font-monospace text-muted" style="font-size: 8.5px; padding: 3px 4px;">${costM3Text}</td>
+                                    <td class="text-center" style="padding: 3px 4px;"><span class="${badgeClass}">${statusText}</span></td>
+                                </tr>
+                            `;
                         });
                     }
                     document.getElementById('tableChemConsBody').innerHTML = tbodyHtml;
@@ -2137,16 +2137,16 @@
                             'text-center font-monospace text-info';
 
                         tbodyHtml += `
-                    <tr>
-                        <td class="fw-semibold text-white" style="font-size: 8.5px; white-space: nowrap; padding: 4px 4px;">${item.parameter}</td>
-                        <td class="text-center font-monospace" style="padding: 4px 3px; font-size: 8.5px;">${item.ph ?? '-'}</td>
-                        <td class="${codCellClass}" style="padding: 4px 3px; font-size: 8.5px;">${item.cod ?? '-'}</td>
-                        <td class="${tssCellClass}" style="padding: 4px 3px; font-size: 8.5px;">${item.tss ?? '-'}</td>
-                        <td class="text-center font-monospace ${remCodColor}" style="padding: 4px 3px; font-size: 8.5px;" title="Std: ${standard}">${remCod}</td>
-                        <td class="text-center font-monospace ${remTssColor}" style="padding: 4px 3px; font-size: 8.5px;" title="Std: ${standard}">${remTss}</td>
-                        <td class="text-center" style="padding: 4px 4px;"><span class="${badgeClass}" title="Std: ${standard}">${status}</span></td>
-                    </tr>
-                    `;
+                            <tr>
+                                <td class="fw-semibold text-white" style="font-size: 8.5px; white-space: nowrap; padding: 4px 4px;">${item.parameter}</td>
+                                <td class="text-center font-monospace" style="padding: 4px 3px; font-size: 8.5px;">${item.ph ?? '-'}</td>
+                                <td class="${codCellClass}" style="padding: 4px 3px; font-size: 8.5px;">${item.cod ?? '-'}</td>
+                                <td class="${tssCellClass}" style="padding: 4px 3px; font-size: 8.5px;">${item.tss ?? '-'}</td>
+                                <td class="text-center font-monospace ${remCodColor}" style="padding: 4px 3px; font-size: 8.5px;" title="Std: ${standard}">${remCod}</td>
+                                <td class="text-center font-monospace ${remTssColor}" style="padding: 4px 3px; font-size: 8.5px;" title="Std: ${standard}">${remTss}</td>
+                                <td class="text-center" style="padding: 4px 4px;"><span class="${badgeClass}" title="Std: ${standard}">${status}</span></td>
+                            </tr>
+                        `;
                     });
                     document.getElementById('tableEnvPerfBody').innerHTML = tbodyHtml;
                 }
