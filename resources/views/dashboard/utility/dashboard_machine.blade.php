@@ -774,23 +774,25 @@
                         </div>
                     </div>
 
-                    <!-- Card 4: Cooling Tower -->
+                    <!-- Card 4: Total Cost Utility (formerly Cooling Tower) -->
                     <div class="col-xl-2 col-md-4 col-6">
                         <div class="kpi-top-card">
                             <div class="kpi-top-header">
                                 <div class="kpi-top-icon"
                                     style="background: rgba(16, 185, 129, 0.15); color: var(--wco-green);">
-                                    <i class="mdi mdi-coolant-temperature"></i>
+                                    <i class="mdi mdi-cash-multiple"></i>
                                 </div>
                                 <div>
-                                    <div class="kpi-top-label">COOLING TOWER</div>
-                                    <div class="text-muted" style="font-size: 8px;">TEMP & PRESSURE OUT</div>
+                                    <div class="kpi-top-label">TOTAL COST UTILITY</div>
+                                    <div class="text-muted" style="font-size: 8px;">COST SMKP & UTILITY</div>
                                 </div>
                             </div>
-                            <div class="kpi-top-val text-success" id="kpiCtVal">0 <span
-                                    style="font-size: 11px; font-weight: normal; color: #94a3b8;">°C</span></div>
-                            <div class="kpi-top-sub" id="kpiCtSub">
-                                <i class="mdi mdi-gauge"></i> Press: <span id="kpiCtPress">-</span> Bar
+                            <div class="kpi-top-val text-success" id="kpiTotalCostUtilityVal">Rp 0 Jt</div>
+                            <div class="kpi-top-sub d-flex justify-content-between align-items-center" id="kpiTotalCostUtilitySub"
+                                style="font-size: 7.5px;">
+                                <span class="text-truncate"><i class="mdi mdi-calendar-text text-success"></i> <span
+                                        id="kpiCostSmkpYearMeta">Tahun -</span></span>
+                                <span class="text-muted text-truncate" id="kpiAvgCostUtilityMeta">Avg: 0 Jt/bln</span>
                             </div>
                         </div>
                     </div>
@@ -1958,12 +1960,13 @@
                                 maximumFractionDigits: 1
                             }) + ' Rb';
                         } else {
-                            invFormatted = 'Rp 1.303';
+                            invFormatted = 'Rp 0';
                         }
+                        const tarifFormatted = Number(ph.tarif_per_kwh || 1303).toLocaleString('id-ID');
                         $('#kpiInvoiceVal').text(invFormatted);
                         $('#kpiInvoiceVal').attr('title',
-                            `Estimasi Biaya: Rp ${invVal.toLocaleString('id-ID')} (@Rp 1.303 / kWh)`);
-                        $('#kpiInvoiceSub').text(`@1.303/kWh`);
+                            `Estimasi Biaya: Rp ${invVal.toLocaleString('id-ID')} (@Rp ${tarifFormatted} / kWh)`);
+                        $('#kpiInvoiceSub').text(`@${tarifFormatted}/kWh`);
 
                         // Subtitle Meta
                         $('#kpiTotalEnergy').text(totalEnergy.toLocaleString('id-ID', {
@@ -2036,12 +2039,6 @@
 
                 // 4. COOLING TOWER UI & LOADER
                 function updateCtUI(ct) {
-                    // Top KPI Card: Total AVG across period
-                    $('#kpiCtVal').html(
-                        `${ct.temp_out_avg} <span style="font-size: 11px; font-weight: normal; color: #94a3b8;">°C</span>`
-                    );
-                    $('#kpiCtPress').text(ct.pressure_out_avg);
-
                     // Card metric tiles: tampilkan AVG data tanggal terbaru (sama seperti Compressor)
                     const tempLatestVal = (ct.temp_out_latest_avg !== undefined) ? ct.temp_out_latest_avg : ct
                         .temp_out_avg;
@@ -3576,6 +3573,23 @@
                     );
                     $('#metaCostSmkpMonth').text(
                         `Avg: Rp ${Number(s.avg_utility_cost_jt || 0).toLocaleString('id-ID', { maximumFractionDigits: 1 })} Jt/bln`
+                    );
+
+                    // Top KPI Card 4: TOTAL COST UTILITY (dari Cost SMKP & Utility)
+                    const totalCostJt = Number(s.total_utility_cost_jt || 0);
+                    let formattedKpiCost = 'Rp 0 Jt';
+                    if (totalCostJt >= 1000) {
+                        formattedKpiCost = `Rp ${(totalCostJt / 1000).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} M`;
+                    } else if (totalCostJt > 0) {
+                        formattedKpiCost = `Rp ${totalCostJt.toLocaleString('id-ID', { maximumFractionDigits: 1 })} Jt`;
+                    }
+                    $('#kpiTotalCostUtilityVal').text(formattedKpiCost);
+                    $('#kpiTotalCostUtilityVal').attr('title',
+                        `Total Cost Utility: Rp ${Number(s.total_utility_cost || 0).toLocaleString('id-ID')}`
+                    );
+                    $('#kpiCostSmkpYearMeta').text(`Tahun ${costSmkp.year}`);
+                    $('#kpiAvgCostUtilityMeta').text(
+                        `Avg: ${Number(s.avg_utility_cost_jt || 0).toLocaleString('id-ID', { maximumFractionDigits: 1 })} Jt/bln`
                     );
                 }
 
