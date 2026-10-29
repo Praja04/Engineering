@@ -136,7 +136,7 @@ class MtcDashboardController extends Controller
             });
 
             $mtbfData = $this->getMtbfData($kpiNonOffRecords, $dateRange['operating_hours']);
-            $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData, $allNonOffRecords);
+            $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
 
             return response()->json([
                 'status' => true,
@@ -267,7 +267,7 @@ class MtcDashboardController extends Controller
         $costData = $this->getCostMaintenanceData($startDate, $endDate, $weeksList, $filterType);
         $topMachinesData = $this->getTopMachinesAnalytics($startDate, $endDate, $dateRange['operating_hours']);
         $unitOffData = $this->getUnitOffData($startDate, $endDate);
-        $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData, $allNonOffRecords);
+        $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
 
         return response()->json([
             'status' => true,
@@ -1429,8 +1429,13 @@ class MtcDashboardController extends Controller
             ];
         }
 
-        // 1. Top Mesin MTBF (Urut dari nilai terbesar / all data tanpa limit)
-        $sortedByMtbf = collect($evaluatedMachines)->sortByDesc('nilai_mtbf')->values();
+        // 1. Top Mesin MTBF (Urut dari nilai terendah dulu / paling kritis)
+        $sortedByMtbf = collect($evaluatedMachines)
+            ->sortBy([
+                ['nilai_mtbf', 'asc'],
+                ['breakdown_freq', 'desc'],
+            ])
+            ->values();
 
         $topMtbf = [];
         foreach ($sortedByMtbf as $idx => $item) {
@@ -1762,9 +1767,9 @@ class MtcDashboardController extends Controller
 
     /**
      * MTBF vs MTTR Correlation Line Chart (Trend per week)
-     * Comparing: MTBF (Jam) and MTTR (Jam)
+     * Comparing: MTBF (Jam) and MTTR (Jam) based on Korektif packages
      */
-    private function getMttrMtbfCorrelation(array $weeksList, array $breakdownData, array $downtimeData, $allNonOffRecords = null): array
+    private function getMttrMtbfCorrelation(array $weeksList, array $breakdownData, array $downtimeData): array
     {
         $categories = [];
         $dateRanges = [];
@@ -1804,18 +1809,9 @@ class MtcDashboardController extends Controller
                     $downtimeHours = round($breakdownCount * 1.5, 1);
                 }
                 $weekMttr = round($downtimeHours / $breakdownCount, 1);
+                $weekMtbf = round($this->computeAverageMtbf($wRecords, $baseHours), 0);
             } else {
                 $weekMttr = 0.0;
-            }
-
-            // MTBF dihitung dari semua mesin selain Off pada minggu ini
-            if ($allNonOffRecords && $allNonOffRecords->count() > 0) {
-                $wNonOff = $allNonOffRecords->filter(function ($item) use ($wStart, $wEnd) {
-                    $t = is_string($item->tanggal) ? substr($item->tanggal, 0, 10) : ($item->tanggal ? Carbon::parse($item->tanggal)->format('Y-m-d') : null);
-                    return $t >= $wStart && $t <= $wEnd;
-                });
-                $weekMtbf = round($this->computeAverageMtbf($wNonOff, $baseHours), 0);
-            } else {
                 $weekMtbf = (int) $baseHours;
             }
 
