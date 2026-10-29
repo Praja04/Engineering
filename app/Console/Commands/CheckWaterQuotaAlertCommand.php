@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\WaterQuotaAlertMail;
+use App\Models\NotificationsModel;
 use App\Models\User;
 use App\Models\Utility\AirArea;
 use App\Models\Utility\PemakaianAirModel;
@@ -70,10 +71,10 @@ class CheckWaterQuotaAlertCommand extends Command
         $this->line("Periode: {$monthName} {$year} ({$daysInMonth} hari | {$startOfMonth} s.d. {$endOfMonth})");
         $this->line("Tanggal Check: " . $now->toDateTimeString());
 
-        // 1. Ambil target kuota harian dari AirArea
-        $dbQuotas = AirArea::whereIn('nama_area', $this->rawSources)
-            ->pluck('quota_target', 'nama_area')
-            ->toArray();
+        // 1. Ambil target kuota harian dan ID dari AirArea
+        $airAreas = AirArea::whereIn('nama_area', $this->rawSources)
+            ->get()
+            ->keyBy('nama_area');
 
         // 2. Ambil pemakaian aktual bulan berjalan
         $records = PemakaianAirModel::query()
@@ -88,8 +89,9 @@ class CheckWaterQuotaAlertCommand extends Command
         $alertItems = [];
 
         foreach ($this->rawSources as $source) {
-            $dailyQuota = isset($dbQuotas[$source]) && $dbQuotas[$source] !== null
-                ? (float) $dbQuotas[$source]
+            $areaModel = $airAreas[$source] ?? null;
+            $dailyQuota = $areaModel && $areaModel->quota_target !== null
+                ? (float) $areaModel->quota_target
                 : ($this->defaultQuotas[$source] ?? 0.0);
 
             // Perhitungan: Kuota 1 bulan penuh = daily_quota * jumlah hari di bulan ini
@@ -132,6 +134,7 @@ class CheckWaterQuotaAlertCommand extends Command
                 if ($isForce || !$alreadyAlerted) {
                     $alertItems[] = [
                         'source'        => $source,
+                        'area_id'       => $areaModel?->id,
                         'daily_quota'   => $dailyQuota,
                         'monthly_quota' => $monthlyQuota,
                         'threshold_80'  => $threshold80,
@@ -163,29 +166,62 @@ class CheckWaterQuotaAlertCommand extends Command
                 $q->where('jabatan', 'LIKE', '%supervisor%')
                   ->orWhere('jabatan', 'LIKE', '%spv%');
             })
-            ->whereNotNull('email')
-            ->where('email', '!=', '')
             ->get();
 
         if ($supervisors->isEmpty()) {
-            $this->error("Tidak ditemukan user supervisor aktif dengan alamat email valid.");
+            $this->error("Tidak ditemukan user supervisor aktif.");
             return Command::FAILURE;
         }
 
         $this->info("Ditemukan {$supervisors->count()} user supervisor penerima notifikasi.");
 
         if ($isTest) {
-            $this->warn("[MODE TEST] Email tidak dikirim ke supervisor secara riil. Data simulasi:");
+            $this->warn("[MODE TEST] Email dan notifikasi web tidak dikirim ke supervisor secara riil. Data simulasi:");
             foreach ($supervisors as $spv) {
                 $recipientName = $spv->fullname ?: ($spv->username ?: 'Supervisor');
-                $this->line("- [TEST] Penerima: {$recipientName} ({$spv->email}) | Jabatan: {$spv->jabatan} | Dept: {$spv->departemen}");
+                $emailStatus = $spv->email ? $spv->email : 'Tanpa Email';
+                $this->line("- [TEST] Penerima: {$recipientName} ({$emailStatus}) | Jabatan: {$spv->jabatan} | Dept: {$spv->departemen}");
             }
             return Command::SUCCESS;
         }
 
-        // 4. Kirim email ke setiap supervisor
-        $sentCount = 0;
+        // 4. Kirim notifikasi web ke tabel `notifications`
+        $dashboardUrl = route('utility.dashboard_machine');
+        $dbNotifCount = 0;
+
         foreach ($supervisors as $supervisor) {
+            foreach ($alertItems as $item) {
+                $statusLabel = $item['percentage'] >= 100 ? 'OVER KUOTA' : 'WASPADA (≥80%)';
+                $title = "⚠️ Kuota Air {$item['source']} [{$statusLabel}]";
+                $message = "Pemakaian {$item['source']} periode {$monthName} {$year} mencapai {$item['percentage']}% ({$item['actual']} m³ dari kuota {$item['monthly_quota']} m³).";
+
+                // Cek apakah notifikasi serupa sudah pernah dicatat bulan ini untuk user ini
+                $alreadyExistsInDb = NotificationsModel::where('user_id', $supervisor->id)
+                    ->where('title', $title)
+                    ->whereDate('created_at', '>=', $startOfMonth)
+                    ->exists();
+
+                if ($isForce || !$alreadyExistsInDb) {
+                    NotificationsModel::create([
+                        'user_id'         => $supervisor->id,
+                        'notifiable_type' => AirArea::class,
+                        'notifiable_id'   => $item['area_id'],
+                        'title'           => $title,
+                        'message'         => $message,
+                        'url'             => $dashboardUrl,
+                        'is_read'         => false,
+                    ]);
+                    $dbNotifCount++;
+                }
+            }
+        }
+        $this->info("✓ Berhasil menyimpan {$dbNotifCount} record ke tabel notifikasi web.");
+
+        // 5. Kirim email ke setiap supervisor yang memiliki email valid
+        $sentCount = 0;
+        $supervisorsWithEmail = $supervisors->filter(fn($u) => !empty($u->email));
+
+        foreach ($supervisorsWithEmail as $supervisor) {
             $recipientName = $supervisor->fullname ?: ($supervisor->username ?: 'Supervisor');
             try {
                 $this->line("Mengirim email ke: {$recipientName} <{$supervisor->email}>...");
@@ -204,8 +240,8 @@ class CheckWaterQuotaAlertCommand extends Command
             }
         }
 
-        // 5. Tandai cache untuk sumber yang berhasil diproses agar tidak duplikat di run berikutnya (TTL s.d akhir bulan)
-        if ($sentCount > 0) {
+        // 6. Tandai cache untuk sumber yang berhasil diproses agar tidak duplikat di run berikutnya (TTL s.d akhir bulan)
+        if ($sentCount > 0 || $dbNotifCount > 0) {
             $secondsUntilEndOfMonth = $now->diffInSeconds($now->copy()->endOfMonth());
             foreach ($alertItems as $item) {
                 Cache::put($item['cache_key'], [
@@ -214,7 +250,7 @@ class CheckWaterQuotaAlertCommand extends Command
                     'percentage' => $item['percentage'],
                 ], $secondsUntilEndOfMonth);
             }
-            $this->info("Berhasil mengirim notifikasi email kuota air ke {$sentCount} supervisor.");
+            $this->info("Notifikasi selesai diproses (Web: {$dbNotifCount}, Email: {$sentCount}).");
         }
 
         return Command::SUCCESS;
