@@ -286,11 +286,27 @@
                 color: #ffffff;
             }
 
+            .kpi-val.optimal {
+                color: #34d399 !important;
+            }
+
+            .kpi-val.danger {
+                color: #f43f5e !important;
+            }
+
             .kpi-val .unit {
                 font-size: 0.85rem;
                 font-weight: 600;
                 color: var(--mtc-text-secondary);
                 margin-left: 3px;
+            }
+
+            .kpi-val.optimal .unit {
+                color: #6ee7b7 !important;
+            }
+
+            .kpi-val.danger .unit {
+                color: #fda4af !important;
             }
 
             .kpi-badge {
@@ -304,21 +320,21 @@
             }
 
             .kpi-badge.optimal {
-                background: rgba(16, 185, 129, 0.15);
-                color: #34d399;
-                border: 1px solid rgba(16, 185, 129, 0.25);
+                background: rgba(16, 185, 129, 0.15) !important;
+                color: #34d399 !important;
+                border: 1px solid rgba(16, 185, 129, 0.25) !important;
             }
 
             .kpi-badge.danger {
-                background: rgba(244, 63, 94, 0.15);
-                color: #fb7185;
-                border: 1px solid rgba(244, 63, 94, 0.25);
+                background: rgba(244, 63, 94, 0.15) !important;
+                color: #fb7185 !important;
+                border: 1px solid rgba(244, 63, 94, 0.25) !important;
             }
 
             .kpi-badge.neutral {
-                background: rgba(56, 189, 248, 0.12);
-                color: #38bdf8;
-                border: 1px solid rgba(56, 189, 248, 0.25);
+                background: rgba(56, 189, 248, 0.12) !important;
+                color: #38bdf8 !important;
+                border: 1px solid rgba(56, 189, 248, 0.25) !important;
             }
 
             .kpi-progress-bar {
@@ -336,12 +352,21 @@
                 transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
+            .kpi-progress-fill.optimal,
             .kpi-progress-fill.success {
-                background: #10b981;
+                background: #10b981 !important;
             }
 
             .kpi-progress-fill.danger {
-                background: #f43f5e;
+                background: #f43f5e !important;
+            }
+
+            .text-mtbf-optimal {
+                color: #34d399 !important;
+            }
+
+            .text-mtbf-danger {
+                color: #f43f5e !important;
             }
 
             /* ── Unified Chart Cards ── */
@@ -567,13 +592,49 @@
             body.theme-light .text-white,
             body.theme-light .text-light,
             body.theme-light .mtc-card-title,
-            body.theme-light .kpi-val.text-white,
-            body.theme-light #kpiBreakdownVal,
-            body.theme-light #kpiDowntimeVal,
-            body.theme-light #kpiMtbfVal,
-            body.theme-light #kpiCostVal,
-            body.theme-light .kpi-val .unit {
+            body.theme-light .kpi-val:not(.optimal):not(.danger),
+            body.theme-light .kpi-val:not(.optimal):not(.danger) .unit {
                 color: #0f172a !important;
+            }
+
+            /* Dynamic KPI Colors in Light Mode */
+            body.theme-light .kpi-val.optimal,
+            body.theme-light .text-mtbf-optimal {
+                color: #059669 !important;
+            }
+
+            body.theme-light .kpi-val.danger,
+            body.theme-light .text-mtbf-danger {
+                color: #dc2626 !important;
+            }
+
+            body.theme-light .kpi-val.optimal .unit {
+                color: #047857 !important;
+            }
+
+            body.theme-light .kpi-val.danger .unit {
+                color: #b91c1c !important;
+            }
+
+            body.theme-light .kpi-badge.optimal {
+                background: #d1fae5 !important;
+                color: #065f46 !important;
+                border: 1px solid #a7f3d0 !important;
+            }
+
+            body.theme-light .kpi-badge.danger {
+                background: #fee2e2 !important;
+                color: #991b1b !important;
+                border: 1px solid #fecaca !important;
+            }
+
+            body.theme-light .kpi-progress-fill.optimal,
+            body.theme-light .kpi-progress-fill.success {
+                background: #059669 !important;
+            }
+
+            body.theme-light .kpi-progress-fill.danger {
+                background: #dc2626 !important;
             }
 
             /* Cards in Light Mode */
@@ -932,7 +993,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="kpi-val font-mono" id="kpiCompletionVal" style="color: #34d399;">
+                                <div class="kpi-val font-mono" id="kpiCompletionVal">
                                     --<span class="unit">%</span>
                                 </div>
                                 <div class="kpi-progress-bar">
@@ -962,7 +1023,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="kpi-val font-mono text-white" id="kpiBreakdownVal">
+                                <div class="kpi-val font-mono" id="kpiBreakdownVal">
                                     --<span class="unit">x</span>
                                 </div>
                                 <div class="kpi-progress-bar">
@@ -992,7 +1053,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="kpi-val font-mono text-white" id="kpiDowntimeVal">
+                                <div class="kpi-val font-mono" id="kpiDowntimeVal">
                                     --<span class="unit">%</span>
                                 </div>
                                 <div class="kpi-progress-bar">
@@ -1022,7 +1083,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="kpi-val font-mono" id="kpiMttrVal" style="color: #38bdf8;">
+                                <div class="kpi-val font-mono" id="kpiMttrVal">
                                     --<span class="unit">Jam</span>
                                 </div>
                                 <div class="kpi-progress-bar">
@@ -1044,14 +1105,14 @@
                                 <div>
                                     <div class="text-secondary fw-bold text-uppercase"
                                         style="font-size: 10px; letter-spacing: 0.04em;">MTBF (Reliability)</div>
-                                    <span class="kpi-badge optimal mt-1" id="kpiMtbfBadge">Target &gt;250 Jam</span>
+                                    <span class="kpi-badge optimal mt-1" id="kpiMtbfBadge">Target &gt;612 Jam</span>
                                 </div>
                                 <div class="kpi-icon-pill">
                                     <i class="mdi mdi-heart-pulse"></i>
                                 </div>
                             </div>
                             <div>
-                                <div class="kpi-val font-mono text-white" id="kpiMtbfVal">
+                                <div class="kpi-val font-mono" id="kpiMtbfVal">
                                     --<span class="unit">Jam</span>
                                 </div>
                                 <div class="kpi-progress-bar">
@@ -1082,7 +1143,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="kpi-val font-mono text-white" id="kpiCostVal"
+                                <div class="kpi-val font-mono" id="kpiCostVal"
                                     style="font-size: 1.45rem;">
                                     --
                                 </div>
@@ -1589,16 +1650,31 @@
                     }) + ' WIB');
                 }
 
+                function applyKpiCardStatus(valSelector, badgeSelector, barSelector, isOptimal) {
+                    const $val = $(valSelector);
+                    const $badge = $(badgeSelector);
+                    const $bar = $(barSelector);
+
+                    if (isOptimal) {
+                        $val.removeClass('danger').addClass('optimal');
+                        $badge.removeClass('danger neutral').addClass('optimal');
+                        $bar.removeClass('danger').addClass('optimal');
+                    } else {
+                        $val.removeClass('optimal').addClass('danger');
+                        $badge.removeClass('optimal neutral').addClass('danger');
+                        $bar.removeClass('optimal').addClass('danger');
+                    }
+                }
+
                 // 1. Schedule Maintenance
                 function updateScheduleUI(sc, chartData) {
                     if (sc) {
                         $('#kpiCompletionVal').html(`${sc.value}<span class="unit">%</span>`);
                         $('#kpiCompletionBar').css('width', `${Math.min(100, sc.value)}%`);
                         $('#kpiCompletionCount').text(`${sc.completed_count} / ${sc.planned_count} Unit`);
-                        $('#kpiCompletionBadge')
-                            .toggleClass('optimal', sc.status === 'optimal')
-                            .toggleClass('danger', sc.status !== 'optimal')
-                            .text(`Target >${sc.target}% (${sc.value >= sc.target ? 'Achieved' : 'Need Focus'})`);
+                        const isOptimal = sc.status === 'optimal' || sc.value >= sc.target;
+                        applyKpiCardStatus('#kpiCompletionVal', '#kpiCompletionBadge', '#kpiCompletionBar', isOptimal);
+                        $('#kpiCompletionBadge').text(`Target >${sc.target}% (${isOptimal ? 'Achieved' : 'Need Focus'})`);
                     }
                     if (chartData) {
                         renderScheduleMaintenanceChart(chartData);
@@ -1614,10 +1690,9 @@
                             $('#kpiBreakdownVal').html(`${bd.value}<span class="unit">x</span>`);
                             const bdPct = Math.min(100, (bd.value / (bd.target * 2)) * 100);
                             $('#kpiBreakdownBar').css('width', `${bdPct}%`);
-                            $('#kpiBreakdownBadge')
-                                .toggleClass('optimal', bd.status === 'optimal')
-                                .toggleClass('danger', bd.status !== 'optimal')
-                                .text(bd.status === 'optimal' ? `Aman (<${bd.target}x)` : `Alarm (>${bd.target}x)`);
+                            const isOptimal = bd.status === 'optimal' || bd.value <= bd.target;
+                            applyKpiCardStatus('#kpiBreakdownVal', '#kpiBreakdownBadge', '#kpiBreakdownBar', isOptimal);
+                            $('#kpiBreakdownBadge').text(isOptimal ? `Aman (<${bd.target}x)` : `Alarm (>${bd.target}x)`);
                         }
                         if (kpi.downtime) {
                             const dt = kpi.downtime;
@@ -1625,30 +1700,27 @@
                             $('#kpiDowntimeHours').text(`${dt.hours} Jam`);
                             const dtPct = Math.min(100, (dt.percentage / (dt.target_percentage * 2)) * 100);
                             $('#kpiDowntimeBar').css('width', `${dtPct}%`);
-                            $('#kpiDowntimeBadge')
-                                .toggleClass('optimal', dt.status === 'optimal')
-                                .toggleClass('danger', dt.status !== 'optimal')
-                                .text(`Target <${dt.target_percentage}%`);
+                            const isOptimal = dt.status === 'optimal' || dt.percentage <= dt.target_percentage;
+                            applyKpiCardStatus('#kpiDowntimeVal', '#kpiDowntimeBadge', '#kpiDowntimeBar', isOptimal);
+                            $('#kpiDowntimeBadge').text(`Target <${dt.target_percentage}%`);
                         }
                         if (kpi.mttr) {
                             const mttr = kpi.mttr;
                             $('#kpiMttrVal').html(`${mttr.value}<span class="unit">${mttr.unit}</span>`);
                             const mttrPct = Math.min(100, (mttr.value / (mttr.target * 2)) * 100);
                             $('#kpiMttrBar').css('width', `${mttrPct}%`);
-                            $('#kpiMttrBadge')
-                                .toggleClass('neutral', mttr.status === 'optimal')
-                                .toggleClass('danger', mttr.status !== 'optimal')
-                                .text(`Target <${mttr.target} Jam`);
+                            const isOptimal = mttr.status === 'optimal' || mttr.value <= mttr.target;
+                            applyKpiCardStatus('#kpiMttrVal', '#kpiMttrBadge', '#kpiMttrBar', isOptimal);
+                            $('#kpiMttrBadge').text(`Target <${mttr.target} Jam`);
                         }
                         if (kpi.mtbf) {
                             const mtbf = kpi.mtbf;
                             $('#kpiMtbfVal').html(`${mtbf.value}<span class="unit">${mtbf.unit}</span>`);
-                            const mtbfPct = Math.min(100, (mtbf.value / 600) * 100);
+                            const mtbfPct = Math.min(100, (mtbf.value / 624) * 100);
                             $('#kpiMtbfBar').css('width', `${mtbfPct}%`);
-                            $('#kpiMtbfBadge')
-                                .toggleClass('optimal', mtbf.status === 'optimal')
-                                .toggleClass('danger', mtbf.status !== 'optimal')
-                                .text(`Target >${mtbf.target} Jam`);
+                            const isOptimal = mtbf.value >= 612; // Standar minimal MTBF > 612 Jam
+                            applyKpiCardStatus('#kpiMtbfVal', '#kpiMtbfBadge', '#kpiMtbfBar', isOptimal);
+                            $('#kpiMtbfBadge').text(`Target >612 Jam (${isOptimal ? 'Optimal' : 'Under Target'})`);
                         }
                     }
                     if (chartsData) {
@@ -1673,7 +1745,9 @@
                         $('#kpiCostVal').text(cost.value);
                         $('#kpiCostUtil').text(`${cost.budget_utilization}%`);
                         $('#kpiCostBar').css('width', `${Math.min(100, cost.budget_utilization)}%`);
-                        $('#kpiCostBadge').text(`Budget ${cost.budget}`);
+                        const isOptimal = cost.status === 'optimal' || cost.budget_utilization <= 100;
+                        applyKpiCardStatus('#kpiCostVal', '#kpiCostBadge', '#kpiCostBar', isOptimal);
+                        $('#kpiCostBadge').text(isOptimal ? `Budget ${cost.budget}` : `Over Budget ${cost.budget}`);
                     }
                     if (chartData) {
                         renderCostMaintenanceChart(chartData);
@@ -2722,9 +2796,10 @@
                     }
                     rows.forEach(item => {
                         const rankClass = item.rank === 1 ? 'top-1' : '';
-                        const badgeClass = item.status === 'Critical' ? 'danger' : (item.status === 'Warning' ?
-                            'neutral' : 'optimal');
-                        const mtbfColor = item.status === 'Critical' ? '#f43f5e' : (item.status === 'Warning' ? '#f59e0b' : '#34d399');
+                        const isOptimal = item.nilai_mtbf >= 612;
+                        const badgeClass = isOptimal ? 'optimal' : 'danger';
+                        const statusLabel = isOptimal ? 'Optimal' : 'Critical';
+                        const mtbfClass = isOptimal ? 'text-mtbf-optimal' : 'text-mtbf-danger';
                         html += `
                     <tr>
                         <td><span class="rank-badge ${rankClass}">${item.rank}</span></td>
@@ -2733,9 +2808,9 @@
                             <div class="text-secondary small font-mono" style="font-size: 9.5px;">${item.kode_mesin}</div>
                         </td>
                         <td><span class="badge bg-dark text-secondary border border-secondary border-opacity-25" style="font-size: 9.5px;">${item.area}</span></td>
-                        <td class="text-end font-mono fw-bold" style="color: ${mtbfColor};">${item.nilai_mtbf} Jam</td>
+                        <td class="text-end font-mono fw-bold ${mtbfClass}">${item.nilai_mtbf} Jam</td>
                         <td class="text-center">
-                            <span class="kpi-badge ${badgeClass}">${item.status}</span>
+                            <span class="kpi-badge ${badgeClass}">${statusLabel}</span>
                         </td>
                     </tr>
                 `;

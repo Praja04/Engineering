@@ -93,7 +93,7 @@ class MtcDashboardController extends Controller
                     'schedule_completion' => [
                         'value' => $scheduleData['kpi_completion_rate'],
                         'target' => 95.0,
-                        'status' => $scheduleData['kpi_completion_rate'] >= 95.0 ? 'optimal' : 'warning',
+                        'status' => $scheduleData['kpi_completion_rate'] >= 95.0 ? 'optimal' : 'danger',
                         'planned_count' => $scheduleData['kpi_total_planned'],
                         'completed_count' => $scheduleData['kpi_total_completed'],
                     ],
@@ -161,14 +161,14 @@ class MtcDashboardController extends Controller
                         'value' => $mttrData['value'],
                         'unit' => 'Jam',
                         'target' => 3.0,
-                        'status' => $mttrData['value'] <= 3.0 ? 'optimal' : 'warning',
+                        'status' => $mttrData['value'] <= 3.0 ? 'optimal' : 'danger',
                         'subtext' => 'Mean Time To Repair',
                     ],
                     'mtbf' => [
                         'value' => $mtbfData['value'],
                         'unit' => 'Jam',
-                        'target' => 250,
-                        'status' => $mtbfData['value'] >= 250 ? 'optimal' : 'danger',
+                        'target' => 612,
+                        'status' => $mtbfData['value'] >= 612 ? 'optimal' : 'danger',
                         'subtext' => 'Avg ((624 - MTTR) / Korektif)',
                     ],
                 ],
@@ -193,6 +193,7 @@ class MtcDashboardController extends Controller
                         'raw_value' => $costData['total_cost'],
                         'budget' => $costData['budget_formatted'],
                         'budget_utilization' => $costData['budget_utilization'],
+                        'status' => $costData['budget_utilization'] <= 100 ? 'optimal' : 'danger',
                         'subtext' => 'Total Maintenance Cost',
                     ],
                 ],
@@ -276,7 +277,7 @@ class MtcDashboardController extends Controller
                 'schedule_completion' => [
                     'value' => $scheduleData['kpi_completion_rate'],
                     'target' => 95.0,
-                    'status' => $scheduleData['kpi_completion_rate'] >= 95.0 ? 'optimal' : 'warning',
+                    'status' => $scheduleData['kpi_completion_rate'] >= 95.0 ? 'optimal' : 'danger',
                     'planned_count' => $scheduleData['kpi_total_planned'],
                     'completed_count' => $scheduleData['kpi_total_completed'],
                 ],
@@ -298,14 +299,14 @@ class MtcDashboardController extends Controller
                     'value' => $mttrData['value'],
                     'unit' => 'Jam',
                     'target' => 3.0,
-                    'status' => $mttrData['value'] <= 3.0 ? 'optimal' : 'warning',
+                    'status' => $mttrData['value'] <= 3.0 ? 'optimal' : 'danger',
                     'subtext' => 'Mean Time To Repair',
                 ],
                 'mtbf' => [
                     'value' => $mtbfData['value'],
                     'unit' => 'Jam',
-                    'target' => 250,
-                    'status' => $mtbfData['value'] >= 250 ? 'optimal' : 'danger',
+                    'target' => 612,
+                    'status' => $mtbfData['value'] >= 612 ? 'optimal' : 'danger',
                     'subtext' => 'Avg ((624 - MTTR) / Korektif)',
                 ],
                 'cost' => [
@@ -313,6 +314,7 @@ class MtcDashboardController extends Controller
                     'raw_value' => $costData['total_cost'],
                     'budget' => $costData['budget_formatted'],
                     'budget_utilization' => $costData['budget_utilization'],
+                    'status' => $costData['budget_utilization'] <= 100 ? 'optimal' : 'danger',
                     'subtext' => 'Total Maintenance Cost',
                 ],
             ],
@@ -1440,8 +1442,8 @@ class MtcDashboardController extends Controller
         $topMtbf = [];
         foreach ($sortedByMtbf as $idx => $item) {
             $mtbfVal = $item['nilai_mtbf'];
-            $status = $mtbfVal < 100 ? 'Critical' : ($mtbfVal < 250 ? 'Warning' : 'Optimal');
-            $statusColor = $mtbfVal < 100 ? 'danger' : ($mtbfVal < 250 ? 'warning' : 'success');
+            $status = $mtbfVal < 612 ? 'Critical' : 'Optimal';
+            $statusColor = $mtbfVal < 612 ? 'danger' : 'success';
 
             $topMtbf[] = [
                 'rank'           => $idx + 1,
@@ -1835,7 +1837,7 @@ class MtcDashboardController extends Controller
             ],
             'benchmark' => [
                 'target_mttr' => 3.0,
-                'target_mtbf' => 250,
+                'target_mtbf' => 612,
             ],
         ];
     }
