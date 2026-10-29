@@ -820,7 +820,7 @@
                         </div>
                     </div>
 
-                    <!-- Card 6: Raw Water Usage vs Quota -->
+                    <!-- Card 6: Raw Water Usage vs Kuota -->
                     <div class="col-xl-2 col-md-4 col-6">
                         <div class="kpi-top-card">
                             <div class="kpi-top-header">
@@ -830,13 +830,13 @@
                                 </div>
                                 <div>
                                     <div class="kpi-top-label">AIR MENTAH</div>
-                                    <div class="text-muted" style="font-size: 8px;">TOTAL / QUOTA RAW WATER</div>
+                                    <div class="text-muted" style="font-size: 8px;">TOTAL / KUOTA RAW WATER</div>
                                 </div>
                             </div>
                             <div class="kpi-top-val text-cyan" id="kpiWaterVal">0 / 0 <span
                                     style="font-size: 10px; font-weight: normal; color: #94a3b8;">m³</span></div>
                             <div class="kpi-top-sub" id="kpiWaterSub">
-                                <i class="mdi mdi-water-check"></i> Aktual: <span id="kpiRawAktual">0</span> | Quota:
+                                <i class="mdi mdi-water-check"></i> Aktual: <span id="kpiRawAktual">0</span> | Kuota:
                                 <span id="kpiRawQuota">0</span> m³
                             </div>
                         </div>
@@ -1233,7 +1233,7 @@
                             <div class="wco-card-header">
                                 <div class="wco-card-title">
                                     <i class="mdi mdi-water-pump text-cyan"></i>
-                                    <span>AIR MENTAH (AKTUAL VS QUOTA)</span>
+                                    <span>AIR MENTAH (AKTUAL VS KUOTA)</span>
                                 </div>
                                 <span class="badge bg-dark border border-secondary text-cyan"
                                     id="airRawPeriodBadge">Sumur 1,2,4,5 & PDAM</span>
@@ -1254,7 +1254,7 @@
                                     <div class="col-3">
                                         <div class="stat-tile py-1 px-1 text-center">
                                             <span class="stat-tile-label text-muted" style="font-size: 8px;">TARGET
-                                                QUOTA</span>
+                                                KUOTA</span>
                                             <div class="stat-tile-val mt-1 text-secondary" id="valAirRawQuota"
                                                 style="font-size: 12px;">0 m³</div>
                                             <div class="stat-tile-meta text-muted" id="valAirRawDaysMeta"
@@ -1268,7 +1268,7 @@
                                             <div class="stat-tile-val mt-1" id="valAirRawVariance"
                                                 style="font-size: 12px;">0 m³</div>
                                             <div class="stat-tile-meta text-muted" style="font-size: 7px;">Aktual -
-                                                Quota</div>
+                                                Kuota</div>
                                         </div>
                                     </div>
                                     <div class="col-3">
@@ -2196,16 +2196,16 @@
                     if (raw.status === 'exceeded') {
                         $('#kpiWaterVal').removeClass('text-cyan text-info').addClass('text-danger');
                         $('#kpiWaterSub').html(
-                            `<i class="mdi mdi-alert-circle text-danger"></i> <span class="text-danger fw-bold">Over Quota: +${Number(raw.total_variance).toLocaleString('id-ID')} m³</span> (${raw.total_percentage}%)`
+                            `<i class="mdi mdi-alert-circle text-danger"></i> <span class="text-danger fw-bold">Over Kuota: +${Number(raw.total_variance).toLocaleString('id-ID')} m³</span> (${raw.total_percentage}%)`
                         );
                     } else {
                         $('#kpiWaterVal').removeClass('text-danger').addClass('text-cyan');
                         $('#kpiWaterSub').html(
-                            `<i class="mdi mdi-water-check text-cyan"></i> Quota: ${quotaFormatted} m³ | Pemakaian: ${raw.total_percentage}%`
+                            `<i class="mdi mdi-water-check text-cyan"></i> Kuota: ${quotaFormatted} m³ | Pemakaian: ${raw.total_percentage}%`
                         );
                     }
                     $('#kpiWaterSub').attr('title',
-                        `Aktual: ${aktualFormatted} m³ | Quota: ${quotaFormatted} m³ (${raw.days_count || 1} hari)`);
+                        `Aktual: ${aktualFormatted} m³ | Kuota: ${quotaFormatted} m³ (${raw.days_count || 1} hari)`);
 
                     // Process & Support Card
                     $('#valAirProsesTotal').text(`${Number(proses.total_pemakaian || 0).toLocaleString('id-ID')} m³`);
@@ -2235,11 +2235,11 @@
                         $('#valAirRawPercent').removeClass('text-warning text-cyan text-success').addClass(
                             'text-danger');
                         $('#valAirRawStatusMeta').html(
-                            '<span class="text-danger fw-bold"><i class="mdi mdi-alert"></i> Over Quota</span>');
+                            '<span class="text-danger fw-bold"><i class="mdi mdi-alert"></i> Over Kuota</span>');
                     } else {
                         $('#valAirRawPercent').removeClass('text-danger').addClass('text-cyan');
                         $('#valAirRawStatusMeta').html(
-                            '<span class="text-success"><i class="mdi mdi-check-circle"></i> Normal (≤ Quota)</span>'
+                            '<span class="text-success"><i class="mdi mdi-check-circle"></i> Normal (≤ Kuota)</span>'
                         );
                     }
                 }
@@ -3443,7 +3443,7 @@
                                 data: actualData
                             },
                             {
-                                name: 'Target Quota (m³)',
+                                name: 'Target Kuota (m³)',
                                 data: quotaData
                             }
                         ],
