@@ -1470,27 +1470,41 @@ class WWTPController extends Controller
         $chemicalWWTP = $masterChemicals->pluck('nama_chemical')->toArray();
         $allStandards = WwtpChemicalStandard::orderBy('id', 'asc')->get();
 
+        // Pemetaan ketat pencocokan nama chemical: WwtpChemicalStandard <=> PemakaianChemicalModel
+        // BE            => BE-100
+        // C204          => C-204
+        // PAC           => PAC powder 1 (hanya ambil step 1, abaikan PAC powder 2)
+        // C9040         => C-9040 step 1 (hanya ambil step 1, abaikan C-9040 step 2)
+        // NAOH          => NaOH
+        // Denfloc 945 DAF => denfloc 945 DAF
+        $standardNameMap = [
+            'BE-100'          => 'BE',
+            'BE'              => 'BE',
+            'C-204'           => 'C204',
+            'C204'            => 'C204',
+            'PAC POWDER 1'    => 'PAC',
+            'PAC'             => 'PAC',
+            'C-9040 STEP 1'   => 'C9040',
+            'C9040'           => 'C9040',
+            'NAOH'            => 'NAOH',
+            'DENFLOC 945 DAF' => 'Denfloc 945 DAF',
+        ];
+
         // Helper untuk mencocokkan master chemical dengan standar harga dan kuota WWTP (WwtpChemicalStandard)
-        $findStandard = function ($chemName) use ($allStandards) {
+        $findStandard = function ($chemName) use ($allStandards, $standardNameMap) {
             $cleanName = strtoupper(trim($chemName));
-            $alphaName = preg_replace('/[^A-Z0-9]/', '', $cleanName);
+            $targetStdName = $standardNameMap[$cleanName] ?? null;
 
-            foreach ($allStandards as $std) {
-                $stdClean = strtoupper(trim($std->chemical_name));
-                $stdAlpha = preg_replace('/[^A-Z0-9]/', '', $stdClean);
-
-                if (strcasecmp($cleanName, $stdClean) === 0 || $alphaName === $stdAlpha) {
-                    return $std;
-                }
-
-                if (str_contains($cleanName, 'NAOH') && str_contains($stdClean, 'NAOH')) return $std;
-                if (str_contains($cleanName, 'PAC') && str_contains($stdClean, 'PAC')) return $std;
-                if ((str_starts_with($cleanName, 'BE-') || str_starts_with($cleanName, 'BE ') || $cleanName === 'BE') && $stdClean === 'BE') return $std;
-                if (str_contains($cleanName, '204') && str_contains($stdClean, '204')) return $std;
-                if (str_contains($cleanName, '9040') && str_contains($stdClean, '9040')) return $std;
-                if ((str_contains($cleanName, '945') || str_contains($cleanName, '260') || str_contains($cleanName, 'DENFLOC')) && (str_contains($stdClean, '945') || str_contains($stdClean, 'DAF') || str_contains($stdClean, '260'))) return $std;
+            if ($targetStdName) {
+                return $allStandards->first(function ($std) use ($targetStdName) {
+                    return strcasecmp(trim($std->chemical_name), $targetStdName) === 0;
+                });
             }
-            return null;
+
+            // Fallback nama persis sama
+            return $allStandards->first(function ($std) use ($cleanName) {
+                return strcasecmp(strtoupper(trim($std->chemical_name)), $cleanName) === 0;
+            });
         };
 
         // =========================================================================
@@ -1564,7 +1578,15 @@ class WWTPController extends Controller
         // 2. PERHITUNGAN HARIAN (TETAP DISIMPAN LENGKAP UNTUK DISKUSI LEBIH LANJUT)
         // =========================================================================
         $standardNames = $allStandards->pluck('chemical_name')->toArray();
-        $allowedChemicalNames = array_values(array_unique(array_merge($chemicalWWTP, $standardNames)));
+        $targetChemicalNames = [
+            'BE-100', 'BE',
+            'C-204', 'C204',
+            'PAC powder 1', 'PAC POWDER 1', 'PAC',
+            'C-9040 step 1', 'C-9040 STEP 1', 'C9040',
+            'NaOH', 'NAOH',
+            'denfloc 945 DAF', 'Denfloc 945 DAF', 'DENFLOC 945 DAF'
+        ];
+        $allowedChemicalNames = array_values(array_unique(array_merge($chemicalWWTP, $standardNames, $targetChemicalNames)));
 
         $wwtpAreaId = $wwtpArea ? $wwtpArea->id : 2;
         $dailyRecords = PemakaianChemicalModel::query()
