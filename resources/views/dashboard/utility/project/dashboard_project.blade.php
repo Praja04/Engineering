@@ -169,10 +169,15 @@
                                     MTC)
                                 </p>
                             </div>
-                            <div class="d-flex flex-wrap gap-2">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <button type="button" id="btnToggleFilterPanel"
-                                    class="btn btn-outline-light btn-sm fw-semibold shadow-sm" title="Sembunyikan / Tampilkan Panel Filter">
-                                    <i class="ri-filter-3-line me-1"></i> <span id="textToggleFilter">Sembunyikan Filter</span>
+                                    class="btn btn-outline-light btn-sm fw-semibold shadow-sm" title="Tampilkan / Sembunyikan Filter">
+                                    <i class="ri-filter-3-line me-1"></i> <span id="textToggleFilter">Filter Data</span>
+                                </button>
+                                <button type="button" id="btnToggleAlertTerlambat"
+                                    class="btn btn-danger btn-sm fw-semibold shadow-sm" title="Tampilkan / Sembunyikan Alert Project Terlambat"
+                                    style="display: {{ ($kpis['terlambat'] ?? 0) > 0 ? 'inline-flex' : 'none' }}; align-items: center;">
+                                    <i class="ri-error-warning-fill me-1"></i> <span id="headerTerlambatCount">{{ $kpis['terlambat'] ?? 0 }}</span> Terlambat
                                 </button>
                                 <button type="button" id="btnRefreshDashboard"
                                     class="btn btn-outline-light btn-sm fw-semibold shadow-sm">
@@ -192,44 +197,29 @@
                 </div>
             </div>
 
-            {{-- ── Alert Terlambat (jika ada) ── --}}
+            {{-- ── Alert Terlambat (Default dihilangkan / disembunyikan dulu) ── --}}
             <div id="alertTerlambatBanner"
                 class="alert alert-danger alert-dismissible fade show border-0 shadow-sm d-flex align-items-center mb-3"
-                role="alert" style="display: {{ $kpis['terlambat'] > 0 ? 'flex' : 'none' }};">
+                role="alert" style="display: none;">
                 <i class="ri-error-warning-fill fs-20 me-2 text-danger"></i>
                 <div class="flex-grow-1">
-                    <strong>Perhatian:</strong> Terdapat <strong id="alertTerlambatCount">{{ $kpis['terlambat'] }}
+                    <strong>Perhatian:</strong> Terdapat <strong id="alertTerlambatCount">{{ $kpis['terlambat'] ?? 0 }}
                         project</strong> yang berstatus terlambat (belum selesai melewati batas deadline).
                 </div>
                 <a href="{{ route('utility.project.data', ['status' => 'Terlambat']) }}" class="btn btn-sm btn-danger ms-2 text-nowrap">
                     Lihat Project Terlambat <i class="ri-arrow-right-s-line"></i>
                 </a>
-                <button type="button" class="btn-close ms-2" id="btnCloseAlertTerlambat" aria-label="Close" title="Sembunyikan Peringatan"></button>
+                <button type="button" class="btn-close ms-2" id="btnCloseAlertTerlambat" aria-label="Close" title="Tutup Alert"></button>
             </div>
 
-            {{-- ── Bar Mini Tampilkan Filter (Muncul saat Filter di-hide) ── --}}
-            <div id="filterCollapsedBar" class="d-none mb-3">
-                <div class="bg-white border rounded shadow-sm p-2 px-3 d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center text-muted fs-12">
-                        <i class="ri-filter-3-line text-primary me-2 fs-15"></i>
-                        <span>Panel Filter Dashboard sedang disembunyikan.</span>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-3 fs-12 fw-semibold" id="btnShowFilterPanel">
-                        <i class="ri-eye-line me-1"></i>Tampilkan Filter
-                    </button>
-                </div>
-            </div>
-
-            {{-- ── Filter Dashboard Panel (Multi-Select) ── --}}
-            <div class="card border-0 shadow-sm mb-3" id="dashFilterCard">
+            {{-- ── Filter Dashboard Panel (Default dihilangkan / disembunyikan dulu) ── --}}
+            <div class="card border-0 shadow-sm mb-3" id="dashFilterCard" style="display: none;">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
                         <span class="fs-12 fw-bold text-uppercase text-muted">
                             <i class="ri-filter-3-line text-primary me-1"></i>Filter Dashboard Project
                         </span>
-                        <button type="button" class="btn btn-sm btn-light border py-0 px-2 fs-11 text-muted" id="btnHideFilterCard" title="Sembunyikan Panel Filter">
-                            <i class="ri-eye-off-line me-1"></i>Sembunyikan
-                        </button>
+                        <button type="button" class="btn-close fs-11" id="btnHideFilterCard" aria-label="Close" title="Sembunyikan Panel Filter"></button>
                     </div>
                     <form id="dashFilterForm" class="row g-2 align-items-center">
 
@@ -1445,8 +1435,13 @@
                         // 1. Alert Banner
                         if (res.kpis && res.kpis.terlambat > 0) {
                             $('#alertTerlambatCount').text(res.kpis.terlambat + ' project');
-                            $('#alertTerlambatBanner').fadeIn(200);
+                            $('#headerTerlambatCount').text(res.kpis.terlambat);
+                            $('#btnToggleAlertTerlambat').css('display', 'inline-flex');
+                            if ($('#alertTerlambatBanner').is(':visible')) {
+                                $('#alertTerlambatBanner').show();
+                            }
                         } else {
+                            $('#btnToggleAlertTerlambat').hide();
                             $('#alertTerlambatBanner').hide();
                         }
 
@@ -1645,40 +1640,27 @@
             updateActiveFilterBadges();
 
             // ── 5. Hide / Show Toggle: Alert Terlambat & Filter Dashboard ──
-            // Hide Alert Terlambat (Reset lagi saat reload)
+            // Toggle Alert Terlambat
+            $('#btnToggleAlertTerlambat').on('click', function() {
+                $('#alertTerlambatBanner').slideToggle(200);
+            });
+
             $('#btnCloseAlertTerlambat').on('click', function() {
                 $('#alertTerlambatBanner').slideUp(200);
             });
 
-            // Hide / Show Filter Panel Dashboard (Reset lagi saat reload)
-            function hideFilterDashboard() {
-                $('#dashFilterCard').slideUp(200, function() {
-                    $('#filterCollapsedBar').removeClass('d-none').hide().fadeIn(150);
-                    $('#textToggleFilter').text('Tampilkan Filter');
+            // Toggle Filter Dashboard Card
+            $('#btnToggleFilterPanel').on('click', function() {
+                $('#dashFilterCard').slideToggle(200, function() {
+                    const isVis = $(this).is(':visible');
+                    $('#textToggleFilter').text(isVis ? 'Tutup Filter' : 'Filter Data');
                 });
-            }
-
-            function showFilterDashboard() {
-                $('#filterCollapsedBar').fadeOut(150, function() {
-                    $('#dashFilterCard').slideDown(200);
-                    $('#textToggleFilter').text('Sembunyikan Filter');
-                });
-            }
+            });
 
             $('#btnHideFilterCard').on('click', function() {
-                hideFilterDashboard();
-            });
-
-            $('#btnShowFilterPanel').on('click', function() {
-                showFilterDashboard();
-            });
-
-            $('#btnToggleFilterPanel').on('click', function() {
-                if ($('#dashFilterCard').is(':visible')) {
-                    hideFilterDashboard();
-                } else {
-                    showFilterDashboard();
-                }
+                $('#dashFilterCard').slideUp(200, function() {
+                    $('#textToggleFilter').text('Filter Data');
+                });
             });
 
             // ── 6. Quick Progress Update Modal Interaction ──

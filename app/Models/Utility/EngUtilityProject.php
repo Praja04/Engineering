@@ -50,11 +50,25 @@ class EngUtilityProject extends Model
     protected static function booted()
     {
         static::saving(function ($project) {
-            if ((int)$project->progress >= 100) {
+            if ((int)$project->progress >= 100 || strtolower(trim((string)$project->status)) === 'selesai') {
                 $project->fase = 'Fase 3';
+                if ((int)$project->progress < 100 && strtolower(trim((string)$project->status)) === 'selesai') {
+                    $project->progress = 100;
+                }
                 $project->status = 'Selesai';
             }
         });
+    }
+
+    /**
+     * Accessor untuk memastikan jika progress >= 100 atau status Selesai, selalu mengembalikan Fase 3
+     */
+    public function getFaseAttribute($value)
+    {
+        if ((int)$this->progress >= 100 || strtolower(trim((string)$this->status)) === 'selesai') {
+            return 'Fase 3';
+        }
+        return $value ?: 'Fase 1';
     }
 
     /**
