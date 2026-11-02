@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Epr;
 use App\Http\Controllers\Controller;
 use App\Models\Epr\CorrectiveMaintenance;
 use App\Models\Epr\JenisDt;
+use App\Models\Epr\CmLoadingTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -267,15 +268,41 @@ class CorrectiveMaintenanceController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls'
+            'file' => 'required|file|max:51200' // allow up to 50MB
         ]);
 
         try {
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($request->file('file')->getRealPath());
-            $sheet = $spreadsheet->getActiveSheet();
-            $rows = $sheet->toArray(null, true, true, true);
+            $file = $request->file('file');
+            $filePath = $file->getRealPath();
 
-            // 1. Find the header row and map columns dynamically
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($filePath);
+            $reader->setReadDataOnly(true);
+
+            // Check sheet names to only load 'HARIAN' if present (avoids loading massive weekly/pivot sheets)
+            $sheetNames = $reader->listWorksheetNames($filePath);
+            $targetSheet = null;
+            foreach ($sheetNames as $name) {
+                if (strcasecmp(trim($name), 'HARIAN') === 0) {
+                    $targetSheet = $name;
+                    break;
+                }
+            }
+
+            if (!$targetSheet && !empty($sheetNames)) {
+                $targetSheet = $sheetNames[0];
+            }
+
+            if ($targetSheet) {
+                $reader->setLoadSheetsOnly([$targetSheet]);
+            }
+
+            $spreadsheet = $reader->load($filePath);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Set calculateFormulas = false to avoid hanging on external/pivot formulas
+            $rows = $sheet->toArray(null, false, false, true);
+
+            // 1. Dynamic Header Mapping
             $headerRowIndex = null;
             $colMap = [
                 'tanggal' => null,
@@ -294,45 +321,43 @@ class CorrectiveMaintenanceController extends Controller
             ];
 
             foreach ($rows as $index => $row) {
-                // Check if this row contains 'TANGGAL'
                 foreach ($row as $colLetter => $val) {
-                    $cleanVal = strtolower(str_replace(' ', '', trim($val)));
-                    if (strpos($cleanVal, 'tanggal') !== false) {
+                    $cleanVal = preg_replace('/[^a-z0-9]/', '', strtolower(trim((string)$val)));
+                    if (strpos($cleanVal, 'tanggal') !== false || $cleanVal === 'tgl' || $cleanVal === 'date') {
                         $headerRowIndex = $index;
                         break;
                     }
                 }
                 if ($headerRowIndex !== null) {
-                    // Map this row's columns
                     foreach ($row as $colLetter => $val) {
-                        $cleanVal = strtolower(str_replace([' ', '/', '_', '-'], '', trim($val)));
+                        $cleanVal = preg_replace('/[^a-z0-9]/', '', strtolower(trim((string)$val)));
                         if (empty($cleanVal)) continue;
 
-                        if (strpos($cleanVal, 'tanggal') !== false) {
+                        if (strpos($cleanVal, 'tanggal') !== false || $cleanVal === 'tgl' || $cleanVal === 'date') {
                             $colMap['tanggal'] = $colLetter;
                         } elseif (strpos($cleanVal, 'shift') !== false) {
                             $colMap['shift'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'grup') !== false) {
+                        } elseif (strpos($cleanVal, 'grup') !== false || strpos($cleanVal, 'group') !== false) {
                             $colMap['grup'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'mesin') !== false) {
+                        } elseif (strpos($cleanVal, 'mesin') !== false || strpos($cleanVal, 'machine') !== false) {
                             $colMap['mesin'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'pouch') !== false || strpos($cleanVal, 'sachet') !== false || strpos($cleanVal, 'uchsach') !== false) {
+                        } elseif (strpos($cleanVal, 'pouch') !== false || strpos($cleanVal, 'sachet') !== false) {
                             $colMap['pouch_sachet'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'jammulai') !== false || strpos($cleanVal, 'ammula') !== false || $cleanVal === 'mulai') {
+                        } elseif (strpos($cleanVal, 'jammulai') !== false || $cleanVal === 'mulai' || $cleanVal === 'start' || $cleanVal === 'waktumulai') {
                             $colMap['jam_mulai'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'jamselesai') !== false || strpos($cleanVal, 'amseles') !== false || $cleanVal === 'selesai') {
+                        } elseif (strpos($cleanVal, 'jamselesai') !== false || $cleanVal === 'selesai' || $cleanVal === 'end' || $cleanVal === 'waktuselesai') {
                             $colMap['jam_selesai'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'totalmenit') !== false || $cleanVal === 'menit') {
+                        } elseif (strpos($cleanVal, 'totalmenit') !== false || $cleanVal === 'menit' || strpos($cleanVal, 'durasi') !== false) {
                             $colMap['total_menit'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'keterangandowntime') !== false || strpos($cleanVal, 'ngandov') !== false || $cleanVal === 'downtime') {
+                        } elseif (strpos($cleanVal, 'keterangandowntime') !== false || strpos($cleanVal, 'keterangandt') !== false || $cleanVal === 'downtime' || strpos($cleanVal, 'problem') !== false) {
                             $colMap['downtime'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'jenisdt') !== false || $cleanVal === 'jenis') {
+                        } elseif (strpos($cleanVal, 'jenisdt') !== false || $cleanVal === 'jenis' || $cleanVal === 'kategoridt') {
                             $colMap['jenis_dt'] = $colLetter;
-                        } elseif ($cleanVal === 'ampm') {
+                        } elseif ($cleanVal === 'ampm' || (strpos($cleanVal, 'am') !== false && strpos($cleanVal, 'pm') !== false)) {
                             $colMap['am_pm'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'electrical') !== false || strpos($cleanVal, 'mechanical') !== false || strpos($cleanVal, 'calmech') !== false || strpos($cleanVal, 'klasifikasi') !== false) {
+                        } elseif (strpos($cleanVal, 'electrical') !== false || strpos($cleanVal, 'mechanical') !== false || strpos($cleanVal, 'klasifikasi') !== false) {
                             $colMap['electrical_mechanical'] = $colLetter;
-                        } elseif (strpos($cleanVal, 'catatan') !== false || strpos($cleanVal, 'tambahan') !== false || $cleanVal === 'keterangan') {
+                        } elseif (strpos($cleanVal, 'catatan') !== false || strpos($cleanVal, 'tambahan') !== false || ($cleanVal === 'keterangan' && !$colMap['downtime'])) {
                             $colMap['keterangan'] = $colLetter;
                         }
                     }
@@ -343,75 +368,128 @@ class CorrectiveMaintenanceController extends Controller
             if ($headerRowIndex === null || !$colMap['tanggal'] || !$colMap['shift'] || !$colMap['mesin']) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Format file Excel tidak dikenali. Pastikan memiliki baris judul kolom dengan minimal kolom TANGGAL, SHIFT, dan MESIN.'
+                    'message' => 'Format file Excel tidak sesuai template. Pastikan baris header memuat kolom TANGGAL, SHIFT, dan MESIN.'
                 ], 400);
             }
+
+            $parseTime = function($val) {
+                if ($val === null || $val === '') return '00:00:00';
+                if (is_numeric($val)) {
+                    return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($val)->format('H:i:s');
+                }
+                $t = strtotime(trim((string)$val));
+                if ($t !== false) {
+                    return date('H:i:s', $t);
+                }
+                return trim((string)$val);
+            };
 
             $successCount = 0;
             $createdById = Auth::id();
 
+            // Preload existing JenisDt to minimize database queries
+            $existingJenisDts = JenisDt::all()->keyBy(function ($item) {
+                return strtolower(trim($item->name));
+            });
+
+            $recordsToInsert = [];
+
             foreach ($rows as $index => $row) {
-                if ($index <= $headerRowIndex) continue; // Skip header row and anything above
+                if ($index <= $headerRowIndex) continue;
 
-                // Get fields
-                $tanggal = $colMap['tanggal'] ? trim($row[$colMap['tanggal']] ?? '') : '';
-                $shift = $colMap['shift'] ? trim($row[$colMap['shift']] ?? '') : '';
-                $grup = $colMap['grup'] ? trim($row[$colMap['grup']] ?? '') : '';
-                $mesin = $colMap['mesin'] ? trim($row[$colMap['mesin']] ?? '') : '';
-                $pouchSachet = $colMap['pouch_sachet'] ? trim($row[$colMap['pouch_sachet']] ?? '') : '';
-                $jamMulai = $colMap['jam_mulai'] ? trim($row[$colMap['jam_mulai']] ?? '') : '';
-                $jamSelesai = $colMap['jam_selesai'] ? trim($row[$colMap['jam_selesai']] ?? '') : '';
-                $totalMenit = $colMap['total_menit'] ? trim($row[$colMap['total_menit']] ?? '') : '';
-                $downtime = $colMap['downtime'] ? trim($row[$colMap['downtime']] ?? '') : '';
-                $jenisDtName = $colMap['jenis_dt'] ? trim($row[$colMap['jenis_dt']] ?? '') : '';
-                $amPm = $colMap['am_pm'] ? trim($row[$colMap['am_pm']] ?? '') : '';
-                $elecMech = $colMap['electrical_mechanical'] ? trim($row[$colMap['electrical_mechanical']] ?? '') : '';
-                $keterangan = $colMap['keterangan'] ? trim($row[$colMap['keterangan']] ?? '') : '';
+                $tanggalRaw = $colMap['tanggal'] ? ($row[$colMap['tanggal']] ?? null) : null;
+                $shiftRaw = $colMap['shift'] ? ($row[$colMap['shift']] ?? null) : null;
+                $mesinRaw = $colMap['mesin'] ? ($row[$colMap['mesin']] ?? null) : null;
 
-                // Validation of mandatory fields
-                if (empty($tanggal) || empty($shift) || empty($mesin) || empty($jamMulai) || empty($jamSelesai)) {
-                    continue; // Skip incomplete rows
-                }
-
-                // Skip header rows if repeated (safety)
-                if (strtolower($tanggal) === 'tanggal' || strtolower($shift) === 'shift') {
+                // Skip empty rows (common in Excel templates)
+                if (empty($tanggalRaw) && empty($shiftRaw) && empty($mesinRaw)) {
                     continue;
                 }
 
-                // Parse Date (handles Excel serial dates as well)
-                if (is_numeric($tanggal)) {
-                    $tanggal = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tanggal)->format('Y-m-d');
+                if (strtolower(trim((string)$tanggalRaw)) === 'tanggal' || strtolower(trim((string)$shiftRaw)) === 'shift') {
+                    continue;
+                }
+
+                // Parse Date
+                if (is_numeric($tanggalRaw)) {
+                    $tanggal = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tanggalRaw)->format('Y-m-d');
                 } else {
-                    $tanggal = date('Y-m-d', strtotime(str_replace('/', '-', $tanggal)));
+                    $cleanDate = str_replace('/', '-', trim((string)$tanggalRaw));
+                    $parsedTime = strtotime($cleanDate);
+                    $tanggal = $parsedTime ? date('Y-m-d', $parsedTime) : date('Y-m-d');
                 }
 
-                // Resolve or create Jenis DT
-                $jenisDtId = null;
-                if (!empty($jenisDtName) && $jenisDtName !== '—') {
-                    $jenisDt = JenisDt::firstOrCreate(
-                        ['name' => $jenisDtName],
-                        ['aktif' => true]
-                    );
-                    $jenisDtId = $jenisDt->id;
+                $shift = trim((string)($row[$colMap['shift']] ?? ''));
+                $grup = $colMap['grup'] ? trim((string)($row[$colMap['grup']] ?? '')) : '';
+                $mesin = trim((string)($row[$colMap['mesin']] ?? ''));
+                $pouchSachet = $colMap['pouch_sachet'] ? trim((string)($row[$colMap['pouch_sachet']] ?? '')) : '';
+                if (!empty($pouchSachet)) {
+                    $pouchSachet = ucfirst(strtolower($pouchSachet));
                 }
 
-                // If total_menit is not provided or placeholder
-                if (empty($totalMenit) || $totalMenit === '—') {
+                $jamMulai = $parseTime($colMap['jam_mulai'] ? ($row[$colMap['jam_mulai']] ?? null) : null);
+                $jamSelesai = $parseTime($colMap['jam_selesai'] ? ($row[$colMap['jam_selesai']] ?? null) : null);
+
+                // Parse Total Menit
+                $totalMenitRaw = $colMap['total_menit'] ? ($row[$colMap['total_menit']] ?? null) : null;
+                if (is_numeric($totalMenitRaw)) {
+                    $totalMenit = (int) round((float) $totalMenitRaw);
+                } else {
                     $sh = strtotime($jamMulai);
                     $eh = strtotime($jamSelesai);
                     if ($sh !== false && $eh !== false) {
                         $diff = ($eh - $sh) / 60;
-                        if ($diff < 0) {
-                            $diff += 24 * 60; // Overnight
-                        }
-                        $totalMenit = $diff;
+                        if ($diff < 0) $diff += 24 * 60;
+                        $totalMenit = (int) round($diff);
                     } else {
                         $totalMenit = 0;
                     }
                 }
 
-                // Insert into database
-                CorrectiveMaintenance::create([
+                $downtime = $colMap['downtime'] ? trim((string)($row[$colMap['downtime']] ?? '')) : null;
+                $keterangan = $colMap['keterangan'] ? trim((string)($row[$colMap['keterangan']] ?? '')) : null;
+                if (empty($keterangan)) {
+                    $keterangan = null;
+                }
+
+                // Resolve Jenis DT
+                $jenisDtName = $colMap['jenis_dt'] ? trim((string)($row[$colMap['jenis_dt']] ?? '')) : '';
+                $jenisDtId = null;
+                if (!empty($jenisDtName) && $jenisDtName !== '—' && $jenisDtName !== '-') {
+                    $lookupKey = strtolower($jenisDtName);
+                    if ($existingJenisDts->has($lookupKey)) {
+                        $jenisDtId = $existingJenisDts->get($lookupKey)->id;
+                    } else {
+                        $newJenis = JenisDt::create([
+                            'name' => $jenisDtName,
+                            'aktif' => true
+                        ]);
+                        $existingJenisDts->put($lookupKey, $newJenis);
+                        $jenisDtId = $newJenis->id;
+                    }
+                }
+
+                // Parse AM/PM
+                $amPmRaw = $colMap['am_pm'] ? strtoupper(trim((string)($row[$colMap['am_pm']] ?? ''))) : '';
+                if ($amPmRaw === 'AM' || $amPmRaw === 'PM') {
+                    $amPm = $amPmRaw;
+                } else {
+                    $h = (int) date('H', strtotime($jamMulai));
+                    $amPm = ($h >= 12) ? 'PM' : 'AM';
+                }
+
+                // Parse Electrical / Mechanical
+                $elecMechRaw = $colMap['electrical_mechanical'] ? trim((string)($row[$colMap['electrical_mechanical']] ?? '')) : '';
+                if (stripos($elecMechRaw, 'elec') !== false) {
+                    $elecMech = 'Electrical';
+                } elseif (stripos($elecMechRaw, 'mech') !== false) {
+                    $elecMech = 'Mechanical';
+                } else {
+                    $elecMech = !empty($elecMechRaw) ? ucfirst(strtolower($elecMechRaw)) : 'Mechanical';
+                }
+
+                $now = now();
+                $recordsToInsert[] = [
                     'tanggal' => $tanggal,
                     'shift' => $shift,
                     'grup' => $grup,
@@ -419,21 +497,79 @@ class CorrectiveMaintenanceController extends Controller
                     'pouch_sachet' => $pouchSachet,
                     'jam_mulai' => $jamMulai,
                     'jam_selesai' => $jamSelesai,
-                    'total_menit' => (int) $totalMenit,
+                    'total_menit' => $totalMenit,
                     'downtime' => $downtime,
                     'jenis_dt_id' => $jenisDtId,
                     'am_pm' => $amPm,
                     'electrical_mechanical' => $elecMech,
                     'keterangan' => $keterangan,
-                    'created_by' => $createdById
-                ]);
+                    'created_by' => $createdById,
+                    'created_at' => $now,
+                    'updated_at' => $now
+                ];
 
                 $successCount++;
             }
 
+            // Batch insert in chunks
+            foreach (array_chunk($recordsToInsert, 200) as $chunk) {
+                CorrectiveMaintenance::insert($chunk);
+            }
+
+            // 2. Extract Loading Times from matrix (Columns N-Y, Rows 4 to 34)
+            $importDate = !empty($recordsToInsert) ? $recordsToInsert[0]['tanggal'] : now()->format('Y-m-d');
+            $loadingTimesCount = 0;
+            $currentCategory = 'Pouch';
+
+            for ($r = 4; $r <= 35; $r++) {
+                if (!isset($rows[$r])) continue;
+                $row = $rows[$r];
+
+                $colN = trim((string)($row['N'] ?? ''));
+                $colO = trim((string)($row['O'] ?? ''));
+
+                if (stripos($colN, 'sachet') !== false) {
+                    $currentCategory = 'Sachet';
+                } elseif (stripos($colN, 'pouch') !== false && stripos($colN, 'sachet') === false && stripos($colN, 'rata') === false) {
+                    $currentCategory = 'Pouch';
+                }
+
+                if (empty($colO) || stripos($colN, 'rata') !== false || stripos($colN, 'total') !== false) {
+                    continue;
+                }
+
+                $mesin = $colO;
+                $ltA = is_numeric($row['P'] ?? null) ? (int)$row['P'] : 0;
+                $ltB = is_numeric($row['S'] ?? null) ? (int)$row['S'] : 0;
+                $ltC = is_numeric($row['V'] ?? null) ? (int)$row['V'] : 0;
+                $ltAll = is_numeric($row['Y'] ?? null) ? (int)$row['Y'] : ($ltA + $ltB + $ltC);
+
+                CmLoadingTime::updateOrCreate(
+                    [
+                        'tanggal' => $importDate,
+                        'mesin' => $mesin
+                    ],
+                    [
+                        'kategori' => $currentCategory,
+                        'loading_time_a' => $ltA,
+                        'loading_time_b' => $ltB,
+                        'loading_time_c' => $ltC,
+                        'loading_time_all' => $ltAll,
+                        'created_by' => $createdById
+                    ]
+                );
+                $loadingTimesCount++;
+            }
+
+            $message = "Berhasil mengimpor {$successCount} data corrective maintenance";
+            if ($loadingTimesCount > 0) {
+                $message .= " dan {$loadingTimesCount} data loading time mesin";
+            }
+            $message .= " dari template Excel.";
+
             return response()->json([
                 'success' => true,
-                'message' => "Berhasil mengimpor {$successCount} data corrective maintenance."
+                'message' => $message
             ]);
 
         } catch (\Exception $e) {
@@ -443,6 +579,23 @@ class CorrectiveMaintenanceController extends Controller
             ], 500);
         }
     }
+
+    public function getLoadingTimes(Request $request)
+    {
+        $query = CmLoadingTime::orderBy('id', 'asc');
+
+        if ($request->filled('month')) {
+            $query->where('tanggal', 'like', $request->input('month') . '%');
+        }
+
+        if ($request->filled('date')) {
+            $query->where('tanggal', $request->input('date'));
+        }
+
+        return response()->json($query->get());
+    }
+
+
 
     // ── Extra Data Management (Cost, OEE KPI, Action Plan) ──
 

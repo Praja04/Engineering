@@ -35,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [CorrectiveMaintenanceController::class, 'destroy'])->name('destroy');
         Route::get('/export', [CorrectiveMaintenanceController::class, 'export'])->name('export');
         Route::post('/import', [CorrectiveMaintenanceController::class, 'import'])->name('import');
+        Route::get('/loading-times', [CorrectiveMaintenanceController::class, 'getLoadingTimes'])->name('loading-times');
 
         // Extra Data: Cost, KPI, Action Plan
         Route::get('/extra-data', [CorrectiveMaintenanceController::class, 'extraData'])->name('extra-data');
