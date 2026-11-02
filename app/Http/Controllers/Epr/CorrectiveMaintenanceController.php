@@ -36,7 +36,11 @@ class CorrectiveMaintenanceController extends Controller
             $query->where('created_by', Auth::id());
         }
 
-        if ($request->filled('month')) {
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('tanggal', [$request->input('date_from'), $request->input('date_to')]);
+        } elseif ($request->filled('date')) {
+            $query->where('tanggal', $request->input('date'));
+        } elseif ($request->filled('month')) {
             $query->where('tanggal', 'like', $request->input('month') . '%');
         }
 
@@ -84,6 +88,27 @@ class CorrectiveMaintenanceController extends Controller
 
         $id = $request->input('id');
         $jenisDtId = $request->input('jenis_dt_id') ?: null;
+        $tanggal = $request->input('tanggal');
+        $mesin = trim((string)$request->input('mesin'));
+        $jamMulai = date('H:i:s', strtotime($request->input('jam_mulai')));
+        $jamSelesai = date('H:i:s', strtotime($request->input('jam_selesai')));
+
+        // Check duplicate validation
+        $duplicateQuery = CorrectiveMaintenance::where('tanggal', $tanggal)
+            ->where('mesin', $mesin)
+            ->where('jam_mulai', $jamMulai)
+            ->where('jam_selesai', $jamSelesai);
+
+        if ($id) {
+            $duplicateQuery->where('id', '!=', $id);
+        }
+
+        if ($duplicateQuery->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => "Data downtime untuk mesin {$mesin} pada tanggal {$tanggal} jam {$jamMulai} - {$jamSelesai} sudah ada di database."
+            ], 422);
+        }
 
         if ($id) {
             $report = CorrectiveMaintenance::findOrFail($id);
@@ -161,7 +186,11 @@ class CorrectiveMaintenanceController extends Controller
             $query->where('electrical_mechanical', $request->input('electrical_mechanical'));
         }
 
-        if ($request->filled('month')) {
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('tanggal', [$request->input('date_from'), $request->input('date_to')]);
+        } elseif ($request->filled('date')) {
+            $query->where('tanggal', $request->input('date'));
+        } elseif ($request->filled('month')) {
             $query->where('tanggal', 'like', $request->input('month') . '%');
         }
 
@@ -385,12 +414,43 @@ class CorrectiveMaintenanceController extends Controller
             };
 
             $successCount = 0;
+            $skippedDuplicateCount = 0;
             $createdById = Auth::id();
 
             // Preload existing JenisDt to minimize database queries
             $existingJenisDts = JenisDt::all()->keyBy(function ($item) {
                 return strtolower(trim($item->name));
             });
+
+            // Scan all dates from rows to preload existing database entries
+            $fileDates = [];
+            foreach ($rows as $index => $row) {
+                if ($index <= $headerRowIndex) continue;
+                $tRaw = $colMap['tanggal'] ? ($row[$colMap['tanggal']] ?? null) : null;
+                if ($tRaw) {
+                    if (is_numeric($tRaw)) {
+                        $fileDates[] = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tRaw)->format('Y-m-d');
+                    } else {
+                        $parsed = strtotime(str_replace('/', '-', trim((string)$tRaw)));
+                        if ($parsed) $fileDates[] = date('Y-m-d', $parsed);
+                    }
+                }
+            }
+            $fileDates = array_values(array_unique(array_filter($fileDates)));
+
+            // Preload existing CM records for these dates to identify duplicates: tanggal|mesin|jam_mulai|jam_selesai
+            $existingRecordsMap = [];
+            if (!empty($fileDates)) {
+                $existingItems = CorrectiveMaintenance::whereIn('tanggal', $fileDates)
+                    ->select('tanggal', 'mesin', 'jam_mulai', 'jam_selesai')
+                    ->get();
+                foreach ($existingItems as $item) {
+                    $mStart = date('H:i:s', strtotime($item->jam_mulai));
+                    $mEnd = date('H:i:s', strtotime($item->jam_selesai));
+                    $k = $item->tanggal . '|' . strtolower(trim($item->mesin)) . '|' . $mStart . '|' . $mEnd;
+                    $existingRecordsMap[$k] = true;
+                }
+            }
 
             $recordsToInsert = [];
 
@@ -488,6 +548,17 @@ class CorrectiveMaintenanceController extends Controller
                     $elecMech = !empty($elecMechRaw) ? ucfirst(strtolower($elecMechRaw)) : 'Mechanical';
                 }
 
+                // Check for duplicate: exists in database or duplicate within the same Excel file
+                $mStart = date('H:i:s', strtotime($jamMulai));
+                $mEnd = date('H:i:s', strtotime($jamSelesai));
+                $recordKey = $tanggal . '|' . strtolower(trim($mesin)) . '|' . $mStart . '|' . $mEnd;
+
+                if (isset($existingRecordsMap[$recordKey])) {
+                    $skippedDuplicateCount++;
+                    continue;
+                }
+                $existingRecordsMap[$recordKey] = true;
+
                 $now = now();
                 $recordsToInsert[] = [
                     'tanggal' => $tanggal,
@@ -511,15 +582,25 @@ class CorrectiveMaintenanceController extends Controller
                 $successCount++;
             }
 
-            // Batch insert in chunks
-            foreach (array_chunk($recordsToInsert, 200) as $chunk) {
-                CorrectiveMaintenance::insert($chunk);
+            // Batch insert in chunks if there are new records
+            if (!empty($recordsToInsert)) {
+                foreach (array_chunk($recordsToInsert, 200) as $chunk) {
+                    CorrectiveMaintenance::insert($chunk);
+                }
             }
 
             // 2. Extract Loading Times from matrix (Columns N-Y, Rows 4 to 34)
-            $importDate = !empty($recordsToInsert) ? $recordsToInsert[0]['tanggal'] : now()->format('Y-m-d');
-            $loadingTimesCount = 0;
+            $importDate = !empty($recordsToInsert) ? $recordsToInsert[0]['tanggal'] : (!empty($fileDates) ? $fileDates[0] : now()->format('Y-m-d'));
+            $newLoadingTimesCount = 0;
+            $skippedLtCount = 0;
             $currentCategory = 'Pouch';
+
+            // Preload existing loading times for this date to prevent updating/overwriting existing records
+            $existingLtMachines = CmLoadingTime::where('tanggal', $importDate)
+                ->pluck('mesin')
+                ->map(fn($m) => strtolower(trim($m)))
+                ->flip()
+                ->toArray();
 
             for ($r = 4; $r <= 35; $r++) {
                 if (!isset($rows[$r])) continue;
@@ -539,36 +620,71 @@ class CorrectiveMaintenanceController extends Controller
                 }
 
                 $mesin = $colO;
+                $lookupMesin = strtolower(trim($mesin));
+
+                // If loading time for this date and machine already exists, DO NOT UPDATE! Skip completely.
+                if (isset($existingLtMachines[$lookupMesin])) {
+                    $skippedLtCount++;
+                    continue;
+                }
+
                 $ltA = is_numeric($row['P'] ?? null) ? (int)$row['P'] : 0;
                 $ltB = is_numeric($row['S'] ?? null) ? (int)$row['S'] : 0;
                 $ltC = is_numeric($row['V'] ?? null) ? (int)$row['V'] : 0;
                 $ltAll = is_numeric($row['Y'] ?? null) ? (int)$row['Y'] : ($ltA + $ltB + $ltC);
 
-                CmLoadingTime::updateOrCreate(
-                    [
-                        'tanggal' => $importDate,
-                        'mesin' => $mesin
-                    ],
-                    [
-                        'kategori' => $currentCategory,
-                        'loading_time_a' => $ltA,
-                        'loading_time_b' => $ltB,
-                        'loading_time_c' => $ltC,
-                        'loading_time_all' => $ltAll,
-                        'created_by' => $createdById
-                    ]
-                );
-                $loadingTimesCount++;
+                CmLoadingTime::create([
+                    'tanggal' => $importDate,
+                    'mesin' => $mesin,
+                    'kategori' => $currentCategory,
+                    'loading_time_a' => $ltA,
+                    'loading_time_b' => $ltB,
+                    'loading_time_c' => $ltC,
+                    'loading_time_all' => $ltAll,
+                    'created_by' => $createdById
+                ]);
+
+                $existingLtMachines[$lookupMesin] = true;
+                $newLoadingTimesCount++;
             }
 
-            $message = "Berhasil mengimpor {$successCount} data corrective maintenance";
-            if ($loadingTimesCount > 0) {
-                $message .= " dan {$loadingTimesCount} data loading time mesin";
+            $message = "";
+            $title = "Berhasil!";
+            $icon = "success";
+
+            if ($successCount > 0 && $skippedDuplicateCount > 0) {
+                $message = "Berhasil menambahkan {$successCount} data corrective maintenance baru. Sebanyak {$skippedDuplicateCount} data dilewati karena sudah ada di database.";
+                if ($newLoadingTimesCount > 0) {
+                    $message .= " Serta {$newLoadingTimesCount} data loading time baru ditambahkan.";
+                }
+            } elseif ($successCount > 0) {
+                $message = "Berhasil mengimpor {$successCount} data corrective maintenance baru";
+                if ($newLoadingTimesCount > 0) {
+                    $message .= " dan {$newLoadingTimesCount} data loading time baru.";
+                } else {
+                    $message .= ".";
+                }
+            } elseif ($newLoadingTimesCount > 0) {
+                $title = "Berhasil!";
+                $icon = "success";
+                $message = "Berhasil menambahkan {$newLoadingTimesCount} data loading time baru.";
+            } elseif ($skippedDuplicateCount > 0 || $skippedLtCount > 0) {
+                $title = "Data Duplikat Dilewati!";
+                $icon = "warning";
+                $message = "Tidak ada data baru yang ditambahkan karena seluruh data downtime" . ($skippedDuplicateCount > 0 ? " ({$skippedDuplicateCount} data)" : "") . " dan loading time untuk tanggal {$importDate} sudah ada di database.";
+            } else {
+                $title = "Info";
+                $icon = "info";
+                $message = "Tidak ada baris data yang diproses.";
             }
-            $message .= " dari template Excel.";
 
             return response()->json([
                 'success' => true,
+                'title' => $title,
+                'icon' => $icon,
+                'imported_count' => $successCount,
+                'skipped_count' => $skippedDuplicateCount,
+                'loading_count' => $loadingTimesCount,
                 'message' => $message
             ]);
 
@@ -584,12 +700,12 @@ class CorrectiveMaintenanceController extends Controller
     {
         $query = CmLoadingTime::orderBy('id', 'asc');
 
-        if ($request->filled('month')) {
-            $query->where('tanggal', 'like', $request->input('month') . '%');
-        }
-
-        if ($request->filled('date')) {
+        if ($request->filled('date_from') && $request->filled('date_to')) {
+            $query->whereBetween('tanggal', [$request->input('date_from'), $request->input('date_to')]);
+        } elseif ($request->filled('date')) {
             $query->where('tanggal', $request->input('date'));
+        } elseif ($request->filled('month')) {
+            $query->where('tanggal', 'like', $request->input('month') . '%');
         }
 
         return response()->json($query->get());
