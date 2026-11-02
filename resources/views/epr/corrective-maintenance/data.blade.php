@@ -132,24 +132,34 @@
                             <input type="text" class="form-control" id="filter-search" placeholder="Cari mesin, jenis DT...">
                         </div>
                     </div>
-                    <div class="col-xl-2 col-md-4">
-                        <label class="form-label small fw-semibold mb-1 text-muted">Tanggal Harian</label>
-                        <input type="date" class="form-control form-control-sm" id="filter-date">
-                    </div>
-                    <div class="col-xl-2 col-md-4">
-                        <label class="form-label small fw-semibold mb-1 text-muted">Bulan</label>
-                        <input type="month" class="form-control form-control-sm" id="filter-month" value="{{ date('Y-m') }}">
-                    </div>
-                    <div class="col-xl-1 col-md-2">
-                        <label class="form-label small fw-semibold mb-1 text-muted">Week</label>
-                        <select class="form-select form-select-sm" id="filter-week">
-                            <option value="">Semua</option>
-                            <option value="1">W1</option>
-                            <option value="2">W2</option>
-                            <option value="3">W3</option>
-                            <option value="4">W4</option>
-                            <option value="5">W5</option>
+                    <div class="col-xl-2 col-md-3">
+                        <label class="form-label small fw-semibold mb-1 text-muted">Filter Waktu</label>
+                        <select class="form-select form-select-sm" id="filter-period-mode" onchange="handlePeriodModeChange(this.value)">
+                            <option value="daily" selected>Harian</option>
+                            <option value="monthly">Bulan</option>
+                            <option value="range">Range Tanggal</option>
                         </select>
+                    </div>
+                    <div class="col-xl-3 col-md-5">
+                        {{-- Mode Harian --}}
+                        <div id="container-filter-daily">
+                            <label class="form-label small fw-semibold mb-1 text-muted">Tanggal Harian</label>
+                            <input type="date" class="form-control form-control-sm" id="filter-date">
+                        </div>
+                        {{-- Mode Bulan --}}
+                        <div id="container-filter-monthly" class="d-none">
+                            <label class="form-label small fw-semibold mb-1 text-muted">Bulan</label>
+                            <input type="month" class="form-control form-control-sm" id="filter-month" value="{{ date('Y-m') }}">
+                        </div>
+                        {{-- Mode Range Tanggal --}}
+                        <div id="container-filter-range" class="d-none">
+                            <label class="form-label small fw-semibold mb-1 text-muted">Rentang Tanggal</label>
+                            <div class="d-flex align-items-center gap-1">
+                                <input type="date" class="form-control form-control-sm" id="filter-date-from" title="Dari Tanggal">
+                                <span class="text-muted small fw-semibold">s/d</span>
+                                <input type="date" class="form-control form-control-sm" id="filter-date-to" title="Sampai Tanggal">
+                            </div>
+                        </div>
                     </div>
                     <div class="col-xl-1 col-md-2">
                         <label class="form-label small fw-semibold mb-1 text-muted">Shift</label>
@@ -430,12 +440,53 @@ $(document).ready(function() {
     let isFirstLoad = true;
     const pageSize = 15;
 
+    function getFilterParams() {
+        const mode = $('#filter-period-mode').val();
+        let params = {};
+        if (mode === 'daily') {
+            const date = $('#filter-date').val();
+            if (date) {
+                params.date = date;
+            } else {
+                params.month = $('#filter-month').val() || "{{ date('Y-m') }}";
+            }
+        } else if (mode === 'monthly') {
+            params.month = $('#filter-month').val() || '';
+        } else if (mode === 'range') {
+            const dFrom = $('#filter-date-from').val();
+            const dTo = $('#filter-date-to').val();
+            if (dFrom && dTo) {
+                params.date_from = dFrom;
+                params.date_to = dTo;
+            } else {
+                params.month = $('#filter-month').val() || "{{ date('Y-m') }}";
+            }
+        }
+        return params;
+    }
+
+    function getPeriodBadgeText() {
+        const mode = $('#filter-period-mode').val();
+        if (mode === 'daily') {
+            const d = $('#filter-date').val() || $('#filter-lt-date').val();
+            return d ? `Tanggal: ${formatDate(d)}` : 'Harian: Semua Tanggal';
+        } else if (mode === 'monthly') {
+            const m = $('#filter-month').val();
+            return m ? `Bulan: ${m}` : 'Bulan: Semua';
+        } else if (mode === 'range') {
+            const dFrom = $('#filter-date-from').val();
+            const dTo = $('#filter-date-to').val();
+            return (dFrom && dTo) ? `Rentang: ${formatDate(dFrom)} s/d ${formatDate(dTo)}` : 'Rentang Tanggal';
+        }
+        return 'Periode: Semua';
+    }
+
     function loadReports() {
-        const month = $('#filter-month').val() || '';
+        const params = getFilterParams();
         $.ajax({
             url: "{{ route('epr.cm.get-reports') }}",
             method: 'GET',
-            data: { month: month },
+            data: params,
             success: function(res) {
                 reports = res;
                 loadLoadingTimes();
@@ -447,17 +498,18 @@ $(document).ready(function() {
     }
 
     function loadLoadingTimes() {
-        const month = $('#filter-month').val() || '';
+        const params = getFilterParams();
         $.ajax({
             url: "{{ route('epr.cm.loading-times') }}",
             method: 'GET',
-            data: { month: month },
+            data: params,
             success: function(res) {
                 loadingTimes = res;
                 // On initial load, set default date to latest available date
                 if (isFirstLoad) {
                     isFirstLoad = false;
-                    if (!$('#filter-date').val() && !$('#filter-lt-date').val()) {
+                    const mode = $('#filter-period-mode').val();
+                    if (mode === 'daily' && !$('#filter-date').val() && !$('#filter-lt-date').val()) {
                         const availDates = [...new Set(loadingTimes.map(lt => lt.tanggal).concat(reports.map(r => r.tanggal)).filter(Boolean))].sort();
                         if (availDates.length) {
                             const latestDate = availDates[availDates.length - 1];
@@ -493,17 +545,31 @@ $(document).ready(function() {
 
     function applyFiltersListOnly() {
         const search = ($('#filter-search').val() || '').trim().toLowerCase();
+        const mode = $('#filter-period-mode').val();
         const date = $('#filter-date').val() || '';
+        const dFrom = $('#filter-date-from').val() || '';
+        const dTo = $('#filter-date-to').val() || '';
+        const month = $('#filter-month').val() || '';
         const shift = $('#filter-shift').val() || '';
         const pouchSachet = $('#filter-pouchSachet').val() || '';
         const em = $('#filter-em').val() || '';
-        const week = $('#filter-week').val() || '';
 
         let filtered = reports;
 
-        if (date) {
-            filtered = filtered.filter(r => r.tanggal === date);
+        if (mode === 'daily') {
+            if (date) filtered = filtered.filter(r => r.tanggal === date);
+        } else if (mode === 'monthly') {
+            if (month) filtered = filtered.filter(r => (r.tanggal || '').startsWith(month));
+        } else if (mode === 'range') {
+            if (dFrom && dTo) {
+                filtered = filtered.filter(r => r.tanggal >= dFrom && r.tanggal <= dTo);
+            } else if (dFrom) {
+                filtered = filtered.filter(r => r.tanggal >= dFrom);
+            } else if (dTo) {
+                filtered = filtered.filter(r => r.tanggal <= dTo);
+            }
         }
+
         if (search) {
             filtered = filtered.filter(r => 
                 (r.mesin || '').toLowerCase().includes(search) ||
@@ -515,7 +581,6 @@ $(document).ready(function() {
         if (shift) filtered = filtered.filter(r => String(r.shift) === String(shift));
         if (pouchSachet) filtered = filtered.filter(r => (r.pouch_sachet || '').toLowerCase() === pouchSachet.toLowerCase());
         if (em) filtered = filtered.filter(r => (r.electrical_mechanical || '').toLowerCase() === em.toLowerCase());
-        if (week) filtered = filtered.filter(r => getWeekOfMonth(r.tanggal) == week);
 
         // Stats calculation
         $('#stat-total').text(filtered.length);
@@ -538,26 +603,23 @@ $(document).ready(function() {
     }
 
     window.applyFilters = function() {
-        const d = $('#filter-date').val();
-        const m = $('#filter-month').val();
-        if (d && (!m || d.substring(0, 7) !== m)) {
-            $('#filter-month').val(d.substring(0, 7));
-            isFirstLoad = false;
-            loadReports();
-        } else {
-            applyFiltersListOnly();
-        }
+        loadReports();
     };
 
     window.resetFilters = function() {
         $('#filter-search').val('');
+        $('#filter-period-mode').val('daily');
+        $('#container-filter-daily').removeClass('d-none');
+        $('#container-filter-monthly').addClass('d-none');
+        $('#container-filter-range').addClass('d-none');
         $('#filter-date').val('');
-        $('#filter-lt-date').val('');
+        $('#filter-date-from').val('');
+        $('#filter-date-to').val('');
+        $('#filter-month').val("{{ date('Y-m') }}");
         $('#filter-shift').val('');
         $('#filter-pouchSachet').val('');
         $('#filter-em').val('');
-        $('#filter-week').val('');
-        $('#filter-month').val("{{ date('Y-m') }}");
+        $('#filter-lt-date').val('');
         isFirstLoad = false;
         loadReports();
     };
@@ -789,10 +851,11 @@ $(document).ready(function() {
         }).then((result) => {
             input.value = '';
             if (result.isConfirmed && result.value && result.value.success) {
+                const res = result.value;
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: result.value.message,
+                    icon: res.icon || 'success',
+                    title: res.title || 'Berhasil!',
+                    text: res.message,
                 });
                 loadReports();
             }
@@ -846,11 +909,7 @@ $(document).ready(function() {
         const tbody = $('#tableSummaryBody');
         tbody.empty();
 
-        const selectedDate = $('#filter-date').val();
-        const selectedWeek = $('#filter-week').val();
-        const monthVal = $('#filter-month').val();
-
-        $('#summary-period-badge').text(selectedDate ? `Tanggal: ${formatDate(selectedDate)}` : `Periode: ${monthVal || 'Semua'}${selectedWeek ? ' (Week ' + selectedWeek + ')' : ''}`);
+        $('#summary-period-badge').text(getPeriodBadgeText());
 
         let items = filteredReports;
 
@@ -916,10 +975,7 @@ $(document).ready(function() {
         const tbody = $('#tableMachineGroupBody');
         tbody.empty();
 
-        const selectedDate = $('#filter-date').val();
-        const monthVal = $('#filter-month').val();
-        const selectedWeek = $('#filter-week').val();
-        $('#machine-period-badge').text(selectedDate ? `Tanggal: ${formatDate(selectedDate)}` : `Periode: ${monthVal || 'Semua'}${selectedWeek ? ' (Week ' + selectedWeek + ')' : ''}`);
+        $('#machine-period-badge').text(getPeriodBadgeText());
 
         let items = filteredReports;
 
@@ -1008,19 +1064,32 @@ $(document).ready(function() {
         const tbody = $('#tableLoadingTimeBody');
         tbody.empty();
 
-        const monthVal = $('#filter-month').val();
-        const selectedDate = $('#filter-date').val() || $('#filter-lt-date').val();
-
+        const mode = $('#filter-period-mode').val();
         let reportsToUse = reports;
         let ltToUse = loadingTimes;
 
-        if (selectedDate) {
-            reportsToUse = reports.filter(r => r.tanggal === selectedDate);
-            ltToUse = loadingTimes.filter(lt => lt.tanggal === selectedDate);
-            $('#lt-period-badge').text(`Tanggal: ${formatDate(selectedDate)}`);
-        } else {
-            $('#lt-period-badge').text(`Bulan: ${monthVal || 'Semua'}`);
+        if (mode === 'daily') {
+            const selectedDate = $('#filter-date').val() || $('#filter-lt-date').val();
+            if (selectedDate) {
+                reportsToUse = reports.filter(r => r.tanggal === selectedDate);
+                ltToUse = loadingTimes.filter(lt => lt.tanggal === selectedDate);
+            }
+        } else if (mode === 'monthly') {
+            const monthVal = $('#filter-month').val();
+            if (monthVal) {
+                reportsToUse = reports.filter(r => (r.tanggal || '').startsWith(monthVal));
+                ltToUse = loadingTimes.filter(lt => (lt.tanggal || '').startsWith(monthVal));
+            }
+        } else if (mode === 'range') {
+            const dFrom = $('#filter-date-from').val();
+            const dTo = $('#filter-date-to').val();
+            if (dFrom && dTo) {
+                reportsToUse = reports.filter(r => r.tanggal >= dFrom && r.tanggal <= dTo);
+                ltToUse = loadingTimes.filter(lt => lt.tanggal >= dFrom && lt.tanggal <= dTo);
+            }
         }
+
+        $('#lt-period-badge').text(getPeriodBadgeText());
 
         const pouchMachines = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'C', 'L', 'B', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'V', 'A', 'U'];
         const sachetMachines = ['O', 'P', 'W', 'X', 'R', 'Q', 'Y'];
@@ -1251,6 +1320,32 @@ $(document).ready(function() {
         `);
     }
 
+    window.handlePeriodModeChange = function(mode) {
+        if (!mode) mode = $('#filter-period-mode').val();
+        $('#container-filter-daily').toggleClass('d-none', mode !== 'daily');
+        $('#container-filter-monthly').toggleClass('d-none', mode !== 'monthly');
+        $('#container-filter-range').toggleClass('d-none', mode !== 'range');
+
+        if (mode === 'daily' && !$('#filter-date').val()) {
+            const availDates = [...new Set(loadingTimes.map(lt => lt.tanggal).concat(reports.map(r => r.tanggal)).filter(Boolean))].sort();
+            if (availDates.length) {
+                $('#filter-date').val(availDates[availDates.length - 1]);
+                $('#filter-lt-date').val(availDates[availDates.length - 1]);
+            }
+        } else if (mode === 'range' && !$('#filter-date-from').val()) {
+            const availDates = [...new Set(loadingTimes.map(lt => lt.tanggal).concat(reports.map(r => r.tanggal)).filter(Boolean))].sort();
+            if (availDates.length) {
+                $('#filter-date-from').val(availDates[0]);
+                $('#filter-date-to').val(availDates[availDates.length - 1]);
+            }
+        }
+        loadReports();
+    };
+
+    $('#filter-period-mode').on('change', function() {
+        handlePeriodModeChange($(this).val());
+    });
+
     $('#filter-search').on('input keypress', function(e) {
         if (e.type === 'input' || e.which === 13) {
             applyFiltersListOnly();
@@ -1258,12 +1353,18 @@ $(document).ready(function() {
     });
 
     $('#filter-date').on('change input', function() {
-        const d = $(this).val();
-        $('#filter-lt-date').val(d);
-        const m = $('#filter-month').val();
-        if (d && (!m || d.substring(0, 7) !== m)) {
-            $('#filter-month').val(d.substring(0, 7));
-            isFirstLoad = false;
+        $('#filter-lt-date').val($(this).val());
+        applyFiltersListOnly();
+    });
+
+    $('#filter-month').on('change', function() {
+        loadReports();
+    });
+
+    $('#filter-date-from, #filter-date-to').on('change input', function() {
+        const dFrom = $('#filter-date-from').val();
+        const dTo = $('#filter-date-to').val();
+        if (dFrom && dTo && dFrom <= dTo) {
             loadReports();
         } else {
             applyFiltersListOnly();
@@ -1271,26 +1372,11 @@ $(document).ready(function() {
     });
 
     $('#filter-lt-date').on('change input', function() {
-        const d = $(this).val();
-        $('#filter-date').val(d);
-        const m = $('#filter-month').val();
-        if (d && (!m || d.substring(0, 7) !== m)) {
-            $('#filter-month').val(d.substring(0, 7));
-            isFirstLoad = false;
-            loadReports();
-        } else {
-            applyFiltersListOnly();
-        }
+        $('#filter-date').val($(this).val());
+        applyFiltersListOnly();
     });
 
-    $('#filter-shift, #filter-pouchSachet, #filter-em, #filter-week').on('change', applyFiltersListOnly);
-
-    $('#filter-month').on('change', function() {
-        $('#filter-date').val('');
-        $('#filter-lt-date').val('');
-        isFirstLoad = true;
-        loadReports();
-    });
+    $('#filter-shift, #filter-pouchSachet, #filter-em').on('change', applyFiltersListOnly);
 
     loadReports();
 });
