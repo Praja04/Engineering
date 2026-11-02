@@ -16,11 +16,14 @@ use App\Http\Controllers\Maintenance\MtcDieselEngineController;
 use App\Http\Controllers\Maintenance\MtcElectricEngineController;
 use App\Http\Controllers\Maintenance\MtcMainController;
 use App\Http\Controllers\Maintenance\MtcMasterMesinController;
+use App\Http\Controllers\Maintenance\MtcMasterMaterialController;
+use App\Http\Controllers\Maintenance\MtcMasterChecklistController;
 use App\Http\Controllers\Maintenance\MtcMaterialDashboardController;
+use App\Http\Controllers\Maintenance\MtcDashboardController;
+use App\Http\Controllers\Maintenance\MtcP2hController;
 
 Route::middleware(['auth'])->group(function () {
     Route::prefix('mtc')->group(function () {
-        Route::get('/agenda', [MtcAgendaController::class, 'index'])->name('agenda.index');
         Route::prefix('form')->group(function () {
             Route::prefix('motor-pump')->group(function () {
                 Route::get('/index', [MtcMotorPumpController::class, 'index'])->name('mtc.motor-pump.index');
@@ -118,6 +121,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/detail/{main}', [MtcApprovalController::class, 'detail']);
             Route::post('/approve/{id}', [MtcApprovalController::class, 'approve'])->name('mtc.approval.approve');
             Route::post('/reject/{id}', [MtcApprovalController::class, 'reject'])->name('mtc.approval.reject');
+            Route::post('/mass-approve', [MtcApprovalController::class, 'massApprove'])->name('mtc.approval.mass-approve');
+            Route::post('/mass-reject', [MtcApprovalController::class, 'massReject'])->name('mtc.approval.mass-reject');
         });
 
         Route::prefix('master')->group(function () {
@@ -129,6 +134,30 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/download-template', [MtcMasterMesinController::class, 'downloadTemplate'])->name('downloadTemplate');
                 Route::post('/upload-excel',     [MtcMasterMesinController::class, 'uploadExcel'])->name('uploadExcel');
             });
+
+            Route::prefix('material')->group(function () {
+                Route::get('/index', [MtcMasterMaterialController::class, 'index'])->name('master.mtc.material.index');
+                Route::get('/data', [MtcMasterMaterialController::class, 'getData'])->name('master.mtc.material.data');
+                Route::post('/store', [MtcMasterMaterialController::class, 'store'])->name('master.mtc.material.store');
+                Route::post('/update/{id}', [MtcMasterMaterialController::class, 'update'])->name('master.mtc.material.update');
+                Route::delete('/delete/{id}', [MtcMasterMaterialController::class, 'destroy'])->name('master.mtc.material.delete');
+                Route::get('/download-template', [MtcMasterMaterialController::class, 'downloadTemplate'])->name('master.mtc.material.downloadTemplate');
+                Route::post('/upload-excel', [MtcMasterMaterialController::class, 'uploadExcel'])->name('master.mtc.material.uploadExcel');
+                Route::post('/sync-warehouse', [MtcMasterMaterialController::class, 'syncWarehouse'])->name('master.mtc.material.syncWarehouse');
+            });
+
+            Route::prefix('checklist')->group(function () {
+                Route::get('/index', [MtcMasterChecklistController::class, 'index'])->name('master.mtc.checklist.index');
+                Route::get('/data', [MtcMasterChecklistController::class, 'getData'])->name('master.mtc.checklist.data');
+                Route::get('/groups', [MtcMasterChecklistController::class, 'getGroups'])->name('master.mtc.checklist.groups');
+                Route::post('/store', [MtcMasterChecklistController::class, 'store'])->name('master.mtc.checklist.store');
+                Route::post('/update/{id}', [MtcMasterChecklistController::class, 'update'])->name('master.mtc.checklist.update');
+                Route::delete('/delete/{id}', [MtcMasterChecklistController::class, 'destroy'])->name('master.mtc.checklist.delete');
+                Route::post('/toggle-status/{id}', [MtcMasterChecklistController::class, 'toggleStatus'])->name('master.mtc.checklist.toggle');
+                Route::post('/group/store', [MtcMasterChecklistController::class, 'storeGroup'])->name('master.mtc.checklist.group.store');
+            });
+
+            Route::get('/agenda/master', [MtcAgendaController::class, 'master'])->name('master.mtc.agenda.master');
         });
 
         // Route for downloading maintenance data
@@ -136,9 +165,35 @@ Route::middleware(['auth'])->group(function () {
 
         // Material Requirements Dashboard
         Route::prefix('dashboard')->group(function () {
+            // MTC Maintenance Analytics Dashboard
+            Route::get('/maintenance', [MtcDashboardController::class, 'index'])->name('mtc.dashboard.index');
+            Route::get('/maintenance/data', [MtcDashboardController::class, 'getData'])->name('mtc.dashboard.data');
+
             Route::get('/material', [MtcMaterialDashboardController::class, 'index'])->name('mtc.dashboard.material');
             Route::get('/material/charts', [MtcMaterialDashboardController::class, 'getDashboardCharts'])->name('mtc.dashboard.material.charts');
-            Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMaterialList'])->name('mtc.dashboard.material.list');
+            Route::get('/material/ledger', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.ledger');
+            Route::get('/material/machine-details', [MtcMaterialDashboardController::class, 'getMachineDetails'])->name('mtc.dashboard.material.machine-details');
+            Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.list');
+
+            Route::get('/agenda', [MtcAgendaController::class, 'index'])->name('agenda.index');
+            Route::get('/agenda/master/data', [MtcAgendaController::class, 'getMasterData'])->name('agenda.master.data');
+            Route::get('/agenda/download-template', [MtcAgendaController::class, 'downloadTemplate'])->name('agenda.download-template');
+            Route::post('/agenda/upload', [MtcAgendaController::class, 'upload'])->name('agenda.upload');
+            Route::post('/agenda/master/save-single', [MtcAgendaController::class, 'saveSingle'])->name('agenda.master.save-single');
+            Route::post('/agenda/master/clear-machine', [MtcAgendaController::class, 'clearMachine'])->name('agenda.master.clear-machine');
+            Route::get('/agenda/dashboard/data', [MtcAgendaController::class, 'getDashboardData'])->name('agenda.dashboard.data');
+            Route::get('/agenda/dashboard/calendar', [MtcAgendaController::class, 'getDashboardCalendar'])->name('agenda.dashboard.calendar');
+        });
+
+        Route::prefix('p2h')->group(function () {
+            Route::get('/form/index', [MtcP2hController::class, 'form'])->name('p2h.form.index');
+            Route::post('/form/store', [MtcP2hController::class, 'store'])->name('p2h.form.store');
+            Route::get('/data/index', [MtcP2hController::class, 'data'])->name('p2h.data.index');
+            Route::post('/data/update/{id}', [MtcP2hController::class, 'update'])->name('p2h.data.update');
+            Route::delete('/data/delete/{id}', [MtcP2hController::class, 'destroy'])->name('p2h.data.delete');
+            Route::post('/sync-warehouse', [MtcP2hController::class, 'syncWarehouse'])->name('p2h.sync.warehouse');
+            Route::post('/sync-production', [MtcP2hController::class, 'syncProduction'])->name('p2h.sync.production');
+            Route::post('/sync-all', [MtcP2hController::class, 'syncAll'])->name('p2h.sync.all');
         });
     });
 });

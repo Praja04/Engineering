@@ -25,10 +25,13 @@ class MtcBatteryMainRequest extends FormRequest
             'battery_type'   => 'nullable|string|max:100',
             'no_seri'        => 'nullable|string|max:100',
             'no_unit'        => 'nullable|string|max:100',
-            'kondisi_plug_battery' => 'nullable|string|max:100',
+            'kondisi_plug_battery' => 'nullable|boolean',
             'total_voltase'     => ['nullable', 'numeric', 'min:0'],
-            'grounding'         => ['nullable', 'numeric', 'min:0'],
+            'grounding'         => 'nullable|string|max:100',
             'catatan'        => 'nullable|string|max:100',
+            'intercell'      => 'nullable|boolean',
+            'kondisi_skun'   => 'nullable|boolean',
+            'kondisi_unit'   => 'nullable|boolean',
         ];
     }
 }

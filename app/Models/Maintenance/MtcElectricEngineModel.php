@@ -62,6 +62,8 @@ class MtcElectricEngineModel extends Model
         'check_axle',
         'check_greasing_point',
         'check_air_spring',
+        'check_boot_steering',
+        'check_wheel_chain',
 
         // Oil
         'ganti_gear_oil',
@@ -121,6 +123,8 @@ class MtcElectricEngineModel extends Model
         'check_axle' => 'boolean',
         'check_greasing_point' => 'boolean',
         'check_air_spring' => 'boolean',
+        'check_boot_steering' => 'boolean',
+        'check_wheel_chain' => 'boolean',
 
         // Oil
         'ganti_gear_oil' => 'boolean',

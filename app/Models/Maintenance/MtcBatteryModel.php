@@ -16,17 +16,11 @@ class MtcBatteryModel extends Model
         'mtc_battery_id',
         'voltase',
         'level_air_aki',
-        'intercell',
-        'kondisi_skun',
-        'kondisi_unit',
         'cell',
     ];
 
     protected $casts = [
         'level_air_aki' => 'boolean',
-        'intercell' => 'boolean',
-        'kondisi_skun' => 'boolean',
-        'kondisi_unit' => 'boolean',
     ];
 
     public function mainBattery()

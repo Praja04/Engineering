@@ -231,6 +231,36 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Preview Sertifikat --}}
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content shadow-lg rounded-3">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white"><i class="mdi mdi-eye-outline me-2"></i>Preview Sertifikat</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0" style="background-color: #f8f9fa;">
+                    <div id="previewSpinner" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">Sedang menyiapkan preview...</p>
+                    </div>
+                    <iframe id="previewFrame" src=""
+                        style="width: 100%; height: 75vh; border: none; display: none;"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <a id="btnDownloadFromPreview" href="#" target="_blank" class="btn btn-primary">
+                        <i class="mdi mdi-file-download-outline me-1"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Edit Kalibrasi --}}
+    @include('kalibrasi.partials.modal_edit_kalibrasi')
 @endsection
 
 @section('scripts')
@@ -329,21 +359,22 @@
                                         'approved');
 
                                 // Kalau sudah approved, tampilkan tombol Download Sertifikat
-                                // if (allApproved) {
                                 sertifButtons += `
+                                        <button class="btn btn-outline-primary btn-sm btn-preview" data-id="${item.certificate?.id}" title="Preview">
+                                            <i class="mdi mdi-eye-outline"></i>
+                                        </button>
                                         <a href="/kalibrasi/certificate/download/${item.certificate?.id}" 
-                                            target="_blank" class="btn btn-outline-info btn-sm">
-                                            <i class="mdi mdi-file-download-outline me-1"></i> Download
+                                            target="_blank" class="btn btn-outline-info btn-sm" title="Download">
+                                            <i class="mdi mdi-file-download-outline"></i>
                                         </a>
                                     `;
-                                // }
 
                                 if (userRole === 'foreman' && !allApproved &&
                                     statusSertifikat === 'draft') {
                                     actionButtons += `
                                        <button class="btn btn-outline-primary btn-sm req-approval-btn" 
-                                            data-id="${item.certificate?.id}">
-                                            <i class="mdi mdi-send-check-outline me-1"></i>Request Approval
+                                            data-id="${item.certificate?.id}" title="Request Approval">
+                                            <i class="mdi mdi-send-check-outline"></i>
                                         </button>
 
                                     `;
@@ -352,12 +383,21 @@
                                 if (['foreman', 'supervisor', 'dept_head'].includes(userRole)) {
                                     deleteButtons += `
                                         <button class="btn btn-outline-danger btn-sm delete-btn" 
-                                            data-id="${item.certificate?.id}">
-                                            <i class="mdi mdi-delete me-1"></i>Hapus
+                                            data-id="${item.certificate?.id}" title="Hapus">
+                                            <i class="mdi mdi-delete"></i>
                                         </button>
                                     `;
                                 }
 
+
+                                let editButton = '';
+                                if (userRole !== 'operator' && '{{ strtolower(Auth::user()->jabatan ?? '') }}' !== 'operator') {
+                                    editButton = `
+                                        <button class="btn btn-outline-warning btn-sm btn-edit" data-id="${item.id}" title="Edit Data Kalibrasi & Sertifikat">
+                                            <i class="mdi mdi-pencil-outline"></i>
+                                        </button>
+                                    `;
+                                }
 
                                 let row = `
                                     <tr>
@@ -375,13 +415,10 @@
                                         <td>${statusBadge}</td>
                                         <td class="text-center">
                                             <div class="d-flex flex-nowrap justify-content-end gap-2"> 
-                                                @if (Auth::user()->jabatan === 'foreman')
-                                                    ${actionButtons}
-                                                @endif
+                                                ${actionButtons}
+                                                ${editButton}
                                                 ${sertifButtons}
-                                                @if (Auth::user()->jabatan === 'foreman')
-                                                    ${deleteButtons}
-                                                @endif
+                                                ${deleteButtons}
                                             </div>
                                         </td>
                                     </tr>
@@ -416,19 +453,23 @@
                 sertifikatId = $(this).data('id');
                 console.log(sertifikatId);
                 $('#sertifikatId').val(sertifikatId);
-                const $btn = $('.req-approval-btn');
+                const $btn = $(this);
 
                 $btn.prop('disabled', true)
                     .html(
                         '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Loading...'
                     );
 
+                loadApproverData(sertifikatId, $btn);
+            });
+
+            function loadApproverData(id, $btn) {
                 // load approver dari server
                 $.ajax({
                     url: `{{ url('api/kalibrasi/approvals/data') }}`, // endpoint untuk ambil daftar approver
                     type: 'GET',
                     data: {
-                        id: sertifikatId
+                        id: id
                     },
                     success: function(res) {
                         let managerOptions =
@@ -484,7 +525,7 @@
                             );
                     }
                 });
-            });
+            }
 
             // Submit form approval
             $('#approvalForm').on('submit', function(e) {
@@ -548,6 +589,23 @@
                 loadData(); // refresh data setelah reset
             });
 
+            $(document).on('click', '.btn-preview', function() {
+                const id = $(this).data('id');
+                const previewUrl = `/kalibrasi/certificate/preview/${id}`;
+                const downloadUrl = `/kalibrasi/certificate/download/${id}`;
+
+                $('#previewFrame').hide();
+                $('#previewSpinner').show();
+                $('#btnDownloadFromPreview').attr('href', downloadUrl);
+
+                $('#previewModal').modal('show');
+
+                $('#previewFrame').attr('src', previewUrl).off('load').on('load', function() {
+                    $('#previewSpinner').hide();
+                    $(this).show();
+                });
+            });
+
             $(document).on('click', '.tracking-badge', function() {
 
                 const approvals = $(this).data('approvals') || [];
@@ -565,14 +623,34 @@
                             app.status === 'read' ? 'bg-info' :
                             'bg-warning';
 
+                        const formattedActionAt = app.action_at ?
+                            new Date(app.action_at).toLocaleString('id-ID', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) : '-';
+
                         html += `
-                            <div class="border rounded p-3 mb-2">
-                                <div class="d-flex justify-content-between">
-                                    <strong>${app.approver?.username ?? app.approver_email}</strong>
-                                    <span class="badge ${badgeClass} text-uppercase">${app.status}</span>
+                            <div class="border rounded p-3 mb-2 shadow-sm bg-white">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold fs-6">${app.approver?.username ?? '-'}</span>
+                                    <span class="badge ${badgeClass} text-uppercase px-2 py-1">${app.status}</span>
                                 </div>
-                                <div class="text-muted small mt-1">
-                                    ${app.comment ?? 'No Comment'}
+                                <div class="row text-muted small mb-2">
+                                    <div class="col-6">
+                                        <div><span class="text-secondary">Level:</span> <strong class="text-dark">${app.level ?? '-'}</strong></div>
+                                        <div><span class="text-secondary">Role:</span> <strong class="text-dark">${app.role ?? '-'}</strong></div>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <div><span class="text-secondary">Action At:</span></div>
+                                        <div class="fw-semibold text-dark">${formattedActionAt}</div>
+                                    </div>
+                                </div>
+                                <div class="text-muted small pt-2 border-top">
+                                    <span class="text-secondary d-block">Catatan:</span>
+                                    <span class="text-dark">${app.catatan ?? '-'}</span>
                                 </div>
                             </div>
                         `;

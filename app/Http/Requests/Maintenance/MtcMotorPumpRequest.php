@@ -24,6 +24,7 @@ class MtcMotorPumpRequest extends FormRequest
     {
         return [
             'mesin_id' => ['required', 'exists:mtc_master_mesin,id'],
+            'checklist_map' => ['nullable', 'array'],
 
             // Motor - semua nullable boolean
             'electrical_motor'               => ['nullable', 'boolean'],
@@ -109,10 +110,21 @@ class MtcMotorPumpRequest extends FormRequest
 
             $hasAnyChecked = false;
 
-            foreach ($checklistFields as $field) {
-                if ($this->boolean($field)) {
-                    $hasAnyChecked = true;
-                    break;
+            if ($this->has('checklist_map') && is_array($this->input('checklist_map'))) {
+                foreach ($this->input('checklist_map') as $field => $id) {
+                    if ($this->has($field) && $this->input($field) !== null && $this->input($field) !== '') {
+                        $hasAnyChecked = true;
+                        break;
+                    }
+                }
+            }
+
+            if (! $hasAnyChecked) {
+                foreach ($checklistFields as $field) {
+                    if ($this->has($field) && $this->input($field) !== null && $this->input($field) !== '') {
+                        $hasAnyChecked = true;
+                        break;
+                    }
                 }
             }
 

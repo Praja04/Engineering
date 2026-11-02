@@ -8,14 +8,20 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Maintenance\MtcMasterMaterialModel;
 use App\Models\Maintenance\MtcMainModel;
 use App\Models\Maintenance\MtcApprovalModel;
 use App\Models\Maintenance\MtcMasterMesinModel;
 use App\Models\Maintenance\MtcRefrigerasiModel;
 use App\Http\Requests\Maintenance\MtcMainRequest;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
-use App\Http\Requests\Maintenance\MtcRefrigerasiRequest;
 use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
+use App\Models\Maintenance\MtcPenggantianMaterialModel;
+use App\Http\Requests\Maintenance\MtcPenggantianMaterialRequest;
+use App\Http\Requests\Maintenance\MtcRefrigerasiRequest;
+use App\Models\Maintenance\MtcMasterChecklistGroup;
+use App\Models\Maintenance\MtcMasterChecklist;
+use App\Models\Maintenance\MtcChecklistResult;
 use Illuminate\Support\Str;
 
 class MtcRefrigerasiController extends Controller
@@ -45,7 +51,18 @@ class MtcRefrigerasiController extends Controller
         $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Refrigerasi')
             ->orderBy('id')->get();
 
-        return view('maintenance.form.refrigerasi', compact('mesin'));
+        $offMachineMap = MtcMasterMesinModel::getCurrentlyOffMachineMap('Refrigerasi');
+        foreach ($mesin as $item) {
+            $item->is_currently_off = isset($offMachineMap[$item->id]);
+        }
+
+        $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Refrigerasi')
+            ->where('is_active', true)
+            ->with(['activeChecklists'])
+            ->orderBy('urutan')
+            ->get();
+
+        return view('maintenance.form.refrigerasi', compact('mesin', 'checklistGroups'));
     }
 
     public function viewData()
@@ -59,9 +76,10 @@ class MtcRefrigerasiController extends Controller
     public function store(
         MtcMainRequest $mainRequest,
         MtcRefrigerasiRequest $detailRequest,
-        MtcKebutuhanMaterialRequest $materials
+        MtcKebutuhanMaterialRequest $materials,
+        MtcPenggantianMaterialRequest $replacements
     ) {
-        DB::transaction(function () use ($mainRequest, $detailRequest, $materials) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $replacements) {
 
             $userId = Auth::id();
 
@@ -78,12 +96,55 @@ class MtcRefrigerasiController extends Controller
                 'mtc_main_id' => $main->id,
             ]);
 
+            // Simpan dynamic checklist results (Zero Data Loss compatibility)
+            $checklistMap = request()->input('checklist_map', []);
+            if (!empty($checklistMap) && is_array($checklistMap)) {
+                foreach ($checklistMap as $field => $checklistId) {
+                    $val = request()->input($field);
+                    $keteranganVal = request()->input('keterangan_' . $field);
+
+                    if ($val !== null) {
+                        $status = is_numeric($val) && ($val == 1 || $val == 0) ? ($val == 1 ? 'OK' : 'NG') : 'OK';
+                        $nilai = is_numeric($val) && $val != 1 && $val != 0 ? (string)$val : null;
+
+                        MtcChecklistResult::create([
+                            'mtc_main_id'  => $main->id,
+                            'checklist_id' => $checklistId,
+                            'status'       => $status,
+                            'nilai'        => $nilai,
+                            'keterangan'   => $keteranganVal,
+                            'created_by'   => $userId,
+                        ]);
+                    }
+                }
+            }
+
             foreach ($materials->materials ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid'         => $item['mid'] ?? null,
-                    'deskripsi'   => $item['desc'] ?? null,
+                    'deskripsi'   => $item['desc'] ?? ($item['deskripsi'] ?? null),
                     'qty'         => $item['qty'] ?? 0,
+                    'uom'         => $uom,
+                    'created_by'  => $userId,
+                ]);
+            }
+
+            foreach ($replacements->replacements ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
+                MtcPenggantianMaterialModel::create([
+                    'mtc_main_id' => $main->id,
+                    'mid'         => $item['mid'] ?? null,
+                    'deskripsi'   => $item['desc'] ?? ($item['deskripsi'] ?? null),
+                    'qty'         => $item['qty'] ?? 0,
+                    'uom'         => $uom,
                     'created_by'  => $userId,
                 ]);
             }
@@ -153,7 +214,7 @@ class MtcRefrigerasiController extends Controller
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data MTC Refrigerasi berhasil disimpan',
+            'message' => 'Data Mtc Refrigerasi berhasil disimpan',
         ], 201);
     }
 
@@ -163,32 +224,33 @@ class MtcRefrigerasiController extends Controller
             ->where('jenis_mtc', 'Refrigerasi')
             ->with([
                 'createdBy:id,username',
-                'refrigerasi.mesin:id,nama_mesin,lokasi',
-                // ⚠️ optional: comment kalau berat
+                'refrigerasi.mesin:id,nama_mesin,lokasi,kode_mesin',
                 'kebutuhanMaterial',
+                'penggantianMaterial',
+                'checklistResults.checklist.group',
             ]);
 
-        // filter tanggal
+        // 🔍 filter tanggal
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
         }
 
-        // filter paket
+        // 🔍 filter paket
         if ($request->filled('paket')) {
             $query->where('paket', $request->paket);
         }
 
-        // filter nama mesin
+        // 🔍 filter nama mesin
         if ($request->filled('nama_mesin')) {
             $query->whereHas('refrigerasi.mesin', function ($q) use ($request) {
                 $q->where('nama_mesin', 'like', '%' . $request->nama_mesin . '%');
             });
         }
 
-        // 🔥 total data
+        // 🔥 total setelah filter
         $total = $query->count();
 
-        // 🔥 pagination (inti solusi)
+        // 🔥 ambil data sesuai DataTables
         $data = $query
             ->orderBy('tanggal', 'desc')
             ->skip($request->start)
@@ -207,9 +269,10 @@ class MtcRefrigerasiController extends Controller
         MtcMainRequest $mainRequest,
         MtcRefrigerasiRequest $detailRequest,
         MtcKebutuhanMaterialRequest $materials,
+        MtcPenggantianMaterialRequest $replacements,
         $id
     ) {
-        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $id) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $replacements, $id) {
 
             $userId = Auth::id();
 
@@ -226,23 +289,29 @@ class MtcRefrigerasiController extends Controller
             $existingIds = $main->kebutuhanMaterial()->pluck('id')->toArray();
             $incomingIds = [];
 
-            foreach ($materials['materials'] as $item) {
+            foreach ($materials['materials'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
 
                 if (!empty($item['id'])) {
                     $incomingIds[] = $item['id'];
 
                     MtcKebutuhanMaterialModel::where('id', $item['id'])->update([
                         'mid'        => $item['mid'] ?? null,
-                        'deskripsi'  => $item['deskripsi'] ?? null,
+                        'deskripsi'  => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty'        => $item['qty'] ?? 0,
+                        'uom'        => $uom,
                         'updated_by' => $userId,
                     ]);
                 } else {
                     $new = MtcKebutuhanMaterialModel::create([
                         'mtc_main_id' => $main->id,
                         'mid'         => $item['mid'] ?? null,
-                        'deskripsi'   => $item['deskripsi'] ?? null,
+                        'deskripsi'   => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty'         => $item['qty'] ?? 0,
+                        'uom'         => $uom,
                         'created_by'  => $userId,
                     ]);
 
@@ -255,11 +324,49 @@ class MtcRefrigerasiController extends Controller
             if ($toDelete) {
                 MtcKebutuhanMaterialModel::whereIn('id', $toDelete)->delete();
             }
+
+            $existingReplIds = $main->penggantianMaterial()->pluck('id')->toArray();
+            $incomingReplIds = [];
+
+            foreach ($replacements['replacements'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
+
+                if (!empty($item['id'])) {
+                    $incomingReplIds[] = $item['id'];
+
+                    MtcPenggantianMaterialModel::where('id', $item['id'])->update([
+                        'mid'        => $item['mid'] ?? null,
+                        'deskripsi'  => $item['deskripsi'] ?? ($item['desc'] ?? null),
+                        'qty'        => $item['qty'] ?? 0,
+                        'uom'        => $uom,
+                        'updated_by' => $userId,
+                    ]);
+                } else {
+                    $new = MtcPenggantianMaterialModel::create([
+                        'mtc_main_id' => $main->id,
+                        'mid'         => $item['mid'] ?? null,
+                        'deskripsi'   => $item['deskripsi'] ?? ($item['desc'] ?? null),
+                        'qty'         => $item['qty'] ?? 0,
+                        'uom'         => $uom,
+                        'created_by'  => $userId,
+                    ]);
+
+                    $incomingReplIds[] = $new->id;
+                }
+            }
+
+            $toDeleteRepl = array_diff($existingReplIds, $incomingReplIds);
+            if ($toDeleteRepl) {
+                MtcPenggantianMaterialModel::whereIn('id', $toDeleteRepl)->delete();
+            }
         });
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data berhasil diperbarui',
+            'message' => 'Data MTC Refrigerasi berhasil diupdate',
         ]);
     }
 }

@@ -1,0 +1,281 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Mail\WaterQuotaAlertMail;
+use App\Models\NotificationsModel;
+use App\Models\User;
+use App\Models\Utility\AirArea;
+use App\Models\Utility\PemakaianAirModel;
+use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+
+class CheckWaterQuotaAlertCommand extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'utility:check-water-quota 
+                            {--force : Force send email alert even if already alerted this period}
+                            {--test : Run in simulation mode without sending actual emails}
+                            {--start-date= : Override start date of cut-off period (YYYY-MM-DD)}
+                            {--end-date= : Override end date of cut-off period (YYYY-MM-DD)}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Check raw water sources (Sumur 1, 2, 4, 5, PDAM) and send email alert to supervisors if usage reaches 80% of cut-off period quota (21st to 20th)';
+
+    /**
+     * Raw water sources to monitor
+     *
+     * @var array
+     */
+    protected array $rawSources = ['Sumur 1', 'Sumur 2', 'Sumur 4', 'Sumur 5', 'PDAM'];
+
+    /**
+     * Default daily quotas if not set in DB
+     *
+     * @var array
+     */
+    protected array $defaultQuotas = [
+        'Sumur 1' => 59.00,
+        'Sumur 2' => 73.00,
+        'Sumur 4' => 28.00,
+        'Sumur 5' => 32.00,
+        'PDAM'    => 14.00,
+    ];
+
+    /**
+     * Execute the console command.
+     */
+    public function handle(): int
+    {
+        $isForce = (bool) $this->option('force');
+        $isTest = (bool) $this->option('test');
+
+        $now = Carbon::now();
+
+        // Tentukan Periode Cut-off (21 s.d. 20)
+        // Contoh: Jika hari ini 02 Nov 2026 -> Periode 21 Okt 2026 s.d. 20 Nov 2026
+        //         Jika hari ini 25 Okt 2026 -> Periode 21 Okt 2026 s.d. 20 Nov 2026
+        if ($this->option('start-date') && $this->option('end-date')) {
+            $periodStart = Carbon::parse($this->option('start-date'))->startOfDay();
+            $periodEnd   = Carbon::parse($this->option('end-date'))->endOfDay();
+        } else {
+            if ($now->day >= 21) {
+                $periodStart = Carbon::create($now->year, $now->month, 21)->startOfDay();
+                $nextMonth   = $now->copy()->startOfMonth()->addMonth();
+                $periodEnd   = Carbon::create($nextMonth->year, $nextMonth->month, 20)->endOfDay();
+            } else {
+                $prevMonth   = $now->copy()->startOfMonth()->subMonth();
+                $periodStart = Carbon::create($prevMonth->year, $prevMonth->month, 21)->startOfDay();
+                $periodEnd   = Carbon::create($now->year, $now->month, 20)->endOfDay();
+            }
+        }
+
+        $startDateStr = $periodStart->toDateString();
+        $endDateStr   = $periodEnd->toDateString();
+        $daysInPeriod = $periodStart->copy()->startOfDay()->diffInDays($periodEnd->copy()->startOfDay()) + 1;
+        $periodLabel  = $periodStart->translatedFormat('d M Y') . ' - ' . $periodEnd->translatedFormat('d M Y');
+        $periodLabelFull = $periodStart->translatedFormat('d F Y') . ' s.d. ' . $periodEnd->translatedFormat('d F Y');
+
+        $this->info("=== Pengecekan Kuota Air Mentah (≥ 80%) ===");
+        $this->line("Periode Cut-off: {$periodLabelFull} ({$daysInPeriod} hari | {$startDateStr} s.d. {$endDateStr})");
+        $this->line("Tanggal Check: " . $now->toDateTimeString());
+
+        // 1. Ambil target kuota harian dan ID dari AirArea
+        $airAreas = AirArea::whereIn('nama_area', $this->rawSources)
+            ->get()
+            ->keyBy('nama_area');
+
+        // 2. Ambil pemakaian aktual dalam periode cut-off (21 s.d. 20)
+        $records = PemakaianAirModel::query()
+            ->select('jenis_pemakaian', DB::raw('SUM(pemakaian_akhir - pemakaian_awal) AS total_pemakaian'))
+            ->whereBetween('tanggal', [$startDateStr, $endDateStr])
+            ->whereIn('jenis_pemakaian', $this->rawSources)
+            ->groupBy('jenis_pemakaian')
+            ->get()
+            ->keyBy('jenis_pemakaian');
+
+        $tableData = [];
+        $alertItems = [];
+
+        foreach ($this->rawSources as $source) {
+            $areaModel = $airAreas[$source] ?? null;
+            $dailyQuota = $areaModel && $areaModel->quota_target !== null
+                ? (float) $areaModel->quota_target
+                : ($this->defaultQuotas[$source] ?? 0.0);
+
+            // Perhitungan: Kuota 1 periode penuh = daily_quota * jumlah hari di periode (21 s.d 20)
+            $monthlyQuota = round($dailyQuota * $daysInPeriod, 2);
+            $threshold80 = round($monthlyQuota * 0.8, 2);
+
+            $actual = isset($records[$source])
+                ? round((float) $records[$source]->total_pemakaian, 2)
+                : 0.0;
+
+            $percentage = $monthlyQuota > 0
+                ? round(($actual / $monthlyQuota) * 100, 1)
+                : 0.0;
+
+            $isExceeded80 = $actual >= $threshold80;
+
+            // Cache key unik per periode cut-off
+            $cacheKey = "water_quota_alert_sent_{$source}_{$periodStart->format('Ymd')}_{$periodEnd->format('Ymd')}";
+            $alreadyAlerted = Cache::has($cacheKey);
+
+            $statusText = 'Normal';
+            if ($percentage >= 100) {
+                $statusText = 'OVER KUOTA (≥100%)';
+            } elseif ($isExceeded80) {
+                $statusText = 'WASPADA (≥80%)';
+            }
+
+            $tableData[] = [
+                'Sumber'              => $source,
+                'Kuota Harian (m³)'   => number_format($dailyQuota, 1, ',', '.'),
+                'Kuota Periode (m³)'  => number_format($monthlyQuota, 1, ',', '.'),
+                'Ambang 80% (m³)'    => number_format($threshold80, 1, ',', '.'),
+                'Aktual (m³)'        => number_format($actual, 1, ',', '.'),
+                'Pencapaian (%)'     => $percentage . '%',
+                'Status'              => $statusText,
+                'Sudah Kirim?'        => $alreadyAlerted ? 'Ya' : 'Belum',
+            ];
+
+            // Cek apakah perlu kirim notifikasi
+            if ($isExceeded80) {
+                if ($isForce || !$alreadyAlerted) {
+                    $alertItems[] = [
+                        'source'        => $source,
+                        'area_id'       => $areaModel?->id,
+                        'daily_quota'   => $dailyQuota,
+                        'monthly_quota' => $monthlyQuota,
+                        'threshold_80'  => $threshold80,
+                        'actual'        => $actual,
+                        'percentage'    => $percentage,
+                        'cache_key'     => $cacheKey,
+                    ];
+                } else {
+                    $this->warn("Sumber [{$source}] sudah melampaui 80% ({$percentage}%), namun notifikasi periode ini sudah pernah terkirim sebelumnya.");
+                }
+            }
+        }
+
+        $this->table(
+            ['Sumber', 'Kuota Harian (m³)', 'Kuota Periode (m³)', 'Ambang 80% (m³)', 'Aktual (m³)', 'Pencapaian (%)', 'Status', 'Alert Terkirim?'],
+            $tableData
+        );
+
+        if (empty($alertItems)) {
+            $this->info("Tidak ada sumber air mentah baru yang mencapai threshold 80% kuota periode untuk dikirimi email.");
+            return Command::SUCCESS;
+        }
+
+        $this->warn("Ditemukan " . count($alertItems) . " sumber air yang mencapai/melebihi 80% kuota periode!");
+
+        // 3. Ambil user dengan jabatan supervisor
+        $supervisors = User::where('is_active', true)
+            ->where(function ($q) {
+                $q->where('jabatan', 'LIKE', '%supervisor%')
+                  ->orWhere('jabatan', 'LIKE', '%spv%');
+            })
+            ->get();
+
+        if ($supervisors->isEmpty()) {
+            $this->error("Tidak ditemukan user supervisor aktif.");
+            return Command::FAILURE;
+        }
+
+        $this->info("Ditemukan {$supervisors->count()} user supervisor penerima notifikasi.");
+
+        if ($isTest) {
+            $this->warn("[MODE TEST] Email dan notifikasi web tidak dikirim ke supervisor secara riil. Data simulasi:");
+            foreach ($supervisors as $spv) {
+                $recipientName = $spv->fullname ?: ($spv->username ?: 'Supervisor');
+                $emailStatus = $spv->email ? $spv->email : 'Tanpa Email';
+                $this->line("- [TEST] Penerima: {$recipientName} ({$emailStatus}) | Jabatan: {$spv->jabatan} | Dept: {$spv->departemen}");
+            }
+            return Command::SUCCESS;
+        }
+
+        // 4. Kirim notifikasi web ke tabel `notifications`
+        $dashboardUrl = route('utility.dashboard_machine');
+        $dbNotifCount = 0;
+
+        foreach ($supervisors as $supervisor) {
+            foreach ($alertItems as $item) {
+                $statusLabel = $item['percentage'] >= 100 ? 'OVER KUOTA' : 'WASPADA (≥80%)';
+                $title = "⚠️ Kuota Air {$item['source']} [{$statusLabel}]";
+                $message = "Pemakaian {$item['source']} periode {$periodLabel} mencapai {$item['percentage']}% ({$item['actual']} m³ dari kuota {$item['monthly_quota']} m³).";
+
+                // Cek apakah notifikasi serupa sudah pernah dicatat dalam periode ini untuk user ini
+                $alreadyExistsInDb = NotificationsModel::where('user_id', $supervisor->id)
+                    ->where('title', $title)
+                    ->whereDate('created_at', '>=', $startDateStr)
+                    ->exists();
+
+                if ($isForce || !$alreadyExistsInDb) {
+                    NotificationsModel::create([
+                        'user_id'         => $supervisor->id,
+                        'notifiable_type' => AirArea::class,
+                        'notifiable_id'   => $item['area_id'],
+                        'title'           => $title,
+                        'message'         => $message,
+                        'url'             => $dashboardUrl,
+                        'is_read'         => false,
+                    ]);
+                    $dbNotifCount++;
+                }
+            }
+        }
+        $this->info("✓ Berhasil menyimpan {$dbNotifCount} record ke tabel notifikasi web.");
+
+        // 5. Kirim email ke setiap supervisor yang memiliki email valid
+        $sentCount = 0;
+        $supervisorsWithEmail = $supervisors->filter(fn($u) => !empty($u->email));
+
+        foreach ($supervisorsWithEmail as $supervisor) {
+            $recipientName = $supervisor->fullname ?: ($supervisor->username ?: 'Supervisor');
+            try {
+                $this->line("Mengirim email ke: {$recipientName} <{$supervisor->email}>...");
+                Mail::to($supervisor->email)->send(new WaterQuotaAlertMail(
+                    $alertItems,
+                    $recipientName,
+                    $periodLabelFull,
+                    $startDateStr,
+                    $endDateStr,
+                    $daysInPeriod
+                ));
+                $sentCount++;
+                $this->info("✓ Sukses terkirim ke {$supervisor->email}");
+            } catch (\Throwable $e) {
+                $this->error("✗ Gagal mengirim email ke {$supervisor->email}: " . $e->getMessage());
+                Log::error("WaterQuotaAlertMail error for {$supervisor->email}: " . $e->getMessage());
+            }
+        }
+
+        // 6. Tandai cache untuk sumber yang berhasil diproses agar tidak duplikat di run berikutnya (TTL s.d akhir periode)
+        if ($sentCount > 0 || $dbNotifCount > 0) {
+            $secondsUntilEndOfPeriod = max(60, $now->diffInSeconds($periodEnd));
+            foreach ($alertItems as $item) {
+                Cache::put($item['cache_key'], [
+                    'sent_at'    => $now->toDateTimeString(),
+                    'actual'     => $item['actual'],
+                    'percentage' => $item['percentage'],
+                ], $secondsUntilEndOfPeriod);
+            }
+            $this->info("Notifikasi selesai diproses (Web: {$dbNotifCount}, Email: {$sentCount}).");
+        }
+
+        return Command::SUCCESS;
+    }
+}

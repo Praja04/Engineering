@@ -134,6 +134,8 @@
                                 <option value="B">B</option>
                                 <option value="C">C</option>
                                 <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="Off">Off</option>
                                 <option value="Korektif">Korektif</option>
                                 <option value="Checkpoint">Checkpoint</option>
                             </select>
@@ -161,21 +163,29 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Nama Mesin</th>
+                                    <th>Kode Mesin</th>
                                     <th>Lokasi</th>
                                     <th>Tanggal</th>
                                     <th>Waktu Mulai</th>
                                     <th>Waktu Selesai</th>
                                     <th>Paket</th>
-                                    <th>status</th>
-                                    <th style="width:180px;" class="text-center">Aksi</th>
+                                    <th>Status</th>
+                                    <th style="width:140px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="tbodyDieselEngine">
                                 <tr>
-                                    <td colspan="8" class="text-center small-muted py-4">Memuat data...</td>
+                                    <td colspan="10" class="text-center small-muted py-4">Memuat data...</td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                        <div id="paginationInfo" class="small text-muted"></div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="paginationList">
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -240,7 +250,16 @@
                                     <option>B</option>
                                     <option>C</option>
                                     <option>D</option>
+                                    <option>E</option>
+                                    <option>Off</option>
+                                    <option>Korektif</option>
+                                    <option>Checkpoint</option>
                                 </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Running Hour</label>
+                                <input type="number" step="0.01" class="form-control" name="running_hour"
+                                    id="editRunningHour" placeholder="0.00">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Waktu Mulai</label>
@@ -252,6 +271,14 @@
                             </div>
                         </div>
 
+
+                        <div class="row g-3 mt-1" id="editTanggalSelesaiRow" style="display:none;">
+                            <div class="col-md-3">
+                                <label class="form-label">Tanggal Selesai <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="tanggal_selesai"
+                                    id="editTanggalSelesai">
+                            </div>
+                        </div>
                         <div id="editSections"><!-- injected --></div>
 
                         <div class="row g-3 mt-2">
@@ -275,6 +302,29 @@
                                         <th class="text-center" style="width: 10%">
                                             <button type="button" class="btn btn-sm btn-primary"
                                                 id="btnAddMaterialEdit">
+                                                +
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="fw-bold mb-2 mt-4">Penggantian Material</div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle" id="replacementTableEdit">
+                                <thead class="table-light text-nowrap">
+                                    <tr>
+                                        <th style="width: 20%">MID</th>
+                                        <th>Deskripsi</th>
+                                        <th style="width: 15%">Jumlah</th>
+                                        <th class="text-center" style="width: 10%">
+                                            <button type="button" class="btn btn-sm btn-primary"
+                                                id="btnAddReplacementEdit">
                                                 +
                                             </button>
                                         </th>
@@ -418,9 +468,10 @@
                 const select = $('#editNamaMesin');
 
                 mesinList.forEach(m => {
+                    const code = m.kode_mesin ? `(${m.kode_mesin}) ` : '';
                     select.append(`
                         <option value="${m.id}">
-                            ${m.nama_mesin} - ${m.lokasi}
+                            ${m.nama_mesin} ${code}- ${m.lokasi}
                         </option>
                     `);
                 });
@@ -473,49 +524,101 @@
                     `;
                 };
 
-                return `
-                    <div class="detail-meta row g-3 mb-2">
-                        <div class="col-md-3">
-                            <div class="meta-label">Nama Mesin</div>
-                            <div class="meta-value">${row.diesel_engine.mesin.nama_mesin ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Lokasi</div>
-                            <div class="meta-value">${row.diesel_engine.mesin.lokasi ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Tanggal</div>
-                            <div class="meta-value">${fmtDate(row.tanggal)}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Waktu Mulai</div>
-                            <div class="meta-value">${row.waktu_mulai ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Waktu Selesai</div>
-                            <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
-                        </div>
-                        ${row.paket === 'Korektif' ? `
-                                                                    <div class="col-md-3">
-                                                                        <div class="meta-label">Tanggal Selesai</div>
-                                                                        <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
-                                                                    </div>
-                                                                    ` : ''}
-                        <div class="col-md-3">
-                            <div class="meta-label">Paket</div>
-                            <div class="meta-value">${row.paket ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Dibuat oleh</div>
-                            <div class="meta-value">${row.created_by.username ?? row.created_by.created_by ?? '-'}</div>
-                        </div>
-                    </div>
+                let checklistContent = '';
+                const results = row.checklist_results || row.checklistResults || [];
+                if (results && results.length > 0) {
+                    const grouped = {};
+                    results.forEach(res => {
+                        const grp = res.checklist?.group?.nama_group || 'Checklist';
+                        if (!grouped[grp]) grouped[grp] = [];
+                        grouped[grp].push(res);
+                    });
 
-                    ${section('Engine', fields.engine)}
-                    ${section('Electric', fields.electric)}
-                    ${section('Transmisi Brake Drive shaft', fields.transmisi_brake_drive_shaft)}
-                    ${section('Hydraulic', fields.hydraulic)}
-                    ${section('General', fields.general)}
+                    checklistContent = Object.keys(grouped).map(groupName => {
+                        const cells = grouped[groupName].map(res => {
+                            let badge = '';
+                            if (res.checklist?.tipe_input === 'boolean_ok_ng' || res.status) {
+                                badge = (res.status || '').toLowerCase() === 'ok' ?
+                                    '<span class="badge bg-success">OK</span>' :
+                                    '<span class="badge bg-danger">Tidak OK</span>';
+                            } else if (res.nilai) {
+                                badge = `<span class="badge bg-info">${res.nilai}</span>`;
+                            } else {
+                                badge = '<span class="badge bg-secondary">-</span>';
+                            }
+                            return `
+                                    <div class="item-cell">
+                                        <div class="item-label">${res.checklist?.label || '-'}</div>
+                                        <div>${badge}</div>
+                                        ${res.keterangan ? `<div class="small text-danger mt-1">Ket: ${res.keterangan}</div>` : ''}
+                                    </div>
+                                `;
+                        }).join('');
+
+                        return `
+                                <div class="mb-3">
+                                    <div class="group-title">${groupName}</div>
+                                    <div class="items-grid">${cells}</div>
+                                </div>
+                            `;
+                    }).join('');
+                } else {
+                    checklistContent = `
+                            ${section('Engine', fields.engine)}
+                            ${section('Electric', fields.electric)}
+                            ${section('Transmisi Brake Drive shaft', fields.transmisi_brake_drive_shaft)}
+                            ${section('Hydraulic', fields.hydraulic)}
+                            ${section('General', fields.general)}
+                        `;
+                }
+
+                return `
+                        <div class="detail-meta row g-3 mb-2">
+                            <div class="col-md-3">
+                                <div class="meta-label">Nama Mesin</div>
+                                <div class="meta-value">${row.diesel_engine?.mesin?.nama_mesin ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Kode Mesin</div>
+                                <div class="meta-value">${row.diesel_engine?.mesin?.kode_mesin ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Lokasi</div>
+                                <div class="meta-value">${row.diesel_engine?.mesin?.lokasi ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Tanggal</div>
+                                <div class="meta-value">${fmtDate(row.tanggal)}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Waktu Mulai</div>
+                                <div class="meta-value">${row.waktu_mulai ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Waktu Selesai</div>
+                                <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Running Hour</div>
+                                <div class="meta-value">${row.running_hour ?? '-'}</div>
+                            </div>
+                            ${row.paket === 'Korektif' ? `
+                                                                                        <div class="col-md-3">
+                                                                                            <div class="meta-label">Tanggal Selesai</div>
+                                                                                            <div class="meta-value">${row.tanggal_selesai ? fmtDate(row.tanggal_selesai) : '-'}</div>
+                                                                                        </div>
+                                                                                        ` : ''}
+                            <div class="col-md-3">
+                                <div class="meta-label">Paket</div>
+                                <div class="meta-value">${row.paket ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Dibuat oleh</div>
+                                <div class="meta-value">${row.created_by.username ?? row.created_by.created_by ?? '-'}</div>
+                            </div>
+                        </div>
+
+                        ${checklistContent}
 
                     <div class="row g-3 mt-2">
                         <div class="col-md-6">
@@ -526,13 +629,23 @@
                             <div class="group-title">Tindakan Korektif</div>
                             <div>${row.korektif ?? '-'}</div>
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <div class="group-title">Kebutuhan Material</div>
                            ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                                                                <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                            `).join('')
+                                            <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                        `).join('')
+                                : '<div>-</div>'
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <div class="group-title">Penggantian Material</div>
+                           ${
+                                row.penggantian_material && row.penggantian_material.length
+                                ? row.penggantian_material.map(m => `
+                                            <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                        `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -610,116 +723,183 @@
                 openTracking(id);
             });
 
-            const dtDieselEngine = $('#tabelDieselEngine').DataTable({
-                processing: true,
-                serverSide: true,
-                searching: false,
-                pageLength: 10,
-                lengthMenu: [5, 10, 25, 50, 100],
-                order: [
-                    [0, 'asc']
-                ],
-                ajax: {
+            let currentPage = 1;
+            const pageSize = 10;
+            let totalRecords = 0;
+
+            function loadTableData(page = 1) {
+                currentPage = page;
+                const start = (currentPage - 1) * pageSize;
+
+                $('#tbodyDieselEngine').html(`
+                    <tr>
+                        <td colspan="10" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span class="ms-2 text-muted">Memuat data...</span>
+                        </td>
+                    </tr>
+                `);
+
+                const filters = {
+                    date: $('#filterDate').val() || null,
+                    paket: $('#filterPaket').val() || null,
+                    nama_mesin: $('#filterNama').val() || null,
+                    start: start,
+                    length: pageSize
+                };
+
+                $.ajax({
                     url: API_URL,
-                    data: function(d) {
-                        // filter custom milikmu
-                        d.date = $('#filterDate').val() || null;
-                        d.paket = $('#filterPaket').val() || null;
-                        d.nama_mesin = $('#filterNama').val() || null;
-                        // penting untuk pagination
-                        d.start = d.start;
-                        d.length = d.length;
-                    },
-                    dataSrc: function(json) {
-                        // simpan untuk modal detail
-                        currentRows = json.data || [];
-                        return currentRows;
-                    },
-                    error: function() {
-                        // DataTables punya tampilan default "No data", tapi kalau mau custom:
-                        // (opsional) bisa pakai language.emptyTable
-                    }
-                },
-                columns: [{
-                        data: null,
-                        className: 'text-center',
-                        orderable: false,
-                        render: function(data, type, row, meta) {
-                            return meta.row + meta.settings._iDisplayStart + 1;
-                        }
-                    },
-                    {
-                        data: 'diesel_engine.mesin.nama_mesin',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'diesel_engine.mesin.lokasi',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'tanggal',
-                        render: function(data, type) {
-                            if (type === 'display') return fmtDate(data);
-                            return data; // sorting pakai ISO
-                        }
-                    },
-                    {
-                        data: 'waktu_mulai',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'waktu_selesai',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'paket',
-                        defaultContent: '-',
-                        orderable: false,
-                    },
-                    {
-                        data: null,
-                        render: function(row) {
-                            return `
-                                <span class="badge cursor-pointer badge-status"
-                                    data-id="${row.id}">
-                                    ${statusBadge(row.status)}
-                                </span>
-                            `;
+                    type: 'GET',
+                    data: filters,
+                    dataType: 'json',
+                    success: function(res) {
+                        currentRows = res.data || [];
+                        totalRecords = res.recordsFiltered || 0;
+
+                        if (currentRows.length === 0) {
+                            $('#tbodyDieselEngine').html(`
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted py-4">Tidak ada data ditemukan</td>
+                                </tr>
+                            `);
+                            $('#paginationInfo').text('Menampilkan 0 sampai 0 dari 0 data');
+                            $('#paginationList').empty();
+                            return;
                         }
 
-                    },
-                    {
-                        data: null,
-                        orderable: false,
-                        className: 'text-center text-nowrap',
-                        render: function(row) {
-                            return `
-                                <button class="btn btn-sm btn-primary btn-detail" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>
-                                <button class="btn btn-sm btn-info btn-edit" data-id="${row.id}" title="${row.status === 'rejected' ? 'Silakan isi form kembali' : 'Edit'}" ${row.status === 'rejected' ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>
-                                <button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>
+                        let html = '';
+                        currentRows.forEach((row, index) => {
+                            const rowNum = start + index + 1;
+                            const engine = row.diesel_engine || {};
+                            const machineName = engine.mesin?.nama_mesin || '-';
+                            const machineCode = engine.mesin?.kode_mesin || '-';
+                            const location = engine.mesin?.lokasi || '-';
+
+                            const showBtn =
+                                `<button class="btn btn-sm btn-primary btn-detail me-1" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>`;
+                            const editDisabled = row.status === 'rejected';
+                            const editBtn =
+                                `<button class="btn btn-sm btn-info btn-edit me-1" data-id="${row.id}" title="${editDisabled ? 'Silakan isi form kembali' : 'Edit'}" ${editDisabled ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>`;
+                            const delBtn =
+                                `<button class="btn btn-sm btn-danger btn-delete me-1" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>`;
+                            const printBtn =
+                                `<button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>`;
+
+                            html += `
+                                <tr>
+                                    <td class="text-center">${rowNum}</td>
+                                    <td>${machineName}</td>
+                                    <td>${machineCode}</td>
+                                    <td>${location}</td>
+                                    <td>${fmtDate(row.tanggal)}</td>
+                                    <td>${row.waktu_mulai ?? '-'}</td>
+                                    <td>${row.waktu_selesai ?? '-'}</td>
+                                    <td>${row.paket ?? '-'}</td>
+                                    <td>
+                                        <span class="badge cursor-pointer badge-status" data-id="${row.id}">
+                                            ${statusBadge(row.status)}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-center">
+                                            ${showBtn}
+                                            ${editBtn}
+                                            ${delBtn}
+                                            ${printBtn}
+                                        </div>
+                                    </td>
+                                </tr>
                             `;
+                        });
+
+                        $('#tbodyDieselEngine').html(html);
+
+                        // Render Pagination
+                        const totalPages = Math.ceil(totalRecords / pageSize);
+                        const endRow = Math.min(start + pageSize, totalRecords);
+                        $('#paginationInfo').text(
+                            `Menampilkan ${start + 1} sampai ${endRow} dari ${totalRecords} data`);
+
+                        let pagHtml = '';
+                        pagHtml += `
+                            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                                <a class="page-link" href="#" data-page="${currentPage - 1}">Sebelumnya</a>
+                            </li>
+                        `;
+
+                        const pages = [];
+                        if (totalPages <= 7) {
+                            for (let i = 1; i <= totalPages; i++) pages.push(i);
+                        } else {
+                            pages.push(1);
+                            let start = Math.max(2, currentPage - 2);
+                            let end = Math.min(totalPages - 1, currentPage + 2);
+                            if (currentPage <= 4) {
+                                start = 2;
+                                end = 5;
+                            } else if (currentPage >= totalPages - 3) {
+                                start = totalPages - 4;
+                                end = totalPages - 1;
+                            }
+                            if (start > 2) pages.push('...');
+                            for (let i = start; i <= end; i++) pages.push(i);
+                            if (end < totalPages - 1) pages.push('...');
+                            pages.push(totalPages);
                         }
+
+                        pages.forEach(p => {
+                            if (p === '...') {
+                                pagHtml += `
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                `;
+                            } else {
+                                pagHtml += `
+                                    <li class="page-item ${currentPage === p ? 'active' : ''}">
+                                        <a class="page-link" href="#" data-page="${p}">${p}</a>
+                                    </li>
+                                `;
+                            }
+                        });
+
+                        pagHtml += `
+                            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                                <a class="page-link" href="#" data-page="${currentPage + 1}">Berikutnya</a>
+                            </li>
+                        `;
+
+                        $('#paginationList').html(pagHtml);
+                    },
+                    error: function() {
+                        $('#tbodyDieselEngine').html(`
+                            <tr>
+                                <td colspan="10" class="text-center text-danger py-4">Gagal memuat data</td>
+                            </tr>
+                        `);
                     }
-                ],
-                language: {
-                    emptyTable: `
-                        <div class="py-4 text-center text-muted">
-                        Tidak ada data
-                        </div>
-                    `,
-                    processing: "Memuat..."
+                });
+            }
+
+            // Init load
+            loadTableData(1);
+
+            // Handle Pagination click
+            $(document).on('click', '#paginationList .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (page && page !== currentPage) {
+                    loadTableData(page);
                 }
             });
 
             // apply/reset filter 
             $('#btnApply').on('click', function(e) {
                 e.preventDefault();
-                dtDieselEngine.ajax.reload();
+                loadTableData(1);
             });
 
             $('#btnReset').on('click', function(e) {
@@ -727,7 +907,7 @@
                 $('#filterDate').val('');
                 $('#filterPaket').val('');
                 $('#filterNama').val('');
-                dtDieselEngine.ajax.reload();
+                loadTableData(1);
             });
 
             // Detail modal
@@ -804,6 +984,28 @@
                 `;
             }
 
+            $(document).on('click', '.edit-radio', function() {
+                const $this = $(this);
+                if ($this.val() === '') return;
+
+                if ($this.data('waschecked') === true) {
+                    const name = this.name;
+                    this.checked = false;
+                    $this.data('waschecked', false);
+
+                    const $nullRadio = $(`input.edit-radio[name="${name}"][value=""]`);
+                    if ($nullRadio.length) {
+                        $nullRadio.prop('checked', true).data('waschecked', true);
+                        $nullRadio.trigger('change');
+                    } else {
+                        $this.trigger('change');
+                    }
+                } else {
+                    $(`input.edit-radio[name="${this.name}"]`).data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
             $(document).on('change', '.edit-radio', function() {
                 const $card = $(this).closest('.item-edit');
                 const field = $card.data('field');
@@ -854,6 +1056,9 @@
                     ${renderEditSection('General', fields.general, row)}
                 `;
                 $('#editSections').html(html);
+                $('#editSections input.edit-radio:checked').each(function() {
+                    $(this).data('waschecked', true);
+                });
             }
 
             $(document).on('click', '.btn-edit', function() {
@@ -863,10 +1068,14 @@
 
                 $('#editId').val(row.id);
                 $('#editTanggal').val(toDateInputValue(row.tanggal));
+                $('#editRunningHour').val(row.running_hour ?? '');
                 $('#editWaktuMulai').val((row.waktu_mulai ?? '').toString().slice(0, 5));
                 $('#editWaktuSelesai').val((row.waktu_selesai ?? '').toString().slice(0, 5));
 
                 $('#editPaket').val(row.paket ?? '');
+                $('#editTanggalSelesai').val(row.tanggal_selesai ? row.tanggal_selesai.substring(0, 10) :
+                    '');
+                toggleEditTanggalSelesai(row.paket ?? '');
                 $('#editKorektif').val(row.korektif ?? '');
                 $('#editNamaMesin')
                     .val(row.diesel_engine?.mesin_id)
@@ -878,6 +1087,9 @@
                 buildEditForm(row);
                 renderEditMaterials(
                     row.kebutuhan_material ?? []
+                );
+                renderEditReplacements(
+                    row.penggantian_material ?? []
                 );
 
                 const ketMap = parseKeteranganPairs(row.keterangan);
@@ -925,13 +1137,30 @@
                 };
             }
 
+
+            function toggleEditTanggalSelesai(paket) {
+                const row = $('#editTanggalSelesaiRow');
+                const input = $('#editTanggalSelesai');
+                if (paket === 'Korektif') {
+                    row.show();
+                    input.prop('required', true);
+                } else {
+                    row.hide();
+                    input.prop('required', false).val('');
+                }
+            }
+
+            $('#editPaket').on('change', function() {
+                toggleEditTanggalSelesai($(this).val());
+            });
+
             function initMidSelect2Edit(element) {
                 $(element).select2({
                     theme: 'bootstrap-5',
                     placeholder: 'Cari MID / Nama Barang...',
                     allowClear: true,
                     width: '100%',
-                    dropdownParent: $('#modalEdit'),
+                    dropdownParent: $(element).closest('.modal-content'),
                     ajax: {
                         url: 'http://10.11.10.130:8087/api/wsp/barang',
                         dataType: 'json',
@@ -947,7 +1176,8 @@
                                     return {
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
-                                        nama_barang: item.nama_barang
+                                        nama_barang: item.nama_barang,
+                                        uom: item.uom || ''
                                     };
                                 })
                             };
@@ -968,16 +1198,31 @@
                     }
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
-                    $(this).closest('tr').find('.material-deskripsi').val(data.nama_barang);
+                    $(this).closest('tr').find('.material-deskripsi, .replacement-deskripsi').val(data
+                        .nama_barang);
+                    $(this).closest('tr').find('.material-uom, .replacement-uom').val(data.uom || '');
+                    $(this).closest('tr').find('.material-qty, .replacement-qty').prop('required', true);
+                }).on('select2:clear select2:unselect', function(e) {
+                    $(this).closest('tr').find('.material-deskripsi, .replacement-deskripsi').val('');
+                    $(this).closest('tr').find('.material-uom, .replacement-uom').val('');
+                    $(this).closest('tr').find('.material-qty, .replacement-qty').val('').prop('required',
+                        false);
                 });
             }
+
+            $('#modalEdit').on('shown.bs.modal', function() {
+                $('.material-mid, .replacement-mid').each(function() {
+                    if (!$(this).hasClass("select2-hidden-accessible")) {
+                        initMidSelect2Edit(this);
+                    }
+                });
+            });
 
             function renderEditMaterials(materials) {
                 const tbody = $('#materialTableEdit tbody');
                 tbody.empty();
 
                 if (!materials || materials.length === 0) {
-                    addMaterialRowEdit();
                     return;
                 }
 
@@ -987,16 +1232,17 @@
                     row.find('.material-id').val(item.id);
                     row.find('.material-deskripsi').val(item.deskripsi);
                     row.find('.material-qty').val(item.qty);
+                    row.find('.material-uom').val(item.uom || '');
 
                     // Add existing MID as option
                     if (item.mid) {
                         const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi :
                             ''), item.mid, true, true);
                         row.find('.material-mid').append(newOption).trigger('change');
+                        row.find('.material-qty').prop('required', true);
                     }
 
                     tbody.append(row);
-                    initMidSelect2Edit(row.find('.material-mid'));
                 });
             }
 
@@ -1004,6 +1250,7 @@
                 return `
                     <tr class="material-row">
                         <input type="hidden" name="materials[${index}][id]" class="material-id">
+                        <input type="hidden" name="materials[${index}][uom]" class="material-uom">
 
                         <td>
                             <select name="materials[${index}][mid]" class="form-control form-control-sm material-mid"></select>
@@ -1019,7 +1266,8 @@
                             <input type="number"
                                 name="materials[${index}][qty]"
                                 class="form-control form-control-sm material-qty"
-                                min="1">
+                                step="any"
+                                min="0">
                         </td>
 
                         <td class="text-center">
@@ -1050,14 +1298,136 @@
 
             function reindexMaterialRows() {
                 $('#materialTableEdit tbody tr').each(function(i) {
-                    $(this).find('input').each(function() {
-                        this.name = this.name.replace(/\[\d+]/, `[${i}]`);
+                    $(this).find('input, select').each(function() {
+                        if (this.name) {
+                            this.name = this.name.replace(/\[\d+]/, `[${i}]`);
+                        }
+                    });
+                });
+            }
+
+            function renderEditReplacements(replacements) {
+                const tbody = $('#replacementTableEdit tbody');
+                tbody.empty();
+
+                if (!replacements || replacements.length === 0) {
+                    return;
+                }
+
+                replacements?.forEach((item, index) => {
+                    const row = $(replacementRowTemplate(index));
+
+                    row.find('.replacement-id').val(item.id);
+                    row.find('.replacement-deskripsi').val(item.deskripsi);
+                    row.find('.replacement-qty').val(item.qty);
+                    row.find('.replacement-uom').val(item.uom || '');
+
+                    // Add existing MID as option
+                    if (item.mid) {
+                        const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi :
+                            ''), item.mid, true, true);
+                        row.find('.replacement-mid').append(newOption).trigger('change');
+                        row.find('.replacement-qty').prop('required', true);
+                    }
+
+                    tbody.append(row);
+                });
+            }
+
+            function replacementRowTemplate(index) {
+                return `
+                    <tr class="replacement-row">
+                        <input type="hidden" name="replacements[${index}][id]" class="replacement-id">
+                        <input type="hidden" name="replacements[${index}][uom]" class="replacement-uom">
+
+                        <td>
+                            <select name="replacements[${index}][mid]" class="form-control form-control-sm replacement-mid"></select>
+                        </td>
+
+                        <td>
+                            <input type="text"
+                                name="replacements[${index}][deskripsi]"
+                                class="form-control form-control-sm replacement-deskripsi">
+                        </td>
+
+                        <td>
+                            <input type="number"
+                                name="replacements[${index}][qty]"
+                                class="form-control form-control-sm replacement-qty"
+                                step="any"
+                                min="0">
+                        </td>
+
+                        <td class="text-center">
+                            <button type="button"
+                                    class="btn btn-sm btn-danger btnRemoveReplacement">
+                                ×
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            $('#btnAddReplacementEdit').on('click', function() {
+                addReplacementRowEdit();
+            });
+
+            function addReplacementRowEdit() {
+                const index = $('#replacementTableEdit tbody tr').length;
+                const $row = $(replacementRowTemplate(index));
+                $('#replacementTableEdit tbody').append($row);
+                initMidSelect2Edit($row.find('.replacement-mid'));
+            }
+
+            $(document).on('click', '.btnRemoveReplacement', function() {
+                $(this).closest('tr').remove();
+                reindexReplacementRows();
+            });
+
+            function reindexReplacementRows() {
+                $('#replacementTableEdit tbody tr').each(function(i) {
+                    $(this).find('input, select').each(function() {
+                        if (this.name) {
+                            this.name = this.name.replace(/\[\d+]/, `[${i}]`);
+                        }
                     });
                 });
             }
 
             $('#formEditDieselEngine').on('submit', function(e) {
                 e.preventDefault();
+
+                // Validate material & replacements rows
+                let materialsValid = true;
+                $('#materialTableEdit tbody tr, #replacementTableEdit tbody tr').each(function() {
+                    const midSelect = $(this).find('.material-mid, .replacement-mid');
+                    const qtyInput = $(this).find('.material-qty, .replacement-qty');
+
+                    if (midSelect.length > 0) {
+                        const midVal = midSelect.val();
+                        const qtyVal = qtyInput.val();
+
+                        if (!midVal || !qtyVal || qtyVal <= 0) {
+                            materialsValid = false;
+                            midSelect.next('.select2-container').find('.select2-selection')
+                                .addClass('is-invalid');
+                            qtyInput.addClass('is-invalid');
+                        } else {
+                            midSelect.next('.select2-container').find('.select2-selection')
+                                .removeClass('is-invalid');
+                            qtyInput.removeClass('is-invalid');
+                        }
+                    }
+                });
+
+                if (!materialsValid) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validasi Gagal',
+                        text: 'Harap isi semua item MID dan Qty pada material/penggantian yang telah Anda tambahkan.'
+                    });
+                    return false;
+                }
 
                 const id = $('#editId').val();
                 const $btn = $('#btnSaveEdit');
@@ -1109,7 +1479,7 @@
                             .hide();
 
                         // reload datatable (stay page)
-                        $('#tabelDieselEngine').DataTable().ajax.reload(null, false);
+                        loadTableData(currentPage);
                     },
                     error: function(xhr) {
                         Swal.fire({
@@ -1153,8 +1523,7 @@
                                 timer: 1200,
                                 showConfirmButton: false
                             });
-                            dtDieselEngine.ajax.reload(null,
-                                false);
+                            loadTableData(currentPage);
                         },
                         error: function(xhr) {
                             Swal.fire({

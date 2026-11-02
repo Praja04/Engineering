@@ -1192,4 +1192,116 @@ class WWTPControllerAnalisa extends Controller
             'message' => 'Laporan analisa berhasil ditolak.'
         ]);
     }
+
+    public function massApprove(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:wwtp_analisa,id'
+        ]);
+
+        $user = Auth::user();
+        $jabatan = $user->jabatan;
+        $userId = $user->id;
+
+        if ($jabatan !== 'supervisor') {
+            return response()->json(['message' => 'Hanya Supervisor yang dapat melakukan mass approval.'], 403);
+        }
+
+        $approvals = WwtpAnalisa::whereIn('id', $request->ids)
+            ->where('supervisor_id', $userId)
+            ->where('status', 'approved_foreman')
+            ->get();
+
+        if ($approvals->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data valid yang dapat disetujui.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($approvals as $approval) {
+                $approval->update([
+                    'status' => 'approved_supervisor',
+                    'approved_supervisor_at' => now(),
+                    'reject_reason' => null
+                ]);
+
+                \App\Models\NotificationsModel::where('notifiable_type', WwtpAnalisa::class)
+                    ->where('notifiable_id', $approval->id)
+                    ->where('user_id', $userId)
+                    ->delete();
+            }
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => count($approvals) . ' data analisa berhasil disetujui.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Terjadi kesalahan saat menyetujui data: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function massReject(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:wwtp_analisa,id',
+            'reason' => 'required|string|max:255'
+        ]);
+
+        $user = Auth::user();
+        $jabatan = $user->jabatan;
+        $userId = $user->id;
+
+        if ($jabatan !== 'supervisor') {
+            return response()->json(['message' => 'Hanya Supervisor yang dapat melakukan mass reject.'], 403);
+        }
+
+        $approvals = WwtpAnalisa::whereIn('id', $request->ids)
+            ->where('supervisor_id', $userId)
+            ->where('status', 'approved_foreman')
+            ->get();
+
+        if ($approvals->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data valid yang dapat ditolak.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($approvals as $approval) {
+                $approval->update([
+                    'status' => 'rejected',
+                    'reject_reason' => $request->reason
+                ]);
+
+                \App\Models\NotificationsModel::where('notifiable_type', WwtpAnalisa::class)
+                    ->where('notifiable_id', $approval->id)
+                    ->where('user_id', $userId)
+                    ->delete();
+
+                if ($approval->created_by) {
+                    \App\Models\NotificationsModel::create([
+                        'user_id' => $approval->created_by,
+                        'title' => 'Laporan Analisa WWTP Ditolak',
+                        'message' => 'Data analisa WWTP tanggal ' . $approval->analisa_date->format('d/m/Y') . ' ditolak (Mass Reject). Alasan: ' . $request->reason,
+                        'url' => url('/wwtp/data_analisa'),
+                        'notifiable_type' => WwtpAnalisa::class,
+                        'notifiable_id' => $approval->id,
+                        'is_read' => 0,
+                    ]);
+                }
+            }
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => count($approvals) . ' data analisa berhasil ditolak.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Terjadi kesalahan saat menolak data: ' . $e->getMessage()], 500);
+        }
+    }
 }

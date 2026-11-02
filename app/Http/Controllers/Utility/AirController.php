@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Utility;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Utility\PemakaianAirModel;
 use App\Models\Utility\AirArea;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Session;
+use App\Models\Utility\CoolingTower;
+use App\Models\Utility\CoolingTowerDetails;
+use App\Models\Utility\PemakaianAirModel;
+use App\Models\Utility\UtilityMonthlyApproval;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -42,6 +46,9 @@ class AirController extends Controller
                         $areaName = $request->input("data.$index.area") ?? "ke-$index";
                         if ($value < $awal) {
                             $fail("Pemakaian akhir harus lebih besar atau sama dengan awal untuk area $areaName.");
+                        }
+                        if (($value - $awal) > 999) {
+                            $fail("Total pemakaian untuk area $areaName tidak masuk akal (lebih dari 3 digit / > 999). Silakan cek kembali input pemakaian awal dan akhir.");
                         }
                     }
                 }
@@ -95,6 +102,10 @@ class AirController extends Controller
             $air->created_by = $createdBy;
             $air->notes = $notes;
             $air->save();
+
+            if ($area === 'CT RO') {
+                $this->syncCoolingTowerFlowrate($tanggal, $entry['pemakaian_liter_awal'], $entry['pemakaian_liter_akhir']);
+            }
 
             $inserted[] = $area;
         }
@@ -221,7 +232,7 @@ class AirController extends Controller
 
     public function getAirAreas()
     {
-        $areas = AirArea::orderBy('nama_area')->get();
+        $areas = AirArea::where('is_active', true)->orderBy('nama_area')->get();
 
         if ($areas->isEmpty()) {
             $defaultAreas = PemakaianAirModel::distinct()->pluck('jenis_pemakaian')->filter()->toArray();
@@ -242,9 +253,9 @@ class AirController extends Controller
                 ];
             }
             foreach ($defaultAreas as $name) {
-                AirArea::firstOrCreate(['nama_area' => $name]);
+                AirArea::firstOrCreate(['nama_area' => $name], ['is_active' => true]);
             }
-            $areas = AirArea::orderBy('nama_area')->get();
+            $areas = AirArea::where('is_active', true)->orderBy('nama_area')->get();
         }
 
         foreach ($areas as $area) {
@@ -460,6 +471,10 @@ class AirController extends Controller
             $end = now()->endOfMonth()->format('Y-m-d');
         }
         $excludedSources = ['PDAM', 'Sumur 1', 'Sumur 2', 'Sumur 4', 'Sumur 5'];
+        $quotas = AirArea::whereIn('nama_area', $excludedSources)
+            ->pluck('quota_target', 'nama_area')
+            ->toArray();
+
         $data = PemakaianAirModel::query()
             ->select('jenis_pemakaian', DB::raw('SUM(pemakaian_akhir - pemakaian_awal) AS total_pemakaian'))
             ->whereBetween('tanggal', [$start, $end])
@@ -467,10 +482,11 @@ class AirController extends Controller
             ->groupBy('jenis_pemakaian')
             ->orderByDesc('total_pemakaian')
             ->get()
-            ->map(function ($item) use ($start, $end) {
+            ->map(function ($item) use ($start, $end, $quotas) {
                 return [
                     'jenis_pemakaian' => $item->jenis_pemakaian,
                     'total_pemakaian' => $item->total_pemakaian,
+                    'quota_target'    => isset($quotas[$item->jenis_pemakaian]) && $quotas[$item->jenis_pemakaian] !== null ? (float)$quotas[$item->jenis_pemakaian] : null,
                     'start_date'      => $start,
                     'end_date'        => $end,
                 ];
@@ -509,7 +525,20 @@ class AirController extends Controller
             'tanggal' => 'required|date',
             'jenis_pemakaian' => 'required|string',
             'pemakaian_awal' => 'required|numeric',
-            'pemakaian_akhir' => 'required|numeric',
+            'pemakaian_akhir' => [
+                'required',
+                'numeric',
+                function ($attribute, $value, $fail) use ($request) {
+                    $awal = $request->input('pemakaian_awal');
+                    $areaName = $request->input('jenis_pemakaian');
+                    if ($value < $awal) {
+                        $fail("Pemakaian akhir harus lebih besar atau sama dengan awal untuk area $areaName.");
+                    }
+                    if (($value - $awal) > 999) {
+                        $fail("Total pemakaian untuk area $areaName tidak masuk akal (lebih dari 3 digit / > 999). Silakan cek kembali input pemakaian awal dan akhir.");
+                    }
+                }
+            ],
             'created_by' => 'nullable|string',
             'notes' => 'nullable|string'
         ]);
@@ -537,6 +566,10 @@ class AirController extends Controller
             'notes' => $request->notes,
         ]);
 
+        if ($request->jenis_pemakaian === 'CT RO') {
+            $this->syncCoolingTowerFlowrate($request->tanggal, $request->pemakaian_awal, $request->pemakaian_akhir);
+        }
+
         // Check and transition status back to submitted if rejected
         \App\Models\Utility\UtilityMonthlyApproval::checkAndNotify(
             $bulan,
@@ -547,5 +580,44 @@ class AirController extends Controller
         );
 
         return response()->json(['message' => 'Data Air berhasil diperbarui.']);
+    }
+
+    private function syncCoolingTowerFlowrate($tanggal, $awal, $akhir)
+    {
+        $date = \Carbon\Carbon::parse($tanggal);
+        $month = $date->month;
+        $year = $date->year;
+
+        $main = CoolingTower::firstOrCreate(
+            [
+                'bulan' => $month,
+                'tahun' => $year,
+            ],
+            [
+                'operator_id' => auth()->id() ?? 1,
+                'status' => 'draft',
+                'submitted_at' => now(),
+            ]
+        );
+
+        $details = CoolingTowerDetails::where('tanggal', $tanggal)->get();
+
+        if ($details->count() > 0) {
+            foreach ($details as $detail) {
+                $detail->update([
+                    'flowrate_ro_awal' => $awal,
+                    'flowrate_ro_akhir' => $akhir,
+                ]);
+            }
+        } else {
+            CoolingTowerDetails::create([
+                'cooling_tower_id' => $main->id,
+                'tanggal' => $tanggal,
+                'jam' => '08:00',
+                'flowrate_ro_awal' => $awal,
+                'flowrate_ro_akhir' => $akhir,
+                'created_by' => auth()->id() ?? 1,
+            ]);
+        }
     }
 }

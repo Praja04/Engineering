@@ -80,6 +80,8 @@
                                     <th>E-Del (kWh)</th>
                                     <th>Arus (A)</th>
                                     <th>Tegangan (V)</th>
+                                    <th>Suhu Trafo (°C)</th>
+                                    <th>Suhu Genset (°C)</th>
                                     <th>Status</th>
                                     <th class="text-center">Aksi</th>
                                 </tr>
@@ -251,6 +253,16 @@
                                     <option value="nok">NOK</option>
                                 </select>
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">Suhu Ruang Trafo (°C)</label>
+                                <input type="number" step="any" name="suhu_ruang_trafo" id="edit_suhu_ruang_trafo"
+                                    class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">Suhu Ruang Genset (°C)</label>
+                                <input type="number" step="any" name="suhu_ruang_genset" id="edit_suhu_ruang_genset"
+                                    class="form-control">
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -291,7 +303,7 @@
                 let html = '';
                 if (data.length === 0) {
                     html =
-                        '<tr><td colspan="9" class="text-center py-5 text-muted">Tidak ada data ditemukan</td></tr>';
+                        '<tr><td colspan="11" class="text-center py-5 text-muted">Tidak ada data ditemukan</td></tr>';
                 } else {
                     const formatNum = (v) => v ? Number(v) : '-';
                     data.forEach((item, index) => {
@@ -333,6 +345,8 @@
                             <td>${formatNum(item.e_del)}</td>
                             <td>${formatNum(item.arus_rata_rata)}</td>
                             <td>${formatNum(item.tegangan_rata_rata)}</td>
+                            <td>${formatNum(item.suhu_ruang_trafo)}</td>
+                            <td>${formatNum(item.suhu_ruang_genset)}</td>
                             <td>${getStatusBadge(item.status)}</td>
                             <td class="text-center">
                                 <div>
@@ -418,7 +432,9 @@
                                     ${renderTechnicalItem('Daya P2', d.daya_p2, 'kW')}
                                     ${renderTechnicalItem('Daya P3', d.daya_p3, 'kW')}
                                     ${renderTechnicalItem('Temp Trafo', d.temperatur_transformator, '°C')}
-                                    ${renderTechnicalItem('Level Oil', d.level_oil.toUpperCase(), '')}
+                                    ${renderTechnicalItem('Level Oil', d.level_oil ? d.level_oil.toUpperCase() : '-', '')}
+                                    ${renderTechnicalItem('Suhu R. Trafo', d.suhu_ruang_trafo, '°C')}
+                                    ${renderTechnicalItem('Suhu R. Genset', d.suhu_ruang_genset, '°C')}
                                 </div>
                             </div>
                         </div>
@@ -478,6 +494,8 @@
                     $('#edit_daya_total').val(formatNum(d.daya_total));
                     $('#edit_temperatur_transformator').val(formatNum(d.temperatur_transformator));
                     $('#edit_level_oil').val(d.level_oil);
+                    $('#edit_suhu_ruang_trafo').val(formatNum(d.suhu_ruang_trafo));
+                    $('#edit_suhu_ruang_genset').val(formatNum(d.suhu_ruang_genset));
                     $('#modalEdit').modal('show');
                 });
             });

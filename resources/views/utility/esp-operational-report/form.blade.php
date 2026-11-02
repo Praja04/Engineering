@@ -278,11 +278,12 @@
                                                 <th>T.Primer</th>
                                                 <th>T.Sekunder</th>
                                                 <th>Suhu</th>
+                                                <th>Dibuat</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tbody-operational-preview">
                                             <tr>
-                                                <td colspan="7" class="text-center py-3 text-muted">
+                                                <td colspan="8" class="text-center py-3 text-muted">
                                                     <i class="ri-loader-4-line"></i> Memuat data...
                                                 </td>
                                             </tr>
@@ -680,7 +681,7 @@
                 const tanggal = new Date().toISOString().slice(0, 10);
                 const grup = $('#filter-grup-operational').val();
                 $('#tbody-operational-preview').html(
-                    '<tr><td colspan="7" class="text-center py-3 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
+                    '<tr><td colspan="8" class="text-center py-3 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
                 );
                 $.get('{{ route('esp-operational-report.json') }}', {
                     tanggal,
@@ -697,10 +698,11 @@
                     <td>${formatDecimalVal(r.tegangan_primer) || '—'}</td>
                     <td>${formatDecimalVal(r.tegangan_sekunder) || '—'}</td>
                     <td>${formatDecimalVal(r.suhu_thermal) || '—'}</td>
+                    <td>${r.created_by ?? '—'}</td>
                 </tr>`;
                     });
                     $('#tbody-operational-preview').html(html ||
-                        '<tr><td colspan="7" class="text-center text-muted py-3">Belum ada data</td></tr>'
+                        '<tr><td colspan="8" class="text-center text-muted py-3">Belum ada data</td></tr>'
                     );
                 });
             }

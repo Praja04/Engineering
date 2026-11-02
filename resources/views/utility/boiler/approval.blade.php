@@ -52,13 +52,36 @@
                         <i class="ri-checkbox-circle-line me-2 text-warning"></i>
                         Approval Boiler Logs Harian
                     </h4>
-                    <p class="mb-0 text-white-50 small">Engineering Utility · Halaman Persetujuan Laporan Harian (06:00 - 06:00)</p>
+                    <p class="mb-0 text-white-50 small">Engineering Utility · Halaman Persetujuan Laporan Harian (06:00 -
+                        06:00)</p>
                 </div>
                 <div class="card-body p-4">
+                    {{-- Mass Action Bar --}}
+                    <div id="massActionArea" class="d-none mb-3 p-3 bg-light rounded d-flex justify-content-between align-items-center border-start border-primary border-3">
+                        <div>
+                            <span class="fw-bold text-primary" id="checkedCount">0</span> laporan terpilih
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-danger btn-sm px-3" id="btnMassReject">
+                                <i class="ri-close-circle-line me-1"></i> Reject Terpilih
+                            </button>
+                            <button type="button" class="btn btn-success btn-sm px-3" id="btnMassApprove">
+                                <i class="ri-checkbox-circle-line me-1"></i> Approve Terpilih
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 d-flex justify-content-start">
+                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" id="btnSelectAll">
+                            <i class="ri-checkbox-multiple-line me-1"></i> Pilih Semua
+                        </button>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
+                                    <th width="40"><input type="checkbox" id="checkAll" class="form-check-input"></th>
                                     <th>No</th>
                                     <th>Tanggal</th>
                                     <th>Foreman Pengaju</th>
@@ -71,8 +94,9 @@
                             </thead>
                             <tbody id="tableBody">
                                 <tr>
-                                    <td colspan="8" class="text-center py-5 text-muted">
-                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                    <td colspan="9" class="text-center py-5 text-muted">
+                                        <div class="spinner-border text-primary spinner-border-sm me-2" role="status">
+                                        </div>
                                         Memuat data...
                                     </td>
                                 </tr>
@@ -90,7 +114,8 @@
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom p-3">
-                    <h5 class="modal-title fw-bold"><i class="ri-checkbox-circle-fill text-warning me-2"></i>Periksa & Setujui Log Boiler</h5>
+                    <h5 class="modal-title fw-bold"><i class="ri-checkbox-circle-fill text-warning me-2"></i>Periksa &
+                        Setujui Log Boiler</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -100,9 +125,18 @@
                                 <h6 class="fw-bold mb-2">Informasi Umum</h6>
                                 <input type="hidden" id="detail_id">
                                 <table class="table table-sm table-borderless mb-0">
-                                    <tr><td class="text-muted" width="40%">Tanggal Operasional</td><td>: <span id="detail_tanggal" class="fw-bold"></span></td></tr>
-                                    <tr><td class="text-muted">Total Jam Tercatat</td><td>: <span id="detail_total_jam"></span> jam</td></tr>
-                                    <tr><td class="text-muted">Status Approval</td><td>: <span id="detail_status"></span></td></tr>
+                                    <tr>
+                                        <td class="text-muted" width="40%">Tanggal Operasional</td>
+                                        <td>: <span id="detail_tanggal" class="fw-bold"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Total Jam Tercatat</td>
+                                        <td>: <span id="detail_total_jam"></span> jam</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Status Approval</td>
+                                        <td>: <span id="detail_status"></span></td>
+                                    </tr>
                                 </table>
                             </div>
                         </div>
@@ -110,15 +144,23 @@
                             <div class="p-3 bg-light rounded border-start border-warning border-3">
                                 <h6 class="fw-bold mb-2">Pihak Berwenang & Tanda Tangan</h6>
                                 <table class="table table-sm table-borderless mb-0">
-                                    <tr><td class="text-muted" width="40%">Diajukan (Foreman)</td><td>: <span id="detail_foreman"></span> <small class="text-muted" id="detail_submitted_at"></small></td></tr>
-                                    <tr><td class="text-muted">Disetujui (Supervisor)</td><td>: <span id="detail_supervisor"></span> <small class="text-muted" id="detail_approved_at"></small></td></tr>
+                                    <tr>
+                                        <td class="text-muted" width="40%">Diajukan (Foreman)</td>
+                                        <td>: <span id="detail_foreman"></span> <small class="text-muted"
+                                                id="detail_submitted_at"></small></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Disetujui (Supervisor)</td>
+                                        <td>: <span id="detail_supervisor"></span> <small class="text-muted"
+                                                id="detail_approved_at"></small></td>
+                                    </tr>
                                 </table>
                             </div>
                         </div>
                     </div>
 
                     <h6 class="fw-bold mb-3"><i class="ri-table-line text-info me-2"></i>Tabel Log Data Sensor Per Jam</h6>
-                    
+
                     <div class="scrollable-detail-table mb-4">
                         <table class="table table-striped table-hover align-middle">
                             <thead class="table-dark">
@@ -151,8 +193,8 @@
                                     <th>Pump 2</th>
                                     <th>BatuBara FK</th>
                                     <th>Steam FK</th>
-                                    @if(in_array(Auth::user()->jabatan, ['foreman', 'supervisor', 'admin']))
-                                    <th>Aksi</th>
+                                    @if (in_array(Auth::user()->jabatan, ['foreman', 'supervisor', 'admin']))
+                                        <th>Aksi</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -182,117 +224,145 @@
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title text-white"><i class="ri-edit-box-line me-1"></i> Edit Log Boiler - <span id="edit_log_waktu"></span></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title text-white"><i class="ri-edit-box-line me-1"></i> Edit Log Boiler - <span
+                            id="edit_log_waktu"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form id="formEditLog">
                         <input type="hidden" id="edit_log_id" name="id">
-                        
+
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">PV Steam (Bar)</label>
-                                <input type="number" step="any" name="PVSteam" id="edit_PVSteam" class="form-control form-control-sm">
+                                <input type="number" step="any" name="PVSteam" id="edit_PVSteam"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Feed Press (Bar)</label>
-                                <input type="number" step="any" name="FeedPressure" id="edit_FeedPressure" class="form-control form-control-sm">
+                                <input type="number" step="any" name="FeedPressure" id="edit_FeedPressure"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Press Past. (Bar)</label>
-                                <input type="number" step="any" name="Press_Pasteur" id="edit_Press_Pasteur" class="form-control form-control-sm">
+                                <input type="number" step="any" name="Press_Pasteur" id="edit_Press_Pasteur"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Level Feed W. (%)</label>
-                                <input type="number" step="any" name="LevelFeedWater" id="edit_LevelFeedWater" class="form-control form-control-sm">
+                                <input type="number" step="any" name="LevelFeedWater" id="edit_LevelFeedWater"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Inlet Flow (m3/h)</label>
-                                <input type="number" step="any" name="InletWaterFlow" id="edit_InletWaterFlow" class="form-control form-control-sm">
+                                <input type="number" step="any" name="InletWaterFlow" id="edit_InletWaterFlow"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Outlet Flow (ton/h)</label>
-                                <input type="number" step="any" name="OutletSteamFlow" id="edit_OutletSteamFlow" class="form-control form-control-sm">
+                                <input type="number" step="any" name="OutletSteamFlow" id="edit_OutletSteamFlow"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Suhu Feed Tank (°C)</label>
-                                <input type="number" step="any" name="SuhuFeedTank" id="edit_SuhuFeedTank" class="form-control form-control-sm">
+                                <input type="number" step="any" name="SuhuFeedTank" id="edit_SuhuFeedTank"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">ID Fan (rpm)</label>
-                                <input type="number" step="any" name="IDFan" id="edit_IDFan" class="form-control form-control-sm">
+                                <input type="number" step="any" name="IDFan" id="edit_IDFan"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">LH FD Fan (rpm)</label>
-                                <input type="number" step="any" name="LHFDFan" id="edit_LHFDFan" class="form-control form-control-sm">
+                                <input type="number" step="any" name="LHFDFan" id="edit_LHFDFan"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">RH FD Fan (rpm)</label>
-                                <input type="number" step="any" name="RHFDFan" id="edit_RHFDFan" class="form-control form-control-sm">
+                                <input type="number" step="any" name="RHFDFan" id="edit_RHFDFan"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">LH Stoker (rpm)</label>
-                                <input type="number" step="any" name="LHStoker" id="edit_LHStoker" class="form-control form-control-sm">
+                                <input type="number" step="any" name="LHStoker" id="edit_LHStoker"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">RH Stoker (rpm)</label>
-                                <input type="number" step="any" name="RHStoker" id="edit_RHStoker" class="form-control form-control-sm">
+                                <input type="number" step="any" name="RHStoker" id="edit_RHStoker"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">LH Temp (°C)</label>
-                                <input type="number" step="any" name="LHTemp" id="edit_LHTemp" class="form-control form-control-sm">
+                                <input type="number" step="any" name="LHTemp" id="edit_LHTemp"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">RH Temp (°C)</label>
-                                <input type="number" step="any" name="RHTemp" id="edit_RHTemp" class="form-control form-control-sm">
+                                <input type="number" step="any" name="RHTemp" id="edit_RHTemp"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">O2 (%)</label>
-                                <input type="number" step="any" name="O2" id="edit_O2" class="form-control form-control-sm">
+                                <input type="number" step="any" name="O2" id="edit_O2"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">CO2 (%)</label>
-                                <input type="number" step="any" name="CO2" id="edit_CO2" class="form-control form-control-sm">
+                                <input type="number" step="any" name="CO2" id="edit_CO2"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">LH Guiloutine (mm)</label>
-                                <input type="number" step="any" name="LHGuiloutine" id="edit_LHGuiloutine" class="form-control form-control-sm">
+                                <input type="number" step="any" name="LHGuiloutine" id="edit_LHGuiloutine"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">RH Guiloutine (mm)</label>
-                                <input type="number" step="any" name="RHGuiloutine" id="edit_RHGuiloutine" class="form-control form-control-sm">
+                                <input type="number" step="any" name="RHGuiloutine" id="edit_RHGuiloutine"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Water Pump 1 (Hz)</label>
-                                <input type="number" step="any" name="WaterPump1" id="edit_WaterPump1" class="form-control form-control-sm">
+                                <input type="number" step="any" name="WaterPump1" id="edit_WaterPump1"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Water Pump 2 (Hz)</label>
-                                <input type="number" step="any" name="WaterPump2" id="edit_WaterPump2" class="form-control form-control-sm">
+                                <input type="number" step="any" name="WaterPump2" id="edit_WaterPump2"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Batubara FK</label>
-                                <input type="number" step="any" name="Batubara_FK" id="edit_Batubara_FK" class="form-control form-control-sm">
+                                <input type="number" step="any" name="Batubara_FK" id="edit_Batubara_FK"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Steam FK</label>
-                                <input type="number" step="any" name="Steam_FK" id="edit_Steam_FK" class="form-control form-control-sm">
+                                <input type="number" step="any" name="Steam_FK" id="edit_Steam_FK"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Water Flow - Total Count (m3/h)</label>
-                                <input type="number" step="any" name="water_flow_total" id="edit_water_flow_total" class="form-control form-control-sm">
+                                <input type="number" step="any" name="water_flow_total" id="edit_water_flow_total"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Water HMI - Flow Rate (m3/h)</label>
-                                <input type="number" step="any" name="water_hmi_flow_rate" id="edit_water_hmi_flow_rate" class="form-control form-control-sm">
+                                <input type="number" step="any" name="water_hmi_flow_rate"
+                                    id="edit_water_hmi_flow_rate" class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Water HMI - Total Count (m3)</label>
-                                <input type="number" step="any" name="water_hmi_total" id="edit_water_hmi_total" class="form-control form-control-sm">
+                                <input type="number" step="any" name="water_hmi_total" id="edit_water_hmi_total"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Temp Flue Gass (°C)</label>
-                                <input type="number" step="any" name="flue_gass_temp" id="edit_flue_gass_temp" class="form-control form-control-sm">
+                                <input type="number" step="any" name="flue_gass_temp" id="edit_flue_gass_temp"
+                                    class="form-control form-control-sm">
                             </div>
                         </div>
                     </form>
@@ -314,38 +384,57 @@
             loadData();
 
             function loadData() {
+                // Reset mass action UI
+                $('#checkAll').prop('checked', false);
+                $('#massActionArea').addClass('d-none');
+                $('#checkedCount').text('0');
+
                 $('#tableBody').html(`
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
+                        <td colspan="9" class="text-center py-5 text-muted">
                             <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
                             Memuat data...
                         </td>
                     </tr>
                 `);
 
-                $.get("{{ route('boiler-logs.json') }}", {
-                    mode: 'approval'
-                }, function(res) {
+                $.get("{{ route('boiler-logs.approval.json') }}", function(res) {
                     if (res.status === 200) {
                         renderTable(res.data);
                     }
+                }).fail(function(xhr) {
+                    console.error('Gagal memuat data approval:', xhr);
+                    $('#tableBody').html(`
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-danger">
+                                <i class="ri-error-warning-line fs-2 d-block mb-2"></i>
+                                Gagal mengambil data dari server (${xhr.status}: ${xhr.statusText})
+                            </td>
+                        </tr>
+                    `);
                 });
             }
 
             function renderTable(data) {
+                const items = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+
                 let html = '';
-                if (data.length === 0) {
-                    html = '<tr><td colspan="8" class="text-center py-5 text-muted"><i class="ri-checkbox-circle-line text-success fs-2 d-block mb-2"></i>Semua laporan boiler log sudah diproses.</td></tr>';
+                if (items.length === 0) {
+                    html =
+                        '<tr><td colspan="9" class="text-center py-5 text-muted"><i class="ri-checkbox-circle-line text-success fs-2 d-block mb-2"></i>Semua laporan boiler log sudah diproses.</td></tr>';
                 } else {
-                    data.forEach((item, index) => {
+                    items.forEach((item, index) => {
+                        console.log(item);
+
                         let actionButtons = `
-                            <button class="btn btn-sm btn-primary rounded-pill px-3 btn-check" data-id="${item.id}">
+                            <button class="btn btn-sm btn-primary rounded-pill px-3 btn-periksa" data-id="${item.id}">
                                 <i class="ri-eye-line me-1"></i> Periksa
                             </button>
                         `;
 
                         html += `
                             <tr>
+                                <td><input type="checkbox" class="form-check-input row-checkbox" value="${item.id}"></td>
                                 <td>${index + 1}</td>
                                 <td>${formatDate(item.tanggal)}</td>
                                 <td>${item.foreman?.username || '-'}</td>
@@ -365,13 +454,157 @@
                 $('#tableBody').html(html);
             }
 
+            // ── Checkbox Change Actions ──
+            $(document).on('change', '#checkAll', function() {
+                const checked = $(this).is(':checked');
+                $('.row-checkbox').prop('checked', checked);
+                toggleMassActionArea();
+            });
+
+            $(document).on('change', '.row-checkbox', function() {
+                const totalChecked = $('.row-checkbox:checked').length;
+                const totalCheckboxes = $('.row-checkbox').length;
+                $('#checkAll').prop('checked', totalChecked === totalCheckboxes);
+                toggleMassActionArea();
+            });
+
+            // ── Button Pilih Semua Action ──
+            $(document).on('click', '#btnSelectAll', function() {
+                const totalCheckboxes = $('.row-checkbox').length;
+                if (totalCheckboxes === 0) return;
+
+                const totalChecked = $('.row-checkbox:checked').length;
+                const checkAllState = (totalChecked < totalCheckboxes);
+
+                $('.row-checkbox').prop('checked', checkAllState);
+                $('#checkAll').prop('checked', checkAllState);
+                toggleMassActionArea();
+            });
+
+            function toggleMassActionArea() {
+                const checkedIds = getCheckedIds();
+                const totalChecked = checkedIds.length;
+                const totalCheckboxes = $('.row-checkbox').length;
+
+                if (totalChecked > 0) {
+                    $('#checkedCount').text(totalChecked);
+                    $('#massActionArea').removeClass('d-none');
+                } else {
+                    $('#massActionArea').addClass('d-none');
+                }
+
+                // Update tombol Pilih Semua text/style
+                if (totalChecked === totalCheckboxes && totalCheckboxes > 0) {
+                    $('#btnSelectAll').html('<i class="ri-checkbox-multiple-blank-line me-1"></i> Batal Pilih Semua')
+                                      .removeClass('btn-outline-primary')
+                                      .addClass('btn-outline-danger');
+                } else {
+                    $('#btnSelectAll').html('<i class="ri-checkbox-multiple-line me-1"></i> Pilih Semua')
+                                      .removeClass('btn-outline-danger')
+                                      .addClass('btn-outline-primary');
+                }
+            }
+
+            function getCheckedIds() {
+                const ids = [];
+                $('.row-checkbox:checked').each(function() {
+                    ids.push($(this).val());
+                });
+                return ids;
+            }
+
+            // ── Mass Approve Action ──
+            $('#btnMassApprove').click(function() {
+                const ids = getCheckedIds();
+                if (ids.length === 0) return;
+
+                Swal.fire({
+                    title: 'Approve Massal?',
+                    text: `Anda akan menyetujui ${ids.length} laporan boiler secara bersamaan.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Setujui Semua!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                            url: "{{ route('boiler-logs.mass-approve') }}",
+                            method: 'POST',
+                            data: { ids: ids },
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(res) {
+                                Swal.fire('Berhasil', res.message, 'success');
+                                loadData();
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error', xhr.responseJSON?.message || 'Gagal menyetujui laporan massal.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // ── Mass Reject Action ──
+            $('#btnMassReject').click(function() {
+                const ids = getCheckedIds();
+                if (ids.length === 0) return;
+
+                Swal.fire({
+                    title: 'Reject Massal?',
+                    text: `Anda akan menolak ${ids.length} laporan boiler secara bersamaan dan mengembalikan ke status Draft.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Tolak Semua!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                            url: "{{ route('boiler-logs.mass-reject') }}",
+                            method: 'POST',
+                            data: { ids: ids },
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(res) {
+                                Swal.fire('Ditolak', res.message, 'info');
+                                loadData();
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error', xhr.responseJSON?.message || 'Gagal menolak laporan massal.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
             // ── View Detail (Periksa) ──
-            $(document).on('click', '.btn-check', function() {
+            $(document).on('click', '.btn-periksa', function() {
                 const id = $(this).data('id');
                 showDetail(id);
             });
 
             let currentDetailApprovalId = null;
+
             function showDetail(id) {
                 currentDetailApprovalId = id;
                 $.get("{{ url('utility/boiler-logs/json') }}/" + id, function(res) {
@@ -383,26 +616,35 @@
                         $('#detail_tanggal').text(formatDate(app.tanggal));
                         $('#detail_total_jam').text(logs.length);
                         $('#detail_status').html(getStatusBadge(app.status));
-                        
+
                         $('#detail_foreman').text(app.foreman?.username || '-');
-                        $('#detail_submitted_at').text(app.submitted_at ? `(${formatDateTime(app.submitted_at)})` : '');
+                        $('#detail_submitted_at').text(app.submitted_at ?
+                            `(${formatDateTime(app.submitted_at)})` : '');
                         $('#detail_supervisor').text(app.supervisor?.username || '-');
-                        $('#detail_approved_at').text(app.approved_at ? `(${formatDateTime(app.approved_at)})` : '');
+                        $('#detail_approved_at').text(app.approved_at ?
+                            `(${formatDateTime(app.approved_at)})` : '');
 
                         // Hide/show action buttons depending on status and role
-                        const userJabatan = "{{ Auth::user()->jabatan }}";
-                        if (app.status === 'waiting_supervisor' && (userJabatan === 'supervisor' || userJabatan === 'admin')) {
+                        const userJabatan = ("{{ Auth::user()->jabatan ?? '' }}").toLowerCase().trim();
+                        const statusLaporan = (app.status ?? '').toLowerCase().trim();
+                        console.log('Debug Approval Modal:', {
+                            status_laporan: statusLaporan,
+                            jabatan_user: userJabatan,
+                            apakah_supervisor: userJabatan === 'supervisor',
+                            apakah_admin: userJabatan === 'admin',
+                            kondisi_lulus: statusLaporan === 'waiting_supervisor' && (
+                                userJabatan === 'supervisor' || userJabatan === 'admin')
+                        });
+                        if (statusLaporan === 'waiting_supervisor' && (userJabatan === 'supervisor' ||
+                                userJabatan === 'admin')) {
                             $('#detailActionButtons').removeClass('d-none');
                         } else {
                             $('#detailActionButtons').addClass('d-none');
                         }
 
-                        let canEdit = false;
-                        if (app.status === 'draft') {
-                            canEdit = ['foreman', 'supervisor', 'admin'].includes(userJabatan);
-                        } else {
-                            canEdit = ['foreman', 'admin'].includes(userJabatan);
-                        }
+                        // Form selalu bisa diedit oleh foreman, supervisor, dan admin
+                        // tanpa memandang status approval (termasuk setelah approved)
+                        let canEdit = ['foreman', 'supervisor', 'admin'].includes(userJabatan);
 
                         let html = '';
                         logs.forEach((log, index) => {
@@ -455,7 +697,7 @@
                                 </tr>
                             `;
                         });
-                        
+
                         $('#detailTableBody').html(html);
                         $('#modalDetail').modal('show');
                     }
@@ -465,7 +707,7 @@
             // ── Action: Approve ──
             $('#btnDetailApprove').click(function() {
                 const id = $('#detail_id').val();
-                
+
                 Swal.fire({
                     title: 'Setujui Laporan Boiler Log?',
                     text: "Laporan harian ini akan disetujui.",
@@ -488,7 +730,8 @@
                                 loadData();
                             },
                             error: function(xhr) {
-                                Swal.fire('Error', xhr.responseJSON?.message || 'Gagal menyetujui laporan.', 'error');
+                                Swal.fire('Error', xhr.responseJSON?.message ||
+                                    'Gagal menyetujui laporan.', 'error');
                             }
                         });
                     }
@@ -521,7 +764,8 @@
                                 loadData();
                             },
                             error: function(xhr) {
-                                Swal.fire('Error', xhr.responseJSON?.message || 'Gagal menolak laporan.', 'error');
+                                Swal.fire('Error', xhr.responseJSON?.message ||
+                                    'Gagal menolak laporan.', 'error');
                             }
                         });
                     }
@@ -540,16 +784,28 @@
 
             function formatNum(v) {
                 if (v === null || v === undefined || v === '') return '-';
-                return Number(v).toLocaleString('id-ID', { maximumFractionDigits: 3 });
+                return Number(v).toLocaleString('id-ID', {
+                    maximumFractionDigits: 3
+                });
             }
 
             function formatDate(dateString) {
-                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const options = {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                };
                 return new Date(dateString).toLocaleDateString('id-ID', options);
             }
 
             function formatDateTime(dateTimeString) {
-                const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
                 return new Date(dateTimeString).toLocaleDateString('id-ID', options);
             }
 
@@ -611,7 +867,7 @@
             $('#btnSaveEditLog').click(function() {
                 const id = $('#edit_log_id').val();
                 const form = $('#formEditLog');
-                
+
                 $.ajax({
                     url: "{{ url('utility/boiler-logs/update') }}/" + id,
                     method: 'POST',
@@ -622,7 +878,7 @@
                     success: function(res) {
                         $('#modalEditLog').modal('hide');
                         Swal.fire('Berhasil', res.message, 'success');
-                        
+
                         if (currentDetailApprovalId) {
                             showDetail(currentDetailApprovalId);
                         }
@@ -636,7 +892,8 @@
                         }, 400);
                     },
                     error: function(xhr) {
-                        Swal.fire('Error', xhr.responseJSON?.message || 'Gagal memperbarui data.', 'error');
+                        Swal.fire('Error', xhr.responseJSON?.message ||
+                            'Gagal memperbarui data.', 'error');
                     }
                 });
             });

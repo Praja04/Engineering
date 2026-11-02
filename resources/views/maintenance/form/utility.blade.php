@@ -84,8 +84,9 @@
                                     </option>
                                     @foreach ($mesin as $item)
                                         <option value="{{ $item->id }}" data-lokasi="{{ $item->lokasi }}"
-                                            data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}">
-                                            {{ $item->nama_mesin }} - {{ $item->lokasi }}
+                                            data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}"
+                                            data-is-off="{{ !empty($item->is_currently_off) ? '1' : '0' }}">
+                                            {{ $item->nama_mesin }} {{ $item->kode_mesin ? "({$item->kode_mesin})" : '' }} - {{ $item->lokasi }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -102,8 +103,9 @@
                                 <input type="text" id="waktu_mulai" name="waktu_mulai" class="form-control" required>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label"> Waktu Selesai </label>
-                                <input type="text" id="waktu_selesai" name="waktu_selesai" class="form-control">
+                                <label class="form-label" id="label_waktu_selesai"> Waktu Selesai <span class="text-danger">*</span></label>
+                                <input type="text" id="waktu_selesai" name="waktu_selesai" class="form-control"
+                                    placeholder="Pilih waktu" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Kode Mesin </label>
@@ -127,6 +129,8 @@
                                     <option>B</option>
                                     <option>C</option>
                                     <option>D</option>
+                                    <option>E</option>
+                                    <option>Off</option>
                                     <option>Korektif</option>
                                     <option>Checkpoint</option>
                                 </select>
@@ -137,75 +141,131 @@
                             </div>
                         </div>
 
-                        @php
-                            $coolingTower = [
-                                'cleaning_saringan_cooling_tower' => 'Cleaning Saringan Bak Cooling Tower',
-                                'cleaning_unit_cooling_tower' => 'Cleaning Unit Cooling Tower',
-                                'cleaning_bak_cooling_tower' => 'Cleaning Bak Cooling Tower',
-                            ];
+                        @if(isset($checklistGroups) && $checklistGroups->isNotEmpty())
+                            {{-- DYNAMIC MASTER CHECKLIST RENDERER --}}
+                            @foreach ($checklistGroups as $group)
+                                <h6 class="fw-bold text-primary mb-3 mt-4">{{ $group->nama_group }}</h6>
+                                @foreach ($group->activeChecklists->chunk(2) as $row)
+                                    <div class="row g-3 mb-3">
+                                        @foreach ($row as $chk)
+                                            @php
+                                                $field = $chk->field_key ?: ('chk_' . $chk->id);
+                                            @endphp
+                                            <div class="col-md-6 col-12">
+                                                <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+                                                    <input type="hidden" name="checklist_map[{{ $field }}]" value="{{ $chk->id }}">
 
-                            $ro = [
-                                'check_sensor_tank_farm_ro_produk' => 'Check Sensor Tank Farm RO Produk',
-                                'cleaning_flow_rate_mmf_1' => 'Cleaning Flow Rate MMF #1',
-                                'cleaning_flow_rate_mmf_2' => 'Cleaning Flow Rate MMF #2',
-                                'cleaning_flow_rate_ro_produk' => 'Cleaning Flow Rate RO Produk',
-                                'cleaning_flow_rate_ro_reject' => 'Cleaning Flow Rate RO Reject',
-                                'penggantian_micron_filter_cip' => 'Penggantian Micron Filter CIP',
-                                'penggantian_micron_filter_makeup_water' => 'Penggantian Micron Filter Make Up Water',
-                                'cleaning_cip_tank' => 'Cleaning CIP Tank',
-                                'cip_membrane_reverse_osmosis' => 'CIP Membrane Reverse Osmosis',
-                                'check_fungsi_valve' => 'Check Fungsi Valve',
-                                'cleaning_unit_ro_mesin' => 'Cleaning Unit RO Mesin',
-                            ];
+                                                    <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                        {{ $chk->label }}
+                                                    </label>
 
-                            $compressor = [
-                                'sirkulasi_phe_aq55vsd' => 'Sirkulasi PHE AQ55VSD',
-                                'penggantian_air_ro_aq55vsd' => 'Penggantian Air RO AQ55VSD',
-                                'cleaning_compressor_aq55vsd' => 'Cleaning Compressor AQ55VSD',
-                                'cleaning_jalur_cooling_aq55vsd' => 'Cleaning Jalur Cooling AQ55VSD',
-                                'cleaning_dryer_fd185' => 'Cleaning Dryer FD185',
-                                'cleaning_compressor_ga37' => 'Cleaning Compressor GA37',
-                                'cleaning_dryer_fd120' => 'Cleaning Dryer FD120',
-                                'lubrikasi_motor_compressor_aq55vsd' => 'Lubrikasi Motor Compressor AQ55VSD',
-                                'cleaning_compressor_sm55' => 'Cleaning Compressor SM55',
-                            ];
+                                                    @if($chk->standar)
+                                                        <div class="text-muted small mb-2">{{ $chk->standar }}</div>
+                                                    @endif
 
-                            $tankFarm = [
-                                'cleaning_sensor_level_tank_farm' => 'Cleaning Sensor Level Tank Farm',
-                                'cleaning_sensor_level_fresh_water_menara' =>
-                                    'Cleaning Sensor Level Fresh Water Menara',
-                                'cleaning_sensor_level_ro_reject_menara' => 'Cleaning Sensor Level RO Reject Menara',
-                                'cleaning_sensor_level_intermediate' => 'Cleaning Sensor Level Intermediate',
-                            ];
+                                                    @if($chk->tipe_input === 'boolean_ok_ng')
+                                                        <div class="btn-group btn-group-sm w-100">
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                            <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
 
-                            $boiler = [
-                                'check_safety_valve' => 'Check Safety Valve',
-                                'cleaning_level_gauge' => 'Cleaning Level Gauge',
-                                'cleaning_level_transmitter' => 'Cleaning Level Transmitter',
-                                'check_pressure_transmitter' => 'Check Pressure Transmitter',
-                                'check_temperature_transmitter' => 'Check Temperature Transmitter',
-                                'cleaning_sensor_o2_co2' => 'Cleaning Sensor O2 & CO2',
-                                'check_chaingrate' => 'Check Chaingrate',
-                                'check_ruang_bakar' => 'Check Ruang Bakar',
-                                'check_back_chamber' => 'Check Back Chamber',
-                                'check_guillotine' => 'Check Guillotine',
-                                'check_wet_ash_conveyor' => 'Check Wet Ash Conveyor',
-                                'check_bottom_ash_conveyor' => 'Check Bottom Ash Conveyor',
-                                'check_conveyor_batu_bara' => 'Check Conveyor Batu Bara',
-                                'check_feeder' => 'Check Feeder',
-                                'cleaning_bak_wet_ash_conveyor' => 'Cleaning Bak Wet Ash Conveyor',
-                                'check_feed_tank' => 'Check Feed Tank',
-                            ];
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                            <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak OK</label>
+                                                        </div>
 
-                            $wwtp = [
-                                'check_line_limbah' => 'Check Line Limbah',
-                                'check_line_chemical' => 'Check Line Chemical',
-                                'check_tangki_kotak' => 'Check Tangki Kotak',
-                                'check_tangki_bulat' => 'Check Tangki Bulat',
-                            ];
-                        @endphp
+                                                        <div class="keterangan-wrapper d-none mt-2">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                name="keterangan_{{ $field }}"
+                                                                placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                        </div>
+                                                    @elseif($chk->tipe_input === 'number')
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="number" step="any" class="form-control" name="{{ $field }}" placeholder="Nilai pengukuran">
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <input type="text" class="form-control form-control-sm" name="keterangan_{{ $field }}" placeholder="Catatan tambahan">
+                                                        </div>
+                                                    @else
+                                                        <input type="text" class="form-control form-control-sm" name="{{ $field }}" placeholder="Catatan / keterangan">
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            @endforeach
+                        @else
+                            {{-- FALLBACK HARDCODED (Legacy) --}}
+                            @php
+                                $coolingTower = [
+                                    'cleaning_saringan_cooling_tower' => 'Cleaning Saringan Bak Cooling Tower',
+                                    'cleaning_unit_cooling_tower' => 'Cleaning Unit Cooling Tower',
+                                    'cleaning_bak_cooling_tower' => 'Cleaning Bak Cooling Tower',
+                                ];
 
-                        <h6 class="fw-bold text-primary mb-3">Cooling Tower</h6>
+                                $ro = [
+                                    'check_sensor_tank_farm_ro_produk' => 'Check Sensor Tank Farm RO Produk',
+                                    'cleaning_flow_rate_mmf_1' => 'Cleaning Flow Rate MMF #1',
+                                    'cleaning_flow_rate_mmf_2' => 'Cleaning Flow Rate MMF #2',
+                                    'cleaning_flow_rate_ro_produk' => 'Cleaning Flow Rate RO Produk',
+                                    'cleaning_flow_rate_ro_reject' => 'Cleaning Flow Rate RO Reject',
+                                    'penggantian_micron_filter_cip' => 'Penggantian Micron Filter CIP',
+                                    'penggantian_micron_filter_makeup_water' => 'Penggantian Micron Filter Make Up Water',
+                                    'cleaning_cip_tank' => 'Cleaning CIP Tank',
+                                    'cip_membrane_reverse_osmosis' => 'CIP Membrane Reverse Osmosis',
+                                    'check_fungsi_valve' => 'Check Fungsi Valve',
+                                    'cleaning_unit_ro_mesin' => 'Cleaning Unit RO Mesin',
+                                ];
+
+                                $compressor = [
+                                    'sirkulasi_phe_aq55vsd' => 'Sirkulasi PHE AQ55VSD',
+                                    'penggantian_air_ro_aq55vsd' => 'Penggantian Air RO AQ55VSD',
+                                    'cleaning_compressor_aq55vsd' => 'Cleaning Compressor AQ55VSD',
+                                    'cleaning_jalur_cooling_aq55vsd' => 'Cleaning Jalur Cooling AQ55VSD',
+                                    'cleaning_dryer_fd185' => 'Cleaning Dryer FD185',
+                                    'cleaning_compressor_ga37' => 'Cleaning Compressor GA37',
+                                    'cleaning_dryer_fd120' => 'Cleaning Dryer FD120',
+                                    'lubrikasi_motor_compressor_aq55vsd' => 'Lubrikasi Motor Compressor AQ55VSD',
+                                    'cleaning_compressor_sm55' => 'Cleaning Compressor SM55',
+                                ];
+
+                                $tankFarm = [
+                                    'cleaning_sensor_level_tank_farm' => 'Cleaning Sensor Level Tank Farm',
+                                    'cleaning_sensor_level_fresh_water_menara' =>
+                                        'Cleaning Sensor Level Fresh Water Menara',
+                                    'cleaning_sensor_level_ro_reject_menara' => 'Cleaning Sensor Level RO Reject Menara',
+                                    'cleaning_sensor_level_intermediate' => 'Cleaning Sensor Level Intermediate',
+                                ];
+
+                                $boiler = [
+                                    'check_safety_valve' => 'Check Safety Valve',
+                                    'cleaning_level_gauge' => 'Cleaning Level Gauge',
+                                    'cleaning_level_transmitter' => 'Cleaning Level Transmitter',
+                                    'check_pressure_transmitter' => 'Check Pressure Transmitter',
+                                    'check_temperature_transmitter' => 'Check Temperature Transmitter',
+                                    'cleaning_sensor_o2_co2' => 'Cleaning Sensor O2 & CO2',
+                                    'check_chaingrate' => 'Check Chaingrate',
+                                    'check_ruang_bakar' => 'Check Ruang Bakar',
+                                    'check_back_chamber' => 'Check Back Chamber',
+                                    'check_guillotine' => 'Check Guillotine',
+                                    'check_wet_ash_conveyor' => 'Check Wet Ash Conveyor',
+                                    'check_bottom_ash_conveyor' => 'Check Bottom Ash Conveyor',
+                                    'check_conveyor_batu_bara' => 'Check Conveyor Batu Bara',
+                                    'check_feeder' => 'Check Feeder',
+                                    'cleaning_bak_wet_ash_conveyor' => 'Cleaning Bak Wet Ash Conveyor',
+                                    'check_feed_tank' => 'Check Feed Tank',
+                                ];
+
+                                $wwtp = [
+                                    'check_line_limbah' => 'Check Line Limbah',
+                                    'check_line_chemical' => 'Check Line Chemical',
+                                    'check_tangki_kotak' => 'Check Tangki Kotak',
+                                    'check_tangki_bulat' => 'Check Tangki Bulat',
+                                ];
+                            @endphp
+
+                            <h6 class="fw-bold text-primary mb-3">Cooling Tower</h6>
 
                         @foreach (array_chunk($coolingTower, 2, true) as $row)
                             <div class="row g-3 mb-3">
@@ -437,6 +497,7 @@
                                 @endforeach
                             </div>
                         @endforeach
+                        @endif
 
                         {{-- Korektif --}}
                         <div class="row mt-4">
@@ -464,25 +525,30 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+
+                        {{-- Penggantian Material --}}
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Penggantian Material</label>
+                                <table class="table table-bordered" id="replacementTable">
+                                    <thead class="table-light text-no-wrap">
                                         <tr>
-                                            <td>
-                                                <select name="materials[0][mid]"
-                                                    class="form-control form-control-sm mid-select2"></select>
-                                            </td>
-                                            <td>
-                                                <input type="text" name="materials[0][desc]"
-                                                    class="form-control form-control-sm">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="materials[0][qty]"
-                                                    class="form-control form-control-sm" min="1">
-                                            </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger removeRow">
-                                                    ×
+                                            <th style="width: 20%">MID</th>
+                                            <th>Deskripsi</th>
+                                            <th style="width: 15%">Jumlah</th>
+                                            <th class="text-center" style="width: 10%">
+                                                <button type="button" class="btn btn-sm btn-primary" id="addReplacementRow">
+                                                    +
                                                 </button>
-                                            </td>
+                                            </th>
                                         </tr>
+                                    </thead>
+                                    <tbody>
                                     </tbody>
                                 </table>
 
@@ -560,7 +626,8 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         $(document).ready(function() {
-            let index = 1;
+            let index = 0;
+            let replacementIndex = 0;
             flatpickr("#waktu_mulai", {
                 enableTime: true,
                 noCalendar: true,
@@ -594,6 +661,36 @@
                     // 🔥 Balikin ke default
                     $('#label_tanggal').html('Tanggal <span class="text-danger">*</span>');
                 }
+
+                if (val === 'Off') {
+                    $('#waktu_selesai').removeAttr('required');
+                    $('#label_waktu_selesai').html('Waktu Selesai');
+                } else {
+                    $('#waktu_selesai').attr('required', true);
+                    $('#label_waktu_selesai').html('Waktu Selesai <span class="text-danger">*</span>');
+                }
+
+                // Cek jika mesin berstatus Off tetapi user mencoba mengubah ke paket lain
+                const selectedMesin = $('#mesin_id').find(':selected');
+                const isMesinOff = selectedMesin.data('is-off') == '1' || selectedMesin.data('is-off') === true;
+
+                if (isMesinOff && val !== 'Off' && val !== '') {
+                    Swal.fire({
+                        icon: 'question',
+                        title: 'Konfirmasi Perubahan Paket',
+                        html: `Mesin ini saat ini masih berstatus <b>OFF</b>.<br>Mengubah paket ke <b>${val}</b> akan mengakhiri status OFF mesin ini. Apakah Anda yakin?`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Lanjut Ubah',
+                        cancelButtonText: 'Batal (Tetap Off)',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6c757d',
+                        allowOutsideClick: false
+                    }).then((res) => {
+                        if (!res.isConfirmed) {
+                            $('select[name="paket"]').val('Off').trigger('change');
+                        }
+                    });
+                }
             });
 
             $('#mesin_id').on('change', function() {
@@ -602,11 +699,35 @@
                 const lokasi = selected.data('lokasi') || '';
                 const departemen = selected.data('departemen') || '';
                 const kodeMesin = selected.data('kode-mesin') || '';
+                const isOff = selected.data('is-off') == '1' || selected.data('is-off') === true;
+                const namaMesin = selected.text().trim();
 
                 $('input[name="kode_mesin"]').val(kodeMesin);
-
                 $('input[name="lokasi"]').val(lokasi);
                 $('input[name="departemen"]').val(departemen);
+
+                if (isOff) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian: Mesin Masih OFF',
+                        html: `Mesin <b>${namaMesin}</b> saat ini masih terjadi <b>OFF</b>.<br><br>Jika ingin melanjutkan pengisian form untuk mesin ini, paket maintenance akan otomatis diatur ke <b>Off</b>.`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Lanjut Isi (Paket Off)',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#ffc107',
+                        cancelButtonColor: '#6c757d',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('select[name="paket"]').val('Off').trigger('change');
+                        } else {
+                            $('#mesin_id').val('').trigger('change.select2');
+                            $('input[name="kode_mesin"]').val('');
+                            $('input[name="lokasi"]').val('');
+                            $('input[name="departemen"]').val('');
+                        }
+                    });
+                }
 
             });
 
@@ -617,13 +738,31 @@
                 width: '100%',
                 templateResult: function(data) {
                     if (!data.id) return data.text;
-                    return $('<span><b>' + data.text.split(' - ')[0] + '</b><br><small>' + data.text
+                    const isOff = $(data.element).data('is-off') == '1';
+                    const offBadge = isOff ? ' <span class="badge bg-danger ms-1">OFF</span>' : '';
+                    return $('<span><b>' + data.text.split(' - ')[0] + '</b>' + offBadge + '<br><small>' + data.text
                         .split(' - ')[1] + '</small></span>');
                 }
             });
 
 
 
+
+            $(document).on('click', '.status-radio', function() {
+                const $this = $(this);
+                if ($this.data('waschecked') === true) {
+                    this.checked = false;
+                    $this.data('waschecked', false);
+                    $this.trigger('change');
+                } else {
+                    $(`input[name="${this.name}"]`).data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
+            $('.status-radio:checked').each(function() {
+                $(this).data('waschecked', true);
+            });
 
             $('.status-radio').on('change', function() {
                 const $row = $(this).closest('.item-row');
@@ -669,6 +808,7 @@
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
                                         nama_barang: item.nama_barang,
+                                        uom: item.uom || '',
                                         qty: item.latest_stock?.qty_soh ?? 0
                                     };
                                 })
@@ -695,9 +835,12 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
+                    $(this).closest('tr').find('input[name*="[uom]"]').val(data.uom || '');
+                    $(this).closest('tr').find('input[name*="[qty]"]').prop('required', true);
                 }).on('select2:clear select2:unselect', function(e) {
                     $(this).closest('tr').find('input[name*="[desc]"]').val('');
-                    $(this).closest('tr').find('input[name*="[qty]"]').val('');
+                    $(this).closest('tr').find('input[name*="[uom]"]').val('');
+                    $(this).closest('tr').find('input[name*="[qty]"]').val('').prop('required', false);
                 });
             }
 
@@ -710,12 +853,13 @@
                     <tr>
                         <td>
                             <select name="materials[${index}][mid]" class="form-control form-control-sm mid-select2"></select>
+                            <input type="hidden" name="materials[${index}][uom]" class="material-uom">
                         </td>
                         <td>
                             <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
                         </td>
                         <td>
-                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1">
+                            <input type="number" step="any" min="0" name="materials[${index}][qty]" class="form-control form-control-sm">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
@@ -729,10 +873,36 @@
                 index++;
             });
 
+            // Penggantian Material
+            $('#addReplacementRow').on('click', function() {
+                let row = `
+                    <tr>
+                        <td>
+                            <select name="replacements[${replacementIndex}][mid]" class="form-control form-control-sm mid-select2"></select>
+                            <input type="hidden" name="replacements[${replacementIndex}][uom]" class="replacement-uom">
+                        </td>
+                        <td>
+                            <input type="text" name="replacements[${replacementIndex}][desc]" class="form-control form-control-sm">
+                        </td>
+                        <td>
+                            <input type="number" step="any" min="0" name="replacements[${replacementIndex}][qty]" class="form-control form-control-sm">
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
+                        </td>
+                    </tr>
+                `;
+
+                const $row = $(row);
+                $('#replacementTable tbody').append($row);
+                initMidSelect2($row.find('.mid-select2'));
+                replacementIndex++;
+            });
+
             $(document).on('click', '.removeRow', function() {
                 $(this).closest('tr').remove();
             });
-            // End Kebutuhan Material
+            // End Kebutuhan & Penggantian Material
 
             function collectNotOkDetails() {
                 const details = [];
@@ -774,6 +944,7 @@
                 const $form = $('#form-mtc-utility');
 
                 $form[0].reset();
+                $('.status-radio').data('waschecked', false);
 
                 $form.find('select').each(function() {
                     if ($(this).hasClass('select2-hidden-accessible')) {
@@ -789,7 +960,9 @@
                 $('.is-invalid').removeClass('is-invalid');
 
                 $('#materialTable tbody').empty();
-                index = 1;
+                index = 0;
+                $('#replacementTable tbody').empty();
+                replacementIndex = 0;
             }
 
             let pendingFormData = null;
@@ -798,6 +971,37 @@
 
             $('#form-mtc-utility').on('submit', function(e) {
                 e.preventDefault();
+
+                // Validate material & replacements rows
+                let isValid = true;
+                $('#materialTable tbody tr, #replacementTable tbody tr').each(function() {
+                    const midSelect = $(this).find('.mid-select2');
+                    const qtyInput = $(this).find('input[name*="[qty]"]');
+                    
+                    if (midSelect.length > 0) {
+                        const midVal = midSelect.val();
+                        const qtyVal = qtyInput.val();
+                        
+                        if (!midVal || !qtyVal || qtyVal <= 0) {
+                            isValid = false;
+                            midSelect.next('.select2-container').find('.select2-selection').addClass('is-invalid');
+                            qtyInput.addClass('is-invalid');
+                        } else {
+                            midSelect.next('.select2-container').find('.select2-selection').removeClass('is-invalid');
+                            qtyInput.removeClass('is-invalid');
+                        }
+                    }
+                });
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validasi Gagal',
+                        text: 'Harap isi semua item MID dan Qty pada material/penggantian yang telah Anda tambahkan.'
+                    });
+                    return false;
+                }
+
                 pendingFormData = new FormData(this);
 
                 $('#modalApprover').modal('show');

@@ -84,28 +84,32 @@
      </tr>
  </table>
 
- <h6 class="mb-2">Checklist Sipil</h6>
+ @if (isset($main->checklistResults) && $main->checklistResults->isNotEmpty())
+     @include('maintenance.approval.partials._dynamic_checklist_table')
+ @else
+     <h6 class="mb-2">Checklist Sipil</h6>
 
- <table class="table table-sm table-bordered align-middle">
-     <thead>
-         <tr class="table-light text-center">
-             <th width="160">Item</th>
-             <th>Standar</th>
-             <th width="80">Status</th>
-         </tr>
-     </thead>
-     <tbody>
-         @foreach ($sipil as $field => $item)
-             <tr>
-                 <td class="fw-semibold">{{ $item['label'] }}</td>
-                 <td>{{ $item['standar'] }}</td>
-                 <td class="text-center">
-                     {!! badge($data->$field ?? null) !!}
-                 </td>
+     <table class="table table-sm table-bordered align-middle">
+         <thead>
+             <tr class="table-light text-center">
+                 <th width="160">Item</th>
+                 <th>Standar</th>
+                 <th width="80">Status</th>
              </tr>
-         @endforeach
-     </tbody>
- </table>
+         </thead>
+         <tbody>
+             @foreach ($sipil as $field => $item)
+                 <tr>
+                     <td class="fw-semibold">{{ $item['label'] }}</td>
+                     <td>{{ $item['standar'] }}</td>
+                     <td class="text-center">
+                         {!! badge($data->$field ?? null) !!}
+                     </td>
+                 </tr>
+             @endforeach
+         </tbody>
+     </table>
+ @endif
 
  <h6 class="mt-4 mb-2">Kebutuhan Material</h6>
 
@@ -128,6 +132,33 @@
                      <td class="text-center">{{ $material->mid }}</td>
                      <td>{{ $material->deskripsi }}</td>
                      <td class="text-center">{{ $material->qty }}</td>
+                 </tr>
+             @endforeach
+         </tbody>
+     </table>
+ @endif
+
+ <h6 class="mt-4 mb-2">Penggantian Material</h6>
+
+ @if ($main->penggantianMaterial->isEmpty())
+     <div class="text-muted fst-italic">
+         Tidak ada penggantian material
+     </div>
+ @else
+     <table class="table table-sm table-bordered align-middle">
+         <thead class="table-light text-center">
+             <tr>
+                 <th width="120">MID</th>
+                 <th>Deskripsi</th>
+                 <th width="80">Qty</th>
+             </tr>
+         </thead>
+         <tbody>
+             @foreach ($main->penggantianMaterial as $replacement)
+                 <tr>
+                     <td class="text-center">{{ $replacement->mid }}</td>
+                     <td>{{ $replacement->deskripsi }}</td>
+                     <td class="text-center">{{ $replacement->qty }}</td>
                  </tr>
              @endforeach
          </tbody>

@@ -15,7 +15,9 @@ use App\Models\Maintenance\MtcSipilInspectionModel;
 use App\Models\Maintenance\MtcBatteryMainModel;
 use App\Models\Maintenance\MtcElectricP2hInspectionModel;
 use App\Models\Maintenance\MtcDieselP2hInspectionModel;
+use App\Models\Maintenance\MtcGensetP2hInspectionModel;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
+use App\Models\Maintenance\MtcPenggantianMaterialModel;
 use App\Models\Maintenance\MtcApprovalModel;
 
 class MtcMainModel extends Model
@@ -128,10 +130,26 @@ class MtcMainModel extends Model
         );
     }
 
+    public function gensetP2h()
+    {
+        return $this->hasOne(
+            MtcGensetP2hInspectionModel::class,
+            'mtc_main_id'
+        );
+    }
+
     public function kebutuhanMaterial()
     {
         return $this->hasMany(
             MtcKebutuhanMaterialModel::class,
+            'mtc_main_id'
+        );
+    }
+
+    public function penggantianMaterial()
+    {
+        return $this->hasMany(
+            MtcPenggantianMaterialModel::class,
             'mtc_main_id'
         );
     }
@@ -157,5 +175,10 @@ class MtcMainModel extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function checklistResults()
+    {
+        return $this->hasMany(MtcChecklistResult::class, 'mtc_main_id');
     }
 }

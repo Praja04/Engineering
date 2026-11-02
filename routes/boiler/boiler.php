@@ -20,5 +20,6 @@ Route::middleware(['auth', 'access:Engineering,Engineering WWTP, Engineering Uti
         Route::get('/dashboard', [DashboardBoilerController::class, 'index'])->name('dashboard.boiler.realtime');
         Route::get('/dashboard/test', [DashboardBoilerController::class, 'dashboard_realtime']);
         Route::get('/dashboard/kpi', [DashboardBoilerController::class, 'viewDashboardKpi'])->name('dashboard.boiler.kpi');
+        Route::get('/dashboard/kpi/export-excel', [DashboardBoilerController::class, 'exportKpiExcel'])->name('dashboard.boiler.kpi.export');
     });
 });

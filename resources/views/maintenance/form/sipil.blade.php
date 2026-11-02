@@ -153,8 +153,8 @@
                                     <option value="" disabled selected>-- Pilih Area --</option>
                                     @foreach ($area as $item)
                                         <option value="{{ $item->nama_mesin }}" data-lokasi="{{ $item->lokasi }}"
-                                            data-departemen="{{ $item->dept }}">
-                                            {{ $item->nama_mesin }} - {{ $item->lokasi }}
+                                            data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}">
+                                            {{ $item->nama_mesin }} {{ $item->kode_mesin ? "({$item->kode_mesin})" : '' }} - {{ $item->lokasi }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -171,7 +171,60 @@
                             <div class="alert alert-danger py-2">{{ $message }}</div>
                         @enderror
 
-                        @php
+                        @if(isset($checklistGroups) && $checklistGroups->isNotEmpty())
+                            {{-- DYNAMIC MASTER CHECKLIST RENDERER --}}
+                            @foreach ($checklistGroups as $group)
+                                <h6 class="fw-bold text-primary mb-3 mt-4">{{ $group->nama_group }}</h6>
+                                @foreach ($group->activeChecklists->chunk(2) as $row)
+                                    <div class="row g-3 mb-3">
+                                        @foreach ($row as $chk)
+                                            @php
+                                                $field = $chk->field_key ?: ('chk_' . $chk->id);
+                                            @endphp
+                                            <div class="col-md-6 col-12">
+                                                <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+                                                    <input type="hidden" name="checklist_map[{{ $field }}]" value="{{ $chk->id }}">
+
+                                                    <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                        {{ $chk->label }}
+                                                    </label>
+
+                                                    @if($chk->standar)
+                                                        <div class="text-muted small mb-2">{{ $chk->standar }}</div>
+                                                    @endif
+
+                                                    @if($chk->tipe_input === 'boolean_ok_ng')
+                                                        <div class="btn-group btn-group-sm w-100">
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                            <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
+
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                            <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak OK</label>
+                                                        </div>
+
+                                                        <div class="keterangan-wrapper d-none mt-2">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                name="keterangan_{{ $field }}"
+                                                                placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                        </div>
+                                                    @elseif($chk->tipe_input === 'number')
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="number" step="any" class="form-control" name="{{ $field }}" placeholder="Nilai pengukuran">
+                                                        </div>
+                                                    @else
+                                                        <input type="text" class="form-control form-control-sm" name="{{ $field }}" placeholder="Keterangan / Nilai">
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            @endforeach
+                        @else
+                            {{-- FALLBACK HARDCODED (Legacy) --}}
+                            @php
                             $sipil = [
                                 'plumbing' => [
                                     'label' => 'Plumbing',
@@ -251,6 +304,7 @@
                                 @endforeach
                             </div>
                         @endforeach
+                        @endif
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
@@ -286,26 +340,28 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Penggantian Material</label>
+                                <table class="table table-bordered" id="replacementTable">
+                                    <thead class="table-light text-no-wrap">
                                         <tr>
-                                            <td>
-                                                <select name="materials[0][mid]"
-                                                    class="form-control form-control-sm mid-select2"></select>
-                                            </td>
-                                            <td>
-                                                <input type="text" name="materials[0][desc]"
-                                                    class="form-control form-control-sm">
-                                            </td>
-                                            <td>
-                                                <input type="number" name="materials[0][qty]"
-                                                    class="form-control form-control-sm" min="1">
-                                                <input type="hidden" name="materials[0][uom]" value="">
-                                            </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger removeRow">
-                                                    ×
+                                            <th style="width: 20%">MID</th>
+                                            <th>Deskripsi</th>
+                                            <th style="width: 15%">Jumlah</th>
+                                            <th class="text-center" style="width: 10%">
+                                                <button type="button" class="btn btn-sm btn-primary" id="addReplacementRow">
+                                                    +
                                                 </button>
-                                            </td>
+                                            </th>
                                         </tr>
+                                    </thead>
+                                    <tbody>
                                     </tbody>
                                 </table>
                             </div>
@@ -378,6 +434,7 @@
     <script>
         $(document).ready(function() {
             let index = 0;
+            let replacementIndex = 0;
             flatpickr("#waktu_mulai", {
                 enableTime: true,
                 noCalendar: true,
@@ -416,6 +473,22 @@
             });
 
 
+
+            $('input.status-radio:checked').each(function() {
+                $(this).data('waschecked', true);
+            });
+
+            $('.status-radio').on('click', function() {
+                var $this = $(this);
+                if ($this.data('waschecked') === true) {
+                    this.checked = false;
+                    $this.data('waschecked', false);
+                    $this.trigger('change');
+                } else {
+                    $('input[name="' + this.name + '"].status-radio').data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
 
             $('.status-radio').on('change', function() {
                 const $row = $(this).closest('.item-row');
@@ -488,10 +561,11 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
-                    $(this).closest('tr').find('input[name*="[uom]"]').val(data.uom);
+                    $(this).closest('tr').find('input[name*="[uom]"]').val(data.uom || '');
+                    $(this).closest('tr').find('input[name*="[qty]"]').prop('required', true);
                 }).on('select2:clear select2:unselect', function(e) {
                     $(this).closest('tr').find('input[name*="[desc]"]').val('');
-                    $(this).closest('tr').find('input[name*="[qty]"]').val('');
+                    $(this).closest('tr').find('input[name*="[qty]"]').val('').prop('required', false);
                     $(this).closest('tr').find('input[name*="[uom]"]').val('');
                 });
             }
@@ -509,7 +583,7 @@
                             <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
                         </td>
                         <td>
-                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1">
+                            <input type="number" step="any" min="0" name="materials[${index}][qty]" class="form-control form-control-sm">
                             <input type="hidden" name="materials[${index}][uom]" value="">
                         </td>
                         <td class="text-center">
@@ -524,10 +598,35 @@
                 index++;
             });
 
+            $('#addReplacementRow').on('click', function() {
+                let row = `
+                    <tr>
+                        <td>
+                            <select name="replacements[${replacementIndex}][mid]" class="form-control form-control-sm mid-select2"></select>
+                        </td>
+                        <td>
+                            <input type="text" name="replacements[${replacementIndex}][desc]" class="form-control form-control-sm">
+                        </td>
+                        <td>
+                            <input type="number" step="any" min="0" name="replacements[${replacementIndex}][qty]" class="form-control form-control-sm">
+                            <input type="hidden" name="replacements[${replacementIndex}][uom]" value="">
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
+                        </td>
+                    </tr>
+                `;
+
+                const $row = $(row);
+                $('#replacementTable tbody').append($row);
+                initMidSelect2($row.find('.mid-select2'));
+                replacementIndex++;
+            });
+
             $(document).on('click', '.removeRow', function() {
                 $(this).closest('tr').remove();
             });
-            // End Kebutuhan Material
+            // End Kebutuhan & Penggantian Material
 
             $('#btnResetKondisi').on('click', function() {
                 Swal.fire({
@@ -555,15 +654,16 @@
                     }
                 });
 
-                $form.find('.kondisi-radio').prop('checked', false);
+                $form.find('.status-radio').prop('checked', false).data('waschecked', false);
                 $('.kondisi-btn').removeClass('active');
-                $('.keterangan-wrapper').remove();
+                $('.keterangan-wrapper').addClass('d-none').find('input').val('').removeAttr('required');
                 $('.item-card').removeClass('not-ok');
                 $('.is-invalid').removeClass('is-invalid');
                 $('#materialTable tbody').empty();
+                index = 0;
+                $('#replacementTable tbody').empty();
+                replacementIndex = 0;
                 // updateRowState();
-
-
             }
 
             function collectNotOkDetails() {
@@ -593,6 +693,37 @@
 
             $('#form-mtc-sipil').on('submit', function(e) {
                 e.preventDefault();
+
+                // Validate material & replacements rows
+                let isValid = true;
+                $('#materialTable tbody tr, #replacementTable tbody tr').each(function() {
+                    const midSelect = $(this).find('.mid-select2');
+                    const qtyInput = $(this).find('input[name*="[qty]"]');
+                    
+                    if (midSelect.length > 0) {
+                        const midVal = midSelect.val();
+                        const qtyVal = qtyInput.val();
+                        
+                        if (!midVal || !qtyVal || qtyVal <= 0) {
+                            isValid = false;
+                            midSelect.next('.select2-container').find('.select2-selection').addClass('is-invalid');
+                            qtyInput.addClass('is-invalid');
+                        } else {
+                            midSelect.next('.select2-container').find('.select2-selection').removeClass('is-invalid');
+                            qtyInput.removeClass('is-invalid');
+                        }
+                    }
+                });
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validasi Gagal',
+                        text: 'Harap isi semua item MID dan Qty pada material/penggantian yang telah Anda tambahkan.'
+                    });
+                    return false;
+                }
+
                 pendingFormData = new FormData(this);
 
                 $('#modalApprover').modal('show');

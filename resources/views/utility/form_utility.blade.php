@@ -17,7 +17,12 @@
                                 <div class="col-sm-10">
                                     <div class="p-3">
                                         <h1>Utility Form</h1>
-                                        <p class="fs-16 lh-base">Periksa Utility Untuk Diri Kita Sendiri!</p>
+                                        <p class="fs-16 lh-base mb-2">Periksa Utility Untuk Diri Kita Sendiri!</p>
+                                        @if ((Auth::user()->jabatan ?? '') !== 'operator')
+                                            <a href="{{ url('utility/master') }}" class="btn btn-soft-primary btn-sm">
+                                                <i class="mdi mdi-database-cog-outline me-1"></i> Kelola Master Data Utility
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="col-sm-2 text-end">
@@ -84,9 +89,15 @@
                                         <label for="panel_type" class="form-label">Panel Type</label>
                                         <select id="panel_type" name="panel_type" class="form-select" required>
                                             <option value="">Pilih Panel</option>
-                                            @foreach (['MDP', 'SDP1', 'SDP2', 'SDP3', 'SDP4', 'SDP5', 'SDP6', 'SDP7', 'SDP8', 'SDP9', 'SDP10', 'SDP11', 'SDP12', 'SDP13', 'SDP14'] as $panel)
-                                                <option value="{{ $panel }}">{{ $panel }}</option>
-                                            @endforeach
+                                            @if(isset($panelListrik) && $panelListrik->isNotEmpty())
+                                                @foreach ($panelListrik as $panel)
+                                                    <option value="{{ $panel->nama_panel }}">{{ $panel->nama_panel }}</option>
+                                                @endforeach
+                                            @else
+                                                @foreach (['MDP', 'SDP1', 'SDP2', 'SDP3', 'SDP4', 'SDP5', 'SDP6', 'SDP7', 'SDP8', 'SDP9', 'SDP10', 'SDP11', 'SDP12', 'SDP13', 'SDP14'] as $panel)
+                                                    <option value="{{ $panel }}">{{ $panel }}</option>
+                                                @endforeach
+                                            @endif
                                         </select>
                                     </div>
                                     <div class="mb-3">
@@ -584,6 +595,7 @@
                 const tanggal = $('#tanggal_air').val();
                 const notes = $('textarea[name="notes"]').val();
                 const payload = [];
+                let localValidationFailed = false;
 
                 $('input[name="areas[]"]').each(function() {
                     const area = $(this).val();
@@ -593,13 +605,40 @@
 
                     // Pastikan nilai tidak kosong
                     if (awal !== '' && akhir !== '') {
+                        const valAwal = parseFloat(awal);
+                        const valAkhir = parseFloat(akhir);
+
+                        if (valAkhir < valAwal) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validasi Gagal',
+                                text: `Pemakaian akhir harus lebih besar atau sama dengan awal untuk area ${area}.`
+                            });
+                            localValidationFailed = true;
+                            return false; // break each
+                        }
+
+                        if ((valAkhir - valAwal) > 999) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validasi Gagal',
+                                text: `Total pemakaian untuk area ${area} tidak masuk akal (lebih dari 3 digit / > 999). Silakan cek kembali input pemakaian awal dan akhir.`
+                            });
+                            localValidationFailed = true;
+                            return false; // break each
+                        }
+
                         payload.push({
                             area: area,
-                            pemakaian_liter_awal: parseFloat(awal),
-                            pemakaian_liter_akhir: parseFloat(akhir)
+                            pemakaian_liter_awal: valAwal,
+                            pemakaian_liter_akhir: valAkhir
                         });
                     }
                 });
+
+                if (localValidationFailed) {
+                    return;
+                }
 
                 const finalData = {
                     tanggal: tanggal,

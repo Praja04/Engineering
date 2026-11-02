@@ -22,18 +22,19 @@ Route::view('/home', 'home')->name('home');
 
 Route::middleware('auth')->group(function () {
     Route::get('/ejo', function () {
-        return view('ejo.index');
-    });
+        return redirect()->to('/ejo-engineer');
+    })->name('ejo.index');
     Route::get('/ejo/dashboard', function () {
-        return view('dashboard.ejo.dashboard');
+        return redirect()->to('/ejo-engineer');
     })->name('ejo.dashboard');
     Route::get('/ejo/create', function () {
-        return view('ejo.create');
+        return redirect()->to('/ejo-engineer');
     });
 
     Route::get('/ejo/{id}', function ($id) {
-        return view('ejo.detail', compact('id'));
+        return redirect()->to('/ejo-engineer');
     });
+
     Route::middleware(['auth', 'access'])->group(function () {
         Route::prefix('users')->as('users.')->group(function () {
             Route::get('/index', [AuthController::class, 'manage_user'])->name('users.index');
@@ -63,6 +64,7 @@ Route::middleware('auth')->group(function () {
     @include 'utility/air-routes.php';
     @include 'utility/wwtp-routes.php';
     @include 'utility/chemical-routes.php';
+    @include 'utility/master-utility-routes.php';
     @include 'utility/dashboard.php';
     @include 'utility/esp-routes.php';
     @include 'utility/water-softener-routes.php';
@@ -81,14 +83,16 @@ Route::middleware('auth')->group(function () {
     @include 'utility/analisis-utility-routes.php';
     @include 'utility/ahu-routes.php';
     @include 'utility/boiler-routes.php';
+    @include 'utility/history-card-routes.php';
+    @include 'utility/project-utility-routes.php';
     @include 'ejo/ejo-routes.php';
     @include 'project/project_routes.php';
 
     //////////    End View Routes   ///////////
 
     @include('boiler/boiler.php');
-
     @include 'epr/epr-routes.php';
-
     @include('maintenance/maintenance.php');
 });
+
+@include 'ejo/ejo-engineer-routes.php';

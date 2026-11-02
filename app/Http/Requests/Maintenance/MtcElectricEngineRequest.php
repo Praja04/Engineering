@@ -24,6 +24,7 @@ class MtcElectricEngineRequest extends FormRequest
     {
         return [
             'mesin_id' => ['required', 'exists:mtc_master_mesin,id'],
+            'checklist_map' => ['nullable', 'array'],
 
             // Forklift Electrical - General
             'check_buzzer_back' => ['nullable', 'boolean'],
@@ -71,6 +72,8 @@ class MtcElectricEngineRequest extends FormRequest
             'check_axle' => ['nullable', 'boolean'],
             'check_greasing_point' => ['nullable', 'boolean'],
             'check_air_spring' => ['nullable', 'boolean'],
+            'check_boot_steering' => ['nullable', 'boolean'],
+            'check_wheel_chain' => ['nullable', 'boolean'],
 
             // Oil
             'ganti_gear_oil' => ['nullable', 'boolean'],
@@ -135,6 +138,8 @@ class MtcElectricEngineRequest extends FormRequest
                 'check_axle',
                 'check_greasing_point',
                 'check_air_spring',
+                'check_boot_steering',
+                'check_wheel_chain',
 
                 // Oil
                 'ganti_gear_oil',
@@ -144,10 +149,22 @@ class MtcElectricEngineRequest extends FormRequest
             ];
 
             $hasAnyChecked = false;
-            foreach ($checklistFields as $field) {
-                if ($this->boolean($field)) {
-                    $hasAnyChecked = true;
-                    break;
+
+            if ($this->has('checklist_map') && is_array($this->input('checklist_map'))) {
+                foreach ($this->input('checklist_map') as $field => $id) {
+                    if ($this->has($field) && $this->input($field) !== null && $this->input($field) !== '') {
+                        $hasAnyChecked = true;
+                        break;
+                    }
+                }
+            }
+
+            if (! $hasAnyChecked) {
+                foreach ($checklistFields as $field) {
+                    if ($this->has($field) && $this->input($field) !== null && $this->input($field) !== '') {
+                        $hasAnyChecked = true;
+                        break;
+                    }
                 }
             }
 

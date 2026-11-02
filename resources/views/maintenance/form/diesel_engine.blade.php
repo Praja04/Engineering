@@ -58,8 +58,9 @@
                                     </option>
                                     @foreach ($mesin as $item)
                                         <option value="{{ $item->id }}" data-lokasi="{{ $item->lokasi }}"
-                                            data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}">
-                                            {{ $item->nama_mesin }} - {{ $item->lokasi }}
+                                            data-departemen="{{ $item->dept }}" data-kode-mesin="{{ $item->kode_mesin }}"
+                                            data-is-off="{{ !empty($item->is_currently_off) ? '1' : '0' }}">
+                                            {{ $item->nama_mesin }} {{ $item->kode_mesin ? "({$item->kode_mesin})" : '' }} - {{ $item->lokasi }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -76,9 +77,9 @@
                                     placeholder="Pilih waktu" required>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Waktu Selesai</label>
+                                <label class="form-label" id="label_waktu_selesai">Waktu Selesai <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="waktu_selesai" id="waktu_selesai"
-                                    placeholder="Pilih waktu">
+                                    placeholder="Pilih waktu" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Lokasi </label>
@@ -93,8 +94,8 @@
                                 <input type="text" class="form-control" name="departemen" readonly>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Runnning Hour </label>
-                                <input type="number" class="form-control" name="running_hour"
+                                <label class="form-label">Running Hour </label>
+                                <input type="number" step="0.01" class="form-control" name="running_hour"
                                     value="{{ old('running_hour') }}">
                             </div>
                             <div class="col-md-3">
@@ -106,6 +107,8 @@
                                     <option>B</option>
                                     <option>C</option>
                                     <option>D</option>
+                                    <option>E</option>
+                                    <option>Off</option>
                                     <option>Korektif</option>
                                     <option>Checkpoint</option>
                                 </select>
@@ -116,7 +119,60 @@
                             </div>
                         </div>
 
-                        @php
+                        @if(isset($checklistGroups) && $checklistGroups->isNotEmpty())
+                            {{-- DYNAMIC MASTER CHECKLIST RENDERER --}}
+                            @foreach ($checklistGroups as $group)
+                                <h6 class="fw-bold text-primary mb-3 mt-4">{{ $group->nama_group }}</h6>
+                                @foreach ($group->activeChecklists->chunk(2) as $row)
+                                    <div class="row g-3 mb-3">
+                                        @foreach ($row as $chk)
+                                            @php
+                                                $field = $chk->field_key ?: ('chk_' . $chk->id);
+                                            @endphp
+                                            <div class="col-md-6 col-12">
+                                                <div class="card shadow-sm item-card p-3 item-row" data-field="{{ $field }}">
+                                                    <input type="hidden" name="checklist_map[{{ $field }}]" value="{{ $chk->id }}">
+
+                                                    <label class="form-label fw-semibold" data-label="{{ $field }}">
+                                                        {{ $chk->label }}
+                                                    </label>
+
+                                                    @if($chk->standar)
+                                                        <div class="text-muted small mb-2">{{ $chk->standar }}</div>
+                                                    @endif
+
+                                                    @if($chk->tipe_input === 'boolean_ok_ng')
+                                                        <div class="btn-group btn-group-sm w-100">
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="1" id="{{ $field }}_ok">
+                                                            <label class="btn btn-outline-success" for="{{ $field }}_ok">OK</label>
+
+                                                            <input type="radio" class="btn-check status-radio"
+                                                                name="{{ $field }}" value="0" id="{{ $field }}_ng">
+                                                            <label class="btn btn-outline-danger" for="{{ $field }}_ng">Tidak OK</label>
+                                                        </div>
+
+                                                        <div class="keterangan-wrapper d-none mt-2">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                name="keterangan_{{ $field }}"
+                                                                placeholder="Wajib diisi jika Tidak OK" data-required-when-not-ok>
+                                                        </div>
+                                                    @elseif($chk->tipe_input === 'number')
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="number" step="any" class="form-control" name="{{ $field }}" placeholder="Nilai pengukuran">
+                                                        </div>
+                                                    @else
+                                                        <input type="text" class="form-control form-control-sm" name="{{ $field }}" placeholder="Keterangan / Nilai">
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            @endforeach
+                        @else
+                            {{-- FALLBACK HARDCODED (Legacy) --}}
+                            @php
                             $engine = [
                                 'check_kondisi_level_oli_mesin' => 'Check Kondisi & Level Oli Mesin',
                                 'check_kondisi_radiator_hose' => 'Check Kondisi Radiator & Hose',
@@ -373,6 +429,7 @@
                                 @endforeach
                             </div>
                         @endforeach
+                        @endif
 
                         {{-- Korektif --}}
                         <div class="row mt-4">
@@ -400,24 +457,30 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <td>
-                                            <select name="materials[0][mid]"
-                                                class="form-control form-control-sm mid-select2"></select>
-                                        </td>
-                                        <td>
-                                            <input type="text" name="materials[0][desc]"
-                                                class="form-control form-control-sm">
-                                        </td>
-                                        <td>
-                                            <input type="number" name="materials[0][qty]"
-                                                class="form-control form-control-sm" min="1">
-                                        </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-danger removeRow">
-                                                ×
-                                            </button>
-                                        </td>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+
+                        {{-- Penggantian Material --}}
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Penggantian Material</label>
+                                <table class="table table-bordered" id="replacementTable">
+                                    <thead class="table-light text-no-wrap">
+                                        <tr>
+                                            <th style="width: 20%">MID</th>
+                                            <th>Deskripsi</th>
+                                            <th style="width: 15%">Jumlah</th>
+                                            <th class="text-center" style="width: 10%">
+                                                <button type="button" class="btn btn-sm btn-primary" id="addReplacementRow">
+                                                    +
+                                                </button>
+                                            </th>
                                         </tr>
+                                    </thead>
+                                    <tbody>
                                     </tbody>
                                 </table>
 
@@ -511,16 +574,42 @@
                 minuteIncrement: 1,
             });
             let index = 0;
+            let replacementIndex = 0;
             $('#mesin_id').on('change', function() {
                 const selected = $(this).find(':selected');
 
                 const lokasi = selected.data('lokasi') || '';
                 const departemen = selected.data('departemen') || '';
                 const kodeMesin = selected.data('kode-mesin') || '';
-                $('input[name="kode_mesin"]').val(kodeMesin);
+                const isOff = selected.data('is-off') == '1' || selected.data('is-off') === true;
+                const namaMesin = selected.text().trim();
 
+                $('input[name="kode_mesin"]').val(kodeMesin);
                 $('input[name="lokasi"]').val(lokasi);
                 $('input[name="departemen"]').val(departemen);
+
+                if (isOff) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian: Mesin Masih OFF',
+                        html: `Mesin <b>${namaMesin}</b> saat ini masih terjadi <b>OFF</b>.<br><br>Jika ingin melanjutkan pengisian form untuk mesin ini, paket maintenance akan otomatis diatur ke <b>Off</b>.`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Lanjut Isi (Paket Off)',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#ffc107',
+                        cancelButtonColor: '#6c757d',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('select[name="paket"]').val('Off').trigger('change');
+                        } else {
+                            $('#mesin_id').val('').trigger('change.select2');
+                            $('input[name="lokasi"]').val('');
+                            $('input[name="departemen"]').val('');
+                            $('input[name="kode_mesin"]').val('');
+                        }
+                    });
+                }
 
             });
             $('#mesin_id').select2({
@@ -530,7 +619,9 @@
                 width: '100%',
                 templateResult: function(data) {
                     if (!data.id) return data.text;
-                    return $('<span><b>' + data.text.split(' - ')[0] + '</b><br><small>' + data.text
+                    const isOff = $(data.element).data('is-off') == '1';
+                    const offBadge = isOff ? ' <span class="badge bg-danger ms-1">OFF</span>' : '';
+                    return $('<span><b>' + data.text.split(' - ')[0] + '</b>' + offBadge + '<br><small>' + data.text
                         .split(' - ')[1] + '</small></span>');
                 }
             });
@@ -554,8 +645,55 @@
                     // 🔥 Balikin ke default
                     $('#label_tanggal').html('Tanggal <span class="text-danger">*</span>');
                 }
+
+                // Field Paket Off: Waktu Selesai tidak required
+                if (val === 'Off') {
+                    $('#waktu_selesai').removeAttr('required');
+                    $('#label_waktu_selesai').html('Waktu Selesai');
+                } else {
+                    $('#waktu_selesai').attr('required', true);
+                    $('#label_waktu_selesai').html('Waktu Selesai <span class="text-danger">*</span>');
+                }
+
+                // Cek jika mesin berstatus Off tetapi user mencoba mengubah ke paket lain
+                const selectedMesin = $('#mesin_id').find(':selected');
+                const isMesinOff = selectedMesin.data('is-off') == '1' || selectedMesin.data('is-off') === true;
+
+                if (isMesinOff && val !== 'Off' && val !== '') {
+                    Swal.fire({
+                        icon: 'question',
+                        title: 'Konfirmasi Perubahan Paket',
+                        html: `Mesin ini saat ini masih berstatus <b>OFF</b>.<br>Mengubah paket ke <b>${val}</b> akan mengakhiri status OFF mesin ini. Apakah Anda yakin?`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Lanjut Ubah',
+                        cancelButtonText: 'Batal (Tetap Off)',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6c757d',
+                        allowOutsideClick: false
+                    }).then((res) => {
+                        if (!res.isConfirmed) {
+                            $('select[name="paket"]').val('Off').trigger('change');
+                        }
+                    });
+                }
             });
 
+
+            $(document).on('click', '.status-radio', function() {
+                const $this = $(this);
+                if ($this.data('waschecked') === true) {
+                    this.checked = false;
+                    $this.data('waschecked', false);
+                    $this.trigger('change');
+                } else {
+                    $(`input[name="${this.name}"]`).data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
+            $('.status-radio:checked').each(function() {
+                $(this).data('waschecked', true);
+            });
 
             $('.status-radio').on('change', function() {
                 const $row = $(this).closest('.item-row');
@@ -623,6 +761,7 @@
                                         id: item.mid_barang,
                                         text: item.mid_barang + ' - ' + item.nama_barang,
                                         nama_barang: item.nama_barang,
+                                        uom: item.uom || '',
                                         qty: item.latest_stock?.qty_soh ?? 0
                                     };
                                 })
@@ -649,9 +788,12 @@
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
                     $(this).closest('tr').find('input[name*="[desc]"]').val(data.nama_barang);
+                    $(this).closest('tr').find('input[name*="[uom]"]').val(data.uom || '');
+                    $(this).closest('tr').find('input[name*="[qty]"]').prop('required', true);
                 }).on('select2:clear select2:unselect', function(e) {
                     $(this).closest('tr').find('input[name*="[desc]"]').val('');
-                    $(this).closest('tr').find('input[name*="[qty]"]').val('');
+                    $(this).closest('tr').find('input[name*="[uom]"]').val('');
+                    $(this).closest('tr').find('input[name*="[qty]"]').val('').prop('required', false);
                 });
             }
 
@@ -663,12 +805,13 @@
                     <tr>
                         <td>
                             <select name="materials[${index}][mid]" class="form-control form-control-sm mid-select2"></select>
+                            <input type="hidden" name="materials[${index}][uom]" class="material-uom">
                         </td>
                         <td>
                             <input type="text" name="materials[${index}][desc]" class="form-control form-control-sm">
                         </td>
                         <td>
-                            <input type="number" name="materials[${index}][qty]" class="form-control form-control-sm" min="1">
+                            <input type="number" step="any" min="0" name="materials[${index}][qty]" class="form-control form-control-sm">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
@@ -682,10 +825,35 @@
                 index++;
             });
 
+            $('#addReplacementRow').on('click', function() {
+                let row = `
+                    <tr>
+                        <td>
+                            <select name="replacements[${replacementIndex}][mid]" class="form-control form-control-sm mid-select2"></select>
+                            <input type="hidden" name="replacements[${replacementIndex}][uom]" class="replacement-uom">
+                        </td>
+                        <td>
+                            <input type="text" name="replacements[${replacementIndex}][desc]" class="form-control form-control-sm">
+                        </td>
+                        <td>
+                            <input type="number" step="any" min="0" name="replacements[${replacementIndex}][qty]" class="form-control form-control-sm">
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger removeRow">×</button>
+                        </td>
+                    </tr>
+                `;
+
+                const $row = $(row);
+                $('#replacementTable tbody').append($row);
+                initMidSelect2($row.find('.mid-select2'));
+                replacementIndex++;
+            });
+
             $(document).on('click', '.removeRow', function() {
                 $(this).closest('tr').remove();
-
             });
+            // End Kebutuhan & Penggantian Material
 
             $('#btn-reset').on('click', function() {
                 Swal.fire({
@@ -706,6 +874,7 @@
                 const $form = $('#form-mtc-diesel-engine');
 
                 $form[0].reset();
+                $('.status-radio').data('waschecked', false);
 
                 $form.find('select').each(function() {
                     if ($(this).hasClass('select2-hidden-accessible')) {
@@ -721,7 +890,9 @@
                 $('.is-invalid').removeClass('is-invalid');
 
                 $('#materialTable tbody').empty();
-                index = 1;
+                index = 0;
+                $('#replacementTable tbody').empty();
+                replacementIndex = 0;
 
 
             }
@@ -734,6 +905,37 @@
 
             $('#form-mtc-diesel-engine').on('submit', function(e) {
                 e.preventDefault();
+
+                // Validate material & replacements rows
+                let isValid = true;
+                $('#materialTable tbody tr, #replacementTable tbody tr').each(function() {
+                    const midSelect = $(this).find('.mid-select2');
+                    const qtyInput = $(this).find('input[name*="[qty]"]');
+                    
+                    if (midSelect.length > 0) {
+                        const midVal = midSelect.val();
+                        const qtyVal = qtyInput.val();
+                        
+                        if (!midVal || !qtyVal || qtyVal <= 0) {
+                            isValid = false;
+                            midSelect.next('.select2-container').find('.select2-selection').addClass('is-invalid');
+                            qtyInput.addClass('is-invalid');
+                        } else {
+                            midSelect.next('.select2-container').find('.select2-selection').removeClass('is-invalid');
+                            qtyInput.removeClass('is-invalid');
+                        }
+                    }
+                });
+
+                if (!isValid) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validasi Gagal',
+                        text: 'Harap isi semua item MID dan Qty pada material/penggantian yang telah Anda tambahkan.'
+                    });
+                    return false;
+                }
+
                 pendingFormData = new FormData(this);
                 $('#modalApprover').modal('show');
 

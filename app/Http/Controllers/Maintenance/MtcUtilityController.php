@@ -7,6 +7,7 @@ use App\Models\NotificationsModel;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Maintenance\MtcMasterMaterialModel;
 use App\Models\Maintenance\MtcMainModel;
 use App\Models\Maintenance\MtcApprovalModel;
 use App\Models\Maintenance\MtcMasterMesinModel;
@@ -15,6 +16,11 @@ use App\Models\Maintenance\MtcUtilityModel;
 use App\Http\Requests\Maintenance\MtcUtilityRequest;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
 use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
+use App\Models\Maintenance\MtcPenggantianMaterialModel;
+use App\Http\Requests\Maintenance\MtcPenggantianMaterialRequest;
+use App\Models\Maintenance\MtcMasterChecklistGroup;
+use App\Models\Maintenance\MtcMasterChecklist;
+use App\Models\Maintenance\MtcChecklistResult;
 
 class MtcUtilityController extends Controller
 {
@@ -23,7 +29,18 @@ class MtcUtilityController extends Controller
         $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Utility')
             ->orderBy('id')->get();
 
-        return view('maintenance.form.utility', compact('mesin'));
+        $offMachineMap = MtcMasterMesinModel::getCurrentlyOffMachineMap('Utility');
+        foreach ($mesin as $item) {
+            $item->is_currently_off = isset($offMachineMap[$item->id]);
+        }
+
+        $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Utility')
+            ->where('is_active', true)
+            ->with(['activeChecklists'])
+            ->orderBy('urutan')
+            ->get();
+
+        return view('maintenance.form.utility', compact('mesin', 'checklistGroups'));
     }
 
     public function viewData()
@@ -37,9 +54,10 @@ class MtcUtilityController extends Controller
     public function store(
         MtcMainRequest $mainRequest,
         MtcUtilityRequest $detailRequest,
-        MtcKebutuhanMaterialRequest $materials
+        MtcKebutuhanMaterialRequest $materials,
+        MtcPenggantianMaterialRequest $replacements
     ) {
-        DB::transaction(function () use ($mainRequest, $detailRequest, $materials) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $replacements) {
             $userId = Auth::id();
 
             // Simpan Main
@@ -55,12 +73,51 @@ class MtcUtilityController extends Controller
                 'mtc_main_id' => $main->id,
             ]);
 
+            // Simpan dynamic checklist results (Zero Data Loss compatibility)
+            $checklistMap = request()->input('checklist_map', []);
+            if (!empty($checklistMap) && is_array($checklistMap)) {
+                foreach ($checklistMap as $field => $checklistId) {
+                    $statusVal = request()->input($field);
+                    $keteranganVal = request()->input('keterangan_' . $field);
+
+                    if ($statusVal !== null) {
+                        MtcChecklistResult::create([
+                            'mtc_main_id'  => $main->id,
+                            'checklist_id' => $checklistId,
+                            'status'       => $statusVal == 1 ? 'OK' : 'NG',
+                            'keterangan'   => $keteranganVal,
+                            'created_by'   => $userId,
+                        ]);
+                    }
+                }
+            }
+
             foreach ($materials->materials ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid'        => $item['mid'] ?? null,
-                    'deskripsi'  => $item['desc'] ?? null,
+                    'deskripsi'  => $item['desc'] ?? ($item['deskripsi'] ?? null),
                     'qty'        => $item['qty'] ?? 0,
+                    'uom'        => $uom,
+                    'created_by' => $userId,
+                ]);
+            }
+
+            foreach ($replacements->replacements ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
+                MtcPenggantianMaterialModel::create([
+                    'mtc_main_id' => $main->id,
+                    'mid'        => $item['mid'] ?? null,
+                    'deskripsi'  => $item['desc'] ?? ($item['deskripsi'] ?? null),
+                    'qty'        => $item['qty'] ?? 0,
+                    'uom'        => $uom,
                     'created_by' => $userId,
                 ]);
             }
@@ -86,43 +143,10 @@ class MtcUtilityController extends Controller
                 ],
             ];
 
-            // $ttdPath = null;
-
-
-            $ttdPaths = [
-                'teknisi' => 'mtc/ttd/ttd_teknisi.jpeg',  // TTD operator/teknisi
-                'staff'   => 'mtc/ttd/ttd_staff.jpeg',     // TTD supervisor
-                'user'    => 'mtc/ttd/ttd_user.jpeg',      // TTD user MT/MTC
-            ];
-
-
-            $approvalFlows = [
-                [
-                    'level' => 1,
-                    'role'  => 'teknisi',
-                    'approver_id' => $userId,
-                    'auto'  => true,
-                ],
-                [
-                    'level' => 2,
-                    'role'  => 'staff',
-                    'approver_id' => 3,
-                    'auto'  => false,
-                ],
-                [
-                    'level' => 3,
-                    'role'  => 'user',
-                    'approver_id' => 4,
-                    'auto'  => false,
-                ],
-            ];
-
             $notificationSent = false;
             foreach ($approvalFlows as $flow) {
-                $isAutoApproved = $flow['auto'];
 
-                // Ambil ttd sesuai role
-                $ttdPath = $isAutoApproved ? ($ttdPaths[$flow['role']] ?? null) : null;
+                $isAutoApproved = $flow['auto'];
 
                 MtcApprovalModel::create([
                     'mtc_main_id' => $main->id,
@@ -130,7 +154,6 @@ class MtcUtilityController extends Controller
                     'role'        => $flow['role'],
                     'approver_id' => $flow['approver_id'],
                     'status'      => $isAutoApproved ? 'approved' : 'pending',
-                    'ttd'         => $ttdPath,
                     'action_at'   => $isAutoApproved ? now() : null,
                     'action_by'   => $isAutoApproved ? $userId : null,
                 ]);
@@ -141,11 +164,10 @@ class MtcUtilityController extends Controller
                         'notifiable_type' => MtcMainModel::class,
                         'notifiable_id'   => $main->id,
                         'title'           => 'Approval Maintenance',
-                        'message'         => 'Maintenance Utility tanggal '.date('d F Y', strtotime($main->tanggal)).' menunggu persetujuan Anda',
+                        'message'         => 'Maintenance Utility tanggal ' . date('d F Y', strtotime($main->tanggal)) . ' menunggu persetujuan Anda',
                         'url'             => route('mtc.approval.index'),
                         'is_read'         => false,
                     ]);
-
                     $notificationSent = true;
                 }
             }
@@ -153,7 +175,7 @@ class MtcUtilityController extends Controller
 
         return response()->json([
             'status'  => true,
-            'message' => 'Data MTC Utility & Kebutuhan Material berhasil disimpan',
+            'message' => 'Data Mtc Utility berhasil disimpan',
         ], 201);
     }
 
@@ -163,8 +185,10 @@ class MtcUtilityController extends Controller
             ->where('jenis_mtc', 'Utility')
             ->with([
                 'createdBy:id,username',
-                'utility.mesin:id,nama_mesin,lokasi',
-                'kebutuhanMaterial'
+                'utility.mesin:id,nama_mesin,lokasi,kode_mesin',
+                'kebutuhanMaterial',
+                'penggantianMaterial',
+                'checklistResults.checklist.group'
             ]);
 
         // 🔍 filter tanggal
@@ -184,7 +208,7 @@ class MtcUtilityController extends Controller
             });
         }
 
-        // 🔥 total sebelum pagination
+        // 🔥 total setelah filter
         $total = $query->count();
 
         // 🔥 ambil data sesuai DataTables
@@ -206,9 +230,10 @@ class MtcUtilityController extends Controller
         MtcMainRequest $mainRequest,
         MtcUtilityRequest $detailRequest,
         MtcKebutuhanMaterialRequest $materials,
+        MtcPenggantianMaterialRequest $replacements,
         $id
     ) {
-        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $id) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $replacements, $id) {
             $userId = Auth::id();
 
             $main = MtcMainModel::findOrFail($id);
@@ -226,7 +251,11 @@ class MtcUtilityController extends Controller
             $existingIds = $main->kebutuhanMaterial()->pluck('id')->toArray();
             $incomingIds = [];
 
-            foreach ($materials['materials'] as $item) {
+            foreach ($materials['materials'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
 
                 if (!empty($item['id'])) {
 
@@ -235,8 +264,9 @@ class MtcUtilityController extends Controller
                     MtcKebutuhanMaterialModel::where('id', $item['id'])
                         ->update([
                             'mid'        => $item['mid'] ?? null,
-                            'deskripsi'  => $item['deskripsi'] ?? null,
+                            'deskripsi'  => $item['deskripsi'] ?? ($item['desc'] ?? null),
                             'qty'        => $item['qty'] ?? 0,
+                            'uom'        => $uom,
                             'updated_by' => $userId,
                         ]);
                 } else {
@@ -244,8 +274,9 @@ class MtcUtilityController extends Controller
                     $new = MtcKebutuhanMaterialModel::create([
                         'mtc_main_id'       => $main->id,
                         'mid'               => $item['mid'] ?? null,
-                        'deskripsi'         => $item['deskripsi'] ?? null,
+                        'deskripsi'         => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty'               => $item['qty'] ?? 0,
+                        'uom'               => $uom,
                         'created_by'        => $userId,
                     ]);
 
@@ -253,9 +284,51 @@ class MtcUtilityController extends Controller
                 }
             }
 
+            // DELETE material yg dihapus
             $toDelete = array_diff($existingIds, $incomingIds);
             if ($toDelete) {
                 MtcKebutuhanMaterialModel::whereIn('id', $toDelete)->delete();
+            }
+
+            $existingReplIds = $main->penggantianMaterial()->pluck('id')->toArray();
+            $incomingReplIds = [];
+
+            foreach ($replacements['replacements'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
+
+                if (!empty($item['id'])) {
+
+                    $incomingReplIds[] = $item['id'];
+
+                    MtcPenggantianMaterialModel::where('id', $item['id'])
+                        ->update([
+                            'mid'        => $item['mid'] ?? null,
+                            'deskripsi'  => $item['deskripsi'] ?? ($item['desc'] ?? null),
+                            'qty'        => $item['qty'] ?? 0,
+                            'uom'        => $uom,
+                            'updated_by' => $userId,
+                        ]);
+                } else {
+
+                    $new = MtcPenggantianMaterialModel::create([
+                        'mtc_main_id'       => $main->id,
+                        'mid'               => $item['mid'] ?? null,
+                        'deskripsi'         => $item['deskripsi'] ?? ($item['desc'] ?? null),
+                        'qty'               => $item['qty'] ?? 0,
+                        'uom'               => $uom,
+                        'created_by'        => $userId,
+                    ]);
+
+                    $incomingReplIds[] = $new->id;
+                }
+            }
+
+            $toDeleteRepl = array_diff($existingReplIds, $incomingReplIds);
+            if ($toDeleteRepl) {
+                MtcPenggantianMaterialModel::whereIn('id', $toDeleteRepl)->delete();
             }
         });
 

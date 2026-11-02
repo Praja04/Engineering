@@ -76,13 +76,14 @@
                                             ' . $labelText . '
                                         </div>
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <input type="radio" class="btn-check radio-checklist" name="' . $fieldName . '" id="' . $fieldName . '_empty" value="" checked style="display: none;">
-
                                             <input type="radio" class="btn-check radio-checklist" name="' . $fieldName . '" id="' . $fieldName . '_ok" value="OK">
                                             <label class="btn btn-outline-success px-3 rounded-start" for="' . $fieldName . '_ok">OK</label>
 
                                             <input type="radio" class="btn-check radio-checklist" name="' . $fieldName . '" id="' . $fieldName . '_nok" value="NOK">
-                                            <label class="btn btn-outline-danger px-3 rounded-end" for="' . $fieldName . '_nok">NOK</label>
+                                            <label class="btn btn-outline-danger px-3" for="' . $fieldName . '_nok">NOK</label>
+
+                                            <input type="radio" class="btn-check radio-checklist" name="' . $fieldName . '" id="' . $fieldName . '_empty" value="" checked>
+                                            <label class="btn btn-outline-secondary px-3 rounded-end" for="' . $fieldName . '_empty">Kosong</label>
                                         </div>
                                     </div>
                                     <input type="text" class="form-control form-control-sm input-description bg-soft-danger text-danger border-danger mt-2" name="keterangan_' . $fieldName . '" id="keterangan_' . $fieldName . '" placeholder="Isi keterangan kerusakan / ketidaksesuaian..." style="display: none;">

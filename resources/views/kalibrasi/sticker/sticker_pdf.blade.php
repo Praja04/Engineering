@@ -153,7 +153,20 @@
                 </tr>
                 <tr>
                     <td class="label">Koreksi</td>
-                    <td class="value">: {{ number_format($kalibrasi->getMaxKoreksi(), 3) }}</td>
+                    <td class="value">: 
+                        @php
+                            $maxKor = $kalibrasi->getMaxKoreksi();
+                            if ($maxKor == (int)$maxKor) {
+                                $formattedKor = number_format($maxKor, 1);
+                            } else {
+                                $formattedKor = rtrim(rtrim(number_format($maxKor, 4), '0'), '.');
+                                if (strpos($formattedKor, '.') === false) {
+                                    $formattedKor .= '.0';
+                                }
+                            }
+                        @endphp
+                        {{ $formattedKor }}
+                    </td>
                 </tr>
             </table>
         </div>

@@ -6,12 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Maintenance\MtcDieselEngineRequest;
 use App\Http\Requests\Maintenance\MtcKebutuhanMaterialRequest;
 use App\Http\Requests\Maintenance\MtcMainRequest;
+use App\Models\Maintenance\MtcMasterMaterialModel;
 use App\Models\Maintenance\MtcApprovalModel;
 use App\Models\Maintenance\MtcDieselEngineModel;
 use App\Models\Maintenance\MtcKebutuhanMaterialModel;
+use App\Models\Maintenance\MtcPenggantianMaterialModel;
+use App\Http\Requests\Maintenance\MtcPenggantianMaterialRequest;
 use App\Models\Maintenance\MtcMainModel;
 use App\Models\Maintenance\MtcMasterMesinModel;
 use App\Models\NotificationsModel;
+use App\Models\Maintenance\MtcMasterChecklistGroup;
+use App\Models\Maintenance\MtcMasterChecklist;
+use App\Models\Maintenance\MtcChecklistResult;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +29,20 @@ class MtcDieselEngineController extends Controller
         $mesin = MtcMasterMesinModel::where('jenis_mtc', 'Diesel Engine')
             ->orderBy('id')->get();
 
-        return view('maintenance.form.diesel_engine', compact('mesin'));
+        $offMachineMap = MtcMasterMesinModel::getCurrentlyOffMachineMap('Diesel Engine');
+        foreach ($mesin as $item) {
+            $item->is_currently_off = isset($offMachineMap[$item->id]);
+        }
+
+        $checklistGroups = MtcMasterChecklistGroup::where('jenis_mtc', 'Diesel Engine')
+            ->where('is_active', true)
+            ->with(['activeChecklists' => function ($q) {
+                $q->orderBy('urutan');
+            }])
+            ->orderBy('urutan')
+            ->get();
+
+        return view('maintenance.form.diesel_engine', compact('mesin', 'checklistGroups'));
     }
 
     public function viewData()
@@ -37,9 +56,10 @@ class MtcDieselEngineController extends Controller
     public function store(
         MtcMainRequest $mainRequest,
         MtcDieselEngineRequest $detailRequest,
-        MtcKebutuhanMaterialRequest $materials
+        MtcKebutuhanMaterialRequest $materials,
+        MtcPenggantianMaterialRequest $replacements
     ) {
-        DB::transaction(function () use ($mainRequest, $detailRequest, $materials) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $replacements) {
 
             $data = $detailRequest->validated();
 
@@ -58,12 +78,61 @@ class MtcDieselEngineController extends Controller
                 'mtc_main_id' => $main->id,
             ]);
 
+            // Simpan Checklist Dinamis
+            $checklistMaps = request()->input('checklist_map', []);
+            if (!empty($checklistMaps)) {
+                foreach ($checklistMaps as $fieldName => $checklistId) {
+                    $val = request()->input($fieldName);
+                    $ket = request()->input('keterangan_' . $fieldName);
+
+                    if ($val !== null && $val !== '') {
+                        $chk = MtcMasterChecklist::find($checklistId);
+                        $statusVal = null;
+                        $nilaiVal = null;
+
+                        if ($chk && $chk->tipe_input === 'boolean_ok_ng') {
+                            $statusVal = ((string)$val === '1' || $val === 1 || $val === 'ok') ? 'ok' : 'ng';
+                        } else {
+                            $nilaiVal = (string)$val;
+                        }
+
+                        MtcChecklistResult::create([
+                            'mtc_main_id'  => $main->id,
+                            'checklist_id' => $checklistId,
+                            'status'       => $statusVal,
+                            'nilai'        => $nilaiVal,
+                            'keterangan'   => $ket,
+                        ]);
+                    }
+                }
+            }
+
             foreach ($materials->materials ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
                 MtcKebutuhanMaterialModel::create([
                     'mtc_main_id' => $main->id,
                     'mid' => $item['mid'] ?? null,
-                    'deskripsi' => $item['desc'] ?? null,
+                    'deskripsi' => $item['desc'] ?? ($item['deskripsi'] ?? null),
                     'qty' => $item['qty'] ?? 0,
+                    'uom' => $uom,
+                    'created_by' => $userId,
+                ]);
+            }
+
+            foreach ($replacements->replacements ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
+                MtcPenggantianMaterialModel::create([
+                    'mtc_main_id' => $main->id,
+                    'mid' => $item['mid'] ?? null,
+                    'deskripsi' => $item['desc'] ?? ($item['deskripsi'] ?? null),
+                    'qty' => $item['qty'] ?? 0,
+                    'uom' => $uom,
                     'created_by' => $userId,
                 ]);
             }
@@ -139,8 +208,10 @@ class MtcDieselEngineController extends Controller
             ->where('jenis_mtc', 'Diesel Engine')
             ->with([
                 'createdBy:id,username',
-                'dieselEngine.mesin:id,nama_mesin,lokasi',
+                'dieselEngine.mesin:id,nama_mesin,lokasi,kode_mesin',
                 'kebutuhanMaterial',
+                'penggantianMaterial',
+                'checklistResults.checklist.group'
             ]);
 
         // 🔍 filter tanggal
@@ -182,9 +253,10 @@ class MtcDieselEngineController extends Controller
         MtcMainRequest $mainRequest,
         MtcDieselEngineRequest $detailRequest,
         MtcKebutuhanMaterialRequest $materials,
+        MtcPenggantianMaterialRequest $replacements,
         $id
     ) {
-        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $id) {
+        DB::transaction(function () use ($mainRequest, $detailRequest, $materials, $replacements, $id) {
 
             $userId = Auth::id();
 
@@ -203,7 +275,11 @@ class MtcDieselEngineController extends Controller
             $existingIds = $main->kebutuhanMaterial()->pluck('id')->toArray();
             $incomingIds = [];
 
-            foreach ($materials['materials'] as $item) {
+            foreach ($materials['materials'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
 
                 if (! empty($item['id'])) {
 
@@ -212,8 +288,9 @@ class MtcDieselEngineController extends Controller
                     MtcKebutuhanMaterialModel::where('id', $item['id'])
                         ->update([
                             'mid' => $item['mid'] ?? null,
-                            'deskripsi' => $item['deskripsi'] ?? null,
+                            'deskripsi' => $item['deskripsi'] ?? ($item['desc'] ?? null),
                             'qty' => $item['qty'] ?? 0,
+                            'uom' => $uom,
                             'updated_by' => $userId,
                         ]);
                 } else {
@@ -221,8 +298,9 @@ class MtcDieselEngineController extends Controller
                     $new = MtcKebutuhanMaterialModel::create([
                         'mtc_main_id' => $main->id,
                         'mid' => $item['mid'] ?? null,
-                        'deskripsi' => $item['deskripsi'] ?? null,
+                        'deskripsi' => $item['deskripsi'] ?? ($item['desc'] ?? null),
                         'qty' => $item['qty'] ?? 0,
+                        'uom' => $uom,
                         'created_by' => $userId,
                     ]);
 
@@ -234,6 +312,47 @@ class MtcDieselEngineController extends Controller
             $toDelete = array_diff($existingIds, $incomingIds);
             if ($toDelete) {
                 MtcKebutuhanMaterialModel::whereIn('id', $toDelete)->delete();
+            }
+
+            $existingReplIds = $main->penggantianMaterial()->pluck('id')->toArray();
+            $incomingReplIds = [];
+
+            foreach ($replacements['replacements'] ?? [] as $item) {
+                $uom = $item['uom'] ?? null;
+                if (!$uom && !empty($item['mid'])) {
+                    $uom = MtcMasterMaterialModel::where('mid', $item['mid'])->value('uom');
+                }
+
+                if (! empty($item['id'])) {
+
+                    $incomingReplIds[] = $item['id'];
+
+                    MtcPenggantianMaterialModel::where('id', $item['id'])
+                        ->update([
+                            'mid' => $item['mid'] ?? null,
+                            'deskripsi' => $item['deskripsi'] ?? ($item['desc'] ?? null),
+                            'qty' => $item['qty'] ?? 0,
+                            'uom' => $uom,
+                            'updated_by' => $userId,
+                        ]);
+                } else {
+
+                    $new = MtcPenggantianMaterialModel::create([
+                        'mtc_main_id' => $main->id,
+                        'mid' => $item['mid'] ?? null,
+                        'deskripsi' => $item['deskripsi'] ?? ($item['desc'] ?? null),
+                        'qty' => $item['qty'] ?? 0,
+                        'uom' => $uom,
+                        'created_by' => $userId,
+                    ]);
+
+                    $incomingReplIds[] = $new->id;
+                }
+            }
+
+            $toDeleteRepl = array_diff($existingReplIds, $incomingReplIds);
+            if ($toDeleteRepl) {
+                MtcPenggantianMaterialModel::whereIn('id', $toDeleteRepl)->delete();
             }
         });
 

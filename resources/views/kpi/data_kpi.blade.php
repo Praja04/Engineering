@@ -85,7 +85,8 @@
                                     <th>Tgl Akhir</th>
                                     <th>Finish Goods (Ton)</th>
                                     <th>Kecap Matang (Ton)</th>
-                                    {{-- <th>Invoice Listrik</th> --}}
+                                    <th>Listrik PRD (Kwh)</th>
+                                    <th>Listrik BAS (Kwh)</th>
                                     <th>Steam</th>
                                     <th>Batubara</th>
                                     <th>Aksi</th>
@@ -109,6 +110,7 @@
                                     <th>Listrik BAS (Kwh)</th>
                                     <th>Steam</th>
                                     <th>Batubara</th>
+                                    <th>Utility Cost</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -170,11 +172,11 @@
                         <label for="kecap_matang" class="form-label">Kecap Matang (Ton)</label>
                         <input type="number" id="kecap_matang" class="form-control" step="0.01" min="0" required>
                     </div>
-                    <div class="mb-3 monthly-only">
+                    <div class="mb-3">
                         <label for="listrik_prd" class="form-label">Listrik PRD</label>
                         <input type="number" id="listrik_prd" class="form-control" step="0.01" min="0">
                     </div>
-                    <div class="mb-3 monthly-only">
+                    <div class="mb-3">
                         <label for="listrik_bas" class="form-label">Listrik BAS</label>
                         <input type="number" id="listrik_bas" class="form-control" step="0.01" min="0">
                     </div>
@@ -185,6 +187,10 @@
                     <div class="mb-3">
                         <label for="batubara" class="form-label">Batubara</label>
                         <input type="number" id="batubara" class="form-control" step="0.01" min="0">
+                    </div>
+                    <div class="mb-3 d-none" id="groupMonthlyCostEdit">
+                        <label for="utility_cost" class="form-label">Utility Cost (Rp)</label>
+                        <input type="number" id="utility_cost" class="form-control" step="0.01" min="0" placeholder="Contoh: 150000000">
                     </div>
 
                 </div>
@@ -296,7 +302,7 @@
                 if (response.data.length === 0) {
                     tableBody.append(`
                             <tr>
-                                <td colspan="8" class="text-center py-4">
+                                <td colspan="10" class="text-center py-4">
                                     <div class="d-flex flex-column align-items-center text-muted">
                                         <i class="mdi mdi-database-off mdi-36px mb-2"></i>
                                         <span class="fw-semibold">Tidak ada data ditemukan</span>
@@ -325,10 +331,13 @@
                                 <td>${item.end_date || '-'}</td>
                                 <td>${finishGoods}</td>
                                 <td>${kecapMatang}</td>
+                                <td>${ListrikPrd}</td>
+                                <td>${ListrikBas}</td>
                                 <td>${steam}</td>
                                 <td>${batubara}</td>
                             `;
                     } else {
+                        const utilityCost = item.utility_cost ? ('Rp ' + Number(item.utility_cost).toLocaleString('id-ID')) : '-';
                         row += `
                                 <td>${item.month || '-'}</td>
                                 <td>${finishGoods}</td>
@@ -337,6 +346,7 @@
                                 <td>${ListrikBas}</td>
                                 <td>${steam}</td>
                                 <td>${batubara}</td>
+                                <td>${utilityCost}</td>
                             `;
                     }
 
@@ -444,6 +454,7 @@
             // MONTHLY
             if (periode === 'monthly') {
                 payload.month = $('#editMonth').val();
+                payload.utility_cost = $('#utility_cost').val();
             }
 
             $.ajax({
@@ -491,7 +502,7 @@
         const periodeTipe = $('#periodeTipe');
         const groupWeeklyEdit = $('#groupWeeklyEdit');
         const groupMonthlyEdit = $('#groupMonthlyEdit');
-        const monthlyOnlyFields = $('.monthly-only');
+        const groupMonthlyCostEdit = $('#groupMonthlyCostEdit');
         const ListrikPrd = $('#listrik_prd');
         const ListrikBas = $('#listrik_bas');
 
@@ -502,16 +513,15 @@
             // Reset dulu
             groupWeeklyEdit.addClass('d-none');
             groupMonthlyEdit.addClass('d-none');
-            monthlyOnlyFields.addClass('d-none');
+            groupMonthlyCostEdit.addClass('d-none');
             ListrikPrd.prop('required', false);
+            ListrikBas.prop('required', false);
 
             if (tipe === 'weekly') {
                 groupWeeklyEdit.removeClass('d-none');
             } else if (tipe === 'monthly') {
                 groupMonthlyEdit.removeClass('d-none');
-                monthlyOnlyFields.removeClass('d-none');
-                ListrikPrd.prop('required', true); // wajib hanya di monthly
-                ListrikBas.prop('required', true); // wajib hanya di monthly
+                groupMonthlyCostEdit.removeClass('d-none');
             }
         }
 
@@ -543,6 +553,7 @@
                     $('#listrik_bas').val(formatNumber(data.listrik_bas || 0));
                     $('#steam').val(formatNumber(data.steam || 0));
                     $('#batubara').val(formatNumber(data.batubara || 0));
+                    $('#utility_cost').val(data.utility_cost ? formatNumber(data.utility_cost) : '');
 
                     $('#modalKpi').modal('show');
 

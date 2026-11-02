@@ -11,6 +11,7 @@ class MtcSipilRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'checklist_map' => ['nullable', 'array'],
             'plumbing' => ['nullable', 'boolean'],
             'plafon' => ['nullable', 'boolean'],
             'lantai' => ['nullable', 'boolean'],
@@ -36,10 +37,22 @@ class MtcSipilRequest extends FormRequest
             ];
 
             $hasAnyChecked = false;
-            foreach ($checklistFields as $field) {
-                if ($this->boolean($field)) {
-                    $hasAnyChecked = true;
-                    break;
+
+            if ($this->has('checklist_map') && is_array($this->input('checklist_map'))) {
+                foreach ($this->input('checklist_map') as $field => $id) {
+                    if ($this->has($field) && $this->input($field) !== null && $this->input($field) !== '') {
+                        $hasAnyChecked = true;
+                        break;
+                    }
+                }
+            }
+
+            if (! $hasAnyChecked) {
+                foreach ($checklistFields as $field) {
+                    if ($this->has($field) && $this->input($field) !== null && $this->input($field) !== '') {
+                        $hasAnyChecked = true;
+                        break;
+                    }
                 }
             }
 

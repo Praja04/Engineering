@@ -24,6 +24,7 @@ class MtcRefrigerasiRequest extends FormRequest
     {
         return [
             'mesin_id' => ['required', 'exists:mtc_master_mesin,id'],
+            'checklist_map' => ['nullable', 'array'],
 
             // ======================
             // Unit Indoor
@@ -101,16 +102,20 @@ class MtcRefrigerasiRequest extends FormRequest
                 'check_flow_return',
             ];
 
-            // minimal ada 1 yang bernilai true / 1 / "on" (atau terisi numeric)
             $hasAnyChecked = false;
-            foreach ($checklistFields as $field) {
-                if (in_array($field, ['check_suhu_supply', 'check_suhu_return', 'check_flow_supply', 'check_flow_return'])) {
-                    if ($this->input($field) !== null && $this->input($field) !== '') {
+
+            if ($this->has('checklist_map') && is_array($this->input('checklist_map'))) {
+                foreach ($this->input('checklist_map') as $field => $id) {
+                    if ($this->has($field) && $this->input($field) !== null && $this->input($field) !== '') {
                         $hasAnyChecked = true;
                         break;
                     }
-                } else {
-                    if ($this->boolean($field)) { // true kalau field ada & truthy
+                }
+            }
+
+            if (! $hasAnyChecked) {
+                foreach ($checklistFields as $field) {
+                    if ($this->has($field) && $this->input($field) !== null && $this->input($field) !== '') {
                         $hasAnyChecked = true;
                         break;
                     }

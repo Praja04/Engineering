@@ -2,7 +2,7 @@
     $jabatan = Auth::user()->jabatan;
     $bagian = Auth::user()->bagian;
 
-    $isUtility = request()->is('utility/form') || request()->is('utility/data') || request()->is('utility/approval');
+    $isUtility = request()->is('utility/form') || request()->is('utility/data') || request()->is('utility/approval') || request()->is('utility/master*');
 
     $isEsp =
         request()->is('utility/esp-operational-report*') ||
@@ -24,6 +24,7 @@
     $isAgendaCoolingTower = request()->is('utility/agenda-cooling-tower*');
     $isAgendaCompressor = request()->is('utility/agenda-compressor*');
     $isAnalisisUtility = request()->is('utility/analisis-utility*');
+    $isHistoryCard = request()->is('utility/history-card*');
 
     $isOperasional =
         $isEsp ||
@@ -40,6 +41,7 @@
         $isAgendaCoolingTower ||
         $isAgendaCompressor ||
         $isAnalisisUtility ||
+        $isHistoryCard ||
         $isAhu ||
         $isMdp ||
         $isBoilerLog;
@@ -80,6 +82,13 @@
                 </li>
 
                 @if ($jabatan != 'operator')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('utility/master*') ? 'active' : '' }}"
+                            href="{{ url('utility/master') }}">
+                            <i class="mdi mdi-database-cog-outline"></i>
+                            <span>Master Utility</span>
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('utility/approval') ? 'active' : '' }}"
                             href="{{ url('utility/approval') }}">
@@ -735,6 +744,34 @@
                                     </a>
                                 </li>
                             @endif
+
+                        </ul>
+                    </div>
+                </li>
+
+                {{-- History Card --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ $isHistoryCard ? '' : 'collapsed' }}" href="#historyCardMenu"
+                        data-bs-toggle="collapse" aria-expanded="{{ $isHistoryCard ? 'true' : 'false' }}">
+                        <i class="bx bx-git-commit fs-12"></i><span>History Card</span>
+                    </a>
+
+                    <div class="collapse menu-dropdown {{ $isHistoryCard ? 'show' : '' }}" id="historyCardMenu">
+                        <ul class="nav nav-sm flex-column">
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/history-card') ? 'active' : '' }}"
+                                    href="{{ url('utility/history-card') }}">
+                                    Form History Card
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->is('utility/history-card/data') ? 'active' : '' }}"
+                                    href="{{ url('utility/history-card/data') }}">
+                                    Data History Card
+                                </a>
+                            </li>
 
                         </ul>
                     </div>

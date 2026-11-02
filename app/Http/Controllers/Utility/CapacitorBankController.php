@@ -405,7 +405,7 @@ class CapacitorBankController extends Controller
 
         for ($day = 1; $day <= 31; $day++) {
             $excelRow = $day + 6;   // hari 1 → row 7, dst.
-            $range    = "A{$excelRow}:R{$excelRow}";
+            $range    = "A{$excelRow}:Q{$excelRow}";
 
             $sheet->getStyle($range)->applyFromArray($borderStyle);
             $sheet->getStyle($range)->applyFromArray($centerAlign);
@@ -432,11 +432,11 @@ class CapacitorBankController extends Controller
                 $sheet->setCellValue("N{$excelRow}", $r->cap_c_i2);
                 $sheet->setCellValue("O{$excelRow}", $r->cap_c_i3);
 
-                $sheet->setCellValue("P{$excelRow}", $r->suhu_ruang);
+                // $sheet->setCellValue("P{$excelRow}", $r->suhu_ruang);
 
                 if ($approval) {
-                    $sheet->setCellValue("Q{$excelRow}", $approval->operator?->username ?? '-');
-                    $sheet->setCellValue("R{$excelRow}", $approval->foreman?->username ?? '-');
+                    $sheet->setCellValue("P{$excelRow}", $approval->operator?->username ?? '-');
+                    $sheet->setCellValue("Q{$excelRow}", $approval->foreman?->username ?? '-');
                 }
             }
         }
@@ -451,9 +451,9 @@ class CapacitorBankController extends Controller
         if ($formCode) {
             $sheet->setCellValue('O46', $formCode);
             $sheet->setCellValue('O38', null);
-            $sheet->unmergeCells('O38:R38');
-            $sheet->mergeCells('O46:R46');
-            $sheet->getStyle('O46:R46')->applyFromArray([
+            $sheet->unmergeCells('O38:Q38');
+            $sheet->mergeCells('O46:Q46');
+            $sheet->getStyle('O46:Q46')->applyFromArray([
                 'font' => [
                     'name' => 'Calibri',
                     'size' => 10,
@@ -515,7 +515,7 @@ class CapacitorBankController extends Controller
             ],
             [
                 'colStart'  => 'M',
-                'colEnd'    => 'R',
+                'colEnd'    => 'Q',
                 'label'     => 'Supervisor',
                 'ttdFile'   => $basePath,
                 'name'      => $getName($approval->supervisor),

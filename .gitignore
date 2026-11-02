@@ -18,3 +18,15 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+*.sqlite
+*.sqlite-journal
+storage/logs/*
+!storage/logs/.gitkeep
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+__pycache__/
+*.pyc
+/Dockerfile
+/Dockerfile V2
+/docker-compose.yml

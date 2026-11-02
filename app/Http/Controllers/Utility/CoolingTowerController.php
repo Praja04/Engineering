@@ -76,16 +76,16 @@ class CoolingTowerController extends Controller
             );
 
             // Validasi status approval dan kunci bulan
-            if (in_array($main->status, ['approved_foreman', 'approved_supervisor'])) {
-                $currentMonth = now()->month;
-                $currentYear = now()->year;
-                if ($month !== $currentMonth || $year !== $currentYear) {
-                    return response()->json([
-                        'status' => 422,
-                        'message' => 'Laporan untuk bulan lalu sudah disetujui, data tidak dapat ditambah.'
-                    ], 422);
-                }
-            }
+            // if (in_array($main->status, ['approved_foreman', 'approved_supervisor'])) {
+            //     $currentMonth = now()->month;
+            //     $currentYear = now()->year;
+            //     if ($month !== $currentMonth || $year !== $currentYear) {
+            //         return response()->json([
+            //             'status' => 422,
+            //             'message' => 'Laporan untuk bulan lalu sudah disetujui, data tidak dapat ditambah.'
+            //         ], 422);
+            //     }
+            // }
 
             if (empty($main->operator_id)) {
                 $main->update(['operator_id' => Auth::id()]);
@@ -147,18 +147,18 @@ class CoolingTowerController extends Controller
             }
 
             // Validasi status approval dan kunci bulan
-            if ($main && in_array($main->status, ['approved_foreman', 'approved_supervisor'])) {
-                $inputMonth = Carbon::parse($validated['tanggal'])->month;
-                $inputYear = Carbon::parse($validated['tanggal'])->year;
-                $currentMonth = now()->month;
-                $currentYear = now()->year;
-                if ($inputMonth !== $currentMonth || $inputYear !== $currentYear) {
-                    return response()->json([
-                        'status' => 422,
-                        'message' => 'Laporan untuk bulan lalu sudah disetujui, data tidak dapat diubah.'
-                    ], 422);
-                }
-            }
+            // if ($main && in_array($main->status, ['approved_foreman', 'approved_supervisor'])) {
+            //     $inputMonth = Carbon::parse($validated['tanggal'])->month;
+            //     $inputYear = Carbon::parse($validated['tanggal'])->year;
+            //     $currentMonth = now()->month;
+            //     $currentYear = now()->year;
+            //     if ($inputMonth !== $currentMonth || $inputYear !== $currentYear) {
+            //         return response()->json([
+            //             'status' => 422,
+            //             'message' => 'Laporan untuk bulan lalu sudah disetujui, data tidak dapat diubah.'
+            //         ], 422);
+            //     }
+            // }
 
             // flowrate langsung di-update di details row
             $detail->update([
@@ -540,18 +540,18 @@ class CoolingTowerController extends Controller
         $main = $data->coolingTower;
 
         // Validasi status approval dan kunci bulan
-        if ($main && in_array($main->status, ['approved_foreman', 'approved_supervisor'])) {
-            $inputMonth = Carbon::parse($data->tanggal)->month;
-            $inputYear = Carbon::parse($data->tanggal)->year;
-            $currentMonth = now()->month;
-            $currentYear = now()->year;
-            if ($inputMonth !== $currentMonth || $inputYear !== $currentYear) {
-                return response()->json([
-                    'status' => 422,
-                    'message' => 'Laporan untuk bulan lalu sudah disetujui, data tidak dapat dihapus.'
-                ], 422);
-            }
-        }
+        // if ($main && in_array($main->status, ['approved_foreman', 'approved_supervisor'])) {
+        //     $inputMonth = Carbon::parse($data->tanggal)->month;
+        //     $inputYear = Carbon::parse($data->tanggal)->year;
+        //     $currentMonth = now()->month;
+        //     $currentYear = now()->year;
+        //     if ($inputMonth !== $currentMonth || $inputYear !== $currentYear) {
+        //         return response()->json([
+        //             'status' => 422,
+        //             'message' => 'Laporan untuk bulan lalu sudah disetujui, data tidak dapat dihapus.'
+        //         ], 422);
+        //     }
+        // }
 
         $coolingTowerId = $data->cooling_tower_id;
         $data->delete();

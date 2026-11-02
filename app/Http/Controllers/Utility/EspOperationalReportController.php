@@ -82,6 +82,11 @@ class EspOperationalReportController extends Controller
             ]
         );
 
+        if (empty($data->created_by)) {
+            $data->created_by = auth()->id();
+            $data->save();
+        }
+
         return response()->json([
             'message' => 'Data berhasil disimpan',
             'data'    => $data,
@@ -95,7 +100,7 @@ class EspOperationalReportController extends Controller
 
         $tanggalBerikut = Carbon::parse($tanggal)->addDay()->format('Y-m-d');
 
-        $query = EspOperationalReport::whereIn('tanggal_laporan', [$tanggal, $tanggalBerikut]);
+        $query = EspOperationalReport::with('createdBy')->whereIn('tanggal_laporan', [$tanggal, $tanggalBerikut]);
 
         if ($request->filled('grup')) {
             $query->where('grup', $request->grup);
@@ -114,6 +119,7 @@ class EspOperationalReportController extends Controller
                 'tegangan_primer'   => $row?->tegangan_primer,
                 'tegangan_sekunder' => $row?->tegangan_sekunder,
                 'suhu_thermal'      => $row?->suhu_thermal,
+                'created_by'        => $row?->createdBy?->username,
             ];
         }
 

@@ -54,13 +54,41 @@
                                     <div class="vr mx-1" style="height:36px;"></div>
                                 </div>
 
-                                {{-- Filter Tanggal --}}
-                                <div class="col-auto">
+                                {{-- Filter Tanggal (Operational & Shift) --}}
+                                <div class="col-auto filter-tanggal-single-wrapper">
                                     <label class="form-label mb-0 me-2 fs-13 text-muted">Tanggal</label>
                                 </div>
-                                <div class="col-auto">
+                                <div class="col-auto filter-tanggal-single-wrapper">
                                     <input type="date" class="form-control form-control-sm" id="filter-tanggal"
                                         value="{{ date('Y-m-d') }}">
+                                </div>
+
+                                {{-- Filter Range Tanggal (Coal Handover) --}}
+                                <div class="col-auto filter-tanggal-range-wrapper" style="display:none;">
+                                    <label class="form-label mb-0 me-2 fs-13 text-muted">Range Tanggal</label>
+                                </div>
+                                <div class="col-auto filter-tanggal-range-wrapper" style="display:none;">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <input type="date" class="form-control form-control-sm" id="filter-start-date"
+                                            value="{{ date('Y-m-d', strtotime('-14 days')) }}">
+                                        <span class="text-muted fs-12">s/d</span>
+                                        <input type="date" class="form-control form-control-sm" id="filter-end-date"
+                                            value="{{ date('Y-m-d') }}">
+                                    </div>
+                                </div>
+
+                                {{-- Filter Range Tanggal (Shift Report) --}}
+                                <div class="col-auto filter-tanggal-range-shift-wrapper" style="display:none;">
+                                    <label class="form-label mb-0 me-2 fs-13 text-muted">Range Tanggal</label>
+                                </div>
+                                <div class="col-auto filter-tanggal-range-shift-wrapper" style="display:none;">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <input type="date" class="form-control form-control-sm"
+                                            id="filter-start-date-shift" value="{{ date('Y-m-d', strtotime('-30 days')) }}">
+                                        <span class="text-muted fs-12">s/d</span>
+                                        <input type="date" class="form-control form-control-sm"
+                                            id="filter-end-date-shift" value="{{ date('Y-m-d') }}">
+                                    </div>
                                 </div>
 
                                 {{-- Filter Grup (hanya operational) --}}
@@ -114,12 +142,13 @@
                                                 <th>Teg. Primer (V)</th>
                                                 <th>Teg. Sekunder (kV)</th>
                                                 <th>Suhu Thermal (°C)</th>
+                                                <th>Dibuat Oleh</th>
                                                 <th>Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tbody-operational">
                                             <tr>
-                                                <td colspan="8" class="py-4 text-muted">Memuat data...</td>
+                                                <td colspan="9" class="py-4 text-muted">Memuat data...</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -151,6 +180,7 @@
                                                 <th>Steam (ton)</th>
                                                 <th>Batubara (ton)</th>
                                                 <th>Efisiensi (%)</th>
+                                                <th>Kondensat (%)</th>
                                                 <th>RH Awal</th>
                                                 <th>RH Akhir</th>
                                                 <th>Status</th>
@@ -257,16 +287,13 @@
                                 <th class="text-muted">Suhu Thermal</th>
                                 <td id="d-op-suhu">—</td>
                             </tr>
+                            <tr>
+                                <th class="text-muted">Dibuat Oleh</th>
+                                <td id="d-op-created-by">—</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-                @if (auth()->user()->jabatan !== 'operator')
-                    <div class="modal-footer border-top">
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn-edit-operational">
-                            <i class="ri-edit-line me-1"></i>Edit Data
-                        </button>
-                    </div>
-                @endif
             </div>
         </div>
     </div>
@@ -413,13 +440,6 @@
                         </div>
                     </div>
                 </div>
-                @if (auth()->user()->jabatan !== 'operator')
-                    <div class="modal-footer border-top">
-                        <button type="button" class="btn btn-outline-danger btn-sm" id="btn-edit-shift">
-                            <i class="ri-edit-line me-1"></i>Edit Data
-                        </button>
-                    </div>
-                @endif
             </div>
         </div>
     </div>
@@ -469,13 +489,7 @@
                         </div>
                     </div>
                 </div>
-                @if (auth()->user()->jabatan !== 'operator')
-                    <div class="modal-footer border-top">
-                        <button type="button" class="btn btn-outline-warning btn-sm text-dark" id="btn-edit-coal">
-                            <i class="ri-edit-line me-1"></i>Edit Data
-                        </button>
-                    </div>
-                @endif
+
             </div>
         </div>
     </div>
@@ -659,6 +673,9 @@
                 $('#section-tbl-shift').hide();
                 $('#section-tbl-coal').hide();
                 $('#filter-grup-wrapper').show();
+                $('.filter-tanggal-single-wrapper').show();
+                $('.filter-tanggal-range-wrapper').hide();
+                $('.filter-tanggal-range-shift-wrapper').hide();
                 $('#btn-export').show();
                 loadOperational();
             });
@@ -672,6 +689,9 @@
                 $('#section-tbl-shift').show();
                 $('#section-tbl-coal').hide();
                 $('#filter-grup-wrapper').hide();
+                $('.filter-tanggal-single-wrapper').hide();
+                $('.filter-tanggal-range-wrapper').hide();
+                $('.filter-tanggal-range-shift-wrapper').show();
                 $('#btn-export').hide();
                 loadShift();
             });
@@ -685,6 +705,9 @@
                 $('#section-tbl-shift').hide();
                 $('#section-tbl-coal').show();
                 $('#filter-grup-wrapper').hide();
+                $('.filter-tanggal-single-wrapper').hide();
+                $('.filter-tanggal-range-wrapper').show();
+                $('.filter-tanggal-range-shift-wrapper').hide();
                 $('#btn-export').hide();
                 loadCoal();
             });
@@ -692,8 +715,12 @@
             // ── FILTER & REFRESH ─────────────────────────────────────────────
             $('#filter-tanggal, #filter-grup').on('change', function() {
                 if (activeTab === 'operational') loadOperational();
-                else if (activeTab === 'shift') loadShift();
-                else if (activeTab === 'coal') loadCoal();
+            });
+            $('#filter-start-date-shift, #filter-end-date-shift').on('change', function() {
+                if (activeTab === 'shift') loadShift();
+            });
+            $('#filter-start-date, #filter-end-date').on('change', function() {
+                if (activeTab === 'coal') loadCoal();
             });
             $('#btn-refresh').on('click', function() {
                 if (activeTab === 'operational') loadOperational();
@@ -722,7 +749,7 @@
                 const tanggal = $('#filter-tanggal').val();
                 const grup = $('#filter-grup').val();
                 $('#tbody-operational').html(
-                    '<tr><td colspan="8" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
+                    '<tr><td colspan="9" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
                 );
                 $.get('{{ route('esp-operational-report.json') }}', {
                     tanggal,
@@ -733,26 +760,36 @@
                     let html = '';
                     data.forEach(function(r) {
                         const hasData = r.arus_primer !== null;
-                        html += `<tr class="${hasData ? '' : 'text-muted opacity-50'}" style="cursor:${hasData?'pointer':'default'};"
-                            data-row='${JSON.stringify(r)}'>
-                    <td class="fw-medium">${r.jam}</td>
-                    <td>${r.grup ? '<span class="badge bg-primary-subtle text-primary">'+r.grup+'</span>' : '—'}</td>
-                    <td>${formatDecimalVal(r.arus_primer) || '—'}</td>
-                    <td>${formatDecimalVal(r.arus_sekunder) || '—'}</td>
-                    <td>${formatDecimalVal(r.tegangan_primer) || '—'}</td>
-                    <td>${formatDecimalVal(r.tegangan_sekunder) || '—'}</td>
-                    <td>${formatDecimalVal(r.suhu_thermal) || '—'}</td>
-                    <td>
-                        ${hasData
-                            ? `<button class="btn btn-xs btn-outline-primary btn-detail-op py-0 px-2">
-                                                        <i class="ri-eye-line"></i></button>`
-                            : '—'
-                        }
-                    </td>
-                </tr>`;
+                        html += `
+                            <tr class="${hasData ? '' : 'text-muted opacity-50'}" style="cursor:${hasData?'pointer':'default'};"
+                                data-row='${JSON.stringify(r)}'>
+                                <td class="fw-medium">${r.jam}</td>
+                                <td>${r.grup ? '<span class="badge bg-primary-subtle text-primary">'+r.grup+'</span>' : '—'}</td>
+                                <td>${formatDecimalVal(r.arus_primer) || '—'}</td>
+                                <td>${formatDecimalVal(r.arus_sekunder) || '—'}</td>
+                                <td>${formatDecimalVal(r.tegangan_primer) || '—'}</td>
+                                <td>${formatDecimalVal(r.tegangan_sekunder) || '—'}</td>
+                                <td>${formatDecimalVal(r.suhu_thermal) || '—'}</td>
+                                <td>
+                                    ${r.created_by ? `<span class="badge bg-light text-dark"><i class="ri-user-line me-1"></i>${r.created_by}</span>` : '—'}
+                                </td>
+                                <td>
+                                    ${hasData
+                                        ? `<button class="btn btn-xs btn-outline-primary btn-detail-op py-0 px-2" title="Detail">
+                                                        <i class="ri-eye-line"></i>
+                                                    </button>
+                                                    @if (auth()->user()->jabatan !== 'operator')
+                                                        <button type="button" class="btn btn-xs btn-outline-primary btn-edit-op-row py-0 px-2" title="Edit">
+                                                            <i class="ri-edit-line"></i>
+                                                        </button>
+                                                    @endif`
+                                        : '—'
+                                    }
+                                </td>
+                            </tr>`;
                     });
                     $('#tbody-operational').html(html ||
-                        '<tr><td colspan="8" class="text-center py-4 text-muted">Belum ada data</td></tr>'
+                        '<tr><td colspan="9" class="text-center py-4 text-muted">Belum ada data</td></tr>'
                     );
                 });
             }
@@ -774,12 +811,14 @@
             };
 
             function loadShift() {
-                const tanggal = $('#filter-tanggal').val();
+                const startDate = $('#filter-start-date-shift').val();
+                const endDate = $('#filter-end-date-shift').val();
                 $('#tbody-shift').html(
                     '<tr><td colspan="9" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
                 );
                 $.get('{{ route('esp-shift-report.json') }}', {
-                    tanggal
+                    start_date: startDate,
+                    end_date: endDate
                 }, function(data) {
                     if (!data.length) {
                         $('#tbody-shift').html(
@@ -794,20 +833,26 @@
                             cls: 'bg-secondary text-white'
                         };
                         html += `<tr style="cursor:pointer;" data-row='${JSON.stringify(r)}'>
-                    <td class="fw-medium">${r.tanggal_laporan}</td>
-                    <td>${formatDecimalVal(r.pemakaian_air) || '—'}</td>
-                    <td>${formatDecimalVal(r.pemakaian_steam) || '—'}</td>
-                    <td>${formatDecimalVal(r.pemakaian_batubara) || '—'}</td>
-                    <td>${formatDecimalVal(r.efisiensi_batubara) || '—'}</td>
-                    <td>${formatDecimalVal(r.running_hour_awal) || '—'}</td>
-                    <td>${formatDecimalVal(r.running_hour_akhir) || '—'}</td>
-                    <td><span class="badge ${s.cls}">${s.label}</span></td>
-                    <td>
-                        <button class="btn btn-xs btn-outline-danger btn-detail-shift py-0 px-2">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                    </td>
-                </tr>`;
+                            <td class="fw-medium">${r.tanggal_laporan}</td>
+                            <td>${formatDecimalVal(r.pemakaian_air) || '—'}</td>
+                            <td>${formatDecimalVal(r.pemakaian_steam) || '—'}</td>
+                            <td>${formatDecimalVal(r.pemakaian_batubara) || '—'}</td>
+                            <td>${formatDecimalVal(r.efisiensi_batubara) || '—'}</td>
+                            <td>${formatDecimalVal(r.kondensat) || '—'}</td>
+                            <td>${formatDecimalVal(r.running_hour_awal) || '—'}</td>
+                            <td>${formatDecimalVal(r.running_hour_akhir) || '—'}</td>
+                            <td><span class="badge ${s.cls}">${s.label}</span></td>
+                            <td>
+                                <button class="btn btn-xs btn-outline-danger btn-detail-shift py-0 px-2" title="Detail">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                                @if (auth()->user()->jabatan !== 'operator')
+                                    <button type="button" class="btn btn-xs btn-outline-primary btn-edit-shift-row py-0 px-2" title="Edit">
+                                        <i class="ri-edit-line"></i>
+                                    </button>
+                                @endif
+                            </td>
+                        </tr>`;
                     });
                     $('#tbody-shift').html(html);
                 });
@@ -815,12 +860,14 @@
 
             // ── LOAD COAL ───────────────────────────────────────────────────
             function loadCoal() {
-                const tanggal = $('#filter-tanggal').val();
+                const startDate = $('#filter-start-date').val();
+                const endDate = $('#filter-end-date').val();
                 $('#tbody-coal').html(
                     '<tr><td colspan="7" class="text-center py-4 text-muted"><i class="ri-loader-4-line"></i> Memuat...</td></tr>'
                 );
                 $.get('{{ route('esp-coal-handover.json') }}', {
-                    tanggal
+                    start_date: startDate,
+                    end_date: endDate
                 }, function(data) {
                     if (!data.length) {
                         $('#tbody-coal').html(
@@ -843,9 +890,14 @@
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-xs btn-outline-warning btn-detail-coal py-0 px-2 text-dark">
+                        <button class="btn btn-xs btn-outline-warning btn-detail-coal py-0 px-2 text-dark" title="Detail">
                             <i class="ri-eye-line"></i>
                         </button>
+                        @if (auth()->user()->jabatan !== 'operator')
+                            <button type="button" class="btn btn-xs btn-outline-primary btn-edit-coal-row py-0 px-2" title="Edit">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                        @endif
                     </td>
                 </tr>`;
                     });
@@ -866,25 +918,25 @@
                 $('#d-op-teg-primer').text(formatDecimalDisplay(r.tegangan_primer, 'V'));
                 $('#d-op-teg-sekunder').text(formatDecimalDisplay(r.tegangan_sekunder, 'kV'));
                 $('#d-op-suhu').text(formatDecimalDisplay(r.suhu_thermal, '°C'));
+                $('#d-op-created-by').text(r.created_by ?? '—');
                 new bootstrap.Modal('#modal-operational').show();
             });
 
-            // Buka edit dari detail
-            $('#btn-edit-operational').on('click', function() {
-                const r = currentOpRow;
-                bootstrap.Modal.getInstance('#modal-operational').hide();
-                setTimeout(function() {
-                    $('#edit-op-jam-label').text(r.jam);
-                    $('#edit-op-jam').val(r.jam);
-                    $('#edit-op-tanggal').val($('#filter-tanggal').val());
-                    $('#edit-op-grup').val(r.grup);
-                    $('#edit-op-arus-primer').val(formatDecimalVal(r.arus_primer));
-                    $('#edit-op-arus-sekunder').val(formatDecimalVal(r.arus_sekunder));
-                    $('#edit-op-teg-primer').val(formatDecimalVal(r.tegangan_primer));
-                    $('#edit-op-teg-sekunder').val(formatDecimalVal(r.tegangan_sekunder));
-                    $('#edit-op-suhu').val(formatDecimalVal(r.suhu_thermal));
-                    new bootstrap.Modal('#modal-edit-operational').show();
-                }, 300);
+            // Buka edit operational langsung dari baris tabel
+            $(document).on('click', '.btn-edit-op-row', function(e) {
+                e.stopPropagation();
+                const r = $(this).closest('tr').data('row');
+                currentOpRow = r;
+                $('#edit-op-jam-label').text(r.jam);
+                $('#edit-op-jam').val(r.jam);
+                $('#edit-op-tanggal').val($('#filter-tanggal').val());
+                $('#edit-op-grup').val(r.grup);
+                $('#edit-op-arus-primer').val(formatDecimalVal(r.arus_primer));
+                $('#edit-op-arus-sekunder').val(formatDecimalVal(r.arus_sekunder));
+                $('#edit-op-teg-primer').val(formatDecimalVal(r.tegangan_primer));
+                $('#edit-op-teg-sekunder').val(formatDecimalVal(r.tegangan_sekunder));
+                $('#edit-op-suhu').val(formatDecimalVal(r.suhu_thermal));
+                new bootstrap.Modal('#modal-edit-operational').show();
             });
 
             // Submit edit operational (reuse route store — updateOrCreate)
@@ -982,27 +1034,26 @@
                 new bootstrap.Modal('#modal-shift').show();
             });
 
-            // Buka edit shift
-            $('#btn-edit-shift').on('click', function() {
-                const r = currentShiftRow;
-                bootstrap.Modal.getInstance('#modal-shift').hide();
-                setTimeout(function() {
-                    $('#edit-sh-tgl-label').text(r.tanggal_laporan);
-                    $('#edit-sh-id').val(r.id);
-                    $('#edit-sh-air').val(formatDecimalVal(r.pemakaian_air));
-                    $('#edit-sh-steam').val(formatDecimalVal(r.pemakaian_steam));
-                    $('#edit-sh-batubara').val(formatDecimalVal(r.pemakaian_batubara));
-                    $('#edit-sh-efisiensi').val(formatDecimalVal(r.efisiensi_batubara));
-                    $('#edit-sh-pengisian').val(formatDecimalVal(r.pengisian_batubara));
-                    $('#edit-sh-rh-awal').val(formatDecimalVal(r.running_hour_awal));
-                    $('#edit-sh-rh-akhir').val(formatDecimalVal(r.running_hour_akhir));
-                    $('#edit-sh-ft-awal').val(formatDecimalVal(r.feed_tank_awal));
-                    $('#edit-sh-ft-akhir').val(formatDecimalVal(r.feed_tank_akhir));
-                    $('#edit-sh-scf').val(formatDecimalVal(r.chemical_scf));
-                    $('#edit-sh-srtf').val(formatDecimalVal(r.chemical_srtf));
-                    $('#edit-sh-dosis').val(formatDecimalVal(r.dosis));
-                    new bootstrap.Modal('#modal-edit-shift').show();
-                }, 300);
+            // Buka edit shift langsung dari baris tabel
+            $(document).on('click', '.btn-edit-shift-row', function(e) {
+                e.stopPropagation();
+                const r = $(this).closest('tr').data('row');
+                currentShiftRow = r;
+                $('#edit-sh-tgl-label').text(r.tanggal_laporan);
+                $('#edit-sh-id').val(r.id);
+                $('#edit-sh-air').val(formatDecimalVal(r.pemakaian_air));
+                $('#edit-sh-steam').val(formatDecimalVal(r.pemakaian_steam));
+                $('#edit-sh-batubara').val(formatDecimalVal(r.pemakaian_batubara));
+                $('#edit-sh-efisiensi').val(formatDecimalVal(r.efisiensi_batubara));
+                $('#edit-sh-pengisian').val(formatDecimalVal(r.pengisian_batubara));
+                $('#edit-sh-rh-awal').val(formatDecimalVal(r.running_hour_awal));
+                $('#edit-sh-rh-akhir').val(formatDecimalVal(r.running_hour_akhir));
+                $('#edit-sh-ft-awal').val(formatDecimalVal(r.feed_tank_awal));
+                $('#edit-sh-ft-akhir').val(formatDecimalVal(r.feed_tank_akhir));
+                $('#edit-sh-scf').val(formatDecimalVal(r.chemical_scf));
+                $('#edit-sh-srtf').val(formatDecimalVal(r.chemical_srtf));
+                $('#edit-sh-dosis').val(formatDecimalVal(r.dosis));
+                new bootstrap.Modal('#modal-edit-shift').show();
             });
 
             // Submit edit shift
@@ -1053,19 +1104,18 @@
                 new bootstrap.Modal('#modal-coal').show();
             });
 
-            // Buka edit coal
-            $('#btn-edit-coal').on('click', function() {
-                const r = currentCoalRow;
-                bootstrap.Modal.getInstance('#modal-coal').hide();
-                setTimeout(function() {
-                    $('#edit-coal-tgl-label').text(r.tanggal_laporan);
-                    $('#edit-coal-id').val(r.id);
-                    $('#edit-coal-penyuplai-qty').val(formatDecimalVal(r.penyuplai_qty));
-                    $('#edit-coal-penyuplai-name').val(r.penyuplai_nik_nama);
-                    $('#edit-coal-penerima-qty').val(formatDecimalVal(r.penerima_qty));
-                    $('#edit-coal-penerima-name').val(r.penerima_nik_nama);
-                    new bootstrap.Modal('#modal-edit-coal').show();
-                }, 300);
+            // Buka edit coal langsung dari baris tabel
+            $(document).on('click', '.btn-edit-coal-row', function(e) {
+                e.stopPropagation();
+                const r = $(this).closest('tr').data('row');
+                currentCoalRow = r;
+                $('#edit-coal-tgl-label').text(r.tanggal_laporan);
+                $('#edit-coal-id').val(r.id);
+                $('#edit-coal-penyuplai-qty').val(formatDecimalVal(r.penyuplai_qty));
+                $('#edit-coal-penyuplai-name').val(r.penyuplai_nik_nama);
+                $('#edit-coal-penerima-qty').val(formatDecimalVal(r.penerima_qty));
+                $('#edit-coal-penerima-name').val(r.penerima_nik_nama);
+                new bootstrap.Modal('#modal-edit-coal').show();
             });
 
             // Submit edit coal

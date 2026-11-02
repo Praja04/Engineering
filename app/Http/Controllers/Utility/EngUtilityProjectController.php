@@ -1,0 +1,2055 @@
+<?php
+
+namespace App\Http\Controllers\Utility;
+
+use App\Http\Controllers\Controller;
+use App\Models\Utility\EngUtilityProject;
+use App\Models\Utility\EngUtilityProjectLog;
+use App\Models\Utility\EngUtilityProjectArea;
+use App\Models\Utility\EngUtilityProjectCategory;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+
+class EngUtilityProjectController extends Controller
+{
+    /**
+     * 1. Dashboard Project Utility (Separated as requested, Clean Light Bootstrap Theme)
+     */
+    public function dashboard(Request $request)
+    {
+        // Helper to normalize array / string / comma-separated filter values
+        $normalizeFilter = function ($val) {
+            if (is_array($val)) {
+                $items = $val;
+            } elseif (is_string($val) && strlen(trim($val)) > 0) {
+                $items = explode(',', $val);
+            } else {
+                return [];
+            }
+            return array_values(array_filter(array_map('trim', $items), function ($v) {
+                return $v !== '' && strtolower($v) !== 'all';
+            }));
+        };
+
+        $statusList = $normalizeFilter($request->input('status'));
+        $kategoriList = $normalizeFilter($request->input('kategori'));
+        $areaList = $normalizeFilter($request->input('area'));
+        $priorityList = $normalizeFilter($request->input('priority'));
+        $faseList = $normalizeFilter($request->input('fase'));
+        $yearList = $normalizeFilter($request->input('year'));
+
+        $statusFilter = !empty($statusList) ? (count($statusList) === 1 ? $statusList[0] : implode(',', $statusList)) : 'all';
+        $kategoriFilter = !empty($kategoriList) ? (count($kategoriList) === 1 ? $kategoriList[0] : implode(',', $kategoriList)) : 'all';
+        $areaFilter = !empty($areaList) ? (count($areaList) === 1 ? $areaList[0] : implode(',', $areaList)) : 'all';
+        $priorityFilter = !empty($priorityList) ? (count($priorityList) === 1 ? $priorityList[0] : implode(',', $priorityList)) : 'all';
+        $faseFilter = !empty($faseList) ? (count($faseList) === 1 ? $faseList[0] : implode(',', $faseList)) : 'all';
+        $yearFilter = !empty($yearList) ? (count($yearList) === 1 ? $yearList[0] : implode(',', $yearList)) : 'all';
+
+        $query = EngUtilityProject::query();
+
+        if (!empty($statusList)) {
+            $query->whereIn('status', $statusList);
+        }
+        if (!empty($kategoriList)) {
+            $query->whereIn('kategori', $kategoriList);
+        }
+        if (!empty($areaList)) {
+            $query->whereIn('area', $areaList);
+        }
+        if (!empty($priorityList)) {
+            $query->whereIn('priority', $priorityList);
+        }
+        if (!empty($faseList)) {
+            $query->whereIn('fase', $faseList);
+        }
+        if (!empty($yearList)) {
+            $query->where(function ($q) use ($yearList) {
+                foreach ($yearList as $idx => $yr) {
+                    if ($idx === 0) {
+                        $q->where(function ($sq) use ($yr) {
+                            $sq->whereYear('finish_date', $yr)
+                                ->orWhereYear('start_date', $yr)
+                                ->orWhereYear('created_at', $yr);
+                        });
+                    } else {
+                        $q->orWhere(function ($sq) use ($yr) {
+                            $sq->whereYear('finish_date', $yr)
+                                ->orWhereYear('start_date', $yr)
+                                ->orWhereYear('created_at', $yr);
+                        });
+                    }
+                }
+            });
+        }
+
+        $allProjects = $query->get();
+        $totalProjects = $allProjects->count();
+
+        $selesaiCount = $allProjects->where('status', 'Selesai')->count();
+        $onProgressCount = $allProjects->where('status', 'On Progress')->count();
+        $terlambatCount = $allProjects->where('status', 'Terlambat')->count();
+
+        $selesaiPct = $totalProjects > 0 ? round(($selesaiCount / $totalProjects) * 100, 1) : 0;
+        $onProgressPct = $totalProjects > 0 ? round(($onProgressCount / $totalProjects) * 100, 1) : 0;
+        $terlambatPct = $totalProjects > 0 ? round(($terlambatCount / $totalProjects) * 100, 1) : 0;
+        $avgProgress = $totalProjects > 0 ? round($allProjects->avg('progress'), 0) : 0;
+
+        $uniqueCategories = $allProjects->pluck('kategori')->filter()->unique()->values();
+        $activeCategoryCount = $uniqueCategories->count();
+
+        $kpis = [
+            'total' => $totalProjects,
+            'active_categories' => $activeCategoryCount,
+            'selesai' => $selesaiCount,
+            'selesai_pct' => $selesaiPct,
+            'on_progress' => $onProgressCount,
+            'on_progress_pct' => $onProgressPct,
+            'terlambat' => $terlambatCount,
+            'terlambat_pct' => $terlambatPct,
+            'avg_progress' => $avgProgress,
+        ];
+
+        // Chart 1: Status Summary (Donut)
+        $chartStatusSummary = [
+            'series' => [$selesaiCount, $onProgressCount, $terlambatCount],
+            'labels' => ['Selesai', 'On Progress', 'Terlambat'],
+            'counts' => [
+                'selesai' => $selesaiCount,
+                'on_progress' => $onProgressCount,
+                'terlambat' => $terlambatCount,
+            ],
+            'percentages' => [
+                'selesai' => $selesaiPct,
+                'on_progress' => $onProgressPct,
+                'terlambat' => $terlambatPct,
+            ]
+        ];
+
+        // Chart 1b: Summary Fase (Donut)
+        $fase1Count = $allProjects->filter(fn($p) => empty($p->fase) || $p->fase === 'Fase 1')->count();
+        $fase2Count = $allProjects->where('fase', 'Fase 2')->count();
+        $fase3Count = $allProjects->where('fase', 'Fase 3')->count();
+
+        $fase1Pct = $totalProjects > 0 ? round(($fase1Count / $totalProjects) * 100, 1) : 0;
+        $fase2Pct = $totalProjects > 0 ? round(($fase2Count / $totalProjects) * 100, 1) : 0;
+        $fase3Pct = $totalProjects > 0 ? round(($fase3Count / $totalProjects) * 100, 1) : 0;
+
+        $chartFaseSummary = [
+            'series' => [$fase1Count, $fase2Count, $fase3Count],
+            'labels' => ['Fase 1: Konsep', 'Fase 2: Administrasi', 'Fase 3: Pekerjaan'],
+            'counts' => [
+                'fase1' => $fase1Count,
+                'fase2' => $fase2Count,
+                'fase3' => $fase3Count,
+            ],
+            'percentages' => [
+                'fase1' => $fase1Pct,
+                'fase2' => $fase2Pct,
+                'fase3' => $fase3Pct,
+            ]
+        ];
+
+        // Chart 2: Status by Kategori (Horizontal Stacked Bar)
+        $kategoriGroup = $allProjects->groupBy('kategori')->sortByDesc(function ($group) {
+            return $group->count();
+        });
+
+        $catLabels = [];
+        $catSelesai = [];
+        $catOnProgress = [];
+        $catTerlambat = [];
+
+        foreach ($kategoriGroup as $katName => $items) {
+            $catLabels[] = "{$katName} (" . $items->count() . ")";
+            $catSelesai[] = $items->where('status', 'Selesai')->count();
+            $catOnProgress[] = $items->where('status', 'On Progress')->count();
+            $catTerlambat[] = $items->where('status', 'Terlambat')->count();
+        }
+
+        $chartStatusByKategori = [
+            'categories' => $catLabels,
+            'series' => [
+                ['name' => 'Selesai', 'data' => $catSelesai, 'color' => '#0ab39c'],
+                ['name' => 'On Progress', 'data' => $catOnProgress, 'color' => '#f7b84b'],
+                ['name' => 'Terlambat', 'data' => $catTerlambat, 'color' => '#f06548'],
+            ]
+        ];
+
+        // Chart 3: Status by Area / PIC (Horizontal Stacked Bar)
+        $definedAreas = EngUtilityProjectArea::where('is_active', true)->pluck('nama_area')->toArray();
+        if (empty($definedAreas)) {
+            $definedAreas = ['Boiler', 'Utility', 'WWTP', 'MTC'];
+        }
+
+        $areaLabels = [];
+        $areaSelesai = [];
+        $areaOnProgress = [];
+        $areaTerlambat = [];
+
+        foreach ($definedAreas as $aName) {
+            $aItems = $allProjects->where('area', $aName);
+            $areaLabels[] = "{$aName} (" . $aItems->count() . ")";
+            $areaSelesai[] = $aItems->where('status', 'Selesai')->count();
+            $areaOnProgress[] = $aItems->where('status', 'On Progress')->count();
+            $areaTerlambat[] = $aItems->where('status', 'Terlambat')->count();
+        }
+
+        $chartStatusByArea = [
+            'categories' => $areaLabels,
+            'series' => [
+                ['name' => 'Selesai', 'data' => $areaSelesai, 'color' => '#0ab39c'],
+                ['name' => 'On Progress', 'data' => $areaOnProgress, 'color' => '#f7b84b'],
+                ['name' => 'Terlambat', 'data' => $areaTerlambat, 'color' => '#f06548'],
+            ]
+        ];
+
+        // Priority Projects: Diurutkan secara spesifik berdasarkan PRIORITY (Critical -> High -> Medium -> Low), lalu finish_date / progress
+        $attentionQuery = (clone $query);
+        if (empty($statusList)) {
+            $attentionQuery->where('status', '!=', 'Selesai');
+        }
+
+        $attentionProjects = $attentionQuery
+            ->with(['latestLog'])
+            ->orderByRaw("CASE 
+                WHEN priority = 'Critical' THEN 1 
+                WHEN priority = 'High' THEN 2 
+                WHEN priority = 'Medium' THEN 3 
+                WHEN priority = 'Low' THEN 4 
+                ELSE 5 END ASC")
+            ->orderBy('progress', 'asc')
+            ->take(8)
+            ->get();
+
+        // Fallback latest_note dari log catatan terakhir jika latest_note pada project kosong
+        $attentionProjects->each(function ($prj) {
+            if (empty($prj->latest_note) && $prj->latestLog) {
+                $prj->latest_note = $prj->latestLog->catatan;
+            }
+        });
+
+        // Support AJAX JSON response for dynamic jQuery dashboard loading
+        if ($request->ajax() || $request->wantsJson() || $request->get('format') === 'json') {
+            return response()->json([
+                'success' => true,
+                'kpis' => $kpis,
+                'chartStatusSummary' => $chartStatusSummary,
+                'chartFaseSummary' => $chartFaseSummary,
+                'chartStatusByKategori' => $chartStatusByKategori,
+                'chartStatusByArea' => $chartStatusByArea,
+                'attentionProjects' => $attentionProjects->map(function ($prj) {
+                    return [
+                        'id' => $prj->id,
+                        'nama_project' => $prj->nama_project,
+                        'nomor_project' => $prj->nomor_project,
+                        'area' => $prj->area,
+                        'kategori' => $prj->kategori,
+                        'priority' => $prj->priority ?: 'Medium',
+                        'fase' => $prj->fase ?: 'Fase 1',
+                        'fase_label' => EngUtilityProject::FASE_OPTIONS[$prj->fase] ?? ($prj->fase ?: 'Fase 1: Konsep Project'),
+                        'progress' => (int) $prj->progress,
+                        'status' => $prj->status,
+                        'finish_date' => $prj->finish_date ? Carbon::parse($prj->finish_date)->format('d/m/Y') : ($prj->finish_week ?: '-'),
+                        'latest_note' => !empty($prj->latest_note) ? $prj->latest_note : ($prj->latestLog?->catatan ?? null),
+                    ];
+                })
+            ]);
+        }
+
+        $categoriesList = EngUtilityProjectCategory::where('is_active', true)->orderBy('nama_kategori')->pluck('nama_kategori')->toArray();
+        if (empty($categoriesList)) {
+            $categoriesList = EngUtilityProject::pluck('kategori')->filter()->unique()->values()->toArray();
+        }
+
+        $areasList = EngUtilityProjectArea::where('is_active', true)->orderBy('nama_area')->pluck('nama_area')->toArray();
+        if (empty($areasList)) {
+            $areasList = ['Boiler', 'Utility', 'WWTP', 'MTC'];
+        }
+
+        $faseOptions = EngUtilityProject::FASE_OPTIONS;
+
+        // Available years for filter
+        $yearsList = collect([
+            Carbon::now()->year,
+            Carbon::now()->subYear()->year,
+            Carbon::now()->addYear()->year,
+        ])->merge(
+            EngUtilityProject::whereNotNull('finish_date')->pluck('finish_date')->map(fn($d) => Carbon::parse($d)->year)
+        )->unique()->sortDesc()->values()->toArray();
+
+        return view('dashboard.utility.project.dashboard_project', compact(
+            'kpis',
+            'chartStatusSummary',
+            'chartFaseSummary',
+            'chartStatusByKategori',
+            'chartStatusByArea',
+            'attentionProjects',
+            'categoriesList',
+            'areasList',
+            'faseOptions',
+            'yearsList',
+            'statusList',
+            'kategoriList',
+            'areaList',
+            'priorityList',
+            'faseList',
+            'yearList',
+            'areaFilter',
+            'kategoriFilter',
+            'priorityFilter',
+            'statusFilter',
+            'faseFilter',
+            'yearFilter'
+        ));
+    }
+
+    /**
+     * 2. Data Project Utility (Clean Light Bootstrap Table & Tracking)
+     */
+    public function data(Request $request)
+    {
+        // Helper to normalize array / string / comma-separated filter values
+        $normalizeFilter = function ($val) {
+            if (is_array($val)) {
+                $items = $val;
+            } elseif (is_string($val) && strlen(trim($val)) > 0) {
+                $items = explode(',', $val);
+            } else {
+                return [];
+            }
+            return array_values(array_filter(array_map('trim', $items), function ($v) {
+                return $v !== '' && strtolower($v) !== 'all';
+            }));
+        };
+
+        $statusList = $normalizeFilter($request->input('status'));
+        $kategoriList = $normalizeFilter($request->input('kategori'));
+        $areaList = $normalizeFilter($request->input('area'));
+        $priorityList = $normalizeFilter($request->input('priority'));
+        $faseList = $normalizeFilter($request->input('fase'));
+        $search = $request->get('search');
+
+        $statusFilter = !empty($statusList) ? (count($statusList) === 1 ? $statusList[0] : implode(',', $statusList)) : 'all';
+        $kategoriFilter = !empty($kategoriList) ? (count($kategoriList) === 1 ? $kategoriList[0] : implode(',', $kategoriList)) : 'all';
+        $areaFilter = !empty($areaList) ? (count($areaList) === 1 ? $areaList[0] : implode(',', $areaList)) : 'all';
+        $priorityFilter = !empty($priorityList) ? (count($priorityList) === 1 ? $priorityList[0] : implode(',', $priorityList)) : 'all';
+        $faseFilter = !empty($faseList) ? (count($faseList) === 1 ? $faseList[0] : implode(',', $faseList)) : 'all';
+
+        $query = EngUtilityProject::with(['logs.user', 'creator']);
+
+        if (!empty($statusList)) {
+            $query->whereIn('status', $statusList);
+        }
+
+        if (!empty($kategoriList)) {
+            $query->whereIn('kategori', $kategoriList);
+        }
+
+        if (!empty($areaList)) {
+            $query->whereIn('area', $areaList);
+        }
+
+        if (!empty($priorityList)) {
+            $query->whereIn('priority', $priorityList);
+        }
+
+        if (!empty($faseList)) {
+            $query->whereIn('fase', $faseList);
+        }
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_project', 'like', "%{$search}%")
+                    ->orWhere('nomor_project', 'like', "%{$search}%")
+                    ->orWhere('target_result', 'like', "%{$search}%")
+                    ->orWhere('area', 'like', "%{$search}%")
+                    ->orWhere('kategori', 'like', "%{$search}%")
+                    ->orWhere('priority', 'like', "%{$search}%")
+                    ->orWhere('fase', 'like', "%{$search}%")
+                    ->orWhere('latest_note', 'like', "%{$search}%");
+            });
+        }
+
+        $totalProjectsCount = EngUtilityProject::count();
+
+        // Calculate stats on filtered query before pagination
+        $stats = [
+            'total' => $totalProjectsCount,
+            'filtered' => (clone $query)->count(),
+            'selesai' => (clone $query)->where('status', 'Selesai')->count(),
+            'on_progress' => (clone $query)->where('status', 'On Progress')->count(),
+            'terlambat' => (clone $query)->where('status', 'Terlambat')->count(),
+        ];
+
+        // Sorting Handling
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDir = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        switch ($sortBy) {
+            case 'nama_project':
+                $query->orderBy('nama_project', $sortDir);
+                break;
+            case 'area':
+                $query->orderBy('area', $sortDir);
+                break;
+            case 'priority':
+                $query->orderByRaw("CASE 
+                    WHEN priority = 'Critical' THEN 1 
+                    WHEN priority = 'High' THEN 2 
+                    WHEN priority = 'Medium' THEN 3 
+                    WHEN priority = 'Low' THEN 4 
+                    ELSE 5 END {$sortDir}");
+                break;
+            case 'kategori':
+                $query->orderBy('kategori', $sortDir);
+                break;
+            case 'fase':
+                $query->orderBy('fase', $sortDir);
+                break;
+            case 'timeline':
+            case 'finish_date':
+                $query->orderBy('finish_date', $sortDir);
+                break;
+            case 'progress':
+                $query->orderBy('progress', $sortDir);
+                break;
+            case 'status':
+                $query->orderByRaw("CASE 
+                    WHEN status = 'Terlambat' THEN 1 
+                    WHEN status = 'On Progress' THEN 2 
+                    WHEN status = 'Selesai' THEN 3 
+                    ELSE 4 END {$sortDir}");
+                break;
+            case 'latest_note':
+                $query->orderBy('latest_note', $sortDir);
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $query->with(['latestLog'])->orderBy('id', 'desc');
+
+        $perPage = (int) $request->get('per_page', 25);
+        if ($perPage <= 0 || $perPage > 500) {
+            $perPage = 25;
+        }
+
+        $paginated = $query->paginate($perPage);
+
+        // Fallback latest_note dari log catatan terakhir jika latest_note pada project kosong
+        $paginated->getCollection()->each(function ($item) {
+            if (empty($item->latest_note) && $item->latestLog) {
+                $item->latest_note = $item->latestLog->catatan;
+            }
+        });
+
+        // Support AJAX JSON response for dynamic jQuery table loading
+        if ($request->ajax() || $request->wantsJson() || $request->get('format') === 'json') {
+            return response()->json([
+                'success' => true,
+                'data' => collect($paginated->items())->values()->map(function ($item, $index) use ($paginated) {
+                    $itemNumber = ($paginated->currentPage() - 1) * $paginated->perPage() + $index + 1;
+                    return [
+                        'id' => $item->id,
+                        'no' => $itemNumber,
+                        'nama_project' => $item->nama_project,
+                        'nomor_project' => $item->nomor_project,
+                        'target_result' => $item->target_result,
+                        'area' => $item->area,
+                        'kategori' => $item->kategori,
+                        'priority' => $item->priority ?: 'Medium',
+                        'fase' => $item->fase ?: 'Fase 1',
+                        'fase_label' => EngUtilityProject::FASE_OPTIONS[$item->fase] ?? ($item->fase ?: 'Fase 1: Konsep Project'),
+                        'start_date' => $item->start_date ? \Carbon\Carbon::parse($item->start_date)->format('d/m/y') : null,
+                        'start_week' => $item->start_week,
+                        'finish_date' => $item->finish_date ? \Carbon\Carbon::parse($item->finish_date)->format('d/m/y') : null,
+                        'finish_week' => $item->finish_week,
+                        'progress' => (int) $item->progress,
+                        'status' => $item->status,
+                        'latest_note' => !empty($item->latest_note) ? $item->latest_note : ($item->latestLog?->catatan ?? null),
+                        'edit_url' => route('utility.project.edit', $item->id),
+                    ];
+                }),
+                'pagination' => [
+                    'total' => $paginated->total(),
+                    'per_page' => $paginated->perPage(),
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'from' => $paginated->firstItem() ?: 0,
+                    'to' => $paginated->lastItem() ?: 0,
+                ],
+                'stats' => $stats
+            ]);
+        }
+
+        $projects = $paginated;
+
+        $categoriesList = EngUtilityProjectCategory::where('is_active', true)->orderBy('nama_kategori')->pluck('nama_kategori')->toArray();
+        if (empty($categoriesList)) {
+            $categoriesList = EngUtilityProject::pluck('kategori')->filter()->unique()->values()->toArray();
+        }
+
+        $areasList = EngUtilityProjectArea::where('is_active', true)->orderBy('nama_area')->pluck('nama_area')->toArray();
+        if (empty($areasList)) {
+            $areasList = ['Boiler', 'Utility', 'WWTP', 'MTC'];
+        }
+
+        $faseOptions = EngUtilityProject::FASE_OPTIONS;
+
+        return view('dashboard.utility.project.data_project', compact(
+            'projects',
+            'categoriesList',
+            'areasList',
+            'faseOptions',
+            'totalProjectsCount',
+            'statusFilter',
+            'kategoriFilter',
+            'areaFilter',
+            'priorityFilter',
+            'faseFilter',
+            'statusList',
+            'kategoriList',
+            'areaList',
+            'priorityList',
+            'faseList',
+            'search'
+        ));
+    }
+
+    /**
+     * 3. Form Input Project (Clean Light Bootstrap Form matching standard forms)
+     */
+    public function create()
+    {
+        $categories = EngUtilityProjectCategory::where('is_active', true)->orderBy('nama_kategori')->pluck('nama_kategori')->toArray();
+        if (empty($categories)) {
+            $categories = [
+                'Maintenance',
+                'KPI BB dan Steam',
+                'Baku Mutu',
+                'Compliance',
+                '5R',
+                'KPI Steam',
+                'Improvement',
+                'Cost Saving',
+                'KPI Air',
+                'Digitalisasi',
+                'KPI Korektif'
+            ];
+        }
+
+        $areas = EngUtilityProjectArea::where('is_active', true)->orderBy('nama_area')->pluck('nama_area')->toArray();
+        if (empty($areas)) {
+            $areas = ['Boiler', 'Utility', 'WWTP', 'MTC'];
+        }
+
+        $faseOptions = EngUtilityProject::FASE_OPTIONS;
+
+        return view('dashboard.utility.project.form_project', compact('categories', 'areas', 'faseOptions'));
+    }
+
+    /**
+     * Store new project
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nama_project' => 'required|string|max:255',
+            'area' => 'required|string|max:100',
+            'kategori' => 'required|string|max:100',
+            'priority' => 'nullable|string|in:Critical,High,Medium,Low',
+            'fase' => 'nullable|string|max:100',
+            'target_result' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'start_week' => 'nullable|string|max:50',
+            'finish_date' => 'nullable|date',
+            'finish_week' => 'nullable|string|max:50',
+            'progress' => 'nullable|integer|min:0|max:100',
+            'status' => 'nullable|string|in:Selesai,On Progress,Terlambat',
+            'latest_note' => 'nullable|string',
+        ]);
+
+        $userId = Auth::id() ?: 1;
+        $progress = (int) $request->get('progress', 0);
+
+        // Auto Week Calculation if empty
+        $monthNamesId = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        $startWeek = $request->start_week;
+        if (empty($startWeek) && !empty($request->start_date)) {
+            $cDate = Carbon::parse($request->start_date);
+            $wNum = min(5, (int)ceil($cDate->day / 7));
+            $mStr = $monthNamesId[$cDate->month] ?? $cDate->isoFormat('MMM');
+            $startWeek = "W{$wNum} {$mStr} " . $cDate->format('y');
+        }
+
+        $finishWeek = $request->finish_week;
+        if (empty($finishWeek) && !empty($request->finish_date)) {
+            $cDate = Carbon::parse($request->finish_date);
+            $wNum = min(5, (int)ceil($cDate->day / 7));
+            $mStr = $monthNamesId[$cDate->month] ?? $cDate->isoFormat('MMM');
+            $finishWeek = "W{$wNum} {$mStr} " . $cDate->format('y');
+        }
+
+        $status = $request->status;
+        $fase = $request->get('fase', 'Fase 1') ?: 'Fase 1';
+        if ($progress >= 100) {
+            $status = 'Selesai';
+            $fase = 'Fase 3';
+        } elseif (!$status) {
+            if ($request->finish_date && Carbon::parse($request->finish_date)->endOfDay()->isPast() && $progress < 100) {
+                $status = 'Terlambat';
+            } else {
+                $status = 'On Progress';
+            }
+        }
+
+        $nomor = $request->nomor_project;
+        if (empty($nomor)) {
+            $prefix = strtoupper(substr($request->area, 0, 3));
+            $seq = EngUtilityProject::where('area', $request->area)->count() + 1;
+            $nomor = 'PRJ-' . $prefix . '-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
+        }
+
+        $project = EngUtilityProject::create([
+            'nomor_project' => $nomor,
+            'nama_project' => $request->nama_project,
+            'target_result' => $request->target_result,
+            'area' => $request->area,
+            'kategori' => $request->kategori,
+            'priority' => $request->get('priority', 'Medium') ?: 'Medium',
+            'fase' => $fase,
+            'start_date' => $request->start_date,
+            'start_week' => $startWeek,
+            'finish_date' => $request->finish_date,
+            'finish_week' => $finishWeek,
+            'progress' => $progress,
+            'status' => $status,
+            'latest_note' => $request->latest_note,
+            'created_by' => $userId,
+            'updated_by' => $userId,
+        ]);
+
+        if ($progress > 0 || !empty($request->latest_note)) {
+            EngUtilityProjectLog::create([
+                'project_id' => $project->id,
+                'progress_sebelumnya' => 0,
+                'progress_baru' => $progress,
+                'catatan' => $request->latest_note ?: 'Inisiasi awal project',
+                'tanggal' => $request->start_date ?: date('Y-m-d'),
+                'created_by' => $userId,
+            ]);
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Project berhasil ditambahkan!',
+                'project' => $project
+            ]);
+        }
+
+        return redirect()->route('utility.project.data')->with('success', 'Project baru berhasil disimpan!');
+    }
+
+    /**
+     * Edit project form
+     */
+    public function edit($id)
+    {
+        $project = EngUtilityProject::findOrFail($id);
+
+        $categories = EngUtilityProjectCategory::where('is_active', true)->orderBy('nama_kategori')->pluck('nama_kategori')->toArray();
+        if (empty($categories)) {
+            $categories = [
+                'Maintenance',
+                'KPI BB dan Steam',
+                'Baku Mutu',
+                'Compliance',
+                '5R',
+                'KPI Steam',
+                'Improvement',
+                'Cost Saving',
+                'KPI Air',
+                'Digitalisasi',
+                'KPI Korektif'
+            ];
+        }
+
+        $areas = EngUtilityProjectArea::where('is_active', true)->orderBy('nama_area')->pluck('nama_area')->toArray();
+        if (empty($areas)) {
+            $areas = ['Boiler', 'Utility', 'WWTP', 'MTC'];
+        }
+
+        $faseOptions = EngUtilityProject::FASE_OPTIONS;
+
+        return view('dashboard.utility.project.form_project', compact('project', 'categories', 'areas', 'faseOptions'));
+    }
+
+    /**
+     * Update project
+     */
+    public function update(Request $request, $id)
+    {
+        $project = EngUtilityProject::findOrFail($id);
+
+        $request->validate([
+            'nama_project' => 'required|string|max:255',
+            'area' => 'required|string|max:100',
+            'kategori' => 'required|string|max:100',
+            'priority' => 'nullable|string|in:Critical,High,Medium,Low',
+            'fase' => 'nullable|string|max:100',
+            'target_result' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'start_week' => 'nullable|string|max:50',
+            'finish_date' => 'nullable|date',
+            'finish_week' => 'nullable|string|max:50',
+            'progress' => 'nullable|integer|min:0|max:100',
+            'status' => 'nullable|string|in:Selesai,On Progress,Terlambat',
+            'latest_note' => 'nullable|string',
+            'catatan_update' => 'nullable|string',
+        ]);
+
+        $userId = Auth::id() ?: 1;
+        $oldProgress = (int) $project->progress;
+        $newProgress = (int) $request->get('progress', $oldProgress);
+
+        if ($newProgress < $oldProgress) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Progress tidak boleh mundur! Progress saat ini sudah {$oldProgress}%, Anda tidak dapat menurunkannya menjadi {$newProgress}%."
+                ], 422);
+            }
+            return redirect()->back()->withInput()->with('error', "Progress tidak boleh mundur! Progress saat ini sudah {$oldProgress}%.");
+        }
+
+        // Auto Week Calculation if empty
+        $monthNamesId = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        $startWeek = $request->start_week;
+        if (empty($startWeek) && !empty($request->start_date)) {
+            $cDate = Carbon::parse($request->start_date);
+            $wNum = min(5, (int)ceil($cDate->day / 7));
+            $mStr = $monthNamesId[$cDate->month] ?? $cDate->isoFormat('MMM');
+            $startWeek = "W{$wNum} {$mStr} " . $cDate->format('y');
+        }
+
+        $finishWeek = $request->finish_week;
+        if (empty($finishWeek) && !empty($request->finish_date)) {
+            $cDate = Carbon::parse($request->finish_date);
+            $wNum = min(5, (int)ceil($cDate->day / 7));
+            $mStr = $monthNamesId[$cDate->month] ?? $cDate->isoFormat('MMM');
+            $finishWeek = "W{$wNum} {$mStr} " . $cDate->format('y');
+        }
+
+        $status = $request->status;
+        $fase = $request->get('fase', $project->fase ?? 'Fase 1') ?: 'Fase 1';
+        if ($newProgress >= 100) {
+            $status = 'Selesai';
+            $fase = 'Fase 3';
+        } elseif (!$status) {
+            if ($request->finish_date && Carbon::parse($request->finish_date)->endOfDay()->isPast() && $newProgress < 100) {
+                $status = 'Terlambat';
+            } else {
+                $status = 'On Progress';
+            }
+        }
+
+        // Catatan Terakhir: update jika ada catatan_update atau latest_note baru, jangan biarkan terhapus jadi null
+        $latestNote = !empty($request->catatan_update)
+            ? $request->catatan_update
+            : ($request->filled('latest_note') ? $request->latest_note : $project->latest_note);
+
+        $project->update([
+            'nomor_project' => $request->nomor_project ?: $project->nomor_project,
+            'nama_project' => $request->nama_project,
+            'target_result' => $request->target_result,
+            'area' => $request->area,
+            'kategori' => $request->kategori,
+            'priority' => $request->get('priority', $project->priority ?? 'Medium') ?: 'Medium',
+            'fase' => $fase,
+            'start_date' => $request->start_date,
+            'start_week' => $startWeek,
+            'finish_date' => $request->finish_date,
+            'finish_week' => $finishWeek,
+            'progress' => $newProgress,
+            'status' => $status,
+            'latest_note' => $latestNote,
+            'updated_by' => $userId,
+        ]);
+
+        if ($oldProgress !== $newProgress || !empty($request->catatan_update)) {
+            EngUtilityProjectLog::create([
+                'project_id' => $project->id,
+                'progress_sebelumnya' => $oldProgress,
+                'progress_baru' => $newProgress,
+                'catatan' => $request->catatan_update ?: $latestNote,
+                'tanggal' => date('Y-m-d'),
+                'created_by' => $userId,
+            ]);
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Project berhasil diupdate!',
+                'project' => $project
+            ]);
+        }
+
+        return redirect()->route('utility.project.data')->with('success', 'Project berhasil diperbarui!');
+    }
+
+    /**
+     * Delete project
+     */
+    public function destroy($id)
+    {
+        $project = EngUtilityProject::findOrFail($id);
+        $project->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project berhasil dihapus.'
+        ]);
+    }
+
+    /**
+     * 4. Update progress from user modal with history recording
+     */
+    public function updateProgress(Request $request, $id)
+    {
+        $project = EngUtilityProject::findOrFail($id);
+
+        $request->validate([
+            'progress' => 'required|integer|min:0|max:100',
+            'catatan' => 'required|string|max:1000',
+            'tanggal' => 'nullable|date',
+            'fase' => 'nullable|string|in:Fase 1,Fase 2,Fase 3',
+        ]);
+
+        $userId = Auth::id() ?: 1;
+        $oldProgress = (int) $project->progress;
+        $newProgress = (int) $request->progress;
+
+        if ($newProgress < $oldProgress) {
+            return response()->json([
+                'success' => false,
+                'message' => "Progress tidak boleh mundur! Progress saat ini sudah {$oldProgress}%, Anda tidak dapat menurunkannya menjadi {$newProgress}%."
+            ], 422);
+        }
+
+        $tanggal = $request->tanggal ? Carbon::parse($request->tanggal)->format('Y-m-d') : date('Y-m-d');
+
+        $status = $project->status;
+        $fase = $project->fase ?: 'Fase 1';
+        if ($newProgress >= 100) {
+            $status = 'Selesai';
+            $fase = 'Fase 3';
+        } elseif ($project->finish_date && Carbon::parse($project->finish_date)->endOfDay()->isPast()) {
+            $status = 'Terlambat';
+        } else {
+            $status = 'On Progress';
+        }
+
+        $updateData = [
+            'progress' => $newProgress,
+            'status' => $status,
+            'latest_note' => $request->catatan,
+            'updated_by' => $userId,
+        ];
+
+        if ($request->filled('fase')) {
+            $updateData['fase'] = $request->fase;
+        }
+
+        if ($newProgress >= 100) {
+            $updateData['fase'] = 'Fase 3';
+        }
+
+        $project->update($updateData);
+
+        $log = EngUtilityProjectLog::create([
+            'project_id' => $project->id,
+            'progress_sebelumnya' => $oldProgress,
+            'progress_baru' => $newProgress,
+            'catatan' => $request->catatan,
+            'tanggal' => $tanggal,
+            'created_by' => $userId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Progress project berhasil diperbarui!',
+            'data' => [
+                'project_id' => $project->id,
+                'progress' => $newProgress,
+                'status' => $status,
+                'fase' => $project->fase,
+                'latest_note' => $request->catatan,
+                'log' => $log,
+            ]
+        ]);
+    }
+
+    /**
+     * Get history logs for a project (for modal display)
+     */
+    public function history($id)
+    {
+        $project = EngUtilityProject::findOrFail($id);
+        $logs = EngUtilityProjectLog::with('user')
+            ->where('project_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'tanggal' => $item->tanggal ? Carbon::parse($item->tanggal)->format('d M Y') : $item->created_at->format('d M Y'),
+                    'jam' => $item->created_at->format('H:i'),
+                    'progress_sebelumnya' => $item->progress_sebelumnya,
+                    'progress_baru' => $item->progress_baru,
+                    'catatan' => $item->catatan,
+                    'user_nama' => $item->user ? ($item->user->username ?: ($item->user->fullname ?: 'Engineering Team')) : 'Engineering Team',
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'project' => [
+                'id' => $project->id,
+                'nama_project' => $project->nama_project,
+                'nomor_project' => $project->nomor_project,
+                'area' => $project->area,
+                'progress' => $project->progress,
+                'status' => $project->status,
+            ],
+            'logs' => $logs
+        ]);
+    }
+
+    /**
+     * Master Data Management (Area & Kategori)
+     */
+    public function master(Request $request)
+    {
+        $areas = EngUtilityProjectArea::withCount('projects')->orderBy('nama_area')->get();
+        $categories = EngUtilityProjectCategory::withCount('projects')->orderBy('nama_kategori')->get();
+
+        if ($request->ajax() || $request->wantsJson() || $request->get('format') === 'json') {
+            return response()->json([
+                'success' => true,
+                'areas' => $areas,
+                'categories' => $categories
+            ]);
+        }
+
+        return view('dashboard.utility.project.master_project', compact('areas', 'categories'));
+    }
+
+    public function storeArea(Request $request)
+    {
+        $request->validate([
+            'nama_area' => 'required|string|max:100|unique:eng_utility_project_areas,nama_area',
+            'kode_area' => 'nullable|string|max:50',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $area = EngUtilityProjectArea::create([
+            'nama_area' => $request->nama_area,
+            'kode_area' => $request->kode_area ?: strtoupper(substr($request->nama_area, 0, 4)),
+            'deskripsi' => $request->deskripsi,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Area baru berhasil ditambahkan!', 'data' => $area]);
+        }
+        return redirect()->route('utility.project.master')->with('success', 'Area baru berhasil disimpan!');
+    }
+
+    public function updateArea(Request $request, $id)
+    {
+        $area = EngUtilityProjectArea::findOrFail($id);
+        $request->validate([
+            'nama_area' => 'required|string|max:100|unique:eng_utility_project_areas,nama_area,' . $id,
+            'kode_area' => 'nullable|string|max:50',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $oldName = $area->nama_area;
+        $area->update([
+            'nama_area' => $request->nama_area,
+            'kode_area' => $request->kode_area ?: $area->kode_area,
+            'deskripsi' => $request->deskripsi,
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $area->is_active,
+        ]);
+
+        // Sync existing projects if area name changed
+        if ($oldName !== $request->nama_area) {
+            EngUtilityProject::where('area', $oldName)->update(['area' => $request->nama_area]);
+        }
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Area berhasil diperbarui!', 'data' => $area]);
+        }
+        return redirect()->route('utility.project.master')->with('success', 'Area berhasil diperbarui!');
+    }
+
+    public function destroyArea($id)
+    {
+        $area = EngUtilityProjectArea::findOrFail($id);
+        $count = EngUtilityProject::where('area', $area->nama_area)->count();
+        if ($count > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => "Area '{$area->nama_area}' tidak dapat dihapus karena masih digunakan oleh {$count} project aktif."
+            ], 422);
+        }
+
+        $area->delete();
+        return response()->json(['success' => true, 'message' => 'Area berhasil dihapus.']);
+    }
+
+    public function storeCategory(Request $request)
+    {
+        $request->validate([
+            'nama_kategori' => 'required|string|max:150|unique:eng_utility_project_categories,nama_kategori',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $category = EngUtilityProjectCategory::create([
+            'nama_kategori' => $request->nama_kategori,
+            'deskripsi' => $request->deskripsi,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Kategori baru berhasil ditambahkan!', 'data' => $category]);
+        }
+        return redirect()->route('utility.project.master')->with('success', 'Kategori baru berhasil disimpan!');
+    }
+
+    public function updateCategory(Request $request, $id)
+    {
+        $category = EngUtilityProjectCategory::findOrFail($id);
+        $request->validate([
+            'nama_kategori' => 'required|string|max:150|unique:eng_utility_project_categories,nama_kategori,' . $id,
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $oldName = $category->nama_kategori;
+        $category->update([
+            'nama_kategori' => $request->nama_kategori,
+            'deskripsi' => $request->deskripsi,
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $category->is_active,
+        ]);
+
+        // Sync existing projects if category name changed
+        if ($oldName !== $request->nama_kategori) {
+            EngUtilityProject::where('kategori', $oldName)->update(['kategori' => $request->nama_kategori]);
+        }
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Kategori berhasil diperbarui!', 'data' => $category]);
+        }
+        return redirect()->route('utility.project.master')->with('success', 'Kategori berhasil diperbarui!');
+    }
+
+    public function destroyCategory($id)
+    {
+        $category = EngUtilityProjectCategory::findOrFail($id);
+        $count = EngUtilityProject::where('kategori', $category->nama_kategori)->count();
+        if ($count > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => "Kategori '{$category->nama_kategori}' tidak dapat dihapus karena masih digunakan oleh {$count} project aktif."
+            ], 422);
+        }
+
+        $category->delete();
+        return response()->json(['success' => true, 'message' => 'Kategori berhasil dihapus.']);
+    }
+
+    /**
+     * Export project utility data to Excel (supports filtering & sorting)
+     */
+    public function exportExcel(Request $request)
+    {
+        $normalizeFilter = function ($val) {
+            if (is_array($val)) {
+                $items = $val;
+            } elseif (is_string($val) && strlen(trim($val)) > 0) {
+                $items = explode(',', $val);
+            } else {
+                return [];
+            }
+            return array_values(array_filter(array_map('trim', $items), function ($v) {
+                return $v !== '' && strtolower($v) !== 'all';
+            }));
+        };
+
+        $statusList = $normalizeFilter($request->input('status'));
+        $kategoriList = $normalizeFilter($request->input('kategori'));
+        $areaList = $normalizeFilter($request->input('area'));
+        $priorityList = $normalizeFilter($request->input('priority'));
+        $faseList = $normalizeFilter($request->input('fase'));
+        $yearList = $normalizeFilter($request->input('year'));
+
+        $query = EngUtilityProject::with(['latestLog']);
+
+        if (!empty($statusList)) {
+            $query->whereIn('status', $statusList);
+        }
+        if (!empty($kategoriList)) {
+            $query->whereIn('kategori', $kategoriList);
+        }
+        if (!empty($areaList)) {
+            $query->whereIn('area', $areaList);
+        }
+        if (!empty($priorityList)) {
+            $query->whereIn('priority', $priorityList);
+        }
+        if (!empty($faseList)) {
+            $query->whereIn('fase', $faseList);
+        }
+        if (!empty($yearList)) {
+            $query->where(function ($q) use ($yearList) {
+                foreach ($yearList as $idx => $yr) {
+                    if ($idx === 0) {
+                        $q->where(function ($sq) use ($yr) {
+                            $sq->whereYear('finish_date', $yr)
+                                ->orWhereYear('start_date', $yr)
+                                ->orWhereYear('created_at', $yr);
+                        });
+                    } else {
+                        $q->orWhere(function ($sq) use ($yr) {
+                            $sq->whereYear('finish_date', $yr)
+                                ->orWhereYear('start_date', $yr)
+                                ->orWhereYear('created_at', $yr);
+                        });
+                    }
+                }
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_project', 'like', "%{$search}%")
+                    ->orWhere('nomor_project', 'like', "%{$search}%")
+                    ->orWhere('target_result', 'like', "%{$search}%")
+                    ->orWhere('area', 'like', "%{$search}%")
+                    ->orWhere('kategori', 'like', "%{$search}%")
+                    ->orWhere('priority', 'like', "%{$search}%")
+                    ->orWhere('fase', 'like', "%{$search}%")
+                    ->orWhere('latest_note', 'like', "%{$search}%");
+            });
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDir = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        switch ($sortBy) {
+            case 'nama_project':
+            case 'nomor_project':
+            case 'area':
+            case 'kategori':
+            case 'fase':
+            case 'start_date':
+            case 'finish_date':
+            case 'progress':
+            case 'status':
+            case 'created_at':
+                $query->orderBy($sortBy, $sortDir);
+                break;
+            case 'priority':
+                $query->orderByRaw("CASE 
+                    WHEN priority = 'Critical' THEN 1 
+                    WHEN priority = 'High' THEN 2 
+                    WHEN priority = 'Medium' THEN 3 
+                    WHEN priority = 'Low' THEN 4 
+                    ELSE 5 END {$sortDir}");
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $projects = $query->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data Project');
+
+        $headers = [
+            'A1' => 'No',
+            'B1' => 'Nomor Project',
+            'C1' => 'Nama Project',
+            'D1' => 'Target Result / Output',
+            'E1' => 'Area',
+            'F1' => 'Kategori',
+            'G1' => 'Prioritas',
+            'H1' => 'Fase',
+            'I1' => 'Tanggal Mulai',
+            'J1' => 'Minggu Mulai',
+            'K1' => 'Target Selesai',
+            'L1' => 'Minggu Selesai',
+            'M1' => 'Progress (%)',
+            'N1' => 'Status',
+            'O1' => 'Catatan Terakhir',
+        ];
+
+        foreach ($headers as $cell => $val) {
+            $sheet->setCellValue($cell, $val);
+        }
+
+        // Style Header
+        $sheet->getStyle('A1:O1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size' => 11,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '1E3C72'], // Deep Navy Blue
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'CBD5E1'],
+                ],
+            ],
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(28);
+
+        $rowIdx = 2;
+        foreach ($projects as $idx => $p) {
+            $startDate = $p->start_date ? Carbon::parse($p->start_date)->format('Y-m-d') : '-';
+            $finishDate = $p->finish_date ? Carbon::parse($p->finish_date)->format('Y-m-d') : '-';
+            $note = !empty($p->latest_note) ? $p->latest_note : ($p->latestLog?->catatan ?? '-');
+
+            $sheet->setCellValue('A' . $rowIdx, $idx + 1);
+            $sheet->setCellValueExplicit('B' . $rowIdx, (string) ($p->nomor_project ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('C' . $rowIdx, $p->nama_project);
+            $sheet->setCellValue('D' . $rowIdx, $p->target_result ?? '-');
+            $sheet->setCellValue('E' . $rowIdx, $p->area ?? '-');
+            $sheet->setCellValue('F' . $rowIdx, $p->kategori ?? '-');
+            $sheet->setCellValue('G' . $rowIdx, $p->priority ?? 'Medium');
+            $sheet->setCellValue('H' . $rowIdx, $p->fase ?? 'Fase 1');
+            $sheet->setCellValueExplicit('I' . $rowIdx, $startDate, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('J' . $rowIdx, $p->start_week ?? '-');
+            $sheet->setCellValueExplicit('K' . $rowIdx, $finishDate, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('L' . $rowIdx, $p->finish_week ?? '-');
+            $sheet->setCellValue('M' . $rowIdx, (int) $p->progress);
+            $sheet->setCellValue('N' . $rowIdx, $p->status);
+            $sheet->setCellValue('O' . $rowIdx, $note);
+
+            // Alternate zebra row
+            if ($rowIdx % 2 === 1) {
+                $sheet->getStyle("A{$rowIdx}:O{$rowIdx}")->getFill()->applyFromArray([
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'F8FAFC'],
+                ]);
+            }
+
+            $sheet->getRowDimension($rowIdx)->setRowHeight(22);
+            $rowIdx++;
+        }
+
+        $lastRow = max(2, $rowIdx - 1);
+
+        // General borders & alignment
+        $sheet->getStyle("A2:O{$lastRow}")->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'E2E8F0'],
+                ],
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+
+        $sheet->getStyle("A2:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("B2:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("E2:H{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("I2:L{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("M2:N{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Auto filter
+        $sheet->setAutoFilter("A1:O{$lastRow}");
+
+        // Auto column width
+        foreach (range('A', 'O') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $fileName = 'Data_Project_Engineering_Utility_' . date('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    /**
+     * Download Excel template for project utility migration
+     */
+    public function downloadTemplate()
+    {
+        $spreadsheet = new Spreadsheet();
+
+        // ── Sheet 1: Template Data Project ──
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data Project');
+
+        $headers = [
+            'A1' => 'Nomor Project (Opsional)',
+            'B1' => 'Nama Project (Wajib)',
+            'C1' => 'Target Result / Output',
+            'D1' => 'Area (Wajib)',
+            'E1' => 'Kategori (Wajib)',
+            'F1' => 'Prioritas (Critical/High/Medium/Low)',
+            'G1' => 'Tanggal Mulai (YYYY-MM-DD)',
+            'H1' => 'Minggu Mulai (Contoh: W1 Okt 26)',
+            'I1' => 'Target Selesai (YYYY-MM-DD)',
+            'J1' => 'Minggu Selesai (Contoh: W3 Nov 26)',
+            'K1' => 'Progress (%)',
+            'L1' => 'Status (Selesai/On Progress/Terlambat)',
+            'M1' => 'Catatan Terakhir',
+        ];
+
+        foreach ($headers as $cell => $val) {
+            $sheet->setCellValue($cell, $val);
+        }
+
+        // Style Header
+        $sheet->getStyle('A1:M1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size' => 11,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '1D4ED8'], // Deep Blue
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'CBD5E1'],
+                ],
+            ],
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(28);
+
+        // Sample Data Rows (3 rows of realistic migration data)
+        $sampleRows = [
+            [
+                'PRJ-BOI-001',
+                'Overhaul Pompa Feed Water Boiler #1',
+                'Peningkatan efisiensi suplai air boiler & zero breakdown',
+                'Boiler',
+                'Maintenance',
+                'High',
+                '2026-10-01',
+                'W1 Okt 26',
+                '2026-10-20',
+                'W3 Okt 26',
+                '100',
+                'Selesai',
+                'Penggantian bearing dan mechanical seal selesai diuji running',
+            ],
+            [
+                '', // Nomor kosong -> akan digenerate otomatis
+                'Pemasangan Flow Meter Air RO Line 2',
+                'Monitoring debit pemakaian air RO secara realtime & akurat',
+                'Utility',
+                'Digitalisasi',
+                'Medium',
+                '2026-10-15',
+                'W3 Okt 26',
+                '2026-11-10',
+                'W2 Nov 26',
+                '45',
+                'On Progress',
+                'Pemasangan pipa selesai, modul sensor sedang proses kalibrasi',
+            ],
+            [
+                '',
+                'Optimasi Aerasi dan Dosing Bak WWTP',
+                'Menjaga parameter COD & BOD limbah cair di bawah baku mutu',
+                'WWTP',
+                'Baku Mutu',
+                'Critical',
+                '2026-10-05',
+                'W1 Okt 26',
+                '2026-10-25',
+                'W4 Okt 26',
+                '70',
+                'Terlambat',
+                'Menunggu penggantian diffuser tube aerator yang aus',
+            ],
+        ];
+
+        $rowIdx = 2;
+        foreach ($sampleRows as $row) {
+            $colLetter = 'A';
+            foreach ($row as $val) {
+                $sheet->setCellValueExplicit($colLetter . $rowIdx, (string)$val, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $colLetter++;
+            }
+            $rowIdx++;
+        }
+
+        // Style Sample Rows
+        $sheet->getStyle('A2:M4')->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => 'E2E8F0'],
+                ],
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+        $sheet->getStyle('A2:A4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('D2:D4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('F2:F4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('G2:J4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('K2:L4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        for ($r = 2; $r <= 4; $r++) {
+            $sheet->getRowDimension($r)->setRowHeight(22);
+        }
+
+        // Auto-fit column widths
+        foreach (range('A', 'M') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // ── Sheet 2: Referensi Master (Area & Kategori) ──
+        $refSheet = $spreadsheet->createSheet();
+        $refSheet->setTitle('Referensi Master');
+
+        $refSheet->setCellValue('A1', 'Daftar Area Terdaftar');
+        $refSheet->setCellValue('C1', 'Daftar Kategori Terdaftar');
+        $refSheet->setCellValue('E1', 'Daftar Prioritas');
+        $refSheet->setCellValue('G1', 'Status Project');
+
+        $refSheet->getStyle('A1:G1')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '334155']],
+        ]);
+
+        $areas = EngUtilityProjectArea::where('is_active', true)->orderBy('nama_area')->pluck('nama_area')->toArray();
+        if (empty($areas)) $areas = ['Boiler', 'Utility', 'WWTP', 'MTC'];
+
+        $categories = EngUtilityProjectCategory::where('is_active', true)->orderBy('nama_kategori')->pluck('nama_kategori')->toArray();
+        if (empty($categories)) {
+            $categories = [
+                'Maintenance',
+                'KPI BB dan Steam',
+                'Baku Mutu',
+                'Compliance',
+                '5R',
+                'KPI Steam',
+                'Improvement',
+                'Cost Saving',
+                'KPI Air',
+                'Digitalisasi',
+                'KPI Korektif'
+            ];
+        }
+
+        $priorities = ['Critical', 'High', 'Medium', 'Low'];
+        $statuses = ['Selesai', 'On Progress', 'Terlambat'];
+
+        $maxRows = max(count($areas), count($categories), count($priorities), count($statuses));
+        for ($i = 0; $i < $maxRows; $i++) {
+            $currRow = $i + 2;
+            if (isset($areas[$i])) $refSheet->setCellValue('A' . $currRow, $areas[$i]);
+            if (isset($categories[$i])) $refSheet->setCellValue('C' . $currRow, $categories[$i]);
+            if (isset($priorities[$i])) $refSheet->setCellValue('E' . $currRow, $priorities[$i]);
+            if (isset($statuses[$i])) $refSheet->setCellValue('G' . $currRow, $statuses[$i]);
+        }
+
+        foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G'] as $col) {
+            $refSheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Set active sheet back to Sheet 1
+        $spreadsheet->setActiveSheetIndex(0);
+
+        $fileName = 'Template_Import_Project_Utility.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    /**
+     * Import projects from Excel file
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ], [
+            'file.required' => 'Silakan pilih file Excel terlebih dahulu.',
+            'file.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau .csv.',
+            'file.max' => 'Ukuran file maksimal adalah 10MB.',
+        ]);
+
+        $file = $request->file('file');
+
+        try {
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal membaca file Excel: ' . $e->getMessage()
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
+        }
+
+        if (empty($rows)) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File Excel kosong atau tidak memiliki data.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'File Excel kosong atau tidak memiliki data.');
+        }
+
+        // Detect Header Row
+        $headerRowIdx = null;
+        $headerMap = [];
+
+        foreach ($rows as $rowIndex => $cols) {
+            $hasProjectHeader = false;
+            foreach ($cols as $colLetter => $val) {
+                $cleaned = strtolower(trim((string)$val));
+                if (str_contains($cleaned, 'nama project') || str_contains($cleaned, 'nama_project') || $cleaned === 'project' || $cleaned === 'nama') {
+                    $hasProjectHeader = true;
+                    break;
+                }
+            }
+
+            if ($hasProjectHeader) {
+                $headerRowIdx = $rowIndex;
+                foreach ($cols as $colLetter => $val) {
+                    $cleaned = strtolower(trim((string)$val));
+
+                    // 1. Status HARUS dicek sebelum progress karena judul status memuat "On Progress"
+                    if (str_contains($cleaned, 'status')) {
+                        $headerMap['status'] = $colLetter;
+                    }
+                    // 2. Progress (%)
+                    elseif (str_contains($cleaned, 'progress') || str_contains($cleaned, 'progres') || str_contains($cleaned, '%') || str_contains($cleaned, 'persen')) {
+                        $headerMap['progress'] = $colLetter;
+                    }
+                    // 3. Tanggal & Minggu Mulai
+                    elseif (str_contains($cleaned, 'mulai') && (str_contains($cleaned, 'minggu') || str_contains($cleaned, 'week'))) {
+                        $headerMap['start_week'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'mulai') || str_contains($cleaned, 'start date') || str_contains($cleaned, 'start_date')) {
+                        $headerMap['start_date'] = $colLetter;
+                    }
+                    // 4. Tanggal & Minggu Selesai / Target Selesai
+                    elseif ((str_contains($cleaned, 'selesai') || str_contains($cleaned, 'finish')) && (str_contains($cleaned, 'minggu') || str_contains($cleaned, 'week'))) {
+                        $headerMap['finish_week'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'selesai') || str_contains($cleaned, 'finish') || str_contains($cleaned, 'deadline') || str_contains($cleaned, 'due') || (str_contains($cleaned, 'target') && !str_contains($cleaned, 'result') && !str_contains($cleaned, 'hasil') && !str_contains($cleaned, 'output'))) {
+                        $headerMap['finish_date'] = $colLetter;
+                    }
+                    // 5. Data Project Lainnya
+                    elseif (str_contains($cleaned, 'nomor') || str_contains($cleaned, 'no project') || str_contains($cleaned, 'kode')) {
+                        $headerMap['nomor_project'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'nama project') || str_contains($cleaned, 'nama_project') || $cleaned === 'project' || $cleaned === 'nama') {
+                        $headerMap['nama_project'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'target result') || str_contains($cleaned, 'output') || str_contains($cleaned, 'target hasil') || str_contains($cleaned, 'tujuan')) {
+                        $headerMap['target_result'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'area') || str_contains($cleaned, 'lokasi') || str_contains($cleaned, 'seksi')) {
+                        $headerMap['area'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'kategori') || str_contains($cleaned, 'category')) {
+                        $headerMap['kategori'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'prioritas') || str_contains($cleaned, 'priority')) {
+                        $headerMap['priority'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'fase') || str_contains($cleaned, 'phase')) {
+                        $headerMap['fase'] = $colLetter;
+                    } elseif (str_contains($cleaned, 'catatan') || str_contains($cleaned, 'note') || str_contains($cleaned, 'keterangan') || str_contains($cleaned, 'remark')) {
+                        $headerMap['latest_note'] = $colLetter;
+                    }
+                }
+                break;
+            }
+        }
+
+        // If no header row detected, default to standard column order
+        if ($headerRowIdx === null) {
+            $headerRowIdx = 1;
+            $headerMap = [
+                'nomor_project' => 'A',
+                'nama_project' => 'B',
+                'target_result' => 'C',
+                'area' => 'D',
+                'kategori' => 'E',
+                'priority' => 'F',
+                'start_date' => 'G',
+                'start_week' => 'H',
+                'finish_date' => 'I',
+                'finish_week' => 'J',
+                'progress' => 'K',
+                'status' => 'L',
+                'latest_note' => 'M',
+            ];
+        }
+
+        $userId = Auth::id() ?: 1;
+        $importedCount = 0;
+        $updatedCount = 0;
+
+        // Date parser helper
+        $parseDate = function ($rawVal) {
+            if (empty($rawVal)) return null;
+            $rawVal = trim((string)$rawVal);
+            if (is_numeric($rawVal) && (float)$rawVal > 1000) {
+                try {
+                    return ExcelDate::excelToDateTimeObject((float)$rawVal)->format('Y-m-d');
+                } catch (\Exception $e) {
+                }
+            }
+            try {
+                return Carbon::parse($rawVal)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return null;
+            }
+        };
+
+        // Helper to convert week string (e.g. 'W1 Okt 26', 'W3 Jun 26', 'W4 Agus 2026', 'Januari-26') to a real Date
+        $parseWeekToDate = function ($weekStr, $isEndOfWeek = false) {
+            if (empty($weekStr)) return null;
+            $weekStr = trim((string)$weekStr);
+
+            $monthsMap = [
+                'jan' => 1,
+                'januari' => 1,
+                'january' => 1,
+                'feb' => 2,
+                'februari' => 2,
+                'february' => 2,
+                'mar' => 3,
+                'maret' => 3,
+                'march' => 3,
+                'apr' => 4,
+                'april' => 4,
+                'mei' => 5,
+                'may' => 5,
+                'jun' => 6,
+                'juni' => 6,
+                'june' => 6,
+                'jul' => 7,
+                'juli' => 7,
+                'july' => 7,
+                'agu' => 8,
+                'ags' => 8,
+                'agt' => 8,
+                'agus' => 8,
+                'agustus' => 8,
+                'aug' => 8,
+                'august' => 8,
+                'sep' => 9,
+                'sept' => 9,
+                'september' => 9,
+                'okt' => 10,
+                'oct' => 10,
+                'oktober' => 10,
+                'october' => 10,
+                'nov' => 11,
+                'nop' => 11,
+                'november' => 11,
+                'des' => 12,
+                'dec' => 12,
+                'desember' => 12,
+                'december' => 12,
+            ];
+
+            $weekNum = 1;
+            $month = null;
+            $year = Carbon::now()->year;
+
+            // Pattern 1: W1 Okt 26 or W3 Jun 2026 or W2 Juni
+            if (preg_match('/W([1-5])\s*([a-zA-Z]+)(?:\s*[-_\/]?\s*(\d{2,4}))?/i', $weekStr, $matches)) {
+                $weekNum = (int)$matches[1];
+                $mStr = strtolower($matches[2]);
+                if (isset($monthsMap[$mStr])) {
+                    $month = $monthsMap[$mStr];
+                }
+                if (!empty($matches[3])) {
+                    $yVal = (int)$matches[3];
+                    $year = ($yVal < 100) ? 2000 + $yVal : $yVal;
+                }
+            }
+            // Pattern 2: Januari-26 or Mei 2026 or Sep-26
+            elseif (preg_match('/([a-zA-Z]+)(?:\s*[-_\/]?\s*(\d{2,4}))?/i', $weekStr, $matches)) {
+                $mStr = strtolower($matches[1]);
+                if (isset($monthsMap[$mStr])) {
+                    $month = $monthsMap[$mStr];
+                }
+                if (!empty($matches[2])) {
+                    $yVal = (int)$matches[2];
+                    $year = ($yVal < 100) ? 2000 + $yVal : $yVal;
+                }
+                $weekNum = $isEndOfWeek ? 4 : 1;
+            }
+
+            if (!$month) {
+                return null;
+            }
+
+            $daysInMonth = Carbon::create($year, $month, 1)->daysInMonth;
+
+            if ($weekNum === 1) {
+                $day = $isEndOfWeek ? min(7, $daysInMonth) : 1;
+            } elseif ($weekNum === 2) {
+                $day = $isEndOfWeek ? min(14, $daysInMonth) : 8;
+            } elseif ($weekNum === 3) {
+                $day = $isEndOfWeek ? min(21, $daysInMonth) : 15;
+            } elseif ($weekNum === 4) {
+                $day = $isEndOfWeek ? min(28, $daysInMonth) : 22;
+            } else {
+                $day = $isEndOfWeek ? $daysInMonth : 29;
+                if ($day > $daysInMonth) $day = $daysInMonth;
+            }
+
+            return Carbon::create($year, $month, $day)->format('Y-m-d');
+        };
+
+        // Cache existing areas & categories
+        $activeAreas = EngUtilityProjectArea::pluck('nama_area')->toArray();
+        if (empty($activeAreas)) $activeAreas = ['Boiler', 'Utility', 'WWTP', 'MTC'];
+        $activeCategories = EngUtilityProjectCategory::pluck('nama_kategori')->toArray();
+
+        DB::beginTransaction();
+        try {
+            foreach ($rows as $rowIndex => $cols) {
+                if ($rowIndex <= $headerRowIdx) continue;
+
+                $namaProject = isset($headerMap['nama_project'], $cols[$headerMap['nama_project']])
+                    ? trim((string)$cols[$headerMap['nama_project']])
+                    : '';
+
+                // Skip if no project name
+                if (empty($namaProject)) {
+                    continue;
+                }
+
+                $nomorProject = isset($headerMap['nomor_project'], $cols[$headerMap['nomor_project']])
+                    ? trim((string)$cols[$headerMap['nomor_project']])
+                    : null;
+
+                $targetResult = isset($headerMap['target_result'], $cols[$headerMap['target_result']])
+                    ? trim((string)$cols[$headerMap['target_result']])
+                    : null;
+
+                $areaRaw = isset($headerMap['area'], $cols[$headerMap['area']])
+                    ? trim((string)$cols[$headerMap['area']])
+                    : 'Utility';
+
+                // Normalize area
+                $area = 'Utility';
+                foreach ($activeAreas as $a) {
+                    if (strcasecmp($a, $areaRaw) === 0) {
+                        $area = $a;
+                        break;
+                    }
+                }
+                if ($area === 'Utility' && !empty($areaRaw)) {
+                    if (stripos($areaRaw, 'boiler') !== false) $area = 'Boiler';
+                    elseif (stripos($areaRaw, 'wwtp') !== false || stripos($areaRaw, 'ipal') !== false) $area = 'WWTP';
+                    elseif (stripos($areaRaw, 'mtc') !== false || stripos($areaRaw, 'maintenance') !== false) $area = 'MTC';
+                }
+
+                $kategoriRaw = isset($headerMap['kategori'], $cols[$headerMap['kategori']])
+                    ? trim((string)$cols[$headerMap['kategori']])
+                    : 'Maintenance';
+
+                $kategori = !empty($kategoriRaw) ? $kategoriRaw : 'Maintenance';
+                foreach ($activeCategories as $c) {
+                    if (strcasecmp($c, $kategoriRaw) === 0) {
+                        $kategori = $c;
+                        break;
+                    }
+                }
+
+                // Prioritas: default ke 'Medium' jika kosong atau tidak cocok
+                $priorityRaw = isset($headerMap['priority'], $cols[$headerMap['priority']])
+                    ? trim((string)$cols[$headerMap['priority']])
+                    : '';
+                $priority = 'Medium';
+                if (!empty($priorityRaw)) {
+                    foreach (['Critical', 'High', 'Medium', 'Low'] as $p) {
+                        if (strcasecmp($p, $priorityRaw) === 0) {
+                            $priority = $p;
+                            break;
+                        }
+                    }
+                }
+
+                // Tanggal & Minggu Mulai
+                $startDate = isset($headerMap['start_date'], $cols[$headerMap['start_date']])
+                    ? $parseDate($cols[$headerMap['start_date']])
+                    : null;
+
+                $startWeek = isset($headerMap['start_week'], $cols[$headerMap['start_week']])
+                    ? trim((string)$cols[$headerMap['start_week']])
+                    : null;
+
+                // Jika tanggal mulai kosong tapi ada minggu mulai -> ambil tanggal awal minggu
+                if (empty($startDate) && !empty($startWeek)) {
+                    $startDate = $parseWeekToDate($startWeek, false);
+                } elseif (!empty($startDate) && empty($startWeek)) {
+                    $cDate = Carbon::parse($startDate);
+                    $startWeek = 'W' . (int)ceil($cDate->day / 7) . ' ' . $cDate->isoFormat('MMM YY');
+                }
+
+                // Tanggal & Minggu Selesai
+                $finishDate = isset($headerMap['finish_date'], $cols[$headerMap['finish_date']])
+                    ? $parseDate($cols[$headerMap['finish_date']])
+                    : null;
+
+                $finishWeek = isset($headerMap['finish_week'], $cols[$headerMap['finish_week']])
+                    ? trim((string)$cols[$headerMap['finish_week']])
+                    : null;
+
+                // Jika target selesai kosong tapi ada minggu selesai -> ambil tanggal akhir minggu
+                if (empty($finishDate) && !empty($finishWeek)) {
+                    $finishDate = $parseWeekToDate($finishWeek, true);
+                } elseif (!empty($finishDate) && empty($finishWeek)) {
+                    $cDate = Carbon::parse($finishDate);
+                    $finishWeek = 'W' . (int)ceil($cDate->day / 7) . ' ' . $cDate->isoFormat('MMM YY');
+                }
+
+                // Progress persentase (support format: "100%", "50 %", "0.45", "45", dsb)
+                $progressRaw = isset($headerMap['progress'], $cols[$headerMap['progress']])
+                    ? $cols[$headerMap['progress']]
+                    : 0;
+                $progress = 0;
+                if ($progressRaw !== null && $progressRaw !== '') {
+                    $cleanProg = trim((string)$progressRaw);
+                    $hasPercentSign = str_contains($cleanProg, '%');
+
+                    // Bersihkan karakter persen dan spasi, ganti koma dengan titik (misal "99,5%" -> "99.5")
+                    $cleanProg = str_replace(['%', ' '], '', $cleanProg);
+                    $cleanProg = str_replace(',', '.', $cleanProg);
+
+                    if (is_numeric($cleanProg)) {
+                        $pVal = (float)$cleanProg;
+                        // Jika desimal murni dari Excel tanpa simbol % (misal 0.45 -> 45%)
+                        if (!$hasPercentSign && $pVal > 0 && $pVal < 1) {
+                            $pVal = $pVal * 100;
+                        }
+                        $progress = (int)round(max(0, min(100, $pVal)));
+                    }
+                }
+
+                // Status project
+                $statusRaw = isset($headerMap['status'], $cols[$headerMap['status']])
+                    ? trim((string)$cols[$headerMap['status']])
+                    : null;
+
+                $status = null;
+                if (!empty($statusRaw)) {
+                    if (stripos($statusRaw, 'selesai') !== false || stripos($statusRaw, 'done') !== false || stripos($statusRaw, 'complete') !== false) {
+                        $status = 'Selesai';
+                    } elseif (stripos($statusRaw, 'lambat') !== false || stripos($statusRaw, 'delay') !== false || stripos($statusRaw, 'overdue') !== false) {
+                        $status = 'Terlambat';
+                    } elseif (stripos($statusRaw, 'progress') !== false || stripos($statusRaw, 'jalan') !== false || stripos($statusRaw, 'ongoing') !== false) {
+                        $status = 'On Progress';
+                    }
+                }
+
+                // Jika status kosong: tentukan otomatis dari persentase dan deadline minggu/tanggal target selesai
+                if (!$status) {
+                    if ($progress >= 100) {
+                        $status = 'Selesai';
+                    } else {
+                        $deadline = $finishDate ?: ($finishWeek ? $parseWeekToDate($finishWeek, true) : null);
+                        if ($deadline && Carbon::parse($deadline)->endOfDay()->isPast()) {
+                            $status = 'Terlambat';
+                        } else {
+                            $status = 'On Progress';
+                        }
+                    }
+                }
+
+                $latestNote = isset($headerMap['latest_note'], $cols[$headerMap['latest_note']])
+                    ? trim((string)$cols[$headerMap['latest_note']])
+                    : null;
+
+                // Fase (Fase 1 / Fase 2 / Fase 3)
+                $faseRaw = isset($headerMap['fase'], $cols[$headerMap['fase']])
+                    ? trim((string)$cols[$headerMap['fase']])
+                    : '';
+                $fase = 'Fase 1';
+                if (!empty($faseRaw)) {
+                    $fLower = strtolower($faseRaw);
+                    if (str_contains($fLower, '3') || str_contains($fLower, 'pekerjaan')) {
+                        $fase = 'Fase 3';
+                    } elseif (str_contains($fLower, '2') || str_contains($fLower, 'administrasi') || str_contains($fLower, 'pr') || str_contains($fLower, 'po')) {
+                        $fase = 'Fase 2';
+                    } else {
+                        $fase = 'Fase 1';
+                    }
+                }
+
+                // Check existing project by nomor_project if provided, or exact nama_project
+                $existing = null;
+                if (!empty($nomorProject)) {
+                    $existing = EngUtilityProject::where('nomor_project', $nomorProject)->first();
+                }
+                if (!$existing) {
+                    $existing = EngUtilityProject::where('nama_project', $namaProject)->first();
+                }
+
+                if ($existing) {
+                    $oldProgress = $existing->progress;
+                    $existing->update([
+                        'nama_project' => $namaProject,
+                        'target_result' => $targetResult ?: $existing->target_result,
+                        'area' => $area,
+                        'kategori' => $kategori,
+                        'priority' => $priority,
+                        'fase' => !empty($faseRaw) ? $fase : ($existing->fase ?: 'Fase 1'),
+                        'start_date' => $startDate ?: $existing->start_date,
+                        'start_week' => $startWeek ?: $existing->start_week,
+                        'finish_date' => $finishDate ?: $existing->finish_date,
+                        'finish_week' => $finishWeek ?: $existing->finish_week,
+                        'progress' => $progress,
+                        'status' => $status,
+                        'latest_note' => $latestNote ?: $existing->latest_note,
+                        'updated_by' => $userId,
+                    ]);
+
+                    if (!empty($latestNote) || $progress != $oldProgress) {
+                        EngUtilityProjectLog::create([
+                            'project_id' => $existing->id,
+                            'progress_sebelumnya' => $oldProgress,
+                            'progress_baru' => $progress,
+                            'catatan' => $latestNote ?: 'Update via Migrasi Excel Project',
+                            'tanggal' => $finishDate ?: date('Y-m-d'),
+                            'created_by' => $userId,
+                        ]);
+                    }
+
+                    $updatedCount++;
+                } else {
+                    // Auto generate nomor if empty
+                    if (empty($nomorProject)) {
+                        $prefix = strtoupper(substr($area, 0, 3));
+                        $seq = EngUtilityProject::where('area', $area)->count() + 1;
+                        $nomorProject = 'PRJ-' . $prefix . '-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
+                    }
+
+                    $project = EngUtilityProject::create([
+                        'nomor_project' => $nomorProject,
+                        'nama_project' => $namaProject,
+                        'target_result' => $targetResult,
+                        'area' => $area,
+                        'kategori' => $kategori,
+                        'priority' => $priority,
+                        'fase' => $fase,
+                        'start_date' => $startDate,
+                        'start_week' => $startWeek,
+                        'finish_date' => $finishDate,
+                        'finish_week' => $finishWeek,
+                        'progress' => $progress,
+                        'status' => $status,
+                        'latest_note' => $latestNote,
+                        'created_by' => $userId,
+                        'updated_by' => $userId,
+                    ]);
+
+                    EngUtilityProjectLog::create([
+                        'project_id' => $project->id,
+                        'progress_sebelumnya' => 0,
+                        'progress_baru' => $progress,
+                        'catatan' => $latestNote ?: 'Migrasi Project Berjalan via Excel',
+                        'tanggal' => $startDate ?: date('Y-m-d'),
+                        'created_by' => $userId,
+                    ]);
+
+                    $importedCount++;
+                }
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memproses data: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat memproses data: ' . $e->getMessage());
+        }
+
+        $msg = "Migrasi berhasil! {$importedCount} project baru ditambahkan";
+        if ($updatedCount > 0) {
+            $msg .= " dan {$updatedCount} project diperbarui.";
+        } else {
+            $msg .= ".";
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'imported' => $importedCount,
+                'updated' => $updatedCount,
+            ]);
+        }
+
+        return redirect()->route('utility.project.data')->with('success', $msg);
+    }
+}

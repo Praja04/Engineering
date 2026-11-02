@@ -68,9 +68,9 @@
                 </div>
             </div>
 
-            <!-- Tabs Navigation -->
-            <div class="row mb-3">
-                <div class="col-12">
+            <!-- Tabs & Mass Action Buttons Navigation -->
+            <div class="row mb-3 align-items-center">
+                <div class="col-md-8 col-12">
                     <ul class="nav nav-pills nav-customs nav-danger" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" data-bs-toggle="tab" href="#pending-tab" role="tab"
@@ -85,6 +85,20 @@
                         </li>
                     </ul>
                 </div>
+                <div class="col-md-4 col-12 text-md-end mt-2 mt-md-0" id="massActionContainer" style="display:none;">
+                    <div class="d-flex gap-2 justify-content-md-end">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnSelectAll">
+                            <i class="ri-checkbox-multiple-line me-1"></i> Pilih Semua
+                        </button>
+                        <button type="button" class="btn btn-sm btn-success" id="btnMassApprove" disabled>
+                            <i class="ri-checkbox-circle-line me-1"></i> Approve Semua (<span
+                                class="selected-count">0</span>)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger" id="btnMassReject" disabled>
+                            <i class="ri-close-circle-line me-1"></i> Reject Semua (<span class="selected-count">0</span>)
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Approval Table Card -->
@@ -94,7 +108,12 @@
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-4">No</th>
+                                    <th class="ps-4" style="width: 50px;">
+                                        <div class="form-check" id="checkAllContainer" style="display:none;">
+                                            <input class="form-check-input" type="checkbox" id="checkAll">
+                                        </div>
+                                        <span id="noHeaderLabel">No</span>
+                                    </th>
                                     <th>Tanggal</th>
                                     <th>Parameter Uji</th>
                                     <th>Pelaksana</th>
@@ -190,6 +209,19 @@
                 const tbody = $('#approvalTableBody');
                 tbody.empty();
 
+                const isSupervisorPending = userJabatan === 'supervisor' && activeTab === 'pending';
+                if (isSupervisorPending && data && data.length > 0) {
+                    $('#checkAllContainer').show();
+                    $('#noHeaderLabel').hide();
+                    $('#massActionContainer').show();
+                    $('#checkAll').prop('checked', false);
+                    updateMassActionState();
+                } else {
+                    $('#checkAllContainer').hide();
+                    $('#noHeaderLabel').show();
+                    $('#massActionContainer').hide();
+                }
+
                 if (!data || !data.length) {
                     tbody.append(`<tr><td colspan="6" class="text-center py-5 text-muted">
                         <i class="ri-checkbox-circle-line fs-3 text-success d-block mb-2"></i>
@@ -199,6 +231,16 @@
 
                 data.forEach(function(item, idx) {
                     const no = idx + 1;
+
+                    // Checkbox column
+                    let noCol = no;
+                    if (isSupervisorPending) {
+                        noCol = `
+                            <div class="form-check">
+                                <input class="form-check-input row-checkbox" type="checkbox" value="${item.id}">
+                            </div>
+                        `;
+                    }
 
                     // Parameters badges
                     let paramNames = new Set();
@@ -242,7 +284,7 @@
 
                     tbody.append(`
                         <tr class="data-row">
-                            <td class="ps-4">${no}</td>
+                            <td class="ps-4">${noCol}</td>
                             <td><span class="badge bg-light text-dark border"><i class="mdi mdi-calendar me-1"></i>${formatDate(item.analisa_date)}</span></td>
                             <td>${paramBadges}</td>
                             <td>${item.pelaksana ? item.pelaksana.username : '-'}</td>
@@ -494,6 +536,147 @@
                     }
                 });
             };
+
+            // Handle Check All
+            // Handle Check All Checkbox
+            $(document).on('change', '#checkAll', function() {
+                const isChecked = $(this).is(':checked');
+                $('.row-checkbox').prop('checked', isChecked);
+                updateMassActionState();
+            });
+
+            // Handle Row Checkbox Change
+            $(document).on('change', '.row-checkbox', function() {
+                const total = $('.row-checkbox').length;
+                const checked = $('.row-checkbox:checked').length;
+                $('#checkAll').prop('checked', total === checked);
+                updateMassActionState();
+            });
+
+            // Handle Select All Button
+            $('#btnSelectAll').on('click', function() {
+                const total = $('.row-checkbox').length;
+                const checked = $('.row-checkbox:checked').length;
+
+                if (checked < total) {
+                    $('.row-checkbox').prop('checked', true);
+                    $('#checkAll').prop('checked', true);
+                } else {
+                    $('.row-checkbox').prop('checked', false);
+                    $('#checkAll').prop('checked', false);
+                }
+                updateMassActionState();
+            });
+
+            function updateMassActionState() {
+                const total = $('.row-checkbox').length;
+                const checkedCount = $('.row-checkbox:checked').length;
+                $('.selected-count').text(checkedCount);
+
+                if (checkedCount > 0) {
+                    $('#btnMassApprove, #btnMassReject').prop('disabled', false);
+                } else {
+                    $('#btnMassApprove, #btnMassReject').prop('disabled', true);
+                }
+
+                // Update btnSelectAll text and icon
+                if (total > 0 && checkedCount === total) {
+                    $('#btnSelectAll').html('<i class="ri-checkbox-multiple-blank-line me-1"></i> Batal Pilih');
+                } else {
+                    $('#btnSelectAll').html('<i class="ri-checkbox-multiple-line me-1"></i> Pilih Semua');
+                }
+            }
+
+            // Mass Approve Action
+            $('#btnMassApprove').on('click', function() {
+                const selectedIds = [];
+                $('.row-checkbox:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (!selectedIds.length) return;
+
+                Swal.fire({
+                    title: 'Konfirmasi Mass Approval',
+                    text: `Apakah Anda yakin ingin menyetujui ${selectedIds.length} data analisa WWTP terpilih?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    confirmButtonText: 'Ya, Setujui Semua',
+                    cancelButtonText: 'Batal'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        showLoading(true);
+                        $.ajax({
+                            url: "/api/wwtp-analisa/mass-approve",
+                            method: 'POST',
+                            data: {
+                                _token: csrfToken,
+                                ids: selectedIds
+                            },
+                            success: function(res) {
+                                showLoading(false);
+                                Swal.fire('Berhasil!', res.message, 'success');
+                                loadApprovals();
+                            },
+                            error: function(xhr) {
+                                showLoading(false);
+                                Swal.fire('Gagal!', xhr.responseJSON?.message ||
+                                    'Gagal memproses mass approval.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Mass Reject Action
+            $('#btnMassReject').on('click', function() {
+                const selectedIds = [];
+                $('.row-checkbox:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (!selectedIds.length) return;
+
+                Swal.fire({
+                    title: 'Mass Reject Laporan',
+                    text: `Masukkan alasan penolakan untuk ${selectedIds.length} data terpilih:`,
+                    input: 'textarea',
+                    inputPlaceholder: 'Alasan penolakan massal...',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Tolak Semua',
+                    cancelButtonText: 'Batal',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Alasan penolakan wajib diisi!'
+                        }
+                    }
+                }).then(result => {
+                    if (result.isConfirmed && result.value) {
+                        showLoading(true);
+                        $.ajax({
+                            url: "/api/wwtp-analisa/mass-reject",
+                            method: 'POST',
+                            data: {
+                                _token: csrfToken,
+                                ids: selectedIds,
+                                reason: result.value
+                            },
+                            success: function(res) {
+                                showLoading(false);
+                                Swal.fire('Ditolak!', res.message, 'info');
+                                loadApprovals();
+                            },
+                            error: function(xhr) {
+                                showLoading(false);
+                                Swal.fire('Gagal!', xhr.responseJSON?.message ||
+                                    'Gagal memproses mass reject.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
 
             function showLoading(show) {
                 if (show) $('#loadingOverlay').removeClass('d-none');

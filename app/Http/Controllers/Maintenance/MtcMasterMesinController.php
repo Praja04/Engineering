@@ -47,7 +47,7 @@ class MtcMasterMesinController extends Controller
         $data = MtcMasterMesinModel::with('frekuensi')
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(fn ($item) => [
+            ->map(fn($item) => [
                 'id'             => $item->id,
                 'jenis_mtc'      => $item->jenis_mtc,
                 'nama_mesin'     => $item->nama_mesin,
@@ -57,7 +57,7 @@ class MtcMasterMesinController extends Controller
                 'aktif'          => $item->aktif,
                 'created_at'     => $item->created_at,
                 // [{ interval: 2, satuan: 'bulan', label: '2 Bulan' }, ...]
-                'frekuensi_list' => $item->frekuensi->map(fn ($f) => [
+                'frekuensi_list' => $item->frekuensi->map(fn($f) => [
                     'interval' => $f->interval,
                     'satuan'   => $f->satuan,
                     'label'    => $f->label,
@@ -90,7 +90,7 @@ class MtcMasterMesinController extends Controller
 
     public function destroy($id)
     {
-        DB::transaction(fn () => MtcMasterMesinModel::findOrFail($id)->delete());
+        DB::transaction(fn() => MtcMasterMesinModel::findOrFail($id)->delete());
 
         return response()->json(['status' => true, 'message' => 'Data mesin berhasil dihapus']);
     }
@@ -100,12 +100,70 @@ class MtcMasterMesinController extends Controller
     public function downloadTemplate()
     {
         $path = storage_path('app/templates/template_master_mesin.xlsx');
+        $dir = dirname($path);
 
-        if (!file_exists($path)) {
-            return response()->json(['status' => false, 'message' => 'File template tidak ditemukan.'], 404);
+        if (!file_exists($dir)) {
+            mkdir($dir, 0775, true);
         }
 
-        return response()->download($path, 'template_master_mesin.xlsx');
+        if (!file_exists($path)) {
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Set headers/instructions
+            $sheet->setCellValue('A1', 'TEMPLATE IMPORT MASTER MESIN');
+            $sheet->mergeCells('A1:H1');
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+            $sheet->setCellValue('A2', 'Petunjuk: Mulai isi data di Baris 5. Kolom B, C, dan D wajib diisi.');
+            $sheet->mergeCells('A2:H2');
+
+            $sheet->setCellValue('A3', 'Frekuensi dipisah koma (contoh: 1 Hari, 2 Minggu, 1 Bulan, 6 Bulan). Aktif diisi: Ya/Tidak atau Aktif/Non Aktif.');
+            $sheet->mergeCells('A3:H3');
+
+            // Table headers in row 4
+            $sheet->setCellValue('A4', 'No');
+            $sheet->setCellValue('B4', 'Jenis MTC *');
+            $sheet->setCellValue('C4', 'Nama Mesin *');
+            $sheet->setCellValue('D4', 'Lokasi *');
+            $sheet->setCellValue('E4', 'Dept');
+            $sheet->setCellValue('F4', 'Kode Mesin');
+            $sheet->setCellValue('G4', 'Frekuensi Perawatan');
+            $sheet->setCellValue('H4', 'Status Aktif');
+
+            // Apply bold to headers
+            $sheet->getStyle('A4:H4')->getFont()->setBold(true);
+
+            // Add sample data in Row 5
+            $sheet->setCellValue('A5', '1');
+            $sheet->setCellValue('B5', 'Utility');
+            $sheet->setCellValue('C5', 'Kompresor A');
+            $sheet->setCellValue('D5', 'Ruang Utility');
+            $sheet->setCellValue('E5', 'Engineering');
+            $sheet->setCellValue('F5', 'UTL-COMP-A');
+            $sheet->setCellValue('G5', '1 Bulan, 6 Bulan');
+            $sheet->setCellValue('H5', 'Aktif');
+
+            // Add sample data in Row 6
+            $sheet->setCellValue('A6', '2');
+            $sheet->setCellValue('B6', 'Electrical');
+            $sheet->setCellValue('C6', 'Panel Listrik Utama');
+            $sheet->setCellValue('D6', 'Gedung Produksi');
+            $sheet->setCellValue('E6', 'Engineering');
+            $sheet->setCellValue('F6', 'ELC-PAN-MAIN');
+            $sheet->setCellValue('G6', '1 Minggu, 1 Tahun');
+            $sheet->setCellValue('H6', 'Aktif');
+
+            // Auto fit column widths
+            foreach (range('A', 'H') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save($path);
+        }
+
+        return response()->download($path, 'template_master_mesin_maintenance.xlsx');
     }
 
     // ── Upload & import Excel ─────────────────────────────────────────────────
@@ -140,7 +198,17 @@ class MtcMasterMesinController extends Controller
                 $rowErrors = [];
                 if ($jenisMtc === '')  $rowErrors[] = 'Jenis MTC wajib diisi';
                 if ($namaMesin === '') $rowErrors[] = 'Nama Mesin wajib diisi';
-                if ($lokasi === '')    $rowErrors[] = 'Lokasi wajib diisi';
+
+                $jenisMtcLower = strtolower($jenisMtc);
+                $isElectrical = str_contains($jenisMtcLower, 'Electrical') || str_contains($jenisMtcLower, 'electrical');
+
+                if ($lokasi === '' && !$isElectrical) {
+                    $rowErrors[] = 'Lokasi wajib diisi';
+                }
+
+                if ($lokasi === '') {
+                    $lokasi = '-';
+                }
 
                 // Parse frekuensi: "1 Bulan, 6 Bulan" → [['interval'=>1,'satuan'=>'bulan'], ...]
                 $frekuensiList = [];
@@ -175,15 +243,31 @@ class MtcMasterMesinController extends Controller
                     continue;
                 }
 
-                $mesin = MtcMasterMesinModel::create([
-                    'jenis_mtc'  => $jenisMtc,
-                    'nama_mesin' => $namaMesin,
-                    'lokasi'     => $lokasi,
-                    'dept'       => $dept !== '' ? $dept : null,
-                    'kode_mesin' => $kodeMesin !== '' ? $kodeMesin : null,
-                    'aktif'      => $aktif,
-                    'created_by' => Auth::id(),
-                ]);
+                $mesin = null;
+                if ($kodeMesin !== '') {
+                    $mesin = MtcMasterMesinModel::where('kode_mesin', $kodeMesin)->first();
+                }
+
+                if ($mesin) {
+                    $mesin->update([
+                        'jenis_mtc'  => $jenisMtc,
+                        'nama_mesin' => $namaMesin,
+                        'lokasi'     => $lokasi,
+                        'dept'       => $dept !== '' ? $dept : null,
+                        'aktif'      => $aktif,
+                        'updated_by' => Auth::id(),
+                    ]);
+                } else {
+                    $mesin = MtcMasterMesinModel::create([
+                        'jenis_mtc'  => $jenisMtc,
+                        'nama_mesin' => $namaMesin,
+                        'lokasi'     => $lokasi,
+                        'dept'       => $dept !== '' ? $dept : null,
+                        'kode_mesin' => $kodeMesin !== '' ? $kodeMesin : null,
+                        'aktif'      => $aktif,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
 
                 $this->syncFrekuensi($mesin->id, $frekuensiList);
                 $inserted++;
@@ -260,10 +344,18 @@ class MtcMasterMesinController extends Controller
 
         // Kata tunggal — anggap interval = 1
         $wordMap = [
-            'harian'   => 'hari',   'hari'    => 'hari',   'daily'  => 'hari',
-            'mingguan' => 'minggu', 'minggu'  => 'minggu', 'weekly' => 'minggu',
-            'bulanan'  => 'bulan',  'bulan'   => 'bulan',  'monthly' => 'bulan',
-            'tahunan'  => 'tahun',  'tahun'   => 'tahun',  'yearly' => 'tahun',
+            'harian'   => 'hari',
+            'hari'    => 'hari',
+            'daily'  => 'hari',
+            'mingguan' => 'minggu',
+            'minggu'  => 'minggu',
+            'weekly' => 'minggu',
+            'bulanan'  => 'bulan',
+            'bulan'   => 'bulan',
+            'monthly' => 'bulan',
+            'tahunan'  => 'tahun',
+            'tahun'   => 'tahun',
+            'yearly' => 'tahun',
             'annual' => 'tahun',
         ];
 

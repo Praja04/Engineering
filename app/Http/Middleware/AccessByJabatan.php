@@ -21,6 +21,11 @@ class AccessByJabatan
             abort(403, 'Unauthorized');
         }
 
+        // Akun Server Root bypass semua route
+        if ($user->role === 'Server' || strtolower($user->username) === 'server') {
+            return $next($request);
+        }
+
         // kalau jabatannya foreman, spv, dept_head → akses semua
         if (in_array($user->jabatan, ['admin', 'foreman', 'supervisor', 'dept_head'])) {
             return $next($request);

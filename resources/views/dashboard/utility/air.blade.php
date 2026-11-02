@@ -322,7 +322,7 @@
 
             // Calculate quota for each source
             const processedData = data.map(item => {
-                const quota = waterQuotas[item.jenis_pemakaian] || 0;
+                const quota = (item.quota_target !== null && item.quota_target !== undefined) ? Number(item.quota_target) : (waterQuotas[item.jenis_pemakaian] || 0);
                 const expectedUsage = quota * daysDiff;
                 const variance = item.total_pemakaian - expectedUsage;
                 const percentageUsage = expectedUsage > 0 ? (item.total_pemakaian / expectedUsage * 100).toFixed(1) : 0;

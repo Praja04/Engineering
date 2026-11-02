@@ -26,7 +26,6 @@ class AnalisisUtilityDetails extends Model
         'ph_depo_lt2',
         'ph_cooling_tower',
         'ph_boiler',
-        'ph_outlet_ws_2',
         'tds_fw_storage',
         'tds_ws_storage',
         'tds_ro_storage',

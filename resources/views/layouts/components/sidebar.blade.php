@@ -54,6 +54,7 @@
                     <li class="menu-title"><span data-key="t-menu">Engineering Menu</span></li>
                     @include('layouts.components.sidebar-utility.kpi')
                     @include('layouts.components.sidebar-utility.utility')
+                    @include('layouts.components.sidebar-utility.utility_project')
                     @include('layouts.components.sidebar-epr.menu-epr')
                     @include('layouts.components.sidebar-utility.wwtp')
                     @include('layouts.components.sidebar-boiler.menu-boiler')
@@ -64,7 +65,7 @@
 
 
                     <!-- /////////////////////Data Master/////////////// -->
-                    @if (in_array($jabatan, ['admin', 'dept_head', 'supervisor', 'foreman']))
+                    @if ($isAdmin || in_array($jabatan, ['admin', 'dept_head', 'supervisor', 'foreman']))
                         <li class="menu-title"><span data-key="t-menu">Data Master</span></li>
 
                         @include('layouts.components.sidebar-kalibrasi.data-master')
@@ -74,7 +75,7 @@
                     @endif
 
                     <!-- /////////////////////Manage User/////////////// -->
-                    @if (in_array($jabatan, ['admin', 'dept_head', 'foreman', 'supervisor']))
+                    @if ($isAdmin || in_array($jabatan, ['admin', 'dept_head', 'foreman', 'supervisor']))
                         <li class="nav-item">
                             <a href="{{ url('users/index') }}"
                                 class="nav-link menu-link  {{ request()->routeIs('users.*') ? 'active' : '' }}">

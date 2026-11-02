@@ -7,6 +7,8 @@ use App\Http\Controllers\Utility\KpiController;
 Route::prefix('utility')->group(function () {
     Route::get('/kpi/chart/listrik-prd-fg',        [KpiController::class, 'getChartListrikPrdPerFg']);
     Route::get('/kpi/chart/listrik-bas-kecap',     [KpiController::class, 'getChartListrikBasPerKecapMatang']);
+    Route::get('/kpi/chart/weekly/listrik-prd-fg',    [KpiController::class, 'getChartWeeklyListrikPrdPerFg']);
+    Route::get('/kpi/chart/weekly/listrik-bas-kecap', [KpiController::class, 'getChartWeeklyListrikBasPerKecapMatang']);
     Route::get('/trend-pemakaian-listrik', [ListrikController::class, 'getTrendPemakaianListrik']);
     Route::get('/top5/listrik', [ListrikController::class, 'getTopJenisPemakaianListrik']);
     Route::get('/top5/operator/listrik', [ListrikController::class, 'getTopOperatorPemakaianListrik']);

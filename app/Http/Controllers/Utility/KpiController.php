@@ -33,6 +33,7 @@ class KpiController extends Controller
             'listrik_bas' => 'nullable|numeric|min:0',
             'steam' => 'nullable|numeric|min:0',
             'batubara' => 'nullable|numeric|min:0',
+            'utility_cost' => 'nullable|numeric|min:0',
 
         ]);
 
@@ -88,6 +89,7 @@ class KpiController extends Controller
             'listrik_bas' => $request->listrik_bas,
             'steam' => $request->steam,
             'batubara' => $request->batubara,
+            'utility_cost' => $jenis === 'monthly' ? $request->utility_cost : null,
         ]);
 
         return response()->json([
@@ -168,6 +170,7 @@ class KpiController extends Controller
             'listrik_bas' => 'nullable|numeric|min:0',
             'steam' => 'nullable|numeric|min:0',
             'batubara' => 'nullable|numeric|min:0',
+            'utility_cost' => 'nullable|numeric|min:0',
         ]);
 
         $kpi = KpiModel::find($id);
@@ -192,6 +195,7 @@ class KpiController extends Controller
             'listrik_bas' => $request->listrik_bas,
             'steam' => $request->steam,
             'batubara' => $request->batubara,
+            'utility_cost' => $jenis === 'monthly' ? $request->utility_cost : null,
         ]);
 
         return response()->json([
@@ -550,6 +554,96 @@ class KpiController extends Controller
             'year'   => $year,
             'label'  => 'Listrik BAS / Kecap Matang',
             'satuan' => 'kWh/Ton',
+            'data'   => $chartData,
+        ]);
+    }
+
+    public function getChartWeeklyListrikPrdPerFg(Request $request)
+    {
+        $year = $request->input('year', Carbon::now()->year);
+
+        $data = KpiModel::where('periode_tipe', 'weekly')
+            ->where(function ($q) use ($year) {
+                $q->whereYear('start_date', $year)
+                  ->orWhereYear('end_date', $year);
+            })
+            ->whereNotNull('listrik_prd')
+            ->whereNotNull('finish_goods')
+            ->where('finish_goods', '>', 0)
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        $chartData = $data->map(function ($item) {
+            $ratio = ($item->listrik_prd / $item->finish_goods) * 10;
+            $start = Carbon::parse($item->start_date);
+            $end = Carbon::parse($item->end_date);
+            $weekNum = $item->week ?: $start->isoWeek;
+            $label = 'W' . $weekNum . ' (' . $start->format('d/m') . '-' . $end->format('d/m') . ')';
+
+            return [
+                'id'           => $item->id,
+                'week'         => $weekNum,
+                'start_date'   => $item->start_date,
+                'end_date'     => $item->end_date,
+                'periode'      => $start->format('d M') . ' - ' . $end->format('d M Y'),
+                'label'        => $label,
+                'listrik_prd'  => (float) $item->listrik_prd,
+                'finish_goods' => (float) $item->finish_goods,
+                'nilai'        => round($ratio, 4),
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'year'   => $year,
+            'label'  => 'KPI Listrik PRD / 10 Ton FG (Weekly)',
+            'satuan' => 'kWh/10 Ton FG',
+            'target' => 510,
+            'data'   => $chartData,
+        ]);
+    }
+
+    public function getChartWeeklyListrikBasPerKecapMatang(Request $request)
+    {
+        $year = $request->input('year', Carbon::now()->year);
+
+        $data = KpiModel::where('periode_tipe', 'weekly')
+            ->where(function ($q) use ($year) {
+                $q->whereYear('start_date', $year)
+                  ->orWhereYear('end_date', $year);
+            })
+            ->whereNotNull('listrik_bas')
+            ->whereNotNull('kecap_matang')
+            ->where('kecap_matang', '>', 0)
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        $chartData = $data->map(function ($item) {
+            $ratio = $item->listrik_bas / $item->kecap_matang;
+            $start = Carbon::parse($item->start_date);
+            $end = Carbon::parse($item->end_date);
+            $weekNum = $item->week ?: $start->isoWeek;
+            $label = 'W' . $weekNum . ' (' . $start->format('d/m') . '-' . $end->format('d/m') . ')';
+
+            return [
+                'id'           => $item->id,
+                'week'         => $weekNum,
+                'start_date'   => $item->start_date,
+                'end_date'     => $item->end_date,
+                'periode'      => $start->format('d M') . ' - ' . $end->format('d M Y'),
+                'label'        => $label,
+                'listrik_bas'  => (float) $item->listrik_bas,
+                'kecap_matang' => (float) $item->kecap_matang,
+                'nilai'        => round($ratio, 4),
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'year'   => $year,
+            'label'  => 'KPI Listrik BAS / Kecap Matang (Weekly)',
+            'satuan' => 'kWh/Ton',
+            'target' => 75,
             'data'   => $chartData,
         ]);
     }

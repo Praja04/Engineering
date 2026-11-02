@@ -140,13 +140,23 @@
                                     <th>Waktu Selesai</th>
                                     <th>Departemen</th>
                                     <th>Area</th>
-                                    <th>status</th>
-                                    <th style="width:180px;" class="text-center">Aksi</th>
+                                    <th>Status</th>
+                                    <th style="width:140px;" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="tbodySipil">
+                                <tr>
+                                    <td colspan="8" class="text-center small-muted py-4">Memuat data...</td>
+                                </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                        <div id="paginationInfo" class="small text-muted"></div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="paginationList">
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -202,7 +212,8 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Waktu Mulai</label>
-                                <input type="time" class="form-control" name="waktu_mulai" id="editWaktuMulai" readonly>
+                                <input type="time" class="form-control" name="waktu_mulai" id="editWaktuMulai"
+                                    readonly>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Waktu Selesai</label>
@@ -218,50 +229,74 @@
 
                         <div id="editSections"><!-- injected checklist items --></div>
 
-                        <div class="row g-3 mt-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Rekomendasi</label>
-                                <textarea class="form-control" name="rekomendasi" id="editRekomendasi" rows="2"></textarea>
+                            <div class="row g-3 mt-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Rekomendasi</label>
+                                    <textarea class="form-control" name="rekomendasi" id="editRekomendasi" rows="2"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Korektif</label>
+                                    <textarea class="form-control" name="korektif" id="editKorektif" rows="2"></textarea>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Korektif</label>
-                                <textarea class="form-control" name="korektif" id="editKorektif" rows="2"></textarea>
+
+                            <hr class="my-4">
+
+                            <div class="fw-bold mb-2">Kebutuhan Material</div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle" id="materialTableEdit">
+                                    <thead class="table-light text-nowrap">
+                                        <tr>
+                                            <th style="width: 20%">MID</th>
+                                            <th>Deskripsi</th>
+                                            <th style="width: 15%">Jumlah</th>
+                                            <th class="text-center" style="width: 10%">
+                                                <button type="button" class="btn btn-sm btn-primary"
+                                                    id="btnAddMaterialEdit">
+                                                    +
+                                                </button>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- dynamic rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="fw-bold mb-2 mt-4">Penggantian Material</div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle" id="replacementTableEdit">
+                                    <thead class="table-light text-nowrap">
+                                        <tr>
+                                            <th style="width: 20%">MID</th>
+                                            <th>Deskripsi</th>
+                                            <th style="width: 15%">Jumlah</th>
+                                            <th class="text-center" style="width: 10%">
+                                                <button type="button" class="btn btn-sm btn-primary"
+                                                    id="btnAddReplacementEdit">
+                                                    +
+                                                </button>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- dynamic rows -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
-                        <hr class="my-4">
-
-                        <div class="fw-bold mb-2">Kebutuhan Material</div>
-
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle" id="materialTableEdit">
-                                <thead class="table-light text-nowrap">
-                                    <tr>
-                                        <th style="width: 20%">MID</th>
-                                        <th>Deskripsi</th>
-                                        <th style="width: 15%">Jumlah</th>
-                                        <th class="text-center" style="width: 10%">
-                                            <button type="button" class="btn btn-sm btn-primary"
-                                                id="btnAddMaterialEdit">
-                                                +
-                                            </button>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- dynamic rows -->
-                                </tbody>
-                            </table>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="btnSaveEdit">
+                                <span class="spinner-border spinner-border-sm me-2 d-none" id="spinEdit"></span>
+                                Simpan Perubahan
+                            </button>
                         </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary" id="btnSaveEdit">
-                            <span class="spinner-border spinner-border-sm me-2 d-none" id="spinEdit"></span>
-                            Simpan Perubahan
-                        </button>
-                    </div>
                 </form>
             </div>
         </div>
@@ -385,35 +420,75 @@
                     `;
                 };
 
-                return `
-                    <div class="detail-meta row g-3 mb-2">
-                        <div class="col-md-3">
-                            <div class="meta-label">Tanggal</div>
-                            <div class="meta-value">${row.tanggal ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Waktu Mulai</div>
-                            <div class="meta-value">${row.waktu_mulai ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Waktu Selesai</div>
-                            <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Departemen</div>
-                            <div class="meta-value">${row.departemen ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Area</div>
-                            <div class="meta-value">${row.area ?? '-'}</div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="meta-label">Dibuat oleh</div>
-                            <div class="meta-value">${row.created_by.username ?? row.created_by.created_by ?? '-'}</div>
-                        </div>
-                    </div>
+                    let checklistContent = '';
+                    const results = row.checklist_results || row.checklistResults || [];
+                    if (results && results.length > 0) {
+                        const grouped = {};
+                        results.forEach(res => {
+                            const grp = res.checklist?.group?.nama_group || 'Checklist';
+                            if (!grouped[grp]) grouped[grp] = [];
+                            grouped[grp].push(res);
+                        });
 
-                    ${section('Sipil', sipil, row.sipil)}
+                        checklistContent = Object.keys(grouped).map(groupName => {
+                            const cells = grouped[groupName].map(res => {
+                                let badge = '';
+                                if (res.checklist?.tipe_input === 'boolean_ok_ng' || res.status) {
+                                    badge = (res.status || '').toLowerCase() === 'ok' ? '<span class="badge bg-success">OK</span>' : '<span class="badge bg-danger">Tidak OK</span>';
+                                } else if (res.nilai) {
+                                    badge = `<span class="badge bg-info">${res.nilai}</span>`;
+                                } else {
+                                    badge = '<span class="badge bg-secondary">-</span>';
+                                }
+                                return `
+                                    <div class="item-cell">
+                                        <div class="item-label">${res.checklist?.label || '-'}</div>
+                                        <div>${badge}</div>
+                                        ${res.keterangan ? `<div class="small text-danger mt-1">Ket: ${res.keterangan}</div>` : ''}
+                                    </div>
+                                `;
+                            }).join('');
+
+                            return `
+                                <div class="mb-3">
+                                    <div class="group-title">${groupName}</div>
+                                    <div class="items-grid">${cells}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        checklistContent = section('Sipil', sipil, row.sipil);
+                    }
+
+                    return `
+                        <div class="detail-meta row g-3 mb-2">
+                            <div class="col-md-3">
+                                <div class="meta-label">Tanggal</div>
+                                <div class="meta-value">${row.tanggal ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Waktu Mulai</div>
+                                <div class="meta-value">${row.waktu_mulai ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Waktu Selesai</div>
+                                <div class="meta-value">${row.waktu_selesai ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Departemen</div>
+                                <div class="meta-value">${row.departemen ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Area</div>
+                                <div class="meta-value">${row.area ?? '-'}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="meta-label">Dibuat oleh</div>
+                                <div class="meta-value">${row.created_by.username ?? row.created_by.created_by ?? '-'}</div>
+                            </div>
+                        </div>
+
+                        ${checklistContent}
 
                     <div class="row g-3 mt-2">
                         <div class="col-md-4">
@@ -424,13 +499,23 @@
                             <div class="group-title">Tindakan Korektif</div>
                             <div>${row.korektif ?? '-'}</div>
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <div class="group-title">Kebutuhan Material</div>
                        ${
                                 row.kebutuhan_material && row.kebutuhan_material.length
                                 ? row.kebutuhan_material.map(m => `
-                                                                                                                                <div>MID:${m.mid} - Deskripsi: ${m.deskripsi} - Qty: ${m.qty}</div>
-                                                                                                                            `).join('')
+                                    <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                `).join('')
+                                : '<div>-</div>'
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <div class="group-title">Penggantian Material</div>
+                       ${
+                                row.penggantian_material && row.penggantian_material.length
+                                ? row.penggantian_material.map(m => `
+                                    <div>MID: ${m.mid || '-'} - Deskripsi: ${m.deskripsi || '-'} - Qty: ${m.qty} ${m.uom ? '(' + m.uom + ')' : ''}</div>
+                                `).join('')
                                 : '<div>-</div>'
                             }
                         </div>
@@ -508,104 +593,178 @@
                 openTracking(id);
             });
 
-            const dtSipil = $('#tabelSipil').DataTable({
-                processing: true,
-                serverSide: true,
-                searching: false,
-                pageLength: 10,
-                lengthMenu: [5, 10, 25, 50, 100],
-                order: [
-                    [0, 'asc']
-                ], // tanggal desc
-                ajax: {
+            let currentPage = 1;
+            const pageSize = 10;
+            let totalRecords = 0;
+
+            function loadTableData(page = 1) {
+                currentPage = page;
+                const start = (currentPage - 1) * pageSize;
+
+                $('#tbodySipil').html(`
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span class="ms-2 text-muted">Memuat data...</span>
+                        </td>
+                    </tr>
+                `);
+
+                const filters = {
+                    date: $('#filterDate').val() || null,
+                    area: $('#filterArea').val() || null,
+                    departemen: $('#filterDepartmen').val() || null,
+                    start: start,
+                    length: pageSize
+                };
+
+                $.ajax({
                     url: API_URL,
-                    data: function(d) {
-                        d.date = $('#filterDate').val() || null;
-                        d.area = $('#filterArea').val() || null;
-                        d.departemen = $('#filterDepartmen').val() || null;
-                        // penting untuk pagination
-                        d.start = d.start;
-                        d.length = d.length;
-                    },
-                    dataSrc: function(json) {
-                        currentRows = json.data || [];
-                        return currentRows;
-                    }
-                },
-                columns: [{
-                        data: null,
-                        className: 'text-center',
-                        orderable: false,
-                        render: function(data, type, row, meta) {
-                            return meta.row + meta.settings._iDisplayStart + 1;
-                        }
-                    },
-                    {
-                        data: 'tanggal',
-                        className: 'text-start',
-                        orderable: false,
-                        render: function(data, type) {
-                            if (type === 'display') return fmtDate(data);
-                            return data; // sorting pakai ISO
-                        },
-                    },
-                    {
-                        data: 'waktu_mulai',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'waktu_selesai',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'departemen',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: 'area',
-                        orderable: false,
-                        defaultContent: '-'
-                    },
-                    {
-                        data: null,
-                        render: function(row) {
-                            return `
-                                <span class="badge cursor-pointer badge-status"
-                                    data-id="${row.id}">
-                                    ${statusBadge(row.status)}
-                                </span>
-                            `;
+                    type: 'GET',
+                    data: filters,
+                    dataType: 'json',
+                    success: function(res) {
+                        currentRows = res.data || [];
+                        totalRecords = res.recordsFiltered || 0;
+
+                        if (currentRows.length === 0) {
+                            $('#tbodySipil').html(`
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">Tidak ada data ditemukan</td>
+                                </tr>
+                            `);
+                            $('#paginationInfo').text('Menampilkan 0 sampai 0 dari 0 data');
+                            $('#paginationList').empty();
+                            return;
                         }
 
-                    },
-                    {
-                        data: null,
-                        className: 'text-center text-nowrap',
-                        render: function(row) {
-                            return `
-                                <button class="btn btn-sm btn-primary btn-detail" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>
-                                <button class="btn btn-sm btn-info btn-edit" data-id="${row.id}" title="${row.status === 'rejected' ? 'Silakan isi form kembali' : 'Edit'}" ${row.status === 'rejected' ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>
-                                <button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>
+                        let html = '';
+                        currentRows.forEach((row, index) => {
+                            const rowNum = start + index + 1;
+                            const showBtn =
+                                `<button class="btn btn-sm btn-primary btn-detail me-1" data-id="${row.id}" title="Detail"><i class="mdi mdi-eye"></i></button>`;
+                            const editDisabled = row.status === 'rejected';
+                            const editBtn =
+                                `<button class="btn btn-sm btn-info btn-edit me-1" data-id="${row.id}" title="${editDisabled ? 'Silakan isi form kembali' : 'Edit'}" ${editDisabled ? 'disabled style="pointer-events: auto;"' : ''}><i class="mdi mdi-pencil"></i></button>`;
+                            const delBtn =
+                                `<button class="btn btn-sm btn-danger btn-delete me-1" data-id="${row.id}" title="Hapus"><i class="mdi mdi-delete"></i></button>`;
+                            const printBtn =
+                                `<button class="btn btn-sm btn-warning btn-print" data-id="${row.id}" title="Download"><i class="mdi mdi-download"></i></button>`;
+
+                            html += `
+                                <tr>
+                                    <td class="text-center">${rowNum}</td>
+                                    <td>${fmtDate(row.tanggal)}</td>
+                                    <td>${row.waktu_mulai ?? '-'}</td>
+                                    <td>${row.waktu_selesai ?? '-'}</td>
+                                    <td>${row.departemen ?? '-'}</td>
+                                    <td>${row.area ?? '-'}</td>
+                                    <td>
+                                        <span class="badge cursor-pointer badge-status" data-id="${row.id}">
+                                            ${statusBadge(row.status)}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-center">
+                                            ${showBtn}
+                                            ${editBtn}
+                                            ${delBtn}
+                                            ${printBtn}
+                                        </div>
+                                    </td>
+                                </tr>
                             `;
+                        });
+
+                        $('#tbodySipil').html(html);
+
+                        // Render Pagination
+                        const totalPages = Math.ceil(totalRecords / pageSize);
+                        const endRow = Math.min(start + pageSize, totalRecords);
+                        $('#paginationInfo').text(
+                            `Menampilkan ${start + 1} sampai ${endRow} dari ${totalRecords} data`);
+
+                        let pagHtml = '';
+                        pagHtml += `
+                            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                                <a class="page-link" href="#" data-page="${currentPage - 1}">Sebelumnya</a>
+                            </li>
+                        `;
+
+                        const pages = [];
+                        if (totalPages <= 7) {
+                            for (let i = 1; i <= totalPages; i++) pages.push(i);
+                        } else {
+                            pages.push(1);
+                            let start = Math.max(2, currentPage - 2);
+                            let end = Math.min(totalPages - 1, currentPage + 2);
+                            if (currentPage <= 4) {
+                                start = 2;
+                                end = 5;
+                            } else if (currentPage >= totalPages - 3) {
+                                start = totalPages - 4;
+                                end = totalPages - 1;
+                            }
+                            if (start > 2) pages.push('...');
+                            for (let i = start; i <= end; i++) pages.push(i);
+                            if (end < totalPages - 1) pages.push('...');
+                            pages.push(totalPages);
                         }
+
+                        pages.forEach(p => {
+                            if (p === '...') {
+                                pagHtml += `
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                `;
+                            } else {
+                                pagHtml += `
+                                    <li class="page-item ${currentPage === p ? 'active' : ''}">
+                                        <a class="page-link" href="#" data-page="${p}">${p}</a>
+                                    </li>
+                                `;
+                            }
+                        });
+
+                        pagHtml += `
+                            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                                <a class="page-link" href="#" data-page="${currentPage + 1}">Berikutnya</a>
+                            </li>
+                        `;
+
+                        $('#paginationList').html(pagHtml);
+                    },
+                    error: function() {
+                        $('#tbodySipil').html(`
+                            <tr>
+                                <td colspan="8" class="text-center text-danger py-4">Gagal memuat data</td>
+                            </tr>
+                        `);
                     }
-                ],
-                language: {
-                    emptyTable: `<div class="py-4 text-center text-muted">Tidak ada data</div>`,
-                    processing: "Memuat..."
+                });
+            }
+
+            // Init load
+            loadTableData(1);
+
+            // Handle Pagination click
+            $(document).on('click', '#paginationList .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (page && page !== currentPage) {
+                    loadTableData(page);
                 }
             });
 
             // Apply/reset filter
-            $('#btnApply').on('click', () => dtSipil.ajax.reload());
+            $('#btnApply').on('click', () => loadTableData(1));
 
             $('#btnReset').on('click', () => {
                 $('#filterDate, #filterArea, #filterDepartmen').val('');
-                dtSipil.ajax.reload();
+                loadTableData(1);
             });
 
             // Detail modal
@@ -702,6 +861,28 @@
                 `;
             }
 
+            $(document).on('click', '.edit-radio', function() {
+                const $this = $(this);
+                if ($this.val() === '') return;
+
+                if ($this.data('waschecked') === true) {
+                    const name = this.name;
+                    this.checked = false;
+                    $this.data('waschecked', false);
+
+                    const $nullRadio = $(`input.edit-radio[name="${name}"][value=""]`);
+                    if ($nullRadio.length) {
+                        $nullRadio.prop('checked', true).data('waschecked', true);
+                        $nullRadio.trigger('change');
+                    } else {
+                        $this.trigger('change');
+                    }
+                } else {
+                    $(`input.edit-radio[name="${this.name}"]`).data('waschecked', false);
+                    $this.data('waschecked', true);
+                }
+            });
+
             $(document).on('change', '.edit-radio', function() {
                 const $card = $(this).closest('.item-edit');
                 const field = $card.data('field');
@@ -748,6 +929,9 @@
                     ${renderEditSection('Sipil', sipil, row)}
                 `;
                 $('#editSections').html(html);
+                $('#editSections input.edit-radio:checked').each(function() {
+                    $(this).data('waschecked', true);
+                });
             }
 
             $(document).on('click', '.btn-edit', function() {
@@ -765,12 +949,16 @@
                 $('#editKorektif').val(row.korektif ?? '');
                 $('#editRekomendasi').val(row.rekomendasi ?? '');
 
+
                 $('#editSub').text(
                     `${fmtDate(row.tanggal)} • ${row.waktu_mulai ?? '-'} - ${row.waktu_selesai ?? '-'}`);
 
                 buildEditForm(row);
                 renderEditMaterials(
                     row.kebutuhan_material ?? []
+                );
+                renderEditReplacements(
+                    row.penggantian_material ?? []
                 );
 
                 const ketMap = parseKeteranganPairs(row.keterangan);
@@ -787,13 +975,22 @@
                 new bootstrap.Modal(document.getElementById('modalEdit')).show();
             });
 
+            $('#modalEdit').on('shown.bs.modal', function() {
+                $('.material-mid, .replacement-mid').each(function() {
+                    if (!$(this).hasClass("select2-hidden-accessible")) {
+                        initMidSelect2Edit(this);
+                    }
+                });
+            });
+
+
             function initMidSelect2Edit(element) {
                 $(element).select2({
                     theme: 'bootstrap-5',
                     placeholder: 'Cari MID / Nama Barang...',
                     allowClear: true,
                     width: '100%',
-                    dropdownParent: $('#modalEdit'),
+                    dropdownParent: $(element).closest('.modal-content'),
                     ajax: {
                         url: 'http://10.11.10.130:8087/api/wsp/barang',
                         dataType: 'json',
@@ -820,23 +1017,26 @@
                     templateResult: function(data) {
                         if (!data.id) return data.text;
                         return $(`
-                            <div class="d-flex flex-column">
-                                <span class="fw-bold" style="font-size: 12.5px;">${data.id}</span>
-                                <small class="text-muted" style="font-size: 11px;">${data.nama_barang}</small>
-                            </div>
-                        `);
+                             <div class="d-flex flex-column">
+                                 <span class="fw-bold" style="font-size: 12.5px;">${data.id}</span>
+                                 <small class="text-muted" style="font-size: 11px;">${data.nama_barang}</small>
+                             </div>
+                         `);
                     },
                     templateSelection: function(data) {
                         return data.id || data.text;
                     }
                 }).on('select2:select', function(e) {
                     const data = e.params.data;
-                    $(this).closest('tr').find('.material-deskripsi').val(data.nama_barang);
-                    $(this).closest('tr').find('.material-uom').val(data.uom);
+                    $(this).closest('tr').find('.material-deskripsi, .replacement-deskripsi').val(data
+                        .nama_barang);
+                    $(this).closest('tr').find('.material-uom, .replacement-uom').val(data.uom);
+                    $(this).closest('tr').find('.material-qty, .replacement-qty').prop('required', true);
                 }).on('select2:clear select2:unselect', function(e) {
-                    $(this).closest('tr').find('.material-deskripsi').val('');
-                    $(this).closest('tr').find('.material-qty').val('');
-                    $(this).closest('tr').find('.material-uom').val('');
+                    $(this).closest('tr').find('.material-deskripsi, .replacement-deskripsi').val('');
+                    $(this).closest('tr').find('.material-qty, .replacement-qty').val('').prop('required',
+                        false);
+                    $(this).closest('tr').find('.material-uom, .replacement-uom').val('');
                 });
             }
 
@@ -845,7 +1045,6 @@
                 tbody.empty();
 
                 if (!materials || materials.length === 0) {
-                    addMaterialRowEdit();
                     return;
                 }
 
@@ -859,48 +1058,50 @@
 
                     // Add existing MID as option
                     if (item.mid) {
-                        const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi : ''), item.mid, true, true);
+                        const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi :
+                            ''), item.mid, true, true);
                         row.find('.material-mid').append(newOption).trigger('change');
+                        row.find('.material-qty').prop('required', true);
                     }
 
                     tbody.append(row);
-                    initMidSelect2Edit(row.find('.material-mid'));
                 });
             }
 
             function materialRowTemplate(index) {
                 return `
-                    <tr class="material-row">
-                        <input type="hidden" name="materials[${index}][id]" class="material-id">
+                     <tr class="material-row">
+                         <input type="hidden" name="materials[${index}][id]" class="material-id">
 
-                        <td>
-                            <select name="materials[${index}][mid]" class="form-control form-control-sm material-mid"></select>
-                        </td>
+                         <td>
+                             <select name="materials[${index}][mid]" class="form-control form-control-sm material-mid"></select>
+                         </td>
 
-                        <td>
-                            <input type="text"
-                                name="materials[${index}][deskripsi]"
-                                class="form-control form-control-sm material-deskripsi">
-                        </td>
+                         <td>
+                             <input type="text"
+                                 name="materials[${index}][deskripsi]"
+                                 class="form-control form-control-sm material-deskripsi">
+                         </td>
 
-                        <td>
-                            <input type="number"
-                                name="materials[${index}][qty]"
-                                class="form-control form-control-sm material-qty"
-                                min="1">
-                            <input type="hidden"
-                                name="materials[${index}][uom]"
-                                class="material-uom">
-                        </td>
+                         <td>
+                             <input type="number"
+                                 name="materials[${index}][qty]"
+                                 class="form-control form-control-sm material-qty"
+                                 step="any"
+                                 min="0">
+                             <input type="hidden"
+                                 name="materials[${index}][uom]"
+                                 class="material-uom">
+                         </td>
 
-                        <td class="text-center">
-                            <button type="button"
-                                    class="btn btn-sm btn-danger btnRemoveMaterial">
-                                ×
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                         <td class="text-center">
+                             <button type="button"
+                                     class="btn btn-sm btn-danger btnRemoveMaterial">
+                                 ×
+                             </button>
+                         </td>
+                     </tr>
+                 `;
             }
 
             $('#btnAddMaterialEdit').on('click', function() {
@@ -921,8 +1122,100 @@
 
             function reindexMaterialRows() {
                 $('#materialTableEdit tbody tr').each(function(i) {
-                    $(this).find('input').each(function() {
-                        this.name = this.name.replace(/\[\d+]/, `[${i}]`);
+                    $(this).find('input, select').each(function() {
+                        if (this.name) {
+                            this.name = this.name.replace(/\[\d+]/, `[${i}]`);
+                        }
+                    });
+                });
+            }
+
+            function renderEditReplacements(replacements) {
+                const tbody = $('#replacementTableEdit tbody');
+                tbody.empty();
+
+                if (!replacements || replacements.length === 0) {
+                    return;
+                }
+
+                replacements.forEach((item, index) => {
+                    const row = $(replacementRowTemplate(index));
+
+                    row.find('.replacement-id').val(item.id);
+                    row.find('.replacement-deskripsi').val(item.deskripsi);
+                    row.find('.replacement-qty').val(item.qty);
+                    row.find('.replacement-uom').val(item.uom);
+
+                    // Add existing MID as option
+                    if (item.mid) {
+                        const newOption = new Option(item.mid + (item.deskripsi ? ' - ' + item.deskripsi :
+                            ''), item.mid, true, true);
+                        row.find('.replacement-mid').append(newOption).trigger('change');
+                        row.find('.replacement-qty').prop('required', true);
+                    }
+
+                    tbody.append(row);
+                });
+            }
+
+            function replacementRowTemplate(index) {
+                return `
+                     <tr class="replacement-row">
+                         <input type="hidden" name="replacements[${index}][id]" class="replacement-id">
+
+                         <td>
+                             <select name="replacements[${index}][mid]" class="form-control form-control-sm replacement-mid"></select>
+                         </td>
+
+                         <td>
+                             <input type="text"
+                                 name="replacements[${index}][deskripsi]"
+                                 class="form-control form-control-sm replacement-deskripsi">
+                         </td>
+
+                         <td>
+                             <input type="number"
+                                 name="replacements[${index}][qty]"
+                                 class="form-control form-control-sm replacement-qty"
+                                 step="any"
+                                 min="0">
+                             <input type="hidden"
+                                 name="replacements[${index}][uom]"
+                                 class="replacement-uom">
+                         </td>
+
+                         <td class="text-center">
+                             <button type="button"
+                                     class="btn btn-sm btn-danger btnRemoveReplacement">
+                                 ×
+                             </button>
+                         </td>
+                     </tr>
+                 `;
+            }
+
+            $('#btnAddReplacementEdit').on('click', function() {
+                addReplacementRowEdit();
+            });
+
+            function addReplacementRowEdit() {
+                const index = $('#replacementTableEdit tbody tr').length;
+                const $row = $(replacementRowTemplate(index));
+                $('#replacementTableEdit tbody').append($row);
+                initMidSelect2Edit($row.find('.replacement-mid'));
+            }
+
+            $(document).on('click', '.btnRemoveReplacement', function() {
+                $(this).closest('tr').remove();
+                reindexReplacementRows();
+            });
+
+            function reindexReplacementRows() {
+                $('#replacementTableEdit tbody tr').each(function(i) {
+                    $(this).find('input, select').each(function() {
+                        if (this.name) {
+                            this.name = this.name.replace(/\[\d+]/, `[${i}]`);
+                        }
                     });
                 });
             }
@@ -962,6 +1255,38 @@
             // Submit edit
             $('#formEditSipil').on('submit', function(e) {
                 e.preventDefault();
+
+                // Validate material & replacements rows
+                let materialsValid = true;
+                $('#materialTableEdit tbody tr, #replacementTableEdit tbody tr').each(function() {
+                    const midSelect = $(this).find('.material-mid, .replacement-mid');
+                    const qtyInput = $(this).find('.material-qty, .replacement-qty');
+
+                    if (midSelect.length > 0) {
+                        const midVal = midSelect.val();
+                        const qtyVal = qtyInput.val();
+
+                        if (!midVal || !qtyVal || qtyVal <= 0) {
+                            materialsValid = false;
+                            midSelect.next('.select2-container').find('.select2-selection')
+                                .addClass('is-invalid');
+                            qtyInput.addClass('is-invalid');
+                        } else {
+                            midSelect.next('.select2-container').find('.select2-selection')
+                                .removeClass('is-invalid');
+                            qtyInput.removeClass('is-invalid');
+                        }
+                    }
+                });
+
+                if (!materialsValid) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validasi Gagal',
+                        text: 'Harap isi semua item MID dan Qty pada material/penggantian yang telah Anda tambahkan.'
+                    });
+                    return false;
+                }
 
                 const id = $('#editId').val();
                 const $btn = $('#btnSaveEdit');
@@ -1012,7 +1337,7 @@
                         bootstrap.Modal.getInstance(document.getElementById('modalEdit'))
                             .hide();
 
-                        dtSipil.ajax.reload(null, false);
+                        loadTableData(currentPage);
                     },
                     error: function(xhr) {
                         Swal.fire({
@@ -1056,7 +1381,7 @@
                                 showConfirmButton: false
                             });
 
-                            dtSipil.ajax.reload(null, false);
+                            loadTableData(currentPage);
                         },
                         error: function(xhr) {
                             Swal.fire({

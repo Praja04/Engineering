@@ -31,6 +31,8 @@ class MdpMonitoring extends Model
         'daya_p3',
         'temperatur_transformator',
         'level_oil',
+        'suhu_ruang_trafo',
+        'suhu_ruang_genset',
         'status',
         'approved_foreman_by',
         'approved_foreman_at',
