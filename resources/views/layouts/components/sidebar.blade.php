@@ -1,9 +1,8 @@
 <div class="app-menu navbar-menu">
     @php
-        $jabatan = Auth::user()->jabatan;
-        $bagian = Auth::user()->bagian;
+        $jabatan = strtolower(Auth::user()->jabatan ?? '');
+        $bagian = trim(Auth::user()->bagian ?? '');
         $departement = strtolower(Auth::user()->departemen ?? '');
-        $isAdmin = Auth::user()->username === 'admin' || $departement === 'engineering' || $departement === 'it';
     @endphp
 
     <!-- LOGO -->
@@ -36,7 +35,7 @@
 
             <ul class="navbar-nav" id="navbar-nav">
                 <!-- /////////////////////Dashboard/////////////// -->
-                @if ($isAdmin)
+                @if ($departement === 'engineering' || $departement === 'it')
                     <li class="menu-title"><span data-key="t-dashboard">Dashboard</span></li>
 
                     @include('layouts.components.sidebar-scoring.dashboard-scoring')
@@ -49,7 +48,7 @@
                 @endif
 
 
-                @if ($isAdmin)
+                @if ($departement === 'engineering' || $departement === 'it')
 
                     <!-- /////////////////////menu/////////////// -->
                     <li class="menu-title"><span data-key="t-menu">Engineering Menu</span></li>

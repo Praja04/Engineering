@@ -1,9 +1,9 @@
 @php
-$jabatan = Auth::user()->jabatan;
-$bagian = Auth::user()->bagian;
+$jabatan = strtolower(Auth::user()->jabatan ?? '');
+$bagian = trim(Auth::user()->bagian ?? '');
 @endphp
 
-@if ($jabatan != 'operator' && in_array($bagian, ['IT','Engineering', 'Engineering Kalibrasi']))
+@if ($jabatan != 'operator' && in_array($bagian, ['IT','Engineering', 'Engineering Kalibrasi', 'Kalibrasi']))
 <li class="nav-item">
     <a class="nav-link menu-link {{ request()->routeIs('master.kalibrasi.*') ? '' : 'collapsed' }}"
         href="#sidebarMasterKalibrasi" data-bs-toggle="collapse" role="button"

@@ -1,10 +1,10 @@
 @php
-$jabatan = Auth::user()->jabatan;
-$bagian = Auth::user()->bagian;
+$jabatan = strtolower(Auth::user()->jabatan ?? '');
+$bagian = trim(Auth::user()->bagian ?? '');
 @endphp
 
-@if ($jabatan === 'admin' ||in_array($jabatan, ['operator', 'foreman', 'supervisor', 'dept_head']) &&
-in_array($bagian, ['Engineering', 'Engineering Kalibrasi']))
+@if ($jabatan === 'admin' || (in_array($jabatan, ['operator', 'foreman', 'supervisor', 'dept_head']) &&
+in_array($bagian, ['Engineering', 'Engineering Kalibrasi', 'Kalibrasi'])))
 <li class="nav-item">
     <a class="nav-link menu-link {{ request()->routeIs('kalibrasi.*') ? '' : 'collapsed' }}" href="#sideBarPressure"
         data-bs-toggle="collapse" role="button"

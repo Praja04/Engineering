@@ -171,9 +171,9 @@ class AuthController extends Controller
             'password' => bcrypt($request->password),
             'email' => $request->email,
             'nik' => $request->nik,
-            'jabatan' => $request->jabatan,
-            'departemen' => $request->departemen,
-            'bagian' => $request->bagian,
+            'jabatan' => strtolower(trim($request->jabatan)),
+            'departemen' => strtolower(trim($request->departemen)),
+            'bagian' => trim($request->bagian),
             'image' => $imageName,
         ]);
 
@@ -217,10 +217,10 @@ class AuthController extends Controller
         $user->update([
             'username' => $request->username,
             'email' => $request->email,
-            'jabatan' => $request->jabatan,
+            'jabatan' => strtolower(trim($request->jabatan)),
             'nik' => $request->nik,
-            'departemen' => $request->departemen,
-            'bagian' => $request->bagian,
+            'departemen' => strtolower(trim($request->departemen)),
+            'bagian' => trim($request->bagian),
             'password' => $request->password ? bcrypt($request->password) : $user->password,
         ]);
 
