@@ -1128,109 +1128,34 @@
                 <!-- ROW 1: 4 CARDS (INFORMASI WWTP, STATUS OPERASI, ENVIRONMENT PERF, CHEMICAL CONSUMPTION) -->
                 <!-- ======================================================= -->
                 <div class="row g-2 mb-2">
-                    <!-- 6. INFORMASI WWTP (Kapasitas Tangki Permanent) -->
+                    <!-- 6. DETAIL COST CHEMICAL & BIAYA / M3 -->
                     <div class="col-xl-3 col-lg-6">
                         <div class="wco-card">
-                            <div class="wco-card-header">
-                                <h5 class="wco-card-title">
-                                    <i class="mdi mdi-information-outline text-info"></i> INFORMASI WWTP
+                            <div class="wco-card-header d-flex justify-content-between align-items-center">
+                                <h5 class="wco-card-title mb-0">
+                                    <i class="mdi mdi-chart-line text-warning"></i> DETAIL BIAYA CHEMICAL
                                 </h5>
-                                <span class="badge bg-primary-subtle text-primary" style="font-size: 8.5px;">KAPASITAS
-                                    TANGKI</span>
+                                <div class="d-flex align-items-center gap-1">
+                                    <select id="wcoCostChemYearSelect" class="form-select form-select-sm"
+                                        style="background: #1e293b; color: #f8fafc; border: 1px solid #334155; font-size: 9px; padding: 1px 4px; height: 20px; width: auto; border-radius: 4px; cursor: pointer;"
+                                        onchange="onCostChemYearChange(this.value)">
+                                        <!-- Dynamic Year Options -->
+                                    </select>
+                                    <span class="badge bg-warning-subtle text-warning" style="font-size: 8px;">2 LINES</span>
+                                </div>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column justify-content-between">
-                                <div class="d-flex align-items-center justify-content-between gap-2 mb-2 p-1 px-2"
-                                    style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px;">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div
-                                            style="width: 24px; height: 24px; background: rgba(6, 182, 212, 0.12); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                                            <i class="mdi mdi-water-pump text-cyan" style="font-size: 14px;"></i>
-                                        </div>
-                                        <div>
-                                            <div
-                                                style="font-size: 8.5px; color: #94a3b8; font-weight: 700; letter-spacing: 0.3px;">
-                                                DEBIT WWTP 1</div>
-                                            <div class="fw-bold font-monospace text-cyan" id="infoDebit1Val"
-                                                style="font-size: 11px;">- m³/h</div>
-                                        </div>
+                                <div class="d-flex justify-content-between align-items-center px-1 mb-1" style="font-size: 8.5px;">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span style="display:inline-block; width:8px; height:8px; background:#f59e0b; border-radius:50%;"></span>
+                                        <span class="text-muted">Total Cost (Rp)</span>
                                     </div>
-                                    <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.08);"></div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div
-                                            style="width: 24px; height: 24px; background: rgba(59, 130, 246, 0.12); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                                            <i class="mdi mdi-water-pump text-primary" style="font-size: 14px;"></i>
-                                        </div>
-                                        <div>
-                                            <div
-                                                style="font-size: 8.5px; color: #94a3b8; font-weight: 700; letter-spacing: 0.3px;">
-                                                DEBIT WWTP 2</div>
-                                            <div class="fw-bold font-monospace text-primary" id="infoDebit2Val"
-                                                style="font-size: 11px;">- m³/h</div>
-                                        </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <span style="display:inline-block; width:8px; height:8px; background:#06b6d4; border-radius:50%;"></span>
+                                        <span class="text-muted">Biaya / m³ (Rp)</span>
                                     </div>
                                 </div>
-                                <div class="row g-1">
-                                    <div class="col-6">
-                                        <div class="info-tank-item">
-                                            <img src="{{ asset('assets/images/wwtp/dashboard/EQUALISASI.png') }}"
-                                                alt="Equal">
-                                            <div class="info-tank-meta">
-                                                <div class="info-tank-name">Equal</div>
-                                                <div class="info-tank-cap">20 m³</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="info-tank-item">
-                                            <img src="{{ asset('assets/images/wwtp/dashboard/ANAEROB.png') }}"
-                                                alt="Anaerob">
-                                            <div class="info-tank-meta">
-                                                <div class="info-tank-name">Anaerob</div>
-                                                <div class="info-tank-cap">426 m³</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="info-tank-item">
-                                            <img src="{{ asset('assets/images/wwtp/dashboard/AEROB.png') }}"
-                                                alt="Aerob">
-                                            <div class="info-tank-meta">
-                                                <div class="info-tank-name">Aerob</div>
-                                                <div class="info-tank-cap">170 m³</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="info-tank-item">
-                                            <img src="{{ asset('assets/images/wwtp/dashboard/LUMPUR AKTIF.png') }}"
-                                                alt="Lumpur Aktif">
-                                            <div class="info-tank-meta">
-                                                <div class="info-tank-name">Lumpur Aktif</div>
-                                                <div class="info-tank-cap">160 m³</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="info-tank-item">
-                                            <img src="{{ asset('assets/images/wwtp/dashboard/DAF.png') }}"
-                                                alt="DAF">
-                                            <div class="info-tank-meta">
-                                                <div class="info-tank-name">DAF</div>
-                                                <div class="info-tank-cap">10 m³</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="info-tank-item">
-                                            <img src="{{ asset('assets/images/wwtp/dashboard/OUTLET.png') }}"
-                                                alt="Outlet">
-                                            <div class="info-tank-meta">
-                                                <div class="info-tank-name">Outlet</div>
-                                                <div class="info-tank-cap">1 m³</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <div class="wco-chart-box" id="chartDetailCostChemical" style="height: 155px; min-height: 155px;"></div>
                             </div>
                         </div>
                     </div>
@@ -3007,18 +2932,161 @@
                 }
             }
 
-            // 6. Informasi WWTP (Debit 1 & Debit 2)
-            async function loadInformasiWWTPSection(start, end) {
-                const data = await fetchWcoSection('informasi_wwtp', start, end);
-                if (!data) return;
+            // 6. Detail Cost Chemical & Biaya per m3 (Monthly 2 Lines Chart)
+            let selectedCostChemYear = null;
 
-                const info = data.card6_informasi_wwtp || data;
-                if (info && info.debit1 !== undefined) {
-                    document.getElementById('infoDebit1Val').textContent = `${info.debit1} m³/h`;
+            async function loadDetailCostChemicalSection(year = null) {
+                if (!year) {
+                    const startInput = document.getElementById('wcoStartDate')?.value;
+                    year = selectedCostChemYear || (startInput ? startInput.split('-')[0] : new Date().getFullYear());
                 }
-                if (info && info.debit2 !== undefined) {
-                    document.getElementById('infoDebit2Val').textContent = `${info.debit2} m³/h`;
+
+                const start = document.getElementById('wcoStartDate')?.value || '';
+                const end = document.getElementById('wcoEndDate')?.value || '';
+
+                const url = `{{ route('wwtp.dashboard_wco_data') }}?section=detail_cost_chemical&year=${year}&start_date=${start}&end_date=${end}`;
+                try {
+                    const res = await fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (!res.ok) return;
+
+                    const resJson = await res.json();
+                    const data = resJson.card_detail_cost_chemical;
+                    if (!data) return;
+
+                    selectedCostChemYear = data.year;
+
+                    // Update dropdown tahun
+                    const yearSelect = document.getElementById('wcoCostChemYearSelect');
+                    if (yearSelect && data.available_years && data.available_years.length > 0) {
+                        let optsHtml = '';
+                        data.available_years.forEach(y => {
+                            optsHtml += `<option value="${y}" ${String(y) === String(data.year) ? 'selected' : ''}>${y}</option>`;
+                        });
+                        yearSelect.innerHTML = optsHtml;
+                    }
+
+                    const costSeries = data.cost_chemical || [];
+                    const m3Series = data.biaya_per_m3 || [];
+                    const limbahSeries = data.limbah_di_olah || [];
+                    const categories = data.months || ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+
+                    const options = {
+                        chart: {
+                            type: 'line',
+                            height: 155,
+                            toolbar: { show: false },
+                            background: 'transparent',
+                            zoom: { enabled: false }
+                        },
+                        theme: { mode: 'dark' },
+                        stroke: {
+                            curve: 'smooth',
+                            width: [2.5, 2.5]
+                        },
+                        colors: ['#f59e0b', '#06b6d4'],
+                        markers: {
+                            size: 3,
+                            hover: { size: 5 }
+                        },
+                        series: [
+                            {
+                                name: 'Cost Chemical',
+                                type: 'line',
+                                data: costSeries
+                            },
+                            {
+                                name: 'Biaya / m³',
+                                type: 'line',
+                                data: m3Series
+                            }
+                        ],
+                        xaxis: {
+                            categories: categories,
+                            labels: {
+                                style: {
+                                    colors: '#64748b',
+                                    fontSize: '8px'
+                                }
+                            },
+                            axisBorder: { show: false },
+                            axisTicks: { show: false }
+                        },
+                        yaxis: [
+                            {
+                                seriesName: 'Cost Chemical',
+                                labels: {
+                                    style: {
+                                        colors: '#f59e0b',
+                                        fontSize: '8px'
+                                    },
+                                    formatter: function(val) {
+                                        if (val === null || val === undefined) return '';
+                                        if (val >= 1000000) return (val / 1000000).toFixed(0) + ' Jt';
+                                        if (val >= 1000) return (val / 1000).toFixed(0) + ' rb';
+                                        return Number(val).toLocaleString('id-ID');
+                                    }
+                                }
+                            },
+                            {
+                                opposite: true,
+                                seriesName: 'Biaya / m³',
+                                labels: {
+                                    style: {
+                                        colors: '#06b6d4',
+                                        fontSize: '8px'
+                                    },
+                                    formatter: function(val) {
+                                        if (val === null || val === undefined) return '';
+                                        if (val >= 1000) return (val / 1000).toFixed(0) + ' rb';
+                                        return Number(val).toLocaleString('id-ID');
+                                    }
+                                }
+                            }
+                        ],
+                        grid: {
+                            borderColor: '#1e293b',
+                            strokeDashArray: 3,
+                            padding: {
+                                top: 5,
+                                bottom: -5,
+                                left: 5,
+                                right: 5
+                            }
+                        },
+                        legend: {
+                            show: false
+                        },
+                        tooltip: {
+                            theme: 'dark',
+                            shared: true,
+                            intersect: false,
+                            y: {
+                                formatter: function(val, opt) {
+                                    if (val === null || val === undefined) return 'Tidak ada data';
+                                    if (opt.seriesIndex === 0) {
+                                        return 'Rp ' + Number(val).toLocaleString('id-ID');
+                                    } else {
+                                        const idx = opt.dataPointIndex;
+                                        const limbah = limbahSeries[idx] || 0;
+                                        const limbahText = limbah > 0 ? ` (Limbah: ${Number(limbah).toLocaleString('id-ID')} m³)` : '';
+                                        return 'Rp ' + Number(val).toLocaleString('id-ID') + ' / m³' + limbahText;
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    renderOrUpdateChart('chartDetailCostChemical', options);
+                } catch (e) {
+                    console.error('Error loading detail cost chemical chart:', e);
                 }
+            }
+
+            function onCostChemYearChange(year) {
+                selectedCostChemYear = year;
+                loadDetailCostChemicalSection(year);
             }
 
             // Master Loader: All sections triggered in parallel!
@@ -3030,7 +3098,8 @@
                 // Whichever finishes first renders immediately!
                 loadBiayaSection(start, end);
                 loadAnalisaSection(start, end);
-                loadInformasiWWTPSection(start, end);
+                const startYear = start ? start.split('-')[0] : '';
+                loadDetailCostChemicalSection(selectedCostChemYear || startYear);
                 loadStatusOperasiSection(start, end);
                 loadSafetyPerfSection(start, end);
                 loadInfluentMingguanSection(start, end);

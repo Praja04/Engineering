@@ -1377,6 +1377,12 @@ class WWTPController extends Controller
             case 'kepatuhan_tss':
                 return response()->json(array_merge($baseResponse, $this->getWcoKepatuhanTssData($startDate, $endDate)));
 
+            case 'detail_cost_chemical':
+                $year = $request->input('year') ?: $startCarbon->year;
+                return response()->json(array_merge($baseResponse, [
+                    'card_detail_cost_chemical' => $this->getWcoDetailCostChemicalData($year)
+                ]));
+
             case 'informasi_wwtp':
                 return response()->json(array_merge($baseResponse, [
                     'card6_informasi_wwtp' => $this->getWcoInformasiWWTPData($startDate, $endDate)
@@ -1396,6 +1402,7 @@ class WWTPController extends Controller
                 $sludgeMgmt = $this->getWcoSludgeMgmtData($startDate, $endDate);
                 $topRiskKoloni = $this->getWcoTopRiskKoloniData();
                 $kepatuhanTss = $this->getWcoKepatuhanTssData($startDate, $endDate);
+                $detailCostChem = $this->getWcoDetailCostChemicalData($request->input('year') ?: $startCarbon->year);
 
                 return response()->json(array_merge($baseResponse, [
                     'wco_score'             => 94,
@@ -1405,7 +1412,8 @@ class WWTPController extends Controller
                         'label'  => 'EXCELLENT',
                         'status' => 'AMAN'
                     ],
-                    'card6_informasi_wwtp'  => $this->getWcoInformasiWWTPData($startDate, $endDate),
+                    'card6_informasi_wwtp'      => $this->getWcoInformasiWWTPData($startDate, $endDate),
+                    'card_detail_cost_chemical' => $detailCostChem,
                 ], $biaya, $analisa, $statusOperasi, $safetyPerf, $influentMingguan, $effluentMingguan, $kepatuhanCod, $performanceSample, $sludgeMgmt, $topRiskKoloni, $kepatuhanTss));
         }
     }
@@ -2955,6 +2963,72 @@ class WWTPController extends Controller
                 ['name' => 'DAF',          'kapasitas' => '10 m³',  'img' => asset('assets/images/wwtp/dashboard/DAF.png')],
                 ['name' => 'Outlet',       'kapasitas' => '1 m³',   'img' => asset('assets/images/wwtp/dashboard/OUTLET.png')],
             ]
+        ];
+    }
+
+    public function getWcoDetailCostChemicalData($year = null)
+    {
+        $year = (int) ($year ?: Carbon::now()->year);
+
+        $standards = WwtpChemicalStandard::orderBy('chemical_name', 'asc')->get();
+        $records = WwtpBiayaChemicalRecord::with(['details.chemicalStandard'])
+            ->whereYear('tanggal', $year)
+            ->get();
+
+        $monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+        $costChemicalSeries = [];
+        $biayaPerM3Series = [];
+        $limbahDiOlahSeries = [];
+
+        for ($m = 1; $m <= 12; $m++) {
+            $record = $records->first(function ($r) use ($m) {
+                return (int) Carbon::parse($r->tanggal)->month === $m;
+            });
+
+            if ($record) {
+                $totalCost = 0;
+                foreach ($standards as $std) {
+                    $det = $record->details ? $record->details->firstWhere('chemical_standard_id', $std->id) : null;
+                    $qty = $det ? (float) $det->qty : 0;
+                    $cost = $qty * (float) $std->harga_standar;
+                    $totalCost += $cost;
+                }
+
+                $limbah = (float) $record->limbah_di_olah;
+                $costM3 = $limbah > 0 ? ($totalCost / $limbah) : 0;
+
+                $costChemicalSeries[] = round($totalCost, 2);
+                $biayaPerM3Series[] = round($costM3, 2);
+                $limbahDiOlahSeries[] = round($limbah, 2);
+            } else {
+                $costChemicalSeries[] = null;
+                $biayaPerM3Series[] = null;
+                $limbahDiOlahSeries[] = 0;
+            }
+        }
+
+        $years = WwtpBiayaChemicalRecord::selectRaw('YEAR(tanggal) as yr')
+            ->distinct()
+            ->pluck('yr')
+            ->map(fn($y) => (int)$y)
+            ->toArray();
+
+        if (!in_array($year, $years)) {
+            $years[] = $year;
+        }
+        $currentYear = (int) date('Y');
+        if (!in_array($currentYear, $years)) {
+            $years[] = $currentYear;
+        }
+        rsort($years);
+
+        return [
+            'year'            => $year,
+            'available_years' => array_values(array_unique($years)),
+            'months'          => $monthsShort,
+            'cost_chemical'   => $costChemicalSeries,
+            'biaya_per_m3'    => $biayaPerM3Series,
+            'limbah_di_olah'  => $limbahDiOlahSeries,
         ];
     }
 }
