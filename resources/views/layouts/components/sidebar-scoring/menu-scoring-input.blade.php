@@ -1,13 +1,13 @@
 @php
-$jabatan = Auth::user()->jabatan;
-$bagian = Auth::user()->bagian;
+$jabatan = strtolower(Auth::user()->jabatan ?? '');
+$bagian = trim(Auth::user()->bagian ?? '');
 @endphp
 
 @if (
 $jabatan === 'admin' ||
 $jabatan === 'dept_head' ||
 $jabatan === 'supervisor' ||
-($jabatan === 'foreman' && $bagian === 'Engineering Maintenance & Improvement')|| ($jabatan === 'foreman' && $bagian === 'Engineering Produksi')
+(in_array($jabatan, ['foreman', 'operator']) && in_array($bagian, ['Engineering Maintenance & Improvement', 'Engineering Produksi', 'Engineering Kalibrasi', 'Kalibrasi']))
 )
 <li class="nav-item">
     <a class="nav-link menu-link" href="#sidebarScoringMesinInput" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarScoringMesinInput">
