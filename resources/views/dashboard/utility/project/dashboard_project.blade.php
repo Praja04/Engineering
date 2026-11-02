@@ -29,28 +29,60 @@
             font-weight: 700 !important;
         }
 
-        /* Apexcharts tooltip text color */
-        .apexcharts-tooltip,
-        .apexcharts-tooltip * {
-            color: #ffffff !important;
+        /* ApexCharts Tooltip Dark Styling (Kontras Tinggi & Tidak Nyaru) */
+        .apexcharts-tooltip.apexcharts-theme-dark,
+        .apexcharts-tooltip.apexcharts-theme-light,
+        .apexcharts-tooltip {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            padding: 0 !important;
         }
 
-        .apexcharts-tooltip span,
-        .apexcharts-tooltip div,
-        .apexcharts-tooltip-text,
-        .apexcharts-tooltip-text-y-label,
-        .apexcharts-tooltip-text-y-value,
         .apexcharts-tooltip-title {
+            background: #0f172a !important;
+            border-bottom: 1px solid #334155 !important;
+            color: #38bdf8 !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            padding: 6px 12px !important;
+            margin-bottom: 2px !important;
+            text-shadow: none !important;
+        }
+
+        .apexcharts-tooltip-series-group {
+            padding: 5px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            background: transparent !important;
+        }
+
+        .apexcharts-tooltip-text {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+
+        .apexcharts-tooltip-text-y-label {
+            color: #cbd5e1 !important;
+            font-weight: 500 !important;
+            font-size: 12px !important;
+            margin-right: 6px !important;
+            text-shadow: none !important;
+        }
+
+        .apexcharts-tooltip-text-y-value {
             color: #ffffff !important;
             font-weight: 700 !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+            font-size: 12px !important;
+            text-shadow: none !important;
         }
 
-        .apexcharts-tooltip.apexcharts-theme-light,
-        .apexcharts-tooltip.apexcharts-theme-dark {
-            border: none !important;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
-            border-radius: 6px !important;
+        .apexcharts-tooltip-marker {
+            margin-right: 8px !important;
+            border-radius: 50% !important;
         }
 
         /* Multi-select Dropdown Custom Styles */
@@ -199,17 +231,19 @@
 
             {{-- ── Alert Terlambat (Default dihilangkan / disembunyikan dulu) ── --}}
             <div id="alertTerlambatBanner"
-                class="alert alert-danger alert-dismissible fade show border-0 shadow-sm d-flex align-items-center mb-3"
+                class="alert alert-danger border-0 shadow-sm mb-3"
                 role="alert" style="display: none;">
-                <i class="ri-error-warning-fill fs-20 me-2 text-danger"></i>
-                <div class="flex-grow-1">
-                    <strong>Perhatian:</strong> Terdapat <strong id="alertTerlambatCount">{{ $kpis['terlambat'] ?? 0 }}
-                        project</strong> yang berstatus terlambat (belum selesai melewati batas deadline).
+                <div class="d-flex align-items-center">
+                    <i class="ri-error-warning-fill fs-20 me-2 text-danger"></i>
+                    <div class="flex-grow-1">
+                        <strong>Perhatian:</strong> Terdapat <strong id="alertTerlambatCount">{{ $kpis['terlambat'] ?? 0 }}
+                            project</strong> yang berstatus terlambat (belum selesai melewati batas deadline).
+                    </div>
+                    <a href="{{ route('utility.project.data', ['status' => 'Terlambat']) }}" class="btn btn-sm btn-danger ms-2 text-nowrap">
+                        Lihat Project Terlambat <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                    <button type="button" class="btn-close ms-2" id="btnCloseAlertTerlambat" aria-label="Close" title="Tutup Alert"></button>
                 </div>
-                <a href="{{ route('utility.project.data', ['status' => 'Terlambat']) }}" class="btn btn-sm btn-danger ms-2 text-nowrap">
-                    Lihat Project Terlambat <i class="ri-arrow-right-s-line"></i>
-                </a>
-                <button type="button" class="btn-close ms-2" id="btnCloseAlertTerlambat" aria-label="Close" title="Tutup Alert"></button>
             </div>
 
             {{-- ── Filter Dashboard Panel (Default dihilangkan / disembunyikan dulu) ── --}}
@@ -958,6 +992,8 @@
                 },
                 tooltip: {
                     theme: 'dark',
+                    shared: true,
+                    intersect: false,
                     y: {
                         formatter: function(val) {
                             return val + " Project";
@@ -1052,6 +1088,8 @@
                 },
                 tooltip: {
                     theme: 'dark',
+                    shared: true,
+                    intersect: false,
                     y: {
                         formatter: function(val) {
                             return val + " Project";
@@ -1118,6 +1156,8 @@
                 },
                 tooltip: {
                     theme: 'dark',
+                    shared: true,
+                    intersect: false,
                     y: {
                         formatter: function(val) {
                             return val + " Project";
@@ -1191,6 +1231,8 @@
                 },
                 tooltip: {
                     theme: 'dark',
+                    shared: true,
+                    intersect: false,
                     y: {
                         formatter: function(val) {
                             return val + " Project";
@@ -1641,11 +1683,13 @@
 
             // ── 5. Hide / Show Toggle: Alert Terlambat & Filter Dashboard ──
             // Toggle Alert Terlambat
-            $('#btnToggleAlertTerlambat').on('click', function() {
+            $(document).on('click', '#btnToggleAlertTerlambat', function(e) {
+                e.preventDefault();
                 $('#alertTerlambatBanner').slideToggle(200);
             });
 
-            $('#btnCloseAlertTerlambat').on('click', function() {
+            $(document).on('click', '#btnCloseAlertTerlambat', function(e) {
+                e.preventDefault();
                 $('#alertTerlambatBanner').slideUp(200);
             });
 
