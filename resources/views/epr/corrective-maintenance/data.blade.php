@@ -124,15 +124,34 @@
         {{-- Filter Card --}}
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
             <div class="card-body p-3">
-                <div class="row g-2">
-                    <div class="col-md-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-xl-2 col-md-4">
                         <label class="form-label small fw-semibold mb-1 text-muted">Cari</label>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text"><i class="ri-search-line"></i></span>
-                            <input type="text" class="form-control" id="filter-search" placeholder="Cari mesin, keterangan, jenis DT...">
+                            <input type="text" class="form-control" id="filter-search" placeholder="Cari mesin, jenis DT...">
                         </div>
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-xl-2 col-md-4">
+                        <label class="form-label small fw-semibold mb-1 text-muted">Tanggal Harian</label>
+                        <input type="date" class="form-control form-control-sm" id="filter-date">
+                    </div>
+                    <div class="col-xl-2 col-md-4">
+                        <label class="form-label small fw-semibold mb-1 text-muted">Bulan</label>
+                        <input type="month" class="form-control form-control-sm" id="filter-month" value="{{ date('Y-m') }}">
+                    </div>
+                    <div class="col-xl-1 col-md-2">
+                        <label class="form-label small fw-semibold mb-1 text-muted">Week</label>
+                        <select class="form-select form-select-sm" id="filter-week">
+                            <option value="">Semua</option>
+                            <option value="1">W1</option>
+                            <option value="2">W2</option>
+                            <option value="3">W3</option>
+                            <option value="4">W4</option>
+                            <option value="5">W5</option>
+                        </select>
+                    </div>
+                    <div class="col-xl-1 col-md-2">
                         <label class="form-label small fw-semibold mb-1 text-muted">Shift</label>
                         <select class="form-select form-select-sm" id="filter-shift">
                             <option value="">Semua</option>
@@ -141,38 +160,23 @@
                             <option value="3">3</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label small fw-semibold mb-1 text-muted">Pouch / Sachet</label>
+                    <div class="col-xl-1 col-md-2">
+                        <label class="form-label small fw-semibold mb-1 text-muted">Kategori</label>
                         <select class="form-select form-select-sm" id="filter-pouchSachet">
                             <option value="">Semua</option>
                             <option value="Pouch">Pouch</option>
                             <option value="Sachet">Sachet</option>
                         </select>
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-xl-1 col-md-2">
                         <label class="form-label small fw-semibold mb-1 text-muted">E / M</label>
                         <select class="form-select form-select-sm" id="filter-em">
                             <option value="">Semua</option>
-                            <option value="Electrical">Electrical</option>
-                            <option value="Mechanical">Mechanical</option>
+                            <option value="Electrical">Elec</option>
+                            <option value="Mechanical">Mech</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label small fw-semibold mb-1 text-muted">Bulan</label>
-                        <input type="month" class="form-control form-control-sm" id="filter-month" value="{{ date('Y-m') }}">
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label small fw-semibold mb-1 text-muted">Week</label>
-                        <select class="form-select form-select-sm" id="filter-week">
-                            <option value="">Semua</option>
-                            <option value="1">Week 1</option>
-                            <option value="2">Week 2</option>
-                            <option value="3">Week 3</option>
-                            <option value="4">Week 4</option>
-                            <option value="5">Week 5</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end gap-1">
+                    <div class="col-xl-2 col-md-4 d-flex align-items-end gap-1">
                         <button class="btn btn-primary btn-sm px-2 w-100 d-flex align-items-center justify-content-center gap-1" onclick="applyFilters()" title="Filter">
                             <i class="ri-filter-3-line"></i> <span>Filter</span>
                         </button>
@@ -199,6 +203,11 @@
             <li class="nav-item">
                 <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-machine-group" role="tab">
                     <i class="ri-pie-chart-line me-1"></i> Jumlah DT Mesin / Grup (MTBF & Availability)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-loading-time" role="tab">
+                    <i class="ri-table-line me-1"></i> Downtime & Loading Time (Pouch & Sachet)
                 </a>
             </li>
         </ul>
@@ -324,6 +333,69 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Tab 4: Downtime & Loading Time Matrix --}}
+            <div class="tab-pane" id="tab-loading-time" role="tabpanel">
+                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                    <div class="card-body p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="fw-bold text-uppercase text-dark mb-1">
+                                    <i class="ri-dashboard-fill text-primary me-2"></i>REKAPAN DOWNTIME & LOADING TIME (POUCH & SACHET)
+                                </h5>
+                                <p class="text-muted fs-13 mb-0">Analisis Loading Time kerja mesin, Realisasi Downtime (menit), dan Persentase Downtime (%) per Grup A, B, C & ALL.</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="small fw-semibold text-muted mb-0">Tanggal Harian:</label>
+                                <input type="date" class="form-control form-control-sm" id="filter-lt-date" style="width: 155px;">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearLtDate()" title="Tampilkan Semua Tanggal">
+                                    Semua
+                                </button>
+                                <span class="badge bg-soft-primary text-primary px-3 py-2 fs-12 fw-semibold" id="lt-period-badge">
+                                    Periode: -
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0 text-center" id="tableLoadingTime">
+                                <thead>
+                                    <tr>
+                                        <th colspan="2" style="background-color: #bbf7d0; color: #166534; font-weight: bold; font-size: 14px;">DOWNTIME</th>
+                                        <th colspan="3" style="background-color: #bfdbfe; color: #1e40af; font-weight: bold; font-size: 14px;">A</th>
+                                        <th colspan="3" style="background-color: #bbf7d0; color: #166534; font-weight: bold; font-size: 14px;">B</th>
+                                        <th colspan="3" style="background-color: #fecaca; color: #991b1b; font-weight: bold; font-size: 14px;">C</th>
+                                        <th colspan="3" style="background-color: #f3f4f6; color: #1f2937; font-weight: bold; font-size: 14px;">ALL</th>
+                                    </tr>
+                                    <tr style="font-size: 12px;">
+                                        <th width="90" style="background-color: #f8fafc;">LINE</th>
+                                        <th width="80" style="background-color: #f8fafc;">MESIN</th>
+                                        {{-- Group A --}}
+                                        <th width="95" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
+                                        <th width="75">DT</th>
+                                        <th width="75">%</th>
+                                        {{-- Group B --}}
+                                        <th width="95" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
+                                        <th width="75">DT</th>
+                                        <th width="75">%</th>
+                                        {{-- Group C --}}
+                                        <th width="95" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
+                                        <th width="75">DT</th>
+                                        <th width="75">%</th>
+                                        {{-- ALL --}}
+                                        <th width="105" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
+                                        <th width="80">DT</th>
+                                        <th width="85">%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableLoadingTimeBody">
+                                    {{-- Dynamically rendered by renderLoadingTimeTable() --}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -352,8 +424,10 @@
 <script>
 $(document).ready(function() {
     let reports = [];
+    let loadingTimes = [];
     let filteredReports = [];
     let currentPage = 1;
+    let isFirstLoad = true;
     const pageSize = 15;
 
     function loadReports() {
@@ -364,13 +438,48 @@ $(document).ready(function() {
             data: { month: month },
             success: function(res) {
                 reports = res;
-                applyFiltersListOnly();
+                loadLoadingTimes();
             },
             error: function() {
                 Swal.fire('Error', 'Gagal memuat riwayat data laporan', 'error');
             }
         });
     }
+
+    function loadLoadingTimes() {
+        const month = $('#filter-month').val() || '';
+        $.ajax({
+            url: "{{ route('epr.cm.loading-times') }}",
+            method: 'GET',
+            data: { month: month },
+            success: function(res) {
+                loadingTimes = res;
+                // On initial load, set default date to latest available date
+                if (isFirstLoad) {
+                    isFirstLoad = false;
+                    if (!$('#filter-date').val() && !$('#filter-lt-date').val()) {
+                        const availDates = [...new Set(loadingTimes.map(lt => lt.tanggal).concat(reports.map(r => r.tanggal)).filter(Boolean))].sort();
+                        if (availDates.length) {
+                            const latestDate = availDates[availDates.length - 1];
+                            $('#filter-date').val(latestDate);
+                            $('#filter-lt-date').val(latestDate);
+                        }
+                    }
+                }
+                applyFiltersListOnly();
+            },
+            error: function() {
+                loadingTimes = [];
+                applyFiltersListOnly();
+            }
+        });
+    }
+
+    window.clearLtDate = function() {
+        $('#filter-date').val('');
+        $('#filter-lt-date').val('');
+        applyFiltersListOnly();
+    };
 
     function getWeekOfMonth(dateStr) {
         if (!dateStr) return 1;
@@ -383,14 +492,18 @@ $(document).ready(function() {
     }
 
     function applyFiltersListOnly() {
-        const search = $('#filter-search').val().trim().toLowerCase();
-        const shift = $('#filter-shift').val();
-        const pouchSachet = $('#filter-pouchSachet').val();
-        const em = $('#filter-em').val();
-        const week = $('#filter-week').val();
+        const search = ($('#filter-search').val() || '').trim().toLowerCase();
+        const date = $('#filter-date').val() || '';
+        const shift = $('#filter-shift').val() || '';
+        const pouchSachet = $('#filter-pouchSachet').val() || '';
+        const em = $('#filter-em').val() || '';
+        const week = $('#filter-week').val() || '';
 
         let filtered = reports;
 
+        if (date) {
+            filtered = filtered.filter(r => r.tanggal === date);
+        }
         if (search) {
             filtered = filtered.filter(r => 
                 (r.mesin || '').toLowerCase().includes(search) ||
@@ -399,9 +512,9 @@ $(document).ready(function() {
                 (r.jenis_dt_name || '').toLowerCase().includes(search)
             );
         }
-        if (shift) filtered = filtered.filter(r => r.shift === shift);
-        if (pouchSachet) filtered = filtered.filter(r => r.pouch_sachet === pouchSachet);
-        if (em) filtered = filtered.filter(r => r.electrical_mechanical === em);
+        if (shift) filtered = filtered.filter(r => String(r.shift) === String(shift));
+        if (pouchSachet) filtered = filtered.filter(r => (r.pouch_sachet || '').toLowerCase() === pouchSachet.toLowerCase());
+        if (em) filtered = filtered.filter(r => (r.electrical_mechanical || '').toLowerCase() === em.toLowerCase());
         if (week) filtered = filtered.filter(r => getWeekOfMonth(r.tanggal) == week);
 
         // Stats calculation
@@ -421,19 +534,31 @@ $(document).ready(function() {
         renderTable();
         renderSummaryTable();
         renderMachineGroupTable();
+        renderLoadingTimeTable();
     }
 
     window.applyFilters = function() {
-        loadReports();
+        const d = $('#filter-date').val();
+        const m = $('#filter-month').val();
+        if (d && (!m || d.substring(0, 7) !== m)) {
+            $('#filter-month').val(d.substring(0, 7));
+            isFirstLoad = false;
+            loadReports();
+        } else {
+            applyFiltersListOnly();
+        }
     };
 
     window.resetFilters = function() {
         $('#filter-search').val('');
+        $('#filter-date').val('');
+        $('#filter-lt-date').val('');
         $('#filter-shift').val('');
         $('#filter-pouchSachet').val('');
         $('#filter-em').val('');
         $('#filter-week').val('');
         $('#filter-month').val("{{ date('Y-m') }}");
+        isFirstLoad = false;
         loadReports();
     };
 
@@ -633,11 +758,11 @@ $(document).ready(function() {
         const input = event.target;
 
         Swal.fire({
-            title: 'Import Data CM?',
-            text: `Apakah Anda yakin ingin mengimpor data dari file "${file.name}"?`,
+            title: 'Import Data Corrective Maintenance',
+            html: `Apakah Anda yakin ingin mengimpor data dari file <b>"${file.name}"</b>?<br><span class="text-muted fs-12 mt-1 d-block">Mendukung format template <b>TAMPLATE INPUT DT</b> (sheet HARIAN).</span>`,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Import',
+            confirmButtonText: '<i class="ri-upload-cloud-2-line me-1"></i> Ya, Import',
             cancelButtonText: 'Batal',
             showLoaderOnConfirm: true,
             preConfirm: () => {
@@ -721,10 +846,11 @@ $(document).ready(function() {
         const tbody = $('#tableSummaryBody');
         tbody.empty();
 
+        const selectedDate = $('#filter-date').val();
         const selectedWeek = $('#filter-week').val();
         const monthVal = $('#filter-month').val();
 
-        $('#summary-period-badge').text(`Periode: ${monthVal || 'Semua'}${selectedWeek ? ' (Week ' + selectedWeek + ')' : ''}`);
+        $('#summary-period-badge').text(selectedDate ? `Tanggal: ${formatDate(selectedDate)}` : `Periode: ${monthVal || 'Semua'}${selectedWeek ? ' (Week ' + selectedWeek + ')' : ''}`);
 
         let items = filteredReports;
 
@@ -790,9 +916,10 @@ $(document).ready(function() {
         const tbody = $('#tableMachineGroupBody');
         tbody.empty();
 
+        const selectedDate = $('#filter-date').val();
         const monthVal = $('#filter-month').val();
         const selectedWeek = $('#filter-week').val();
-        $('#machine-period-badge').text(`Periode: ${monthVal || 'Semua'}${selectedWeek ? ' (Week ' + selectedWeek + ')' : ''}`);
+        $('#machine-period-badge').text(selectedDate ? `Tanggal: ${formatDate(selectedDate)}` : `Periode: ${monthVal || 'Semua'}${selectedWeek ? ' (Week ' + selectedWeek + ')' : ''}`);
 
         let items = filteredReports;
 
@@ -877,9 +1004,293 @@ $(document).ready(function() {
         $('#total-availability').text('-');
     }
 
-    $('#filter-search').on('input', applyFiltersListOnly);
+    function renderLoadingTimeTable() {
+        const tbody = $('#tableLoadingTimeBody');
+        tbody.empty();
+
+        const monthVal = $('#filter-month').val();
+        const selectedDate = $('#filter-date').val() || $('#filter-lt-date').val();
+
+        let reportsToUse = reports;
+        let ltToUse = loadingTimes;
+
+        if (selectedDate) {
+            reportsToUse = reports.filter(r => r.tanggal === selectedDate);
+            ltToUse = loadingTimes.filter(lt => lt.tanggal === selectedDate);
+            $('#lt-period-badge').text(`Tanggal: ${formatDate(selectedDate)}`);
+        } else {
+            $('#lt-period-badge').text(`Bulan: ${monthVal || 'Semua'}`);
+        }
+
+        const pouchMachines = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'C', 'L', 'B', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'V', 'A', 'U'];
+        const sachetMachines = ['O', 'P', 'W', 'X', 'R', 'Q', 'Y'];
+
+        function getMachineMetrics(mName) {
+            const mReports = reportsToUse.filter(r => (r.mesin || '').trim().toUpperCase() === mName.toUpperCase());
+
+            const dtA = mReports.filter(r => (r.grup || '').toUpperCase() === 'A').reduce((acc, c) => acc + (c.total_menit || 0), 0);
+            const dtB = mReports.filter(r => (r.grup || '').toUpperCase() === 'B').reduce((acc, c) => acc + (c.total_menit || 0), 0);
+            const dtC = mReports.filter(r => (r.grup || '').toUpperCase() === 'C').reduce((acc, c) => acc + (c.total_menit || 0), 0);
+            const dtAll = dtA + dtB + dtC;
+
+            const ltRecords = ltToUse.filter(lt => (lt.mesin || '').trim().toUpperCase() === mName.toUpperCase());
+            const ltA = ltRecords.reduce((acc, c) => acc + (c.loading_time_a || 0), 0);
+            const ltB = ltRecords.reduce((acc, c) => acc + (c.loading_time_b || 0), 0);
+            const ltC = ltRecords.reduce((acc, c) => acc + (c.loading_time_c || 0), 0);
+            const ltAll = (ltA + ltB + ltC) > 0 ? (ltA + ltB + ltC) : ltRecords.reduce((acc, c) => acc + (c.loading_time_all || 0), 0);
+
+            const pctA = ltA > 0 ? ((dtA / ltA) * 100) : 0;
+            const pctB = ltB > 0 ? ((dtB / ltB) * 100) : 0;
+            const pctC = ltC > 0 ? ((dtC / ltC) * 100) : 0;
+            const pctAll = ltAll > 0 ? ((dtAll / ltAll) * 100) : 0;
+
+            return { mName, ltA, dtA, pctA, ltB, dtB, pctB, ltC, dtC, pctC, ltAll, dtAll, pctAll };
+        }
+
+        function fmtVal(val) {
+            return val > 0 ? val : '';
+        }
+        function fmtPct(pct, hasLoad) {
+            return hasLoad > 0 ? (pct > 0 ? pct.toFixed(1) + '%' : '0.0%') : '';
+        }
+        function fmtPctExact(pct, hasLoad) {
+            return hasLoad > 0 ? (pct > 0 ? pct.toFixed(2) + '%' : '0.00%') : '';
+        }
+
+        // --- Render POUCH ---
+        let sumPouchLtA = 0, sumPouchDtA = 0;
+        let sumPouchLtB = 0, sumPouchDtB = 0;
+        let sumPouchLtC = 0, sumPouchDtC = 0;
+        let activePouchAllCount = 0;
+        let sumPouchLtAll = 0, sumPouchDtAll = 0;
+
+        pouchMachines.forEach((mName, idx) => {
+            const data = getMachineMetrics(mName);
+            sumPouchLtA += data.ltA;
+            sumPouchDtA += data.dtA;
+            sumPouchLtB += data.ltB;
+            sumPouchDtB += data.dtB;
+            sumPouchLtC += data.ltC;
+            sumPouchDtC += data.dtC;
+
+            if (data.ltAll > 0) {
+                activePouchAllCount++;
+                sumPouchLtAll += data.ltAll;
+                sumPouchDtAll += data.dtAll;
+            }
+
+            const categoryCell = idx === 0 ? `<td rowspan="${pouchMachines.length}" class="fw-bold align-middle" style="background-color: #93c5fd; color: #1e3a8a; font-size: 13px; letter-spacing: 1px;">POUCH</td>` : '';
+
+            tbody.append(`
+                <tr>
+                    ${categoryCell}
+                    <td class="fw-bold text-dark" style="background-color: #f8fafc;">${esc(mName)}</td>
+                    <td style="background-color: #f0fdf4;" class="font-monospace">${fmtVal(data.ltA)}</td>
+                    <td class="font-monospace">${data.ltA > 0 ? data.dtA : ''}</td>
+                    <td class="font-monospace fw-semibold ${data.pctA > 5 ? 'text-danger' : 'text-dark'}">${fmtPct(data.pctA, data.ltA)}</td>
+                    <td style="background-color: #f0fdf4;" class="font-monospace">${fmtVal(data.ltB)}</td>
+                    <td class="font-monospace">${data.ltB > 0 ? data.dtB : ''}</td>
+                    <td class="font-monospace fw-semibold ${data.pctB > 5 ? 'text-danger' : 'text-dark'}">${fmtPct(data.pctB, data.ltB)}</td>
+                    <td style="background-color: #f0fdf4;" class="font-monospace">${fmtVal(data.ltC)}</td>
+                    <td class="font-monospace">${data.ltC > 0 ? data.dtC : ''}</td>
+                    <td class="font-monospace fw-semibold ${data.pctC > 5 ? 'text-danger' : 'text-dark'}">${fmtPct(data.pctC, data.ltC)}</td>
+                    <td style="background-color: #f0fdf4;" class="font-monospace fw-bold">${fmtVal(data.ltAll)}</td>
+                    <td class="font-monospace fw-bold">${data.ltAll > 0 ? data.dtAll : ''}</td>
+                    <td class="font-monospace fw-bold ${data.pctAll > 5 ? 'text-danger' : 'text-dark'}">${fmtPctExact(data.pctAll, data.ltAll)}</td>
+                </tr>
+            `);
+        });
+
+        // Row Rata-rata Pouch (Row 25 in Excel: Sum for A, B, C; Average for ALL)
+        const avgPouchLtA = sumPouchLtA;
+        const avgPouchDtA = Math.round(sumPouchDtA);
+        const avgPouchPctA = avgPouchLtA > 0 ? ((avgPouchDtA / avgPouchLtA) * 100) : 0;
+
+        const avgPouchLtB = sumPouchLtB;
+        const avgPouchDtB = Math.round(sumPouchDtB);
+        const avgPouchPctB = avgPouchLtB > 0 ? ((avgPouchDtB / avgPouchLtB) * 100) : 0;
+
+        const avgPouchLtC = sumPouchLtC;
+        const avgPouchDtC = Math.round(sumPouchDtC);
+        const avgPouchPctC = avgPouchLtC > 0 ? ((avgPouchDtC / avgPouchLtC) * 100) : 0;
+
+        const avgPouchLtAllRaw = activePouchAllCount > 0 ? (sumPouchLtAll / activePouchAllCount) : 0;
+        const avgPouchDtAllRaw = activePouchAllCount > 0 ? (sumPouchDtAll / activePouchAllCount) : 0;
+        const avgPouchPctAll = avgPouchLtAllRaw > 0 ? ((avgPouchDtAllRaw / avgPouchLtAllRaw) * 100) : 0;
+
+        tbody.append(`
+            <tr class="fw-bold" style="background-color: #fef08a; border-top: 2px solid #ca8a04;">
+                <td colspan="2" class="text-start ps-3" style="color: #713f12;">Rata-rata pouch</td>
+                <td class="font-monospace text-dark">${fmtVal(avgPouchLtA)}</td>
+                <td class="font-monospace text-dark">${avgPouchDtA || 0}</td>
+                <td class="font-monospace text-dark">${avgPouchPctA.toFixed(1)}%</td>
+                <td class="font-monospace text-dark">${fmtVal(avgPouchLtB)}</td>
+                <td class="font-monospace text-dark">${avgPouchDtB || 0}</td>
+                <td class="font-monospace text-dark">${avgPouchPctB.toFixed(1)}%</td>
+                <td class="font-monospace text-dark">${fmtVal(avgPouchLtC)}</td>
+                <td class="font-monospace text-dark">${avgPouchDtC || 0}</td>
+                <td class="font-monospace text-dark">${avgPouchPctC.toFixed(1)}%</td>
+                <td class="font-monospace text-dark">${Math.round(avgPouchLtAllRaw)}</td>
+                <td class="font-monospace text-dark">${Math.round(avgPouchDtAllRaw)}</td>
+                <td class="font-monospace text-dark">${avgPouchPctAll.toFixed(2)}%</td>
+            </tr>
+        `);
+
+        // --- Render SACHET ---
+        let sumSachetLtA = 0, sumSachetDtA = 0;
+        let sumSachetLtB = 0, sumSachetDtB = 0;
+        let sumSachetLtC = 0, sumSachetDtC = 0;
+        let activeSachetAllCount = 0;
+        let sumSachetLtAll = 0, sumSachetDtAll = 0;
+
+        sachetMachines.forEach((mName, idx) => {
+            const data = getMachineMetrics(mName);
+            sumSachetLtA += data.ltA;
+            sumSachetDtA += data.dtA;
+            sumSachetLtB += data.ltB;
+            sumSachetDtB += data.dtB;
+            sumSachetLtC += data.ltC;
+            sumSachetDtC += data.dtC;
+
+            if (data.ltAll > 0) {
+                activeSachetAllCount++;
+                sumSachetLtAll += data.ltAll;
+                sumSachetDtAll += data.dtAll;
+            }
+
+            const categoryCell = idx === 0 ? `<td rowspan="${sachetMachines.length}" class="fw-bold align-middle" style="background-color: #fed7aa; color: #9a3412; font-size: 13px; letter-spacing: 1px;">SACHET</td>` : '';
+
+            tbody.append(`
+                <tr>
+                    ${categoryCell}
+                    <td class="fw-bold text-dark" style="background-color: #f8fafc;">${esc(mName)}</td>
+                    <td style="background-color: #f0fdf4;" class="font-monospace">${fmtVal(data.ltA)}</td>
+                    <td class="font-monospace">${data.ltA > 0 ? data.dtA : ''}</td>
+                    <td class="font-monospace fw-semibold ${data.pctA > 5 ? 'text-danger' : 'text-dark'}">${fmtPct(data.pctA, data.ltA)}</td>
+                    <td style="background-color: #f0fdf4;" class="font-monospace">${fmtVal(data.ltB)}</td>
+                    <td class="font-monospace">${data.ltB > 0 ? data.dtB : ''}</td>
+                    <td class="font-monospace fw-semibold ${data.pctB > 5 ? 'text-danger' : 'text-dark'}">${fmtPct(data.pctB, data.ltB)}</td>
+                    <td style="background-color: #f0fdf4;" class="font-monospace">${fmtVal(data.ltC)}</td>
+                    <td class="font-monospace">${data.ltC > 0 ? data.dtC : ''}</td>
+                    <td class="font-monospace fw-semibold ${data.pctC > 5 ? 'text-danger' : 'text-dark'}">${fmtPct(data.pctC, data.ltC)}</td>
+                    <td style="background-color: #f0fdf4;" class="font-monospace fw-bold">${fmtVal(data.ltAll)}</td>
+                    <td class="font-monospace fw-bold">${data.ltAll > 0 ? data.dtAll : ''}</td>
+                    <td class="font-monospace fw-bold ${data.pctAll > 5 ? 'text-danger' : 'text-dark'}">${fmtPctExact(data.pctAll, data.ltAll)}</td>
+                </tr>
+            `);
+        });
+
+        // Row Rata-rata Sachet (Row 33 in Excel: Sum for A, B, C; Average for ALL)
+        const avgSachetLtA = sumSachetLtA;
+        const avgSachetDtA = Math.round(sumSachetDtA);
+        const avgSachetPctA = avgSachetLtA > 0 ? ((avgSachetDtA / avgSachetLtA) * 100) : 0;
+
+        const avgSachetLtB = sumSachetLtB;
+        const avgSachetDtB = Math.round(sumSachetDtB);
+        const avgSachetPctB = avgSachetLtB > 0 ? ((avgSachetDtB / avgSachetLtB) * 100) : 0;
+
+        const avgSachetLtC = sumSachetLtC;
+        const avgSachetDtC = Math.round(sumSachetDtC);
+        const avgSachetPctC = avgSachetLtC > 0 ? ((avgSachetDtC / avgSachetLtC) * 100) : 0;
+
+        const avgSachetLtAllRaw = activeSachetAllCount > 0 ? (sumSachetLtAll / activeSachetAllCount) : 0;
+        const avgSachetDtAllRaw = activeSachetAllCount > 0 ? (sumSachetDtAll / activeSachetAllCount) : 0;
+        const avgSachetPctAll = avgSachetLtAllRaw > 0 ? ((avgSachetDtAllRaw / avgSachetLtAllRaw) * 100) : 0;
+
+        tbody.append(`
+            <tr class="fw-bold" style="background-color: #fef08a; border-top: 2px solid #ca8a04;">
+                <td colspan="2" class="text-start ps-3" style="color: #713f12;">Rata-rata Sachet</td>
+                <td class="font-monospace text-dark">${fmtVal(avgSachetLtA)}</td>
+                <td class="font-monospace text-dark">${avgSachetDtA || 0}</td>
+                <td class="font-monospace text-dark">${avgSachetPctA.toFixed(2)}%</td>
+                <td class="font-monospace text-dark">${fmtVal(avgSachetLtB)}</td>
+                <td class="font-monospace text-dark">${avgSachetDtB || 0}</td>
+                <td class="font-monospace text-dark">${avgSachetPctB.toFixed(1)}%</td>
+                <td class="font-monospace text-dark">${fmtVal(avgSachetLtC)}</td>
+                <td class="font-monospace text-dark">${avgSachetDtC || 0}</td>
+                <td class="font-monospace text-dark">${avgSachetPctC.toFixed(2)}%</td>
+                <td class="font-monospace text-dark">${Math.round(avgSachetLtAllRaw)}</td>
+                <td class="font-monospace text-dark">${Math.round(avgSachetDtAllRaw)}</td>
+                <td class="font-monospace text-dark">${avgSachetPctAll.toFixed(2)}%</td>
+            </tr>
+        `);
+
+        // Row Total Pouch & Sachet (Row 34 in Excel: AVERAGE(Pouch, Sachet))
+        const totalLtA = Math.round((avgPouchLtA + avgSachetLtA) / 2);
+        const totalDtA = Number(((avgPouchDtA + avgSachetDtA) / 2).toFixed(1));
+        const totalPctA = totalLtA > 0 ? ((totalDtA / totalLtA) * 100) : 0;
+
+        const totalLtB = Math.round((avgPouchLtB + avgSachetLtB) / 2);
+        const totalDtB = Math.round((avgPouchDtB + avgSachetDtB) / 2);
+        const totalPctB = totalLtB > 0 ? ((totalDtB / totalLtB) * 100) : 0;
+
+        const totalLtC = Math.round((avgPouchLtC + avgSachetLtC) / 2);
+        const totalDtC = Math.round((avgPouchDtC + avgSachetDtC) / 2);
+        const totalPctC = totalLtC > 0 ? ((totalDtC / totalLtC) * 100) : 0;
+
+        const totalLtAll = Math.round((avgPouchLtAllRaw + avgSachetLtAllRaw) / 2);
+        const totalDtAll = Math.round((avgPouchDtAllRaw + avgSachetDtAllRaw) / 2);
+        const totalPctAll = totalLtAll > 0 ? (((avgPouchDtAllRaw + avgSachetDtAllRaw) / 2) / totalLtAll * 100) : 0;
+
+        tbody.append(`
+            <tr class="fw-bold" style="background-color: #86efac; border-top: 3px double #15803d; font-size: 13px;">
+                <td colspan="2" class="text-start ps-3" style="color: #14532d;">Total Pouch & Sachet</td>
+                <td class="font-monospace text-dark">${fmtVal(totalLtA)}</td>
+                <td class="font-monospace text-dark">${totalDtA}</td>
+                <td class="font-monospace text-dark">${totalPctA.toFixed(2)}%</td>
+                <td class="font-monospace text-dark">${fmtVal(totalLtB)}</td>
+                <td class="font-monospace text-dark">${totalDtB}</td>
+                <td class="font-monospace text-dark">${totalPctB.toFixed(2)}%</td>
+                <td class="font-monospace text-dark">${fmtVal(totalLtC)}</td>
+                <td class="font-monospace text-dark">${totalDtC}</td>
+                <td class="font-monospace text-dark">${Math.round(totalPctC)}%</td>
+                <td class="font-monospace text-dark">${totalLtAll}</td>
+                <td class="font-monospace text-dark">${totalDtAll}</td>
+                <td class="font-monospace text-dark">${totalPctAll.toFixed(2)}%</td>
+            </tr>
+        `);
+    }
+
+    $('#filter-search').on('input keypress', function(e) {
+        if (e.type === 'input' || e.which === 13) {
+            applyFiltersListOnly();
+        }
+    });
+
+    $('#filter-date').on('change input', function() {
+        const d = $(this).val();
+        $('#filter-lt-date').val(d);
+        const m = $('#filter-month').val();
+        if (d && (!m || d.substring(0, 7) !== m)) {
+            $('#filter-month').val(d.substring(0, 7));
+            isFirstLoad = false;
+            loadReports();
+        } else {
+            applyFiltersListOnly();
+        }
+    });
+
+    $('#filter-lt-date').on('change input', function() {
+        const d = $(this).val();
+        $('#filter-date').val(d);
+        const m = $('#filter-month').val();
+        if (d && (!m || d.substring(0, 7) !== m)) {
+            $('#filter-month').val(d.substring(0, 7));
+            isFirstLoad = false;
+            loadReports();
+        } else {
+            applyFiltersListOnly();
+        }
+    });
+
     $('#filter-shift, #filter-pouchSachet, #filter-em, #filter-week').on('change', applyFiltersListOnly);
-    $('#filter-month').on('change', loadReports);
+
+    $('#filter-month').on('change', function() {
+        $('#filter-date').val('');
+        $('#filter-lt-date').val('');
+        isFirstLoad = true;
+        loadReports();
+    });
 
     loadReports();
 });
