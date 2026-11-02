@@ -65,7 +65,7 @@
 
 
                     <!-- /////////////////////Data Master/////////////// -->
-                    @if ($isAdmin || in_array($jabatan, ['admin', 'dept_head', 'supervisor', 'foreman']))
+                    @if (in_array($jabatan, ['admin', 'dept_head', 'supervisor', 'foreman']))
                         <li class="menu-title"><span data-key="t-menu">Data Master</span></li>
 
                         @include('layouts.components.sidebar-kalibrasi.data-master')
@@ -75,7 +75,7 @@
                     @endif
 
                     <!-- /////////////////////Manage User/////////////// -->
-                    @if ($isAdmin || in_array($jabatan, ['admin', 'dept_head', 'foreman', 'supervisor']))
+                    @if (in_array($jabatan, ['admin', 'dept_head', 'foreman', 'supervisor']))
                         <li class="nav-item">
                             <a href="{{ url('users/index') }}"
                                 class="nav-link menu-link  {{ request()->routeIs('users.*') ? 'active' : '' }}">
