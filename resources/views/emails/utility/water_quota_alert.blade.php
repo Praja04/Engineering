@@ -145,7 +145,7 @@
             <div class="header">
                 <h1>⚠️ Peringatan Kuota Air Mentah (≥ 80%)</h1>
                 <p>PT Bumi Alam Segar — Engineering Utility</p>
-                <div class="badge-warning">Periode {{ $monthName }} {{ $year }} ({{ $daysInMonth }} Hari)
+                <div class="badge-warning">Periode {{ $periodLabel ?? ($monthName . ' ' . $year) }} ({{ $daysInPeriod ?? $daysInMonth }} Hari)
                 </div>
             </div>
 
@@ -154,8 +154,8 @@
                 <p class="intro">
                     Halo <strong>{{ $recipientName }}</strong>,<br><br>
                     Sistem otomatis memantau pemakaian air mentah harian. Diberitahukan bahwa terdapat sumur/sumber air
-                    mentah yang pemakaiannya pada bulan berjalan telah <strong>mencapai atau melampaui batas
-                        80%</strong> dari total kuota 1 bulan penuh:
+                    mentah yang pemakaiannya pada periode berjalan (<strong>{{ $startDate }} s.d. {{ $endDate }}</strong>) telah <strong>mencapai atau melampaui batas
+                        80%</strong> dari total kuota 1 periode penuh:
                 </p>
 
                 <div class="table-container">
@@ -164,7 +164,7 @@
                             <tr>
                                 <th>Sumber Air</th>
                                 <th class="text-right">Kuota Harian</th>
-                                <th class="text-right">Kuota 1 Bulan</th>
+                                <th class="text-right">Kuota 1 Periode</th>
                                 <th class="text-right">Aktual s.d Hari Ini</th>
                                 <th class="text-right">% Pemakaian</th>
                                 <th class="text-center">Status</th>
@@ -200,8 +200,7 @@
                 <div class="notes-box">
                     <strong>Catatan Pengingat:</strong>
                     <ul style="margin: 6px 0 0 0; padding-left: 20px;">
-                        <li>Perhitungan 80% dihitung dari total kuota 1 bulan penuh ({{ $daysInMonth }} hari x kuota
-                            harian).</li>
+                        <li>Perhitungan 80% dihitung dari total kuota 1 periode penuh tanggal 21 s.d. 20 ({{ $daysInPeriod ?? $daysInMonth }} hari x kuota harian).</li>
                         <li>Mohon dilakukan evaluasi pemakaian debit sumur dan koordinasikan dengan tim operasional
                             terkait untuk mencegah over kuota berlebih.</li>
                     </ul>

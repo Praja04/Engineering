@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -15,31 +14,35 @@ class WaterQuotaAlertMail extends Mailable
 
     public array $alertItems;
     public string $recipientName;
-    public string $monthName;
-    public int $year;
-    public int $daysInMonth;
+    public string $periodLabel;
+    public string $startDate;
+    public string $endDate;
+    public int $daysInPeriod;
 
     /**
      * Create a new message instance.
      *
      * @param array $alertItems
      * @param string $recipientName
-     * @param string $monthName
-     * @param int $year
-     * @param int $daysInMonth
+     * @param string $periodLabel
+     * @param string $startDate
+     * @param string $endDate
+     * @param int $daysInPeriod
      */
     public function __construct(
         array $alertItems,
         string $recipientName,
-        string $monthName,
-        int $year,
-        int $daysInMonth
+        string $periodLabel,
+        string $startDate,
+        string $endDate,
+        int $daysInPeriod
     ) {
-        $this->alertItems = $alertItems;
+        $this->alertItems    = $alertItems;
         $this->recipientName = $recipientName;
-        $this->monthName = $monthName;
-        $this->year = $year;
-        $this->daysInMonth = $daysInMonth;
+        $this->periodLabel   = $periodLabel;
+        $this->startDate     = $startDate;
+        $this->endDate       = $endDate;
+        $this->daysInPeriod  = $daysInPeriod;
     }
 
     /**
@@ -49,7 +52,7 @@ class WaterQuotaAlertMail extends Mailable
     {
         $sourcesStr = implode(', ', array_column($this->alertItems, 'source'));
         return new Envelope(
-            subject: "⚠️ Peringatan Kuota Air Mentah (≥ 80%): {$sourcesStr} [{$this->monthName} {$this->year}]",
+            subject: "⚠️ Peringatan Kuota Air Mentah (≥ 80%): {$sourcesStr} [Periode {$this->periodLabel}]",
         );
     }
 
@@ -63,9 +66,14 @@ class WaterQuotaAlertMail extends Mailable
             with: [
                 'alertItems'    => $this->alertItems,
                 'recipientName' => $this->recipientName,
-                'monthName'     => $this->monthName,
-                'year'          => $this->year,
-                'daysInMonth'   => $this->daysInMonth,
+                'periodLabel'   => $this->periodLabel,
+                'startDate'     => $this->startDate,
+                'endDate'       => $this->endDate,
+                'daysInPeriod'  => $this->daysInPeriod,
+                // Backwards-compatibility fallback
+                'monthName'     => $this->periodLabel,
+                'year'          => '',
+                'daysInMonth'   => $this->daysInPeriod,
             ],
         );
     }

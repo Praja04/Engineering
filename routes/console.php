@@ -9,8 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 // Scheduler Pengecekan Kuota Air Mentah (Sumur 1, 2, 4, 5, PDAM) jika mencapai 80% dari kuota 1 bulan
-Schedule::command('utility:check-water-quota')
-    ->dailyAt('08:00')
-    ->withoutOverlapping()
-    ->runInBackground();
-
+// Schedule::command('utility:check-water-quota')
+//     ->dailyAt('08:00')
+//     ->withoutOverlapping()
+//     ->runInBackground();
