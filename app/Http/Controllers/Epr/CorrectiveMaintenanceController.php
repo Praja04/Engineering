@@ -23,7 +23,10 @@ class CorrectiveMaintenanceController extends Controller
     public function data()
     {
         $jenisDts = JenisDt::orderBy('name', 'asc')->get();
-        return view('epr.corrective-maintenance.data', compact('jenisDts'));
+        $latestDate = CorrectiveMaintenance::max('tanggal') ?: date('Y-m-d');
+        $defaultMonth = substr($latestDate, 0, 7);
+        $defaultDate = $latestDate;
+        return view('epr.corrective-maintenance.data', compact('jenisDts', 'defaultDate', 'defaultMonth'));
     }
 
     public function getReports(Request $request)

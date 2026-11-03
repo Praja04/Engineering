@@ -144,12 +144,12 @@
                         {{-- Mode Harian --}}
                         <div id="container-filter-daily">
                             <label class="form-label small fw-semibold mb-1 text-muted">Tanggal Harian</label>
-                            <input type="date" class="form-control form-control-sm" id="filter-date">
+                            <input type="date" class="form-control form-control-sm" id="filter-date" value="{{ $defaultDate ?? date('Y-m-d') }}">
                         </div>
                         {{-- Mode Bulan --}}
                         <div id="container-filter-monthly" class="d-none">
                             <label class="form-label small fw-semibold mb-1 text-muted">Bulan</label>
-                            <input type="month" class="form-control form-control-sm" id="filter-month" value="{{ date('Y-m') }}">
+                            <input type="month" class="form-control form-control-sm" id="filter-month" value="{{ $defaultMonth ?? date('Y-m') }}">
                         </div>
                         {{-- Mode Range Tanggal --}}
                         <div id="container-filter-range" class="d-none">
@@ -217,7 +217,12 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-loading-time" role="tab">
-                    <i class="ri-table-line me-1"></i> Downtime & Loading Time (Pouch & Sachet)
+                    <i class="ri-table-line me-1"></i> Persentase DT / Jam Kerja (Loading Time)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-em-analysis" role="tab">
+                    <i class="ri-flashlight-line me-1 text-info"></i> Klasifikasi E/M & Top 5 DT
                 </a>
             </li>
         </ul>
@@ -279,13 +284,13 @@
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle mb-0" id="tableSummary">
                                 <thead class="table-success text-dark align-middle">
-                                    <tr>
+                                    <tr style="font-size: 13px;">
                                         <th width="110" class="text-center">TANGGAL</th>
                                         <th>JENIS DT</th>
-                                        <th width="150" class="text-center">Count of JENIS</th>
-                                        <th width="170" class="text-center">Sum of TOTAL MENIT</th>
-                                        <th width="120" class="text-center">MTTR</th>
-                                        <th width="120" class="text-center">Persen</th>
+                                        <th width="140" class="text-center">Count of JENIS DT</th>
+                                        <th width="160" class="text-center">Sum of TOTAL MENIT</th>
+                                        <th width="120" class="text-center">MTTR (Menit)</th>
+                                        <th width="160" class="text-center">% DT Pabrik</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableSummaryBody">
@@ -310,32 +315,34 @@
                             </span>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0" id="tableMachineGroup">
-                                <thead class="table-light text-dark align-middle text-center">
-                                    <tr>
-                                        <th width="120" style="background-color: #fde047; color: #713f12;">UNIT MESIN</th>
-                                        <th width="100" style="background-color: #38bdf8; color: #0c4a6e;">A</th>
-                                        <th width="100" style="background-color: #fde047; color: #713f12;">B</th>
-                                        <th width="100" style="background-color: #4ade80; color: #14532d;">C</th>
-                                        <th width="150" style="background-color: #fef08a; color: #713f12;">JUMLAH / MTTR</th>
-                                        <th width="120" style="background-color: #e9d5ff; color: #581c87;">MTBF (x)</th>
-                                        <th width="150" style="background-color: #f472b6; color: #831843;">MTBF (MENIT)</th>
-                                        <th width="130" style="background-color: #c084fc; color: #581c87;">Availability</th>
+                            <table class="table table-bordered align-middle mb-0 text-center" id="tableMachineGroup">
+                                <thead class="table-light text-dark align-middle">
+                                    <tr style="font-size: 13px;">
+                                        <th width="110" style="background-color: #fef08a; color: #713f12; font-weight: bold;">UNIT MESIN</th>
+                                        <th width="90" style="background-color: #bae6fd; color: #0369a1; font-weight: bold;">A (Menit)</th>
+                                        <th width="90" style="background-color: #fef08a; color: #713f12; font-weight: bold;">B (Menit)</th>
+                                        <th width="90" style="background-color: #bbf7d0; color: #15803d; font-weight: bold;">C (Menit)</th>
+                                        <th width="110" style="background-color: #fde047; color: #713f12; font-weight: bold;">TOTAL DT</th>
+                                        <th width="105" style="background-color: #fed7aa; color: #9a3412; font-weight: bold;">MTTR</th>
+                                        <th width="105" style="background-color: #e9d5ff; color: #581c87; font-weight: bold;">MTBF (x)</th>
+                                        <th width="130" style="background-color: #fbcfe8; color: #831843; font-weight: bold;">MTBF (MENIT)</th>
+                                        <th width="120" style="background-color: #ddd6fe; color: #4338ca; font-weight: bold;">Availability</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tableMachineGroupBody">
+                                <tbody id="tableMachineGroupBody" style="font-size: 13px;">
                                     {{-- Dynamically filled --}}
                                 </tbody>
-                                <tfoot class="fw-bold" style="background-color: #fffbeb;">
+                                <tfoot class="fw-bold text-center" style="background-color: #fffbeb; font-size: 13px;">
                                     <tr>
-                                        <td class="text-center" style="background-color: #fde047;">JUMLAH</td>
-                                        <td class="text-center font-monospace" style="background-color: #38bdf8;" id="total-group-a">0</td>
-                                        <td class="text-center font-monospace" style="background-color: #fde047;" id="total-group-b">0</td>
-                                        <td class="text-center font-monospace" style="background-color: #4ade80;" id="total-group-c">0</td>
-                                        <td class="text-center font-monospace" style="background-color: #fef08a;" id="total-group-all">0</td>
-                                        <td class="text-center font-monospace" id="total-mtbf-x">0.00</td>
-                                        <td class="text-center font-monospace text-muted" id="total-mtbf-menit">#DIV/0!</td>
-                                        <td class="text-center font-monospace text-muted" id="total-availability">-</td>
+                                        <td style="background-color: #fef08a; color: #713f12;">JUMLAH</td>
+                                        <td class="font-monospace" style="background-color: #bae6fd;" id="total-group-a">0</td>
+                                        <td class="font-monospace" style="background-color: #fef08a;" id="total-group-b">0</td>
+                                        <td class="font-monospace" style="background-color: #bbf7d0;" id="total-group-c">0</td>
+                                        <td class="font-monospace fw-bold text-dark" style="background-color: #fde047;" id="total-group-dt">0</td>
+                                        <td class="font-monospace" style="background-color: #fed7aa;" id="total-group-mttr">0.0</td>
+                                        <td class="font-monospace" style="background-color: #e9d5ff;" id="total-mtbf-x">0</td>
+                                        <td class="font-monospace" style="background-color: #fbcfe8;" id="total-mtbf-menit">-</td>
+                                        <td class="font-monospace" style="background-color: #ddd6fe;" id="total-availability">-</td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -351,16 +358,18 @@
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
                                 <h5 class="fw-bold text-uppercase text-dark mb-1">
-                                    <i class="ri-dashboard-fill text-primary me-2"></i>REKAPAN DOWNTIME & LOADING TIME (POUCH & SACHET)
+                                    <i class="ri-dashboard-fill text-primary me-2"></i>PERSENTASE DT / JAM KERJA (LOADING TIME & DOWNTIME)
                                 </h5>
                                 <p class="text-muted fs-13 mb-0">Analisis Loading Time kerja mesin, Realisasi Downtime (menit), dan Persentase Downtime (%) per Grup A, B, C & ALL.</p>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <label class="small fw-semibold text-muted mb-0">Tanggal Harian:</label>
-                                <input type="date" class="form-control form-control-sm" id="filter-lt-date" style="width: 155px;">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearLtDate()" title="Tampilkan Semua Tanggal">
-                                    Semua
-                                </button>
+                                <div id="container-lt-subfilter" class="d-flex align-items-center gap-2">
+                                    <label class="small fw-semibold text-muted mb-0">Tanggal Harian:</label>
+                                    <input type="date" class="form-control form-control-sm" id="filter-lt-date" value="{{ $defaultDate ?? date('Y-m-d') }}" style="width: 155px;">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearLtDate()" title="Tampilkan Semua Tanggal">
+                                        Semua
+                                    </button>
+                                </div>
                                 <span class="badge bg-soft-primary text-primary px-3 py-2 fs-12 fw-semibold" id="lt-period-badge">
                                     Periode: -
                                 </span>
@@ -406,6 +415,203 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Tab 5: Klasifikasi E/M & Top 5 DT --}}
+            <div class="tab-pane" id="tab-em-analysis" role="tabpanel">
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                    <div class="card-body p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="fw-bold text-uppercase text-dark mb-1">
+                                    <i class="ri-flashlight-line text-info me-2"></i>KLASIFIKASI DOWNTIME ELECTRICAL & MECHANICAL
+                                </h5>
+                                <p class="text-muted fs-13 mb-0">Perbandingan frekuensi kejadian (interval), total durasi menit downtime, kontribusi terhadap % Downtime Pabrik, dan TOP 5 Downtime tertinggi.</p>
+                            </div>
+                            <span class="badge bg-soft-info text-info px-3 py-2 fs-12 fw-semibold" id="em-period-badge">
+                                Periode: -
+                            </span>
+                        </div>
+
+                        {{-- Metric Cards --}}
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6 col-xl-4">
+                                <div class="p-3 rounded-3 border" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #bfdbfe !important;">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 36px; height: 36px; background: #2563eb;">
+                                                <i class="ri-flashlight-fill fs-18"></i>
+                                            </div>
+                                            <h6 class="fw-bold mb-0 text-primary">ELECTRICAL</h6>
+                                        </div>
+                                        <span class="badge bg-primary text-white font-monospace" id="em-elec-share">0.0% DT</span>
+                                    </div>
+                                    <div class="row g-2 mt-1">
+                                        <div class="col-6">
+                                            <div class="text-muted fs-11 text-uppercase fw-semibold">Frekuensi (Interval)</div>
+                                            <div class="fs-18 fw-bold text-dark font-monospace" id="em-elec-count">0 <small class="fs-12 fw-normal text-muted">kejadian</small></div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted fs-11 text-uppercase fw-semibold">Total Durasi</div>
+                                            <div class="fs-18 fw-bold text-primary font-monospace" id="em-elec-duration">0 <small class="fs-12 fw-normal text-muted">menit</small></div>
+                                        </div>
+                                        <div class="col-12 pt-2 border-top" style="border-color: #bfdbfe !important;">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-muted fs-12">Kontribusi % DT Pabrik:</span>
+                                                <span class="fw-bold text-primary font-monospace fs-14" id="em-elec-pct">0.00%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-xl-4">
+                                <div class="p-3 rounded-3 border" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-color: #e9d5ff !important;">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 36px; height: 36px; background: #7c3aed;">
+                                                <i class="ri-settings-4-fill fs-18"></i>
+                                            </div>
+                                            <h6 class="fw-bold mb-0" style="color: #6b21a8;">MECHANICAL</h6>
+                                        </div>
+                                        <span class="badge text-white font-monospace" style="background-color: #7c3aed;" id="em-mech-share">0.0% DT</span>
+                                    </div>
+                                    <div class="row g-2 mt-1">
+                                        <div class="col-6">
+                                            <div class="text-muted fs-11 text-uppercase fw-semibold">Frekuensi (Interval)</div>
+                                            <div class="fs-18 fw-bold text-dark font-monospace" id="em-mech-count">0 <small class="fs-12 fw-normal text-muted">kejadian</small></div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted fs-11 text-uppercase fw-semibold">Total Durasi</div>
+                                            <div class="fs-18 fw-bold font-monospace" style="color: #6b21a8;" id="em-mech-duration">0 <small class="fs-12 fw-normal text-muted">menit</small></div>
+                                        </div>
+                                        <div class="col-12 pt-2 border-top" style="border-color: #e9d5ff !important;">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-muted fs-12">Kontribusi % DT Pabrik:</span>
+                                                <span class="fw-bold font-monospace fs-14" style="color: #6b21a8;" id="em-mech-pct">0.00%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 col-xl-4">
+                                <div class="p-3 rounded-3 border bg-light h-100 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-muted fs-12 fw-bold text-uppercase">Distribusi Downtime</span>
+                                            <span class="badge bg-secondary font-monospace" id="em-total-duration">Total: 0 m</span>
+                                        </div>
+                                        <div class="progress" style="height: 14px; border-radius: 7px; overflow: hidden; background-color: #e2e8f0;">
+                                            <div class="progress-bar bg-primary" role="progressbar" id="em-progress-elec" style="width: 0%;" title="Electrical"></div>
+                                            <div class="progress-bar" role="progressbar" id="em-progress-mech" style="width: 0%; background-color: #7c3aed;" title="Mechanical"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between fs-11 text-muted mt-2">
+                                            <span><i class="ri-checkbox-blank-circle-fill text-primary me-1"></i>Electrical (<span id="em-legend-elec">0%</span>)</span>
+                                            <span><i class="ri-checkbox-blank-circle-fill me-1" style="color: #7c3aed;"></i>Mechanical (<span id="em-legend-mech">0%</span>)</span>
+                                        </div>
+                                    </div>
+                                    <div class="pt-2 border-top mt-2 d-flex justify-content-between align-items-center fs-12 text-muted">
+                                        <span>% Downtime Pabrik:</span>
+                                        <span class="fw-bold text-dark font-monospace fs-13" id="em-plant-dt">0.00%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Excel Matching Table: DT Maintenance / Electrical & Mechanical --}}
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered align-middle text-center mb-0">
+                                <thead style="background-color: #f1f5f9; font-size: 13px;">
+                                    <tr>
+                                        <th width="120">TANGGAL</th>
+                                        <th width="180">Kelompok DT</th>
+                                        <th width="140">Interval (x)</th>
+                                        <th width="180">Sum of TOTAL MENIT</th>
+                                        <th width="160">% Downtime Pabrik</th>
+                                        <th width="160">Kontribusi % DT</th>
+                                        <th width="140">Share of DT</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableEmSummaryBody" style="font-size: 13px;">
+                                    {{-- Dynamically filled --}}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- TOP 5 Section Header --}}
+                        <div class="row g-4 mt-1">
+                            {{-- TOP 5 ELECTRICAL --}}
+                            <div class="col-lg-6">
+                                <div class="card border border-primary-subtle shadow-none h-100" style="border-radius: 10px;">
+                                    <div class="card-header bg-soft-primary border-bottom border-primary-subtle py-3 px-3 d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-primary rounded-pill p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                                                <i class="ri-flashlight-line fs-14"></i>
+                                            </span>
+                                            <h6 class="fw-bold text-primary mb-0">TOP 5 DOWNTIME ELECTRICAL</h6>
+                                        </div>
+                                        <span class="badge bg-white text-primary border border-primary-subtle fw-semibold">Durasi Tertinggi</span>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="45" class="text-center">#</th>
+                                                        <th width="85">Tgl</th>
+                                                        <th width="65" class="text-center">Shift</th>
+                                                        <th width="60" class="text-center">Mesin</th>
+                                                        <th>Keterangan Kerusakan</th>
+                                                        <th width="80" class="text-center">Durasi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tableTop5ElecBody">
+                                                    {{-- Dynamically filled --}}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- TOP 5 MECHANICAL --}}
+                            <div class="col-lg-6">
+                                <div class="card border border-purple-subtle shadow-none h-100" style="border-radius: 10px; border-color: #e9d5ff !important;">
+                                    <div class="card-header border-bottom py-3 px-3 d-flex justify-content-between align-items-center" style="background-color: #f5f3ff; border-color: #e9d5ff !important;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge rounded-pill p-1 d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px; background-color: #7c3aed;">
+                                                <i class="ri-settings-4-line fs-14"></i>
+                                            </span>
+                                            <h6 class="fw-bold mb-0" style="color: #6b21a8;">TOP 5 DOWNTIME MECHANICAL</h6>
+                                        </div>
+                                        <span class="badge bg-white border fw-semibold" style="color: #6b21a8; border-color: #e9d5ff !important;">Durasi Tertinggi</span>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="45" class="text-center">#</th>
+                                                        <th width="85">Tgl</th>
+                                                        <th width="65" class="text-center">Shift</th>
+                                                        <th width="60" class="text-center">Mesin</th>
+                                                        <th>Keterangan Kerusakan</th>
+                                                        <th width="80" class="text-center">Durasi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tableTop5MechBody">
+                                                    {{-- Dynamically filled --}}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -448,7 +654,7 @@ $(document).ready(function() {
             if (date) {
                 params.date = date;
             } else {
-                params.month = $('#filter-month').val() || "{{ date('Y-m') }}";
+                params.month = $('#filter-month').val() || "{{ $defaultMonth ?? date('Y-m') }}";
             }
         } else if (mode === 'monthly') {
             params.month = $('#filter-month').val() || '';
@@ -459,7 +665,7 @@ $(document).ready(function() {
                 params.date_from = dFrom;
                 params.date_to = dTo;
             } else {
-                params.month = $('#filter-month').val() || "{{ date('Y-m') }}";
+                params.month = $('#filter-month').val() || "{{ $defaultMonth ?? date('Y-m') }}";
             }
         }
         return params;
@@ -600,6 +806,7 @@ $(document).ready(function() {
         renderSummaryTable();
         renderMachineGroupTable();
         renderLoadingTimeTable();
+        renderEmAnalysis();
     }
 
     window.applyFilters = function() {
@@ -612,10 +819,11 @@ $(document).ready(function() {
         $('#container-filter-daily').removeClass('d-none');
         $('#container-filter-monthly').addClass('d-none');
         $('#container-filter-range').addClass('d-none');
+        $('#container-lt-subfilter').removeClass('d-none');
         $('#filter-date').val('');
         $('#filter-date-from').val('');
         $('#filter-date-to').val('');
-        $('#filter-month').val("{{ date('Y-m') }}");
+        $('#filter-month').val("{{ $defaultMonth ?? date('Y-m') }}");
         $('#filter-shift').val('');
         $('#filter-pouchSachet').val('');
         $('#filter-em').val('');
@@ -905,6 +1113,87 @@ $(document).ready(function() {
         return div.innerHTML;
     }
 
+    function getOverallPlantMetrics() {
+        const mode = $('#filter-period-mode').val();
+        let reportsToUse = reports;
+        let ltToUse = loadingTimes;
+
+        if (mode === 'daily') {
+            const selectedDate = $('#filter-date').val() || $('#filter-lt-date').val();
+            if (selectedDate) {
+                reportsToUse = reports.filter(r => r.tanggal === selectedDate);
+                ltToUse = loadingTimes.filter(lt => lt.tanggal === selectedDate);
+            }
+        } else if (mode === 'monthly') {
+            const monthVal = $('#filter-month').val();
+            if (monthVal) {
+                reportsToUse = reports.filter(r => (r.tanggal || '').startsWith(monthVal));
+                ltToUse = loadingTimes.filter(lt => (lt.tanggal || '').startsWith(monthVal));
+            }
+        } else if (mode === 'range') {
+            const dFrom = $('#filter-date-from').val();
+            const dTo = $('#filter-date-to').val();
+            if (dFrom && dTo) {
+                reportsToUse = reports.filter(r => r.tanggal >= dFrom && r.tanggal <= dTo);
+                ltToUse = loadingTimes.filter(lt => lt.tanggal >= dFrom && lt.tanggal <= dTo);
+            }
+        }
+
+        const pouchMachines = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'C', 'L', 'B', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'V', 'A', 'U'];
+        const sachetMachines = ['O', 'P', 'W', 'X', 'R', 'Q', 'Y'];
+
+        function getMData(mName) {
+            const mReports = reportsToUse.filter(r => (r.mesin || '').trim().toUpperCase() === mName.toUpperCase());
+            const dtAll = mReports.reduce((acc, c) => acc + (c.total_menit || 0), 0);
+
+            const ltRecords = ltToUse.filter(lt => (lt.mesin || '').trim().toUpperCase() === mName.toUpperCase());
+            const ltA = ltRecords.reduce((acc, c) => acc + (c.loading_time_a || 0), 0);
+            const ltB = ltRecords.reduce((acc, c) => acc + (c.loading_time_b || 0), 0);
+            const ltC = ltRecords.reduce((acc, c) => acc + (c.loading_time_c || 0), 0);
+            const ltAll = (ltA + ltB + ltC) > 0 ? (ltA + ltB + ltC) : ltRecords.reduce((acc, c) => acc + (c.loading_time_all || 0), 0);
+            return { ltAll, dtAll };
+        }
+
+        let sumPouchLt = 0, sumPouchDt = 0, activePouch = 0;
+        pouchMachines.forEach(m => {
+            const d = getMData(m);
+            if (d.ltAll > 0) {
+                activePouch++;
+                sumPouchLt += d.ltAll;
+                sumPouchDt += d.dtAll;
+            }
+        });
+
+        let sumSachetLt = 0, sumSachetDt = 0, activeSachet = 0;
+        sachetMachines.forEach(m => {
+            const d = getMData(m);
+            if (d.ltAll > 0) {
+                activeSachet++;
+                sumSachetLt += d.ltAll;
+                sumSachetDt += d.dtAll;
+            }
+        });
+
+        const avgPouchLt = activePouch > 0 ? (sumPouchLt / activePouch) : 0;
+        const avgPouchDt = activePouch > 0 ? (sumPouchDt / activePouch) : 0;
+        const avgSachetLt = activeSachet > 0 ? (sumSachetLt / activeSachet) : 0;
+        const avgSachetDt = activeSachet > 0 ? (sumSachetDt / activeSachet) : 0;
+
+        let grandLt = 0, grandDt = 0, plantDtPct = 0;
+        if (avgPouchLt > 0 || avgSachetLt > 0) {
+            grandLt = Math.round((avgPouchLt + avgSachetLt) / 2);
+            grandDt = Math.round((avgPouchDt + avgSachetDt) / 2);
+            plantDtPct = grandLt > 0 ? (grandDt / grandLt * 100) : 0;
+        } else {
+            const totalDtReports = reportsToUse.reduce((acc, c) => acc + (c.total_menit || 0), 0);
+            grandDt = totalDtReports;
+            grandLt = 28 * 24 * 60;
+            plantDtPct = grandLt > 0 ? (grandDt / grandLt * 100) : 0;
+        }
+
+        return { grandLt, grandDt, plantDtPct, reportsToUse, ltToUse };
+    }
+
     function renderSummaryTable() {
         const tbody = $('#tableSummaryBody');
         tbody.empty();
@@ -917,6 +1206,8 @@ $(document).ready(function() {
             tbody.append('<tr><td colspan="6" class="text-center text-muted py-4"><i class="ri-file-list-3-line fs-2 mb-2 d-block text-muted"></i>Tidak ada data ringkasan</td></tr>');
             return;
         }
+
+        const metrics = getOverallPlantMetrics();
 
         // Group items by week number
         const weeksMap = {};
@@ -948,9 +1239,16 @@ $(document).ready(function() {
             const rowCount = jenisList.length;
 
             jenisList.forEach((jItem, index) => {
-                const mttr = jItem.count > 0 ? Math.round(jItem.sumMenit / jItem.count) : 0;
-                const persenVal = totalMenitInWeek > 0 ? ((jItem.sumMenit / totalMenitInWeek) * 100) : 0;
-                const persenStr = persenVal.toFixed(2) + '%';
+                // MTTR = Total Menit / Count (In Excel: =Q3/P3)
+                const mttr = jItem.count > 0 ? (jItem.sumMenit / jItem.count).toFixed(1) : '0.0';
+
+                // Persentase Frekuensi Jenis DT (In Excel: =Q3/SUM($Q$3:$Q$39)*$AQ$34)
+                const pctPabrikVal = totalMenitInWeek > 0 ? ((jItem.sumMenit / totalMenitInWeek) * (metrics.plantDtPct / 100) * 100) : 0;
+                const pctPabrikStr = pctPabrikVal.toFixed(2) + '%';
+
+                // Share of DT
+                const shareVal = totalMenitInWeek > 0 ? ((jItem.sumMenit / totalMenitInWeek) * 100) : 0;
+                const shareStr = shareVal.toFixed(1) + '%';
 
                 let weekCellHtml = '';
                 if (index === 0) {
@@ -964,7 +1262,10 @@ $(document).ready(function() {
                         <td class="text-center font-monospace">${jItem.count}</td>
                         <td class="text-center font-monospace fw-semibold text-danger">${jItem.sumMenit}</td>
                         <td class="text-center font-monospace fw-bold">${mttr}</td>
-                        <td class="text-center font-monospace text-primary fw-semibold">${persenStr}</td>
+                        <td class="text-center font-monospace">
+                            <span class="fw-bold text-primary">${pctPabrikStr}</span>
+                            <span class="text-muted fs-11 ms-1">(${shareStr})</span>
+                        </td>
                     </tr>
                 `);
             });
@@ -979,85 +1280,251 @@ $(document).ready(function() {
 
         let items = filteredReports;
 
-        if (!items.length) {
-            tbody.append('<tr><td colspan="8" class="text-center text-muted py-4"><i class="ri-file-list-3-line fs-2 mb-2 d-block text-muted"></i>Tidak ada data ringkasan mesin</td></tr>');
+        if (!items.length && !loadingTimes.length) {
+            tbody.append('<tr><td colspan="9" class="text-center text-muted py-4"><i class="ri-file-list-3-line fs-2 mb-2 d-block text-muted"></i>Tidak ada data ringkasan mesin</td></tr>');
             $('#total-group-a').text('0');
             $('#total-group-b').text('0');
             $('#total-group-c').text('0');
-            $('#total-group-all').text('0');
-            $('#total-mtbf-x').text('0.00');
-            $('#total-mtbf-menit').text('#DIV/0!');
+            $('#total-group-dt').text('0');
+            $('#total-group-mttr').text('0.0');
+            $('#total-mtbf-x').text('0');
+            $('#total-mtbf-menit').text('-');
             $('#total-availability').text('-');
             return;
         }
 
-        const daysInPeriod = selectedWeek ? 7 : 30;
+        const mode = $('#filter-period-mode').val();
+        let daysInPeriod = 30;
+        if (mode === 'daily') {
+            daysInPeriod = 1;
+        } else if (mode === 'monthly') {
+            const m = $('#filter-month').val();
+            if (m) {
+                const parts = m.split('-');
+                daysInPeriod = new Date(parts[0], parts[1], 0).getDate();
+            } else {
+                daysInPeriod = 30;
+            }
+        } else if (mode === 'range') {
+            const dFrom = $('#filter-date-from').val();
+            const dTo = $('#filter-date-to').val();
+            if (dFrom && dTo) {
+                const diffTime = Math.abs(new Date(dTo) - new Date(dFrom));
+                daysInPeriod = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            } else {
+                daysInPeriod = 30;
+            }
+        }
         const plannedOperatingMinutes = daysInPeriod * 24 * 60;
 
-        const machineNames = [...new Set(items.map(r => r.mesin).filter(Boolean))].sort();
+        // Exact list of 28 machines from Excel sheet WEEKLY
+        const defaultMachines = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'C', 'L', 'B', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'V', 'A', 'U', 'O', 'P', 'W', 'X', 'R', 'Q', 'Y'];
+        const extraMachines = [...new Set(items.map(r => r.mesin).filter(m => m && !defaultMachines.includes(m)))].sort();
+        const machineNames = defaultMachines.concat(extraMachines);
 
-        let grandA = 0, grandB = 0, grandC = 0, grandTotal = 0;
+        let grandA = 0, grandB = 0, grandC = 0, grandDt = 0;
+        let grandTotalCount = 0;
+        let grandLt = 0;
 
         machineNames.forEach(mName => {
-            const mItems = items.filter(r => r.mesin === mName);
+            const mItems = items.filter(r => (r.mesin || '').trim().toUpperCase() === mName.toUpperCase());
 
             const groupA = mItems.filter(r => (r.grup || '').toUpperCase() === 'A');
             const groupB = mItems.filter(r => (r.grup || '').toUpperCase() === 'B');
             const groupC = mItems.filter(r => (r.grup || '').toUpperCase() === 'C');
 
-            const countA = groupA.length;
-            const countB = groupB.length;
-            const countC = groupC.length;
-
             const sumMenitA = groupA.reduce((acc, c) => acc + (c.total_menit || 0), 0);
             const sumMenitB = groupB.reduce((acc, c) => acc + (c.total_menit || 0), 0);
             const sumMenitC = groupC.reduce((acc, c) => acc + (c.total_menit || 0), 0);
 
-            const totalCount = countA + countB + countC;
+            const totalCount = mItems.length; // MTBF (x) = Frekuensi kejadian breakdown per mesin
             const totalDowntimeMenit = sumMenitA + sumMenitB + sumMenitC;
 
-            grandA += countA;
-            grandB += countB;
-            grandC += countC;
-            grandTotal += totalCount;
-
-            const mtbfX = (totalCount / 3).toFixed(2);
-
-            let mtbfMenitStr = '#DIV/0!';
-            let availabilityStr = '-';
-
-            if (totalCount > 0) {
-                const operatingMinutes = Math.max(0, plannedOperatingMinutes - totalDowntimeMenit);
-                const mtbfMenit = (operatingMinutes / totalCount).toFixed(2);
-                mtbfMenitStr = mtbfMenit;
-
-                const avail = (operatingMinutes / plannedOperatingMinutes).toFixed(2);
-                availabilityStr = avail;
+            // Look up machine loading time from loadingTimes
+            const ltRecs = loadingTimes.filter(lt => (lt.mesin || '').trim().toUpperCase() === mName.toUpperCase());
+            let machineLt = ltRecs.reduce((acc, c) => acc + (c.loading_time_a || 0) + (c.loading_time_b || 0) + (c.loading_time_c || 0), 0);
+            if (machineLt === 0) {
+                machineLt = ltRecs.reduce((acc, c) => acc + (c.loading_time_all || 0), 0);
+            }
+            if (machineLt === 0 && totalCount > 0) {
+                machineLt = plannedOperatingMinutes;
             }
 
-            const rowBg = totalCount === 0 ? 'style="background-color: #f9fafb;"' : '';
+            grandA += sumMenitA;
+            grandB += sumMenitB;
+            grandC += sumMenitC;
+            grandDt += totalDowntimeMenit;
+            grandTotalCount += totalCount;
+            grandLt += machineLt;
+
+            // MTTR = Downtime / MTBF(x) (In Excel: =SUM(V4:X4)/Z4)
+            const mttr = totalCount > 0 ? (totalDowntimeMenit / totalCount).toFixed(1) : '0.0';
+
+            // MTBF (MENIT) = (Loading Time - Downtime) / MTBF(x) (In Excel: =(AO4-AP4)/Z4)
+            const opTime = Math.max(0, machineLt - totalDowntimeMenit);
+            const mtbfMenit = totalCount > 0 ? (opTime / totalCount).toFixed(1) : '-';
+
+            // Availability = MTBF(menit) / (MTBF(menit) + MTTR) = (Loading Time - Downtime) / Loading Time (In Excel: =AA4/(AA4+Y4))
+            const avail = machineLt > 0 ? ((opTime / machineLt) * 100).toFixed(2) + '%' : (totalCount === 0 ? '100.00%' : '-');
+
+            const isZero = totalCount === 0 && totalDowntimeMenit === 0;
+            const rowBg = isZero ? 'style="opacity: 0.75;"' : '';
 
             tbody.append(`
                 <tr ${rowBg}>
                     <td class="text-center fw-bold text-dark" style="background-color: #fef08a;">${esc(mName)}</td>
-                    <td class="text-center font-monospace" style="background-color: #e0f2fe;">${countA}</td>
-                    <td class="text-center font-monospace" style="background-color: #fef9c3;">${countB}</td>
-                    <td class="text-center font-monospace" style="background-color: #dcfce7;">${countC}</td>
-                    <td class="text-center font-monospace fw-bold text-dark" style="background-color: #fef08a;">${totalCount}</td>
-                    <td class="text-center font-monospace">${mtbfX}</td>
-                    <td class="text-center font-monospace ${mtbfMenitStr === '#DIV/0!' ? 'text-muted' : 'fw-semibold text-success'}">${mtbfMenitStr}</td>
-                    <td class="text-center font-monospace ${availabilityStr === '-' ? 'text-muted' : 'fw-bold text-primary'}">${availabilityStr}</td>
+                    <td class="text-center font-monospace" style="background-color: #e0f2fe;">${sumMenitA || 0}</td>
+                    <td class="text-center font-monospace" style="background-color: #fef9c3;">${sumMenitB || 0}</td>
+                    <td class="text-center font-monospace" style="background-color: #dcfce7;">${sumMenitC || 0}</td>
+                    <td class="text-center font-monospace fw-bold text-dark" style="background-color: #fef08a;">${totalDowntimeMenit}</td>
+                    <td class="text-center font-monospace fw-semibold text-danger" style="background-color: #fff7ed;">${mttr}</td>
+                    <td class="text-center font-monospace fw-bold text-purple" style="background-color: #faf5ff;">${totalCount}</td>
+                    <td class="text-center font-monospace ${mtbfMenit === '-' ? 'text-muted' : 'fw-semibold text-success'}" style="background-color: #fdf2f8;">${mtbfMenit}</td>
+                    <td class="text-center font-monospace ${avail === '-' ? 'text-muted' : 'fw-bold text-primary'}" style="background-color: #f5f3ff;">${avail}</td>
                 </tr>
             `);
         });
 
+        const grandMttr = grandTotalCount > 0 ? (grandDt / grandTotalCount).toFixed(1) : '0.0';
+        const grandOpTime = Math.max(0, grandLt - grandDt);
+        const grandMtbfMenit = grandTotalCount > 0 ? (grandOpTime / grandTotalCount).toFixed(1) : '-';
+        const grandAvail = grandLt > 0 ? ((grandOpTime / grandLt) * 100).toFixed(2) + '%' : '-';
+
         $('#total-group-a').text(grandA);
         $('#total-group-b').text(grandB);
         $('#total-group-c').text(grandC);
-        $('#total-group-all').text(grandTotal);
-        $('#total-mtbf-x').text((grandTotal / 3).toFixed(2));
-        $('#total-mtbf-menit').text('#DIV/0!');
-        $('#total-availability').text('-');
+        $('#total-group-dt').text(grandDt);
+        $('#total-group-mttr').text(grandMttr);
+        $('#total-mtbf-x').text(grandTotalCount);
+        $('#total-mtbf-menit').text(grandMtbfMenit);
+        $('#total-availability').text(grandAvail);
+    }
+
+    function renderEmAnalysis() {
+        $('#em-period-badge').text(getPeriodBadgeText());
+
+        const items = filteredReports;
+        const metrics = getOverallPlantMetrics();
+        const plantDtPct = metrics.plantDtPct;
+
+        const elecItems = items.filter(r => (r.electrical_mechanical || '').trim().toLowerCase() === 'electrical');
+        const mechItems = items.filter(r => (r.electrical_mechanical || '').trim().toLowerCase() === 'mechanical');
+
+        const elecCount = elecItems.length;
+        const mechCount = mechItems.length;
+        const totalCount = elecCount + mechCount;
+
+        const elecDuration = elecItems.reduce((acc, c) => acc + (c.total_menit || 0), 0);
+        const mechDuration = mechItems.reduce((acc, c) => acc + (c.total_menit || 0), 0);
+        const totalDuration = elecDuration + mechDuration;
+
+        const elecShare = totalDuration > 0 ? ((elecDuration / totalDuration) * 100) : 0;
+        const mechShare = totalDuration > 0 ? ((mechDuration / totalDuration) * 100) : 0;
+
+        // Kontribusi % DT Pabrik (In Excel: =AV3/SUM(AV3:AV4)*AW3)
+        const elecPctPabrik = (elecShare / 100) * plantDtPct;
+        const mechPctPabrik = (mechShare / 100) * plantDtPct;
+
+        // Populate Cards
+        $('#em-elec-count').html(`${elecCount} <small class="fs-12 fw-normal text-muted">kejadian</small>`);
+        $('#em-elec-duration').html(`${elecDuration} <small class="fs-12 fw-normal text-muted">menit</small>`);
+        $('#em-elec-share').text(`${elecShare.toFixed(1)}% DT`);
+        $('#em-elec-pct').text(`${elecPctPabrik.toFixed(2)}%`);
+
+        $('#em-mech-count').html(`${mechCount} <small class="fs-12 fw-normal text-muted">kejadian</small>`);
+        $('#em-mech-duration').html(`${mechDuration} <small class="fs-12 fw-normal text-muted">menit</small>`);
+        $('#em-mech-share').text(`${mechShare.toFixed(1)}% DT`);
+        $('#em-mech-pct').text(`${mechPctPabrik.toFixed(2)}%`);
+
+        $('#em-total-duration').text(`Total: ${totalDuration} m`);
+        $('#em-plant-dt').text(`${plantDtPct.toFixed(2)}%`);
+
+        // Progress Bar
+        $('#em-progress-elec').css('width', `${elecShare}%`);
+        $('#em-progress-mech').css('width', `${mechShare}%`);
+        $('#em-legend-elec').text(`${elecShare.toFixed(1)}%`);
+        $('#em-legend-mech').text(`${mechShare.toFixed(1)}%`);
+
+        // Summary Table (Excel matching)
+        const tbodySummary = $('#tableEmSummaryBody');
+        tbodySummary.empty();
+
+        const periodLabel = getPeriodBadgeText().replace('Tanggal: ', '').replace('Periode: ', '');
+
+        tbodySummary.append(`
+            <tr>
+                <td rowspan="2" class="align-middle fw-bold" style="background-color: #f8fafc;">${esc(periodLabel)}</td>
+                <td class="fw-bold text-start ps-3 text-primary"><i class="ri-flashlight-fill me-1"></i>Electrical</td>
+                <td class="font-monospace fw-semibold">${elecCount}</td>
+                <td class="font-monospace fw-bold text-primary">${elecDuration}</td>
+                <td rowspan="2" class="align-middle font-monospace fw-bold text-dark" style="background-color: #f1f5f9;">${plantDtPct.toFixed(2)}%</td>
+                <td class="font-monospace fw-bold text-primary">${elecPctPabrik.toFixed(2)}%</td>
+                <td class="font-monospace fw-semibold text-primary">${elecShare.toFixed(1)}%</td>
+            </tr>
+            <tr>
+                <td class="fw-bold text-start ps-3" style="color: #7c3aed;"><i class="ri-settings-4-fill me-1"></i>Mechanical</td>
+                <td class="font-monospace fw-semibold">${mechCount}</td>
+                <td class="font-monospace fw-bold" style="color: #7c3aed;">${mechDuration}</td>
+                <td class="font-monospace fw-bold" style="color: #7c3aed;">${mechPctPabrik.toFixed(2)}%</td>
+                <td class="font-monospace fw-semibold" style="color: #7c3aed;">${mechShare.toFixed(1)}%</td>
+            </tr>
+            <tr class="fw-bold" style="background-color: #e2e8f0;">
+                <td colspan="2" class="text-start ps-3 text-dark">TOTAL E & M</td>
+                <td class="font-monospace text-dark">${totalCount}</td>
+                <td class="font-monospace text-dark">${totalDuration}</td>
+                <td class="font-monospace text-dark">${plantDtPct.toFixed(2)}%</td>
+                <td class="font-monospace text-dark">${(elecPctPabrik + mechPctPabrik).toFixed(2)}%</td>
+                <td class="font-monospace text-dark">100.0%</td>
+            </tr>
+        `);
+
+        // TOP 5 ELECTRICAL
+        const top5Elec = [...elecItems].sort((a, b) => (b.total_menit || 0) - (a.total_menit || 0)).slice(0, 5);
+        const tbodyElec = $('#tableTop5ElecBody');
+        tbodyElec.empty();
+
+        if (!top5Elec.length) {
+            tbodyElec.append('<tr><td colspan="6" class="text-center text-muted py-3">Tidak ada data downtime Electrical</td></tr>');
+        } else {
+            top5Elec.forEach((item, idx) => {
+                const rankColors = ['#f59e0b', '#64748b', '#b45309', '#94a3b8', '#94a3b8'];
+                const rankColor = rankColors[idx] || '#94a3b8';
+                tbodyElec.append(`
+                    <tr style="cursor: pointer;" onclick="showDetail(${item.id})" title="Klik untuk lihat detail">
+                        <td class="text-center"><span class="badge rounded-circle text-white" style="background-color: ${rankColor}; width: 22px; height: 22px; padding: 4px 0;">${idx + 1}</span></td>
+                        <td class="text-nowrap">${formatDate(item.tanggal)}</td>
+                        <td class="text-center"><span class="badge bg-light text-dark border">${item.shift || '-'}/${item.grup || '-'}</span></td>
+                        <td class="text-center"><span class="badge bg-soft-info text-info fw-bold">${esc(item.mesin)}</span></td>
+                        <td class="text-truncate" style="max-width: 180px;" title="${esc(item.keterangan || item.downtime || '-')}">${esc(item.keterangan || item.downtime || '-')}</td>
+                        <td class="text-center"><span class="badge bg-primary text-white font-monospace">${item.total_menit} m</span></td>
+                    </tr>
+                `);
+            });
+        }
+
+        // TOP 5 MECHANICAL
+        const top5Mech = [...mechItems].sort((a, b) => (b.total_menit || 0) - (a.total_menit || 0)).slice(0, 5);
+        const tbodyMech = $('#tableTop5MechBody');
+        tbodyMech.empty();
+
+        if (!top5Mech.length) {
+            tbodyMech.append('<tr><td colspan="6" class="text-center text-muted py-3">Tidak ada data downtime Mechanical</td></tr>');
+        } else {
+            top5Mech.forEach((item, idx) => {
+                const rankColors = ['#f59e0b', '#64748b', '#b45309', '#94a3b8', '#94a3b8'];
+                const rankColor = rankColors[idx] || '#94a3b8';
+                tbodyMech.append(`
+                    <tr style="cursor: pointer;" onclick="showDetail(${item.id})" title="Klik untuk lihat detail">
+                        <td class="text-center"><span class="badge rounded-circle text-white" style="background-color: ${rankColor}; width: 22px; height: 22px; padding: 4px 0;">${idx + 1}</span></td>
+                        <td class="text-nowrap">${formatDate(item.tanggal)}</td>
+                        <td class="text-center"><span class="badge bg-light text-dark border">${item.shift || '-'}/${item.grup || '-'}</span></td>
+                        <td class="text-center"><span class="badge bg-soft-info text-info fw-bold">${esc(item.mesin)}</span></td>
+                        <td class="text-truncate" style="max-width: 180px;" title="${esc(item.keterangan || item.downtime || '-')}">${esc(item.keterangan || item.downtime || '-')}</td>
+                        <td class="text-center"><span class="badge text-white font-monospace" style="background-color: #7c3aed;">${item.total_menit} m</span></td>
+                    </tr>
+                `);
+            });
+        }
     }
 
     function renderLoadingTimeTable() {
@@ -1065,6 +1532,7 @@ $(document).ready(function() {
         tbody.empty();
 
         const mode = $('#filter-period-mode').val();
+        $('#container-lt-subfilter').toggleClass('d-none', mode !== 'daily');
         let reportsToUse = reports;
         let ltToUse = loadingTimes;
 
@@ -1325,6 +1793,7 @@ $(document).ready(function() {
         $('#container-filter-daily').toggleClass('d-none', mode !== 'daily');
         $('#container-filter-monthly').toggleClass('d-none', mode !== 'monthly');
         $('#container-filter-range').toggleClass('d-none', mode !== 'range');
+        $('#container-lt-subfilter').toggleClass('d-none', mode !== 'daily');
 
         if (mode === 'daily' && !$('#filter-date').val()) {
             const availDates = [...new Set(loadingTimes.map(lt => lt.tanggal).concat(reports.map(r => r.tanggal)).filter(Boolean))].sort();
