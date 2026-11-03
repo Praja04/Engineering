@@ -310,9 +310,30 @@ class AirController extends Controller
         $sheet->setCellValue("AK2", $year);
 
         foreach ($kategori as $index => $jenis) {
-            $data = PemakaianAirModel::where('jenis_pemakaian', $jenis)
-                ->whereBetween('tanggal', [$startDate, $endDate])
-                ->orderBy('tanggal')
+            $query = PemakaianAirModel::whereBetween('tanggal', [$startDate, $endDate]);
+
+            if ($jenis === 'Air Proses') {
+                $query->where(function ($q) {
+                    $q->where('jenis_pemakaian', 'Air Proses')
+                      ->orWhere('jenis_pemakaian', 'Air Proses (RO)')
+                      ->orWhere('jenis_pemakaian', 'like', '%Air Proses%')
+                      ->orWhere('jenis_pemakaian', 'RO To PRD');
+                });
+            } elseif ($jenis === 'Green Belt') {
+                $query->where(function ($q) {
+                    $q->where('jenis_pemakaian', 'Green Belt')
+                      ->orWhere('jenis_pemakaian', 'Greenbelt');
+                });
+            } elseif ($jenis === 'Outlet Storage RO Reject') {
+                $query->where(function ($q) {
+                    $q->where('jenis_pemakaian', 'Outlet Storage RO Reject')
+                      ->orWhere('jenis_pemakaian', 'Outlet Storage RO');
+                });
+            } else {
+                $query->where('jenis_pemakaian', $jenis);
+            }
+
+            $data = $query->orderBy('tanggal')
                 ->get()
                 ->keyBy(function ($item) {
                     return Carbon::parse($item->tanggal)->day;
