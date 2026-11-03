@@ -2190,7 +2190,7 @@ class WWTPController extends Controller
         ];
     }
 
-    private function getWcoSafetyPerfData($startDate, $endDate)
+    public function getWcoSafetyPerfData($startDate, $endDate)
     {
         $influentRecords = WwtpInfluentHarian::whereBetween('tanggal', [$startDate, $endDate])
             ->orderBy('tanggal', 'asc')
@@ -2325,7 +2325,7 @@ class WWTPController extends Controller
         ];
     }
 
-    private function getWcoInfluentMingguanData($startDate, $endDate)
+    public function getWcoInfluentMingguanData($startDate, $endDate)
     {
         $startC = Carbon::parse($startDate);
         $endC   = Carbon::parse($endDate);
@@ -2386,7 +2386,7 @@ class WWTPController extends Controller
         ];
     }
 
-    private function getWcoEffluentMingguanData($startDate, $endDate)
+    public function getWcoEffluentMingguanData($startDate, $endDate)
     {
         $startC = Carbon::parse($startDate);
         $endC   = Carbon::parse($endDate);
@@ -2438,7 +2438,7 @@ class WWTPController extends Controller
         ];
     }
 
-    private function getWcoKepatuhanCodData($startDate, $endDate)
+    public function getWcoKepatuhanCodData($startDate, $endDate)
     {
         $paramCOD = WwtpParameter::where('parameter_name', 'like', '%COD%')->first();
         $effluentPointNames = ['Effluent'];
@@ -2813,7 +2813,7 @@ class WWTPController extends Controller
         ];
     }
 
-    private function getWcoKepatuhanTssData($startDate, $endDate)
+    public function getWcoKepatuhanTssData($startDate, $endDate)
     {
         $paramTSS = WwtpParameter::where('parameter_name', 'like', '%TSS%')->first();
         $effluentPointNames = ['Effluent'];
