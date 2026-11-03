@@ -633,6 +633,13 @@
                                 <i class="mdi mdi-refresh" id="refreshIcon"></i>
                             </button>
 
+                            <!-- Export PPTX Button with Screenshot -->
+                            <button id="btnExportPptxScreen" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
+                                title="Export PowerPoint (.pptx) dengan Screenshot Grafik Otomatis" type="button">
+                                <i class="mdi mdi-file-powerpoint-box text-warning"></i>
+                                <span class="d-none d-sm-inline">Export PPTX</span>
+                            </button>
+
                             <!-- Theme Toggle Button -->
                             <button id="btnThemeToggle" class="btn-theme-toggle" type="button"
                                 title="Ganti Mode Tampilan (Dark / Light)">
@@ -3820,6 +3827,91 @@
                     updateCostSmkpUI(data.cost_smkp);
                     renderCostSmkpChart(data.cost_smkp);
                 }
+
+                // ─── Export PPTX dengan Screenshot Chart Langsung dari Browser ───
+                $('#btnExportPptxScreen').on('click', async function() {
+                    const $btn = $(this);
+                    const originalHtml = $btn.html();
+                    $btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin text-warning"></i> <span>Capture Chart...</span>');
+
+                    try {
+                        const images = {};
+
+                        // Capture chart compressor
+                        if (charts.comp && typeof charts.comp.dataURI === 'function') {
+                            try {
+                                const res = await charts.comp.dataURI();
+                                if (res && res.imgURI) images['chart.compressor'] = res.imgURI;
+                            } catch (e) { console.warn('Capture compressor failed:', e); }
+                        }
+
+                        // Capture chart ahu
+                        if (charts.ahu && typeof charts.ahu.dataURI === 'function') {
+                            try {
+                                const res = await charts.ahu.dataURI();
+                                if (res && res.imgURI) images['chart.ahu'] = res.imgURI;
+                            } catch (e) { console.warn('Capture ahu failed:', e); }
+                        }
+
+                        // Capture chart cooling tower
+                        if (charts.ct && typeof charts.ct.dataURI === 'function') {
+                            try {
+                                const res = await charts.ct.dataURI();
+                                if (res && res.imgURI) images['chart.cooling_tower'] = res.imgURI;
+                            } catch (e) { console.warn('Capture cooling tower failed:', e); }
+                        }
+
+                        // Capture chart power house (MDP)
+                        if (charts.mdp && typeof charts.mdp.dataURI === 'function') {
+                            try {
+                                const res = await charts.mdp.dataURI();
+                                if (res && res.imgURI) images['chart.powerhouse'] = res.imgURI;
+                            } catch (e) { console.warn('Capture powerhouse failed:', e); }
+                        }
+
+                        // Filter parameters
+                        const mode = $('#filterMode').val();
+                        const selectedDate = $('#selectedDate').val();
+                        const startDate = mode === 'custom' ? $('#customStartDate').val() : (mode === 'today' ? selectedDate : $('#selectedDate').val());
+                        const endDate = mode === 'custom' ? $('#customEndDate').val() : selectedDate;
+                        const gensetYear = $('#gensetYearSelect').val() || new Date().getFullYear();
+
+                        $btn.html('<i class="mdi mdi-loading mdi-spin text-warning"></i> <span>Menyiapkan File...</span>');
+
+                        const csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
+                        const exportUrl = `{{ route('utility.dashboard_machine_export_pptx') }}?mode=${mode}&tanggal=${selectedDate}&start_date=${startDate}&end_date=${endDate}&genset_year=${gensetYear}`;
+
+                        const response = await fetch(exportUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+                            },
+                            body: JSON.stringify({ images: images })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Gagal mengekspor file PPTX (HTTP ' + response.status + ')');
+                        }
+
+                        const blob = await response.blob();
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = `Weekly_Operasional_Utility_${startDate}_${endDate}.pptx`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(blobUrl);
+
+                    } catch (err) {
+                        console.error('Error export PPTX:', err);
+                        alert('Gagal mengekspor PPTX: ' + (err.message || 'Terjadi kesalahan sistem.'));
+                    } finally {
+                        $btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
 
                 // Initial trigger
                 loadDashboardData();
