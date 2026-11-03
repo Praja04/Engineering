@@ -25,6 +25,35 @@
     .card-stat:hover {
         transform: translateY(-2px);
     }
+
+    /* Alternatif 3: Accordion Cards & Nav Pills Styling */
+    .cursor-pointer { cursor: pointer; }
+    .nav-custom-pills .nav-link {
+        color: #4b5563;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+    .nav-custom-pills .nav-link:hover {
+        background: #edf2f7;
+        color: #1e293b;
+    }
+    .nav-custom-pills .nav-link.active {
+        color: #2563eb;
+        background: #eff6ff;
+        border-color: #3b82f6;
+        box-shadow: 0 2px 4px rgba(37,99,235,0.12);
+    }
+    .accordion-chevron {
+        transition: transform 0.25s ease-in-out;
+    }
+    .collapsed .accordion-chevron {
+        transform: rotate(-90deg);
+    }
+    .custom-analysis-accordion .card {
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03) !important;
+    }
 </style>
 @endsection
 
@@ -198,38 +227,28 @@
             </div>
         </div>
 
-        {{-- Navigation Tabs --}}
-        <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#tab-detail-log" role="tab">
-                    <i class="ri-file-list-3-line me-1"></i> Data Log Corrective Maintenance
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-summary-dt" role="tab">
-                    <i class="ri-bar-chart-grouped-line me-1"></i> Frekuensi DT by Jenis DT (Per Week)
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-machine-group" role="tab">
-                    <i class="ri-pie-chart-line me-1"></i> Jumlah DT Mesin / Grup (MTBF & Availability)
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-loading-time" role="tab">
-                    <i class="ri-table-line me-1"></i> Persentase DT / Jam Kerja (Loading Time)
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#tab-em-analysis" role="tab">
-                    <i class="ri-flashlight-line me-1 text-info"></i> Klasifikasi E/M & Top 5 DT
-                </a>
-            </li>
-        </ul>
+                {{-- Navigation View Tabs (Alternatif 3: Dual View with Accordion Cards) --}}
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <ul class="nav nav-pills nav-custom-pills gap-2" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active fw-semibold px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm" data-bs-toggle="tab" href="#tab-detail-log" role="tab">
+                        <i class="ri-file-list-3-line fs-16 text-primary"></i>
+                        <span>Data Log Corrective Maintenance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold px-3 py-2 rounded-3 d-flex align-items-center gap-2 shadow-sm" data-bs-toggle="tab" href="#tab-analysis-accordion" role="tab">
+                        <i class="ri-dashboard-3-line fs-16 text-success"></i>
+                        <span>Rekap & Analisis Mingguan</span>
+                        <span class="badge bg-soft-success text-success rounded-pill px-2 fs-11">4 Analisis Accordion</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
 
         <div class="tab-content">
-            {{-- Tab 1: Detail Log --}}
-            <div class="tab-pane active" id="tab-detail-log" role="tabpanel">
+            {{-- VIEW 1: Detail Log --}}
+            <div class="tab-pane fade show active" id="tab-detail-log" role="tabpanel">
                 <div class="card border-0 shadow-sm" style="border-radius: 12px;">
                     <div class="card-body p-4 bg-white">
                         <div class="table-responsive">
@@ -269,355 +288,422 @@
                 </div>
             </div>
 
-            {{-- Tab 2: Frekuensi DT by Jenis DT --}}
-            <div class="tab-pane" id="tab-summary-dt" role="tabpanel">
-                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
-                    <div class="card-body p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-uppercase text-dark mb-0">
-                                <i class="ri-bar-chart-2-line text-success me-2"></i>FREKUENSI DT BY JENIS DT ALL MESIN
-                            </h5>
-                            <span class="badge bg-soft-success text-success px-3 py-2 fs-12 fw-semibold" id="summary-period-badge">
-                                Periode: -
-                            </span>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0" id="tableSummary">
-                                <thead class="table-success text-dark align-middle">
-                                    <tr style="font-size: 13px;">
-                                        <th width="110" class="text-center">TANGGAL</th>
-                                        <th>JENIS DT</th>
-                                        <th width="140" class="text-center">Count of JENIS DT</th>
-                                        <th width="160" class="text-center">Sum of TOTAL MENIT</th>
-                                        <th width="120" class="text-center">MTTR (Menit)</th>
-                                        <th width="160" class="text-center">% DT Pabrik</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableSummaryBody">
-                                    {{-- Dynamically filled --}}
-                                </tbody>
-                            </table>
-                        </div>
+            {{-- VIEW 2: Rekap & Analisis Mingguan (Accordion Cards) --}}
+            <div class="tab-pane fade" id="tab-analysis-accordion" role="tabpanel">
+                {{-- Quick action bar to Expand / Collapse All --}}
+                <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-soft-info text-info p-2 rounded-circle">
+                            <i class="ri-information-line fs-16"></i>
+                        </span>
+                        <span class="text-muted fs-13">
+                            4 Tabel Analisis Mingguan sesuai template sheet <strong>WEEKLY</strong>. Klik header kartu untuk menutup/membuka section.
+                        </span>
+                    </div>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="expandAllAccordionCards()">
+                            <i class="ri-expand-up-down-line me-1"></i> Buka Semua
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="collapseAllAccordionCards()">
+                            <i class="ri-contract-up-down-line me-1"></i> Tutup Semua
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            {{-- Tab 3: Jumlah DT Mesin / Grup --}}
-            <div class="tab-pane" id="tab-machine-group" role="tabpanel">
-                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
-                    <div class="card-body p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-uppercase text-dark mb-0">
-                                <i class="ri-dashboard-3-line text-warning me-2"></i>JUMLAH DT MESIN / GROUP (MTBF & AVAILABILITY)
-                            </h5>
-                            <span class="badge bg-soft-warning text-warning px-3 py-2 fs-12 fw-semibold" id="machine-period-badge">
-                                Periode: -
-                            </span>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0 text-center" id="tableMachineGroup">
-                                <thead class="table-light text-dark align-middle">
-                                    <tr style="font-size: 13px;">
-                                        <th width="110" style="background-color: #fef08a; color: #713f12; font-weight: bold;">UNIT MESIN</th>
-                                        <th width="90" style="background-color: #bae6fd; color: #0369a1; font-weight: bold;">A (Menit)</th>
-                                        <th width="90" style="background-color: #fef08a; color: #713f12; font-weight: bold;">B (Menit)</th>
-                                        <th width="90" style="background-color: #bbf7d0; color: #15803d; font-weight: bold;">C (Menit)</th>
-                                        <th width="110" style="background-color: #fde047; color: #713f12; font-weight: bold;">TOTAL DT</th>
-                                        <th width="105" style="background-color: #fed7aa; color: #9a3412; font-weight: bold;">MTTR</th>
-                                        <th width="105" style="background-color: #e9d5ff; color: #581c87; font-weight: bold;">MTBF (x)</th>
-                                        <th width="130" style="background-color: #fbcfe8; color: #831843; font-weight: bold;">MTBF (MENIT)</th>
-                                        <th width="120" style="background-color: #ddd6fe; color: #4338ca; font-weight: bold;">Availability</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableMachineGroupBody" style="font-size: 13px;">
-                                    {{-- Dynamically filled --}}
-                                </tbody>
-                                <tfoot class="fw-bold text-center" style="background-color: #fffbeb; font-size: 13px;">
-                                    <tr>
-                                        <td style="background-color: #fef08a; color: #713f12;">JUMLAH</td>
-                                        <td class="font-monospace" style="background-color: #bae6fd;" id="total-group-a">0</td>
-                                        <td class="font-monospace" style="background-color: #fef08a;" id="total-group-b">0</td>
-                                        <td class="font-monospace" style="background-color: #bbf7d0;" id="total-group-c">0</td>
-                                        <td class="font-monospace fw-bold text-dark" style="background-color: #fde047;" id="total-group-dt">0</td>
-                                        <td class="font-monospace" style="background-color: #fed7aa;" id="total-group-mttr">0.0</td>
-                                        <td class="font-monospace" style="background-color: #e9d5ff;" id="total-mtbf-x">0</td>
-                                        <td class="font-monospace" style="background-color: #fbcfe8;" id="total-mtbf-menit">-</td>
-                                        <td class="font-monospace" style="background-color: #ddd6fe;" id="total-availability">-</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <div class="accordion custom-analysis-accordion d-flex flex-column gap-3" id="accordionAnalysis">
 
-            {{-- Tab 4: Downtime & Loading Time Matrix --}}
-            <div class="tab-pane" id="tab-loading-time" role="tabpanel">
-                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
-                    <div class="card-body p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h5 class="fw-bold text-uppercase text-dark mb-1">
-                                    <i class="ri-dashboard-fill text-primary me-2"></i>PERSENTASE DT / JAM KERJA (LOADING TIME & DOWNTIME)
-                                </h5>
-                                <p class="text-muted fs-13 mb-0">Analisis Loading Time kerja mesin, Realisasi Downtime (menit), dan Persentase Downtime (%) per Grup A, B, C & ALL.</p>
+                    {{-- CARD 1: Frekuensi DT by Jenis DT --}}
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom border-success border-2 cursor-pointer"
+                             data-bs-toggle="collapse" data-bs-target="#collapseCardSummaryDt" aria-expanded="true" aria-controls="collapseCardSummaryDt">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-xs flex-shrink-0">
+                                    <span class="avatar-title bg-soft-success text-success rounded-circle fs-16 p-2">
+                                        <i class="ri-bar-chart-2-line"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-uppercase text-dark mb-0">1. Frekuensi DT by Jenis DT All Mesin</h6>
+                                    <small class="text-muted">Total frekuensi kejadian per jenis DT, durasi total, MTTR, dan bobot % DT terhadap pabrik</small>
+                                </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <div id="container-lt-subfilter" class="d-flex align-items-center gap-2">
-                                    <label class="small fw-semibold text-muted mb-0">Tanggal Harian:</label>
-                                    <input type="date" class="form-control form-control-sm" id="filter-lt-date" value="{{ $defaultDate ?? date('Y-m-d') }}" style="width: 155px;">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearLtDate()" title="Tampilkan Semua Tanggal">
-                                        Semua
-                                    </button>
+                                <span class="badge bg-soft-success text-success px-3 py-2 fs-12 fw-semibold" id="summary-period-badge">
+                                    Periode: -
+                                </span>
+                                <i class="ri-arrow-down-s-line fs-20 text-muted accordion-chevron"></i>
+                            </div>
+                        </div>
+                        <div id="collapseCardSummaryDt" class="collapse show">
+                            <div class="card-body p-4 bg-white">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle mb-0" id="tableSummary">
+                                        <thead class="table-success text-dark align-middle">
+                                            <tr style="font-size: 13px;">
+                                                <th width="110" class="text-center">TANGGAL</th>
+                                                <th>JENIS DT</th>
+                                                <th width="140" class="text-center">Count of JENIS DT</th>
+                                                <th width="160" class="text-center">Sum of TOTAL MENIT</th>
+                                                <th width="120" class="text-center">MTTR (Menit)</th>
+                                                <th width="160" class="text-center">% DT Pabrik</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableSummaryBody">
+                                            {{-- Dynamically filled --}}
+                                        </tbody>
+                                    </table>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- CARD 2: Jumlah DT Mesin / Grup (MTBF & Availability) --}}
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom border-warning border-2 cursor-pointer"
+                             data-bs-toggle="collapse" data-bs-target="#collapseCardMachineGroup" aria-expanded="true" aria-controls="collapseCardMachineGroup">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-xs flex-shrink-0">
+                                    <span class="avatar-title bg-soft-warning text-warning rounded-circle fs-16 p-2">
+                                        <i class="ri-dashboard-3-line"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-uppercase text-dark mb-0">2. Jumlah DT Mesin / Group (MTBF & Availability)</h6>
+                                    <small class="text-muted">Downtime menit per grup A, B, C, TOTAL DT, MTTR, MTBF (x), MTBF (menit), dan Availability</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-soft-warning text-warning px-3 py-2 fs-12 fw-semibold" id="machine-period-badge">
+                                    Periode: -
+                                </span>
+                                <i class="ri-arrow-down-s-line fs-20 text-muted accordion-chevron"></i>
+                            </div>
+                        </div>
+                        <div id="collapseCardMachineGroup" class="collapse show">
+                            <div class="card-body p-4 bg-white">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle mb-0 text-center" id="tableMachineGroup">
+                                        <thead class="table-light text-dark align-middle">
+                                            <tr style="font-size: 13px;">
+                                                <th width="110" style="background-color: #fef08a; color: #713f12; font-weight: bold;">UNIT MESIN</th>
+                                                <th width="90" style="background-color: #bae6fd; color: #0369a1; font-weight: bold;">A (Menit)</th>
+                                                <th width="90" style="background-color: #fef08a; color: #713f12; font-weight: bold;">B (Menit)</th>
+                                                <th width="90" style="background-color: #bbf7d0; color: #15803d; font-weight: bold;">C (Menit)</th>
+                                                <th width="110" style="background-color: #fde047; color: #713f12; font-weight: bold;">TOTAL DT</th>
+                                                <th width="105" style="background-color: #fed7aa; color: #9a3412; font-weight: bold;">MTTR</th>
+                                                <th width="105" style="background-color: #e9d5ff; color: #581c87; font-weight: bold;">MTBF (x)</th>
+                                                <th width="130" style="background-color: #fbcfe8; color: #831843; font-weight: bold;">MTBF (MENIT)</th>
+                                                <th width="120" style="background-color: #ddd6fe; color: #4338ca; font-weight: bold;">Availability</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableMachineGroupBody" style="font-size: 13px;">
+                                            {{-- Dynamically filled --}}
+                                        </tbody>
+                                        <tfoot class="fw-bold text-center" style="background-color: #fffbeb; font-size: 13px;">
+                                            <tr>
+                                                <td style="background-color: #fef08a; color: #713f12;">JUMLAH</td>
+                                                <td class="font-monospace" style="background-color: #bae6fd;" id="total-group-a">0</td>
+                                                <td class="font-monospace" style="background-color: #fef08a;" id="total-group-b">0</td>
+                                                <td class="font-monospace" style="background-color: #bbf7d0;" id="total-group-c">0</td>
+                                                <td class="font-monospace fw-bold text-dark" style="background-color: #fde047;" id="total-group-dt">0</td>
+                                                <td class="font-monospace" style="background-color: #fed7aa;" id="total-group-mttr">0.0</td>
+                                                <td class="font-monospace" style="background-color: #e9d5ff;" id="total-mtbf-x">0</td>
+                                                <td class="font-monospace" style="background-color: #fbcfe8;" id="total-mtbf-menit">-</td>
+                                                <td class="font-monospace" style="background-color: #ddd6fe;" id="total-availability">-</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- CARD 3: Persentase DT / Jam Kerja (Loading Time & Downtime) --}}
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom border-primary border-2 cursor-pointer"
+                             data-bs-toggle="collapse" data-bs-target="#collapseCardLoadingTime" aria-expanded="true" aria-controls="collapseCardLoadingTime">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-xs flex-shrink-0">
+                                    <span class="avatar-title bg-soft-primary text-primary rounded-circle fs-16 p-2">
+                                        <i class="ri-dashboard-fill"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-uppercase text-dark mb-0">3. Persentase DT / Jam Kerja (Loading Time & Downtime)</h6>
+                                    <small class="text-muted">Loading Time kerja mesin, Realisasi Downtime (menit), dan % DT per Grup A, B, C & ALL</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
                                 <span class="badge bg-soft-primary text-primary px-3 py-2 fs-12 fw-semibold" id="lt-period-badge">
                                     Periode: -
                                 </span>
+                                <i class="ri-arrow-down-s-line fs-20 text-muted accordion-chevron"></i>
                             </div>
                         </div>
-                        
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0 text-center" id="tableLoadingTime">
-                                <thead>
-                                    <tr>
-                                        <th colspan="2" style="background-color: #bbf7d0; color: #166534; font-weight: bold; font-size: 14px;">DOWNTIME</th>
-                                        <th colspan="3" style="background-color: #bfdbfe; color: #1e40af; font-weight: bold; font-size: 14px;">A</th>
-                                        <th colspan="3" style="background-color: #bbf7d0; color: #166534; font-weight: bold; font-size: 14px;">B</th>
-                                        <th colspan="3" style="background-color: #fecaca; color: #991b1b; font-weight: bold; font-size: 14px;">C</th>
-                                        <th colspan="3" style="background-color: #f3f4f6; color: #1f2937; font-weight: bold; font-size: 14px;">ALL</th>
-                                    </tr>
-                                    <tr style="font-size: 12px;">
-                                        <th width="90" style="background-color: #f8fafc;">LINE</th>
-                                        <th width="80" style="background-color: #f8fafc;">MESIN</th>
-                                        {{-- Group A --}}
-                                        <th width="95" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
-                                        <th width="75">DT</th>
-                                        <th width="75">%</th>
-                                        {{-- Group B --}}
-                                        <th width="95" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
-                                        <th width="75">DT</th>
-                                        <th width="75">%</th>
-                                        {{-- Group C --}}
-                                        <th width="95" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
-                                        <th width="75">DT</th>
-                                        <th width="75">%</th>
-                                        {{-- ALL --}}
-                                        <th width="105" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
-                                        <th width="80">DT</th>
-                                        <th width="85">%</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableLoadingTimeBody">
-                                    {{-- Dynamically rendered by renderLoadingTimeTable() --}}
-                                </tbody>
-                            </table>
+                        <div id="collapseCardLoadingTime" class="collapse show">
+                            <div class="card-body p-4 bg-white">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                                    <div class="text-muted fs-13">
+                                        Data perbandingan Loading Time (menit) dan Downtime mesin Pouch & Sachet.
+                                    </div>
+                                    <div id="container-lt-subfilter" class="d-flex align-items-center gap-2">
+                                        <label class="small fw-semibold text-muted mb-0">Tanggal Harian:</label>
+                                        <input type="date" class="form-control form-control-sm" id="filter-lt-date" value="{{ $defaultDate ?? date('Y-m-d') }}" style="width: 155px;">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearLtDate()" title="Tampilkan Semua Tanggal">
+                                            Semua
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle mb-0 text-center" id="tableLoadingTime">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="2" style="background-color: #bbf7d0; color: #166534; font-weight: bold; font-size: 14px;">DOWNTIME</th>
+                                                <th colspan="3" style="background-color: #bfdbfe; color: #1e40af; font-weight: bold; font-size: 14px;">A</th>
+                                                <th colspan="3" style="background-color: #bbf7d0; color: #166534; font-weight: bold; font-size: 14px;">B</th>
+                                                <th colspan="3" style="background-color: #fecaca; color: #991b1b; font-weight: bold; font-size: 14px;">C</th>
+                                                <th colspan="3" style="background-color: #f3f4f6; color: #1f2937; font-weight: bold; font-size: 14px;">ALL</th>
+                                            </tr>
+                                            <tr style="font-size: 12px;">
+                                                <th width="90" style="background-color: #f8fafc;">LINE</th>
+                                                <th width="80" style="background-color: #f8fafc;">MESIN</th>
+                                                {{-- Group A --}}
+                                                <th width="95" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
+                                                <th width="75">DT</th>
+                                                <th width="75">%</th>
+                                                {{-- Group B --}}
+                                                <th width="95" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
+                                                <th width="75">DT</th>
+                                                <th width="75">%</th>
+                                                {{-- Group C --}}
+                                                <th width="95" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
+                                                <th width="75">DT</th>
+                                                <th width="75">%</th>
+                                                {{-- ALL --}}
+                                                <th width="105" style="background-color: #dcfce7; color: #14532d;">Loading Time</th>
+                                                <th width="80">DT</th>
+                                                <th width="85">%</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableLoadingTimeBody">
+                                            {{-- Dynamically rendered by renderLoadingTimeTable() --}}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {{-- Tab 5: Klasifikasi E/M & Top 5 DT --}}
-            <div class="tab-pane" id="tab-em-analysis" role="tabpanel">
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-body p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h5 class="fw-bold text-uppercase text-dark mb-1">
-                                    <i class="ri-flashlight-line text-info me-2"></i>KLASIFIKASI DOWNTIME ELECTRICAL & MECHANICAL
-                                </h5>
-                                <p class="text-muted fs-13 mb-0">Perbandingan frekuensi kejadian (interval), total durasi menit downtime, kontribusi terhadap % Downtime Pabrik, dan TOP 5 Downtime tertinggi.</p>
-                            </div>
-                            <span class="badge bg-soft-info text-info px-3 py-2 fs-12 fw-semibold" id="em-period-badge">
-                                Periode: -
-                            </span>
-                        </div>
-
-                        {{-- Metric Cards --}}
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6 col-xl-4">
-                                <div class="p-3 rounded-3 border" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #bfdbfe !important;">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 36px; height: 36px; background: #2563eb;">
-                                                <i class="ri-flashlight-fill fs-18"></i>
-                                            </div>
-                                            <h6 class="fw-bold mb-0 text-primary">ELECTRICAL</h6>
-                                        </div>
-                                        <span class="badge bg-primary text-white font-monospace" id="em-elec-share">0.0% DT</span>
-                                    </div>
-                                    <div class="row g-2 mt-1">
-                                        <div class="col-6">
-                                            <div class="text-muted fs-11 text-uppercase fw-semibold">Frekuensi (Interval)</div>
-                                            <div class="fs-18 fw-bold text-dark font-monospace" id="em-elec-count">0 <small class="fs-12 fw-normal text-muted">kejadian</small></div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="text-muted fs-11 text-uppercase fw-semibold">Total Durasi</div>
-                                            <div class="fs-18 fw-bold text-primary font-monospace" id="em-elec-duration">0 <small class="fs-12 fw-normal text-muted">menit</small></div>
-                                        </div>
-                                        <div class="col-12 pt-2 border-top" style="border-color: #bfdbfe !important;">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span class="text-muted fs-12">Kontribusi % DT Pabrik:</span>
-                                                <span class="fw-bold text-primary font-monospace fs-14" id="em-elec-pct">0.00%</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                    {{-- CARD 4: Klasifikasi E/M & Top 5 Downtime --}}
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom border-info border-2 cursor-pointer"
+                             data-bs-toggle="collapse" data-bs-target="#collapseCardEmAnalysis" aria-expanded="true" aria-controls="collapseCardEmAnalysis">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-xs flex-shrink-0">
+                                    <span class="avatar-title bg-soft-info text-info rounded-circle fs-16 p-2">
+                                        <i class="ri-flashlight-line"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-uppercase text-dark mb-0">4. Klasifikasi Downtime Electrical & Mechanical + Top 5 Kerusakan</h6>
+                                    <small class="text-muted">Komparasi durasi & frekuensi E/M, kontribusi terhadap % DT Pabrik, serta Top 5 Breakdown</small>
                                 </div>
                             </div>
-
-                            <div class="col-md-6 col-xl-4">
-                                <div class="p-3 rounded-3 border" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-color: #e9d5ff !important;">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 36px; height: 36px; background: #7c3aed;">
-                                                <i class="ri-settings-4-fill fs-18"></i>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-soft-info text-info px-3 py-2 fs-12 fw-semibold" id="em-period-badge">
+                                    Periode: -
+                                </span>
+                                <i class="ri-arrow-down-s-line fs-20 text-muted accordion-chevron"></i>
+                            </div>
+                        </div>
+                        <div id="collapseCardEmAnalysis" class="collapse show">
+                            <div class="card-body p-4 bg-white">
+                                {{-- Metric Cards --}}
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6 col-xl-4">
+                                        <div class="p-3 rounded-3 border" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #bfdbfe !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 36px; height: 36px; background: #2563eb;">
+                                                        <i class="ri-flashlight-fill fs-18"></i>
+                                                    </div>
+                                                    <h6 class="fw-bold mb-0 text-primary">ELECTRICAL</h6>
+                                                </div>
+                                                <span class="badge bg-primary text-white font-monospace" id="em-elec-share">0.0% DT</span>
                                             </div>
-                                            <h6 class="fw-bold mb-0" style="color: #6b21a8;">MECHANICAL</h6>
-                                        </div>
-                                        <span class="badge text-white font-monospace" style="background-color: #7c3aed;" id="em-mech-share">0.0% DT</span>
-                                    </div>
-                                    <div class="row g-2 mt-1">
-                                        <div class="col-6">
-                                            <div class="text-muted fs-11 text-uppercase fw-semibold">Frekuensi (Interval)</div>
-                                            <div class="fs-18 fw-bold text-dark font-monospace" id="em-mech-count">0 <small class="fs-12 fw-normal text-muted">kejadian</small></div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="text-muted fs-11 text-uppercase fw-semibold">Total Durasi</div>
-                                            <div class="fs-18 fw-bold font-monospace" style="color: #6b21a8;" id="em-mech-duration">0 <small class="fs-12 fw-normal text-muted">menit</small></div>
-                                        </div>
-                                        <div class="col-12 pt-2 border-top" style="border-color: #e9d5ff !important;">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span class="text-muted fs-12">Kontribusi % DT Pabrik:</span>
-                                                <span class="fw-bold font-monospace fs-14" style="color: #6b21a8;" id="em-mech-pct">0.00%</span>
+                                            <div class="row g-2 mt-1">
+                                                <div class="col-6">
+                                                    <div class="text-muted fs-11 text-uppercase fw-semibold">Frekuensi (Interval)</div>
+                                                    <div class="fs-18 fw-bold text-dark font-monospace" id="em-elec-count">0 <small class="fs-12 fw-normal text-muted">kejadian</small></div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted fs-11 text-uppercase fw-semibold">Total Durasi</div>
+                                                    <div class="fs-18 fw-bold text-primary font-monospace" id="em-elec-duration">0 <small class="fs-12 fw-normal text-muted">menit</small></div>
+                                                </div>
+                                                <div class="col-12 pt-2 border-top" style="border-color: #bfdbfe !important;">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="text-muted fs-12">Kontribusi % DT Pabrik:</span>
+                                                        <span class="fw-bold text-primary font-monospace fs-14" id="em-elec-pct">0.00%</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <div class="col-md-12 col-xl-4">
-                                <div class="p-3 rounded-3 border bg-light h-100 d-flex flex-column justify-content-between">
-                                    <div>
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <span class="text-muted fs-12 fw-bold text-uppercase">Distribusi Downtime</span>
-                                            <span class="badge bg-secondary font-monospace" id="em-total-duration">Total: 0 m</span>
-                                        </div>
-                                        <div class="progress" style="height: 14px; border-radius: 7px; overflow: hidden; background-color: #e2e8f0;">
-                                            <div class="progress-bar bg-primary" role="progressbar" id="em-progress-elec" style="width: 0%;" title="Electrical"></div>
-                                            <div class="progress-bar" role="progressbar" id="em-progress-mech" style="width: 0%; background-color: #7c3aed;" title="Mechanical"></div>
-                                        </div>
-                                        <div class="d-flex justify-content-between fs-11 text-muted mt-2">
-                                            <span><i class="ri-checkbox-blank-circle-fill text-primary me-1"></i>Electrical (<span id="em-legend-elec">0%</span>)</span>
-                                            <span><i class="ri-checkbox-blank-circle-fill me-1" style="color: #7c3aed;"></i>Mechanical (<span id="em-legend-mech">0%</span>)</span>
+                                    <div class="col-md-6 col-xl-4">
+                                        <div class="p-3 rounded-3 border" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-color: #e9d5ff !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 36px; height: 36px; background: #7c3aed;">
+                                                        <i class="ri-settings-4-fill fs-18"></i>
+                                                    </div>
+                                                    <h6 class="fw-bold mb-0" style="color: #6b21a8;">MECHANICAL</h6>
+                                                </div>
+                                                <span class="badge text-white font-monospace" style="background-color: #7c3aed;" id="em-mech-share">0.0% DT</span>
+                                            </div>
+                                            <div class="row g-2 mt-1">
+                                                <div class="col-6">
+                                                    <div class="text-muted fs-11 text-uppercase fw-semibold">Frekuensi (Interval)</div>
+                                                    <div class="fs-18 fw-bold text-dark font-monospace" id="em-mech-count">0 <small class="fs-12 fw-normal text-muted">kejadian</small></div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted fs-11 text-uppercase fw-semibold">Total Durasi</div>
+                                                    <div class="fs-18 fw-bold font-monospace" style="color: #6b21a8;" id="em-mech-duration">0 <small class="fs-12 fw-normal text-muted">menit</small></div>
+                                                </div>
+                                                <div class="col-12 pt-2 border-top" style="border-color: #e9d5ff !important;">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="text-muted fs-12">Kontribusi % DT Pabrik:</span>
+                                                        <span class="fw-bold font-monospace fs-14" style="color: #6b21a8;" id="em-mech-pct">0.00%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="pt-2 border-top mt-2 d-flex justify-content-between align-items-center fs-12 text-muted">
-                                        <span>% Downtime Pabrik:</span>
-                                        <span class="fw-bold text-dark font-monospace fs-13" id="em-plant-dt">0.00%</span>
+
+                                    <div class="col-md-12 col-xl-4">
+                                        <div class="p-3 rounded-3 border bg-light h-100 d-flex flex-column justify-content-between">
+                                            <div>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="text-muted fs-12 fw-bold text-uppercase">Distribusi Downtime</span>
+                                                    <span class="badge bg-secondary font-monospace" id="em-total-duration">Total: 0 m</span>
+                                                </div>
+                                                <div class="progress" style="height: 14px; border-radius: 7px; overflow: hidden; background-color: #e2e8f0;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" id="em-progress-elec" style="width: 0%;" title="Electrical"></div>
+                                                    <div class="progress-bar" role="progressbar" id="em-progress-mech" style="width: 0%; background-color: #7c3aed;" title="Mechanical"></div>
+                                                </div>
+                                                <div class="d-flex justify-content-between fs-11 text-muted mt-2">
+                                                    <span><i class="ri-checkbox-blank-circle-fill text-primary me-1"></i>Electrical (<span id="em-legend-elec">0%</span>)</span>
+                                                    <span><i class="ri-checkbox-blank-circle-fill me-1" style="color: #7c3aed;"></i>Mechanical (<span id="em-legend-mech">0%</span>)</span>
+                                                </div>
+                                            </div>
+                                            <div class="pt-2 border-top mt-2 d-flex justify-content-between align-items-center fs-12 text-muted">
+                                                <span>% Downtime Pabrik:</span>
+                                                <span class="fw-bold text-dark font-monospace fs-13" id="em-plant-dt">0.00%</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+
+                                {{-- Excel Matching Table: DT Maintenance / Electrical & Mechanical --}}
+                                <div class="table-responsive mb-4">
+                                    <table class="table table-bordered align-middle text-center mb-0">
+                                        <thead style="background-color: #f1f5f9; font-size: 13px;">
+                                            <tr>
+                                                <th width="120">TANGGAL</th>
+                                                <th width="180">Kelompok DT</th>
+                                                <th width="140">Interval (x)</th>
+                                                <th width="180">Sum of TOTAL MENIT</th>
+                                                <th width="160">% Downtime Pabrik</th>
+                                                <th width="160">Kontribusi % DT</th>
+                                                <th width="140">Share of DT</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableEmSummaryBody" style="font-size: 13px;">
+                                            {{-- Dynamically filled --}}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {{-- TOP 5 Section Header --}}
+                                <div class="row g-4 mt-1">
+                                    {{-- TOP 5 ELECTRICAL --}}
+                                    <div class="col-lg-6">
+                                        <div class="card border border-primary-subtle shadow-none h-100" style="border-radius: 10px;">
+                                            <div class="card-header bg-soft-primary border-bottom border-primary-subtle py-3 px-3 d-flex justify-content-between align-items-center">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-primary rounded-pill p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                                                        <i class="ri-flashlight-line fs-14"></i>
+                                                    </span>
+                                                    <h6 class="fw-bold text-primary mb-0">TOP 5 DOWNTIME ELECTRICAL</h6>
+                                                </div>
+                                                <span class="badge bg-white text-primary border border-primary-subtle fw-semibold">Durasi Tertinggi</span>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th width="45" class="text-center">#</th>
+                                                                <th width="85">Tgl</th>
+                                                                <th width="65" class="text-center">Shift</th>
+                                                                <th width="60" class="text-center">Mesin</th>
+                                                                <th>Keterangan Kerusakan</th>
+                                                                <th width="80" class="text-center">Durasi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="tableTop5ElecBody">
+                                                            {{-- Dynamically filled --}}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- TOP 5 MECHANICAL --}}
+                                    <div class="col-lg-6">
+                                        <div class="card border border-purple-subtle shadow-none h-100" style="border-radius: 10px; border-color: #e9d5ff !important;">
+                                            <div class="card-header border-bottom py-3 px-3 d-flex justify-content-between align-items-center" style="background-color: #f5f3ff; border-color: #e9d5ff !important;">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge rounded-pill p-1 d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px; background-color: #7c3aed;">
+                                                        <i class="ri-settings-4-line fs-14"></i>
+                                                    </span>
+                                                    <h6 class="fw-bold mb-0" style="color: #6b21a8;">TOP 5 DOWNTIME MECHANICAL</h6>
+                                                </div>
+                                                <span class="badge bg-white border fw-semibold" style="color: #6b21a8; border-color: #e9d5ff !important;">Durasi Tertinggi</span>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th width="45" class="text-center">#</th>
+                                                                <th width="85">Tgl</th>
+                                                                <th width="65" class="text-center">Shift</th>
+                                                                <th width="60" class="text-center">Mesin</th>
+                                                                <th>Keterangan Kerusakan</th>
+                                                                <th width="80" class="text-center">Durasi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="tableTop5MechBody">
+                                                            {{-- Dynamically filled --}}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
-
-                        {{-- Excel Matching Table: DT Maintenance / Electrical & Mechanical --}}
-                        <div class="table-responsive mb-4">
-                            <table class="table table-bordered align-middle text-center mb-0">
-                                <thead style="background-color: #f1f5f9; font-size: 13px;">
-                                    <tr>
-                                        <th width="120">TANGGAL</th>
-                                        <th width="180">Kelompok DT</th>
-                                        <th width="140">Interval (x)</th>
-                                        <th width="180">Sum of TOTAL MENIT</th>
-                                        <th width="160">% Downtime Pabrik</th>
-                                        <th width="160">Kontribusi % DT</th>
-                                        <th width="140">Share of DT</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableEmSummaryBody" style="font-size: 13px;">
-                                    {{-- Dynamically filled --}}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- TOP 5 Section Header --}}
-                        <div class="row g-4 mt-1">
-                            {{-- TOP 5 ELECTRICAL --}}
-                            <div class="col-lg-6">
-                                <div class="card border border-primary-subtle shadow-none h-100" style="border-radius: 10px;">
-                                    <div class="card-header bg-soft-primary border-bottom border-primary-subtle py-3 px-3 d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="badge bg-primary rounded-pill p-1 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
-                                                <i class="ri-flashlight-line fs-14"></i>
-                                            </span>
-                                            <h6 class="fw-bold text-primary mb-0">TOP 5 DOWNTIME ELECTRICAL</h6>
-                                        </div>
-                                        <span class="badge bg-white text-primary border border-primary-subtle fw-semibold">Durasi Tertinggi</span>
-                                    </div>
-                                    <div class="card-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th width="45" class="text-center">#</th>
-                                                        <th width="85">Tgl</th>
-                                                        <th width="65" class="text-center">Shift</th>
-                                                        <th width="60" class="text-center">Mesin</th>
-                                                        <th>Keterangan Kerusakan</th>
-                                                        <th width="80" class="text-center">Durasi</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="tableTop5ElecBody">
-                                                    {{-- Dynamically filled --}}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- TOP 5 MECHANICAL --}}
-                            <div class="col-lg-6">
-                                <div class="card border border-purple-subtle shadow-none h-100" style="border-radius: 10px; border-color: #e9d5ff !important;">
-                                    <div class="card-header border-bottom py-3 px-3 d-flex justify-content-between align-items-center" style="background-color: #f5f3ff; border-color: #e9d5ff !important;">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="badge rounded-pill p-1 d-flex align-items-center justify-content-center text-white" style="width: 24px; height: 24px; background-color: #7c3aed;">
-                                                <i class="ri-settings-4-line fs-14"></i>
-                                            </span>
-                                            <h6 class="fw-bold mb-0" style="color: #6b21a8;">TOP 5 DOWNTIME MECHANICAL</h6>
-                                        </div>
-                                        <span class="badge bg-white border fw-semibold" style="color: #6b21a8; border-color: #e9d5ff !important;">Durasi Tertinggi</span>
-                                    </div>
-                                    <div class="card-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th width="45" class="text-center">#</th>
-                                                        <th width="85">Tgl</th>
-                                                        <th width="65" class="text-center">Shift</th>
-                                                        <th width="60" class="text-center">Mesin</th>
-                                                        <th>Keterangan Kerusakan</th>
-                                                        <th width="80" class="text-center">Durasi</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="tableTop5MechBody">
-                                                    {{-- Dynamically filled --}}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
+
                 </div>
             </div>
         </div>
 
-    </div>
-</div>
-
-{{-- Detail Modal --}}
+        {{-- Detail Modal --}}
 <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content border-0 shadow">
