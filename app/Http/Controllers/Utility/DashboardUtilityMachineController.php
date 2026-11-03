@@ -1237,7 +1237,7 @@ class DashboardUtilityMachineController extends Controller
         $costData = $this->getCostSmkpYearlyData($costYear);
 
         // Template lookup - Primary: operasional_utility.pptx
-        $templatePath = public_path('assets/templates/pptx/operasional_utility.pptx');
+        $templatePath = public_path('assets/templates/pptx/template_eut.pptx');
         if (!file_exists($templatePath)) {
             $templatePath = public_path('assets/templates/pptx/template_utility.pptx');
         }
