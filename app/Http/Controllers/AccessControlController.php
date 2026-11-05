@@ -28,21 +28,44 @@ class AccessControlController extends Controller
     }
 
     /**
-     * Halaman Utama Manajemen Role & Permission
+     * Endpoint API JSON Data Access Control (Client-Side Rendering)
      */
-    public function index()
+    public function getData(Request $request)
     {
         $this->authorizeAdmin();
 
         $permissions = Permission::orderBy('group', 'asc')->orderBy('name', 'asc')->get();
-        $permissionsGrouped = $permissions->groupBy('group');
-
         $roles = Role::with('permissions')->orderBy('name', 'asc')->get();
         $users = User::with(['customRoles', 'directPermissions'])->orderBy('username', 'asc')->get();
-
         $groups = Permission::select('group')->distinct()->pluck('group')->filter()->values();
 
-        return view('access_control.index', compact('permissions', 'permissionsGrouped', 'roles', 'users', 'groups'));
+        return response()->json([
+            'status' => 'success',
+            'permissions' => $permissions,
+            'roles' => $roles,
+            'users' => $users,
+            'groups' => $groups,
+            'stats' => [
+                'total_permissions' => $permissions->count(),
+                'total_roles' => $roles->count(),
+                'total_groups' => $groups->count(),
+                'total_users' => $users->count(),
+            ]
+        ]);
+    }
+
+    /**
+     * Halaman Utama Manajemen Role & Permission (Shell View)
+     */
+    public function index(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return $this->getData($request);
+        }
+
+        return view('access_control.index');
     }
 
     /**

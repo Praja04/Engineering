@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
             ->middleware('role:admin')
             ->group(function () {
                 Route::get('/', [AccessControlController::class, 'index'])->name('index');
+                Route::get('/data', [AccessControlController::class, 'getData'])->name('data');
                 // Permission CRUD
                 Route::post('/permissions', [AccessControlController::class, 'storePermission'])->name('permissions.store');
                 Route::put('/permissions/{id}', [AccessControlController::class, 'updatePermission'])->name('permissions.update');
