@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\AccessByJabatan;
+use App\Http\Middleware\CheckPermission;
+use App\Http\Middleware\CheckRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,7 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             // 'auth' => \App\Http\Middleware\Authenticate::class,
-            'access' => AccessByJabatan::class
+            'access'     => AccessByJabatan::class,
+            'role'       => CheckRole::class,
+            'permission' => CheckPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -83,6 +83,16 @@
                             </a>
                         </li>
                     @endif
+
+                    <!-- /////////////////////Role & Permission (Khusus Admin)/////////////// -->
+                    @can('role', 'admin')
+                        <li class="nav-item">
+                            <a href="{{ route('access-control.index') }}"
+                                class="nav-link menu-link {{ request()->routeIs('access-control.*') ? 'active' : '' }}">
+                                <i class="mdi mdi-shield-key-outline"></i> <span data-key="t-roles">Role & Permission</span>
+                            </a>
+                        </li>
+                    @endcan
                 @else
                     <li class="menu-title"><span data-key="t-menu">Menu</span></li>
                     @include('layouts.components.sidebar-dept.dept_lain')
