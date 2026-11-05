@@ -231,6 +231,13 @@
                                     <input type="number" step="0.01" name="suhu_dryer_ir" class="form-control"
                                         placeholder="0.00">
                                 </div>
+
+                                <div class="col-12 mt-4"><span class="badge bg-soft-danger text-danger">Suhu Ruang Compressor (°C)</span></div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Suhu Ruang Compressor</label>
+                                    <input type="number" step="0.01" name="suhu_ruang_compressor" class="form-control"
+                                        placeholder="0.00">
+                                </div>
                             </div>
 
                             <div class="text-end mt-4">
