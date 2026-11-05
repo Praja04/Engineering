@@ -60,12 +60,8 @@
     </li>
 @endif
 
-@if (
-    $jabatan === 'admin' ||
-        $jabatan === 'dept_head' ||
-        $jabatan === 'supervisor' ||
-        ($jabatan === 'foreman' &&
-            in_array($bagian, ['Engineering', 'Engineering WWTP', 'Engineering Maintenance & Improvement'])))
+@can('permission', 'project_utility_dashboard')
+    {{-- @if ($jabatan === 'admin' || $jabatan === 'dept_head' || $jabatan === 'supervisor' || ($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering WWTP', 'Engineering Maintenance & Improvement']))) --}}
     <li class="nav-item">
         <a href="{{ route('utility.project.dashboard') }}"
             class="nav-link menu-link {{ request()->routeIs('utility.project.dashboard') ? 'active' : '' }}"
@@ -73,4 +69,5 @@
             <i class="ri-dashboard-2-line"></i>Project Utility
         </a>
     </li>
-@endif
+    {{-- @endif --}}
+@endcan
