@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccessControlController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\TokenAuthController;
 
 Route::get('/auth/sso/callback', [TokenAuthController::class, 'callback'])
@@ -34,6 +35,13 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/ejo/{id}', function ($id) {
         return redirect()->to('/ejo-engineer');
+    });
+
+    // ── User Profile & Password Update ──
+    Route::prefix('profile')->as('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'index'])->name('index');
+        Route::post('/update', [ProfileController::class, 'update'])->name('update');
+        Route::post('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
     });
 
     Route::middleware(['auth', 'access'])->group(function () {

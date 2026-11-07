@@ -132,8 +132,13 @@
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
                         <h6 class="dropdown-header">
-                            Welcome!
+                            Welcome, {{ Auth::user()->username }}!
                         </h6>
+                        <a class="dropdown-item cursor-pointer" href="{{ route('profile.index') }}">
+                            <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
+                            <span class="align-middle" data-key="t-profile">Profile</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
                         <a id="logoutButton" class="dropdown-item cursor-pointer"><i
                                 class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>
                             <span class="align-middle" data-key="t-logout">Logout</span></a>
