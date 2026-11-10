@@ -41,77 +41,85 @@ Route::middleware('auth')->group(function () {
   });
 
   // WWTP Approval Harian Routes
-  Route::prefix('wwtp-approval')->middleware('auth')->group(function () {
-    Route::get('/check', [WWTPControllerApproval::class, 'checkApproval']);
-    Route::get('/list', [WWTPControllerApproval::class, 'getApprovalList']);
-    Route::post('/mass-approve', [WWTPControllerApproval::class, 'massApprove']);
-    Route::post('/mass-reject', [WWTPControllerApproval::class, 'massReject']);
-    Route::get('/{id}', [WWTPControllerApproval::class, 'show']);
-    Route::post('/{id}/approve', [WWTPControllerApproval::class, 'approve']);
-    Route::post('/{id}/reject', [WWTPControllerApproval::class, 'reject']);
+  Route::middleware('permission:wwtp_daily_approval')->group(function () {
+    Route::prefix('wwtp-approval')->middleware('auth')->group(function () {
+      Route::get('/check', [WWTPControllerApproval::class, 'checkApproval']);
+      Route::get('/list', [WWTPControllerApproval::class, 'getApprovalList']);
+      Route::post('/mass-approve', [WWTPControllerApproval::class, 'massApprove']);
+      Route::post('/mass-reject', [WWTPControllerApproval::class, 'massReject']);
+      Route::get('/{id}', [WWTPControllerApproval::class, 'show']);
+      Route::post('/{id}/approve', [WWTPControllerApproval::class, 'approve']);
+      Route::post('/{id}/reject', [WWTPControllerApproval::class, 'reject']);
+    });
   });
 
-  Route::prefix('api/wwtp-analisa')->group(function () {
-    Route::get('/users/approvers', [WWTPControllerAnalisa::class, 'getUsersForApproval']);
-    Route::get('/approval-list', [WWTPControllerAnalisa::class, 'getApprovalList']);
-    Route::post('/mass-approve', [WWTPControllerAnalisa::class, 'massApprove']);
-    Route::post('/mass-reject', [WWTPControllerAnalisa::class, 'massReject']);
-    Route::post('/{id}/approve', [WWTPControllerAnalisa::class, 'approve']);
-    Route::post('/{id}/reject', [WWTPControllerAnalisa::class, 'reject']);
-    Route::get('/check-filled', [WWTPControllerAnalisa::class, 'checkFilledParameters']);
-    Route::get('/parameters', [WWTPControllerAnalisa::class, 'indexParameter']);
-    Route::post('/parameters', [WWTPControllerAnalisa::class, 'storeParameter']);
-    Route::get('/parameters/{id}', [WWTPControllerAnalisa::class, 'showParameter']);
-    Route::put('/parameters/{id}', [WWTPControllerAnalisa::class, 'updateParameter']);
-    Route::delete('/parameters/{id}', [WWTPControllerAnalisa::class, 'destroyParameter']);
-    Route::get('/points', [WWTPControllerAnalisa::class, 'indexPoint']);
-    Route::post('/points', [WWTPControllerAnalisa::class, 'storePoint']);
-    Route::get('/points/{id}', [WWTPControllerAnalisa::class, 'showPoint']);
-    Route::put('/points/{id}', [WWTPControllerAnalisa::class, 'updatePoint']);
-    Route::delete('/points/{id}', [WWTPControllerAnalisa::class, 'destroyPoint']);
-    Route::get('/standards', [WWTPControllerAnalisa::class, 'indexStandar']);
-    Route::post('/standards', [WWTPControllerAnalisa::class, 'storeStandar']);
-    Route::get('/standards/{id}', [WWTPControllerAnalisa::class, 'showStandar']);
-    Route::put('/standards/{id}', [WWTPControllerAnalisa::class, 'updateStandar']);
-    Route::delete('/standards/{id}', [WWTPControllerAnalisa::class, 'destroyStandar']);
-    Route::post('/', [WWTPControllerAnalisa::class, 'store']);
-    Route::post('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'updateParameterResults']);
-    Route::delete('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'destroyParameterResults']);
-    Route::delete('/{id}', [WWTPControllerAnalisa::class, 'destroy']);
-    Route::post('/{id}', [WWTPControllerAnalisa::class, 'update']);
-    Route::get('/', [WWTPControllerAnalisa::class, 'index']);
-    Route::get('/{id}', [WWTPControllerAnalisa::class, 'show']);
+  Route::middleware('permission:wwtp_analisa_menu')->group(function () {
+    Route::prefix('api/wwtp-analisa')->group(function () {
+      Route::get('/users/approvers', [WWTPControllerAnalisa::class, 'getUsersForApproval']);
+      Route::get('/approval-list', [WWTPControllerAnalisa::class, 'getApprovalList']);
+      Route::post('/mass-approve', [WWTPControllerAnalisa::class, 'massApprove']);
+      Route::post('/mass-reject', [WWTPControllerAnalisa::class, 'massReject']);
+      Route::post('/{id}/approve', [WWTPControllerAnalisa::class, 'approve']);
+      Route::post('/{id}/reject', [WWTPControllerAnalisa::class, 'reject']);
+      Route::get('/check-filled', [WWTPControllerAnalisa::class, 'checkFilledParameters']);
+      Route::get('/parameters', [WWTPControllerAnalisa::class, 'indexParameter']);
+      Route::post('/parameters', [WWTPControllerAnalisa::class, 'storeParameter']);
+      Route::get('/parameters/{id}', [WWTPControllerAnalisa::class, 'showParameter']);
+      Route::put('/parameters/{id}', [WWTPControllerAnalisa::class, 'updateParameter']);
+      Route::delete('/parameters/{id}', [WWTPControllerAnalisa::class, 'destroyParameter']);
+      Route::get('/points', [WWTPControllerAnalisa::class, 'indexPoint']);
+      Route::post('/points', [WWTPControllerAnalisa::class, 'storePoint']);
+      Route::get('/points/{id}', [WWTPControllerAnalisa::class, 'showPoint']);
+      Route::put('/points/{id}', [WWTPControllerAnalisa::class, 'updatePoint']);
+      Route::delete('/points/{id}', [WWTPControllerAnalisa::class, 'destroyPoint']);
+      Route::get('/standards', [WWTPControllerAnalisa::class, 'indexStandar']);
+      Route::post('/standards', [WWTPControllerAnalisa::class, 'storeStandar']);
+      Route::get('/standards/{id}', [WWTPControllerAnalisa::class, 'showStandar']);
+      Route::put('/standards/{id}', [WWTPControllerAnalisa::class, 'updateStandar']);
+      Route::delete('/standards/{id}', [WWTPControllerAnalisa::class, 'destroyStandar']);
+      Route::post('/', [WWTPControllerAnalisa::class, 'store']);
+      Route::post('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'updateParameterResults']);
+      Route::delete('/{id}/parameters/{parameterId}', [WWTPControllerAnalisa::class, 'destroyParameterResults']);
+      Route::delete('/{id}', [WWTPControllerAnalisa::class, 'destroy']);
+      Route::post('/{id}', [WWTPControllerAnalisa::class, 'update']);
+      Route::get('/', [WWTPControllerAnalisa::class, 'index']);
+      Route::get('/{id}', [WWTPControllerAnalisa::class, 'show']);
+    });
   });
 
   // WWTP Koloni Routes
-  Route::get('/wwtp/form_koloni', [WWTPControllerKoloni::class, 'form_koloni'])->name('wwtp.form_koloni');
-  Route::get('/wwtp/data_koloni', [WWTPControllerKoloni::class, 'data_koloni'])->name('wwtp.data_koloni');
-  Route::get('/wwtp/master_koloni', [WWTPControllerKoloni::class, 'master_koloni'])->name('wwtp.master_koloni')->middleware('access');
-  Route::post('/wwtp/koloni', [WWTPControllerKoloni::class, 'store'])->name('wwtp.koloni.store');
-  Route::put('/wwtp/koloni/{id}', [WWTPControllerKoloni::class, 'update'])->name('wwtp.koloni.update');
-  Route::post('/wwtp/koloni-master/store', [WWTPControllerKoloni::class, 'storeMaster'])->name('wwtp.master.store');
-  Route::put('/wwtp/koloni-master/update/{id}', [WWTPControllerKoloni::class, 'updateMaster'])->name('wwtp.master.update');
+  Route::middleware('permission:wwtp_koloni_menu')->group(function () {
+    Route::get('/wwtp/form_koloni', [WWTPControllerKoloni::class, 'form_koloni'])->name('wwtp.form_koloni');
+    Route::get('/wwtp/data_koloni', [WWTPControllerKoloni::class, 'data_koloni'])->name('wwtp.data_koloni');
+    Route::get('/wwtp/master_koloni', [WWTPControllerKoloni::class, 'master_koloni'])->name('wwtp.master_koloni')->middleware('access');
+    Route::post('/wwtp/koloni', [WWTPControllerKoloni::class, 'store'])->name('wwtp.koloni.store');
+    Route::put('/wwtp/koloni/{id}', [WWTPControllerKoloni::class, 'update'])->name('wwtp.koloni.update');
+    Route::post('/wwtp/koloni-master/store', [WWTPControllerKoloni::class, 'storeMaster'])->name('wwtp.master.store');
+    Route::put('/wwtp/koloni-master/update/{id}', [WWTPControllerKoloni::class, 'updateMaster'])->name('wwtp.master.update');
+  });
 
   // WWTP Biaya Chemical Routes
-  Route::get('/wwtp/form_biaya_chemical', [WWTPControllerBiayaChemical::class, 'form_biaya_chemical'])->name('wwtp.form_biaya_chemical');
-  Route::get('/wwtp/data_biaya_chemical', [WWTPControllerBiayaChemical::class, 'data_biaya_chemical'])->name('wwtp.data_biaya_chemical');
-  Route::get('/wwtp/master_biaya_chemical', [WWTPControllerBiayaChemical::class, 'master_biaya_chemical'])->name('wwtp.master_biaya_chemical')->middleware('access');
-  Route::post('/wwtp/biaya-chemical', [WWTPControllerBiayaChemical::class, 'store'])->name('wwtp.biaya-chemical.store');
-  Route::put('/wwtp/biaya-chemical/{id}', [WWTPControllerBiayaChemical::class, 'update'])->name('wwtp.biaya-chemical.update');
-  Route::delete('/wwtp/biaya-chemical/{id}', [WWTPControllerBiayaChemical::class, 'destroy'])->name('wwtp.biaya-chemical.destroy');
-  
-  Route::get('/api/wwtp-biaya-chemical', [WWTPControllerBiayaChemical::class, 'index'])->name('api.wwtp-biaya-chemical.index');
-  Route::get('/api/wwtp-biaya-chemical/check-filled', [WWTPControllerBiayaChemical::class, 'checkFilled'])->name('api.wwtp-biaya-chemical.check-filled');
-  Route::get('/api/wwtp-biaya-chemical/standards', [WWTPControllerBiayaChemical::class, 'indexStandards'])->name('api.wwtp-biaya-chemical.standards.index');
-  Route::post('/api/wwtp-biaya-chemical/standards', [WWTPControllerBiayaChemical::class, 'storeStandard'])->name('api.wwtp-biaya-chemical.standards.store');
-  Route::put('/api/wwtp-biaya-chemical/standards/{id}', [WWTPControllerBiayaChemical::class, 'updateStandard'])->name('api.wwtp-biaya-chemical.standards.update');
-  Route::delete('/api/wwtp-biaya-chemical/standards/{id}', [WWTPControllerBiayaChemical::class, 'destroyStandard'])->name('api.wwtp-biaya-chemical.standards.destroy');
+  Route::middleware('permission:wwtp_biaya_chemical_menu')->group(function () {
+    Route::get('/wwtp/form_biaya_chemical', [WWTPControllerBiayaChemical::class, 'form_biaya_chemical'])->name('wwtp.form_biaya_chemical');
+    Route::get('/wwtp/data_biaya_chemical', [WWTPControllerBiayaChemical::class, 'data_biaya_chemical'])->name('wwtp.data_biaya_chemical');
+    Route::get('/wwtp/master_biaya_chemical', [WWTPControllerBiayaChemical::class, 'master_biaya_chemical'])->name('wwtp.master_biaya_chemical')->middleware('access');
+    Route::post('/wwtp/biaya-chemical', [WWTPControllerBiayaChemical::class, 'store'])->name('wwtp.biaya-chemical.store');
+    Route::put('/wwtp/biaya-chemical/{id}', [WWTPControllerBiayaChemical::class, 'update'])->name('wwtp.biaya-chemical.update');
+    Route::delete('/wwtp/biaya-chemical/{id}', [WWTPControllerBiayaChemical::class, 'destroy'])->name('wwtp.biaya-chemical.destroy');
 
-  // WWTP Pit Produksi Harian Routes
-  Route::get('/wwtp/form_pit_produksi', [WWTPControllerBiayaChemical::class, 'form_pit_produksi'])->name('wwtp.form_pit_produksi');
-  Route::get('/api/wwtp-pit-produksi', [WWTPControllerBiayaChemical::class, 'indexPitProduksi'])->name('api.wwtp-pit-produksi.index');
-  Route::post('/api/wwtp-pit-produksi', [WWTPControllerBiayaChemical::class, 'storePitProduksi'])->name('api.wwtp-pit-produksi.store');
-  Route::get('/api/wwtp-pit-produksi/{id}', [WWTPControllerBiayaChemical::class, 'showPitProduksi'])->name('api.wwtp-pit-produksi.show');
-  Route::put('/api/wwtp-pit-produksi/{id}', [WWTPControllerBiayaChemical::class, 'updatePitProduksi'])->name('api.wwtp-pit-produksi.update');
-  Route::delete('/api/wwtp-pit-produksi/{id}', [WWTPControllerBiayaChemical::class, 'destroyPitProduksi'])->name('api.wwtp-pit-produksi.destroy');
+    Route::get('/api/wwtp-biaya-chemical', [WWTPControllerBiayaChemical::class, 'index'])->name('api.wwtp-biaya-chemical.index');
+    Route::get('/api/wwtp-biaya-chemical/check-filled', [WWTPControllerBiayaChemical::class, 'checkFilled'])->name('api.wwtp-biaya-chemical.check-filled');
+    Route::get('/api/wwtp-biaya-chemical/standards', [WWTPControllerBiayaChemical::class, 'indexStandards'])->name('api.wwtp-biaya-chemical.standards.index');
+    Route::post('/api/wwtp-biaya-chemical/standards', [WWTPControllerBiayaChemical::class, 'storeStandard'])->name('api.wwtp-biaya-chemical.standards.store');
+    Route::put('/api/wwtp-biaya-chemical/standards/{id}', [WWTPControllerBiayaChemical::class, 'updateStandard'])->name('api.wwtp-biaya-chemical.standards.update');
+    Route::delete('/api/wwtp-biaya-chemical/standards/{id}', [WWTPControllerBiayaChemical::class, 'destroyStandard'])->name('api.wwtp-biaya-chemical.standards.destroy');
+
+    // WWTP Pit Produksi Harian Routes
+    Route::get('/wwtp/form_pit_produksi', [WWTPControllerBiayaChemical::class, 'form_pit_produksi'])->name('wwtp.form_pit_produksi');
+    Route::get('/api/wwtp-pit-produksi', [WWTPControllerBiayaChemical::class, 'indexPitProduksi'])->name('api.wwtp-pit-produksi.index');
+    Route::post('/api/wwtp-pit-produksi', [WWTPControllerBiayaChemical::class, 'storePitProduksi'])->name('api.wwtp-pit-produksi.store');
+    Route::get('/api/wwtp-pit-produksi/{id}', [WWTPControllerBiayaChemical::class, 'showPitProduksi'])->name('api.wwtp-pit-produksi.show');
+    Route::put('/api/wwtp-pit-produksi/{id}', [WWTPControllerBiayaChemical::class, 'updatePitProduksi'])->name('api.wwtp-pit-produksi.update');
+    Route::delete('/api/wwtp-pit-produksi/{id}', [WWTPControllerBiayaChemical::class, 'destroyPitProduksi'])->name('api.wwtp-pit-produksi.destroy');
+  });
 });

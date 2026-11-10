@@ -124,7 +124,8 @@
                                 delegasi izin ke pengguna.</p>
                         </div>
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadAccessControlData(true)">
+                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                onclick="loadAccessControlData(true)">
                                 <i class="ri-refresh-line me-1" id="iconRefresh"></i> Refresh
                             </button>
                             <a href="{{ route('users.index') }}" class="btn btn-outline-secondary btn-sm">
@@ -180,7 +181,7 @@
                                 </span>
                             </div>
                             <div class="flex-grow-1">
-                                <span class="text-muted fs-12 text-uppercase fw-semibold d-block">Modul Fitur</span>
+                                <span class="text-muted fs-12 text-uppercase fw-semibold d-block">Total Group</span>
                                 <h4 class="mb-0 fw-bold text-dark" id="statTotalGroups">
                                     <span class="spinner-border spinner-border-sm text-muted"></span>
                                 </h4>
@@ -244,34 +245,33 @@
                                     <div
                                         class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
                                         <div class="d-flex flex-wrap align-items-center gap-2">
-                                            <div class="input-group input-group-sm" style="width: 250px;">
+                                            <div class="input-group" style="width: 250px;">
                                                 <span class="input-group-text bg-light border-end-0"><i
                                                         class="ri-search-line text-muted"></i></span>
                                                 <input type="text" id="searchPermission"
                                                     class="form-control border-start-0 ps-0"
                                                     placeholder="Cari permission / slug...">
                                             </div>
-                                            <select id="filterGroupPermission" class="form-select form-select-sm"
-                                                style="width: 200px;">
-                                                <option value="">-- Semua Modul / Group --</option>
+                                            <select id="filterGroupPermission" class="form-select" style="width: 200px;">
+                                                <option value="">-- Semua Group --</option>
                                             </select>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm"
-                                                id="btnResetFilterPerm" title="Reset Filter">
+                                            <button type="button" class="btn btn-outline-danger" id="btnResetFilterPerm"
+                                                title="Reset Filter">
                                                 <i class="ri-restart-line"></i>
                                             </button>
                                         </div>
-                                        <button type="button" class="btn btn-primary btn-sm fw-semibold shadow-sm"
+                                        <button type="button" class="btn btn-primary fw-semibold shadow-sm"
                                             onclick="openCreatePermissionModal()">
-                                            <i class="ri-add-line align-middle me-1"></i> Tambah Permission Baru
+                                            <i class="ri-add-line align-middle me-1"></i> Tambah Permission
                                         </button>
                                     </div>
 
                                     <div class="table-responsive">
-                                        <table class="table table-hover align-middle table-sm mb-0" id="tablePermissions">
+                                        <table class="table table-hover align-middle mb-0" id="tablePermissions">
                                             <thead class="table-light fs-12 text-muted text-uppercase">
                                                 <tr>
                                                     <th style="width: 50px;" class="text-center">No</th>
-                                                    <th style="width: 180px;">Modul / Group</th>
+                                                    <th style="width: 180px;">Group</th>
                                                     <th style="width: 280px;">Key Permission</th>
                                                     <th>Deskripsi</th>
                                                     <th class="text-center" style="width: 110px;">Aksi</th>
@@ -280,7 +280,8 @@
                                             <tbody id="tablePermissionsBody">
                                                 <tr id="permLoadingRow">
                                                     <td colspan="5" class="text-center py-5 text-muted">
-                                                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                                        <div class="spinner-border spinner-border-sm text-primary me-2">
+                                                        </div>
                                                         Memuat data permission...
                                                     </td>
                                                 </tr>
@@ -318,16 +319,16 @@
                                     <div
                                         class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
                                         <div class="d-flex flex-wrap align-items-center gap-2">
-                                            <div class="input-group input-group-sm" style="width: 250px;">
+                                            <div class="input-group" style="width: 250px;">
                                                 <span class="input-group-text bg-light border-end-0"><i
                                                         class="ri-search-line text-muted"></i></span>
-                                                <input type="text" id="searchRole" class="form-control border-start-0 ps-0"
-                                                    placeholder="Cari role...">
+                                                <input type="text" id="searchRole"
+                                                    class="form-control border-start-0 ps-0" placeholder="Cari role...">
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-success btn-sm fw-semibold shadow-sm"
+                                        <button type="button" class="btn btn-success fw-semibold shadow-sm"
                                             onclick="openCreateRoleModal()">
-                                            <i class="ri-add-line align-middle me-1"></i> Tambah Role Baru
+                                            <i class="ri-add-line align-middle me-1"></i> Tambah Role
                                         </button>
                                     </div>
 
@@ -346,15 +347,14 @@
                                     <div
                                         class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
                                         <div class="d-flex flex-wrap align-items-center gap-2">
-                                            <div class="input-group input-group-sm" style="width: 280px;">
+                                            <div class="input-group" style="width: 280px;">
                                                 <span class="input-group-text bg-light border-end-0"><i
                                                         class="ri-search-line text-muted"></i></span>
                                                 <input type="text" id="searchUserAccess"
                                                     class="form-control border-start-0 ps-0"
                                                     placeholder="Cari user (nama, jabatan, dept)...">
                                             </div>
-                                            <select id="filterRoleUser" class="form-select form-select-sm"
-                                                style="width: 180px;">
+                                            <select id="filterRoleUser" class="form-select" style="width: 180px;">
                                                 <option value="">-- Semua Role --</option>
                                             </select>
                                         </div>
@@ -365,7 +365,7 @@
                                     </div>
 
                                     <div class="table-responsive">
-                                        <table class="table table-hover align-middle table-sm mb-0" id="tableUserAccess">
+                                        <table class="table table-hover align-middle mb-0" id="tableUserAccess">
                                             <thead class="table-light fs-12 text-muted text-uppercase">
                                                 <tr>
                                                     <th style="width: 50px;" class="text-center">No</th>
@@ -379,7 +379,8 @@
                                             <tbody id="tableUserAccessBody">
                                                 <tr id="usersLoadingRow">
                                                     <td colspan="6" class="text-center py-5 text-muted">
-                                                        <div class="spinner-border spinner-border-sm text-warning me-2"></div>
+                                                        <div class="spinner-border spinner-border-sm text-warning me-2">
+                                                        </div>
                                                         Memuat data pengguna...
                                                     </td>
                                                 </tr>
@@ -436,9 +437,10 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Modul / Group Fitur <span class="text-danger">*</span></label>
-                        <select id="perm_group_select" class="form-select" onchange="handleGroupSelectChange(this.value)" required>
-                            <option value="" disabled selected>-- Pilih Modul / Group --</option>
+                        <label class="form-label fw-bold">Group Fitur <span class="text-danger">*</span></label>
+                        <select id="perm_group_select" class="form-select" onchange="handleGroupSelectChange(this.value)"
+                            required>
+                            <option value="" disabled selected>-- Pilih Group --</option>
                             <option value="__new__" class="fw-bold text-primary">+ Buat Grup Baru...</option>
                         </select>
 
@@ -450,7 +452,8 @@
                                 </span>
                                 <input type="text" id="perm_group_new" class="form-control border-primary-subtle"
                                     placeholder="Contoh: Genset, Water Treatment, dsb.">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cancelNewGroup()" title="Batal buat grup baru">
+                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    onclick="cancelNewGroup()" title="Batal buat grup baru">
                                     <i class="ri-close-line"></i>
                                 </button>
                             </div>
@@ -461,8 +464,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Key Permission <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light text-muted fs-12"><i
-                                    class="ri-key-2-line"></i></span>
+                            <span class="input-group-text bg-light text-muted fs-12"><i class="ri-key-2-line"></i></span>
                             <input type="text" name="name" id="perm_name" class="form-control font-monospace"
                                 placeholder="Contoh: project_create" required oninput="sanitizePermKey(this)">
                         </div>
@@ -512,8 +514,7 @@
                                 onkeyup="autoGenerateRoleSlug(this.value)">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Key / Slug Role <span
-                                    class="text-danger">*</span></label>
+                            <label class="form-label fw-bold">Key / Slug Role <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="role_name" class="form-control font-monospace"
                                 placeholder="Contoh: operator_utility" required>
                             <small class="text-muted fs-11">Huruf kecil, tanpa spasi (gunakan underscore
@@ -693,7 +694,13 @@
 
         function escapeHtml(text) {
             if (text === null || text === undefined) return '';
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
             return text.toString().replace(/[&<>"']/g, m => map[m]);
         }
 
@@ -939,7 +946,7 @@
         function renderGroupOptions(groups) {
             const currentFilter = $('#filterGroupPermission').val();
             const $filter = $('#filterGroupPermission');
-            $filter.empty().append('<option value="">-- Semua Modul / Group --</option>');
+            $filter.empty().append('<option value="">-- Semua Group --</option>');
 
             const $modalSelect = $('#perm_group_select');
             $modalSelect.find('option:not([value=""]):not([value="__new__"])').remove();
@@ -966,7 +973,9 @@
 
             if (roles && roles.length) {
                 roles.forEach(r => {
-                    $select.append(`<option value="${escapeHtml(r.name)}">${escapeHtml(r.display_name || r.name)}</option>`);
+                    $select.append(
+                        `<option value="${escapeHtml(r.name)}">${escapeHtml(r.display_name || r.name)}</option>`
+                    );
                 });
             }
 
@@ -1132,7 +1141,8 @@
                 const fullname = u.fullname || u.username;
                 const userRoles = u.custom_roles || [];
                 const rolesNames = userRoles.map(r => r.name).join(' ');
-                const searchStr = `${u.username} ${fullname} ${u.jabatan || ''} ${u.departemen || ''} ${rolesNames}`.toLowerCase();
+                const searchStr = `${u.username} ${fullname} ${u.jabatan || ''} ${u.departemen || ''} ${rolesNames}`
+                    .toLowerCase();
 
                 let rolesBadges = '<span class="text-muted fs-12">-</span>';
                 if (userRoles.length > 0) {
@@ -1350,7 +1360,8 @@
                 updateNumber: true,
                 emptyMessage: 'Tidak ada permission yang cocok dengan filter.',
                 filterFn: function(el) {
-                    const selectedGroup = ($('#filterGroupPermission').val() || '').toLowerCase().trim();
+                    const selectedGroup = ($('#filterGroupPermission').val() || '').toLowerCase()
+                        .trim();
                     const query = ($('#searchPermission').val() || '').toLowerCase().trim();
                     const rowGroup = ($(el).data('group') || '').toLowerCase();
                     const rowSearch = ($(el).data('search') || '').toLowerCase();
@@ -1534,7 +1545,8 @@
                 $('#wrapperNewGroup').hide();
                 $('#perm_group_new').val('').prop('required', false);
             } else if (group) {
-                $select.find('option[value="__new__"]').before(`<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`);
+                $select.find('option[value="__new__"]').before(
+                    `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`);
                 $select.val(group);
                 $('#wrapperNewGroup').hide();
                 $('#perm_group_new').val('').prop('required', false);
@@ -1545,7 +1557,8 @@
             }
 
             $('#modalPermissionTitle').html(
-                '<i class="ri-edit-2-line me-1"></i> Edit Permission: <span class="badge bg-light text-primary">' + escapeHtml(perm.name) + '</span>');
+                '<i class="ri-edit-2-line me-1"></i> Edit Permission: <span class="badge bg-light text-primary">' +
+                escapeHtml(perm.name) + '</span>');
             $('#btnSubmitPermission').html('<i class="ri-check-line me-1"></i> Perbarui Permission');
             const modal = new bootstrap.Modal(document.getElementById('modalPermission'));
             modal.show();
@@ -1570,7 +1583,7 @@
             }
 
             if (!selectedGroup) {
-                Swal.fire('Perhatian', 'Silakan pilih atau buat modul / grup fitur.', 'warning');
+                Swal.fire('Perhatian', 'Silakan pilih atau buat grup fitur.', 'warning');
                 $('#perm_group_select').focus();
                 return;
             }
@@ -1779,7 +1792,8 @@
                 data: postData,
                 success: function(res) {
                     bootstrap.Modal.getInstance(document.getElementById('modalRole'))?.hide();
-                    $('#btnSubmitRole').prop('disabled', false).html('<i class="ri-save-line me-1"></i> Simpan Role');
+                    $('#btnSubmitRole').prop('disabled', false).html(
+                        '<i class="ri-save-line me-1"></i> Simpan Role');
 
                     // Muat ulang data terbaru tanpa reload halaman
                     loadAccessControlData(false);
@@ -1793,7 +1807,8 @@
                     });
                 },
                 error: function(err) {
-                    $('#btnSubmitRole').prop('disabled', false).html('<i class="ri-save-line me-1"></i> Simpan Role');
+                    $('#btnSubmitRole').prop('disabled', false).html(
+                        '<i class="ri-save-line me-1"></i> Simpan Role');
                     const msg = err.responseJSON?.message || 'Terjadi kesalahan saat menyimpan role.';
                     Swal.fire('Gagal', msg, 'error');
                 }
