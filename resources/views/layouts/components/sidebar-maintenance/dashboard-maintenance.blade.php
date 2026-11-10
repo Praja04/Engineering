@@ -3,12 +3,8 @@
     $bagian = Auth::user()->bagian;
 @endphp
 
-@if (
-    $jabatan === 'admin' ||
-        $jabatan === 'dept_head' ||
-        $jabatan === 'supervisor' ||
-        ($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement'])) ||
-        ($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement'])))
+{{-- @if ($jabatan === 'admin' || $jabatan === 'dept_head' || $jabatan === 'supervisor' || ($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement'])) || ($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement']))) --}}
+@can('permission', 'mtc_dashboard')
     <li class="nav-item">
         <a class="nav-link menu-link {{ request()->is('mtc/dashboard/*') || request()->is('mtc/dashboard/agenda') ? '' : 'collapsed' }}"
             href="#sidebarMtcDashboard" data-bs-toggle="collapse" role="button"
@@ -32,8 +28,7 @@
 
                 <li class="nav-item">
                     <a href="{{ url('mtc/dashboard/agenda') }}"
-                        class="nav-link {{ request()->is('mtc/dashboard/agenda') ? 'active' : '' }}"
-                        data-key="t-analytics">
+                        class="nav-link {{ request()->is('mtc/dashboard/agenda') ? 'active' : '' }}" data-key="t-analytics">
                         <i class="mdi mdi-chart-bar me-2"></i> Agenda
                     </a>
                 </li>
@@ -48,4 +43,5 @@
             </ul>
         </div>
     </li>
-@endif
+@endcan
+{{-- @endif --}}

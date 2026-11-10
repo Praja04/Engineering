@@ -164,25 +164,27 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/download-data/{jenis_mtc}/{id}', [MtcMainController::class, 'downloadMaintenanceData'])->name('mtc.download.data');
 
         // Material Requirements Dashboard
-        Route::prefix('dashboard')->group(function () {
-            // MTC Maintenance Analytics Dashboard
-            Route::get('/maintenance', [MtcDashboardController::class, 'index'])->name('mtc.dashboard.index');
-            Route::get('/maintenance/data', [MtcDashboardController::class, 'getData'])->name('mtc.dashboard.data');
+        Route::middleware('permission:mtc_dashboard')->group(function () {
+            Route::prefix('dashboard')->group(function () {
+                // MTC Maintenance Analytics Dashboard
+                Route::get('/maintenance', [MtcDashboardController::class, 'index'])->name('mtc.dashboard.index');
+                Route::get('/maintenance/data', [MtcDashboardController::class, 'getData'])->name('mtc.dashboard.data');
 
-            Route::get('/material', [MtcMaterialDashboardController::class, 'index'])->name('mtc.dashboard.material');
-            Route::get('/material/charts', [MtcMaterialDashboardController::class, 'getDashboardCharts'])->name('mtc.dashboard.material.charts');
-            Route::get('/material/ledger', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.ledger');
-            Route::get('/material/machine-details', [MtcMaterialDashboardController::class, 'getMachineDetails'])->name('mtc.dashboard.material.machine-details');
-            Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.list');
+                Route::get('/material', [MtcMaterialDashboardController::class, 'index'])->name('mtc.dashboard.material');
+                Route::get('/material/charts', [MtcMaterialDashboardController::class, 'getDashboardCharts'])->name('mtc.dashboard.material.charts');
+                Route::get('/material/ledger', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.ledger');
+                Route::get('/material/machine-details', [MtcMaterialDashboardController::class, 'getMachineDetails'])->name('mtc.dashboard.material.machine-details');
+                Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.list');
 
-            Route::get('/agenda', [MtcAgendaController::class, 'index'])->name('agenda.index');
-            Route::get('/agenda/master/data', [MtcAgendaController::class, 'getMasterData'])->name('agenda.master.data');
-            Route::get('/agenda/download-template', [MtcAgendaController::class, 'downloadTemplate'])->name('agenda.download-template');
-            Route::post('/agenda/upload', [MtcAgendaController::class, 'upload'])->name('agenda.upload');
-            Route::post('/agenda/master/save-single', [MtcAgendaController::class, 'saveSingle'])->name('agenda.master.save-single');
-            Route::post('/agenda/master/clear-machine', [MtcAgendaController::class, 'clearMachine'])->name('agenda.master.clear-machine');
-            Route::get('/agenda/dashboard/data', [MtcAgendaController::class, 'getDashboardData'])->name('agenda.dashboard.data');
-            Route::get('/agenda/dashboard/calendar', [MtcAgendaController::class, 'getDashboardCalendar'])->name('agenda.dashboard.calendar');
+                Route::get('/agenda', [MtcAgendaController::class, 'index'])->name('agenda.index');
+                Route::get('/agenda/master/data', [MtcAgendaController::class, 'getMasterData'])->name('agenda.master.data');
+                Route::get('/agenda/download-template', [MtcAgendaController::class, 'downloadTemplate'])->name('agenda.download-template');
+                Route::post('/agenda/upload', [MtcAgendaController::class, 'upload'])->name('agenda.upload');
+                Route::post('/agenda/master/save-single', [MtcAgendaController::class, 'saveSingle'])->name('agenda.master.save-single');
+                Route::post('/agenda/master/clear-machine', [MtcAgendaController::class, 'clearMachine'])->name('agenda.master.clear-machine');
+                Route::get('/agenda/dashboard/data', [MtcAgendaController::class, 'getDashboardData'])->name('agenda.dashboard.data');
+                Route::get('/agenda/dashboard/calendar', [MtcAgendaController::class, 'getDashboardCalendar'])->name('agenda.dashboard.calendar');
+            });
         });
 
         Route::prefix('p2h')->group(function () {
