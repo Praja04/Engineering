@@ -1091,14 +1091,17 @@ $(document).ready(function() {
         const shift = $('#filter-shift').val() || '';
         const pouchSachet = $('#filter-pouchSachet').val() || '';
         const em = $('#filter-em').val() || '';
-        const month = $('#filter-month').val() || '';
+        const params = getFilterParams();
 
         let url = "{{ route('epr.cm.export') }}?";
         if (search) url += `search=${encodeURIComponent(search)}&`;
         if (shift) url += `shift=${encodeURIComponent(shift)}&`;
         if (pouchSachet) url += `pouch_sachet=${encodeURIComponent(pouchSachet)}&`;
         if (em) url += `electrical_mechanical=${encodeURIComponent(em)}&`;
-        if (month) url += `month=${encodeURIComponent(month)}&`;
+        if (params.date) url += `date=${encodeURIComponent(params.date)}&`;
+        if (params.date_from) url += `date_from=${encodeURIComponent(params.date_from)}&`;
+        if (params.date_to) url += `date_to=${encodeURIComponent(params.date_to)}&`;
+        if (params.month) url += `month=${encodeURIComponent(params.month)}&`;
 
         window.open(url, '_blank');
     };
