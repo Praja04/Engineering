@@ -12,9 +12,9 @@ Route::prefix('utility')->middleware(['auth', 'permission:utility_menu'])->group
     Route::get('/export-pemakaian-listrik', [ListrikController::class, 'exportPemakaianListrikSpreadsheet']);
 
     // Monthly Approval routes
+    Route::get('/approval/check', [UtilityApprovalController::class, 'checkApproval']);
     Route::middleware('permission:utility_monthly_approval')->group(function () {
         Route::get('/approval', [UtilityApprovalController::class, 'approvalView'])->name('utility.approval');
-        Route::get('/approval/check', [UtilityApprovalController::class, 'checkApproval']);
         Route::get('/approval/collected', [UtilityApprovalController::class, 'getCollectedData']);
         Route::post('/approval/submit', [UtilityApprovalController::class, 'submitMonthly']);
         Route::get('/approval/list', [UtilityApprovalController::class, 'getApprovalList']);
