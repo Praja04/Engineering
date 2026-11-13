@@ -13,7 +13,18 @@ class WwtpRecord extends Model
     protected $fillable = [
         'tanggal',
         'kategori',
+        'created_by',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
 
     // Relasi Influent (1 : 1 atau 1 : N sesuai kebutuhan)
     public function influent()

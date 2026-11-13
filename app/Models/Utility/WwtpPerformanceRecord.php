@@ -16,7 +16,18 @@ class WwtpPerformanceRecord extends Model
         'tss',
         'cod',
         'foto',
+        'created_by',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
 
     /**
      * Relasi ke minggu

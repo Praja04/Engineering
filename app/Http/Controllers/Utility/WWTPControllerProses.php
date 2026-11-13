@@ -41,7 +41,7 @@ class WWTPControllerProses extends Controller
 
     public function index(Request $request)
     {
-        $query = WwtpRecord::with(['influent', 'effluent'])
+        $query = WwtpRecord::with(['influent', 'effluent', 'creator:id,username,fullname'])
             ->orderBy('tanggal', 'desc');
 
         if ($request->kategori) {
@@ -126,8 +126,9 @@ class WWTPControllerProses extends Controller
 
         // Simpan header
         $record = WwtpRecord::create([
-            'tanggal'  => $request->tanggal,
-            'kategori' => 'influent',
+            'tanggal'    => $request->tanggal,
+            'kategori'   => 'influent',
+            'created_by' => Auth::id(),
         ]);
 
         // Simpan detail
@@ -166,8 +167,9 @@ class WWTPControllerProses extends Controller
 
         // Buat header
         $record = WwtpRecord::create([
-            'tanggal'  => $request->tanggal,
-            'kategori' => 'effluent',
+            'tanggal'    => $request->tanggal,
+            'kategori'   => 'effluent',
+            'created_by' => Auth::id(),
         ]);
 
         // Simpan detail
@@ -446,6 +448,7 @@ class WWTPControllerProses extends Controller
             'running_wwtp1' => $request->running_wwtp1,
             'debit2' => $request->debit2,
             'running_wwtp2' => $request->running_wwtp2,
+            'created_by' => Auth::id(),
         ]);
 
         WwtpInfluentHarian::recalculateAwalFieldsFrom($harian->tanggal, $harian->id);
@@ -513,7 +516,7 @@ class WWTPControllerProses extends Controller
      */
     public function show($id)
     {
-        $data = WwtpRecord::with(['influent', 'effluent'])->findOrFail($id);
+        $data = WwtpRecord::with(['influent', 'effluent', 'creator:id,username,fullname'])->findOrFail($id);
         return response()->json($data);
     }
 
@@ -630,7 +633,8 @@ class WWTPControllerProses extends Controller
         $page    = $request->input('page', 1);
         $bulan   = $request->input('bulan');
 
-        $query = WwtpInfluentHarian::orderBy('tanggal', 'desc')
+        $query = WwtpInfluentHarian::with('creator:id,username,fullname')
+            ->orderBy('tanggal', 'desc')
             ->orderBy('shift', 'asc');
 
         if ($bulan) {
@@ -658,7 +662,7 @@ class WWTPControllerProses extends Controller
      */
     public function showHarian($id)
     {
-        $data = WwtpInfluentHarian::findOrFail($id);
+        $data = WwtpInfluentHarian::with('creator:id,username,fullname')->findOrFail($id);
         $approval = WwtpDailyApproval::where('tanggal', $data->tanggal)->first();
         $data->approval_status = $approval ? $approval->status : null;
         return response()->json($data);
@@ -1063,7 +1067,7 @@ class WWTPControllerProses extends Controller
      */
     public function getRecentRecords($limit = 10)
     {
-        $data = WwtpRecord::with(['influent', 'effluent'])
+        $data = WwtpRecord::with(['influent', 'effluent', 'creator:id,username,fullname'])
             ->orderBy('tanggal', 'desc')
             ->limit($limit)
             ->get();

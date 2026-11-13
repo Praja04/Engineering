@@ -18,6 +18,17 @@ class WwtpSludge extends Model
         'drain_lumpur',
         'running_hour_scp',
         'hasil_lumpur',
-        'sludge_content'
+        'sludge_content',
+        'created_by',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
 }

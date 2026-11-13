@@ -25,6 +25,16 @@ class WwtpPerformancePHharian extends Model
         'lumpur_aktif',
         'clarifier_2',
         'outlet',
-
+        'created_by',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
 }

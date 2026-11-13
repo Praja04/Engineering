@@ -14,7 +14,18 @@ class WwtpPerformanceWeek extends Model
     protected $fillable = [
         'week_start',
         'week_end',
+        'created_by',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
 
     protected $casts = [
         'week_start' => 'date',

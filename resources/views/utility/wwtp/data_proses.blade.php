@@ -156,12 +156,13 @@
                                                 <th class="fw-semibold">Kategori</th>
                                                 <th class="fw-semibold">Detail Data</th>
                                                 <th class="fw-semibold text-end">Total Volume</th>
+                                                <th class="fw-semibold">Dibuat Oleh</th>
                                                 <th class="fw-semibold text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="weeklyTableBody">
                                             <tr>
-                                                <td colspan="5" class="text-center py-5">
+                                                <td colspan="6" class="text-center py-5">
                                                     <div class="spinner-border text-primary" role="status">
                                                         <span class="visually-hidden">Loading...</span>
                                                     </div>
@@ -192,12 +193,13 @@
                                                 <th class="fw-semibold">Shift</th>
                                                 <th class="fw-semibold">Detail Data</th>
                                                 <th class="fw-semibold text-end">Total Volume</th>
+                                                <th class="fw-semibold">Dibuat Oleh</th>
                                                 <th class="fw-semibold text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="dailyTableBody">
                                             <tr>
-                                                <td colspan="5" class="text-center py-4 text-muted">
+                                                <td colspan="6" class="text-center py-4 text-muted">
                                                     <i class="fas fa-info-circle me-2"></i>Data harian akan ditampilkan di
                                                     sini
                                                 </td>
@@ -865,7 +867,7 @@
 
                 $('#weeklyTableBody').html(`
             <tr>
-                <td colspan="5" class="text-center py-5">
+                <td colspan="6" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
@@ -908,7 +910,7 @@
                 if (!data || data.length === 0) {
                     tbody.append(`
                 <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
+                    <td colspan="6" class="text-center py-4 text-muted">
                         <i class="fas fa-inbox me-2"></i>Tidak ada data yang ditemukan
                     </td>
                 </tr>
@@ -942,12 +944,15 @@
                         detailData = `Full Proses: ${eff.full_proses}m³, DAF Pre: ${eff.daf_pre}m³`;
                     }
 
+                    const creatorName = item.creator ? (item.creator.username || item.creator.fullname) : '-';
+
                     tbody.append(`
                         <tr class="data-row">
                             <td>${formatDate(item.tanggal)}</td>
                             <td>${badge}</td>
                             <td><small class="text-muted">${detailData}</small></td>
                             <td class="text-end fw-bold">${totalVolume.toFixed(2)} m³</td>
+                            <td><span class="badge bg-light text-secondary border">${creatorName}</span></td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-outline-primary me-1"
                                         onclick="showDetail(${item.id})"
@@ -986,7 +991,7 @@
 
                 $('#dailyTableBody').html(`
                     <tr>
-                        <td colspan="5" class="text-center py-5">
+                        <td colspan="6" class="text-center py-5">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
@@ -1026,7 +1031,7 @@
                 if (!data || data.length === 0) {
                     tbody.append(`
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
+                            <td colspan="6" class="text-center py-4 text-muted">
                                 <i class="fas fa-inbox me-2"></i>Tidak ada data harian
                             </td>
                         </tr>
@@ -1072,6 +1077,7 @@
 
                     const detailData =
                         `Sparta: ${diffSparta.toFixed(2)}m³, Debit WWTP1: ${item.debit1 || '-'}m³/h, Debit WWTP2: ${item.debit2 || '-'}m³/h`;
+                    const creatorName = item.creator ? (item.creator.username || item.creator.fullname) : '-';
 
                     tbody.append(`
                         <tr class="data-row">
@@ -1079,6 +1085,7 @@
                             <td><span class="badge bg-secondary">${shiftLabel}</span></td>
                             <td><small class="text-muted">${detailData}</small></td>
                             <td class="text-end fw-bold">${totalVolume.toFixed(2)} m³</td>
+                            <td><span class="badge bg-light text-secondary border">${creatorName}</span></td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-outline-primary me-1"
                                         onclick="showDetailHarian(${item.id})"
@@ -1270,18 +1277,24 @@
 
                 let content = `
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="info-box p-3 bg-light rounded">
                                 <p class="text-muted small mb-1">Tanggal</p>
                                 <p class="fw-bold mb-0">${formatDate(record.tanggal)}</p>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="info-box p-3 bg-light rounded">
                                 <p class="text-muted small mb-1">Kategori</p>
                                 ${record.kategori === 'influent'
                                     ? '<span class="badge bg-info">Influent</span>'
                                     : '<span class="badge bg-success">Effluent</span>'}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Dibuat Oleh</p>
+                                <p class="fw-bold mb-0">${record.creator ? (record.creator.username || record.creator.fullname) : '-'}</p>
                             </div>
                         </div>
                     </div>
@@ -1433,19 +1446,25 @@
                                 </div>
                             </div>
                             <div class="row g-3 mb-4">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="info-box p-3 bg-light rounded">
                                         <p class="text-muted small mb-1">Tanggal</p>
                                         <p class="fw-bold mb-0">${formatDate(record.tanggal)}</p>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="info-box p-3 bg-light rounded">
                                         <p class="text-muted small mb-1">Shift</p>
                                         <span class="badge bg-secondary">${shiftLabel}</span>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <div class="info-box p-3 bg-light rounded">
+                                        <p class="text-muted small mb-1">Dibuat Oleh</p>
+                                        <p class="fw-bold mb-0">${record.creator ? (record.creator.username || record.creator.fullname) : '-'}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
                                     <div class="info-box p-3 bg-light rounded">
                                         <p class="text-muted small mb-1">Tipe</p>
                                         <span class="badge bg-info">Data Harian</span>
