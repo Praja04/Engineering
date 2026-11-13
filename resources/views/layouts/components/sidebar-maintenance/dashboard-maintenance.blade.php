@@ -27,7 +27,7 @@
                         </a>
                     </li>
                 @endcan
-                @can('permission', 'mtc_machine_ledger_dashboad')
+                @can('permission', 'mtc_machine_ledger_dashboard')
                     <li class="nav-item">
                         <a href="{{ route('mtc.dashboard.material') }}"
                             class="nav-link {{ request()->routeIs('mtc.dashboard.material') ? 'active' : '' }}"
