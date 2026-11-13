@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\MasterUtilityController;
 
-Route::prefix('utility/master')->middleware('auth')->group(function () {
+Route::prefix('utility/master')->middleware(['auth', 'permission:utility_master'])->group(function () {
     Route::get('/', [MasterUtilityController::class, 'index'])->name('utility.master.index');
 
     // Master Listrik (Panel Types)

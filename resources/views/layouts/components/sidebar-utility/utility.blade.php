@@ -2,7 +2,11 @@
     $jabatan = Auth::user()->jabatan;
     $bagian = Auth::user()->bagian;
 
-    $isUtility = request()->is('utility/form') || request()->is('utility/data') || request()->is('utility/approval') || request()->is('utility/master*');
+    $isUtility =
+        request()->is('utility/form') ||
+        request()->is('utility/data') ||
+        request()->is('utility/approval') ||
+        request()->is('utility/master*');
 
     $isEsp =
         request()->is('utility/esp-operational-report*') ||
@@ -55,52 +59,57 @@
         ($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering WWTP'])))
 
     {{-- ================= UTILITY ================= --}}
-    <li class="nav-item">
-        <a class="nav-link menu-link {{ $isUtility ? '' : 'collapsed' }}" href="#sidebarUtilityMenu"
-            data-bs-toggle="collapse">
-            <i class="mdi mdi-flash"></i>
-            <span>Utility</span>
-        </a>
+    @can('permission', 'utility_menu')
+        <li class="nav-item">
+            <a class="nav-link menu-link {{ $isUtility ? '' : 'collapsed' }}" href="#sidebarUtilityMenu"
+                data-bs-toggle="collapse">
+                <i class="mdi mdi-flash"></i>
+                <span>Utility</span>
+            </a>
 
-        <div class="collapse menu-dropdown {{ $isUtility ? 'show' : '' }}" id="sidebarUtilityMenu">
-            <ul class="nav nav-sm flex-column">
+            <div class="collapse menu-dropdown {{ $isUtility ? 'show' : '' }}" id="sidebarUtilityMenu">
+                <ul class="nav nav-sm flex-column">
+                    @can('permission', 'utility_menu_form')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/form') ? 'active' : '' }}"
+                                href="{{ url('utility/form') }}">
+                                <i class="mdi mdi-file-document-edit-outline"></i>
+                                <span>Form Utility</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('permission', 'utility_menu_data')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/data') ? 'active' : '' }}"
+                                href="{{ url('utility/data') }}">
+                                <i class="mdi mdi-database-eye-outline"></i>
+                                <span>Data Utility</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('permission', 'utility_master')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/master*') ? 'active' : '' }}"
+                                href="{{ url('utility/master') }}">
+                                <i class="mdi mdi-database-cog-outline"></i>
+                                <span>Master Utility</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('permission', 'utility_monthly_approval')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->is('utility/approval') ? 'active' : '' }}"
+                                href="{{ url('utility/approval') }}">
+                                <i class="mdi mdi-checkbox-marked-circle-outline"></i>
+                                <span>Approval Utility</span>
+                            </a>
+                        </li>
+                    @endcan
 
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->is('utility/form') ? 'active' : '' }}"
-                        href="{{ url('utility/form') }}">
-                        <i class="mdi mdi-file-document-edit-outline"></i>
-                        <span>Form Utility</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->is('utility/data') ? 'active' : '' }}"
-                        href="{{ url('utility/data') }}">
-                        <i class="mdi mdi-database-eye-outline"></i>
-                        <span>Data Utility</span>
-                    </a>
-                </li>
-
-                @if ($jabatan != 'operator')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('utility/master*') ? 'active' : '' }}"
-                            href="{{ url('utility/master') }}">
-                            <i class="mdi mdi-database-cog-outline"></i>
-                            <span>Master Utility</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('utility/approval') ? 'active' : '' }}"
-                            href="{{ url('utility/approval') }}">
-                            <i class="mdi mdi-checkbox-marked-circle-outline"></i>
-                            <span>Approval Utility</span>
-                        </a>
-                    </li>
-                @endif
-
-            </ul>
-        </div>
-    </li>
+                </ul>
+            </div>
+        </li>
+    @endcan
 
     {{-- ================= OPERASIONAL ================= --}}
     <li class="nav-item">

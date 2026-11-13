@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\AirController;
 
-Route::prefix('utility')->middleware('auth')->group(function () {
+Route::prefix('utility')->middleware(['auth', 'permission:utility_menu'])->group(function () {
 
     Route::post('/data/air/store', [AirController::class, 'storeAir'])->name('air.store'); // Simpan data baru
     Route::get('/air-area', [AirController::class, 'getAirAreas']);
@@ -15,6 +15,5 @@ Route::prefix('utility')->middleware('auth')->group(function () {
     Route::get('/top5/air/raw', [AirController::class, 'getTopJenisPemakaianAirRaw']);
     Route::get('/top5/operator/air', [AirController::class, 'getTopOperatorPemakaianAir']);
     Route::post('/update-pemakaian-air', [AirController::class, 'updateAir']);
-   Route::get('/export-pemakaian-air', [AirController::class, 'exportPemakaianAirSpreadsheet']);
-
+    Route::get('/export-pemakaian-air', [AirController::class, 'exportPemakaianAirSpreadsheet']);
 });
