@@ -28,7 +28,7 @@ Route::middleware(['permission:wwtp_dashboard'])->group(function () {
         Route::get('dashboard/wwtp/visualisasi-data', [WWTPController::class, 'wwtp_visualisasi_data'])
             ->name('wwtp.dashboard_visualisasi_data');
     });
-    Route::middleware('permission:wwtp_wco_dashboard')->group(function () {
+    Route::middleware('permission:wwtp_wco_she_dashboard')->group(function () {
         Route::get('dashboard/wwtp/wco', [DashboardUtilityController::class, 'wwtp_wco'])->name('wwtp.dashboard_wco');
         Route::get('dashboard/wwtp/wco-data', [WWTPController::class, 'wwtp_wco_data'])->name('wwtp.dashboard_wco_data');
     });
