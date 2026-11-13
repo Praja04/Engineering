@@ -3,7 +3,7 @@
 use App\Http\Controllers\Utility\KpiController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->middleware('permission:utility_kpi_menu')->group(function () {
     Route::prefix('kpi')->group(function () {
         Route::get('/form', [KpiController::class, 'viewForm'])->name('kpi.form');
         Route::get('/data', [KpiController::class, 'viewData'])->name('kpi.data');
