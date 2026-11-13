@@ -9,7 +9,7 @@
         <div class="collapse menu-dropdown {{ request()->is('dashboard/wwtp/*') ? 'show' : '' }}"
             id="sidebarUtilityDashboard">
             <ul class="nav nav-sm flex-column">
-                @can('permission', 'wwtp_proses_dashbboard')
+                @can('permission', 'wwtp_proses_dashboard')
                     <li class="nav-item">
                         <a class="nav-link menu-link {{ request()->is('dashboard/wwtp/proses') ? 'active' : '' }}"
                             href="{{ url('dashboard/wwtp/proses') }}">
