@@ -22,46 +22,46 @@ use App\Http\Controllers\Maintenance\MtcMaterialDashboardController;
 use App\Http\Controllers\Maintenance\MtcDashboardController;
 use App\Http\Controllers\Maintenance\MtcP2hController;
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->middleware('permission:mtc_menu')->group(function () {
     Route::prefix('mtc')->group(function () {
         Route::prefix('form')->group(function () {
-            Route::prefix('motor-pump')->group(function () {
+            Route::prefix('motor-pump')->middleware('permission:mtc_form_motor_pompa')->group(function () {
                 Route::get('/index', [MtcMotorPumpController::class, 'index'])->name('mtc.motor-pump.index');
                 Route::post('/store', [MtcMotorPumpController::class, 'store'])->name('mtc.motor-pump.store');
             });
-            Route::prefix('utility')->group(function () {
+            Route::prefix('utility')->middleware('permission:mtc_form_utility')->group(function () {
                 Route::get('/index', [MtcUtilityController::class, 'index'])->name('mtc.utility.index');
                 Route::post('/store', [MtcUtilityController::class, 'store'])->name('mtc.utility.store');
             });
-            Route::prefix('electrical')->group(function () {
+            Route::prefix('electrical')->middleware('permission:mtc_form_electrical')->group(function () {
                 Route::get('/index', [MtcElectricalController::class, 'index'])->name('mtc.electrical.index');
                 Route::post('/store', [MtcElectricalController::class, 'store'])->name('mtc.electrical.store');
             });
-            Route::prefix('refrigerasi')->group(function () {
+            Route::prefix('refrigerasi')->middleware('permission:mtc_form_refrigerasi')->group(function () {
                 Route::get('/index', [MtcRefrigerasiController::class, 'index'])->name('mtc.refrigerasi.index');
                 Route::post('/store', [MtcRefrigerasiController::class, 'store'])->name('mtc.refrigerasi.store');
             });
-            Route::prefix('electric-engine')->group(function () {
+            Route::prefix('electric-engine')->middleware('permission:mtc_form_electric_engine')->group(function () {
                 Route::get('/index', [MtcElectricEngineController::class, 'index'])->name('mtc.electric-engine.index');
                 Route::post('/store', [MtcElectricEngineController::class, 'store'])->name('mtc.electric-engine.store');
             });
-            Route::prefix('diesel-engine')->group(function () {
+            Route::prefix('diesel-engine')->middleware('permission:mtc_form_diesel_engine')->group(function () {
                 Route::get('/index', [MtcDieselEngineController::class, 'index'])->name('mtc.diesel-engine.index');
                 Route::post('/store', [MtcDieselEngineController::class, 'store'])->name('mtc.diesel-engine.store');
             });
-            Route::prefix('sipil')->group(function () {
+            Route::prefix('sipil')->middleware('permission:mtc_form_sipil')->group(function () {
                 Route::get('/index', [MtcSipilController::class, 'index'])->name('mtc.sipil.index');
                 Route::post('/store', [MtcSipilController::class, 'store'])->name('mtc.sipil.store');
             });
-            Route::prefix('battery')->group(function () {
+            Route::prefix('battery')->middleware('permission:mtc_form_battery')->group(function () {
                 Route::get('/index', [MtcBatteryController::class, 'index'])->name('mtc.battery.index');
                 Route::post('/store', [MtcBatteryController::class, 'store'])->name('mtc.battery.store');
             });
-            Route::prefix('electric-p2h')->group(function () {
+            Route::prefix('electric-p2h')->middleware('permission:mtc_form_electric_p2h')->group(function () {
                 Route::get('/index', [MtcElectricP2hController::class, 'index'])->name('mtc.electric-p2h.index');
                 Route::post('/store', [MtcElectricP2hController::class, 'store'])->name('mtc.electric-p2h.store');
             });
-            Route::prefix('diesel-p2h')->group(function () {
+            Route::prefix('diesel-p2h')->middleware('permission:mtc_form_diesel_p2h')->group(function () {
                 Route::get('/index', [MtcDieselP2hController::class, 'index'])->name('mtc.diesel-p2h.index');
                 Route::post('/store', [MtcDieselP2hController::class, 'store'])->name('mtc.diesel-p2h.store');
             });
@@ -73,49 +73,49 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::prefix('data')->group(function () {
-            Route::prefix('motor-pump')->group(function () {
+            Route::prefix('motor-pump')->middleware('permission:mtc_data_motor_pompa')->group(function () {
                 Route::get('/index', [MtcMotorPumpController::class, 'viewData'])->name('mtc.motor-pump.data.index');
                 Route::post('/update/{id}', [MtcMotorPumpController::class, 'update'])->name('mtc.motor-pump.data.update');
             });
-            Route::prefix('utility')->group(function () {
+            Route::prefix('utility')->middleware('permission:mtc_data_utility')->group(function () {
                 Route::get('/index', [MtcUtilityController::class, 'viewData'])->name('mtc.utility.data.index');
                 Route::post('/update/{id}', [MtcUtilityController::class, 'update'])->name('mtc.utility.data.update');
             });
-            Route::prefix('electrical')->group(function () {
+            Route::prefix('electrical')->middleware('permission:mtc_data_electrical')->group(function () {
                 Route::get('/index', [MtcElectricalController::class, 'viewData'])->name('mtc.electrical.data.index');
                 Route::post('/update/{id}', [MtcElectricalController::class, 'update'])->name('mtc.electrical.data.update');
             });
-            Route::prefix('refrigerasi')->group(function () {
+            Route::prefix('refrigerasi')->middleware('permission:mtc_data_refrigerasi')->group(function () {
                 Route::get('/index', [MtcRefrigerasiController::class, 'viewData'])->name('mtc.refrigerasi.data.index');
                 Route::post('/update/{id}', [MtcRefrigerasiController::class, 'update'])->name('mtc.refrigerasi.data.update');
             });
-            Route::prefix('electric-engine')->group(function () {
+            Route::prefix('electric-engine')->middleware('permission:mtc_data_electric_engine')->group(function () {
                 Route::get('/index', [MtcElectricEngineController::class, 'viewData'])->name('mtc.electric-engine.data.index');
                 Route::post('/update/{id}', [MtcElectricEngineController::class, 'update'])->name('mtc.electric-engine.data.update');
             });
-            Route::prefix('diesel-engine')->group(function () {
+            Route::prefix('diesel-engine')->middleware('permission:mtc_data_diesel_engine')->group(function () {
                 Route::get('/index', [MtcDieselEngineController::class, 'viewData'])->name('mtc.diesel-engine.data.index');
                 Route::post('/update/{id}', [MtcDieselEngineController::class, 'update'])->name('mtc.diesel-engine.data.update');
             });
-            Route::prefix('sipil')->group(function () {
+            Route::prefix('sipil')->middleware('permission:mtc_data_sipil')->group(function () {
                 Route::get('/index', [MtcSipilController::class, 'viewData'])->name('mtc.sipil.data.index');
                 Route::post('/update/{id}', [MtcSipilController::class, 'update'])->name('mtc.sipil.data.update');
             });
-            Route::prefix('battery')->group(function () {
+            Route::prefix('battery')->middleware('permission:mtc_data_battery')->group(function () {
                 Route::get('/index', [MtcBatteryController::class, 'viewData'])->name('mtc.battery.data.index');
                 Route::post('/update/{id}', [MtcBatteryController::class, 'update'])->name('mtc.battery.data.update');
             });
-            Route::prefix('electric-p2h')->group(function () {
+            Route::prefix('electric-p2h')->middleware('permission:mtc_data_electric_p2h')->group(function () {
                 Route::get('/index', [MtcElectricP2hController::class, 'viewData'])->name('mtc.electric-p2h.data.index');
                 Route::post('/update/{id}', [MtcElectricP2hController::class, 'update'])->name('mtc.electric-p2h.data.update');
             });
-            Route::prefix('diesel-p2h')->group(function () {
+            Route::prefix('diesel-p2h')->middleware('permission:mtc_data_diesel_p2h')->group(function () {
                 Route::get('/index', [MtcDieselP2hController::class, 'viewData'])->name('mtc.diesel-p2h.data.index');
                 Route::post('/update/{id}', [MtcDieselP2hController::class, 'update'])->name('mtc.diesel-p2h.data.update');
             });
         });
 
-        Route::prefix('approval')->group(function () {
+        Route::prefix('approval')->middleware('permission:mtc_approval')->group(function () {
             Route::get('/index', [MtcApprovalController::class, 'index'])->name('mtc.approval.index');
             Route::get('/show', [MtcApprovalController::class, 'show'])->name('mtc.approval.show');
             Route::get('/detail/{main}', [MtcApprovalController::class, 'detail']);
@@ -125,8 +125,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/mass-reject', [MtcApprovalController::class, 'massReject'])->name('mtc.approval.mass-reject');
         });
 
-        Route::prefix('master')->group(function () {
-            Route::prefix('mesin')->group(function () {
+        Route::prefix('master')->middleware('permission:mtc_master')->group(function () {
+            Route::prefix('mesin')->middleware('permission:mtc_master_mesin')->group(function () {
                 Route::get('/index', [MtcMasterMesinController::class, 'index'])->name('master.mtc.mesin.index');
                 Route::post('/store', [MtcMasterMesinController::class, 'store'])->name('master.mtc.mesin.store');
                 Route::delete('/delete/{id}', [MtcMasterMesinController::class, 'destroy'])->name('master.mtc.mesin.delete');
@@ -135,7 +135,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/upload-excel',     [MtcMasterMesinController::class, 'uploadExcel'])->name('uploadExcel');
             });
 
-            Route::prefix('material')->group(function () {
+            Route::prefix('material')->middleware('permission:mtc_master_material')->group(function () {
                 Route::get('/index', [MtcMasterMaterialController::class, 'index'])->name('master.mtc.material.index');
                 Route::get('/data', [MtcMasterMaterialController::class, 'getData'])->name('master.mtc.material.data');
                 Route::post('/store', [MtcMasterMaterialController::class, 'store'])->name('master.mtc.material.store');
@@ -146,7 +146,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/sync-warehouse', [MtcMasterMaterialController::class, 'syncWarehouse'])->name('master.mtc.material.syncWarehouse');
             });
 
-            Route::prefix('checklist')->group(function () {
+            Route::prefix('checklist')->middleware('permission:mtc_master_checklist')->group(function () {
                 Route::get('/index', [MtcMasterChecklistController::class, 'index'])->name('master.mtc.checklist.index');
                 Route::get('/data', [MtcMasterChecklistController::class, 'getData'])->name('master.mtc.checklist.data');
                 Route::get('/groups', [MtcMasterChecklistController::class, 'getGroups'])->name('master.mtc.checklist.groups');
@@ -157,7 +157,14 @@ Route::middleware(['auth'])->group(function () {
                 Route::post('/group/store', [MtcMasterChecklistController::class, 'storeGroup'])->name('master.mtc.checklist.group.store');
             });
 
-            Route::get('/agenda/master', [MtcAgendaController::class, 'master'])->name('master.mtc.agenda.master');
+            Route::prefix('agenda')->middleware('permission:mtc_master_agenda')->group(function () {
+                Route::get('/master', [MtcAgendaController::class, 'master'])->name('master.mtc.agenda.master');
+                Route::get('/master/data', [MtcAgendaController::class, 'getMasterData'])->name('agenda.master.data');
+                Route::get('/download-template', [MtcAgendaController::class, 'downloadTemplate'])->name('agenda.download-template');
+                Route::post('/upload', [MtcAgendaController::class, 'upload'])->name('agenda.upload');
+                Route::post('/master/save-single', [MtcAgendaController::class, 'saveSingle'])->name('agenda.master.save-single');
+                Route::post('/master/clear-machine', [MtcAgendaController::class, 'clearMachine'])->name('agenda.master.clear-machine');
+            });
         });
 
         // Route for downloading maintenance data
@@ -167,27 +174,28 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware('permission:mtc_dashboard')->group(function () {
             Route::prefix('dashboard')->group(function () {
                 // MTC Maintenance Analytics Dashboard
-                Route::get('/maintenance', [MtcDashboardController::class, 'index'])->name('mtc.dashboard.index');
-                Route::get('/maintenance/data', [MtcDashboardController::class, 'getData'])->name('mtc.dashboard.data');
+                Route::middleware('permission:mtc_performance_dashboard')->group(function () {
+                    Route::get('/maintenance', [MtcDashboardController::class, 'index'])->name('mtc.dashboard.index');
+                    Route::get('/maintenance/data', [MtcDashboardController::class, 'getData'])->name('mtc.dashboard.data');
+                });
 
-                Route::get('/material', [MtcMaterialDashboardController::class, 'index'])->name('mtc.dashboard.material');
-                Route::get('/material/charts', [MtcMaterialDashboardController::class, 'getDashboardCharts'])->name('mtc.dashboard.material.charts');
-                Route::get('/material/ledger', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.ledger');
-                Route::get('/material/machine-details', [MtcMaterialDashboardController::class, 'getMachineDetails'])->name('mtc.dashboard.material.machine-details');
-                Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.list');
+                Route::middleware('permission:mtc_machine_ledger_dashboard')->group(function () {
+                    Route::get('/material', [MtcMaterialDashboardController::class, 'index'])->name('mtc.dashboard.material');
+                    Route::get('/material/charts', [MtcMaterialDashboardController::class, 'getDashboardCharts'])->name('mtc.dashboard.material.charts');
+                    Route::get('/material/ledger', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.ledger');
+                    Route::get('/material/machine-details', [MtcMaterialDashboardController::class, 'getMachineDetails'])->name('mtc.dashboard.material.machine-details');
+                    Route::get('/material/list', [MtcMaterialDashboardController::class, 'getMachineLedger'])->name('mtc.dashboard.material.list');
+                });
 
-                Route::get('/agenda', [MtcAgendaController::class, 'index'])->name('agenda.index');
-                Route::get('/agenda/master/data', [MtcAgendaController::class, 'getMasterData'])->name('agenda.master.data');
-                Route::get('/agenda/download-template', [MtcAgendaController::class, 'downloadTemplate'])->name('agenda.download-template');
-                Route::post('/agenda/upload', [MtcAgendaController::class, 'upload'])->name('agenda.upload');
-                Route::post('/agenda/master/save-single', [MtcAgendaController::class, 'saveSingle'])->name('agenda.master.save-single');
-                Route::post('/agenda/master/clear-machine', [MtcAgendaController::class, 'clearMachine'])->name('agenda.master.clear-machine');
-                Route::get('/agenda/dashboard/data', [MtcAgendaController::class, 'getDashboardData'])->name('agenda.dashboard.data');
-                Route::get('/agenda/dashboard/calendar', [MtcAgendaController::class, 'getDashboardCalendar'])->name('agenda.dashboard.calendar');
+                Route::middleware('permission:mtc_agenda_dashboard')->group(function () {
+                    Route::get('/agenda', [MtcAgendaController::class, 'index'])->name('agenda.index');
+                    Route::get('/agenda/dashboard/data', [MtcAgendaController::class, 'getDashboardData'])->name('agenda.dashboard.data');
+                    Route::get('/agenda/dashboard/calendar', [MtcAgendaController::class, 'getDashboardCalendar'])->name('agenda.dashboard.calendar');
+                });
             });
         });
 
-        Route::prefix('p2h')->group(function () {
+        Route::prefix('p2h')->middleware('permission:mtc_p2h_menu')->group(function () {
             Route::get('/form/index', [MtcP2hController::class, 'form'])->name('p2h.form.index');
             Route::post('/form/store', [MtcP2hController::class, 'store'])->name('p2h.form.store');
             Route::get('/data/index', [MtcP2hController::class, 'data'])->name('p2h.data.index');

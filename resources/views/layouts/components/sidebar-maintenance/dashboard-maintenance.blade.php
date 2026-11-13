@@ -1,9 +1,3 @@
-@php
-    $jabatan = Auth::user()->jabatan;
-    $bagian = Auth::user()->bagian;
-@endphp
-
-{{-- @if ($jabatan === 'admin' || $jabatan === 'dept_head' || $jabatan === 'supervisor' || ($jabatan === 'operator' && in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement'])) || ($jabatan === 'foreman' && in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement']))) --}}
 @can('permission', 'mtc_dashboard')
     <li class="nav-item">
         <a class="nav-link menu-link {{ request()->is('mtc/dashboard/*') || request()->is('mtc/dashboard/agenda') ? '' : 'collapsed' }}"
@@ -16,32 +10,33 @@
         <div class="collapse menu-dropdown {{ request()->is('mtc/dashboard/*') || request()->is('mtc/dashboard/agenda') ? 'show' : '' }}"
             id="sidebarMtcDashboard">
             <ul class="nav nav-sm flex-column">
-                {{-- @if ($jabatan === 'admin') --}}
-                <li class="nav-item">
-                    <a href="{{ route('mtc.dashboard.index') }}"
-                        class="nav-link {{ request()->routeIs('mtc.dashboard.index') ? 'active' : '' }}"
-                        data-key="t-maintenance-dashboard">
-                        <i class="mdi mdi-view-dashboard-outline me-2"></i> Maintenance Dashboard
-                    </a>
-                </li>
-                {{-- @endif --}}
-
-                <li class="nav-item">
-                    <a href="{{ url('mtc/dashboard/agenda') }}"
-                        class="nav-link {{ request()->is('mtc/dashboard/agenda') ? 'active' : '' }}" data-key="t-analytics">
-                        <i class="mdi mdi-chart-bar me-2"></i> Agenda
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{{ route('mtc.dashboard.material') }}"
-                        class="nav-link {{ request()->routeIs('mtc.dashboard.material') ? 'active' : '' }}"
-                        data-key="t-machine-ledger">
-                        <i class="mdi mdi-file-cog-outline me-2"></i> Machine Ledger
-                    </a>
-                </li>
+                @can('permission', 'mtc_performance_dashboard')
+                    <li class="nav-item">
+                        <a href="{{ route('mtc.dashboard.index') }}"
+                            class="nav-link {{ request()->routeIs('mtc.dashboard.index') ? 'active' : '' }}"
+                            data-key="t-maintenance-dashboard">
+                            <i class="mdi mdi-view-dashboard-outline me-2"></i> Maintenance Dashboard
+                        </a>
+                    </li>
+                @endcan
+                @can('permission', 'mtc_agenda_dashboard')
+                    <li class="nav-item">
+                        <a href="{{ url('mtc/dashboard/agenda') }}"
+                            class="nav-link {{ request()->is('mtc/dashboard/agenda') ? 'active' : '' }}" data-key="t-analytics">
+                            <i class="mdi mdi-chart-bar me-2"></i> Agenda
+                        </a>
+                    </li>
+                @endcan
+                @can('permission', 'mtc_machine_ledger_dashboad')
+                    <li class="nav-item">
+                        <a href="{{ route('mtc.dashboard.material') }}"
+                            class="nav-link {{ request()->routeIs('mtc.dashboard.material') ? 'active' : '' }}"
+                            data-key="t-machine-ledger">
+                            <i class="mdi mdi-file-cog-outline me-2"></i> Machine Ledger
+                        </a>
+                    </li>
+                @endcan
             </ul>
         </div>
     </li>
 @endcan
-{{-- @endif --}}

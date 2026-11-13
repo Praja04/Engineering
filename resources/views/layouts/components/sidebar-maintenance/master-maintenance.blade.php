@@ -1,16 +1,4 @@
-@php
-    $jabatan = Auth::user()->jabatan;
-    $bagian = Auth::user()->bagian;
-@endphp
-
-@if (
-    $jabatan === 'admin' ||
-        $jabatan === 'dept_head' ||
-        $jabatan === 'supervisor' ||
-        ($jabatan === 'operator' &&
-            in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement', 'Engineering Kalibrasi'])) ||
-        ($jabatan === 'foreman' &&
-            in_array($bagian, ['Engineering', 'Engineering Maintenance & Improvement', 'Engineering Kalibrasi'])))
+@can('permission', 'mtc_master')
     <li class="nav-item">
         <a class="nav-link menu-link {{ request()->routeIs('master.mtc.*') ? '' : 'collapsed' }}" href="#sidebarMasterMtc"
             data-bs-toggle="collapse" role="button"
@@ -19,31 +7,39 @@
         </a>
         <div class="collapse menu-dropdown {{ request()->routeIs('master.mtc.*') ? 'show' : '' }}" id="sidebarMasterMtc">
             <ul class="nav nav-sm flex-column">
-                <li class="nav-item">
-                    <a href="{{ route('master.mtc.mesin.index') }}"
-                        class="nav-link {{ request()->routeIs('master.mtc.mesin.*') ? 'active' : '' }}">
-                        <i class="mdi mdi-view-grid"></i>Master Mesin
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('master.mtc.material.index') }}"
-                        class="nav-link {{ request()->routeIs('master.mtc.material.*') ? 'active' : '' }}">
-                        <i class="mdi mdi-cube-outline"></i>Master Material
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('master.mtc.checklist.index') }}"
-                        class="nav-link {{ request()->routeIs('master.mtc.checklist.*') ? 'active' : '' }}">
-                        <i class="mdi mdi-checkbox-marked-circle-outline"></i>Master Checklist
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url('mtc/master/agenda/master') }}"
-                        class="nav-link {{ request()->is('mtc/master/agenda/master') ? 'active' : '' }}">
-                        <i class="mdi mdi-chart-bar"></i>Master Agenda
-                    </a>
-                </li>
+                @can('permission', 'mtc_master_mesin')
+                    <li class="nav-item">
+                        <a href="{{ route('master.mtc.mesin.index') }}"
+                            class="nav-link {{ request()->routeIs('master.mtc.mesin.*') ? 'active' : '' }}">
+                            <i class="mdi mdi-view-grid"></i>Master Mesin
+                        </a>
+                    </li>
+                @endcan
+                @can('permission', 'mtc_master_material')
+                    <li class="nav-item">
+                        <a href="{{ route('master.mtc.material.index') }}"
+                            class="nav-link {{ request()->routeIs('master.mtc.material.*') ? 'active' : '' }}">
+                            <i class="mdi mdi-cube-outline"></i>Master Material
+                        </a>
+                    </li>
+                @endcan
+                @can('permission', 'mtc_master_checklist')
+                    <li class="nav-item">
+                        <a href="{{ route('master.mtc.checklist.index') }}"
+                            class="nav-link {{ request()->routeIs('master.mtc.checklist.*') ? 'active' : '' }}">
+                            <i class="mdi mdi-checkbox-marked-circle-outline"></i>Master Checklist
+                        </a>
+                    </li>
+                @endcan
+                @can('permission', 'mtc_master_agenda')
+                    <li class="nav-item">
+                        <a href="{{ url('mtc/master/agenda/master') }}"
+                            class="nav-link {{ request()->is('mtc/master/agenda/master') ? 'active' : '' }}">
+                            <i class="mdi mdi-chart-bar"></i>Master Agenda
+                        </a>
+                    </li>
+                @endcan
             </ul>
         </div>
     </li>
-@endif
+@endcan
