@@ -373,7 +373,7 @@
                     tbody.append(`
                         <tr>
                             <td class="text-center">
-                                <input type="number"
+                                <input type="number" step="any"
                                     name="data[${i}][titik_kalibrasi]"
                                     value="${row.titik_kalibrasi}"
                                     class="input-mini text-center">
@@ -434,7 +434,7 @@
                     tbody.append(`
                         <tr>
                             <td class="text-center">
-                                <input type="number"
+                                <input type="number" step="any"
                                     name="data[${i}][titik_kalibrasi]"
                                     class="input-mini text-center">
                             </td>
@@ -465,7 +465,7 @@
 
                 $(this).closest('tr').remove();
 
-                // renumber ulang
+                // renumber ulang name atribut array
                 $('#tableVolumetrik tbody tr').each(function(index) {
 
                     $(this).find('input[name^="data"]').each(function() {
@@ -474,8 +474,6 @@
                         const newName = name.replace(/data\[\d+\]/, `data[${index}]`);
                         $(this).attr('name', newName);
                     });
-
-                    $(this).find('input[name*="titik_kalibrasi"]').val(index + 1);
                 });
 
                 if ($('#tableVolumetrik tbody tr').length === 0) {
@@ -522,7 +520,7 @@
                 tbody.append(`
                     <tr>
                         <td class="text-center">
-                            <input type="number"
+                            <input type="number" step="any"
                                 name="data[${rowIndex}][titik_kalibrasi]"
                                 class="input-mini text-center">
                         </td>
