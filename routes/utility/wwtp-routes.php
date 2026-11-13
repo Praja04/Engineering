@@ -32,9 +32,12 @@ Route::middleware(['auth', 'permission:wwtp_menu'])->group(function () {
 
 
   // WWTP Approval Harian Routes
-  Route::middleware('permission:wwtp_daily_approval')->group(function () {
-    Route::prefix('wwtp-approval')->middleware('auth')->group(function () {
-      Route::get('/check', [WWTPControllerApproval::class, 'checkApproval']);
+  Route::prefix('wwtp-approval')->middleware('auth')->group(function () {
+    // Check approval status & get approvers list (accessible to operators filling the daily forms)
+    Route::get('/check', [WWTPControllerApproval::class, 'checkApproval']);
+
+    // Approval actions (restricted to users with approval permissions)
+    Route::middleware('permission:wwtp_daily_approval,wwtp_approve')->group(function () {
       Route::get('/list', [WWTPControllerApproval::class, 'getApprovalList']);
       Route::post('/mass-approve', [WWTPControllerApproval::class, 'massApprove']);
       Route::post('/mass-reject', [WWTPControllerApproval::class, 'massReject']);
