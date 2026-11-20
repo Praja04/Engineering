@@ -1,9 +1,10 @@
-@php
+{{-- @php
     $jabatan = Auth::user()->jabatan;
     $bagian = Auth::user()->bagian;
-@endphp
+@endphp --}}
 
-@if ($jabatan != 'operator' && in_array($bagian, ['IT', 'Engineering', 'Engineering Utility', 'Engineering WWTP']))
+{{-- @if ($jabatan != 'operator' && in_array($bagian, ['IT', 'Engineering', 'Engineering Utility', 'Engineering WWTP'])) --}}
+@can('permission', 'utility_dashboard')
     <li class="nav-item">
         <a class="nav-link menu-link
             {{ request()->routeIs('dashboard.boiler.*') || request()->Is('utility/dashboard/listrik') || request()->Is('utility/dashboard/air') || request()->Is('utility/dashboard/chemical') || request()->Is('utility/dashboard/machine') || request()->is('utility/project/dashboard*') ? '' : 'collapsed' }}"
@@ -24,40 +25,50 @@
                         <i class="mdi mdi-chart-line me-2"></i> Dashboard Realtime
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('dashboard.boiler.kpi') }}"
-                        class="nav-link {{ request()->routeIs('dashboard.boiler.kpi') ? 'active' : '' }}"
-                        data-key="t-analytics">
-                        <i class="mdi mdi-bullseye-arrow me-2"></i> Dashboard KPI Boiler
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url('utility/dashboard/listrik') }}"
-                        class="nav-link {{ request()->Is('utility/dashboard/listrik') ? 'active' : '' }}"
-                        data-key="t-analytics">
-                        <i class="mdi mdi-chart-bar me-2"></i> Pemakaian Listrik
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url('utility/dashboard/air') }}"
-                        class="nav-link {{ request()->Is('utility/dashboard/air') ? 'active' : '' }}"
-                        data-key="t-analytics">
-                        <i class="mdi mdi-chart-bar me-2"></i> Pemakaian Air
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url('utility/dashboard/chemical') }}"
-                        class="nav-link {{ request()->Is('utility/dashboard/chemical') ? 'active' : '' }}"
-                        data-key="t-analytics">
-                        <i class="mdi mdi-chart-bar me-2"></i> Pemakaian chemical
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ url('dashboard/engineering-utility') }}"
-                        class="nav-link {{ request()->Is('dashboard/engineering-utility') ? 'active' : '' }}"
-                        data-key="t-analytics">
-                        <i class="mdi mdi-chart-bar me-2"></i> Engineering Utility Dashboard </a>
-                </li>
+                @can('permission', 'utility_dashboard_kpi_boiler')
+                    <li class="nav-item">
+                        <a href="{{ route('dashboard.boiler.kpi') }}"
+                            class="nav-link {{ request()->routeIs('dashboard.boiler.kpi') ? 'active' : '' }}"
+                            data-key="t-analytics">
+                            <i class="mdi mdi-bullseye-arrow me-2"></i> Dashboard KPI Boiler
+                        </a>
+                    </li>
+                @endcan
+                @can('permission', 'utility_dashboard_listrik')
+                    <li class="nav-item">
+                        <a href="{{ url('utility/dashboard/listrik') }}"
+                            class="nav-link {{ request()->Is('utility/dashboard/listrik') ? 'active' : '' }}"
+                            data-key="t-analytics">
+                            <i class="mdi mdi-chart-bar me-2"></i> Pemakaian Listrik
+                        </a>
+                    </li>
+                @endcan
+                @can('permission', 'utility_dashboard_air')
+                    <li class="nav-item">
+                        <a href="{{ url('utility/dashboard/air') }}"
+                            class="nav-link {{ request()->Is('utility/dashboard/air') ? 'active' : '' }}"
+                            data-key="t-analytics">
+                            <i class="mdi mdi-chart-bar me-2"></i> Pemakaian Air
+                        </a>
+                    </li>
+                @endcan
+                @can('permission', 'utility_dashboard_chemical')
+                    <li class="nav-item">
+                        <a href="{{ url('utility/dashboard/chemical') }}"
+                            class="nav-link {{ request()->Is('utility/dashboard/chemical') ? 'active' : '' }}"
+                            data-key="t-analytics">
+                            <i class="mdi mdi-chart-bar me-2"></i> Pemakaian chemical
+                        </a>
+                    </li>
+                @endcan
+                @can('permission', 'utility_dashboard_engineering')
+                    <li class="nav-item">
+                        <a href="{{ url('dashboard/engineering-utility') }}"
+                            class="nav-link {{ request()->Is('dashboard/engineering-utility') ? 'active' : '' }}"
+                            data-key="t-analytics">
+                            <i class="mdi mdi-chart-bar me-2"></i> Engineering Utility Dashboard </a>
+                    </li>
+                @endcan
                 @if ($jabatan === 'admin')
                     <li class="nav-item">
                         <a href="javascript:void(0);" class="nav-link text-warning fw-semibold" data-bs-toggle="modal"
@@ -78,4 +89,5 @@
     </li>
 
     @include('layouts.components.modal-pptx-weekly')
-@endif
+@endcan
+{{-- @endif --}}
