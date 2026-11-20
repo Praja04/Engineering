@@ -32,6 +32,12 @@ $bagian = trim(Auth::user()->bagian ?? '');
                     data-key="t-tkbm">
                     <i class="mdi mdi-book-open"></i>Timbangan</a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('master.kalibrasi.ketidakpastian_pressure') }}"
+                    class="nav-link {{ request()->routeIs('master.kalibrasi.ketidakpastian_pressure*') ? 'active' : '' }}"
+                    data-key="t-tkbm">
+                    <i class="mdi mdi-gauge"></i>Ketidakpastian Pressure</a>
+            </li>
         </ul>
     </div>
 

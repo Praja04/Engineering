@@ -1123,7 +1123,21 @@ class KalibrasiCertificateController extends Controller
             $sheet->setCellValue("U{$row}", $pgTurun->avg_tekanan_standar_turun ?? '');
             $sheet->setCellValue("X{$row}", $pg->avg_koreksi_alat_naik ?? '');
             $sheet->setCellValue("AA{$row}", $pgTurun->avg_koreksi_alat_turun ?? '');
-            $sheet->setCellValue("AD{$row}", $pg->u_gabungan ?? '');
+
+            // Prioritaskan nilai dari Master Ketidakpastian jika terdaftar untuk alat & titik ini
+            $uVal = $pg->u_gabungan;
+            $masterU = \App\Models\Kalibrasi\Master\MasterKetidakpastianPressureModel::where(function ($q) use ($alat) {
+                    if (!empty($alat->id)) $q->where('alat_id', $alat->id);
+                    if (!empty($alat->kode_alat)) $q->orWhere('kode_alat', $alat->kode_alat);
+                })
+                ->where('titik_kalibrasi', $pg->titik_kalibrasi)
+                ->first();
+
+            if ($masterU && $masterU->nilai_ketidakpastian !== null) {
+                $uVal = $masterU->nilai_ketidakpastian;
+            }
+
+            $sheet->setCellValue("AD{$row}", $uVal ?? '');
 
             $row++;
             $index++;
