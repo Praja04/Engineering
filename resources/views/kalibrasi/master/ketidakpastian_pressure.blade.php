@@ -48,6 +48,10 @@
                             <div style="min-width: 200px;">
                                 <input type="text" class="form-control form-control-sm" id="searchTable" placeholder="Cari data...">
                             </div>
+                            <!-- Tombol Import Excel -->
+                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalImport">
+                                <i class="mdi mdi-file-excel-outline me-1"></i> Import Excel
+                            </button>
                             <!-- Tombol Tambah -->
                             <button class="btn btn-sm btn-primary" id="btnAdd">
                                 <i class="mdi mdi-plus-circle-outline me-1"></i> Tambah Data
@@ -153,6 +157,47 @@
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                                 <button type="submit" class="btn btn-primary" id="btnSubmit">
                                     <i class="mdi mdi-content-save-outline me-1"></i> Simpan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Import Excel -->
+            <div class="modal fade" id="modalImport" tabindex="-1" aria-labelledby="modalImportTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title fw-semibold text-white" id="modalImportTitle">
+                                <i class="mdi mdi-file-excel-outline me-1"></i> Import Master Ketidakpastian
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="formImport" enctype="multipart/form-data">
+                            @csrf
+                            <div class="modal-body">
+                                <div class="alert alert-info d-flex align-items-center mb-3 py-2 px-3">
+                                    <i class="mdi mdi-information-outline fs-4 me-2"></i>
+                                    <div>
+                                        Gunakan format template Excel. Jika kode alat dan titik kalibrasi sudah ada di database, nilai ketidakpastian akan diperbarui secara otomatis.
+                                    </div>
+                                </div>
+                                <div class="mb-3 text-center">
+                                    <a href="{{ route('master.kalibrasi.ketidakpastian_pressure.download_template') }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="mdi mdi-download me-1"></i> Download Format Template Excel (.xlsx)
+                                    </a>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="import_file" class="form-label fw-semibold">Pilih File Excel (.xlsx / .xls) <span class="text-danger">*</span></label>
+                                    <input type="file" class="form-control" id="import_file" name="file" accept=".xlsx, .xls" required>
+                                    <div class="form-text">Pastikan baris pertama adalah header dan urutan kolom sesuai template: <b>Kode Alat, Titik Kalibrasi, Nilai Ketidakpastian, Keterangan</b>.</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light py-2">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-sm btn-success" id="btnSubmitImport">
+                                    <i class="mdi mdi-upload me-1"></i> Unggah & Import
                                 </button>
                             </div>
                         </form>
@@ -361,6 +406,81 @@
                             icon: 'error',
                             title: 'Gagal!',
                             text: msg
+                        });
+                    }
+                });
+            });
+
+            // Handle Import Excel
+            $('#formImport').on('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const $btn = $('#btnSubmitImport');
+                $btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Mengimpor...');
+
+                $.ajax({
+                    url: "{{ route('master.kalibrasi.ketidakpastian_pressure.import') }}",
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $btn.prop('disabled', false).html('<i class="mdi mdi-upload me-1"></i> Unggah & Import');
+                        const importModalEl = document.getElementById('modalImport');
+                        const modalInstance = bootstrap.Modal.getInstance(importModalEl);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+                        $('#formImport')[0].reset();
+
+                        if (response.status === 'partial') {
+                            let errorList = '';
+                            if (response.errors && response.errors.length > 0) {
+                                errorList = '<div class="text-start mt-2 p-2 bg-light border rounded" style="max-height: 180px; overflow-y: auto;"><ul class="mb-0 text-danger ps-3">' +
+                                    response.errors.map(function(err) { return `<li><small>${err}</small></li>`; }).join('') +
+                                    '</ul></div>';
+                            }
+
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Selesai Sebagian',
+                                html: `<p class="mb-1">${response.message}</p>${errorList}`,
+                                confirmButtonText: 'Tutup'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: response.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        }
+
+                        loadData();
+                    },
+                    error: function(xhr) {
+                        $btn.prop('disabled', false).html('<i class="mdi mdi-upload me-1"></i> Unggah & Import');
+                        let errMsg = xhr.responseJSON?.message || 'Terjadi kesalahan saat mengimpor data.';
+                        let errorDetails = '';
+
+                        if (xhr.responseJSON?.errors) {
+                            if (Array.isArray(xhr.responseJSON.errors)) {
+                                errorDetails = '<div class="text-start mt-2 p-2 bg-light border rounded" style="max-height: 180px; overflow-y: auto;"><ul class="mb-0 text-danger ps-3">' +
+                                    xhr.responseJSON.errors.map(function(err) { return `<li><small>${err}</small></li>`; }).join('') +
+                                    '</ul></div>';
+                            } else if (typeof xhr.responseJSON.errors === 'object') {
+                                let list = Object.values(xhr.responseJSON.errors).flat();
+                                errorDetails = '<div class="text-start mt-2 p-2 bg-light border rounded" style="max-height: 180px; overflow-y: auto;"><ul class="mb-0 text-danger ps-3">' +
+                                    list.map(function(err) { return `<li><small>${err}</small></li>`; }).join('') +
+                                    '</ul></div>';
+                            }
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Import Gagal!',
+                            html: `<p class="mb-1">${errMsg}</p>${errorDetails}`
                         });
                     }
                 });

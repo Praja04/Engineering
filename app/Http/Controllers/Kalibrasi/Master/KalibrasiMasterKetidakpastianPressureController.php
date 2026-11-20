@@ -7,6 +7,12 @@ use App\Models\Kalibrasi\AlatKalibrasiModel;
 use App\Models\Kalibrasi\Master\MasterKetidakpastianPressureModel;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class KalibrasiMasterKetidakpastianPressureController extends Controller
 {
@@ -216,5 +222,213 @@ class KalibrasiMasterKetidakpastianPressureController extends Controller
             'status' => 'success',
             'data'   => $data,
         ]);
+    }
+
+    /**
+     * Download template Excel untuk import ketidakpastian pressure.
+     */
+    public function downloadTemplate()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Ketidakpastian');
+
+        // Header
+        $headers = [
+            'A1' => 'Kode Alat',
+            'B1' => 'Titik Kalibrasi',
+            'C1' => 'Nilai Ketidakpastian',
+            'D1' => 'Keterangan',
+        ];
+
+        foreach ($headers as $cell => $text) {
+            $sheet->setCellValue($cell, $text);
+        }
+
+        // Style Header
+        $headerStyle = [
+            'font' => [
+                'bold'  => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size'  => 11,
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical'   => Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType'   => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '2563EB'], // Primary blue
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color'       => ['rgb' => 'D1D5DB'],
+                ],
+            ],
+        ];
+
+        $sheet->getStyle('A1:D1')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(1)->setRowHeight(28);
+
+        // Contoh Data
+        $sampleData = [
+            ['PRS/TEST/01', 0, 0.08, 'Contoh Titik 0'],
+            ['PRS/TEST/01', 5, 0.08, 'Contoh Titik 5'],
+            ['PRS/TEST/01', 10, 0.08, 'Contoh Titik 10'],
+            ['PRS/TEST/01', 15, 0.08, 'Contoh Titik 15'],
+            ['PRS/TEST/01', 20, 0.08, 'Contoh Titik 20'],
+        ];
+
+        $rowNum = 2;
+        foreach ($sampleData as $row) {
+            $sheet->setCellValueExplicit("A{$rowNum}", $row[0], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue("B{$rowNum}", $row[1]);
+            $sheet->setCellValue("C{$rowNum}", $row[2]);
+            $sheet->setCellValueExplicit("D{$rowNum}", $row[3], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+
+            $sheet->getStyle("A{$rowNum}:D{$rowNum}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle("A{$rowNum}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("B{$rowNum}:C{$rowNum}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            $sheet->getRowDimension($rowNum)->setRowHeight(22);
+
+            $rowNum++;
+        }
+
+        // Auto-fit kolom
+        foreach (range('A', 'D') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = 'template_master_ketidakpastian_pressure.xlsx';
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+
+    /**
+     * Import data ketidakpastian pressure via file Excel.
+     */
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:10240',
+        ], [
+            'file.required' => 'File Excel wajib dipilih.',
+            'file.mimes'    => 'Format file harus berupa file Excel (.xlsx atau .xls).',
+            'file.max'      => 'Ukuran file maksimal adalah 10MB.',
+        ]);
+
+        try {
+            $spreadsheet = IOFactory::load($request->file('file')->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
+
+            $errors = [];
+            $successCount = 0;
+            $updatedCount = 0;
+
+            foreach ($rows as $index => $row) {
+                // Lewati header (baris 1)
+                if ($index == 1) continue;
+
+                $kodeAlat = trim((string)($row['A'] ?? ''));
+                $titikRaw = trim((string)($row['B'] ?? ''));
+                $nilaiRaw = trim((string)($row['C'] ?? ''));
+                $keterangan = trim((string)($row['D'] ?? ''));
+
+                // Jika seluruh baris kosong, lewati
+                if ($kodeAlat === '' && $titikRaw === '' && $nilaiRaw === '') {
+                    continue;
+                }
+
+                // Validasi Kode Alat
+                if ($kodeAlat === '') {
+                    $errors[] = "Baris {$index}: Kolom Kode Alat wajib diisi.";
+                    continue;
+                }
+
+                // Konversi format desimal koma ke titik
+                $titikClean = str_replace(',', '.', $titikRaw);
+                if ($titikRaw === '' || !is_numeric($titikClean)) {
+                    $errors[] = "Baris {$index}: Titik Kalibrasi '{$titikRaw}' harus berupa angka valid.";
+                    continue;
+                }
+                $titik = (float) $titikClean;
+
+                $nilaiClean = str_replace(',', '.', $nilaiRaw);
+                if ($nilaiRaw === '' || !is_numeric($nilaiClean) || (float) $nilaiClean < 0) {
+                    $errors[] = "Baris {$index}: Nilai Ketidakpastian '{$nilaiRaw}' harus berupa angka positif valid.";
+                    continue;
+                }
+                $nilai = (float) $nilaiClean;
+
+                // Cari alat di master alat kalibrasi jika terdaftar
+                $alat = AlatKalibrasiModel::where('kode_alat', $kodeAlat)->first();
+
+                // Simpan atau update
+                $existing = MasterKetidakpastianPressureModel::where('kode_alat', $kodeAlat)
+                    ->where('titik_kalibrasi', $titik)
+                    ->first();
+
+                if ($existing) {
+                    $existing->update([
+                        'alat_id'              => $alat ? $alat->id : $existing->alat_id,
+                        'nama_alat'            => $alat ? $alat->nama_alat : $existing->nama_alat,
+                        'nilai_ketidakpastian' => $nilai,
+                        'u_naik'               => $nilai / sqrt(2),
+                        'u_turun'              => $nilai / sqrt(2),
+                        'keterangan'           => $keterangan ?: $existing->keterangan,
+                    ]);
+                    $updatedCount++;
+                } else {
+                    MasterKetidakpastianPressureModel::create([
+                        'alat_id'              => $alat ? $alat->id : null,
+                        'kode_alat'            => $kodeAlat,
+                        'nama_alat'            => $alat ? $alat->nama_alat : null,
+                        'titik_kalibrasi'      => $titik,
+                        'nilai_ketidakpastian' => $nilai,
+                        'u_naik'               => $nilai / sqrt(2),
+                        'u_turun'              => $nilai / sqrt(2),
+                        'keterangan'           => $keterangan ?: null,
+                    ]);
+                    $successCount++;
+                }
+            }
+
+            $totalProcessed = $successCount + $updatedCount;
+
+            if ($totalProcessed === 0 && count($errors) > 0) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Gagal mengimpor data. Semua baris tidak valid.',
+                    'errors'  => $errors,
+                ], 422);
+            }
+
+            if (count($errors) > 0) {
+                return response()->json([
+                    'status'  => 'partial',
+                    'message' => "Berhasil memproses {$totalProcessed} data ({$successCount} baru, {$updatedCount} diperbarui), tetapi terdapat " . count($errors) . " baris gagal.",
+                    'errors'  => $errors,
+                ]);
+            }
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => "Berhasil mengimpor {$totalProcessed} data ketidakpastian ({$successCount} baru, {$updatedCount} diperbarui).",
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Terjadi kesalahan saat memproses file Excel: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

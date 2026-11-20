@@ -117,6 +117,8 @@ Route::middleware(['auth', 'access'])->group(function () {
             Route::get('/timbangan/index', [KalibrasiMasterTimbanganController::class, 'viewTimbangan'])->name('master.kalibrasi.timbangan');
             Route::get('/ketidakpastian-pressure/index', [KalibrasiMasterKetidakpastianPressureController::class, 'viewKetidakpastian'])->name('master.kalibrasi.ketidakpastian_pressure');
             Route::get('/ketidakpastian-pressure/by-alat/{alat}', [KalibrasiMasterKetidakpastianPressureController::class, 'getByAlat'])->name('master.kalibrasi.ketidakpastian_pressure.by-alat');
+            Route::get('/ketidakpastian-pressure/download-template', [KalibrasiMasterKetidakpastianPressureController::class, 'downloadTemplate'])->name('master.kalibrasi.ketidakpastian_pressure.download_template');
+            Route::post('/ketidakpastian-pressure/import', [KalibrasiMasterKetidakpastianPressureController::class, 'importExcel'])->name('master.kalibrasi.ketidakpastian_pressure.import');
             Route::resource('/jangka-sorong', KalibrasiMasterJangkaSorongController::class);
             Route::resource('/timbangan', KalibrasiMasterTimbanganController::class);
             Route::resource('/ketidakpastian-pressure', KalibrasiMasterKetidakpastianPressureController::class)->names([
