@@ -56,48 +56,56 @@ class KalibrasiVolumetrikController extends Controller
 
             foreach ($validated['data'] as $titik) {
 
-                $standarArray = $titik['penunjuk_standar'];
-                $alatArray    = $titik['penunjuk_alat'];
+                $standarArrayRaw = $titik['penunjuk_standar'] ?? [];
+                $alatArrayRaw    = $titik['penunjuk_alat'] ?? [];
 
+                $standarArray  = [];
+                $alatArray     = [];
                 $koreksiValues = [];
 
-                // hitung koreksi per repeat
-                foreach ($standarArray as $index => $standar) {
+                // Filter hanya pasangan yang terisi lengkap
+                foreach ($standarArrayRaw as $index => $standar) {
+                    $alat = $alatArrayRaw[$index] ?? null;
 
-                    $alat = $alatArray[$index] ?? 0;
-                    $koreksi = $standar - $alat;
+                    if ($standar !== null && $standar !== '' && $alat !== null && $alat !== '') {
+                        $stdNum = (float) $standar;
+                        $altNum = (float) $alat;
+                        $koreksi = $stdNum - $altNum;
 
-                    $koreksiValues[] = $koreksi;
+                        $standarArray[]  = $stdNum;
+                        $alatArray[]     = $altNum;
+                        $koreksiValues[] = $koreksi;
+                    }
                 }
 
-                $avgStandar = collect($standarArray)->avg();
-                $avgKoreksi = collect($koreksiValues)->avg();
+                $n = count($standarArray);
+                $avgStandar = $n > 0 ? collect($standarArray)->avg() : 0;
+                $avgKoreksi = $n > 0 ? collect($koreksiValues)->avg() : 0;
                 $stdevStandar = $this->calculateStdev($standarArray);
 
-                $akar10 = sqrt(count($standarArray));
-                $uTotal = $akar10 > 0 ? $stdevStandar / $akar10 : 0;
+                $akarN = sqrt($n);
+                $uTotal = $akarN > 0 ? $stdevStandar / $akarN : 0;
 
                 $volumetrik = KalibrasiVolumetrikModel::create([
-                    'kalibrasi_id' => $kalibrasi->id,
-                    'titik_kalibrasi' => $titik['titik_kalibrasi'],
-                    'avg_penunjuk_standar' => $avgStandar,
-                    'avg_koreksi' => $avgKoreksi,
+                    'kalibrasi_id'           => $kalibrasi->id,
+                    'titik_kalibrasi'        => $titik['titik_kalibrasi'],
+                    'avg_penunjuk_standar'   => $avgStandar,
+                    'avg_koreksi'            => $avgKoreksi,
                     'stdev_penunjuk_standar' => $stdevStandar,
-                    'akar_10' => $akar10,
-                    'u_timbangan' => null,
-                    'u_total' => $uTotal,
+                    'akar_10'                => $akarN,
+                    'u_timbangan'            => null,
+                    'u_total'                => $uTotal,
                 ]);
 
                 foreach ($standarArray as $index => $standar) {
-
-                    $alat = $alatArray[$index] ?? 0;
-                    $koreksi = $standar - $alat;
+                    $alat = $alatArray[$index];
+                    $koreksi = $koreksiValues[$index];
 
                     KalibrasiVolumetrikDetailModel::create([
-                        'volumetrik_id' => $volumetrik->id,
+                        'volumetrik_id'    => $volumetrik->id,
                         'penunjuk_standar' => $standar,
-                        'penunjuk_alat' => $alat,
-                        'koreksi' => $koreksi,
+                        'penunjuk_alat'    => $alat,
+                        'koreksi'          => $koreksi,
                     ]);
                 }
             }

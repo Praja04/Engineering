@@ -7,7 +7,7 @@
         <div class="container-fluid">
 
             <!-- Header Section -->
-            <div class="row mb-3">
+            <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
                         <h4 class="mb-sm-0">Master Ketidakpastian Pressure</h4>
@@ -24,13 +24,14 @@
 
             <!-- Main Card -->
             <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-white py-3">
+                <div class="card-header py-3">
                     <div class="row g-3 align-items-center justify-content-between">
                         <div class="col-md-4">
                             <h5 class="mb-0 fw-bold text-primary">
                                 <i class="mdi mdi-gauge me-2"></i> Ketidakpastian Tiap Titik Kalibrasi Pressure
                             </h5>
-                            <small class="text-muted">Master nilai ketidakpastian standar per kode alat & titik kalibrasi</small>
+                            <small class="text-muted">Master nilai ketidakpastian standar per kode alat & titik
+                                kalibrasi</small>
                         </div>
                         <div class="col-md-8 text-md-end d-flex flex-wrap gap-2 justify-content-md-end">
                             <!-- Filter Alat -->
@@ -46,7 +47,8 @@
                             </div>
                             <!-- Search -->
                             <div style="min-width: 200px;">
-                                <input type="text" class="form-control form-control-sm" id="searchTable" placeholder="Cari data...">
+                                <input type="text" class="form-control form-control-sm" id="searchTable"
+                                    placeholder="Cari data...">
                             </div>
                             <!-- Tombol Import Excel -->
                             <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalImport">
@@ -88,7 +90,8 @@
                     <div class="modal-content border-0 shadow">
                         <div class="modal-header bg-primary text-white">
                             <h5 class="modal-title fw-semibold text-white" id="modalTitle">Tambah Ketidakpastian</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
                         <form id="formMaster">
                             @csrf
@@ -102,8 +105,7 @@
                                     <select class="form-select" id="modal_alat_select">
                                         <option value="">-- Pilih dari Daftar Alat Pressure --</option>
                                         @foreach ($alatList as $alat)
-                                            <option value="{{ $alat->id }}"
-                                                data-kode="{{ $alat->kode_alat }}"
+                                            <option value="{{ $alat->id }}" data-kode="{{ $alat->kode_alat }}"
                                                 data-nama="{{ $alat->nama_alat }}">
                                                 {{ $alat->kode_alat }} ({{ $alat->nama_alat }})
                                             </option>
@@ -141,8 +143,10 @@
                                         <label for="nilai_ketidakpastian" class="form-label fw-semibold text-success">
                                             Nilai Ketidakpastian <span class="text-danger">*</span>
                                         </label>
-                                        <input type="number" step="any" name="nilai_ketidakpastian" id="nilai_ketidakpastian"
-                                            class="form-control text-center fw-bold text-success" placeholder="Contoh: 0.08" required>
+                                        <input type="number" step="any" name="nilai_ketidakpastian"
+                                            id="nilai_ketidakpastian"
+                                            class="form-control text-center fw-bold text-success"
+                                            placeholder="Contoh: 0.08" required>
                                         <div class="form-text">Nilai yang akan tampil di sertifikat</div>
                                     </div>
                                 </div>
@@ -165,14 +169,16 @@
             </div>
 
             <!-- Modal Import Excel -->
-            <div class="modal fade" id="modalImport" tabindex="-1" aria-labelledby="modalImportTitle" aria-hidden="true">
+            <div class="modal fade" id="modalImport" tabindex="-1" aria-labelledby="modalImportTitle"
+                aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-0 shadow">
                         <div class="modal-header bg-success text-white">
                             <h5 class="modal-title fw-semibold text-white" id="modalImportTitle">
                                 <i class="mdi mdi-file-excel-outline me-1"></i> Import Master Ketidakpastian
                             </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
                         <form id="formImport" enctype="multipart/form-data">
                             @csrf
@@ -180,22 +186,28 @@
                                 <div class="alert alert-info d-flex align-items-center mb-3 py-2 px-3">
                                     <i class="mdi mdi-information-outline fs-4 me-2"></i>
                                     <div>
-                                        Gunakan format template Excel. Jika kode alat dan titik kalibrasi sudah ada di database, nilai ketidakpastian akan diperbarui secara otomatis.
+                                        Gunakan format template Excel. Jika kode alat dan titik kalibrasi sudah ada di
+                                        database, nilai ketidakpastian akan diperbarui secara otomatis.
                                     </div>
                                 </div>
                                 <div class="mb-3 text-center">
-                                    <a href="{{ route('master.kalibrasi.ketidakpastian_pressure.download_template') }}" class="btn btn-outline-primary btn-sm">
+                                    <a href="{{ route('master.kalibrasi.ketidakpastian_pressure.download_template') }}"
+                                        class="btn btn-outline-primary btn-sm">
                                         <i class="mdi mdi-download me-1"></i> Download Format Template Excel (.xlsx)
                                     </a>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="import_file" class="form-label fw-semibold">Pilih File Excel (.xlsx / .xls) <span class="text-danger">*</span></label>
-                                    <input type="file" class="form-control" id="import_file" name="file" accept=".xlsx, .xls" required>
-                                    <div class="form-text">Pastikan baris pertama adalah header dan urutan kolom sesuai template: <b>Kode Alat, Titik Kalibrasi, Nilai Ketidakpastian, Keterangan</b>.</div>
+                                    <label for="import_file" class="form-label fw-semibold">Pilih File Excel (.xlsx /
+                                        .xls) <span class="text-danger">*</span></label>
+                                    <input type="file" class="form-control" id="import_file" name="file"
+                                        accept=".xlsx, .xls" required>
+                                    <div class="form-text">Pastikan baris pertama adalah header dan urutan kolom sesuai
+                                        template: <b>Kode Alat, Titik Kalibrasi, Nilai Ketidakpastian, Keterangan</b>.</div>
                                 </div>
                             </div>
                             <div class="modal-footer bg-light py-2">
-                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="button" class="btn btn-sm btn-secondary"
+                                    data-bs-dismiss="modal">Batal</button>
                                 <button type="submit" class="btn btn-sm btn-success" id="btnSubmitImport">
                                     <i class="mdi mdi-upload me-1"></i> Unggah & Import
                                 </button>
@@ -374,25 +386,28 @@
 
                 const id = $('#master_id').val();
                 const isEdit = !!id;
-                const url = isEdit
-                    ? "{{ url('kalibrasi/master/ketidakpastian-pressure') }}/" + id
-                    : "{{ route('master.kalibrasi.ketidakpastian_pressure.store') }}";
+                const url = isEdit ?
+                    "{{ url('kalibrasi/master/ketidakpastian-pressure') }}/" + id :
+                    "{{ route('master.kalibrasi.ketidakpastian_pressure.store') }}";
                 const method = isEdit ? 'PUT' : 'POST';
 
-                $('#btnSubmit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
+                $('#btnSubmit').prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
 
                 $.ajax({
                     url: url,
                     type: method,
                     data: $(this).serialize(),
                     success: function(response) {
-                        $('#btnSubmit').prop('disabled', false).html('<i class="mdi mdi-content-save-outline me-1"></i> Simpan');
+                        $('#btnSubmit').prop('disabled', false).html(
+                            '<i class="mdi mdi-content-save-outline me-1"></i> Simpan');
                         modal.hide();
 
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil!',
-                            text: response.message || 'Data ketidakpastian berhasil disimpan.',
+                            text: response.message ||
+                                'Data ketidakpastian berhasil disimpan.',
                             timer: 1500,
                             showConfirmButton: false
                         });
@@ -400,8 +415,10 @@
                         loadData();
                     },
                     error: function(xhr) {
-                        $('#btnSubmit').prop('disabled', false).html('<i class="mdi mdi-content-save-outline me-1"></i> Simpan');
-                        const msg = xhr.responseJSON?.message || 'Terjadi kesalahan saat menyimpan data.';
+                        $('#btnSubmit').prop('disabled', false).html(
+                            '<i class="mdi mdi-content-save-outline me-1"></i> Simpan');
+                        const msg = xhr.responseJSON?.message ||
+                            'Terjadi kesalahan saat menyimpan data.';
                         Swal.fire({
                             icon: 'error',
                             title: 'Gagal!',
@@ -416,7 +433,8 @@
                 e.preventDefault();
                 const formData = new FormData(this);
                 const $btn = $('#btnSubmitImport');
-                $btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin me-1"></i> Mengimpor...');
+                $btn.prop('disabled', true).html(
+                    '<i class="mdi mdi-loading mdi-spin me-1"></i> Mengimpor...');
 
                 $.ajax({
                     url: "{{ route('master.kalibrasi.ketidakpastian_pressure.import') }}",
@@ -425,7 +443,8 @@
                     processData: false,
                     contentType: false,
                     success: function(response) {
-                        $btn.prop('disabled', false).html('<i class="mdi mdi-upload me-1"></i> Unggah & Import');
+                        $btn.prop('disabled', false).html(
+                            '<i class="mdi mdi-upload me-1"></i> Unggah & Import');
                         const importModalEl = document.getElementById('modalImport');
                         const modalInstance = bootstrap.Modal.getInstance(importModalEl);
                         if (modalInstance) {
@@ -436,8 +455,11 @@
                         if (response.status === 'partial') {
                             let errorList = '';
                             if (response.errors && response.errors.length > 0) {
-                                errorList = '<div class="text-start mt-2 p-2 bg-light border rounded" style="max-height: 180px; overflow-y: auto;"><ul class="mb-0 text-danger ps-3">' +
-                                    response.errors.map(function(err) { return `<li><small>${err}</small></li>`; }).join('') +
+                                errorList =
+                                    '<div class="text-start mt-2 p-2 bg-light border rounded" style="max-height: 180px; overflow-y: auto;"><ul class="mb-0 text-danger ps-3">' +
+                                    response.errors.map(function(err) {
+                                        return `<li><small>${err}</small></li>`;
+                                    }).join('') +
                                     '</ul></div>';
                             }
 
@@ -460,19 +482,27 @@
                         loadData();
                     },
                     error: function(xhr) {
-                        $btn.prop('disabled', false).html('<i class="mdi mdi-upload me-1"></i> Unggah & Import');
-                        let errMsg = xhr.responseJSON?.message || 'Terjadi kesalahan saat mengimpor data.';
+                        $btn.prop('disabled', false).html(
+                            '<i class="mdi mdi-upload me-1"></i> Unggah & Import');
+                        let errMsg = xhr.responseJSON?.message ||
+                            'Terjadi kesalahan saat mengimpor data.';
                         let errorDetails = '';
 
                         if (xhr.responseJSON?.errors) {
                             if (Array.isArray(xhr.responseJSON.errors)) {
-                                errorDetails = '<div class="text-start mt-2 p-2 bg-light border rounded" style="max-height: 180px; overflow-y: auto;"><ul class="mb-0 text-danger ps-3">' +
-                                    xhr.responseJSON.errors.map(function(err) { return `<li><small>${err}</small></li>`; }).join('') +
+                                errorDetails =
+                                    '<div class="text-start mt-2 p-2 bg-light border rounded" style="max-height: 180px; overflow-y: auto;"><ul class="mb-0 text-danger ps-3">' +
+                                    xhr.responseJSON.errors.map(function(err) {
+                                        return `<li><small>${err}</small></li>`;
+                                    }).join('') +
                                     '</ul></div>';
                             } else if (typeof xhr.responseJSON.errors === 'object') {
                                 let list = Object.values(xhr.responseJSON.errors).flat();
-                                errorDetails = '<div class="text-start mt-2 p-2 bg-light border rounded" style="max-height: 180px; overflow-y: auto;"><ul class="mb-0 text-danger ps-3">' +
-                                    list.map(function(err) { return `<li><small>${err}</small></li>`; }).join('') +
+                                errorDetails =
+                                    '<div class="text-start mt-2 p-2 bg-light border rounded" style="max-height: 180px; overflow-y: auto;"><ul class="mb-0 text-danger ps-3">' +
+                                    list.map(function(err) {
+                                        return `<li><small>${err}</small></li>`;
+                                    }).join('') +
                                     '</ul></div>';
                             }
                         }
@@ -505,7 +535,8 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: "{{ url('kalibrasi/master/ketidakpastian-pressure') }}/" + id,
+                            url: "{{ url('kalibrasi/master/ketidakpastian-pressure') }}/" +
+                                id,
                             type: 'DELETE',
                             data: {
                                 _token: '{{ csrf_token() }}'
@@ -514,7 +545,8 @@
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Terhapus!',
-                                    text: res.message || 'Data berhasil dihapus.',
+                                    text: res.message ||
+                                        'Data berhasil dihapus.',
                                     timer: 1500,
                                     showConfirmButton: false
                                 });
@@ -524,7 +556,8 @@
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Gagal!',
-                                    text: xhr.responseJSON?.message || 'Gagal menghapus data.'
+                                    text: xhr.responseJSON?.message ||
+                                        'Gagal menghapus data.'
                                 });
                             }
                         });

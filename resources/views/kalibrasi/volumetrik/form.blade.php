@@ -32,11 +32,28 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             background-color: #fcf0cc;
+            transition: all 0.2s ease-in-out;
         }
 
         .input-mini:focus {
             outline: none;
             border-color: #0d6efd;
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+        }
+
+        .input-mini.required-slot {
+            border-left: 3px solid #0d6efd;
+        }
+
+        .input-mini.optional-slot {
+            border-left: 3px solid #adb5bd;
+            background-color: #f8f9fa;
+        }
+
+        .input-mini.pair-invalid {
+            border-color: #dc3545 !important;
+            background-color: #ffe6e6 !important;
+            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important;
         }
     </style>
 @endsection
@@ -199,14 +216,29 @@
                                     </div>
                                 </div>
 
+                                {{-- Ketentuan Pengisian Alert --}}
+                                <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center gap-2">
+                                    <i class="mdi mdi-information-outline fs-5 text-primary"></i>
+                                    <div class="fs-12">
+                                        <strong>Ketentuan Pengisian:</strong>
+                                        Setiap titik kalibrasi <strong>minimal 3 baris pertama wajib diisi lengkap</strong>. Baris ke-4 hingga 10 bersifat <strong>opsional</strong>. Namun, jika penunjuk standar diisi pada baris tertentu, maka penunjuk alat pada baris yang sama <strong>wajib diisi (dan sebaliknya)</strong>.
+                                    </div>
+                                </div>
+
                                 {{-- === Data Pengukuran Volumetrik === --}}
                                 <div class="table-responsive">
                                     <table class="table table-bordered align-middle" id="tableVolumetrik">
                                         <thead class="table-light">
                                             <tr>
-                                                <th class="text-center" style="width:120px;">Titik Kalibrasi</th>
-                                                <th class="text-center">Penunjuk Standar</th>
-                                                <th class="text-center">Penunjuk Alat</th>
+                                                <th class="text-center" style="width:140px;">Titik Kalibrasi</th>
+                                                <th class="text-center">
+                                                    Penunjuk Standar
+                                                    <div class="fs-11 text-muted fw-normal">Min. 3 baris terisi</div>
+                                                </th>
+                                                <th class="text-center">
+                                                    Penunjuk Alat
+                                                    <div class="fs-11 text-muted fw-normal">Min. 3 baris terisi</div>
+                                                </th>
                                                 <th style="width:80px;" class="text-center">Aksi</th>
                                             </tr>
                                         </thead>
@@ -327,6 +359,97 @@
                 saveDraft();
             });
 
+            function createInputRow(index, rowData = null) {
+                let standarInputs = '';
+                let alatInputs = '';
+
+                const stdValues = rowData && rowData.penunjuk_standar ? rowData.penunjuk_standar : [];
+                const alatValues = rowData && rowData.penunjuk_alat ? rowData.penunjuk_alat : [];
+                const titikVal = rowData && rowData.titik_kalibrasi !== undefined ? rowData.titik_kalibrasi : '';
+
+                for (let j = 0; j < 10; j++) {
+                    const sVal = stdValues[j] !== undefined && stdValues[j] !== null ? stdValues[j] : '';
+                    const aVal = alatValues[j] !== undefined && alatValues[j] !== null ? alatValues[j] : '';
+                    const isRequired = j < 3;
+                    const slotClass = isRequired ? 'required-slot' : 'optional-slot';
+                    const placeholder = isRequired ? `${j + 1} (Wajib)` : `${j + 1} (Opsional)`;
+
+                    standarInputs += `
+                        <input type="number" step="any"
+                            name="data[${index}][penunjuk_standar][]"
+                            value="${sVal}"
+                            data-row="${j}"
+                            placeholder="${placeholder}"
+                            class="input-mini ${slotClass}">
+                    `;
+
+                    alatInputs += `
+                        <input type="number" step="any"
+                            name="data[${index}][penunjuk_alat][]"
+                            value="${aVal}"
+                            data-row="${j}"
+                            placeholder="${placeholder}"
+                            class="input-mini ${slotClass}">
+                    `;
+                }
+
+                return `
+                    <tr>
+                        <td class="text-center align-top pt-2">
+                            <input type="number" step="any"
+                                name="data[${index}][titik_kalibrasi]"
+                                value="${titikVal}"
+                                placeholder="Titik"
+                                class="input-mini text-center fw-bold">
+                        </td>
+                        <td>
+                            <div class="mini-container">
+                                ${standarInputs}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="mini-container">
+                                ${alatInputs}
+                            </div>
+                        </td>
+                        <td class="text-center align-top pt-2">
+                            <button type="button" class="btn btn-sm btn-danger btn-delete-row" title="Hapus Titik">✕</button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // Validasi langsung satu pasang input
+            function validatePair($input) {
+                const $row = $input.closest('tr');
+                const rowIndex = $input.data('row');
+                if (rowIndex === undefined) return;
+
+                const $stdInputs = $row.find('input[name*="penunjuk_standar"]');
+                const $alatInputs = $row.find('input[name*="penunjuk_alat"]');
+
+                const $std = $stdInputs.eq(rowIndex);
+                const $alat = $alatInputs.eq(rowIndex);
+
+                const stdVal = $std.val().trim();
+                const alatVal = $alat.val().trim();
+
+                if (stdVal !== '' && alatVal === '') {
+                    $alat.addClass('pair-invalid').attr('title', 'Penunjuk Alat wajib diisi karena Penunjuk Standar terisi');
+                    $std.removeClass('pair-invalid').removeAttr('title');
+                } else if (stdVal === '' && alatVal !== '') {
+                    $std.addClass('pair-invalid').attr('title', 'Penunjuk Standar wajib diisi karena Penunjuk Alat terisi');
+                    $alat.removeClass('pair-invalid').removeAttr('title');
+                } else {
+                    $std.removeClass('pair-invalid').removeAttr('title');
+                    $alat.removeClass('pair-invalid').removeAttr('title');
+                }
+            }
+
+            $(document).on('input blur change', 'input[name*="penunjuk_standar"], input[name*="penunjuk_alat"]', function() {
+                validatePair($(this));
+            });
+
             function loadDraft() {
 
                 const draft = localStorage.getItem(STORAGE_KEY);
@@ -347,50 +470,14 @@
 
                 if (!data.data.length) return;
 
+                tbody.empty();
                 data.data.forEach((row, i) => {
+                    tbody.append(createInputRow(i, row));
+                });
 
-                    let standarInputs = '';
-                    let alatInputs = '';
-
-                    row.penunjuk_standar.forEach((val, j) => {
-                        standarInputs += `
-                            <input type="number" step="any"
-                                name="data[${i}][penunjuk_standar][]"
-                                value="${val}"
-                                class="input-mini">
-                        `;
-                    });
-
-                    row.penunjuk_alat.forEach((val, j) => {
-                        alatInputs += `
-                            <input type="number" step="any"
-                                name="data[${i}][penunjuk_alat][]"
-                                value="${val}"
-                                class="input-mini">
-                        `;
-                    });
-
-                    tbody.append(`
-                        <tr>
-                            <td class="text-center">
-                                <input type="number" step="any"
-                                    name="data[${i}][titik_kalibrasi]"
-                                    value="${row.titik_kalibrasi}"
-                                    class="input-mini text-center">
-                            </td>
-
-                            <td><div class="mini-container">${standarInputs}</div></td>
-                            <td><div class="mini-container">${alatInputs}</div></td>
-
-                            <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-danger btn-delete-row">✕</button>
-                            </td>
-                        </tr>
-                    `);
-
-                    if (i === data.data.length - 1) {
-                        $('#emptyState').remove();
-                    }
+                // Jalankan validasi visual pada data yang di-restore
+                tbody.find('input[name*="penunjuk_standar"]').each(function() {
+                    validatePair($(this));
                 });
             }
 
@@ -413,49 +500,7 @@
                 }
 
                 for (let i = 0; i < jumlah; i++) {
-
-                    let standarInputs = '';
-                    let alatInputs = '';
-
-                    for (let j = 0; j < 10; j++) {
-                        standarInputs += `
-                            <input type="number" step="any"
-                                name="data[${i}][penunjuk_standar][]"
-                                class="input-mini">
-                        `;
-
-                        alatInputs += `
-                            <input type="number" step="any"
-                                name="data[${i}][penunjuk_alat][]"
-                                class="input-mini">
-                        `;
-                    }
-
-                    tbody.append(`
-                        <tr>
-                            <td class="text-center">
-                                <input type="number" step="any"
-                                    name="data[${i}][titik_kalibrasi]"
-                                    class="input-mini text-center">
-                            </td>
-
-                            <td>
-                                <div class="mini-container">
-                                    ${standarInputs}
-                                </div>
-                            </td>
-
-                            <td>
-                                <div class="mini-container">
-                                    ${alatInputs}
-                                </div>
-                            </td>
-
-                            <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-danger btn-delete-row">✕</button>
-                            </td>
-                        </tr>
-                    `);
+                    tbody.append(createInputRow(i));
                 }
 
                 saveDraft();
@@ -497,57 +542,88 @@
                 }
 
                 const rowIndex = tbody.find('tr').length; // index berikutnya
-
-                let standarInputs = '';
-                let alatInputs = '';
-
-                for (let j = 0; j < 10; j++) {
-                    standarInputs += `
-                        <input type="number" step="any"
-                            name="data[${rowIndex}][penunjuk_standar][]"
-                            
-                            class="input-mini">
-                    `;
-
-                    alatInputs += `
-                        <input type="number" step="any"
-                            name="data[${rowIndex}][penunjuk_alat][]"
-                            
-                            class="input-mini">
-                    `;
-                }
-
-                tbody.append(`
-                    <tr>
-                        <td class="text-center">
-                            <input type="number" step="any"
-                                name="data[${rowIndex}][titik_kalibrasi]"
-                                class="input-mini text-center">
-                        </td>
-
-                        <td>
-                            <div class="mini-container">
-                                ${standarInputs}
-                            </div>
-                        </td>
-
-                        <td>
-                            <div class="mini-container">
-                                ${alatInputs}
-                            </div>
-                        </td>
-
-                        <td class="text-center">
-                            <button type="button" class="btn btn-sm btn-danger btn-delete-row">✕</button>
-                        </td>
-                    </tr>
-                `);
+                tbody.append(createInputRow(rowIndex));
 
                 saveDraft();
             });
 
             // Submit form via AJAX
             $('#formVolumetrik').on('submit', function(e) {
+                e.preventDefault();
+
+                // Validasi form langsung (client-side)
+                const $rows = $('#tableVolumetrik tbody tr');
+                if ($rows.length === 0 || $rows.first().attr('id') === 'emptyState' || $rows.first().find('td').length === 1) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Data Masih Kosong',
+                        text: 'Silakan tentukan dan tambahkan minimal satu titik kalibrasi terlebih dahulu.'
+                    });
+                    return false;
+                }
+
+                let clientErrors = [];
+
+                $rows.each(function(i) {
+                    if ($(this).attr('id') === 'emptyState' || $(this).find('td').length === 1) return;
+
+                    const $titikInput = $(this).find('input[name*="titik_kalibrasi"]');
+                    const titikVal = $titikInput.val().trim();
+                    const titikLabel = titikVal ? `Titik ${titikVal}` : `Titik ke-${i + 1}`;
+
+                    if (!titikVal) {
+                        clientErrors.push(`${titikLabel}: Nilai titik kalibrasi wajib diisi.`);
+                        $titikInput.addClass('pair-invalid');
+                    } else {
+                        $titikInput.removeClass('pair-invalid');
+                    }
+
+                    const $stdInputs = $(this).find('input[name*="penunjuk_standar"]');
+                    const $alatInputs = $(this).find('input[name*="penunjuk_alat"]');
+
+                    let filledCount = 0;
+
+                    for (let j = 0; j < 10; j++) {
+                        const $std = $stdInputs.eq(j);
+                        const $alat = $alatInputs.eq(j);
+                        const sVal = $std.val().trim();
+                        const aVal = $alat.val().trim();
+
+                        if (sVal !== '' && aVal === '') {
+                            clientErrors.push(`${titikLabel} baris ke-${j + 1}: Penunjuk Alat wajib diisi karena Penunjuk Standar telah terisi.`);
+                            $alat.addClass('pair-invalid');
+                        } else if (sVal === '' && aVal !== '') {
+                            clientErrors.push(`${titikLabel} baris ke-${j + 1}: Penunjuk Standar wajib diisi karena Penunjuk Alat telah terisi.`);
+                            $std.addClass('pair-invalid');
+                        } else if (sVal !== '' && aVal !== '') {
+                            filledCount++;
+                            $std.removeClass('pair-invalid');
+                            $alat.removeClass('pair-invalid');
+                        } else {
+                            $std.removeClass('pair-invalid');
+                            $alat.removeClass('pair-invalid');
+                        }
+                    }
+
+                    if (filledCount < 3) {
+                        clientErrors.push(`${titikLabel}: Minimal 3 baris pengisian (Standar & Alat) harus diisi lengkap. Saat ini baru terisi ${filledCount} baris.`);
+                        for (let j = 0; j < 3; j++) {
+                            if ($stdInputs.eq(j).val().trim() === '') $stdInputs.eq(j).addClass('pair-invalid');
+                            if ($alatInputs.eq(j).val().trim() === '') $alatInputs.eq(j).addClass('pair-invalid');
+                        }
+                    }
+                });
+
+                if (clientErrors.length > 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Validasi Form Belum Lengkap',
+                        html: '<div class="text-start fs-13"><ul class="mb-0 text-danger ps-3">' +
+                            clientErrors.map(err => `<li class="mb-1">${err}</li>`).join('') +
+                            '</ul></div>'
+                    });
+                    return false;
+                }
                 e.preventDefault();
 
                 let formData = $(this).serialize();
