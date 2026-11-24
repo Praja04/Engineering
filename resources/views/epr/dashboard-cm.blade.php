@@ -86,7 +86,7 @@
     <div class="container-fluid">
 
         {{-- Top Banner Header --}}
-        <div class="kpi-header mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="kpi-header mb-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <span class="badge bg-warning text-dark fw-bold px-2 py-1">LIVE CM DATA</span>
@@ -100,33 +100,6 @@
                 </p>
             </div>
             <div class="d-flex flex-wrap align-items-center gap-2">
-                {{-- Month Selector --}}
-                <div class="d-flex align-items-center bg-dark bg-opacity-50 p-2 rounded border border-secondary border-opacity-50">
-                    <label class="form-label text-slate-300 fs-11 mb-0 me-2 fw-semibold text-nowrap">BULAN:</label>
-                    <select id="kpi-month" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: 140px;" onchange="changeKpiFilter()">
-                        @foreach($availableMonths as $m)
-                            <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
-                                {{ date('F Y', strtotime($m . '-01')) }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Specific Date Selector (Optional) --}}
-                @if(count($availableDates) > 0)
-                <div class="d-flex align-items-center bg-dark bg-opacity-50 p-2 rounded border border-secondary border-opacity-50">
-                    <label class="form-label text-slate-300 fs-11 mb-0 me-2 fw-semibold text-nowrap">TANGGAL:</label>
-                    <select id="kpi-date" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: 130px;" onchange="changeKpiFilter()">
-                        <option value="">Semua (1 Bulan)</option>
-                        @foreach($availableDates as $d)
-                            <option value="{{ $d }}" {{ $selectedDate === $d ? 'selected' : '' }}>
-                                {{ date('d M Y', strtotime($d)) }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                @endif
-
                 {{-- Quick Link to Corrective Maintenance History --}}
                 <a href="{{ route('epr.cm.data') }}" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm">
                     <i class="ri-file-list-3-line"></i> Data Log CM
@@ -134,6 +107,122 @@
                 <a href="{{ route('epr.cm.extra-data') }}" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1">
                     <i class="ri-settings-3-line"></i> Input Biaya & KPI
                 </a>
+            </div>
+        </div>
+
+        {{-- Filter Bar --}}
+        <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
+            <div class="card-body p-3">
+                <form id="formKpiFilter" method="GET" action="{{ route('epr.dashboard.cm') }}">
+                    <div class="row g-2 align-items-center">
+                        {{-- Mode Filter Selector --}}
+                        <div class="col-xl-2 col-md-3 col-sm-6">
+                            <label class="form-label fs-11 fw-bold text-uppercase text-muted mb-1">
+                                <i class="ri-filter-3-line text-primary me-1"></i> Tipe Periode
+                            </label>
+                            <select name="filter_type" id="filter_type" class="form-select form-select-sm fw-semibold" onchange="toggleFilterInputs()">
+                                <option value="month" {{ $filterType === 'month' ? 'selected' : '' }}>Bulanan (Month)</option>
+                                <option value="week" {{ $filterType === 'week' ? 'selected' : '' }}>Mingguan (Week)</option>
+                                <option value="date" {{ $filterType === 'date' ? 'selected' : '' }}>Harian (1 Tanggal)</option>
+                                <option value="custom" {{ $filterType === 'custom' ? 'selected' : '' }}>Custom (Rentang Tanggal)</option>
+                            </select>
+                        </div>
+
+                        {{-- Month Selector (Shown on 'month' & 'week') --}}
+                        <div class="col-xl-2 col-md-3 col-sm-6 filter-input-group" id="group_month">
+                            <label class="form-label fs-11 fw-bold text-uppercase text-muted mb-1">
+                                <i class="ri-calendar-line text-info me-1"></i> Pilih Bulan
+                            </label>
+                            <select name="month" id="filter_month" class="form-select form-select-sm">
+                                @foreach($availableMonths as $m)
+                                    <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
+                                        {{ date('F Y', strtotime($m . '-01')) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Week Selector (Shown only on 'week') --}}
+                        <div class="col-xl-2 col-md-3 col-sm-6 filter-input-group" id="group_week" style="display: none;">
+                            <label class="form-label fs-11 fw-bold text-uppercase text-muted mb-1">
+                                <i class="ri-calendar-todo-line text-warning me-1"></i> Pilih Minggu
+                            </label>
+                            <select name="week" id="filter_week" class="form-select form-select-sm">
+                                <option value="1" {{ $week == 1 ? 'selected' : '' }}>Minggu 1 (Tgl 01 - 07)</option>
+                                <option value="2" {{ $week == 2 ? 'selected' : '' }}>Minggu 2 (Tgl 08 - 14)</option>
+                                <option value="3" {{ $week == 3 ? 'selected' : '' }}>Minggu 3 (Tgl 15 - 21)</option>
+                                <option value="4" {{ $week == 4 ? 'selected' : '' }}>Minggu 4 (Tgl 22 - 28)</option>
+                                <option value="5" {{ $week == 5 ? 'selected' : '' }}>Minggu 5 (Tgl 29 - Akhir)</option>
+                            </select>
+                        </div>
+
+                        {{-- Single Date Selector (Shown only on 'date') --}}
+                        <div class="col-xl-2 col-md-3 col-sm-6 filter-input-group" id="group_date" style="display: none;">
+                            <label class="form-label fs-11 fw-bold text-uppercase text-muted mb-1">
+                                <i class="ri-calendar-event-line text-success me-1"></i> Pilih Tanggal
+                            </label>
+                            <input type="date" name="date" id="filter_date" class="form-control form-control-sm" value="{{ $selectedDate }}">
+                        </div>
+
+                        {{-- Custom Start Date (Shown only on 'custom') --}}
+                        <div class="col-xl-2 col-md-3 col-sm-6 filter-input-group" id="group_start_date" style="display: none;">
+                            <label class="form-label fs-11 fw-bold text-uppercase text-muted mb-1">
+                                <i class="ri-calendar-check-line text-primary me-1"></i> Dari Tanggal
+                            </label>
+                            <input type="date" name="start_date" id="filter_start_date" class="form-control form-control-sm" value="{{ $startDate }}">
+                        </div>
+
+                        {{-- Custom End Date (Shown only on 'custom') --}}
+                        <div class="col-xl-2 col-md-3 col-sm-6 filter-input-group" id="group_end_date" style="display: none;">
+                            <label class="form-label fs-11 fw-bold text-uppercase text-muted mb-1">
+                                <i class="ri-calendar-close-line text-danger me-1"></i> Sampai Tanggal
+                            </label>
+                            <input type="date" name="end_date" id="filter_end_date" class="form-control form-control-sm" value="{{ $endDate }}">
+                        </div>
+
+                        {{-- Kategori Mesin Selector --}}
+                        <div class="col-xl-2 col-md-3 col-sm-6">
+                            <label class="form-label fs-11 fw-bold text-uppercase text-muted mb-1">
+                                <i class="ri-macbook-line text-purple me-1"></i> Kategori Mesin
+                            </label>
+                            <select name="kategori" id="filter_kategori" class="form-select form-select-sm">
+                                <option value="all" {{ $kategori === 'all' ? 'selected' : '' }}>Semua Mesin (28 Mesin)</option>
+                                <option value="pouch" {{ $kategori === 'pouch' ? 'selected' : '' }}>Pouch Saja (21 Mesin)</option>
+                                <option value="sachet" {{ $kategori === 'sachet' ? 'selected' : '' }}>Sachet Saja (7 Mesin)</option>
+                            </select>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="col-xl-auto col-md-auto col-12 d-flex align-items-end gap-1 mt-auto pt-1">
+                            <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1 shadow-sm">
+                                <i class="ri-search-line"></i> Terapkan
+                            </button>
+                            <a href="{{ route('epr.dashboard.cm') }}" class="btn btn-sm btn-light border d-flex align-items-center gap-1" title="Reset ke Default">
+                                <i class="ri-refresh-line"></i> Reset
+                            </a>
+                        </div>
+                    </div>
+                </form>
+
+                {{-- Active Period Info Badge --}}
+                <div class="mt-2 pt-2 border-top d-flex flex-wrap align-items-center justify-content-between gap-2 fs-12">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-soft-primary text-primary px-2 py-1 fw-semibold">
+                            <i class="ri-time-line me-1"></i> Periode Aktif: {{ $periodLabel }}
+                        </span>
+                        <span class="badge bg-soft-info text-info px-2 py-1">
+                            {{ $daysInPeriod }} Hari Terpilih
+                        </span>
+                        @if($kategori !== 'all')
+                        <span class="badge bg-soft-warning text-warning px-2 py-1 text-uppercase">
+                            Kategori: {{ $kategori }}
+                        </span>
+                        @endif
+                    </div>
+                    <div class="text-muted fs-11">
+                        Rentang Waktu: <strong class="text-dark">{{ date('d/m/Y', strtotime($startDate)) }}</strong> s/d <strong class="text-dark">{{ date('d/m/Y', strtotime($endDate)) }}</strong>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -212,145 +301,109 @@
             </div>
         </div>
 
-        {{-- Row 2: 1. Performance Map, 2&3. Top 5 & Worst 5 Mesin, 4. Shift & Trend Breakdown --}}
+        {{-- Row 2: Top 5 Mesin Terbaik & Worst 5 Mesin --}}
         <div class="row g-3 mb-4">
-            {{-- Module 1: Machine Performance Map --}}
-            <div class="col-xl-4 col-lg-6">
+            {{-- Top 5 Mesin --}}
+            <div class="col-lg-6">
                 <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                    <div class="card-module-header">
-                        <span>1. MACHINE PERFORMANCE MAP (MTBF vs BREAKDOWN)</span>
-                        <span class="badge bg-light text-dark fs-10">28 Mesin</span>
-                    </div>
-                    <div class="card-body p-3">
-                        <div id="chartPerformanceMap" style="min-height: 280px;"></div>
-                        <div class="d-flex justify-content-center gap-3 fs-11 mt-2">
-                            <span><span class="status-dot dot-red me-1"></span> High Breakdown (&gt;3%)</span>
-                            <span><span class="status-dot dot-yellow me-1"></span> Low MTBF (Freq Stop)</span>
-                            <span><span class="status-dot dot-green me-1"></span> Healthy Zone (Ideal)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Module 2 & 3: Top 5 & Worst 5 Mesin --}}
-            <div class="col-xl-4 col-lg-6">
-                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                    {{-- Top 5 Mesin --}}
                     <div class="card-module-header header-emerald">
-                        <span>2. TOP 5 MESIN TERBAIK (Availability Tertinggi)</span>
-                        <i class="ri-trophy-line text-warning"></i>
-                    </div>
-                    <div class="card-body p-2 border-bottom">
-                        <table class="table table-compact table-bordered mb-0 align-middle text-center">
-                            <thead class="table-light fs-11">
-                                <tr>
-                                    <th>RANK</th>
-                                    <th>MESIN</th>
-                                    <th>AVAILABILITY</th>
-                                    <th>DOWNTIME</th>
-                                    <th>MTTR</th>
-                                    <th>MTBF</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($top5 as $idx => $t)
-                                <tr>
-                                    <td>{{ $idx + 1 }}</td>
-                                    <td class="fw-bold">{{ $t['mesin'] }}</td>
-                                    <td class="text-success fw-bold">{{ number_format($t['avail'], 1) }}%</td>
-                                    <td class="font-monospace">{{ $t['total_dt'] }} m</td>
-                                    <td class="font-monospace">{{ $t['mttr'] }}</td>
-                                    <td class="font-monospace text-muted">{{ number_format($t['mtbf']) }}</td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="6" class="text-center text-muted py-2">Belum ada data</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {{-- Worst 5 Mesin --}}
-                    <div class="card-module-header header-red">
-                        <span>3. WORST 5 MESIN (Downtime Tertinggi)</span>
-                        <i class="ri-alert-fill text-white"></i>
+                        <span><i class="ri-trophy-line text-warning me-1"></i> TOP 5 MESIN TERBAIK (Availability Tertinggi)</span>
+                        <span class="badge bg-white text-success fs-10">Efisiensi Tinggi</span>
                     </div>
                     <div class="card-body p-2">
-                        <table class="table table-compact table-bordered mb-0 align-middle text-center">
-                            <thead class="table-light fs-11">
-                                <tr>
-                                    <th>RANK</th>
-                                    <th>MESIN</th>
-                                    <th>DOWNTIME</th>
-                                    <th>% DT</th>
-                                    <th>MTTR</th>
-                                    <th>KEJADIAN</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($worst5 as $idx => $w)
-                                <tr>
-                                    <td>{{ $idx + 1 }}</td>
-                                    <td class="fw-bold text-danger">{{ $w['mesin'] }}</td>
-                                    <td class="text-danger fw-bold font-monospace">{{ $w['total_dt'] }} m</td>
-                                    <td class="text-danger fw-semibold">{{ number_format($w['breakdown'], 2) }}%</td>
-                                    <td class="font-monospace">{{ $w['mttr'] }}</td>
-                                    <td><span class="badge bg-soft-danger text-danger">{{ $w['freq'] }}x</span></td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="6" class="text-center text-muted py-2">Belum ada data</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-compact table-bordered mb-0 align-middle text-center">
+                                <thead class="table-light fs-11">
+                                    <tr>
+                                        <th width="45">RANK</th>
+                                        <th width="75">MESIN</th>
+                                        <th>KATEGORI</th>
+                                        <th>AVAILABILITY</th>
+                                        <th>DOWNTIME</th>
+                                        <th>MTTR</th>
+                                        <th>MTBF</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($top5 as $idx => $t)
+                                    <tr>
+                                        <td>{{ $idx + 1 }}</td>
+                                        <td class="fw-bold text-success">{{ $t['mesin'] }}</td>
+                                        <td>
+                                            <span class="badge {{ $t['kategori'] === 'Pouch' ? 'badge-pouch' : 'badge-sachet' }}">
+                                                {{ $t['kategori'] }}
+                                            </span>
+                                        </td>
+                                        <td class="text-success fw-bold">{{ number_format($t['avail'], 1) }}%</td>
+                                        <td class="font-monospace">{{ $t['total_dt'] }} m</td>
+                                        <td class="font-monospace">{{ $t['mttr'] }}</td>
+                                        <td class="font-monospace text-muted">{{ number_format($t['mtbf']) }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr><td colspan="7" class="text-center text-muted py-3">Belum ada data pada periode ini</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Module 4: Shift Comparison & Worst Machine Trend --}}
-            <div class="col-xl-4 col-lg-12">
+            {{-- Worst 5 Mesin --}}
+            <div class="col-lg-6">
                 <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                    <div class="card-module-header">
-                        <span>4. KOMPARASI SHIFT & TREND DOWNTIME</span>
-                        <span class="badge bg-light text-dark fs-10">Shift A, B, C</span>
+                    <div class="card-module-header header-red">
+                        <span><i class="ri-alert-fill text-white me-1"></i> WORST 5 MESIN (Downtime Tertinggi)</span>
+                        <span class="badge bg-white text-danger fs-10">Prioritas Perbaikan</span>
                     </div>
-                    <div class="card-body p-3">
-                        <div class="row g-2 mb-3 text-center">
-                            <div class="col-4">
-                                <div class="p-2 border rounded bg-light">
-                                    <div class="fs-10 text-muted fw-bold">SHIFT A</div>
-                                    <div class="fs-16 fw-bold text-primary font-monospace">{{ $shiftA }} m</div>
-                                    <div class="fs-10 text-muted">{{ $totalDowntime > 0 ? round(($shiftA / $totalDowntime) * 100, 1) : 0 }}% DT</div>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="p-2 border rounded bg-light">
-                                    <div class="fs-10 text-muted fw-bold">SHIFT B</div>
-                                    <div class="fs-16 fw-bold text-warning font-monospace">{{ $shiftB }} m</div>
-                                    <div class="fs-10 text-muted">{{ $totalDowntime > 0 ? round(($shiftB / $totalDowntime) * 100, 1) : 0 }}% DT</div>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="p-2 border rounded bg-light">
-                                    <div class="fs-10 text-muted fw-bold">SHIFT C</div>
-                                    <div class="fs-16 fw-bold text-success font-monospace">{{ $shiftC }} m</div>
-                                    <div class="fs-10 text-muted">{{ $totalDowntime > 0 ? round(($shiftC / $totalDowntime) * 100, 1) : 0 }}% DT</div>
-                                </div>
-                            </div>
+                    <div class="card-body p-2">
+                        <div class="table-responsive">
+                            <table class="table table-compact table-bordered mb-0 align-middle text-center">
+                                <thead class="table-light fs-11">
+                                    <tr>
+                                        <th width="45">RANK</th>
+                                        <th width="75">MESIN</th>
+                                        <th>KATEGORI</th>
+                                        <th>DOWNTIME</th>
+                                        <th>% DT</th>
+                                        <th>MTTR</th>
+                                        <th>KEJADIAN</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($worst5 as $idx => $w)
+                                    <tr>
+                                        <td>{{ $idx + 1 }}</td>
+                                        <td class="fw-bold text-danger">{{ $w['mesin'] }}</td>
+                                        <td>
+                                            <span class="badge {{ $w['kategori'] === 'Pouch' ? 'badge-pouch' : 'badge-sachet' }}">
+                                                {{ $w['kategori'] }}
+                                            </span>
+                                        </td>
+                                        <td class="text-danger fw-bold font-monospace">{{ $w['total_dt'] }} m</td>
+                                        <td class="text-danger fw-semibold">{{ number_format($w['breakdown'], 2) }}%</td>
+                                        <td class="font-monospace">{{ $w['mttr'] }}</td>
+                                        <td><span class="badge bg-soft-danger text-danger">{{ $w['freq'] }}x</span></td>
+                                    </tr>
+                                    @empty
+                                    <tr><td colspan="7" class="text-center text-muted py-3">Belum ada data pada periode ini</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
-                        <div id="chartBreakdownTrend" style="min-height: 200px;"></div>
-                        <div class="text-muted fs-11 mt-1 text-center">* Distribusi downtime per shift pada Top 4 Worst Mesin</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Row 3: 5. Pareto Kerusakan (Jenis DT), 6. Reliability Quadrant, 7. Klasifikasi E/M --}}
+        {{-- Row 3: Pareto Kerusakan (Jenis DT) & Klasifikasi Electrical vs Mechanical --}}
         <div class="row g-3 mb-4">
-            {{-- Module 5: Pareto Analisis Jenis DT --}}
-            <div class="col-xl-4 col-lg-6">
+            {{-- Module Pareto Analisis Jenis DT --}}
+            <div class="col-lg-6">
                 <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
                     <div class="card-module-header header-blue">
-                        <span>5. PARETO ANALISIS: TOP JENIS KERUSAKAN (DT)</span>
-                        <i class="ri-bar-chart-grouped-line"></i>
+                        <span><i class="ri-bar-chart-grouped-line me-1"></i> PARETO ANALISIS: TOP JENIS KERUSAKAN (DT)</span>
+                        <span class="badge bg-light text-dark fs-10">80/20 Rule</span>
                     </div>
                     <div class="card-body p-3">
                         <div id="chartParetoJenisDt" style="min-height: 280px;"></div>
@@ -359,36 +412,18 @@
                 </div>
             </div>
 
-            {{-- Module 6: Reliability Quadrant --}}
-            <div class="col-xl-4 col-lg-6">
+            {{-- Module Klasifikasi Electrical & Mechanical --}}
+            <div class="col-lg-6">
                 <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
                     <div class="card-module-header">
-                        <span>6. RELIABILITY QUADRANT (MTTR vs MTBF)</span>
-                        <i class="ri-bubble-chart-line text-warning"></i>
-                    </div>
-                    <div class="card-body p-3">
-                        <div id="chartReliabilityQuadrant" style="min-height: 280px;"></div>
-                        <div class="d-flex justify-content-center gap-3 fs-11 mt-2">
-                            <span><span class="status-dot dot-red me-1"></span> Slow Repair (MTTR &gt; 30m)</span>
-                            <span><span class="status-dot dot-yellow me-1"></span> Low MTBF (Fast Stop)</span>
-                            <span><span class="status-dot dot-green me-1"></span> Ideal / Stable</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Module 7: Klasifikasi Electrical & Mechanical --}}
-            <div class="col-xl-4 col-lg-12">
-                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                    <div class="card-module-header">
-                        <span>7. KLASIFIKASI ELECTRICAL VS MECHANICAL</span>
-                        <i class="ri-flashlight-line text-info"></i>
+                        <span><i class="ri-flashlight-line text-info me-1"></i> KLASIFIKASI ELECTRICAL VS MECHANICAL</span>
+                        <span class="badge bg-light text-dark fs-10">Distribusi Disiplin</span>
                     </div>
                     <div class="card-body p-3 d-flex flex-column justify-content-between">
                         <div class="row g-2 mb-3">
                             {{-- Electrical Card --}}
                             <div class="col-6">
-                                <div class="p-3 rounded-3 border" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #bfdbfe !important;">
+                                <div class="p-3 rounded-3 border h-100" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #bfdbfe !important;">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="d-flex align-items-center gap-1">
                                             <i class="ri-flashlight-fill text-primary fs-18"></i>
@@ -402,7 +437,7 @@
                             </div>
                             {{-- Mechanical Card --}}
                             <div class="col-6">
-                                <div class="p-3 rounded-3 border" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-color: #e9d5ff !important;">
+                                <div class="p-3 rounded-3 border h-100" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-color: #e9d5ff !important;">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="d-flex align-items-center gap-1">
                                             <i class="ri-settings-4-fill fs-18" style="color: #7c3aed;"></i>
@@ -633,115 +668,86 @@
 
 @section('scripts')
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    // 1. Machine Performance Map (Scatter)
-    const perfMapOptions = {
-        series: @json($chartPerfMapSeries),
-        chart: {
-            type: 'scatter',
-            height: 280,
-            toolbar: { show: false }
-        },
-        colors: ['#f59e0b', '#ef4444', '#22c55e'],
-        xaxis: {
-            title: { text: 'MTBF (MENIT OPERASI)', style: { fontSize: '11px' } },
-            min: 0,
-            labels: { formatter: val => Math.round(val) }
-        },
-        yaxis: {
-            title: { text: 'BREAKDOWN RATE (%)', style: { fontSize: '11px' } },
-            min: 0
-        },
-        grid: { borderColor: '#f1f5f9' },
-        markers: { size: 8 }
-    };
-    new ApexCharts(document.querySelector("#chartPerformanceMap"), perfMapOptions).render();
+function toggleFilterInputs() {
+    const type = document.getElementById('filter_type').value;
+    const groupMonth = document.getElementById('group_month');
+    const groupWeek = document.getElementById('group_week');
+    const groupDate = document.getElementById('group_date');
+    const groupStart = document.getElementById('group_start_date');
+    const groupEnd = document.getElementById('group_end_date');
 
-    // 4. Breakdown Trend across Shifts on Worst Machines
-    const trendOptions = {
-        series: @json($chartTrendSeries),
-        chart: {
-            type: 'bar',
-            height: 200,
-            toolbar: { show: false }
-        },
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                columnWidth: '55%',
-                borderRadius: 4
-            }
-        },
-        colors: ['#ef4444', '#f97316', '#eab308', '#3b82f6'],
-        xaxis: { categories: @json($trendCategories) },
-        yaxis: { title: { text: 'Downtime (Menit)', style: { fontSize: '11px' } } },
-        grid: { borderColor: '#f1f5f9' }
-    };
-    new ApexCharts(document.querySelector("#chartBreakdownTrend"), trendOptions).render();
+    if (!groupMonth || !groupWeek || !groupDate || !groupStart || !groupEnd) return;
 
-    // 5. Pareto Analisis Jenis DT (Column + Line)
-    const paretoOptions = {
-        series: [{
-            name: 'Durasi DT (Menit)',
-            type: 'column',
-            data: @json($paretoDurations)
-        }, {
-            name: 'Kumulatif %',
-            type: 'line',
-            data: @json($paretoCumulative)
-        }],
-        chart: {
-            type: 'line',
-            height: 280,
-            toolbar: { show: false }
-        },
-        stroke: { width: [0, 3], curve: 'smooth' },
-        colors: ['#3b82f6', '#ef4444'],
-        plotOptions: { bar: { columnWidth: '45%', borderRadius: 4 } },
-        xaxis: {
-            categories: @json($paretoCategories),
-            labels: { rotate: -35, style: { fontSize: '10px' }, trim: true }
-        },
-        yaxis: [
-            { title: { text: 'Downtime (Menit)', style: { fontSize: '11px' } } },
-            { opposite: true, max: 100, title: { text: 'Kumulatif %', style: { fontSize: '11px' } } }
-        ]
-    };
-    new ApexCharts(document.querySelector("#chartParetoJenisDt"), paretoOptions).render();
+    // Reset visibility
+    groupMonth.style.display = 'none';
+    groupWeek.style.display = 'none';
+    groupDate.style.display = 'none';
+    groupStart.style.display = 'none';
+    groupEnd.style.display = 'none';
 
-    // 6. Reliability Quadrant (MTTR vs MTBF)
-    const relOptions = {
-        series: @json($chartReliabilitySeries),
-        chart: {
-            type: 'scatter',
-            height: 280,
-            toolbar: { show: false }
-        },
-        colors: ['#ef4444', '#f59e0b', '#22c55e'],
-        xaxis: {
-            title: { text: 'MTBF (MENIT OPERASI)', style: { fontSize: '11px' } },
-            min: 0,
-            labels: { formatter: val => Math.round(val) }
-        },
-        yaxis: {
-            title: { text: 'MTTR (MENIT PERBAIKAN)', style: { fontSize: '11px' } },
-            min: 0
-        },
-        grid: { borderColor: '#f1f5f9' },
-        markers: { size: 8 }
-    };
-    new ApexCharts(document.querySelector("#chartReliabilityQuadrant"), relOptions).render();
-});
-
-function changeKpiFilter() {
-    const month = document.getElementById('kpi-month').value;
-    const dateEl = document.getElementById('kpi-date');
-    const date = dateEl ? dateEl.value : '';
-    let url = `{{ route('epr.dashboard.cm') }}?month=${month}`;
-    if (date) {
-        url += `&date=${date}`;
+    if (type === 'month') {
+        groupMonth.style.display = 'block';
+    } else if (type === 'week') {
+        groupMonth.style.display = 'block';
+        groupWeek.style.display = 'block';
+    } else if (type === 'date') {
+        groupDate.style.display = 'block';
+    } else if (type === 'custom') {
+        groupStart.style.display = 'block';
+        groupEnd.style.display = 'block';
     }
-    window.location.href = url;
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    toggleFilterInputs();
+
+    // Pareto Analisis Jenis DT (Column + Line)
+    const paretoCategories = @json($paretoCategories);
+    const paretoDurations = @json($paretoDurations);
+    const paretoCumulative = @json($paretoCumulative);
+    const paretoEl = document.querySelector("#chartParetoJenisDt");
+
+    if (paretoEl) {
+        if (paretoCategories && paretoCategories.length > 0) {
+            const paretoOptions = {
+                series: [{
+                    name: 'Durasi DT (Menit)',
+                    type: 'column',
+                    data: paretoDurations
+                }, {
+                    name: 'Kumulatif %',
+                    type: 'line',
+                    data: paretoCumulative
+                }],
+                chart: {
+                    type: 'line',
+                    height: 280,
+                    toolbar: { show: false }
+                },
+                stroke: { width: [0, 3], curve: 'smooth' },
+                colors: ['#3b82f6', '#ef4444'],
+                plotOptions: { bar: { columnWidth: '45%', borderRadius: 4 } },
+                xaxis: {
+                    categories: paretoCategories,
+                    labels: { rotate: -35, style: { fontSize: '10px' }, trim: true }
+                },
+                yaxis: [
+                    { title: { text: 'Downtime (Menit)', style: { fontSize: '11px' } } },
+                    { opposite: true, max: 100, title: { text: 'Kumulatif %', style: { fontSize: '11px' } } }
+                ],
+                grid: { borderColor: '#f1f5f9' }
+            };
+            new ApexCharts(paretoEl, paretoOptions).render();
+        } else {
+            paretoEl.innerHTML = `
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted py-5" style="min-height: 250px;">
+                    <i class="ri-inbox-line fs-36 text-secondary mb-2" style="font-size: 36px;"></i>
+                    <span class="fs-13">Tidak ada data breakdown jenis DT pada periode ini</span>
+                </div>
+            `;
+        }
+    }
+});
+</script>
 </script>
 @endsection

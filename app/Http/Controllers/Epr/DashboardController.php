@@ -104,13 +104,11 @@ class DashboardController extends Controller
         ));
     }
 
-        public function cmDashboard(Request $request)
+    public function cmDashboard(Request $request)
     {
         // 1. Auto-detect default month from latest Corrective Maintenance record
         $defaultDate = \App\Models\Epr\CorrectiveMaintenance::max('tanggal');
         $defaultMonth = $defaultDate ? substr($defaultDate, 0, 7) : date('Y-m');
-        $month = $request->input('month', $defaultMonth);
-        $selectedDate = $request->input('date');
 
         // Available distinct months from database
         $availableMonths = \App\Models\Epr\CorrectiveMaintenance::selectRaw("DISTINCT SUBSTRING(tanggal, 1, 7) as m")
@@ -122,43 +120,119 @@ class DashboardController extends Controller
         if ($defaultMonth && !in_array($defaultMonth, $availableMonths)) {
             array_unshift($availableMonths, $defaultMonth);
         }
+        $currentMonth = date('Y-m');
+        if (!in_array($currentMonth, $availableMonths)) {
+            $availableMonths[] = $currentMonth;
+        }
 
-        // Available distinct dates in this month
-        $availableDates = \App\Models\Epr\CorrectiveMaintenance::where('tanggal', 'like', $month . '%')
+        // Filter Mode: 'month', 'week', 'date', 'custom'
+        $filterType = $request->input('filter_type');
+        if (!$filterType) {
+            if ($request->filled('start_date') || $request->filled('end_date')) {
+                $filterType = 'custom';
+            } elseif ($request->filled('week')) {
+                $filterType = 'week';
+            } elseif ($request->filled('date')) {
+                $filterType = 'date';
+            } else {
+                $filterType = 'month';
+            }
+        }
+
+        $month = $request->input('month', $defaultMonth);
+        if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+            $month = $defaultMonth;
+        }
+
+        $week = (int) $request->input('week', 1);
+        if ($week < 1 || $week > 5) {
+            $week = 1;
+        }
+
+        $selectedDate = $request->input('date', $defaultDate ?: date('Y-m-d'));
+        $customStart = $request->input('start_date');
+        $customEnd = $request->input('end_date');
+        $kategori = strtolower(trim((string)$request->input('kategori', 'all')));
+
+        // Calculate Start Date, End Date, and Period Label based on filterType
+        $daysInSelectedMonth = (int) date('t', strtotime("$month-01"));
+        $startDate = "$month-01";
+        $endDate = "$month-$daysInSelectedMonth";
+        $periodLabel = date('F Y', strtotime("$month-01"));
+
+        if ($filterType === 'week') {
+            // Week 1: 01 - 07, Week 2: 08 - 14, Week 3: 15 - 21, Week 4: 22 - 28, Week 5: 29 - akhir bulan
+            $startDay = ($week - 1) * 7 + 1;
+            $endDay = min($daysInSelectedMonth, $week * 7);
+            if ($week === 5) {
+                $startDay = 29;
+                $endDay = $daysInSelectedMonth;
+                if ($startDay > $daysInSelectedMonth) {
+                    $startDay = $daysInSelectedMonth;
+                }
+            }
+            $startDate = sprintf('%s-%02d', $month, $startDay);
+            $endDate = sprintf('%s-%02d', $month, $endDay);
+            $periodLabel = "Minggu {$week} (" . date('d M', strtotime($startDate)) . " - " . date('d M Y', strtotime($endDate)) . ")";
+        } elseif ($filterType === 'date') {
+            if ($selectedDate) {
+                $startDate = $selectedDate;
+                $endDate = $selectedDate;
+                $periodLabel = date('d F Y', strtotime($selectedDate));
+            }
+        } elseif ($filterType === 'custom') {
+            $startDate = $customStart ?: "$month-01";
+            $endDate = $customEnd ?: "$month-$daysInSelectedMonth";
+            if ($startDate > $endDate) {
+                [$startDate, $endDate] = [$endDate, $startDate];
+            }
+            $periodLabel = date('d M Y', strtotime($startDate)) . " s/d " . date('d M Y', strtotime($endDate));
+        }
+
+        // Available distinct dates in the selected period
+        $availableDates = \App\Models\Epr\CorrectiveMaintenance::whereBetween('tanggal', [$startDate, $endDate])
             ->selectRaw("DISTINCT tanggal")
             ->orderBy('tanggal', 'asc')
             ->pluck('tanggal')
             ->toArray();
 
         // 2. Query CM Reports & Loading Times
-        $queryCm = \App\Models\Epr\CorrectiveMaintenance::with('jenisDt');
-        $queryLt = \App\Models\Epr\CmLoadingTime::query();
-
-        if ($selectedDate) {
-            $queryCm->where('tanggal', $selectedDate);
-            $queryLt->where('tanggal', $selectedDate);
-        } else {
-            $queryCm->where('tanggal', 'like', $month . '%');
-            $queryLt->where('tanggal', 'like', $month . '%');
-        }
-
-        $cmReports = $queryCm->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc')->get();
-        $loadingTimes = $queryLt->get();
+        $queryCm = \App\Models\Epr\CorrectiveMaintenance::with('jenisDt')
+            ->whereBetween('tanggal', [$startDate, $endDate]);
+        $queryLt = \App\Models\Epr\CmLoadingTime::whereBetween('tanggal', [$startDate, $endDate]);
 
         // 3. Define Standard 28 Machines from Excel template sheet WEEKLY
         $pouchMachines = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'C', 'L', 'B', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'V', 'A', 'U'];
         $sachetMachines = ['O', 'P', 'W', 'X', 'R', 'Q', 'Y'];
         $defaultMachines = array_merge($pouchMachines, $sachetMachines);
+
+        if ($kategori === 'pouch') {
+            $queryCm->whereIn(\Illuminate\Support\Facades\DB::raw('UPPER(TRIM(mesin))'), $pouchMachines);
+            $queryLt->whereIn(\Illuminate\Support\Facades\DB::raw('UPPER(TRIM(mesin))'), $pouchMachines);
+            $activeMachines = $pouchMachines;
+        } elseif ($kategori === 'sachet') {
+            $queryCm->whereIn(\Illuminate\Support\Facades\DB::raw('UPPER(TRIM(mesin))'), $sachetMachines);
+            $queryLt->whereIn(\Illuminate\Support\Facades\DB::raw('UPPER(TRIM(mesin))'), $sachetMachines);
+            $activeMachines = $sachetMachines;
+        } else {
+            $activeMachines = $defaultMachines;
+        }
+
+        $cmReports = $queryCm->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc')->get();
+        $loadingTimes = $queryLt->get();
+
         $extraMachines = $cmReports->pluck('mesin')
-            ->filter(fn($m) => $m && !in_array(strtoupper(trim($m)), $defaultMachines))
+            ->filter(fn($m) => $m && !in_array(strtoupper(trim($m)), $activeMachines))
             ->unique()
             ->values()
             ->toArray();
-        $allMachineNames = array_merge($defaultMachines, $extraMachines);
+        $allMachineNames = array_merge($activeMachines, $extraMachines);
 
         // Days in selected period
-        $daysInMonth = (int) date('t', strtotime("$month-01"));
-        $plannedMinsPerMachine = $selectedDate ? (24 * 60) : ($daysInMonth * 24 * 60);
+        $startCarbon = \Carbon\Carbon::parse($startDate)->startOfDay();
+        $endCarbon = \Carbon\Carbon::parse($endDate)->endOfDay();
+        $daysInPeriod = max(1, (int) $startCarbon->diffInDays($endCarbon) + 1);
+        $plannedMinsPerMachine = $daysInPeriod * 24 * 60;
 
         // 4. Calculate Per-Machine Statistics
         $machineStats = [];
@@ -182,7 +256,7 @@ class DashboardController extends Controller
             $ltC = $ltRecs->sum('loading_time_c');
             $machineLt = ($ltA + $ltB + $ltC) > 0 ? ($ltA + $ltB + $ltC) : $ltRecs->sum('loading_time_all');
 
-            if ($machineLt == 0 && $freq > 0) {
+            if ($machineLt == 0) {
                 $machineLt = $plannedMinsPerMachine;
             }
 
@@ -295,63 +369,8 @@ class DashboardController extends Controller
             $paretoCumulative[] = $totalDowntime > 0 ? round(($runningSum / $totalDowntime) * 100, 1) : 0;
         }
 
-        // 10. Machine Performance Map & Reliability Quadrant (Scatter)
-        $perfHighBd = [];
-        $perfFreqStop = [];
-        $perfHealthy = [];
-
-        $relHighMttr = [];
-        $relLowMttr = [];
-        $relIdeal = [];
-
-        foreach ($machineStats as $st) {
-            $pointPerf = [$st['mtbf'], $st['breakdown']];
-            if ($st['breakdown'] > 3.0 || $st['total_dt'] >= 40) {
-                $perfHighBd[] = $pointPerf;
-            } elseif ($st['mtbf'] < 300 && $st['freq'] >= 2) {
-                $perfFreqStop[] = $pointPerf;
-            } else {
-                $perfHealthy[] = $pointPerf;
-            }
-
-            $pointRel = [$st['mtbf'], $st['mttr']];
-            if ($st['mttr'] > 30) {
-                $relHighMttr[] = $pointRel;
-            } elseif ($st['mtbf'] < 300) {
-                $relLowMttr[] = $pointRel;
-            } else {
-                $relIdeal[] = $pointRel;
-            }
-        }
-
-        $chartPerfMapSeries = [
-            ['name' => 'Low MTBF / Frequent Stop', 'data' => $perfFreqStop],
-            ['name' => 'High Breakdown (Prioritas)', 'data' => $perfHighBd],
-            ['name' => 'Healthy Zone / Ideal', 'data' => $perfHealthy],
-        ];
-
-        $chartReliabilitySeries = [
-            ['name' => 'High MTTR (Slow Repair)', 'data' => $relHighMttr],
-            ['name' => 'Low MTTR (Fast Repair)', 'data' => $relLowMttr],
-            ['name' => 'Ideal Condition (Fast & Stable)', 'data' => $relIdeal],
-        ];
-
-        // 11. Breakdown Trend by 4 Top Worst Machines across shifts or months
-        $trendCategories = ['Shift A', 'Shift B', 'Shift C'];
-        $chartTrendSeries = [];
-        $topWorstForTrend = array_slice($worst5, 0, 4);
-
-        foreach ($topWorstForTrend as $tw) {
-            if ($tw['total_dt'] > 0) {
-                $chartTrendSeries[] = [
-                    'name' => 'Mesin ' . $tw['mesin'],
-                    'data' => [$tw['dt_a'], $tw['dt_b'], $tw['dt_c']]
-                ];
-            }
-        }
-
-        // 12. Optional Cost, Machine KPI, Action Plan models
-        $dbCosts = \App\Models\Epr\CmCost::where('tanggal', 'like', $month . '%')->get();
+        // 10. Optional Cost, Machine KPI, Action Plan models
+        $dbCosts = \App\Models\Epr\CmCost::whereBetween('tanggal', [$startDate, $endDate])->get();
         $totalCostVal = $dbCosts->sum('jumlah_biaya');
         $dbMachineKpis = \App\Models\Epr\CmMachineKpi::where('month', $month)->get();
         $dbActionPlans = \App\Models\Epr\CmActionPlan::where('month', $month)->get();
@@ -365,8 +384,17 @@ class DashboardController extends Controller
         ];
 
         return view('epr.dashboard-cm', compact(
+            'filterType',
             'month',
+            'week',
             'selectedDate',
+            'customStart',
+            'customEnd',
+            'startDate',
+            'endDate',
+            'periodLabel',
+            'daysInPeriod',
+            'kategori',
             'availableMonths',
             'availableDates',
             'cmReports',
@@ -396,10 +424,6 @@ class DashboardController extends Controller
             'paretoCategories',
             'paretoDurations',
             'paretoCumulative',
-            'chartPerfMapSeries',
-            'chartTrendSeries',
-            'trendCategories',
-            'chartReliabilitySeries',
             'dbCosts',
             'totalCostVal',
             'dbMachineKpis',
