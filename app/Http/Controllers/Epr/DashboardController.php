@@ -144,9 +144,20 @@ class DashboardController extends Controller
             $month = $defaultMonth;
         }
 
+        // Daftar minggu kalender (Senin - Minggu) pada bulan terpilih
+        $weeksInMonth = self::getWeeksOfMonth($month);
+
         $week = (int) $request->input('week', 1);
-        if ($week < 1 || $week > 5) {
-            $week = 1;
+        $selectedWeekObj = null;
+        foreach ($weeksInMonth as $wk) {
+            if ($wk['week_num'] === $week) {
+                $selectedWeekObj = $wk;
+                break;
+            }
+        }
+        if (!$selectedWeekObj && count($weeksInMonth) > 0) {
+            $selectedWeekObj = $weeksInMonth[0];
+            $week = $selectedWeekObj['week_num'];
         }
 
         $selectedDate = $request->input('date', $defaultDate ?: date('Y-m-d'));
@@ -160,20 +171,11 @@ class DashboardController extends Controller
         $endDate = "$month-$daysInSelectedMonth";
         $periodLabel = date('F Y', strtotime("$month-01"));
 
-        if ($filterType === 'week') {
-            // Week 1: 01 - 07, Week 2: 08 - 14, Week 3: 15 - 21, Week 4: 22 - 28, Week 5: 29 - akhir bulan
-            $startDay = ($week - 1) * 7 + 1;
-            $endDay = min($daysInSelectedMonth, $week * 7);
-            if ($week === 5) {
-                $startDay = 29;
-                $endDay = $daysInSelectedMonth;
-                if ($startDay > $daysInSelectedMonth) {
-                    $startDay = $daysInSelectedMonth;
-                }
-            }
-            $startDate = sprintf('%s-%02d', $month, $startDay);
-            $endDate = sprintf('%s-%02d', $month, $endDay);
-            $periodLabel = "Minggu {$week} (" . date('d M', strtotime($startDate)) . " - " . date('d M Y', strtotime($endDate)) . ")";
+        if ($filterType === 'week' && $selectedWeekObj) {
+            // Kalender Mingguan standar Senin s/d Minggu (misal 16 Nov - 22 Nov 2026)
+            $startDate = $selectedWeekObj['start'];
+            $endDate = $selectedWeekObj['end'];
+            $periodLabel = $selectedWeekObj['label'];
         } elseif ($filterType === 'date') {
             if ($selectedDate) {
                 $startDate = $selectedDate;
@@ -428,8 +430,39 @@ class DashboardController extends Controller
             'totalCostVal',
             'dbMachineKpis',
             'dbActionPlans',
-            'additionalKpiAvg'
+            'additionalKpiAvg',
+            'weeksInMonth'
         ));
     }
 
+    /**
+     * Menghasilkan daftar minggu kalender (Senin - Minggu) untuk bulan yang dipilih.
+     */
+    public static function getWeeksOfMonth(string $yearMonth): array
+    {
+        $firstDay = \Carbon\Carbon::parse($yearMonth . '-01')->startOfDay();
+        $lastDay = $firstDay->copy()->endOfMonth()->startOfDay();
+
+        // Mulai dari hari Senin pada minggu yang memuat tanggal 1 bulan terpilih
+        $curr = $firstDay->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $weeks = [];
+        $w = 1;
+
+        while ($curr->lte($lastDay)) {
+            $start = $curr->copy();
+            $end = $curr->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+
+            $weeks[] = [
+                'week_num' => $w,
+                'start'    => $start->format('Y-m-d'),
+                'end'      => $end->format('Y-m-d'),
+                'label'    => "Minggu {$w} (" . $start->format('d M') . " - " . $end->format('d M Y') . ")"
+            ];
+
+            $curr->addWeek();
+            $w++;
+        }
+
+        return $weeks;
+    }
 }

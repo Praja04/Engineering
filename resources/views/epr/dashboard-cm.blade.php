@@ -133,7 +133,7 @@
                             <label class="form-label fs-11 fw-bold text-uppercase text-muted mb-1">
                                 <i class="ri-calendar-line text-info me-1"></i> Pilih Bulan
                             </label>
-                            <select name="month" id="filter_month" class="form-select form-select-sm">
+                            <select name="month" id="filter_month" class="form-select form-select-sm" onchange="updateWeeksDropdown()">
                                 @foreach($availableMonths as $m)
                                     <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
                                         {{ date('F Y', strtotime($m . '-01')) }}
@@ -145,14 +145,14 @@
                         {{-- Week Selector (Shown only on 'week') --}}
                         <div class="col-xl-2 col-md-3 col-sm-6 filter-input-group" id="group_week" style="display: none;">
                             <label class="form-label fs-11 fw-bold text-uppercase text-muted mb-1">
-                                <i class="ri-calendar-todo-line text-warning me-1"></i> Pilih Minggu
+                                <i class="ri-calendar-todo-line text-warning me-1"></i> Pilih Minggu (Senin-Minggu)
                             </label>
                             <select name="week" id="filter_week" class="form-select form-select-sm">
-                                <option value="1" {{ $week == 1 ? 'selected' : '' }}>Minggu 1 (Tgl 01 - 07)</option>
-                                <option value="2" {{ $week == 2 ? 'selected' : '' }}>Minggu 2 (Tgl 08 - 14)</option>
-                                <option value="3" {{ $week == 3 ? 'selected' : '' }}>Minggu 3 (Tgl 15 - 21)</option>
-                                <option value="4" {{ $week == 4 ? 'selected' : '' }}>Minggu 4 (Tgl 22 - 28)</option>
-                                <option value="5" {{ $week == 5 ? 'selected' : '' }}>Minggu 5 (Tgl 29 - Akhir)</option>
+                                @foreach($weeksInMonth as $wk)
+                                    <option value="{{ $wk['week_num'] }}" {{ $week == $wk['week_num'] ? 'selected' : '' }}>
+                                        {{ $wk['label'] }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -695,6 +695,55 @@ function toggleFilterInputs() {
     } else if (type === 'custom') {
         groupStart.style.display = 'block';
         groupEnd.style.display = 'block';
+    }
+}
+
+function updateWeeksDropdown() {
+    const monthEl = document.getElementById('filter_month');
+    const weekEl = document.getElementById('filter_week');
+    if (!monthEl || !weekEl) return;
+
+    const yearMonth = monthEl.value;
+    if (!yearMonth) return;
+
+    const parts = yearMonth.split('-').map(Number);
+    const year = parts[0];
+    const month = parts[1];
+
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+
+    const day = firstDay.getDay(); // 0 is Sun, 1 is Mon
+    const diffToMonday = (day === 0 ? -6 : 1 - day);
+    let curr = new Date(firstDay);
+    curr.setDate(firstDay.getDate() + diffToMonday);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+    const currentSelected = weekEl.value;
+    weekEl.innerHTML = '';
+
+    let w = 1;
+    while (curr <= lastDay) {
+        let wStart = new Date(curr);
+        let wEnd = new Date(curr);
+        wEnd.setDate(curr.getDate() + 6);
+
+        let sDay = String(wStart.getDate()).padStart(2, '0');
+        let sMon = monthNames[wStart.getMonth()];
+        let eDay = String(wEnd.getDate()).padStart(2, '0');
+        let eMon = monthNames[wEnd.getMonth()];
+        let eYear = wEnd.getFullYear();
+
+        const opt = document.createElement('option');
+        opt.value = w;
+        opt.textContent = `Minggu ${w} (${sDay} ${sMon} - ${eDay} ${eMon} ${eYear})`;
+        if (String(w) === String(currentSelected)) {
+            opt.selected = true;
+        }
+        weekEl.appendChild(opt);
+
+        curr.setDate(curr.getDate() + 7);
+        w++;
     }
 }
 
