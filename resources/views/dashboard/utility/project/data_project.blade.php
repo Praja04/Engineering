@@ -1691,10 +1691,9 @@
                             // Status Badge
                             $row.find('.status-col-' + id).html(getStatusBadge(status));
 
-                            // Sinkronisasi data ke DataTables
-                            if (projectTable) {
-                                projectTable.row($row).invalidate().draw(false);
-                                updateStatsBadges();
+                            // Sinkronisasi data ke DataTables jika terpasang
+                            if (typeof $.fn.DataTable !== 'undefined' && $.fn.DataTable.isDataTable('#projectTable')) {
+                                $('#projectTable').DataTable().row($row).invalidate().draw(false);
                             }
 
                             // Refresh data project tanpa mereset halaman
@@ -1824,10 +1823,9 @@
                             dataType: 'json',
                             success: function(res) {
                                 if (res.success) {
-                                    if (projectTable) {
-                                        projectTable.row($('#row-project-' + id))
+                                    if (typeof $.fn.DataTable !== 'undefined' && $.fn.DataTable.isDataTable('#projectTable')) {
+                                        $('#projectTable').DataTable().row($('#row-project-' + id))
                                             .remove().draw(false);
-                                        updateStatsBadges();
                                     } else {
                                         $('#row-project-' + id).fadeOut(300,
                                             function() {
