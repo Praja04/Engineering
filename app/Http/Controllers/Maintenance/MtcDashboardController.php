@@ -138,6 +138,11 @@ class MtcDashboardController extends Controller
             $mtbfData = $this->getMtbfData($kpiNonOffRecords, $dateRange['operating_hours']);
             $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
 
+            $targetBreakdown = ($filterType === 'yearly') ? 60 : 5;
+            $targetDowntimeHours = ($filterType === 'yearly') ? 150.0 : 12.5;
+            $breakdownSubtext = ($filterType === 'yearly') ? 'Paket Korektif (Target <60x)' : 'Paket Korektif (Target <5x)';
+            $downtimeSubtext = ($filterType === 'yearly') ? 'Target <2% dari 7.488 Jam (Max 150 Jam)' : 'Target <2% dari 624 Jam (Max 12.5 Jam)';
+
             return response()->json([
                 'status' => true,
                 'section' => 'reliability',
@@ -145,17 +150,18 @@ class MtcDashboardController extends Controller
                 'kpi' => [
                     'total_breakdown' => [
                         'value' => $breakdownData['kpi_breakdowns'],
-                        'target' => 5,
-                        'status' => $breakdownData['kpi_breakdowns'] <= 5 ? 'optimal' : 'danger',
-                        'subtext' => 'Paket Korektif (Target <5x)',
+                        'target' => $targetBreakdown,
+                        'status' => $breakdownData['kpi_breakdowns'] <= $targetBreakdown ? 'optimal' : 'danger',
+                        'subtext' => $breakdownSubtext,
                     ],
                     'downtime' => [
                         'percentage' => $downtimeData['kpi_downtime_percentage'],
                         'hours' => $downtimeData['kpi_downtime_hours'],
+                        'backup_hours' => $downtimeData['total_backup_hours'] ?? 0.0,
                         'target_percentage' => 2.0,
-                        'target_hours' => 12.5,
+                        'target_hours' => $targetDowntimeHours,
                         'status' => $downtimeData['kpi_downtime_percentage'] <= 2.0 ? 'optimal' : 'danger',
-                        'subtext' => 'Target <2% dari 624 Jam (Max 12.5 Jam)',
+                        'subtext' => $downtimeSubtext,
                     ],
                     'mttr' => [
                         'value' => $mttrData['value'],
@@ -270,6 +276,11 @@ class MtcDashboardController extends Controller
         $unitOffData = $this->getUnitOffData($startDate, $endDate);
         $correlationData = $this->getMttrMtbfCorrelation($weeksList, $breakdownData, $downtimeData);
 
+        $targetBreakdown = ($filterType === 'yearly') ? 60 : 5;
+        $targetDowntimeHours = ($filterType === 'yearly') ? 150.0 : 12.5;
+        $breakdownSubtext = ($filterType === 'yearly') ? 'Paket Korektif (Target <60x)' : 'Paket Korektif (Target <5x)';
+        $downtimeSubtext = ($filterType === 'yearly') ? 'Target <2% dari 7.488 Jam (Max 150 Jam)' : 'Target <2% dari 624 Jam (Max 12.5 Jam)';
+
         return response()->json([
             'status' => true,
             'filter_meta' => $filterMeta,
@@ -283,17 +294,18 @@ class MtcDashboardController extends Controller
                 ],
                 'total_breakdown' => [
                     'value' => $breakdownData['kpi_breakdowns'],
-                    'target' => 5,
-                    'status' => $breakdownData['kpi_breakdowns'] <= 5 ? 'optimal' : 'danger',
-                    'subtext' => 'Paket Korektif (Target <5x)',
+                    'target' => $targetBreakdown,
+                    'status' => $breakdownData['kpi_breakdowns'] <= $targetBreakdown ? 'optimal' : 'danger',
+                    'subtext' => $breakdownSubtext,
                 ],
                 'downtime' => [
                     'percentage' => $downtimeData['kpi_downtime_percentage'],
                     'hours' => $downtimeData['kpi_downtime_hours'],
+                    'backup_hours' => $downtimeData['total_backup_hours'] ?? 0.0,
                     'target_percentage' => 2.0,
-                    'target_hours' => 12.5,
+                    'target_hours' => $targetDowntimeHours,
                     'status' => $downtimeData['kpi_downtime_percentage'] <= 2.0 ? 'optimal' : 'danger',
-                    'subtext' => 'Target <2% dari 624 Jam (Max 12.5 Jam)',
+                    'subtext' => $downtimeSubtext,
                 ],
                 'mttr' => [
                     'value' => $mttrData['value'],
@@ -449,6 +461,39 @@ class MtcDashboardController extends Controller
             ];
         }
 
+        if ($filterType === 'yearly') {
+            $start = Carbon::createFromDate($year, 1, 1)->startOfDay();
+            $end = Carbon::createFromDate($year, 12, 31)->endOfDay();
+
+            $monthNames = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+                7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+            ];
+
+            $weeks = [];
+            foreach ($monthNames as $mNum => $mLabel) {
+                $mStart = Carbon::createFromDate($year, $mNum, 1)->startOfDay();
+                $mEnd = (clone $mStart)->endOfMonth()->endOfDay();
+                $weeks[] = [
+                    'key' => $mLabel,
+                    'label' => $mLabel . ' ' . $year,
+                    'short_label' => $mLabel,
+                    'start' => $mStart,
+                    'end' => $mEnd,
+                    'display' => $mLabel . ' ' . $year,
+                    'month_num' => $mNum,
+                ];
+            }
+
+            return [
+                'start' => $start,
+                'end' => $end,
+                'weeks' => $weeks,
+                'operating_hours' => 624 * 12, // 7.488 Jam (12 bulan * 624 jam perusahaan)
+                'label' => "Tahun {$year}",
+            ];
+        }
+
         // Custom Date Range
         $start = !empty($startDateStr) ? Carbon::parse($startDateStr)->startOfDay() : Carbon::today()->subDays(30)->startOfDay();
         $end = !empty($endDateStr) ? Carbon::parse($endDateStr)->endOfDay() : Carbon::today()->endOfDay();
@@ -582,7 +627,7 @@ class MtcDashboardController extends Controller
 
         $units = ['MHE', 'Motor Pompa', 'Utility', 'AC'];
         $series = [];
-        $weekColors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'];
+        $weekColors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1', '#eab308', '#14b8a6', '#f97316', '#8b5cf6', '#0ea5e9'];
 
         // Cek apakah mode monthly filter (W1: 1-7, W2: 8-14, dst)
         $isMonthlyFilter = count($weeksList) === 5 && $weeksList[0]['start']->day === 1 && $weeksList[0]['end']->day === 7;
@@ -600,8 +645,18 @@ class MtcDashboardController extends Controller
             $wEnd = $wk['end']->format('Y-m-d');
             $wMingguKe = $idx + 1;
 
-            // Filter agenda untuk minggu ini
-            $wAgendas = $agendaRecords->filter(function ($item) use ($wStart, $wEnd, $wMingguKe, $isMonthlyFilter, $wk) {
+            // Filter agenda untuk interval/minggu/bulan ini
+            $wAgendas = $agendaRecords->filter(function ($item) use ($wStart, $wEnd, $wMingguKe, $isMonthlyFilter, $wk, $filterType, $idx) {
+                if ($filterType === 'yearly') {
+                    $mNum = $wk['month_num'] ?? ($idx + 1);
+                    if ($item->tanggal !== null) {
+                        $tglObj = Carbon::parse($item->tanggal);
+                        return (int)$tglObj->year === (int)$wk['start']->year && (int)$tglObj->month === $mNum;
+                    } else {
+                        return (int)$item->tahun === (int)$wk['start']->year && (int)$item->bulan === $mNum;
+                    }
+                }
+
                 if ($item->tanggal !== null) {
                     $tglObj = Carbon::parse($item->tanggal);
                     if ($isMonthlyFilter) {
@@ -944,6 +999,21 @@ class MtcDashboardController extends Controller
             return $t >= $tStart && $t <= $tEnd;
         });
 
+        // Summary Breakdown per Jenis MTC (Total seluruh chart)
+        $breakdownByJenis = [
+            'mhe'     => 0,
+            'pompa'   => 0,
+            'utility' => 0,
+            'ac'      => 0,
+        ];
+        foreach ($korektifRecords as $rec) {
+            $cat = $this->normalizeJenisCategory($rec->jenis_mtc ?? '');
+            if ($cat === 'MHE') $breakdownByJenis['mhe']++;
+            elseif ($cat === 'Motor Pompa') $breakdownByJenis['pompa']++;
+            elseif ($cat === 'Utility') $breakdownByJenis['utility']++;
+            elseif ($cat === 'AC') $breakdownByJenis['ac']++;
+        }
+
         return [
             'kpi_breakdowns' => $kpiBreakdowns,
             'kpi_records' => $kpiRecords,
@@ -960,6 +1030,7 @@ class MtcDashboardController extends Controller
                         'color' => '#f43f5e', // Crimson Rose
                     ],
                 ],
+                'by_jenis' => $breakdownByJenis,
                 'target' => 5,
             ],
         ];
@@ -969,6 +1040,7 @@ class MtcDashboardController extends Controller
      * Compute Downtime data: jam mulai sampai jam selesai dari paket korektif
      * Rumus Downtime persentase: Total jam korektif / 624 * 100
      * Target < 2% dari 624 jam
+     * Catatan: Mesin yang memiliki backup unit (has_backup = true) TIDAK dihitung sebagai Downtime Lost
      */
     private function getDowntimeData(array $breakdownData, array $weeksList, float $operatingHours, string $filterType): array
     {
@@ -977,7 +1049,9 @@ class MtcDashboardController extends Controller
         $categoryDetails = [];
         $seriesDowntimePct = [];
         $seriesDowntimeHours = [];
+        $seriesBackupHours = [];
         $totalDowntimeHours = 0;
+        $totalBackupHours = 0;
         $selectedWeekHours = 0;
         $selectedWeekPct = 0;
 
@@ -998,26 +1072,44 @@ class MtcDashboardController extends Controller
             });
 
             $weekHours = 0;
+            $weekBackupHours = 0;
+            $nonBackupCount = 0;
+
             foreach ($wRecords as $rec) {
+                $mInfo = $this->resolveMachineInfo($rec);
+                $isBackup = !empty($mInfo['has_backup']);
+
+                $durHours = 0;
                 if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
                     $startT = Carbon::parse($rec->waktu_mulai);
                     $endT = Carbon::parse($rec->waktu_selesai);
                     $durHours = max(0.1, $startT->diffInMinutes($endT) / 60);
+                } else {
+                    $durHours = 1.5; // fallback estimasi jika waktu tidak diisi
+                }
+
+                if ($isBackup) {
+                    // Mesin memiliki backup di area: perbaikan tidak mematikan lini / bukan downtime lost
+                    $weekBackupHours += $durHours;
+                } else {
+                    $nonBackupCount++;
                     $weekHours += $durHours;
                 }
             }
 
-            // If there were breakdown records but waktu_mulai/waktu_selesai was not filled, estimate 1.5h per event
-            if ($wRecords->count() > 0 && $weekHours === 0) {
-                $weekHours = round($wRecords->count() * 1.5, 1);
+            // If there were non-backup breakdown records but waktu_mulai/waktu_selesai was not filled, estimate 1.5h per event
+            if ($nonBackupCount > 0 && $weekHours === 0) {
+                $weekHours = round($nonBackupCount * 1.5, 1);
             }
 
             // Rumus Downtime persentase: Total jam korektif / 624 * 100
             $pct = round(($weekHours / $baseHours) * 100, 2);
 
             $seriesDowntimeHours[] = round($weekHours, 1);
+            $seriesBackupHours[] = round($weekBackupHours, 1);
             $seriesDowntimePct[] = $pct;
             $totalDowntimeHours += $weekHours;
+            $totalBackupHours += $weekBackupHours;
 
             if (!empty($wk['is_selected'])) {
                 $selectedWeekHours = round($weekHours, 1);
@@ -1025,16 +1117,50 @@ class MtcDashboardController extends Controller
             }
         }
 
-        // Overall Downtime persentase: Total jam korektif / 624 * 100
+        // Overall Downtime persentase: Total jam korektif / baseHours * 100
+        $kpiBaseHours = ($filterType === 'yearly') ? (624.0 * 12) : $baseHours;
         $kpiHours = ($filterType === 'weekly') ? $selectedWeekHours : round($totalDowntimeHours, 1);
-        $kpiPct   = round(($kpiHours / $baseHours) * 100, 2);
-        $overallPct = round(($totalDowntimeHours / $baseHours) * 100, 2);
+        $kpiPct   = round(($kpiHours / $kpiBaseHours) * 100, 2);
+        $overallPct = round(($totalDowntimeHours / $kpiBaseHours) * 100, 2);
+
+        // Summary Downtime Lost per Jenis MTC (Total seluruh chart)
+        $downtimeByJenis = [
+            'mhe'     => 0.0,
+            'pompa'   => 0.0,
+            'utility' => 0.0,
+            'ac'      => 0.0,
+        ];
+        $targetDtRecords = $breakdownData['records'];
+
+        foreach ($targetDtRecords as $rec) {
+            $mInfo = $this->resolveMachineInfo($rec);
+            if (!empty($mInfo['has_backup'])) {
+                continue; // Mesin memiliki backup di area: bukan downtime lost
+            }
+            $durHours = 0;
+            if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
+                $startT = Carbon::parse($rec->waktu_mulai);
+                $endT = Carbon::parse($rec->waktu_selesai);
+                $durHours = max(0.1, $startT->diffInMinutes($endT) / 60);
+            } else {
+                $durHours = 1.5;
+            }
+            $cat = $this->normalizeJenisCategory($rec->jenis_mtc ?? '');
+            if ($cat === 'MHE') $downtimeByJenis['mhe'] += $durHours;
+            elseif ($cat === 'Motor Pompa') $downtimeByJenis['pompa'] += $durHours;
+            elseif ($cat === 'Utility') $downtimeByJenis['utility'] += $durHours;
+            elseif ($cat === 'AC') $downtimeByJenis['ac'] += $durHours;
+        }
+        foreach ($downtimeByJenis as $k => $v) {
+            $downtimeByJenis[$k] = round($v, 1);
+        }
 
         return [
             'kpi_downtime_hours' => $kpiHours,
             'kpi_downtime_percentage' => $kpiPct,
             'total_downtime_hours' => round($totalDowntimeHours, 1),
             'total_downtime_percentage' => $overallPct,
+            'total_backup_hours' => round($totalBackupHours, 1),
             'avg_percentage' => $overallPct,
             'chart' => [
                 'categories' => $chartCategories,
@@ -1048,6 +1174,8 @@ class MtcDashboardController extends Controller
                     ],
                 ],
                 'hours_series' => $seriesDowntimeHours,
+                'backup_hours_series' => $seriesBackupHours,
+                'by_jenis' => $downtimeByJenis,
                 'target' => $targetPct,
                 'average' => $overallPct,
             ],
@@ -1173,7 +1301,7 @@ class MtcDashboardController extends Controller
             ->get();
 
         $units = ['MHE', 'Motor Pompa', 'Utility', 'AC'];
-        $weekColors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1'];
+        $weekColors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#6366f1', '#eab308', '#14b8a6', '#f97316', '#8b5cf6', '#0ea5e9'];
         $series = [];
 
         $chartCategories = [];
@@ -1245,15 +1373,22 @@ class MtcDashboardController extends Controller
         $kpiCost = ($filterType === 'weekly' && $selectedWeekTotal > 0) ? $selectedWeekTotal : $totalPeriodCost;
 
         $monthlyBudget = 95000000.0; // 95 Juta IDR budget limit
-        $budgetLimit = ($filterType === 'weekly') ? ($monthlyBudget / 4) : $monthlyBudget;
+        if ($filterType === 'yearly') {
+            $budgetLimit = $monthlyBudget * 12; // 1,140,000,000 IDR (1.14 Miliar)
+            $budgetFormatted = '1.140 Jt';
+        } elseif ($filterType === 'weekly') {
+            $budgetLimit = $monthlyBudget / 4;
+            $budgetFormatted = '23.8 Jt (W)';
+        } else {
+            $budgetLimit = $monthlyBudget;
+            $budgetFormatted = '95.0 Jt';
+        }
         $budgetUtil = $budgetLimit > 0 ? round(($kpiCost / $budgetLimit) * 100, 1) : 0;
 
         $kpiCostM = round($kpiCost / 1000000, 2);
         $totalCostFormatted = ($kpiCostM >= 1.0)
             ? 'IDR ' . number_format($kpiCostM, 1, ',', '.') . ' Jt'
             : ($kpiCost > 0 ? 'IDR ' . number_format($kpiCostM, 2, ',', '.') . ' Jt' : 'IDR 0,0 Jt');
-
-        $budgetFormatted = ($filterType === 'weekly') ? '23.8 Jt (W)' : '95.0 Jt';
 
         return [
             'total_cost' => $kpiCost,
@@ -1291,6 +1426,8 @@ class MtcDashboardController extends Controller
         $machineName = '-';
         $machineCode = '-';
         $location    = $main->lokasi ?? $main->area ?? '-';
+        $hasBackup   = false;
+        $backupNotes = null;
 
         if ($rel && $main->$rel && $main->$rel->mesin) {
             $mObj        = $main->$rel->mesin;
@@ -1298,6 +1435,8 @@ class MtcDashboardController extends Controller
             $machineName = $mObj->nama_mesin;
             $machineCode = $mObj->kode_mesin ?? '-';
             $location    = $mObj->lokasi ?? $mObj->dept ?? $location;
+            $hasBackup   = (bool) ($mObj->has_backup ?? false);
+            $backupNotes = $mObj->backup_notes ?? null;
         } elseif (in_array($main->jenis_mtc, ['Electric Engine', 'Diesel Engine'])) {
             $machineKey  = "main_" . $main->id;
             $machineName = $main->area ? "Unit: {$main->area}" : ($main->jenis_mtc . ' #' . $main->id);
@@ -1317,11 +1456,31 @@ class MtcDashboardController extends Controller
             $machineCode = '-';
         }
 
+        // Fallback matching by name or code if hasBackup is still false
+        if (!$hasBackup && !empty($main->area)) {
+            static $masterMesinBackupMap = null;
+            if ($masterMesinBackupMap === null) {
+                $masterMesinBackupMap = [];
+                $allM = DB::table('mtc_master_mesin')->select('nama_mesin', 'kode_mesin', 'has_backup', 'backup_notes')->get();
+                foreach ($allM as $mm) {
+                    if ($mm->nama_mesin) $masterMesinBackupMap[trim(strtolower($mm->nama_mesin))] = ['has_backup' => (bool)$mm->has_backup, 'notes' => $mm->backup_notes];
+                    if ($mm->kode_mesin) $masterMesinBackupMap[trim(strtolower($mm->kode_mesin))] = ['has_backup' => (bool)$mm->has_backup, 'notes' => $mm->backup_notes];
+                }
+            }
+            $target = trim(strtolower($main->area));
+            if (isset($masterMesinBackupMap[$target])) {
+                $hasBackup = $masterMesinBackupMap[$target]['has_backup'];
+                $backupNotes = $masterMesinBackupMap[$target]['notes'];
+            }
+        }
+
         return [
-            'key'        => $machineKey,
-            'nama_mesin' => $machineName,
-            'kode_mesin' => $machineCode,
-            'area'       => $location ?: '-',
+            'key'          => $machineKey,
+            'nama_mesin'   => $machineName,
+            'kode_mesin'   => $machineCode,
+            'area'         => $location ?: '-',
+            'has_backup'   => $hasBackup,
+            'backup_notes' => $backupNotes,
         ];
     }
 
@@ -1367,6 +1526,8 @@ class MtcDashboardController extends Controller
                     'nama_mesin'     => $mInfo['nama_mesin'],
                     'kode_mesin'     => $mInfo['kode_mesin'],
                     'area'           => $cat,
+                    'has_backup'     => !empty($mInfo['has_backup']),
+                    'backup_notes'   => $mInfo['backup_notes'] ?? null,
                     'breakdown_freq' => 0,
                     'total_downtime' => 0.0,
                     'keterangan'     => [],
@@ -1742,6 +1903,7 @@ class MtcDashboardController extends Controller
                 'unit_id'        => ($mInfo['kode_mesin'] && $mInfo['kode_mesin'] !== '-') ? $mInfo['kode_mesin'] : 'MTC-' . $rec->id,
                 'name'           => $mInfo['nama_mesin'],
                 'category'       => $cat,
+                'area_label'     => $areaLabel,
                 'category_badge' => $catBadge,
                 'lokasi'         => $mInfo['area'],
                 'off_since'      => $offSince,
@@ -1796,15 +1958,10 @@ class MtcDashboardController extends Controller
             });
 
             $breakdownCount = $wRecords->count();
-            $downtimeHours = 0;
-
-            foreach ($wRecords as $rec) {
-                if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
-                    $startT = Carbon::parse($rec->waktu_mulai);
-                    $endT = Carbon::parse($rec->waktu_selesai);
-                    $downtimeHours += max(0.1, $startT->diffInMinutes($endT) / 60);
-                }
-            }
+            // Ambil jam downtime yang sudah mengecualikan unit backup
+            $downtimeHours = isset($downtimeData['chart']['hours_series'][$idx]) 
+                ? (float) $downtimeData['chart']['hours_series'][$idx] 
+                : 0.0;
 
             if ($breakdownCount > 0) {
                 if ($downtimeHours <= 0) {
@@ -1821,6 +1978,53 @@ class MtcDashboardController extends Controller
             $seriesMttr[] = (float) $weekMttr;
         }
 
+        // Summary MTTR & MTBF per Jenis MTC
+        $corrByJenis = [
+            'mhe'     => ['mttr' => 0.0, 'mtbf' => (int) $baseHours, 'freq' => 0],
+            'pompa'   => ['mttr' => 0.0, 'mtbf' => (int) $baseHours, 'freq' => 0],
+            'utility' => ['mttr' => 0.0, 'mtbf' => (int) $baseHours, 'freq' => 0],
+            'ac'      => ['mttr' => 0.0, 'mtbf' => (int) $baseHours, 'freq' => 0],
+        ];
+
+        $targetCorrRecords = $breakdownData['records'] ?? collect([]);
+
+        $corrCats = [
+            'mhe'     => 'MHE',
+            'pompa'   => 'Motor Pompa',
+            'utility' => 'Utility',
+            'ac'      => 'AC',
+        ];
+
+        foreach ($corrCats as $key => $catName) {
+            $cRecords = $targetCorrRecords->filter(function ($item) use ($catName) {
+                return $this->normalizeJenisCategory($item->jenis_mtc ?? '') === $catName;
+            });
+            $cFreq = $cRecords->count();
+            if ($cFreq > 0) {
+                $cDtHours = 0;
+                foreach ($cRecords as $rec) {
+                    $mInfo = $this->resolveMachineInfo($rec);
+                    if (!empty($mInfo['has_backup'])) {
+                        continue;
+                    }
+                    if (!empty($rec->waktu_mulai) && !empty($rec->waktu_selesai)) {
+                        $startT = Carbon::parse($rec->waktu_mulai);
+                        $endT = Carbon::parse($rec->waktu_selesai);
+                        $cDtHours += max(0.1, $startT->diffInMinutes($endT) / 60);
+                    } else {
+                        $cDtHours += 1.5;
+                    }
+                }
+                $cMttr = round($cDtHours / $cFreq, 1);
+                $cMtbf = round($this->computeAverageMtbf($cRecords, $baseHours), 0);
+                $corrByJenis[$key] = [
+                    'mttr' => $cMttr,
+                    'mtbf' => (int) $cMtbf,
+                    'freq' => $cFreq,
+                ];
+            }
+        }
+
         return [
             'categories' => $categories,
             'date_ranges' => $dateRanges,
@@ -1835,6 +2039,7 @@ class MtcDashboardController extends Controller
                     'data' => $seriesMttr,
                 ],
             ],
+            'by_jenis' => $corrByJenis,
             'benchmark' => [
                 'target_mttr' => 3.0,
                 'target_mtbf' => 612,

@@ -998,6 +998,11 @@
                                 <option value="1">Aktif</option>
                                 <option value="0">Non-Aktif</option>
                             </select>
+                            <select class="filter-select" id="filterBackup">
+                                <option value="">Semua Backup</option>
+                                <option value="1">Ada Backup</option>
+                                <option value="0">Tanpa Backup</option>
+                            </select>
                         </div>
                         <div class="toolbar-right">
                             <span class="table-info-text" id="tableCount">— data</span>
@@ -1014,6 +1019,7 @@
                                     <th>Lokasi</th>
                                     <th>Dept</th>
                                     <th>Kode Mesin</th>
+                                    <th>Backup Unit</th>
                                     <th>Frekuensi</th>
                                     <th>Status</th>
                                     <th>Dibuat</th>
@@ -1022,7 +1028,7 @@
                             </thead>
                             <tbody id="tableBody">
                                 <tr>
-                                    <td colspan="10">
+                                    <td colspan="11">
                                         <div class="table-empty">
                                             <i class="mdi mdi-loading spin"></i>
                                             <div>Memuat data…</div>
@@ -1104,6 +1110,32 @@
                                     <label class="form-label-c">Kode Mesin</label>
                                     <input type="text" class="form-control-c" id="kode_mesin"
                                         placeholder="Contoh: MES-001">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group-c">
+                                        <label class="form-label-c">Status Backup Unit</label>
+                                        <select class="form-control-c" id="has_backup">
+                                            <option value="0">Tanpa Backup (Single Unit)</option>
+                                            <option value="1">Ada Backup Unit</option>
+                                        </select>
+                                        <div style="font-size: 11px; color: var(--ink-muted); margin-top: 4px;">
+                                            <i class="mdi mdi-information-outline"></i> Jika Ada Backup, perbaikan korektif
+                                            mesin ini <strong>tidak dihitung sebagai Downtime Lost</strong>.
+                                        </div>
+                                    </div>
+                                    <div class="form-group-c" id="groupBackupNotes" style="display:none">
+                                        <label class="form-label-c">Pilih Mesin Backup / Cadangan <span
+                                                class="req">*</span></label>
+                                        <select class="form-control-c" id="backup_mesin_id" style="width: 100%;">
+                                            <option value="">— Cari Kode / Nama Mesin —</option>
+                                        </select>
+                                        <input type="hidden" id="backup_notes">
+                                        <div style="font-size: 11px; color: #059669; margin-top: 5px;">
+                                            <i class="mdi mdi-sync"></i> <strong>Sinkronisasi 2 Arah:</strong> Mesin yang
+                                            dipilih otomatis terhubung saling backup.
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="form-group-c">
@@ -1294,13 +1326,15 @@
                 const q = $('#searchInput').val().toLowerCase().trim();
                 const jenis = $('#filterJenis').val();
                 const aktif = $('#filterAktif').val();
+                const backup = $('#filterBackup').val();
 
                 filtered = allData.filter(d => {
-                    const matchQ = !q || [d.nama_mesin, d.lokasi, d.dept, d.kode_mesin]
+                    const matchQ = !q || [d.nama_mesin, d.lokasi, d.dept, d.kode_mesin, d.backup_notes]
                         .some(v => (v ?? '').toLowerCase().includes(q));
                     const matchJ = !jenis || d.jenis_mtc === jenis;
                     const matchA = aktif === '' || String(d.aktif ? 1 : 0) === aktif;
-                    return matchQ && matchJ && matchA;
+                    const matchB = backup === '' || String(d.has_backup ? 1 : 0) === backup;
+                    return matchQ && matchJ && matchA && matchB;
                 });
 
                 page = 1;
@@ -1317,7 +1351,7 @@
                 if (!paged.length) {
                     $('#tableBody').html(`
                         <tr>
-                            <td colspan="10">
+                            <td colspan="11">
                                 <div class="table-empty">
                                     <i class="mdi mdi-magnify" style="font-size:28px; color:var(--ink-muted)"></i>
                                     <div style="margin-top:8px; font-size:13px; color:var(--ink-muted)">
@@ -1333,7 +1367,12 @@
                 }
 
                 let html = '';
+
                 paged.forEach((item, i) => {
+                    const hasBackupBadge = item.has_backup ?
+                        `<span class="badge bg-success"><i class="mdi mdi-shield-check me-1"></i>Ada Backup</span>${item.backup_notes ? `<div class="text-muted small mt-1 font-monospace" style="font-size:11px;">${item.backup_notes}</div>` : ''}` :
+                        `<span class="badge bg-secondary">Tanpa Backup</span>`;
+
                     html += `
                         <tr>
                             <td style="color:var(--ink-muted);font-size:12px">${start + i + 1}</td>
@@ -1342,6 +1381,9 @@
                             <td>${item.lokasi ?? '—'}</td>
                             <td>${item.dept ?? '<span style="color:var(--ink-muted)">—</span>'}</td>
                             <td style="font-family:monospace;font-size:12px">${item.kode_mesin ?? '—'}</td>
+                            <td>
+                                ${hasBackupBadge}
+                            </td>
                             <td>${item.frekuensi_list && item.frekuensi_list.length
                                 ? item.frekuensi_list.map(f => `<span class="badge-frek">${f.label ?? (f.interval + ' ' + f.satuan)}</span>`).join('')
                                 : '<span style="color:var(--ink-muted)">—</span>'
@@ -1394,7 +1436,55 @@
                 clearTimeout(searchTimer);
                 searchTimer = setTimeout(applyFilter, 280);
             });
-            $('#filterJenis, #filterAktif').on('change', applyFilter);
+            $('#filterJenis, #filterAktif, #filterBackup').on('change', applyFilter);
+
+            /* ── Backup Select2 Searchable Dropdown ─────────────────────────────── */
+            function initBackupSelect2(currentId = null, selectedBackupId = null) {
+                const $sel = $('#backup_mesin_id');
+                $sel.empty().append('<option value="">— Cari Kode / Nama Mesin —</option>');
+
+                // Urutkan mesin berdasarkan nama
+                const sorted = [...allData].sort((a, b) => (a.nama_mesin || '').localeCompare(b.nama_mesin || ''));
+                sorted.forEach(m => {
+                    // Jangan tampilkan mesin itu sendiri sebagai opsi backup dirinya
+                    if (currentId && String(m.id) === String(currentId)) return;
+                    const code = m.kode_mesin ? `[${m.kode_mesin}] ` : '';
+                    const loc = m.lokasi ? ` (${m.lokasi})` : '';
+                    const label = `${code}${m.nama_mesin}${loc}`;
+                    const isSelected = selectedBackupId && String(m.id) === String(selectedBackupId);
+                    $sel.append(new Option(label, m.id, false, isSelected));
+                });
+
+                if (selectedBackupId) {
+                    $sel.val(selectedBackupId);
+                }
+
+                if (!$sel.hasClass('select2-hidden-accessible')) {
+                    $sel.select2({
+                        theme: 'bootstrap-5',
+                        dropdownParent: $('#modalMesin'),
+                        placeholder: '— Cari Kode / Nama Mesin —',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                } else {
+                    $sel.trigger('change.select2');
+                }
+            }
+
+            /* Toggle backup select */
+            $('#has_backup').on('change', function() {
+                if ($(this).val() === '1') {
+                    $('#groupBackupNotes').slideDown(150, function() {
+                        const curId = $('#mesinId').val();
+                        initBackupSelect2(curId, $('#backup_mesin_id').val());
+                    });
+                } else {
+                    $('#groupBackupNotes').slideUp(150);
+                    $('#backup_mesin_id').val('').trigger('change.select2');
+                    $('#backup_notes').val('');
+                }
+            });
 
             /* ── Pagination click ────────────────────────────────────────────────────── */
             $(document).on('click', '.page-btn:not([disabled]):not(.active)', function() {
@@ -1412,6 +1502,11 @@
                 $('#modalMesinTitle').text('Tambah Mesin');
                 $('#groupAktif').hide();
                 $('#aktif').prop('checked', true);
+                $('#has_backup').val('0');
+                initBackupSelect2(null, null);
+                $('#backup_mesin_id').val('').trigger('change.select2');
+                $('#backup_notes').val('');
+                $('#groupBackupNotes').hide();
                 $('input[name="frekuensi[]"]').prop('checked', false);
                 $('#modalMesin').modal('show');
             });
@@ -1427,6 +1522,17 @@
                 $('#lokasi').val(d.lokasi);
                 $('#dept').val(d.dept ?? '');
                 $('#kode_mesin').val(d.kode_mesin ?? '');
+                $('#has_backup').val(d.has_backup ? '1' : '0');
+                initBackupSelect2(d.id, d.backup_mesin_id || null);
+                if (d.has_backup) {
+                    $('#groupBackupNotes').show();
+                    if (d.backup_mesin_id) {
+                        $('#backup_mesin_id').val(d.backup_mesin_id).trigger('change.select2');
+                    }
+                } else {
+                    $('#groupBackupNotes').hide();
+                }
+                $('#backup_notes').val(d.backup_notes ?? '');
                 $('#aktif').prop('checked', !!d.aktif);
                 $('#aktifLabel').text(d.aktif ? 'Aktif' : 'Non-Aktif');
                 $('#groupAktif').show();
@@ -1455,6 +1561,11 @@
                 const isUpdate = !!id;
                 const url = isUpdate ? R.update(id) : R.store;
 
+                const hasBackupVal = $('#has_backup').val();
+                const backupMesinIdVal = (hasBackupVal === '1') ? ($('#backup_mesin_id').val() || null) : null;
+                const backupText = (hasBackupVal === '1' && backupMesinIdVal) ? $(
+                    '#backup_mesin_id option:selected').text().trim() : null;
+
                 const payload = {
                     _token: R.csrf,
                     _method: 'POST',
@@ -1463,6 +1574,9 @@
                     lokasi: $('#lokasi').val(),
                     dept: $('#dept').val() || null,
                     kode_mesin: $('#kode_mesin').val() || null,
+                    has_backup: hasBackupVal,
+                    backup_mesin_id: backupMesinIdVal,
+                    backup_notes: backupText,
                     'frekuensi[]': $('input[name="frekuensi[]"]:checked').map(function() {
                         return this.value;
                     }).get(),

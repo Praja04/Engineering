@@ -19,13 +19,22 @@ class MtcMasterMesinModel extends Model
         'dept',
         'kode_mesin',
         'aktif',
+        'has_backup',
+        'backup_mesin_id',
+        'backup_notes',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'aktif' => 'boolean',
+        'has_backup' => 'boolean',
     ];
+
+    public function backupMesin()
+    {
+        return $this->belongsTo(self::class, 'backup_mesin_id');
+    }
 
     public function createdBy()
     {

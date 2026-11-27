@@ -822,6 +822,296 @@
             body.theme-light .apexcharts-data-labels text.apexcharts-datalabel {
                 fill: #000000 !important;
             }
+
+            /* Modal Unit Off Custom Dark/Light Styling */
+            .modal-dark .modal-content {
+                background: #0b1120;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                color: #f8fafc;
+                box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75);
+                border-radius: 12px;
+            }
+
+            .modal-dark .modal-header {
+                background: #0f172a;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            .modal-dark .modal-footer {
+                background: #0f172a;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            .modal-dark .modal-table,
+            .modal-dark .modal-table > :not(caption) > * > * {
+                --vz-table-bg: transparent !important;
+                --vz-table-accent-bg: transparent !important;
+                --vz-table-hover-bg: transparent !important;
+                --vz-table-hover-color: inherit !important;
+                --bs-table-bg: transparent !important;
+                --bs-table-accent-bg: transparent !important;
+                --bs-table-hover-bg: transparent !important;
+                --bs-table-hover-color: inherit !important;
+                box-shadow: none !important;
+            }
+
+            .modal-dark .modal-table th {
+                background: #1e293b !important;
+                color: #94a3b8 !important;
+                font-size: 11px;
+                font-weight: 700;
+                border-color: rgba(255, 255, 255, 0.08) !important;
+                box-shadow: none !important;
+            }
+
+            .modal-dark .modal-table td {
+                border-color: rgba(255, 255, 255, 0.06) !important;
+                color: #e2e8f0;
+                font-size: 12px;
+                background-color: transparent !important;
+                box-shadow: none !important;
+            }
+
+            .modal-dark .modal-table tbody tr {
+                background-color: transparent !important;
+                transition: background-color 0.15s ease-in-out;
+            }
+
+            .modal-dark .modal-table tbody tr:hover {
+                background-color: #1e293b !important;
+            }
+
+            .modal-dark .modal-table tbody tr:hover > td,
+            .modal-dark .modal-table tbody tr:hover > th {
+                background-color: transparent !important;
+                box-shadow: none !important;
+                color: #f8fafc !important;
+            }
+
+            .modal-dark .modal-table tbody tr:hover .modal-machine-name {
+                color: #ffffff !important;
+            }
+
+            /* Badges inside modal table */
+            .modal-unit-code {
+                display: inline-block;
+                padding: 3px 8px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 11px;
+                font-weight: 600;
+                background: #0f172a !important;
+                color: #38bdf8 !important;
+                border: 1px solid rgba(56, 189, 248, 0.35) !important;
+                border-radius: 4px;
+            }
+
+            .modal-machine-name {
+                color: #ffffff !important;
+                font-size: 12px;
+            }
+
+            .modal-off-time {
+                color: #cbd5e1 !important;
+                font-size: 11px;
+            }
+
+            .modal-cat-badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 3px 8px;
+                font-size: 11px;
+                font-weight: 700;
+                border-radius: 4px;
+                letter-spacing: 0.2px;
+            }
+
+            .modal-cat-mhe {
+                background: rgba(56, 189, 248, 0.2) !important;
+                color: #38bdf8 !important;
+                border: 1px solid rgba(56, 189, 248, 0.45) !important;
+            }
+
+            .modal-cat-pompa {
+                background: rgba(16, 185, 129, 0.2) !important;
+                color: #10b981 !important;
+                border: 1px solid rgba(16, 185, 129, 0.45) !important;
+            }
+
+            .modal-cat-utility {
+                background: rgba(245, 158, 11, 0.2) !important;
+                color: #f59e0b !important;
+                border: 1px solid rgba(245, 158, 11, 0.45) !important;
+            }
+
+            .modal-cat-ac {
+                background: rgba(168, 85, 247, 0.2) !important;
+                color: #c084fc !important;
+                border: 1px solid rgba(168, 85, 247, 0.45) !important;
+            }
+
+            .modal-status-badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 3px 10px;
+                font-size: 11px;
+                font-weight: 700;
+                border-radius: 4px;
+                letter-spacing: 0.3px;
+            }
+
+            .modal-status-danger {
+                background: rgba(244, 63, 94, 0.25) !important;
+                color: #f43f5e !important;
+                border: 1px solid rgba(244, 63, 94, 0.5) !important;
+            }
+
+            .modal-status-warning {
+                background: rgba(245, 158, 11, 0.25) !important;
+                color: #f59e0b !important;
+                border: 1px solid rgba(245, 158, 11, 0.5) !important;
+            }
+
+            .modal-status-secondary {
+                background: rgba(148, 163, 184, 0.25) !important;
+                color: #94a3b8 !important;
+                border: 1px solid rgba(148, 163, 184, 0.5) !important;
+            }
+
+            /* Light mode overrides for modal */
+            body.theme-light .modal-dark .modal-content {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                color: #0f172a !important;
+                box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15) !important;
+            }
+
+            body.theme-light .modal-dark .modal-header {
+                background: #f8fafc !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+            }
+
+            body.theme-light .modal-dark .modal-footer {
+                background: #f8fafc !important;
+                border-top: 1px solid #e2e8f0 !important;
+            }
+
+            body.theme-light .modal-dark .modal-table,
+            body.theme-light .modal-dark .modal-table > :not(caption) > * > * {
+                --vz-table-bg: transparent !important;
+                --vz-table-accent-bg: transparent !important;
+                --vz-table-hover-bg: transparent !important;
+                --bs-table-bg: transparent !important;
+                --bs-table-accent-bg: transparent !important;
+                --bs-table-hover-bg: transparent !important;
+                box-shadow: none !important;
+            }
+
+            body.theme-light .modal-dark .modal-table th {
+                background: #f1f5f9 !important;
+                color: #475569 !important;
+                border-color: #e2e8f0 !important;
+                box-shadow: none !important;
+            }
+
+            body.theme-light .modal-dark .modal-table td {
+                border-color: #e2e8f0 !important;
+                color: #1e293b !important;
+                box-shadow: none !important;
+            }
+
+            body.theme-light .modal-dark .modal-table tbody tr:hover {
+                background-color: #f1f5f9 !important;
+            }
+
+            body.theme-light .modal-dark .modal-table tbody tr:hover > td,
+            body.theme-light .modal-dark .modal-table tbody tr:hover > th {
+                background-color: transparent !important;
+                box-shadow: none !important;
+                color: #0f172a !important;
+            }
+
+            body.theme-light .modal-dark .btn-close {
+                filter: none !important;
+            }
+
+            body.theme-light #searchUnitOffModal {
+                background: #ffffff !important;
+                border-color: #cbd5e1 !important;
+                color: #0f172a !important;
+            }
+
+            body.theme-light .modal-machine-name {
+                color: #0f172a !important;
+            }
+
+            body.theme-light .modal-off-time {
+                color: #334155 !important;
+            }
+
+            body.theme-light .modal-unit-code {
+                background: #f1f5f9 !important;
+                color: #0284c7 !important;
+                border-color: #cbd5e1 !important;
+            }
+
+            /* Metric summary tiles above charts */
+            .mtc-stat-tile {
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.07);
+                border-radius: 6px;
+                padding: 4px 4px;
+                transition: all 0.2s ease;
+                text-align: center;
+            }
+
+            .mtc-stat-tile:hover {
+                background: rgba(255, 255, 255, 0.06);
+                border-color: rgba(56, 189, 248, 0.3);
+            }
+
+            .mtc-stat-label {
+                font-size: 8px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mtc-stat-val {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 11.5px;
+                font-weight: 700;
+                line-height: 1.2;
+                margin-top: 1px;
+            }
+
+            .mtc-stat-sub {
+                font-size: 7.5px;
+                color: var(--mtc-text-muted);
+                line-height: 1.1;
+                margin-top: 1px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            body.theme-light .mtc-stat-tile {
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+
+            body.theme-light .mtc-stat-tile:hover {
+                background: #f1f5f9 !important;
+                border-color: #0284c7 !important;
+            }
+
+            body.theme-light .mtc-stat-sub {
+                color: #64748b !important;
+            }
         </style>
     </head>
 
@@ -869,6 +1159,9 @@
                                 </button>
                                 <button type="button" class="filter-pill-btn" data-type="monthly">
                                     <i class="mdi mdi-calendar-month"></i> Monthly
+                                </button>
+                                <button type="button" class="filter-pill-btn" data-type="yearly">
+                                    <i class="mdi mdi-calendar-blank"></i> Yearly
                                 </button>
                                 <button type="button" class="filter-pill-btn" data-type="custom">
                                     <i class="mdi mdi-calendar-range"></i> Custom
@@ -918,6 +1211,16 @@
                                 <select id="selectYear" class="filter-ctrl font-mono">
                                     <option value="2026" selected>2026</option>
                                     <option value="2025">2025</option>
+                                </select>
+                            </div>
+
+                            <div id="yearlyFilterGroup" class="d-flex align-items-center gap-1 d-none">
+                                <select id="selectYearly" class="filter-ctrl font-mono" style="min-width: 140px;">
+                                    @for ($y = $currentYear; $y >= 2024; $y--)
+                                        <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>
+                                            Tahun {{ $y }}
+                                        </option>
+                                    @endfor
                                 </select>
                             </div>
 
@@ -1143,8 +1446,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="kpi-val font-mono" id="kpiCostVal"
-                                    style="font-size: 1.45rem;">
+                                <div class="kpi-val font-mono" id="kpiCostVal" style="font-size: 1.45rem;">
                                     --
                                 </div>
                                 <div class="kpi-progress-bar">
@@ -1195,10 +1497,6 @@
                                         <i class="mdi mdi-chart-timeline-variant-shimmer text-danger"></i>
                                         Total Breakdown (Frequency Korektif)
                                     </h4>
-                                    {{-- <div class="mtc-card-subtitle">
-                                        Frekuensi insiden breakdown mesin per minggu (W1, W2, W3...) dengan threshold
-                                        target &lt;5x
-                                    </div> --}}
                                 </div>
                                 <span
                                     class="badge bg-dark text-secondary border border-secondary border-opacity-25 font-mono px-2 py-1"
@@ -1206,7 +1504,38 @@
                                     Target: &lt;5x
                                 </span>
                             </div>
-                            <div id="chartTotalBreakdown" style="min-height: 295px;"></div>
+                            <!-- Summary per Jenis MTC -->
+                            <div class="row g-1 mb-1 px-3 pt-2">
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label text-info">MHE</div>
+                                        <div class="mtc-stat-val text-info" id="valBdMhe">0x</div>
+                                        <div class="mtc-stat-sub">Kejadian</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label text-success">POMPA</div>
+                                        <div class="mtc-stat-val text-success" id="valBdPompa">0x</div>
+                                        <div class="mtc-stat-sub">Kejadian</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label text-warning">UTILITY</div>
+                                        <div class="mtc-stat-val text-warning" id="valBdUtility">0x</div>
+                                        <div class="mtc-stat-sub">Kejadian</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label" style="color: #c084fc;">AC</div>
+                                        <div class="mtc-stat-val" style="color: #c084fc;" id="valBdAc">0x</div>
+                                        <div class="mtc-stat-sub">Kejadian</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="chartTotalBreakdown" style="min-height: 245px;"></div>
                         </div>
                     </div>
 
@@ -1219,10 +1548,6 @@
                                         <i class="mdi mdi-chart-areaspline text-info"></i>
                                         Total Downtime
                                     </h4>
-                                    {{-- <div class="mtc-card-subtitle">
-                                        Persentase downtime dari 624 jam kerja standar per periode dengan garis Average
-                                        &amp; Target
-                                    </div> --}}
                                 </div>
                                 <div class="d-flex align-items-center gap-1">
                                     <span
@@ -1237,7 +1562,38 @@
                                     </span>
                                 </div>
                             </div>
-                            <div id="chartTotalDowntime" style="min-height: 295px;"></div>
+                            <!-- Summary per Jenis MTC -->
+                            <div class="row g-1 mb-1 px-3 pt-2">
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label text-info">MHE</div>
+                                        <div class="mtc-stat-val text-info" id="valDtMhe">0h</div>
+                                        <div class="mtc-stat-sub">Jam Lost</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label text-success">POMPA</div>
+                                        <div class="mtc-stat-val text-success" id="valDtPompa">0h</div>
+                                        <div class="mtc-stat-sub">Jam Lost</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label text-warning">UTILITY</div>
+                                        <div class="mtc-stat-val text-warning" id="valDtUtility">0h</div>
+                                        <div class="mtc-stat-sub">Jam Lost</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label" style="color: #c084fc;">AC</div>
+                                        <div class="mtc-stat-val" style="color: #c084fc;" id="valDtAc">0h</div>
+                                        <div class="mtc-stat-sub">Jam Lost</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="chartTotalDowntime" style="min-height: 245px;"></div>
                         </div>
                     </div>
 
@@ -1255,11 +1611,13 @@
                                     </div>
                                 </div>
                                 <span class="badge bg-danger bg-opacity-20 border border-danger border-opacity-25"
-                                    id="unitOffTotalBadge" style="font-size: 10.5px;">
+                                    id="unitOffTotalBadge" style="font-size: 10.5px; cursor: pointer;"
+                                    title="Klik untuk lihat detail unit offline">
                                     0 Units Off
                                 </span>
                             </div>
-                            <div id="chartUnitOff" style="min-height: 280px;"></div>
+                            <div id="chartUnitOff" style="min-height: 280px; cursor: pointer;"
+                                title="Klik pada potongan chart untuk lihat detail"></div>
                         </div>
                     </div>
 
@@ -1273,15 +1631,46 @@
                                         Korelasi MTBF &amp; MTTR
                                     </h4>
                                     <div class="mtc-card-subtitle">
-                                        Keandalan (MTBF Jam) &amp; Pemulihan (MTTR Jam)
+                                        Keandalan (MTBF) &amp; Pemulihan (MTTR)
                                     </div>
                                 </div>
-                                <span class="badge bg-dark text-info border border-info border-opacity-25"
+                                <span class="badge bg-dark text-info border border-info border-opacity-25 font-mono"
                                     style="font-size: 10px;">
-                                    Jam (MTBF &amp; MTTR)
+                                    MTTR &bull; MTBF
                                 </span>
                             </div>
-                            <div id="chartMttrMtbfCorrelation" style="min-height: 285px;"></div>
+                            <!-- Summary per Jenis MTC -->
+                            <div class="row g-1 mb-1 px-3 pt-2">
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label text-info">MHE</div>
+                                        <div class="mtc-stat-val text-info" id="valCorrMhe">0h</div>
+                                        <div class="mtc-stat-sub" id="subCorrMhe">MTBF: 624h</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label text-success">POMPA</div>
+                                        <div class="mtc-stat-val text-success" id="valCorrPompa">0h</div>
+                                        <div class="mtc-stat-sub" id="subCorrPompa">MTBF: 624h</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label text-warning">UTILITY</div>
+                                        <div class="mtc-stat-val text-warning" id="valCorrUtility">0h</div>
+                                        <div class="mtc-stat-sub" id="subCorrUtility">MTBF: 624h</div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="mtc-stat-tile">
+                                        <div class="mtc-stat-label" style="color: #c084fc;">AC</div>
+                                        <div class="mtc-stat-val" style="color: #c084fc;" id="valCorrAc">0h</div>
+                                        <div class="mtc-stat-sub" id="subCorrAc">MTBF: 624h</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="chartMttrMtbfCorrelation" style="min-height: 240px;"></div>
                         </div>
                     </div>
 
@@ -1317,7 +1706,7 @@
                                         <i class="mdi mdi-shield-check-outline"></i>
                                         Top Mesin MTBF
                                     </h4>
-                                    <div class="mtc-card-subtitle">Urutan MTBF mesin (Nilai terbesar)</div>
+                                    <div class="mtc-card-subtitle">Urutan MTBF mesin (Nilai Terendah)</div>
                                 </div>
                                 <span
                                     class="badge bg-info bg-opacity-20 border border-info border-opacity-25 font-mono"
@@ -1416,6 +1805,93 @@
 
                 </div>
 
+            </div>
+        </div>
+
+        <!-- MODAL DETAIL UNIT OFF -->
+        <div class="modal fade modal-dark" id="modalUnitOffDetail" tabindex="-1"
+            aria-labelledby="modalUnitOffDetailLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header py-2 px-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="p-2 rounded bg-danger bg-opacity-20 text-white">
+                                <i class="mdi mdi-power-plug-off fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0" id="modalUnitOffDetailLabel"
+                                    style="font-size: 15px;">
+                                    Detail Data Unit Off (Area Breakdown)
+                                </h5>
+                                <div class="text-secondary small" style="font-size: 11px;">
+                                    Daftar unit berstatus Offline / Paket Off aktif di lapangan
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-3">
+                        <!-- Toolbar Filter & Search -->
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                            <div class="btn-group btn-group-sm" role="group" id="unitOffAreaFilters">
+                                <button type="button" class="btn btn-outline-info active" data-filter="ALL">
+                                    Semua Area <span class="badge bg-info text-dark ms-1" id="countFilterAll">0</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-info"
+                                    data-filter="MHE (Diesel & Electric)">
+                                    MHE <span class="badge bg-secondary ms-1" id="countFilterMHE">0</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-info" data-filter="Motor Pompa">
+                                    Motor Pompa <span class="badge bg-secondary ms-1" id="countFilterPompa">0</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-info" data-filter="Utility Plant">
+                                    Utility <span class="badge bg-secondary ms-1" id="countFilterUtility">0</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-info" data-filter="AC">
+                                    AC <span class="badge bg-secondary ms-1" id="countFilterAC">0</span>
+                                </button>
+                            </div>
+                            <div class="position-relative" style="min-width: 240px;">
+                                <input type="text" class="form-control form-control-sm ps-4 font-mono"
+                                    id="searchUnitOffModal" placeholder="Cari kode, nama, lokasi..."
+                                    style="background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.15); color: #fff; font-size: 11px;">
+                                <i
+                                    class="mdi mdi-magnify position-absolute top-50 start-0 translate-middle-y ms-2 text-secondary"></i>
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="table-responsive rounded border border-secondary border-opacity-25"
+                            style="max-height: 440px;">
+                            <table class="table align-middle mb-0 modal-table">
+                                <thead class="sticky-top">
+                                    <tr>
+                                        <th style="width: 38px;" class="text-center">#</th>
+                                        <th style="min-width: 110px;">Kode Unit</th>
+                                        <th style="min-width: 170px;">Nama Mesin / Unit</th>
+                                        <th style="min-width: 110px;">Kategori</th>
+                                        <th style="min-width: 130px;">Lokasi / Area</th>
+                                        <th style="min-width: 120px;">Off Sejak</th>
+                                        <th style="min-width: 120px;">Downtime</th>
+                                        <th style="min-width: 180px;">Kendala / Keterangan</th>
+                                        <th style="min-width: 90px;" class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyUnitOffModal">
+                                    <!-- Injected dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2 px-3 justify-content-between">
+                        <div class="small text-secondary" id="modalUnitOffFooterInfo" style="font-size: 11.5px;">
+                            Menampilkan 0 unit offline
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary"
+                            data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1528,12 +2004,13 @@
 
                     $('#weeklyFilterGroup').toggleClass('d-none', activeFilterType !== 'weekly');
                     $('#monthlyFilterGroup').toggleClass('d-none', activeFilterType !== 'monthly');
+                    $('#yearlyFilterGroup').toggleClass('d-none', activeFilterType !== 'yearly');
                     $('#customFilterGroup').toggleClass('d-none', activeFilterType !== 'custom');
 
                     fetchDashboardData();
                 });
 
-                $('#selectWeek, #selectMonth, #selectYear').on('change', function() {
+                $('#selectWeek, #selectMonth, #selectYear, #selectYearly').on('change', function() {
                     fetchDashboardData();
                 });
 
@@ -1674,7 +2151,8 @@
                         $('#kpiCompletionCount').text(`${sc.completed_count} / ${sc.planned_count} Unit`);
                         const isOptimal = sc.status === 'optimal' || sc.value >= sc.target;
                         applyKpiCardStatus('#kpiCompletionVal', '#kpiCompletionBadge', '#kpiCompletionBar', isOptimal);
-                        $('#kpiCompletionBadge').text(`Target >${sc.target}% (${isOptimal ? 'Achieved' : 'Need Focus'})`);
+                        $('#kpiCompletionBadge').text(
+                            `Target >${sc.target}% (${isOptimal ? 'Achieved' : 'Need Focus'})`);
                     }
                     if (chartData) {
                         renderScheduleMaintenanceChart(chartData);
@@ -1692,12 +2170,18 @@
                             $('#kpiBreakdownBar').css('width', `${bdPct}%`);
                             const isOptimal = bd.status === 'optimal' || bd.value <= bd.target;
                             applyKpiCardStatus('#kpiBreakdownVal', '#kpiBreakdownBadge', '#kpiBreakdownBar', isOptimal);
-                            $('#kpiBreakdownBadge').text(isOptimal ? `Aman (<${bd.target}x)` : `Alarm (>${bd.target}x)`);
+                            $('#kpiBreakdownBadge').text(isOptimal ? `Aman (<${bd.target}x)` :
+                                `Alarm (>${bd.target}x)`);
                         }
                         if (kpi.downtime) {
                             const dt = kpi.downtime;
                             $('#kpiDowntimeVal').html(`${dt.percentage}<span class="unit">%</span>`);
-                            $('#kpiDowntimeHours').text(`${dt.hours} Jam`);
+                            let hoursText = `${dt.hours} Jam`;
+                            if (dt.backup_hours && Number(dt.backup_hours) > 0) {
+                                hoursText +=
+                                    ` <span style="font-size:9.5px; color:#10b981; font-weight:600;" title="${dt.backup_hours} jam perbaikan korektif tidak dihitung downtime karena ter-backup">(-${dt.backup_hours}h backup)</span>`;
+                            }
+                            $('#kpiDowntimeHours').html(hoursText);
                             const dtPct = Math.min(100, (dt.percentage / (dt.target_percentage * 2)) * 100);
                             $('#kpiDowntimeBar').css('width', `${dtPct}%`);
                             const isOptimal = dt.status === 'optimal' || dt.percentage <= dt.target_percentage;
@@ -1764,13 +2248,17 @@
                 }
 
                 // 5. Unit Off
+                let currentUnitOffList = [];
+                let activeUnitOffFilter = 'ALL';
+
                 function updateUnitOffUI(chartData, unitList) {
+                    if (unitList) {
+                        currentUnitOffList = unitList;
+                        renderUnitOffDetailsTable(unitList);
+                    }
                     if (chartData) {
                         renderUnitOffChart(chartData);
                         hideChartLoading('#chartUnitOff');
-                    }
-                    if (unitList) {
-                        renderUnitOffDetailsTable(unitList);
                     }
                 }
 
@@ -1857,9 +2345,14 @@
                     abortActiveRequests();
                     const loadSeq = ++currentLoadSeq;
 
+                    let selectedYear = $('#selectYear').val() || {{ $currentYear }};
+                    if (activeFilterType === 'yearly') {
+                        selectedYear = $('#selectYearly').val() || selectedYear;
+                    }
+
                     const params = {
                         filter_type: activeFilterType,
-                        year: $('#selectYear').val() || 2026,
+                        year: selectedYear,
                         month: $('#selectMonth').val() || {{ $currentMonth }},
                         week: $('#selectWeek').val() || {{ $currentWeek }}
                     };
@@ -2077,11 +2570,18 @@
                     lastChartData.breakdown = chartData;
                     const theme = getChartTheme();
 
+                    if (chartData.by_jenis) {
+                        $('#valBdMhe').text((chartData.by_jenis.mhe || 0) + 'x');
+                        $('#valBdPompa').text((chartData.by_jenis.pompa || 0) + 'x');
+                        $('#valBdUtility').text((chartData.by_jenis.utility || 0) + 'x');
+                        $('#valBdAc').text((chartData.by_jenis.ac || 0) + 'x');
+                    }
+
                     const options = {
                         series: chartData.series,
                         chart: {
                             type: 'bar',
-                            height: 295,
+                            height: 245,
                             toolbar: {
                                 show: false
                             },
@@ -2214,6 +2714,13 @@
                     lastChartData.downtime = chartData;
                     const theme = getChartTheme();
 
+                    if (chartData.by_jenis) {
+                        $('#valDtMhe').text((chartData.by_jenis.mhe || 0) + 'h');
+                        $('#valDtPompa').text((chartData.by_jenis.pompa || 0) + 'h');
+                        $('#valDtUtility').text((chartData.by_jenis.utility || 0) + 'h');
+                        $('#valDtAc').text((chartData.by_jenis.ac || 0) + 'h');
+                    }
+
                     const dataVals = (chartData.series && chartData.series[0] && chartData.series[0].data) ?
                         chartData.series[0].data.map(v => Number(v) || 0) : [];
                     const maxData = dataVals.length ? Math.max(...dataVals) : 0;
@@ -2230,7 +2737,7 @@
                         series: chartData.series,
                         chart: {
                             type: 'area',
-                            height: 295,
+                            height: 245,
                             parentHeightOffset: 0,
                             toolbar: {
                                 show: false
@@ -2366,7 +2873,25 @@
                                 }
                             },
                             y: {
-                                formatter: val => val + '% (Jam Korektif / 624 × 100)'
+                                formatter: function(val, {
+                                    dataPointIndex
+                                }) {
+                                    const hours = (chartData.hours_series && chartData.hours_series[
+                                            dataPointIndex] !== undefined) ?
+                                        chartData.hours_series[dataPointIndex] : null;
+                                    const backupHours = (chartData.backup_hours_series && chartData
+                                            .backup_hours_series[dataPointIndex] !== undefined) ?
+                                        chartData.backup_hours_series[dataPointIndex] : 0;
+                                    let str = val + '%';
+                                    if (hours !== null) {
+                                        str += ` (${hours} Jam Lost)`;
+                                    }
+                                    if (backupHours > 0) {
+                                        str +=
+                                            `<br/><span style="color:#10b981;font-size:10px;">🛡️ ${backupHours} jam dicover backup unit (bukan downtime)</span>`;
+                                    }
+                                    return str;
+                                }
                             }
                         }
                     };
@@ -2412,6 +2937,16 @@
                         chart: {
                             type: 'donut',
                             height: 280,
+                            events: {
+                                dataPointSelection: function(event, chartContext, config) {
+                                    const selectedIndex = config.dataPointIndex;
+                                    if (selectedIndex !== undefined && selectedIndex !== -1 && chartData
+                                        .labels && chartData.labels[selectedIndex]) {
+                                        const selectedLabel = chartData.labels[selectedIndex];
+                                        openUnitOffModal(selectedLabel);
+                                    }
+                                }
+                            },
                             animations: {
                                 enabled: true
                             }
@@ -2485,11 +3020,31 @@
                     lastChartData.correlation = chartData;
                     const theme = getChartTheme();
 
+                    if (chartData.by_jenis) {
+                        const bj = chartData.by_jenis;
+                        if (bj.mhe) {
+                            $('#valCorrMhe').text((bj.mhe.mttr || 0) + 'h');
+                            $('#subCorrMhe').text('MTBF: ' + (bj.mhe.mtbf || 0) + 'h');
+                        }
+                        if (bj.pompa) {
+                            $('#valCorrPompa').text((bj.pompa.mttr || 0) + 'h');
+                            $('#subCorrPompa').text('MTBF: ' + (bj.pompa.mtbf || 0) + 'h');
+                        }
+                        if (bj.utility) {
+                            $('#valCorrUtility').text((bj.utility.mttr || 0) + 'h');
+                            $('#subCorrUtility').text('MTBF: ' + (bj.utility.mtbf || 0) + 'h');
+                        }
+                        if (bj.ac) {
+                            $('#valCorrAc').text((bj.ac.mttr || 0) + 'h');
+                            $('#subCorrAc').text('MTBF: ' + (bj.ac.mtbf || 0) + 'h');
+                        }
+                    }
+
                     const options = {
                         series: chartData.series,
                         chart: {
                             type: 'line',
-                            height: 285,
+                            height: 240,
                             toolbar: {
                                 show: false
                             },
@@ -2652,9 +3207,9 @@
                         },
                         plotOptions: {
                             bar: {
-                                horizontal: false,
+                                horizontal: true,
                                 borderRadius: 4,
-                                columnWidth: '38%',
+                                barHeight: '52%',
                                 dataLabels: {
                                     total: {
                                         enabled: true,
@@ -2665,12 +3220,13 @@
                                                 ' Jt';
                                         },
                                         style: {
-                                            fontSize: '11px',
+                                            fontSize: '10.5px',
                                             fontFamily: 'JetBrains Mono',
                                             fontWeight: 800,
                                             color: theme.totalDataLabelColor
                                         },
-                                        offsetY: -6
+                                        offsetX: 8,
+                                        offsetY: 0
                                     }
                                 }
                             }
@@ -2696,15 +3252,15 @@
                         xaxis: {
                             categories: chartData.categories, // ['MHE', 'Motor Pompa', 'Utility', 'AC']
                             labels: {
-                                rotate: 0,
-                                rotateAlways: false,
-                                hideOverlappingLabels: false,
-                                trim: false,
                                 style: {
                                     colors: theme.textColor,
-                                    fontSize: '11px',
+                                    fontSize: '10px',
                                     fontFamily: 'JetBrains Mono',
-                                    fontWeight: 600
+                                    fontWeight: 500
+                                },
+                                formatter: function(val) {
+                                    const num = Number(val) || 0;
+                                    return (num % 1 === 0 ? num.toFixed(0) : num.toFixed(1)) + ' Jt';
                                 }
                             },
                             axisBorder: {
@@ -2712,26 +3268,28 @@
                             }
                         },
                         yaxis: {
-                            title: {
-                                text: 'Total Biaya (Juta IDR)',
-                                style: {
-                                    color: theme.textColor,
-                                    fontSize: '10.5px',
-                                    fontWeight: 600
-                                }
-                            },
                             labels: {
                                 style: {
                                     colors: theme.textColor,
-                                    fontSize: '10px',
-                                    fontFamily: 'JetBrains Mono'
-                                },
-                                formatter: val => 'Rp ' + val + ' Jt'
+                                    fontSize: '11px',
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontWeight: 600
+                                }
                             }
                         },
                         grid: {
                             borderColor: theme.borderColor,
-                            strokeDashArray: 3
+                            strokeDashArray: 3,
+                            xaxis: {
+                                lines: {
+                                    show: true
+                                }
+                            },
+                            yaxis: {
+                                lines: {
+                                    show: false
+                                }
+                            }
                         },
                         legend: {
                             show: true,
@@ -2904,6 +3462,151 @@
 
                     $('#tbodyUnitOffDetails').html(tableHtml);
                 }
+
+                // ─────────────────────────────────────────────────────────────
+                // MODAL UNIT OFF INTERACTION
+                // ─────────────────────────────────────────────────────────────
+                function openUnitOffModal(filterArea) {
+                    activeUnitOffFilter = filterArea || 'ALL';
+                    $('#searchUnitOffModal').val('');
+
+                    // Hitung jumlah unit per kategori untuk badge filter
+                    const countAll = currentUnitOffList.length;
+                    const countMHE = currentUnitOffList.filter(u => (u.area_label === 'MHE (Diesel & Electric)' || u
+                        .category === 'MHE')).length;
+                    const countPompa = currentUnitOffList.filter(u => (u.area_label === 'Motor Pompa' || u.category ===
+                        'Motor Pompa')).length;
+                    const countUtility = currentUnitOffList.filter(u => (u.area_label === 'Utility Plant' || u
+                        .category === 'Utility')).length;
+                    const countAC = currentUnitOffList.filter(u => (u.area_label === 'AC' || u.category === 'AC'))
+                        .length;
+
+                    $('#countFilterAll').text(countAll);
+                    $('#countFilterMHE').text(countMHE);
+                    $('#countFilterPompa').text(countPompa);
+                    $('#countFilterUtility').text(countUtility);
+                    $('#countFilterAC').text(countAC);
+
+                    // Set status tombol filter aktif
+                    $('#unitOffAreaFilters button').removeClass('active');
+                    let matchedBtn = $(`#unitOffAreaFilters button[data-filter="${activeUnitOffFilter}"]`);
+                    if (matchedBtn.length) {
+                        matchedBtn.addClass('active');
+                    } else {
+                        $('#unitOffAreaFilters button[data-filter="ALL"]').addClass('active');
+                        activeUnitOffFilter = 'ALL';
+                    }
+
+                    renderUnitOffModalTable();
+
+                    const modalEl = document.getElementById('modalUnitOffDetail');
+                    if (window.bootstrap && bootstrap.Modal) {
+                        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modalInstance.show();
+                    } else {
+                        $('#modalUnitOffDetail').modal('show');
+                    }
+                }
+
+                function renderUnitOffModalTable() {
+                    const searchTerm = ($('#searchUnitOffModal').val() || '').toLowerCase().trim();
+
+                    const filtered = currentUnitOffList.filter(u => {
+                        // Filter Kategori/Area
+                        if (activeUnitOffFilter !== 'ALL') {
+                            const matchesArea = (u.area_label === activeUnitOffFilter) ||
+                                (u.category === activeUnitOffFilter) ||
+                                (activeUnitOffFilter.includes(u.category));
+                            if (!matchesArea) return false;
+                        }
+                        // Filter Search Keyword
+                        if (searchTerm) {
+                            const searchStr =
+                                `${u.unit_id} ${u.name} ${u.category} ${u.lokasi} ${u.cause} ${u.status}`
+                                .toLowerCase();
+                            if (!searchStr.includes(searchTerm)) return false;
+                        }
+                        return true;
+                    });
+
+                    let html = '';
+                    if (filtered.length === 0) {
+                        html = `
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-secondary">
+                                    <div class="mb-1"><i class="mdi mdi-information-outline fs-3"></i></div>
+                                    <div class="fw-semibold">Tidak ada unit offline</div>
+                                    <div class="small">Tidak ada data unit yang cocok dengan filter atau kata kunci pencarian.</div>
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        filtered.forEach((u, idx) => {
+                            let catClass = 'modal-cat-mhe';
+                            if (u.category === 'Motor Pompa') catClass = 'modal-cat-pompa';
+                            else if (u.category === 'Utility') catClass = 'modal-cat-utility';
+                            else if (u.category === 'AC') catClass = 'modal-cat-ac';
+
+                            let statusClass = 'modal-status-danger';
+                            if (u.status_badge === 'warning') statusClass = 'modal-status-warning';
+                            else if (u.status_badge === 'secondary') statusClass = 'modal-status-secondary';
+
+                            html += `
+                                <tr>
+                                    <td class="text-center font-mono text-secondary" style="font-size: 11px;">${idx + 1}</td>
+                                    <td>
+                                        <span class="modal-unit-code">
+                                            ${u.unit_id}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold modal-machine-name">${u.name}</div>
+                                    </td>
+                                    <td>
+                                        <span class="modal-cat-badge ${catClass}">
+                                            ${u.category}
+                                        </span>
+                                    </td>
+                                    <td style="color: #94a3b8; font-size: 11.5px;">${u.lokasi || '-'}</td>
+                                    <td>
+                                        <span class="font-mono modal-off-time">${u.off_since || '-'}</span>
+                                    </td>
+                                    <td>
+                                        <span class="font-mono fw-bold text-info" style="font-size: 11.5px;">${u.downtime_str || '-'}</span>
+                                    </td>
+                                    <td style="color: #94a3b8; font-size: 11.5px;">${u.cause || '-'}</td>
+                                    <td class="text-center">
+                                        <span class="modal-status-badge ${statusClass}">
+                                            ${u.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    $('#tbodyUnitOffModal').html(html);
+                    $('#modalUnitOffFooterInfo').text(
+                        `Menampilkan ${filtered.length} dari ${currentUnitOffList.length} total unit offline`);
+                }
+
+                // Event listener klik tombol filter area di modal
+                $(document).on('click', '#unitOffAreaFilters button', function() {
+                    $('#unitOffAreaFilters button').removeClass('active');
+                    $(this).addClass('active');
+                    activeUnitOffFilter = $(this).data('filter');
+                    renderUnitOffModalTable();
+                });
+
+                // Event listener live search di modal
+                $(document).on('input', '#searchUnitOffModal', function() {
+                    renderUnitOffModalTable();
+                });
+
+                // Event listener klik badge total unit off pada card header
+                $(document).on('click', '#unitOffTotalBadge', function() {
+                    openUnitOffModal('ALL');
+                });
 
                 // ─────────────────────────────────────────────────────────────
                 // INITIAL LOAD

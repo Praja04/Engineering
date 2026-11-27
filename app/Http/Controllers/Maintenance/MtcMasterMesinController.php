@@ -25,15 +25,24 @@ class MtcMasterMesinController extends Controller
     public function store(MtcMasterMesinRequest $request)
     {
         DB::transaction(function () use ($request) {
+            $hasBackup = $request->boolean('has_backup', false);
+            $backupMesinId = $hasBackup && !empty($request->backup_mesin_id) ? (int)$request->backup_mesin_id : null;
+
             $mesin = MtcMasterMesinModel::create([
-                'jenis_mtc'  => $request->jenis_mtc,
-                'nama_mesin' => $request->nama_mesin,
-                'lokasi'     => $request->lokasi,
-                'dept'       => $request->dept ?? null,
-                'kode_mesin' => $request->kode_mesin ?? null,
-                'aktif'      => 1,
-                'created_by' => Auth::id(),
+                'jenis_mtc'       => $request->jenis_mtc,
+                'nama_mesin'      => $request->nama_mesin,
+                'lokasi'          => $request->lokasi,
+                'dept'            => $request->dept ?? null,
+                'kode_mesin'      => $request->kode_mesin ?? null,
+                'has_backup'      => $hasBackup,
+                'backup_mesin_id' => $backupMesinId,
+                'backup_notes'    => null,
+                'aktif'           => 1,
+                'created_by'      => Auth::id(),
             ]);
+
+            // Sinkronisasi 2 arah untuk mesin backup
+            $this->syncTwoWayBackup($mesin, $hasBackup, $backupMesinId, $request->backup_notes);
 
             // frekuensi dikirim sebagai array: [{ interval: 1, satuan: 'bulan' }, ...]
             $this->syncFrekuensi($mesin->id, $request->frekuensi ?? []);
@@ -48,16 +57,19 @@ class MtcMasterMesinController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn($item) => [
-                'id'             => $item->id,
-                'jenis_mtc'      => $item->jenis_mtc,
-                'nama_mesin'     => $item->nama_mesin,
-                'lokasi'         => $item->lokasi,
-                'dept'           => $item->dept,
-                'kode_mesin'     => $item->kode_mesin,
-                'aktif'          => $item->aktif,
-                'created_at'     => $item->created_at,
+                'id'              => $item->id,
+                'jenis_mtc'       => $item->jenis_mtc,
+                'nama_mesin'      => $item->nama_mesin,
+                'lokasi'          => $item->lokasi,
+                'dept'            => $item->dept,
+                'kode_mesin'      => $item->kode_mesin,
+                'has_backup'      => (bool) $item->has_backup,
+                'backup_mesin_id' => $item->backup_mesin_id,
+                'backup_notes'    => $item->backup_notes,
+                'aktif'           => $item->aktif,
+                'created_at'      => $item->created_at,
                 // [{ interval: 2, satuan: 'bulan', label: '2 Bulan' }, ...]
-                'frekuensi_list' => $item->frekuensi->map(fn($f) => [
+                'frekuensi_list'  => $item->frekuensi->map(fn($f) => [
                     'interval' => $f->interval,
                     'satuan'   => $f->satuan,
                     'label'    => $f->label,
@@ -71,16 +83,23 @@ class MtcMasterMesinController extends Controller
     {
         DB::transaction(function () use ($request, $id) {
             $mesin = MtcMasterMesinModel::findOrFail($id);
+            $hasBackup = $request->boolean('has_backup', false);
+            $backupMesinId = $hasBackup && !empty($request->backup_mesin_id) ? (int)$request->backup_mesin_id : null;
 
             $mesin->update([
-                'jenis_mtc'  => $request->jenis_mtc,
-                'nama_mesin' => $request->nama_mesin,
-                'lokasi'     => $request->lokasi,
-                'dept'       => $request->dept ?? null,
-                'kode_mesin' => $request->kode_mesin ?? null,
-                'aktif'      => $request->aktif,
-                'updated_by' => Auth::id(),
+                'jenis_mtc'       => $request->jenis_mtc,
+                'nama_mesin'      => $request->nama_mesin,
+                'lokasi'          => $request->lokasi,
+                'dept'            => $request->dept ?? null,
+                'kode_mesin'      => $request->kode_mesin ?? null,
+                'has_backup'      => $hasBackup,
+                'backup_mesin_id' => $backupMesinId,
+                'aktif'           => $request->aktif,
+                'updated_by'      => Auth::id(),
             ]);
+
+            // Sinkronisasi 2 arah untuk mesin backup
+            $this->syncTwoWayBackup($mesin, $hasBackup, $backupMesinId, $request->backup_notes);
 
             $this->syncFrekuensi($mesin->id, $request->frekuensi ?? []);
         });
@@ -90,7 +109,16 @@ class MtcMasterMesinController extends Controller
 
     public function destroy($id)
     {
-        DB::transaction(fn() => MtcMasterMesinModel::findOrFail($id)->delete());
+        DB::transaction(function () use ($id) {
+            $mesin = MtcMasterMesinModel::findOrFail($id);
+            // Clear partner machine's backup link (2 arah)
+            MtcMasterMesinModel::where('backup_mesin_id', $mesin->id)->update([
+                'has_backup'      => false,
+                'backup_mesin_id' => null,
+                'backup_notes'    => null,
+            ]);
+            $mesin->delete();
+        });
 
         return response()->json(['status' => true, 'message' => 'Data mesin berhasil dihapus']);
     }
@@ -106,20 +134,20 @@ class MtcMasterMesinController extends Controller
             mkdir($dir, 0775, true);
         }
 
-        if (!file_exists($path)) {
+        if (!file_exists($path) || true) { // Always ensure updated columns
             $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
 
             // Set headers/instructions
             $sheet->setCellValue('A1', 'TEMPLATE IMPORT MASTER MESIN');
-            $sheet->mergeCells('A1:H1');
+            $sheet->mergeCells('A1:J1');
             $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 
             $sheet->setCellValue('A2', 'Petunjuk: Mulai isi data di Baris 5. Kolom B, C, dan D wajib diisi.');
-            $sheet->mergeCells('A2:H2');
+            $sheet->mergeCells('A2:J2');
 
-            $sheet->setCellValue('A3', 'Frekuensi dipisah koma (contoh: 1 Hari, 2 Minggu, 1 Bulan, 6 Bulan). Aktif diisi: Ya/Tidak atau Aktif/Non Aktif.');
-            $sheet->mergeCells('A3:H3');
+            $sheet->setCellValue('A3', 'Frekuensi: dipisah koma (contoh: 1 Hari, 1 Bulan). Aktif: Ya/Tidak. Backup Unit: Ya/Tidak (Jika Ya, korektif tidak dihitung downtime). Catatan Backup: nama mesin cadangan.');
+            $sheet->mergeCells('A3:J3');
 
             // Table headers in row 4
             $sheet->setCellValue('A4', 'No');
@@ -130,9 +158,11 @@ class MtcMasterMesinController extends Controller
             $sheet->setCellValue('F4', 'Kode Mesin');
             $sheet->setCellValue('G4', 'Frekuensi Perawatan');
             $sheet->setCellValue('H4', 'Status Aktif');
+            $sheet->setCellValue('I4', 'Backup Unit (Ya/Tidak)');
+            $sheet->setCellValue('J4', 'Catatan Backup (Opsional)');
 
             // Apply bold to headers
-            $sheet->getStyle('A4:H4')->getFont()->setBold(true);
+            $sheet->getStyle('A4:J4')->getFont()->setBold(true);
 
             // Add sample data in Row 5
             $sheet->setCellValue('A5', '1');
@@ -143,6 +173,8 @@ class MtcMasterMesinController extends Controller
             $sheet->setCellValue('F5', 'UTL-COMP-A');
             $sheet->setCellValue('G5', '1 Bulan, 6 Bulan');
             $sheet->setCellValue('H5', 'Aktif');
+            $sheet->setCellValue('I5', 'Ya');
+            $sheet->setCellValue('J5', 'Kompresor A.1 (Standby)');
 
             // Add sample data in Row 6
             $sheet->setCellValue('A6', '2');
@@ -153,9 +185,11 @@ class MtcMasterMesinController extends Controller
             $sheet->setCellValue('F6', 'ELC-PAN-MAIN');
             $sheet->setCellValue('G6', '1 Minggu, 1 Tahun');
             $sheet->setCellValue('H6', 'Aktif');
+            $sheet->setCellValue('I6', 'Tidak');
+            $sheet->setCellValue('J6', '');
 
             // Auto fit column widths
-            foreach (range('A', 'H') as $col) {
+            foreach (range('A', 'J') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
@@ -175,7 +209,8 @@ class MtcMasterMesinController extends Controller
             ->toArray(null, true, true, true);
 
         // Kolom: A=No, B=jenis_mtc, C=nama_mesin, D=lokasi,
-        //        E=dept, F=kode_mesin, G=frekuensi (pisah koma: "1 Bulan,6 Bulan"), H=aktif
+        //        E=dept, F=kode_mesin, G=frekuensi (pisah koma: "1 Bulan,6 Bulan"), H=aktif,
+        //        I=backup (Ya/Tidak), J=backup_notes
         $dataStart = 5;
         $inserted  = 0;
         $skipped   = 0;
@@ -185,13 +220,15 @@ class MtcMasterMesinController extends Controller
             foreach ($rows as $rowNum => $row) {
                 if ($rowNum < $dataStart) continue;
 
-                $jenisMtc  = trim((string) ($row['B'] ?? ''));
-                $namaMesin = trim((string) ($row['C'] ?? ''));
-                $lokasi    = trim((string) ($row['D'] ?? ''));
-                $dept      = trim((string) ($row['E'] ?? ''));
-                $kodeMesin = trim((string) ($row['F'] ?? ''));
-                $frekRaw   = trim((string) ($row['G'] ?? ''));
-                $aktifRaw  = trim((string) ($row['H'] ?? ''));
+                $jenisMtc       = trim((string) ($row['B'] ?? ''));
+                $namaMesin      = trim((string) ($row['C'] ?? ''));
+                $lokasi         = trim((string) ($row['D'] ?? ''));
+                $dept           = trim((string) ($row['E'] ?? ''));
+                $kodeMesin      = trim((string) ($row['F'] ?? ''));
+                $frekRaw        = trim((string) ($row['G'] ?? ''));
+                $aktifRaw       = trim((string) ($row['H'] ?? ''));
+                $backupRaw      = trim((string) ($row['I'] ?? ''));
+                $backupNotesRaw = trim((string) ($row['J'] ?? ''));
 
                 if ($jenisMtc === '' && $namaMesin === '' && $lokasi === '') continue;
 
@@ -237,6 +274,11 @@ class MtcMasterMesinController extends Controller
                     $aktif = null;
                 }
 
+                // Parse has_backup
+                $backupNorm = strtolower($backupRaw);
+                $hasBackup = in_array($backupNorm, ['1', 'true', 'yes', 'ya', 'ada'], true);
+                $backupNotes = $hasBackup && $backupNotesRaw !== '' ? $backupNotesRaw : null;
+
                 if (!empty($rowErrors)) {
                     $errors[] = ['baris' => $rowNum, 'masalah' => implode(', ', $rowErrors)];
                     $skipped++;
@@ -268,6 +310,18 @@ class MtcMasterMesinController extends Controller
                         'created_by' => Auth::id(),
                     ]);
                 }
+
+                // Sinkronisasi backup 2 arah
+                $partnerId = null;
+                if ($hasBackup && $backupNotesRaw !== '') {
+                    $partner = MtcMasterMesinModel::where('kode_mesin', $backupNotesRaw)
+                        ->orWhere('nama_mesin', $backupNotesRaw)
+                        ->first();
+                    if ($partner && $partner->id !== $mesin->id) {
+                        $partnerId = $partner->id;
+                    }
+                }
+                $this->syncTwoWayBackup($mesin, $hasBackup, $partnerId, $backupNotesRaw);
 
                 $this->syncFrekuensi($mesin->id, $frekuensiList);
                 $inserted++;
@@ -364,5 +418,68 @@ class MtcMasterMesinController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Sinkronisasi relasi 2 arah antara Mesin Utama dan Mesin Backup
+     */
+    private function syncTwoWayBackup(MtcMasterMesinModel $mesin, bool $hasBackup, ?int $backupMesinId, ?string $manualNotes = null)
+    {
+        if ($hasBackup && $backupMesinId) {
+            $backupMesin = MtcMasterMesinModel::find($backupMesinId);
+            if ($backupMesin && $backupMesin->id !== $mesin->id) {
+                // Catatan nama unit backup untuk mesin ini
+                $notesForThis = $backupMesin->kode_mesin
+                    ? "[{$backupMesin->kode_mesin}] {$backupMesin->nama_mesin}"
+                    : $backupMesin->nama_mesin;
+
+                $mesin->update([
+                    'has_backup'      => true,
+                    'backup_mesin_id' => $backupMesin->id,
+                    'backup_notes'    => $notesForThis,
+                ]);
+
+                // Lepaskan relasi mesin lain yang sebelumnya mem-backup mesin ini jika ada perubahan
+                MtcMasterMesinModel::where('backup_mesin_id', $mesin->id)
+                    ->where('id', '!=', $backupMesin->id)
+                    ->update([
+                        'has_backup'      => false,
+                        'backup_mesin_id' => null,
+                        'backup_notes'    => null,
+                    ]);
+
+                // Sinkronisasi otomatis 2 arah ke mesin pasangannya
+                $notesForPartner = $mesin->kode_mesin
+                    ? "[{$mesin->kode_mesin}] {$mesin->nama_mesin}"
+                    : $mesin->nama_mesin;
+
+                $backupMesin->update([
+                    'has_backup'      => true,
+                    'backup_mesin_id' => $mesin->id,
+                    'backup_notes'    => $notesForPartner,
+                ]);
+            }
+        } elseif ($hasBackup && !empty($manualNotes)) {
+            // Jika ada backup manual tanpa ID pasangan spesifik
+            $mesin->update([
+                'has_backup'      => true,
+                'backup_mesin_id' => null,
+                'backup_notes'    => $manualNotes,
+            ]);
+        } else {
+            // Hapus relasi backup pada mesin ini
+            $mesin->update([
+                'has_backup'      => false,
+                'backup_mesin_id' => null,
+                'backup_notes'    => null,
+            ]);
+
+            // Hapus juga relasi 2 arah pada mesin yang berpasangan dengannya
+            MtcMasterMesinModel::where('backup_mesin_id', $mesin->id)->update([
+                'has_backup'      => false,
+                'backup_mesin_id' => null,
+                'backup_notes'    => null,
+            ]);
+        }
     }
 }

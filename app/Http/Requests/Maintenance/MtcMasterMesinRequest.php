@@ -22,11 +22,14 @@ class MtcMasterMesinRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jenis_mtc'  => ['required', 'string'],
-            'nama_mesin' => ['required', 'string'],
-            'lokasi'     => ['nullable', 'string'],
-            // 'frekuensi'  => ['nullable', 'string'],
-            // 'aktif'      => ['required', 'boolean'],
+            'jenis_mtc'       => ['required', 'string'],
+            'nama_mesin'      => ['required', 'string'],
+            'lokasi'          => ['nullable', 'string'],
+            'dept'            => ['nullable', 'string'],
+            'kode_mesin'      => ['nullable', 'string'],
+            'has_backup'      => ['nullable'],
+            'backup_mesin_id' => ['nullable'],
+            'backup_notes'    => ['nullable', 'string', 'max:255'],
         ];
     }
 }
