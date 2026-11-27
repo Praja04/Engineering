@@ -21,6 +21,8 @@ class UtilityHistoryCard extends Model
         'Boiler',
         'Tank Farm',
         'Hydrant',
+        'Cooling Tower',
+        'Ruang AHU',
     ];
 
     protected $fillable = [

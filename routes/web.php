@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AccessControlController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\TokenAuthController;
 
 Route::get('/auth/sso/callback', [TokenAuthController::class, 'callback'])
@@ -35,15 +37,41 @@ Route::middleware('auth')->group(function () {
         return redirect()->to('/ejo-engineer');
     });
 
+    // ── User Profile & Password Update ──
+    Route::prefix('profile')->as('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'index'])->name('index');
+        Route::post('/update', [ProfileController::class, 'update'])->name('update');
+        Route::post('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+    });
+
     Route::middleware(['auth', 'access'])->group(function () {
         Route::prefix('users')->as('users.')->group(function () {
-            Route::get('/index', [AuthController::class, 'manage_user'])->name('users.index');
+            Route::get('/index', [AuthController::class, 'manage_user'])->name('index');
             Route::get('/data', [AuthController::class, 'getUsers'])->name('get'); // API untuk DataTables
             Route::post('/', [AuthController::class, 'store'])->name('store'); // Simpan user baru
             Route::get('/edit/{id}', [AuthController::class, 'edit'])->name('edit'); // Ambil data user untuk edit
             Route::post('/{id}', [AuthController::class, 'update'])->name('update'); // Update user
             Route::delete('/{id}', [AuthController::class, 'destroy'])->name('destroy'); // Hapus user
         });
+
+        // ── Manajemen Role & Permission (Hanya Admin) ──
+        Route::prefix('access-control')->as('access-control.')
+            ->middleware('role:admin')
+            ->group(function () {
+                Route::get('/', [AccessControlController::class, 'index'])->name('index');
+                Route::get('/data', [AccessControlController::class, 'getData'])->name('data');
+                // Permission CRUD
+                Route::post('/permissions', [AccessControlController::class, 'storePermission'])->name('permissions.store');
+                Route::put('/permissions/{id}', [AccessControlController::class, 'updatePermission'])->name('permissions.update');
+                Route::delete('/permissions/{id}', [AccessControlController::class, 'destroyPermission'])->name('permissions.destroy');
+                // Role CRUD
+                Route::post('/roles', [AccessControlController::class, 'storeRole'])->name('roles.store');
+                Route::put('/roles/{id}', [AccessControlController::class, 'updateRole'])->name('roles.update');
+                Route::delete('/roles/{id}', [AccessControlController::class, 'destroyRole'])->name('roles.destroy');
+                // User Permissions Mapping
+                Route::get('/user/{id}', [AccessControlController::class, 'getUserAccess'])->name('user.get');
+                Route::post('/user/{id}', [AccessControlController::class, 'updateUserAccess'])->name('user.update');
+            });
     });
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');

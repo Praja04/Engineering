@@ -96,6 +96,31 @@ Setiap tag yang ditulis dengan format kurung kurawal ganda `{{nama_tag}}` di dal
 
 ---
 
+### 8. Tag Grafik / Chart Otomatis (*Auto-Generated Chart Images*)
+> **Tips:** Buat sebuah kotak (*Shape* persegi) di PowerPoint pada slide yang diinginkan, lalu ketik tag di dalam kotak tersebut. Sistem akan otomatis mengganti kotak tersebut dengan gambar grafik beresolusi tinggi (*Dark Theme* elegan) yang ukurannya pas mengikuti kotak!
+
+#### A. Chart Utility Mesin & Boiler (Slide 2 & Slide 4):
+| Tag Placeholder | Grafik Mesin | Keterangan Data |
+| :--- | :--- | :--- |
+| `{{chart.bbsteam}}` | **Tren Harian Batu Bara vs Steam** | Perbandingan Tonase BB vs Produksi Steam |
+| `{{chart.kondensat}}` | **Rasio Kondensat Boiler (%)** | Trend % kondensat harian vs Target 85% |
+| `{{chart.compressor}}` | **Running Hours Air Compressor** | Multi-line 4 mesin: GA37, GA57, IR55, GA55 |
+| `{{chart.ahu}}` | **Monitoring Suhu & Ampere AHU** | Dual axis: Rata-rata Suhu Ruangan & Ampere |
+| `{{chart.cooling_tower}}` | **Temperatur & Tekanan Cooling Tower** | Temp Out (°C) & Pressure Out (Bar) |
+| `{{chart.powerhouse}}` | **Konsumsi Listrik Power House** | Trend harian konsumsi PLN vs PLTS Solar |
+
+#### B. Chart WCO WWTP (Slide 3):
+| Tag Placeholder | Grafik WCO WWTP | Keterangan Data |
+| :--- | :--- | :--- |
+| `{{chart.wco_cost}}` | **Detail Biaya Chemical & Biaya / m³** | Trend Total Cost (Jt Rp) & Biaya/m³ bulanan |
+| `{{chart.wco_influent}}` | **Influent Mingguan per Pit** | Bar grouped per pit: Sparta, Garam, Step 3, Storage |
+| `{{chart.wco_effluent}}` | **Volume Effluent Mingguan** | Bar perbandingan Full Proses vs DAF Pre |
+| `{{chart.wco_sparta_garam}}` | **Influent Sparta & Garam** | Trend harian vs garis batas standar 50 m³/day |
+| `{{chart.wco_cod}}` | **Tren Kepatuhan Effluent: COD** | Nilai COD harian vs batas baku mutu 300 ppm |
+| `{{chart.wco_tss}}` | **Tren Kepatuhan Effluent: TSS** | Nilai TSS harian vs batas baku mutu 100 ppm |
+
+---
+
 ## 💡 Penanganan Slide yang Belum Ada Datanya di Web
 *(Contoh: Slide 9 Foto Batubara, Slide 10 Verifikasi Delta P Steam, Slide 11 Action Plan Boiler, Slide 14/16 Dokumentasi Perbaikan Mesin)*
 

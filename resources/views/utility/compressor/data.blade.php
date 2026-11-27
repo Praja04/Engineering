@@ -320,6 +320,13 @@
                                 <input type="number" step="0.01" name="suhu_dryer_ir" id="edit_dryer_ir"
                                     class="form-control">
                             </div>
+
+                            <div class="col-12 mt-3"><span class="badge bg-soft-danger text-danger">Suhu Ruang Compressor (°C)</span></div>
+                            <div class="col-md-4">
+                                <label class="form-label">Suhu Ruang</label>
+                                <input type="number" step="0.01" name="suhu_ruang_compressor" id="edit_suhu_ruang"
+                                    class="form-control">
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -706,6 +713,9 @@
                         <div class="col-4 mt-1"><strong>TR15:</strong> ${formatNum(data.suhu_dryer_tr15)} °C</div>
                         <div class="col-4 mt-1"><strong>FX250:</strong> ${formatNum(data.suhu_dryer_fx250)} °C</div>
                         <div class="col-4 mt-1"><strong>IR:</strong> ${formatNum(data.suhu_dryer_ir)} °C</div>
+
+                        <div class="col-12 mt-2"><span class="badge bg-soft-danger text-danger">Suhu Ruang Compressor (°C)</span></div>
+                        <div class="col-12 mt-1"><strong>Suhu Ruang:</strong> ${formatNum(data.suhu_ruang_compressor)} °C</div>
                     </div>
                 `;
                 $('#detailContent').html(html);
@@ -750,6 +760,7 @@
                 $('#edit_dryer_tr').val(formatNum(data.suhu_dryer_tr15));
                 $('#edit_dryer_fx').val(formatNum(data.suhu_dryer_fx250));
                 $('#edit_dryer_ir').val(formatNum(data.suhu_dryer_ir));
+                $('#edit_suhu_ruang').val(formatNum(data.suhu_ruang_compressor));
 
                 $('#modalEdit').modal('show');
             });

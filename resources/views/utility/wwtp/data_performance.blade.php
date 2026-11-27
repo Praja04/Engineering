@@ -164,12 +164,13 @@
                                                 <th class="fw-semibold text-center">TSS (mg/L)</th>
                                                 <th class="fw-semibold text-center">COD (mg/L)</th>
                                                 <th class="fw-semibold text-center">Foto</th>
+                                                <th class="fw-semibold">Dibuat Oleh</th>
                                                 <th class="fw-semibold text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="performanceTableBody">
                                             <tr>
-                                                <td colspan="6" class="text-center py-5">
+                                                <td colspan="7" class="text-center py-5">
                                                     <div class="spinner-border text-primary" role="status">
                                                         <span class="visually-hidden">Loading...</span>
                                                     </div>
@@ -210,12 +211,13 @@
                                                 <th class="fw-semibold text-center">Equalisasi 1</th>
                                                 <th class="fw-semibold text-center">Equalisasi 2</th>
                                                 <th class="fw-semibold text-center">Outlet</th>
+                                                <th class="fw-semibold">Dibuat Oleh</th>
                                                 <th class="fw-semibold text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="phTableBody">
                                             <tr>
-                                                <td colspan="6" class="text-center py-4 text-muted">
+                                                <td colspan="7" class="text-center py-4 text-muted">
                                                     <i class="fas fa-info-circle me-2"></i>Data PH harian akan ditampilkan
                                                     di sini
                                                 </td>
@@ -275,12 +277,13 @@
                                                         class="text-muted">(mL/g)</small></th>
                                                 <th class="fw-semibold text-center">DO <small
                                                         class="text-muted">(mg/L)</small></th>
+                                                <th class="fw-semibold">Dibuat Oleh</th>
                                                 <th class="fw-semibold text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="sampleTableBody">
                                             <tr>
-                                                <td colspan="9" class="text-center py-5">
+                                                <td colspan="10" class="text-center py-5">
                                                     <div class="spinner-border text-warning" role="status">
                                                         <span class="visually-hidden">Loading...</span>
                                                     </div>
@@ -861,7 +864,7 @@
                 tbody.empty();
                 if (!data || !data.length) {
                     tbody.append(
-                        `<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data performance</td></tr>`
+                        `<tr><td colspan="7" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data performance</td></tr>`
                     );
                     return;
                 }
@@ -878,6 +881,7 @@
                     <button class="btn btn-sm btn-outline-success me-1" onclick="showPerformanceEdit(${record.id})" title="Edit"><i class="mdi mdi-pencil"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="confirmDeletePerformance(${record.id})" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
                     }
+                    const creatorName = record.creator ? (record.creator.username || record.creator.fullname) : '-';
                     tbody.append(`
                 <tr class="data-row">
                     <td>${record.week ? formatWeekRange(record.week.week_start, record.week.week_end) : '-'}</td>
@@ -885,6 +889,7 @@
                     <td class="text-center fw-bold">${record.tss}</td>
                     <td class="text-center fw-bold">${record.cod}</td>
                     <td class="text-center">${hasFoto}</td>
+                    <td><span class="badge bg-light text-secondary border">${creatorName}</span></td>
                     <td class="text-center">${btns}</td>
                 </tr>`);
                 });
@@ -934,9 +939,10 @@
                         currentRecordId = id;
                         let content = `
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Periode</p><p class="fw-bold mb-0">${formatWeekRange(r.week.week_start, r.week.week_end)}</p></div></div>
-                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Jenis</p>${getJenisBadge(r.jenis)}</div></div>
-                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Tanggal Input</p><p class="fw-bold mb-0">${formatDate(r.created_at)}</p></div></div>
+                        <div class="col-md-3"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Periode</p><p class="fw-bold mb-0">${formatWeekRange(r.week.week_start, r.week.week_end)}</p></div></div>
+                        <div class="col-md-3"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Jenis</p>${getJenisBadge(r.jenis)}</div></div>
+                        <div class="col-md-3"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Dibuat Oleh</p><p class="fw-bold mb-0">${r.creator ? (r.creator.username || r.creator.fullname) : '-'}</p></div></div>
+                        <div class="col-md-3"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Tanggal Input</p><p class="fw-bold mb-0">${formatDate(r.created_at)}</p></div></div>
                     </div>
                     <h6 class="fw-bold mb-3 text-primary">Parameter</h6>
                     <div class="row g-3 mb-4">
@@ -1090,7 +1096,7 @@
                 tbody.empty();
                 if (!data || !data.length) {
                     tbody.append(
-                        `<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data PH harian</td></tr>`
+                        `<tr><td colspan="7" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data PH harian</td></tr>`
                     );
                     return;
                 }
@@ -1103,6 +1109,7 @@
                     <button class="btn btn-sm btn-outline-success me-1" onclick="showPHEdit(${item.id})" title="Edit"><i class="mdi mdi-pencil"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="confirmDeletePH(${item.id})" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
                     }
+                    const creatorName = item.creator ? (item.creator.username || item.creator.fullname) : '-';
                     tbody.append(`
                 <tr class="data-row">
                     <td>${formatDate(item.tanggal)}</td>
@@ -1110,6 +1117,7 @@
                     <td class="text-center fw-bold">${item.equalisasi_1 ?? '-'}</td>
                     <td class="text-center fw-bold">${item.equalisasi_2 ?? '-'}</td>
                     <td class="text-center fw-bold">${item.outlet ?? '-'}</td>
+                    <td><span class="badge bg-light text-secondary border">${creatorName}</span></td>
                     <td class="text-center">${btns}</td>
                 </tr>`);
                 });
@@ -1190,8 +1198,9 @@
                     </div></div>`).join('');
                         $('#modalPHContent').html(`
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Tanggal</p><p class="fw-bold mb-0">${formatDate(r.tanggal)}</p></div></div>
-                        <div class="col-md-6"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Shift</p>${getShiftBadge(r.shift)}</div></div>
+                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Tanggal</p><p class="fw-bold mb-0">${formatDate(r.tanggal)}</p></div></div>
+                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Shift</p>${getShiftBadge(r.shift)}</div></div>
+                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Dibuat Oleh</p><p class="fw-bold mb-0">${r.creator ? (r.creator.username || r.creator.fullname) : '-'}</p></div></div>
                     </div>
                     <h6 class="fw-bold mb-3 text-info">Nilai PH per Lokasi</h6>
                     <div class="row g-3">${phGrid}</div>`);
@@ -1369,7 +1378,7 @@
                 tbody.empty();
                 if (!data || !data.length) {
                     tbody.append(
-                        `<tr><td colspan="9" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data sample</td></tr>`
+                        `<tr><td colspan="10" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>Tidak ada data sample</td></tr>`
                     );
                     return;
                 }
@@ -1382,16 +1391,18 @@
                     <button class="btn btn-sm btn-outline-success me-1" onclick="showSampleEdit(${s.id})" title="Edit"><i class="mdi mdi-pencil"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteSample(${s.id})" title="Hapus"><i class="mdi mdi-trash-can"></i></button>`;
                     }
+                    const creatorName = s.creator ? (s.creator.username || s.creator.fullname) : '-';
                     tbody.append(`
                 <tr class="data-row">
                     <td>${formatDate(s.tanggal)}</td>
-                    <td><span class="badge bg-warning text-dark">${s.jenis_sampel.nama_sampel || '-'}</span></td>
+                    <td><span class="badge bg-warning text-dark">${s.jenis_sampel ? (s.jenis_sampel.nama_sampel || s.jenis_sampel) : '-'}</span></td>
                     <td class="text-center fw-bold">${s.tss  ?? '-'}</td>
                     <td class="text-center fw-bold">${s.sv30 ?? '-'}</td>
                     <td class="text-center fw-bold">${s.ph   ?? '-'}</td>
                     <td class="text-center fw-bold">${s.mlss ?? '-'}</td>
                     <td class="text-center fw-bold">${s.svl  ?? '-'}</td>
                     <td class="text-center fw-bold">${s.do   ?? '-'}</td>
+                    <td><span class="badge bg-light text-secondary border">${creatorName}</span></td>
                     <td class="text-center">${btns}</td>
                 </tr>`);
                 });
@@ -1488,8 +1499,9 @@
                         }).join('');
                         $('#modalSampleContent').html(`
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Tanggal</p><p class="fw-bold mb-0">${formatDate(s.tanggal ? s.tanggal.substring(0,10) : '')}</p></div></div>
-                        <div class="col-md-6"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Jenis Sampel</p><span class="badge bg-warning text-dark fs-6">${namaSampel}</span></div></div>
+                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Tanggal</p><p class="fw-bold mb-0">${formatDate(s.tanggal ? s.tanggal.substring(0,10) : '')}</p></div></div>
+                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Jenis Sampel</p><span class="badge bg-warning text-dark fs-6">${namaSampel}</span></div></div>
+                        <div class="col-md-4"><div class="info-box p-3 bg-light rounded"><p class="text-muted small mb-1">Dibuat Oleh</p><p class="fw-bold mb-0">${s.creator ? (s.creator.username || s.creator.fullname) : '-'}</p></div></div>
                     </div>
                     <h6 class="fw-bold mb-3 text-warning">Parameter Pengujian</h6>
                     <div class="row g-3">${paramGrid}</div>`);

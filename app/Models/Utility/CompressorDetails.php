@@ -57,8 +57,7 @@ class CompressorDetails extends Model
         'suhu_dryer_tr15',
         'suhu_dryer_fx250',
         'suhu_dryer_ir',
-        'created_by',
-        'updated_by',
+        'suhu_ruang_compressor',
     ];
 
     protected $casts = [

@@ -24,9 +24,59 @@
         /* Apexcharts data labels high contrast */
         .apexcharts-datalabel,
         .apexcharts-datalabel text,
-        .apexcharts-datalabels text {
+        .apexcharts-datalabels text,
+        .apexcharts-pie-label {
             fill: #ffffff !important;
+            color: #ffffff !important;
             font-weight: 700 !important;
+        }
+
+        /* ApexCharts Axis Labels, Titles & Legend - Solid Black */
+        .apexcharts-text.apexcharts-yaxis-label,
+        .apexcharts-text.apexcharts-xaxis-label,
+        .apexcharts-yaxis-label,
+        .apexcharts-xaxis-label,
+        .apexcharts-yaxis-texts-g text,
+        .apexcharts-xaxis-texts-g text,
+        .apexcharts-yaxis text,
+        .apexcharts-xaxis text,
+        .apexcharts-yaxis-title text,
+        .apexcharts-xaxis-title text {
+            fill: #000000 !important;
+            color: #000000 !important;
+            font-weight: 600 !important;
+        }
+
+        .apexcharts-legend-text {
+            color: #000000 !important;
+            font-weight: 600 !important;
+        }
+
+        /* Dark mode support for ApexCharts labels */
+        [data-layout-mode="dark"] .apexcharts-text.apexcharts-yaxis-label,
+        [data-layout-mode="dark"] .apexcharts-text.apexcharts-xaxis-label,
+        [data-layout-mode="dark"] .apexcharts-yaxis-label,
+        [data-layout-mode="dark"] .apexcharts-xaxis-label,
+        [data-layout-mode="dark"] .apexcharts-yaxis-texts-g text,
+        [data-layout-mode="dark"] .apexcharts-xaxis-texts-g text,
+        [data-layout-mode="dark"] .apexcharts-yaxis text,
+        [data-layout-mode="dark"] .apexcharts-xaxis text,
+        [data-layout-mode="dark"] .apexcharts-yaxis-title text,
+        [data-layout-mode="dark"] .apexcharts-xaxis-title text,
+        [data-layout-mode="dark"] .apexcharts-legend-text,
+        [data-bs-theme="dark"] .apexcharts-text.apexcharts-yaxis-label,
+        [data-bs-theme="dark"] .apexcharts-text.apexcharts-xaxis-label,
+        [data-bs-theme="dark"] .apexcharts-yaxis-label,
+        [data-bs-theme="dark"] .apexcharts-xaxis-label,
+        [data-bs-theme="dark"] .apexcharts-yaxis-texts-g text,
+        [data-bs-theme="dark"] .apexcharts-xaxis-texts-g text,
+        [data-bs-theme="dark"] .apexcharts-yaxis text,
+        [data-bs-theme="dark"] .apexcharts-xaxis text,
+        [data-bs-theme="dark"] .apexcharts-yaxis-title text,
+        [data-bs-theme="dark"] .apexcharts-xaxis-title text,
+        [data-bs-theme="dark"] .apexcharts-legend-text {
+            fill: #f8fafc !important;
+            color: #f8fafc !important;
         }
 
         /* ApexCharts Tooltip Dark Styling (Kontras Tinggi & Tidak Nyaru) */
@@ -52,11 +102,15 @@
             text-shadow: none !important;
         }
 
-        .apexcharts-tooltip-series-group {
+        .apexcharts-tooltip-series-group.apexcharts-active {
             padding: 5px 12px !important;
             display: flex !important;
             align-items: center !important;
             background: transparent !important;
+        }
+
+        .apexcharts-tooltip-series-group:not(.apexcharts-active) {
+            display: none !important;
         }
 
         .apexcharts-tooltip-text {
@@ -203,13 +257,16 @@
                             </div>
                             <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <button type="button" id="btnToggleFilterPanel"
-                                    class="btn btn-outline-light btn-sm fw-semibold shadow-sm" title="Tampilkan / Sembunyikan Filter">
+                                    class="btn btn-outline-light btn-sm fw-semibold shadow-sm"
+                                    title="Tampilkan / Sembunyikan Filter">
                                     <i class="ri-filter-3-line me-1"></i> <span id="textToggleFilter">Filter Data</span>
                                 </button>
                                 <button type="button" id="btnToggleAlertTerlambat"
-                                    class="btn btn-danger btn-sm fw-semibold shadow-sm" title="Tampilkan / Sembunyikan Alert Project Terlambat"
+                                    class="btn btn-danger btn-sm fw-semibold shadow-sm"
+                                    title="Tampilkan / Sembunyikan Alert Project Terlambat"
                                     style="display: {{ ($kpis['terlambat'] ?? 0) > 0 ? 'inline-flex' : 'none' }}; align-items: center;">
-                                    <i class="ri-error-warning-fill me-1"></i> <span id="headerTerlambatCount">{{ $kpis['terlambat'] ?? 0 }}</span> Terlambat
+                                    <i class="ri-error-warning-fill me-1"></i> <span
+                                        id="headerTerlambatCount">{{ $kpis['terlambat'] ?? 0 }}</span> Terlambat
                                 </button>
                                 <button type="button" id="btnRefreshDashboard"
                                     class="btn btn-outline-light btn-sm fw-semibold shadow-sm">
@@ -230,19 +287,20 @@
             </div>
 
             {{-- ── Alert Terlambat (Default dihilangkan / disembunyikan dulu) ── --}}
-            <div id="alertTerlambatBanner"
-                class="alert alert-danger border-0 shadow-sm mb-3"
-                role="alert" style="display: none;">
+            <div id="alertTerlambatBanner" class="alert alert-danger border-0 shadow-sm mb-3" role="alert"
+                style="display: none;">
                 <div class="d-flex align-items-center">
                     <i class="ri-error-warning-fill fs-20 me-2 text-danger"></i>
                     <div class="flex-grow-1">
                         <strong>Perhatian:</strong> Terdapat <strong id="alertTerlambatCount">{{ $kpis['terlambat'] ?? 0 }}
                             project</strong> yang berstatus terlambat (belum selesai melewati batas deadline).
                     </div>
-                    <a href="{{ route('utility.project.data', ['status' => 'Terlambat']) }}" class="btn btn-sm btn-danger ms-2 text-nowrap">
+                    <a href="{{ route('utility.project.data', ['status' => 'Terlambat']) }}"
+                        class="btn btn-sm btn-danger ms-2 text-nowrap">
                         Lihat Project Terlambat <i class="ri-arrow-right-s-line"></i>
                     </a>
-                    <button type="button" class="btn-close ms-2" id="btnCloseAlertTerlambat" aria-label="Close" title="Tutup Alert"></button>
+                    <button type="button" class="btn-close ms-2" id="btnCloseAlertTerlambat" aria-label="Close"
+                        title="Tutup Alert"></button>
                 </div>
             </div>
 
@@ -253,7 +311,8 @@
                         <span class="fs-12 fw-bold text-uppercase text-muted">
                             <i class="ri-filter-3-line text-primary me-1"></i>Filter Dashboard Project
                         </span>
-                        <button type="button" class="btn-close fs-11" id="btnHideFilterCard" aria-label="Close" title="Sembunyikan Panel Filter"></button>
+                        <button type="button" class="btn-close fs-11" id="btnHideFilterCard" aria-label="Close"
+                            title="Sembunyikan Panel Filter"></button>
                     </div>
                     <form id="dashFilterForm" class="row g-2 align-items-center">
 
@@ -265,23 +324,32 @@
                                     type="button" id="dropdownYearBtn" data-bs-toggle="dropdown"
                                     data-bs-auto-close="outside" aria-expanded="false">
                                     <span class="filter-btn-text text-truncate me-1">
-                                        <i class="ri-calendar-line text-muted me-1"></i><span class="label-text">Semua Tahun</span>
+                                        <i class="ri-calendar-line text-muted me-1"></i><span class="label-text">Semua
+                                            Tahun</span>
                                     </span>
                                     <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
                                 </button>
-                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 200px;" aria-labelledby="dropdownYearBtn">
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 200px;"
+                                    aria-labelledby="dropdownYearBtn">
                                     <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
                                         <small class="fw-bold text-muted text-uppercase fs-11">Filter Tahun</small>
                                         <div class="d-flex gap-2">
-                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="year">Pilih Semua</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-primary text-decoration-none fw-medium btn-select-all"
+                                                data-target="year">Pilih Semua</a>
                                             <span class="text-muted fs-11">|</span>
-                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="year">Reset</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter"
+                                                data-target="year">Reset</a>
                                         </div>
                                     </div>
                                     <div class="filter-options-list">
                                         @foreach ($yearsList as $yr)
-                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center gap-2 cursor-pointer mb-0 option-item">
-                                                <input class="form-check-input mt-0 filter-checkbox filter-checkbox-year" type="checkbox" value="{{ $yr }}" {{ in_array($yr, $yearList ?? []) ? 'checked' : '' }}>
+                                            <label
+                                                class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center gap-2 cursor-pointer mb-0 option-item">
+                                                <input class="form-check-input mt-0 filter-checkbox filter-checkbox-year"
+                                                    type="checkbox" value="{{ $yr }}"
+                                                    {{ in_array($yr, $yearList ?? []) ? 'checked' : '' }}>
                                                 <span class="fs-12 text-dark">Tahun {{ $yr }}</span>
                                             </label>
                                         @endforeach
@@ -298,17 +366,23 @@
                                     type="button" id="dropdownFaseBtn" data-bs-toggle="dropdown"
                                     data-bs-auto-close="outside" aria-expanded="false">
                                     <span class="filter-btn-text text-truncate me-1">
-                                        <i class="ri-git-commit-line text-muted me-1"></i><span class="label-text">Semua Fase</span>
+                                        <i class="ri-git-commit-line text-muted me-1"></i><span class="label-text">Semua
+                                            Fase</span>
                                     </span>
                                     <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
                                 </button>
-                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 250px;" aria-labelledby="dropdownFaseBtn">
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 250px;"
+                                    aria-labelledby="dropdownFaseBtn">
                                     <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
                                         <small class="fw-bold text-muted text-uppercase fs-11">Filter Fase</small>
                                         <div class="d-flex gap-2">
-                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="fase">Pilih Semua</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-primary text-decoration-none fw-medium btn-select-all"
+                                                data-target="fase">Pilih Semua</a>
                                             <span class="text-muted fs-11">|</span>
-                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="fase">Reset</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter"
+                                                data-target="fase">Reset</a>
                                         </div>
                                     </div>
                                     <div class="filter-options-list">
@@ -321,23 +395,30 @@
                                                 ],
                                                 'Fase 2' => [
                                                     'label' => 'Fase 2: Administrasi (IO/ PR/ PO)',
-                                                    'badge' => 'bg-warning-subtle text-warning border border-warning-subtle',
+                                                    'badge' =>
+                                                        'bg-warning-subtle text-warning border border-warning-subtle',
                                                     'icon' => 'ri-file-list-3-line',
                                                 ],
                                                 'Fase 3' => [
                                                     'label' => 'Fase 3: Proses Pekerjaan',
-                                                    'badge' => 'bg-primary-subtle text-primary border border-primary-subtle',
+                                                    'badge' =>
+                                                        'bg-primary-subtle text-primary border border-primary-subtle',
                                                     'icon' => 'ri-tools-line',
                                                 ],
                                             ];
                                         @endphp
                                         @foreach ($faseListConfig as $fKey => $fCfg)
-                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
+                                            <label
+                                                class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <input class="form-check-input mt-0 filter-checkbox filter-checkbox-fase" type="checkbox" value="{{ $fKey }}" {{ in_array($fKey, $faseList ?? []) ? 'checked' : '' }}>
+                                                    <input
+                                                        class="form-check-input mt-0 filter-checkbox filter-checkbox-fase"
+                                                        type="checkbox" value="{{ $fKey }}"
+                                                        {{ in_array($fKey, $faseList ?? []) ? 'checked' : '' }}>
                                                     <span class="fs-12 text-dark">{{ $fKey }}</span>
                                                 </div>
-                                                <span class="badge {{ $fCfg['badge'] }} fs-10 px-2 py-0"><i class="{{ $fCfg['icon'] }} me-1"></i>{{ $fKey }}</span>
+                                                <span class="badge {{ $fCfg['badge'] }} fs-10 px-2 py-0"><i
+                                                        class="{{ $fCfg['icon'] }} me-1"></i>{{ $fKey }}</span>
                                             </label>
                                         @endforeach
                                     </div>
@@ -353,23 +434,32 @@
                                     type="button" id="dropdownAreaBtn" data-bs-toggle="dropdown"
                                     data-bs-auto-close="outside" aria-expanded="false">
                                     <span class="filter-btn-text text-truncate me-1">
-                                        <i class="ri-map-pin-line text-muted me-1"></i><span class="label-text">Semua Area</span>
+                                        <i class="ri-map-pin-line text-muted me-1"></i><span class="label-text">Semua
+                                            Area</span>
                                     </span>
                                     <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
                                 </button>
-                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 230px;" aria-labelledby="dropdownAreaBtn">
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 230px;"
+                                    aria-labelledby="dropdownAreaBtn">
                                     <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
                                         <small class="fw-bold text-muted text-uppercase fs-11">Filter Area</small>
                                         <div class="d-flex gap-2">
-                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="area">Pilih Semua</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-primary text-decoration-none fw-medium btn-select-all"
+                                                data-target="area">Pilih Semua</a>
                                             <span class="text-muted fs-11">|</span>
-                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="area">Reset</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter"
+                                                data-target="area">Reset</a>
                                         </div>
                                     </div>
                                     <div class="filter-options-list" style="max-height: 220px; overflow-y: auto;">
                                         @foreach ($areasList as $ar)
-                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center gap-2 cursor-pointer mb-0 option-item">
-                                                <input class="form-check-input mt-0 filter-checkbox filter-checkbox-area" type="checkbox" value="{{ $ar }}" {{ in_array($ar, $areaList ?? []) ? 'checked' : '' }}>
+                                            <label
+                                                class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center gap-2 cursor-pointer mb-0 option-item">
+                                                <input class="form-check-input mt-0 filter-checkbox filter-checkbox-area"
+                                                    type="checkbox" value="{{ $ar }}"
+                                                    {{ in_array($ar, $areaList ?? []) ? 'checked' : '' }}>
                                                 <span class="fs-12 text-dark">{{ $ar }}</span>
                                             </label>
                                         @endforeach
@@ -386,29 +476,42 @@
                                     type="button" id="dropdownKategoriBtn" data-bs-toggle="dropdown"
                                     data-bs-auto-close="outside" aria-expanded="false">
                                     <span class="filter-btn-text text-truncate me-1">
-                                        <i class="ri-price-tag-3-line text-muted me-1"></i><span class="label-text">Semua Kategori</span>
+                                        <i class="ri-price-tag-3-line text-muted me-1"></i><span class="label-text">Semua
+                                            Kategori</span>
                                     </span>
                                     <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
                                 </button>
-                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 250px;" aria-labelledby="dropdownKategoriBtn">
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 250px;"
+                                    aria-labelledby="dropdownKategoriBtn">
                                     <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
                                         <small class="fw-bold text-muted text-uppercase fs-11">Filter Kategori</small>
                                         <div class="d-flex gap-2">
-                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="kategori">Pilih Semua</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-primary text-decoration-none fw-medium btn-select-all"
+                                                data-target="kategori">Pilih Semua</a>
                                             <span class="text-muted fs-11">|</span>
-                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="kategori">Reset</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter"
+                                                data-target="kategori">Reset</a>
                                         </div>
                                     </div>
                                     <div class="mb-2">
                                         <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-light border-end-0 py-1"><i class="ri-search-line fs-11"></i></span>
-                                            <input type="text" class="form-control form-control-sm border-start-0 filter-search-input" placeholder="Cari kategori..." data-filter="kategori" autocomplete="off">
+                                            <span class="input-group-text bg-light border-end-0 py-1"><i
+                                                    class="ri-search-line fs-11"></i></span>
+                                            <input type="text"
+                                                class="form-control form-control-sm border-start-0 filter-search-input"
+                                                placeholder="Cari kategori..." data-filter="kategori" autocomplete="off">
                                         </div>
                                     </div>
                                     <div class="filter-options-list" style="max-height: 200px; overflow-y: auto;">
                                         @foreach ($categoriesList as $cat)
-                                            <label class="dropdown-item px-2 py-1 rounded-2 gap-2 cursor-pointer mb-0 option-item">
-                                                <input class="form-check-input mt-0 filter-checkbox filter-checkbox-kategori" type="checkbox" value="{{ $cat }}" {{ in_array($cat, $kategoriList ?? []) ? 'checked' : '' }}>
+                                            <label
+                                                class="dropdown-item px-2 py-1 rounded-2 gap-2 cursor-pointer mb-0 option-item">
+                                                <input
+                                                    class="form-check-input mt-0 filter-checkbox filter-checkbox-kategori"
+                                                    type="checkbox" value="{{ $cat }}"
+                                                    {{ in_array($cat, $kategoriList ?? []) ? 'checked' : '' }}>
                                                 <span class="fs-12 text-dark text-truncate">{{ $cat }}</span>
                                             </label>
                                         @endforeach
@@ -425,35 +528,48 @@
                                     type="button" id="dropdownPriorityBtn" data-bs-toggle="dropdown"
                                     data-bs-auto-close="outside" aria-expanded="false">
                                     <span class="filter-btn-text text-truncate me-1">
-                                        <i class="ri-flag-line text-muted me-1"></i><span class="label-text">Semua Prioritas</span>
+                                        <i class="ri-flag-line text-muted me-1"></i><span class="label-text">Semua
+                                            Prioritas</span>
                                     </span>
                                     <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
                                 </button>
-                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 220px;" aria-labelledby="dropdownPriorityBtn">
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 220px;"
+                                    aria-labelledby="dropdownPriorityBtn">
                                     <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
                                         <small class="fw-bold text-muted text-uppercase fs-11">Filter Prioritas</small>
                                         <div class="d-flex gap-2">
-                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="priority">Pilih Semua</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-primary text-decoration-none fw-medium btn-select-all"
+                                                data-target="priority">Pilih Semua</a>
                                             <span class="text-muted fs-11">|</span>
-                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="priority">Reset</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter"
+                                                data-target="priority">Reset</a>
                                         </div>
                                     </div>
                                     <div class="filter-options-list">
                                         @php
                                             $priorities = [
-                                                'Critical' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                                'Critical' =>
+                                                    'bg-danger-subtle text-danger border border-danger-subtle',
                                                 'High' => 'bg-warning-subtle text-warning border border-warning-subtle',
                                                 'Medium' => 'bg-info-subtle text-info border border-info-subtle',
-                                                'Low' => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
+                                                'Low' =>
+                                                    'bg-secondary-subtle text-secondary border border-secondary-subtle',
                                             ];
                                         @endphp
                                         @foreach ($priorities as $prKey => $prClass)
-                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
+                                            <label
+                                                class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <input class="form-check-input mt-0 filter-checkbox filter-checkbox-priority" type="checkbox" value="{{ $prKey }}" {{ in_array($prKey, $priorityList ?? []) ? 'checked' : '' }}>
+                                                    <input
+                                                        class="form-check-input mt-0 filter-checkbox filter-checkbox-priority"
+                                                        type="checkbox" value="{{ $prKey }}"
+                                                        {{ in_array($prKey, $priorityList ?? []) ? 'checked' : '' }}>
                                                     <span class="fs-12 text-dark">{{ $prKey }}</span>
                                                 </div>
-                                                <span class="badge {{ $prClass }} fs-10 px-2 py-0">{{ $prKey }}</span>
+                                                <span
+                                                    class="badge {{ $prClass }} fs-10 px-2 py-0">{{ $prKey }}</span>
                                             </label>
                                         @endforeach
                                     </div>
@@ -469,43 +585,57 @@
                                     type="button" id="dropdownStatusBtn" data-bs-toggle="dropdown"
                                     data-bs-auto-close="outside" aria-expanded="false">
                                     <span class="filter-btn-text text-truncate me-1">
-                                        <i class="ri-checkbox-circle-line text-muted me-1"></i><span class="label-text">Status</span>
+                                        <i class="ri-checkbox-circle-line text-muted me-1"></i><span
+                                            class="label-text">Status</span>
                                     </span>
                                     <span class="badge bg-primary rounded-pill filter-count-badge d-none">0</span>
                                 </button>
-                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 220px;" aria-labelledby="dropdownStatusBtn">
+                                <div class="dropdown-menu p-2 shadow-lg border-0 rounded-3" style="min-width: 220px;"
+                                    aria-labelledby="dropdownStatusBtn">
                                     <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
                                         <small class="fw-bold text-muted text-uppercase fs-11">Filter Status</small>
                                         <div class="d-flex gap-2">
-                                            <a href="javascript:void(0)" class="fs-11 text-primary text-decoration-none fw-medium btn-select-all" data-target="status">Pilih Semua</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-primary text-decoration-none fw-medium btn-select-all"
+                                                data-target="status">Pilih Semua</a>
                                             <span class="text-muted fs-11">|</span>
-                                            <a href="javascript:void(0)" class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter" data-target="status">Reset</a>
+                                            <a href="javascript:void(0)"
+                                                class="fs-11 text-danger text-decoration-none fw-medium btn-clear-filter"
+                                                data-target="status">Reset</a>
                                         </div>
                                     </div>
                                     <div class="filter-options-list">
                                         @php
                                             $statuses = [
                                                 'Selesai' => [
-                                                    'class' => 'bg-success-subtle text-success border border-success-subtle',
+                                                    'class' =>
+                                                        'bg-success-subtle text-success border border-success-subtle',
                                                     'icon' => 'ri-checkbox-circle-line',
                                                 ],
                                                 'On Progress' => [
-                                                    'class' => 'bg-warning-subtle text-warning border border-warning-subtle',
+                                                    'class' =>
+                                                        'bg-warning-subtle text-warning border border-warning-subtle',
                                                     'icon' => 'ri-time-line',
                                                 ],
                                                 'Terlambat' => [
-                                                    'class' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                                    'class' =>
+                                                        'bg-danger-subtle text-danger border border-danger-subtle',
                                                     'icon' => 'ri-alert-line',
                                                 ],
                                             ];
                                         @endphp
                                         @foreach ($statuses as $stKey => $stMeta)
-                                            <label class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
+                                            <label
+                                                class="dropdown-item px-2 py-1 rounded-2 d-flex align-items-center justify-content-between cursor-pointer mb-0 option-item">
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <input class="form-check-input mt-0 filter-checkbox filter-checkbox-status" type="checkbox" value="{{ $stKey }}" {{ in_array($stKey, $statusList ?? []) ? 'checked' : '' }}>
+                                                    <input
+                                                        class="form-check-input mt-0 filter-checkbox filter-checkbox-status"
+                                                        type="checkbox" value="{{ $stKey }}"
+                                                        {{ in_array($stKey, $statusList ?? []) ? 'checked' : '' }}>
                                                     <span class="fs-12 text-dark">{{ $stKey }}</span>
                                                 </div>
-                                                <span class="badge {{ $stMeta['class'] }} fs-10 px-2 py-0"><i class="{{ $stMeta['icon'] }} me-1"></i>{{ $stKey }}</span>
+                                                <span class="badge {{ $stMeta['class'] }} fs-10 px-2 py-0"><i
+                                                        class="{{ $stMeta['icon'] }} me-1"></i>{{ $stKey }}</span>
                                             </label>
                                         @endforeach
                                     </div>
@@ -515,17 +645,21 @@
 
                         {{-- Reset Button --}}
                         <div class="col-xl-1 col-md-3 col-sm-6 d-flex gap-1">
-                            <button type="button" id="btnDashResetFilter" class="btn btn-outline-danger w-100 py-2 filter-btn" title="Reset Semua Filter">
+                            <button type="button" id="btnDashResetFilter"
+                                class="btn btn-outline-danger w-100 py-2 filter-btn" title="Reset Semua Filter">
                                 <i class="ri-refresh-line"></i>
                             </button>
                         </div>
                     </form>
 
                     {{-- Active Filter Badges Row --}}
-                    <div id="activeFiltersRow" class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top d-none">
+                    <div id="activeFiltersRow"
+                        class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top d-none">
                         <span class="fs-12 text-muted me-1"><i class="ri-filter-3-line me-1"></i>Filter Aktif:</span>
                         <div id="activeFilterBadges" class="d-flex flex-wrap gap-1 align-items-center"></div>
-                        <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none p-0 ms-2 fs-12 fw-semibold" id="btnClearAllActive">
+                        <button type="button"
+                            class="btn btn-link btn-sm text-danger text-decoration-none p-0 ms-2 fs-12 fw-semibold"
+                            id="btnClearAllActive">
                             <i class="ri-close-circle-line me-1"></i>Hapus Semua
                         </button>
                     </div>
@@ -535,124 +669,135 @@
             {{-- ── 5 KPI Cards (Light Bootstrap) ── --}}
             <div class="row g-3 mb-3">
                 {{-- Total Project --}}
-                <div class="col-xl-2 col-md-4 col-sm-6">
-                    <div class="card card-animate border-0 shadow-sm h-100">
-                        <div class="card-body">
+                <div class="col-xl col-md-4 col-sm-6">
+                    <div class="card card-animate border-0 shadow-sm mb-0">
+                        <div class="card-body" style="padding: 10px 14px;">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
-                                    <p class="text-uppercase fw-semibold text-muted fs-12 mb-1">Total Project</p>
-                                    <h3 class="mb-0 fw-bold text-dark" id="kpiTotal">{{ $kpis['total'] }}</h3>
+                                    <p class="text-uppercase fw-bold text-dark fs-12 mb-1">Total Project</p>
+                                    <h1 class="mb-0 fw-bold" id="kpiTotal">{{ $kpis['total'] }}</h1>
                                 </div>
-                                <div class="avatar-sm flex-shrink-0">
-                                    <span class="avatar-title bg-primary-subtle rounded-circle fs-3">
+                                <div class="avatar-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                                    <span class="avatar-title rounded-circle fs-4" style="width: 38px; height: 38px;">
                                         <i class="ri-folders-line"></i>
                                     </span>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center mt-3 fs-12 text-muted">
-                                <span class="badge bg-light text-secondary border me-1"
+                            <div class="d-flex align-items-center text-dark mt-1">
+                                <span class="badge bg-light text-dark border me-1 fw-semibold px-1.5 py-0.5 fs-11"
                                     id="kpiActiveCategories">{{ $kpis['active_categories'] }}</span>
-                                <span>Kategori Aktif</span>
+                                <span class="text-dark fs-11">Kategori Aktif</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Selesai --}}
-                <div class="col-xl-2 col-md-4 col-sm-6">
-                    <div class="card card-animate border-0 shadow-sm h-100">
-                        <div class="card-body">
+                <div class="col-xl col-md-4 col-sm-6">
+                    <div class="card card-animate border-0 shadow-sm mb-0">
+                        <div class="card-body" style="padding: 10px 14px;">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
-                                    <p class="text-uppercase fw-semibold text-muted fs-12 mb-1">Selesai</p>
-                                    <h3 class="mb-0 fw-bold text-success" id="kpiSelesai">{{ $kpis['selesai'] }}</h3>
+                                    <p class="text-uppercase fw-bold text-dark fs-12 mb-1">Selesai</p>
+                                    <h1 class="mb-0 fw-bold text-success" id="kpiSelesai">{{ $kpis['selesai'] }}
+                                    </h1>
                                 </div>
-                                <div class="avatar-sm flex-shrink-0">
-                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                <div class="avatar-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-4"
+                                        style="width: 38px; height: 38px;">
                                         <i class="ri-checkbox-circle-line"></i>
                                     </span>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center mt-3 fs-12">
-                                <span class="badge bg-success-subtle text-success me-1"
+                            <div class="d-flex align-items-center text-dark mt-1">
+                                <span class="badge bg-success-subtle text-success me-1 fw-semibold px-1.5 py-0.5 fs-11"
                                     id="kpiSelesaiPct">{{ $kpis['selesai_pct'] }}%</span>
-                                <span class="text-muted">dari total project</span>
+                                <span class="text-dark fs-11">dari total project</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- On Progress --}}
-                <div class="col-xl-2 col-md-4 col-sm-6">
-                    <div class="card card-animate border-0 shadow-sm h-100">
-                        <div class="card-body">
+                <div class="col-xl col-md-4 col-sm-6">
+                    <div class="card card-animate border-0 shadow-sm mb-0">
+                        <div class="card-body" style="padding: 10px 14px;">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
-                                    <p class="text-uppercase fw-semibold text-muted fs-12 mb-1">On Progress</p>
-                                    <h3 class="mb-0 fw-bold text-warning" id="kpiOnProgress">{{ $kpis['on_progress'] }}
-                                    </h3>
+                                    <p class="text-uppercase fw-bold text-dark fs-12 mb-1">On Progress</p>
+                                    <h1 class="mb-0 fw-bold text-warning" id="kpiOnProgress">
+                                        {{ $kpis['on_progress'] }}
+                                    </h1>
                                 </div>
-                                <div class="avatar-sm flex-shrink-0">
-                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                <div class="avatar-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-4"
+                                        style="width: 38px; height: 38px;">
                                         <i class="ri-time-line"></i>
                                     </span>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center mt-3 fs-12">
-                                <span class="badge bg-warning-subtle text-warning me-1"
+                            <div class="d-flex align-items-center text-dark mt-1">
+                                <span class="badge bg-warning-subtle text-warning me-1 fw-semibold px-1.5 py-0.5 fs-11"
                                     id="kpiOnProgressPct">{{ $kpis['on_progress_pct'] }}%</span>
-                                <span class="text-muted">sedang berjalan</span>
+                                <span class="text-dark fs-11">sedang berjalan</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Terlambat --}}
-                <div class="col-xl-3 col-md-6 col-sm-6">
-                    <div class="card card-animate border-0 shadow-sm h-100">
-                        <div class="card-body">
+                <div class="col-xl col-md-6 col-sm-6">
+                    <div class="card card-animate border-0 shadow-sm mb-0">
+                        <div class="card-body" style="padding: 10px 14px;">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
-                                    <p class="text-uppercase fw-semibold text-muted fs-12 mb-1">Terlambat</p>
-                                    <h3 class="mb-0 fw-bold text-danger" id="kpiTerlambat">{{ $kpis['terlambat'] }}</h3>
+                                    <p class="text-uppercase fw-bold text-dark fs-12 mb-1">Terlambat</p>
+                                    <h1 class="mb-0 fw-bold text-danger" id="kpiTerlambat">{{ $kpis['terlambat'] }}
+                                    </h1>
                                 </div>
-                                <div class="avatar-sm flex-shrink-0">
-                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                <div class="avatar-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-4"
+                                        style="width: 38px; height: 38px;">
                                         <i class="ri-error-warning-line"></i>
                                     </span>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center mt-3 fs-12">
-                                <span class="badge bg-danger-subtle text-danger me-1"
+                            <div class="d-flex align-items-center text-dark mt-1">
+                                <span class="badge bg-danger-subtle text-danger me-1 fw-semibold px-1.5 py-0.5 fs-11"
                                     id="kpiTerlambatPct">{{ $kpis['terlambat_pct'] }}%</span>
-                                <span class="text-muted">butuh penanganan</span>
+                                <span class="text-dark fs-11">butuh penanganan</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Rata-Rata Progress --}}
-                <div class="col-xl-3 col-md-6 col-sm-12">
-                    <div class="card card-animate border-0 shadow-sm h-100">
-                        <div class="card-body">
+                <div class="col-xl col-md-6 col-sm-12">
+                    <div class="card card-animate border-0 shadow-sm mb-0">
+                        <div class="card-body" style="padding: 10px 14px;">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div>
-                                    <p class="text-uppercase fw-semibold text-muted fs-12 mb-1">Rata-Rata Progress</p>
-                                    <h3 class="mb-0 fw-bold text-primary" id="kpiAvgProgress">
+                                    <p class="text-uppercase fw-bold text-dark fs-12 mb-1">Rata-Rata Progress</p>
+                                    <h1 class="mb-0 fw-bold" id="kpiAvgProgress">
                                         {{ $kpis['avg_progress'] }}%
-                                    </h3>
+                                    </h1>
                                 </div>
-                                <div class="avatar-sm flex-shrink-0">
-                                    <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                <div class="avatar-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                                    <span class="avatar-title bg-info-subtle text-info rounded-circle fs-4"
+                                        style="width: 38px; height: 38px;">
                                         <i class="ri-pie-chart-line"></i>
                                     </span>
                                 </div>
                             </div>
-                            <div class="progress progress-sm mt-3" style="height: 6px;">
-                                <div class="progress-bar bg-primary" id="kpiAvgProgressBar" role="progressbar"
-                                    style="width: {{ $kpis['avg_progress'] }}%;"
-                                    aria-valuenow="{{ $kpis['avg_progress'] }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="d-flex align-items-center text-dark mt-1" style="height: 18px;">
+                                <div class="progress progress-sm flex-grow-1 me-2" style="height: 5px;">
+                                    <div class="progress-bar bg-primary" id="kpiAvgProgressBar" role="progressbar"
+                                        style="width: {{ $kpis['avg_progress'] }}%;"
+                                        aria-valuenow="{{ $kpis['avg_progress'] }}" aria-valuemin="0"
+                                        aria-valuemax="100">
+                                    </div>
                                 </div>
+                                <span class="badge bg-light text-dark border fw-semibold px-1 py-0 fs-11">Progress</span>
                             </div>
                         </div>
                     </div>
@@ -942,7 +1087,7 @@
                                     show: true,
                                     fontSize: '13px',
                                     fontWeight: 600,
-                                    color: '#495057'
+                                    color: '#212529'
                                 },
                                 value: {
                                     show: true,
@@ -958,7 +1103,7 @@
                                     label: 'Total Project',
                                     fontSize: '12px',
                                     fontWeight: 600,
-                                    color: '#495057',
+                                    color: '#212529',
                                     formatter: function(w) {
                                         return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                                     }
@@ -974,6 +1119,9 @@
                 legend: {
                     position: 'bottom',
                     fontSize: '12px',
+                    labels: {
+                        colors: '#212529'
+                    },
                     markers: {
                         radius: 12
                     }
@@ -992,12 +1140,22 @@
                 },
                 tooltip: {
                     theme: 'dark',
-                    shared: true,
-                    intersect: false,
-                    y: {
-                        formatter: function(val) {
-                            return val + " Project";
-                        }
+                    custom: function({
+                        series,
+                        seriesIndex,
+                        dataPointIndex,
+                        w
+                    }) {
+                        const label = w.globals.labels[seriesIndex] || '';
+                        const val = series[seriesIndex] || 0;
+                        const color = (w.globals.colors && w.globals.colors[seriesIndex]) ? w.globals
+                            .colors[seriesIndex] : '#0ab39c';
+                        return '<div class="d-flex align-items-center gap-2 px-3 py-2 text-white fs-12 shadow" style="background: #1e293b; border: 1px solid #334155; border-radius: 6px;">' +
+                            '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background-color:' +
+                            color + ';"></span>' +
+                            '<span style="color:#ffffff;"><strong>' + label + '</strong>: ' + val +
+                            ' Project</span>' +
+                            '</div>';
                     }
                 }
             };
@@ -1030,7 +1188,7 @@
                                     show: true,
                                     fontSize: '13px',
                                     fontWeight: 600,
-                                    color: '#495057'
+                                    color: '#212529'
                                 },
                                 value: {
                                     show: true,
@@ -1046,7 +1204,7 @@
                                     label: 'Total Project',
                                     fontSize: '12px',
                                     fontWeight: 600,
-                                    color: '#495057',
+                                    color: '#212529',
                                     formatter: function(w) {
                                         return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                                     }
@@ -1062,6 +1220,9 @@
                 legend: {
                     position: 'bottom',
                     fontSize: '12px',
+                    labels: {
+                        colors: '#212529'
+                    },
                     markers: {
                         radius: 12
                     }
@@ -1088,12 +1249,22 @@
                 },
                 tooltip: {
                     theme: 'dark',
-                    shared: true,
-                    intersect: false,
-                    y: {
-                        formatter: function(val) {
-                            return val + " Project";
-                        }
+                    custom: function({
+                        series,
+                        seriesIndex,
+                        dataPointIndex,
+                        w
+                    }) {
+                        const label = w.globals.labels[seriesIndex] || '';
+                        const val = series[seriesIndex] || 0;
+                        const color = (w.globals.colors && w.globals.colors[seriesIndex]) ? w.globals
+                            .colors[seriesIndex] : '#0ab39c';
+                        return '<div class="d-flex align-items-center gap-2 px-3 py-2 text-white fs-12 shadow" style="background: #1e293b; border: 1px solid #334155; border-radius: 6px;">' +
+                            '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background-color:' +
+                            color + ';"></span>' +
+                            '<span style="color:#ffffff;"><strong>' + label + '</strong>: ' + val +
+                            ' Project</span>' +
+                            '</div>';
                     }
                 }
             };
@@ -1131,17 +1302,18 @@
                     categories: (kategoriData && kategoriData.categories) ? kategoriData.categories : [],
                     labels: {
                         style: {
-                            colors: '#74788d',
-                            fontSize: '11px'
+                            colors: Array(50).fill('#000000'),
+                            fontSize: '11px',
+                            fontWeight: 600
                         }
                     }
                 },
                 yaxis: {
                     labels: {
                         style: {
-                            colors: '#495057',
+                            colors: Array(50).fill('#000000'),
                             fontSize: '12px',
-                            fontWeight: 500
+                            fontWeight: 600
                         }
                     }
                 },
@@ -1152,7 +1324,10 @@
                 legend: {
                     position: 'top',
                     horizontalAlign: 'right',
-                    fontSize: '12px'
+                    fontSize: '12px',
+                    labels: {
+                        colors: '#000000'
+                    }
                 },
                 tooltip: {
                     theme: 'dark',
@@ -1199,7 +1374,7 @@
                     categories: (areaData && areaData.categories) ? areaData.categories : [],
                     labels: {
                         style: {
-                            colors: '#495057',
+                            colors: Array(50).fill('#000000'),
                             fontSize: '12px',
                             fontWeight: 600
                         }
@@ -1209,14 +1384,16 @@
                     title: {
                         text: 'Jumlah Project',
                         style: {
-                            color: '#74788d',
-                            fontSize: '11px'
+                            color: '#000000',
+                            fontSize: '11px',
+                            fontWeight: 600
                         }
                     },
                     labels: {
                         style: {
-                            colors: '#74788d',
-                            fontSize: '11px'
+                            colors: Array(50).fill('#000000'),
+                            fontSize: '11px',
+                            fontWeight: 600
                         }
                     }
                 },
@@ -1227,7 +1404,10 @@
                 legend: {
                     position: 'top',
                     horizontalAlign: 'right',
-                    fontSize: '12px'
+                    fontSize: '12px',
+                    labels: {
+                        colors: '#000000'
+                    }
                 },
                 tooltip: {
                     theme: 'dark',
@@ -1554,20 +1734,47 @@
 
                         // 4. Chart Status by Kategori
                         if (res.chartStatusByKategori && chartKategori) {
+                            const catLen = (res.chartStatusByKategori.categories || []).length ||
+                                50;
                             chartKategori.updateOptions({
                                 series: res.chartStatusByKategori.series,
                                 xaxis: {
-                                    categories: res.chartStatusByKategori.categories
+                                    categories: res.chartStatusByKategori.categories,
+                                    labels: {
+                                        style: {
+                                            colors: Array(catLen + 10).fill('#000000')
+                                        }
+                                    }
+                                },
+                                yaxis: {
+                                    labels: {
+                                        style: {
+                                            colors: Array(catLen + 10).fill('#000000')
+                                        }
+                                    }
                                 }
                             });
                         }
 
                         // 5. Chart Status by Area
                         if (res.chartStatusByArea && chartArea) {
+                            const areaLen = (res.chartStatusByArea.categories || []).length || 50;
                             chartArea.updateOptions({
                                 series: res.chartStatusByArea.series,
                                 xaxis: {
-                                    categories: res.chartStatusByArea.categories
+                                    categories: res.chartStatusByArea.categories,
+                                    labels: {
+                                        style: {
+                                            colors: Array(areaLen + 10).fill('#000000')
+                                        }
+                                    }
+                                },
+                                yaxis: {
+                                    labels: {
+                                        style: {
+                                            colors: Array(areaLen + 10).fill('#000000')
+                                        }
+                                    }
                                 }
                             });
                         }

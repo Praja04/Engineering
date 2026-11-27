@@ -153,12 +153,13 @@
                                             <th class="fw-semibold text-center">Running Hour SCP (jam)</th>
                                             <th class="fw-semibold text-center">Hasil Lumpur (ton)</th>
                                             <th class="fw-semibold text-center">Sludge Content (%)</th>
+                                            <th class="fw-semibold">Dibuat Oleh</th>
                                             <th class="fw-semibold text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="sludgeTableBody">
                                         <tr>
-                                            <td colspan="8" class="text-center py-5">
+                                            <td colspan="9" class="text-center py-5">
                                                 <div class="spinner-border text-warning" role="status">
                                                     <span class="visually-hidden">Loading...</span>
                                                 </div>
@@ -204,12 +205,13 @@
                                             <th class="fw-semibold">No</th>
                                             <th class="fw-semibold">Periode Minggu</th>
                                             <th class="fw-semibold text-center">Jumlah Pengangkutan (ton)</th>
+                                            <th class="fw-semibold">Dibuat Oleh</th>
                                             <th class="fw-semibold text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="pengangkutanTableBody">
                                         <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted">
+                                            <td colspan="5" class="text-center py-4 text-muted">
                                                 <i class="mdi mdi-information me-2"></i>Data pengangkutan akan
                                                 ditampilkan di sini
                                             </td>
@@ -601,7 +603,7 @@
             if (sludgeState.bulan) params.bulan = sludgeState.bulan;
             if (sludgeState.search) params.search = sludgeState.search;
 
-            showLoading('#sludgeTableBody', 8);
+            showLoading('#sludgeTableBody', 9);
             clearPagination('#sludgePaginationInfo', '#sludgePagination');
 
             $.ajax({
@@ -629,7 +631,7 @@
             tbody.empty();
 
             if (!data || !data.length) {
-                tbody.append(`<tr><td colspan="8" class="text-center py-4 text-muted">
+                tbody.append(`<tr><td colspan="9" class="text-center py-4 text-muted">
                     <i class="mdi mdi-inbox me-2"></i>Tidak ada data sludge</td></tr>`);
                 return;
             }
@@ -649,6 +651,8 @@
                         <i class="mdi mdi-trash-can"></i></button>`;
                 }
 
+                const creatorName = item.creator ? (item.creator.username || item.creator.fullname) : '-';
+
                 tbody.append(`
                 <tr class="data-row">
                     <td>${no}</td>
@@ -658,6 +662,7 @@
                     <td class="text-center fw-bold">${parseFloat(item.running_hour_scp || 0).toFixed(2)}</td>
                     <td class="text-center fw-bold">${parseFloat(item.hasil_lumpur   || 0).toFixed(2)}</td>
                     <td class="text-center fw-bold">${item.sludge_content != null ? parseFloat(item.sludge_content).toFixed(2) : '-'}</td>
+                    <td><span class="badge bg-light text-secondary border">${creatorName}</span></td>
                     <td class="text-center">${btns}</td>
                 </tr>`);
             });
@@ -706,19 +711,25 @@
                     currentSludgeId = id;
                     $('#modalSludgeContent').html(`
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="info-box p-3 bg-light rounded">
                                 <p class="text-muted small mb-1">Tanggal</p>
                                 <p class="fw-bold mb-0">${formatDate(record.tanggal)}</p>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="info-box p-3 bg-light rounded">
                                 <p class="text-muted small mb-1">Shift</p>
                                 ${getShiftBadge(record.shift)}
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Dibuat Oleh</p>
+                                <p class="fw-bold mb-0">${record.creator ? (record.creator.username || record.creator.fullname) : '-'}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="info-box p-3 bg-light rounded">
                                 <p class="text-muted small mb-1">Waktu Input</p>
                                 <p class="fw-bold mb-0">${formatDateTime(record.created_at)}</p>
@@ -865,7 +876,7 @@
             if (pengangkutanState.bulan) params.bulan = pengangkutanState.bulan;
             if (pengangkutanState.search) params.search = pengangkutanState.search;
 
-            showLoading('#pengangkutanTableBody', 4);
+            showLoading('#pengangkutanTableBody', 5);
             clearPagination('#pengangkutanPaginationInfo', '#pengangkutanPagination');
 
             $.ajax({
@@ -892,7 +903,7 @@
             tbody.empty();
 
             if (!data || !data.length) {
-                tbody.append(`<tr><td colspan="4" class="text-center py-4 text-muted">
+                tbody.append(`<tr><td colspan="5" class="text-center py-4 text-muted">
                     <i class="mdi mdi-inbox me-2"></i>Tidak ada data pengangkutan</td></tr>`);
                 return;
             }
@@ -912,11 +923,14 @@
                         <i class="mdi mdi-trash-can"></i></button>`;
                 }
 
+                const creatorName = item.creator ? (item.creator.username || item.creator.fullname) : '-';
+
                 tbody.append(`
                 <tr class="data-row">
                     <td>${no}</td>
                     <td>${formatWeekRange(item.week_start, item.week_end)}</td>
                     <td class="text-center fw-bold">${parseFloat(item.jumlah_pengangkutan || 0).toFixed(2)}</td>
+                    <td><span class="badge bg-light text-secondary border">${creatorName}</span></td>
                     <td class="text-center">${btns}</td>
                 </tr>`);
             });
@@ -965,10 +979,16 @@
                     currentPengangkutanId = id;
                     $('#modalPengangkutanContent').html(`
                     <div class="row g-3">
-                        <div class="col-12">
+                        <div class="col-md-6">
                             <div class="info-box p-3 bg-light rounded">
                                 <p class="text-muted small mb-1">Periode Minggu</p>
                                 <p class="fw-bold mb-0">${formatWeekRange(r.week_start, r.week_end)}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-box p-3 bg-light rounded">
+                                <p class="text-muted small mb-1">Dibuat Oleh</p>
+                                <p class="fw-bold mb-0">${r.creator ? (r.creator.username || r.creator.fullname) : '-'}</p>
                             </div>
                         </div>
                         <div class="col-12">

@@ -43,7 +43,7 @@ class WWTPControllerPerformance extends Controller
         $bulan   = $request->input('bulan');
         $search  = $request->input('search');
 
-        $query = WwtpPerformanceRecord::with('week')
+        $query = WwtpPerformanceRecord::with(['week', 'creator:id,username,fullname'])
             ->orderBy('created_at', 'desc');
 
         if ($jenis) {
@@ -80,6 +80,17 @@ class WWTPControllerPerformance extends Controller
             'tss'     => 'required|numeric|min:0',
             'cod'     => 'required|numeric|min:0',
             'foto'    => 'nullable|image|max:2048'
+        ], [
+            'tanggal.required' => 'Field Tanggal wajib diisi.',
+            'tanggal.date'     => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'jenis.required'   => 'Field Jenis Sampel / Parameter wajib dipilih.',
+            'jenis.in'         => 'Pilihan Jenis tidak valid.',
+            'tss.required'     => 'Field TSS wajib diisi.',
+            'tss.numeric'      => 'Field TSS harus berupa angka.',
+            'cod.required'     => 'Field COD wajib diisi.',
+            'cod.numeric'      => 'Field COD harus berupa angka.',
+            'foto.image'       => 'File foto harus berupa gambar.',
+            'foto.max'         => 'Ukuran foto tidak boleh lebih dari 2MB.',
         ]);
 
         // Tentukan minggu otomatis
@@ -91,6 +102,8 @@ class WWTPControllerPerformance extends Controller
         $week = WwtpPerformanceWeek::firstOrCreate([
             'week_start' => $startWeek,
             'week_end'   => $endWeek,
+        ], [
+            'created_by' => Auth::id(),
         ]);
 
         // Cek apakah jenis untuk minggu ini sudah diinput
@@ -118,12 +131,13 @@ class WWTPControllerPerformance extends Controller
             'tss'   => $request->tss,
             'cod'   => $request->cod,
             'foto'  => $fotoPath,
+            'created_by' => Auth::id(),
         ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data berhasil disimpan.',
-            'data' => $record->load('week')
+            'data' => $record->load(['week', 'creator:id,username,fullname'])
         ]);
     }
 
@@ -132,7 +146,7 @@ class WWTPControllerPerformance extends Controller
      */
     public function show($id)
     {
-        $data = WwtpPerformanceRecord::with('week')->findOrFail($id);
+        $data = WwtpPerformanceRecord::with(['week', 'creator:id,username,fullname'])->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -152,6 +166,13 @@ class WWTPControllerPerformance extends Controller
             'tss'  => 'required|numeric|min:0',
             'cod'  => 'required|numeric|min:0',
             'foto' => 'nullable|image|max:2048',
+        ], [
+            'tss.required' => 'Field TSS wajib diisi.',
+            'tss.numeric'  => 'Field TSS harus berupa angka.',
+            'cod.required' => 'Field COD wajib diisi.',
+            'cod.numeric'  => 'Field COD harus berupa angka.',
+            'foto.image'   => 'File foto harus berupa gambar.',
+            'foto.max'     => 'Ukuran foto tidak boleh lebih dari 2MB.',
         ]);
 
         // Update data
@@ -199,10 +220,8 @@ class WWTPControllerPerformance extends Controller
     //////////////////PH harian/////////////////////
     public function indexPHHarian(Request $request)
     {
-        $query = WwtpPerformancePHharian::orderBy(
-            'tanggal',
-            'desc'
-        )
+        $query = WwtpPerformancePHharian::with('creator:id,username,fullname')
+            ->orderBy('tanggal', 'desc')
             ->orderBy('shift', 'asc');
 
         if ($request->bulan) {
@@ -260,14 +279,19 @@ class WWTPControllerPerformance extends Controller
 
         if (!$approval) {
             $request->validate([
-                'foreman_id' => 'required|exists:users,id',
+                'foreman_id'    => 'required|exists:users,id',
                 'supervisor_id' => 'required|exists:users,id',
+            ], [
+                'foreman_id.required'    => 'Field Foreman wajib dipilih.',
+                'foreman_id.exists'      => 'Foreman yang dipilih tidak valid atau tidak ditemukan.',
+                'supervisor_id.required' => 'Field Supervisor wajib dipilih.',
+                'supervisor_id.exists'   => 'Supervisor yang dipilih tidak valid atau tidak ditemukan.',
             ]);
         }
 
         $request->validate([
-            'tanggal'  => 'required|date',
-            'shift'    => 'required|in:shift1,shift2,shift3',
+            'tanggal'        => 'required|date',
+            'shift'          => 'required|in:shift1,shift2,shift3',
             'equalisasi_1'   => 'nullable|numeric',
             'equalisasi_2'   => 'nullable|numeric',
             'netralisasi'    => 'nullable|numeric',
@@ -278,6 +302,11 @@ class WWTPControllerPerformance extends Controller
             'lumpur_aktif'   => 'nullable|numeric',
             'clarifier_2'    => 'nullable|numeric',
             'outlet'         => 'nullable|numeric',
+        ], [
+            'tanggal.required' => 'Field Tanggal wajib diisi.',
+            'tanggal.date'     => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'shift.required'   => 'Field Shift wajib dipilih.',
+            'shift.in'         => 'Pilihan Shift tidak valid.',
         ]);
 
         // Cek apakah shift pada tanggal tersebut sudah ada
@@ -314,6 +343,7 @@ class WWTPControllerPerformance extends Controller
             'lumpur_aktif'   => $request->lumpur_aktif,
             'clarifier_2'    => $request->clarifier_2,
             'outlet'         => $request->outlet,
+            'created_by'     => Auth::id(),
         ]);
 
         // Create or update daily approval
@@ -376,7 +406,7 @@ class WWTPControllerPerformance extends Controller
      */
     public function showPHHarian($id)
     {
-        $data = WwtpPerformancePHharian::findOrFail($id);
+        $data = WwtpPerformancePHharian::with('creator:id,username,fullname')->findOrFail($id);
         $approval = WwtpDailyApproval::where('tanggal', $data->tanggal)->first();
         $data->approval_status = $approval ? $approval->status : null;
         return response()->json($data);
@@ -390,8 +420,8 @@ class WWTPControllerPerformance extends Controller
         $phHarian = WwtpPerformancePHharian::findOrFail($id);
 
         $request->validate([
-            'tanggal'  => 'required|date',
-            'shift'    => 'required|in:shift1,shift2,shift3',
+            'tanggal'        => 'required|date',
+            'shift'          => 'required|in:shift1,shift2,shift3',
             'equalisasi_1'   => 'nullable|numeric',
             'equalisasi_2'   => 'nullable|numeric',
             'netralisasi'    => 'nullable|numeric',
@@ -402,6 +432,11 @@ class WWTPControllerPerformance extends Controller
             'lumpur_aktif'   => 'nullable|numeric',
             'clarifier_2'    => 'nullable|numeric',
             'outlet'         => 'nullable|numeric',
+        ], [
+            'tanggal.required' => 'Field Tanggal wajib diisi.',
+            'tanggal.date'     => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'shift.required'   => 'Field Shift wajib dipilih.',
+            'shift.in'         => 'Pilihan Shift tidak valid.',
         ]);
 
         $err = $this->checkDailyApprovalPermission($request->tanggal, 'mengubah');
@@ -497,7 +532,7 @@ class WWTPControllerPerformance extends Controller
     ////////////// Sample            ////////////////////
     public function indexSample(Request $request)
     {
-        $query = WwtpPerformanceSample::with('jenisSampel')
+        $query = WwtpPerformanceSample::with(['jenisSampel', 'creator:id,username,fullname'])
             ->orderBy('tanggal', 'desc');
 
         if ($request->bulan) {
@@ -554,6 +589,19 @@ class WWTPControllerPerformance extends Controller
             'mlss'      => 'nullable|numeric|min:0',
             'svl'       => 'nullable|numeric|min:0',
             'do'        => 'nullable|numeric|min:0',
+        ], [
+            'tanggal.required'   => 'Field Tanggal wajib diisi.',
+            'tanggal.date'       => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'id_sampel.required' => 'Field Jenis Sampel wajib dipilih.',
+            'id_sampel.exists'   => 'Jenis Sampel yang dipilih tidak valid atau tidak ditemukan.',
+            'tss.required'       => 'Field TSS wajib diisi.',
+            'tss.numeric'        => 'Field TSS harus berupa angka.',
+            'sv30.required'      => 'Field SV30 wajib diisi.',
+            'sv30.numeric'       => 'Field SV30 harus berupa angka.',
+            'ph.required'        => 'Field pH wajib diisi.',
+            'ph.numeric'         => 'Field pH harus berupa angka.',
+            'ph.min'             => 'Nilai pH minimal 0.',
+            'ph.max'             => 'Nilai pH maksimal 14.',
         ]);
 
         $jenisSampel = WwtpJenisSample::findOrFail($request->id_sampel);
@@ -580,12 +628,13 @@ class WWTPControllerPerformance extends Controller
             'mlss'         => $validated['mlss'],
             'svl'          => $validated['svl'],
             'do'           => $validated['do'],
+            'created_by'   => Auth::id(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Data performance sampel berhasil ditambahkan.',
-            'data'    => $sample->load('jenisSampel'),
+            'data'    => $sample->load(['jenisSampel', 'creator:id,username,fullname']),
         ], 201);
     }
 
@@ -593,7 +642,7 @@ class WWTPControllerPerformance extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $wwtpPerformanceSample->load('jenisSampel'),
+            'data'    => $wwtpPerformanceSample->load(['jenisSampel', 'creator:id,username,fullname']),
         ]);
     }
 
@@ -608,6 +657,25 @@ class WWTPControllerPerformance extends Controller
             'mlss'      => 'required|numeric|min:0',
             'svl'       => 'required|numeric|min:0',
             'do'        => 'required|numeric|min:0',
+        ], [
+            'tanggal.required'   => 'Field Tanggal wajib diisi.',
+            'tanggal.date'       => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'id_sampel.required' => 'Field Jenis Sampel wajib dipilih.',
+            'id_sampel.exists'   => 'Jenis Sampel yang dipilih tidak valid atau tidak ditemukan.',
+            'tss.required'       => 'Field TSS wajib diisi.',
+            'tss.numeric'        => 'Field TSS harus berupa angka.',
+            'sv30.required'      => 'Field SV30 wajib diisi.',
+            'sv30.numeric'       => 'Field SV30 harus berupa angka.',
+            'ph.required'        => 'Field pH wajib diisi.',
+            'ph.numeric'         => 'Field pH harus berupa angka.',
+            'ph.min'             => 'Nilai pH minimal 0.',
+            'ph.max'             => 'Nilai pH maksimal 14.',
+            'mlss.required'      => 'Field MLSS wajib diisi.',
+            'mlss.numeric'       => 'Field MLSS harus berupa angka.',
+            'svl.required'       => 'Field SVL wajib diisi.',
+            'svl.numeric'        => 'Field SVL harus berupa angka.',
+            'do.required'        => 'Field DO wajib diisi.',
+            'do.numeric'         => 'Field DO harus berupa angka.',
         ]);
 
         $jenisSampel = WwtpJenisSample::findOrFail($request->id_sampel);
@@ -784,7 +852,7 @@ class WWTPControllerPerformance extends Controller
      */
     public function getRecentRecords($limit = 10)
     {
-        $data = WwtpPerformanceRecord::with('week')
+        $data = WwtpPerformanceRecord::with(['week', 'creator:id,username,fullname'])
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();

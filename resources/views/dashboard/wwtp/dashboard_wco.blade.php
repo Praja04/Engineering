@@ -922,6 +922,13 @@
                                 <i class="mdi mdi-refresh"></i>
                             </button>
 
+                            <!-- Export PPTX Button with Screenshot -->
+                            <button id="btnExportWcoPptxScreen" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
+                                title="Export PowerPoint (.pptx) dengan Screenshot Grafik WWTP" type="button">
+                                <i class="mdi mdi-file-powerpoint-box text-warning"></i>
+                                <span class="d-none d-sm-inline">Export PPTX</span>
+                            </button>
+
                             <button id="btnThemeToggle" class="btn-theme-toggle" type="button"
                                 title="Ganti Mode Tampilan (Dark / Light)">
                                 <i class="mdi mdi-weather-sunny text-warning" id="themeIcon"></i>
@@ -3110,6 +3117,83 @@
                 loadTopRiskKoloniSection();
                 loadKepatuhanTssSection(start, end);
             }
+            // ─── Export PPTX dengan Screenshot Chart Langsung dari Browser (WWTP WCO) ───
+            document.addEventListener('DOMContentLoaded', function() {
+                const btnWcoPptx = document.getElementById('btnExportWcoPptxScreen');
+                if (!btnWcoPptx) return;
+
+                btnWcoPptx.addEventListener('click', async function() {
+                    const originalHtml = btnWcoPptx.innerHTML;
+                    btnWcoPptx.disabled = true;
+                    btnWcoPptx.innerHTML = '<i class="mdi mdi-loading mdi-spin text-warning"></i> <span>Capture Chart...</span>';
+
+                    try {
+                        const images = {};
+
+                        // Map DOM IDs to placeholder tags
+                        const chartMap = {
+                            'chartDetailCostChemical': 'chart.wco_cost',
+                            'chartInfluentMingguan': 'chart.wco_influent',
+                            'chartEffluentMingguan': 'chart.wco_effluent',
+                            'chartSafetyPerf': 'chart.wco_sparta_garam',
+                            'chartKepatuhanCod': 'chart.wco_cod',
+                            'chartKepatuhanTss': 'chart.wco_tss',
+                            'chartTopRiskKoloni': 'chart.wco_koloni'
+                        };
+
+                        for (const [domId, tag] of Object.entries(chartMap)) {
+                            if (wcoCharts && wcoCharts[domId] && typeof wcoCharts[domId].dataURI === 'function') {
+                                try {
+                                    const res = await wcoCharts[domId].dataURI();
+                                    if (res && res.imgURI) {
+                                        images[tag] = res.imgURI;
+                                    }
+                                } catch (e) {
+                                    console.warn(`Capture ${domId} failed:`, e);
+                                }
+                            }
+                        }
+
+                        btnWcoPptx.innerHTML = '<i class="mdi mdi-loading mdi-spin text-warning"></i> <span>Menyiapkan File...</span>';
+
+                        const start = document.getElementById('wcoStartDate').value;
+                        const end = document.getElementById('wcoEndDate').value;
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        const exportUrl = `{{ route('utility.dashboard_machine_export_pptx') }}?mode=custom&start_date=${start}&end_date=${end}&tanggal=${end}`;
+
+                        const response = await fetch(exportUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+                            },
+                            body: JSON.stringify({ images: images })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Gagal mengekspor file PPTX (HTTP ' + response.status + ')');
+                        }
+
+                        const blob = await response.blob();
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = `Weekly_WWTP_WCO_${start}_${end}.pptx`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(blobUrl);
+
+                    } catch (err) {
+                        console.error('Error export PPTX WCO:', err);
+                        alert('Gagal mengekspor PPTX: ' + (err.message || 'Terjadi kesalahan sistem.'));
+                    } finally {
+                        btnWcoPptx.disabled = false;
+                        btnWcoPptx.innerHTML = originalHtml;
+                    }
+                });
+            });
         </script>
     </body>
 

@@ -72,6 +72,7 @@ class CompressorController extends Controller
                 'suhu_dryer_tr15' => 'nullable|numeric',
                 'suhu_dryer_fx250' => 'nullable|numeric',
                 'suhu_dryer_ir' => 'nullable|numeric',
+                'suhu_ruang_compressor' => 'nullable|numeric',
             ]);
 
             // Cek Duplikat di Details
@@ -174,6 +175,7 @@ class CompressorController extends Controller
                 'suhu_dryer_tr15' => 'nullable|numeric',
                 'suhu_dryer_fx250' => 'nullable|numeric',
                 'suhu_dryer_ir' => 'nullable|numeric',
+                'suhu_ruang_compressor' => 'nullable|numeric',
             ]);
 
             $detail->update([
@@ -631,6 +633,7 @@ class CompressorController extends Controller
                     $sheet->setCellValue('AA' . $currentRow, $item->suhu_dryer_tr15);
                     $sheet->setCellValue('AB' . $currentRow, $item->suhu_dryer_fx250);
                     $sheet->setCellValue('AC' . $currentRow, $item->suhu_dryer_ir);
+                    $sheet->setCellValue('AD' . $currentRow, $item->suhu_ruang_compressor);
                 }
 
                 $dayCounter++;

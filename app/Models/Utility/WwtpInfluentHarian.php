@@ -35,7 +35,18 @@ class WwtpInfluentHarian extends Model
         'running_wwtp1',
         'debit2',
         'running_wwtp2',
+        'created_by',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
 
     /**
      * Recalculate _awal fields chronologically starting from a certain date

@@ -1241,15 +1241,26 @@
                         const error = xhr.responseJSON;
                         let message = 'Terjadi kesalahan saat menyimpan data!';
 
-                        if (error && error.message) {
+                        if (error && error.errors && typeof error.errors === 'object') {
+                            const errorList = [];
+                            for (const [field, msgs] of Object.entries(error.errors)) {
+                                const fieldLabel = field.replace(/_/g, ' ').toUpperCase();
+                                if (Array.isArray(msgs)) {
+                                    msgs.forEach(m => errorList.push(`&bull; <strong>${fieldLabel}</strong>: ${m}`));
+                                } else {
+                                    errorList.push(`&bull; <strong>${fieldLabel}</strong>: ${msgs}`);
+                                }
+                            }
+                            if (errorList.length > 0) {
+                                message = `<div class="text-start fs-13"><div class="fw-semibold text-danger mb-2">Mohon lengkapi field yang diperlukan:</div>${errorList.join('<br>')}</div>`;
+                            }
+                        } else if (error && error.message) {
                             message = error.message;
-                        } else if (error && error.errors) {
-                            message = Object.values(error.errors).flat().join('<br>');
                         }
 
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal!',
+                            title: 'Validasi Gagal!',
                             html: message,
                             confirmButtonColor: '#3085d6'
                         });
@@ -1319,15 +1330,26 @@
                         const error = xhr.responseJSON;
                         let message = 'Terjadi kesalahan saat menyimpan data!';
 
-                        if (error && error.message) {
+                        if (error && error.errors && typeof error.errors === 'object') {
+                            const errorList = [];
+                            for (const [field, msgs] of Object.entries(error.errors)) {
+                                const fieldLabel = field.replace(/_/g, ' ').toUpperCase();
+                                if (Array.isArray(msgs)) {
+                                    msgs.forEach(m => errorList.push(`&bull; <strong>${fieldLabel}</strong>: ${m}`));
+                                } else {
+                                    errorList.push(`&bull; <strong>${fieldLabel}</strong>: ${msgs}`);
+                                }
+                            }
+                            if (errorList.length > 0) {
+                                message = `<div class="text-start fs-13"><div class="fw-semibold text-danger mb-2">Mohon lengkapi field yang diperlukan:</div>${errorList.join('<br>')}</div>`;
+                            }
+                        } else if (error && error.message) {
                             message = error.message;
-                        } else if (error && error.errors) {
-                            message = Object.values(error.errors).flat().join('<br>');
                         }
 
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal!',
+                            title: 'Validasi Gagal!',
                             html: message,
                             confirmButtonColor: '#3085d6'
                         });

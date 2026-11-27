@@ -32,7 +32,7 @@ class CheckWaterQuotaAlertCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Check raw water sources (Sumur 1, 2, 4, 5, PDAM) and send email alert to supervisors if usage reaches 80% of cut-off period quota (21st to 20th)';
+    protected $description = 'Check raw water sources (Sumur 1, 2, 4, 5, PDAM) and send email alert to users with utility_water_notification permission if usage reaches 80% of cut-off period quota (21st to 20th)';
 
     /**
      * Raw water sources to monitor
@@ -182,27 +182,34 @@ class CheckWaterQuotaAlertCommand extends Command
 
         $this->warn("Ditemukan " . count($alertItems) . " sumber air yang mencapai/melebihi 80% kuota periode!");
 
-        // 3. Ambil user dengan jabatan supervisor
-        $supervisors = User::where('is_active', true)
-            ->where(function ($q) {
-                $q->where('jabatan', 'LIKE', '%supervisor%')
-                  ->orWhere('jabatan', 'LIKE', '%spv%');
+        // 3. Ambil user penerima notifikasi yang memiliki permission 'utility_water_notification'
+        $permissionNames = ['utility_water_notification', 'utlity_water_notification'];
+        $recipients = User::where('is_active', true)
+            ->where(function ($q) use ($permissionNames) {
+                // Direct permission
+                $q->whereHas('directPermissions', function ($dp) use ($permissionNames) {
+                    $dp->whereIn('permissions.name', $permissionNames);
+                })
+                // Atau permission via role
+                ->orWhereHas('customRoles.permissions', function ($rp) use ($permissionNames) {
+                    $rp->whereIn('permissions.name', $permissionNames);
+                });
             })
             ->get();
 
-        if ($supervisors->isEmpty()) {
-            $this->error("Tidak ditemukan user supervisor aktif.");
+        if ($recipients->isEmpty()) {
+            $this->error("Tidak ditemukan user aktif yang memiliki permission 'utility_water_notification'.");
             return Command::FAILURE;
         }
 
-        $this->info("Ditemukan {$supervisors->count()} user supervisor penerima notifikasi.");
+        $this->info("Ditemukan {$recipients->count()} user dengan permission 'utility_water_notification' penerima notifikasi.");
 
         if ($isTest) {
-            $this->warn("[MODE TEST] Email dan notifikasi web tidak dikirim ke supervisor secara riil. Data simulasi:");
-            foreach ($supervisors as $spv) {
-                $recipientName = $spv->fullname ?: ($spv->username ?: 'Supervisor');
-                $emailStatus = $spv->email ? $spv->email : 'Tanpa Email';
-                $this->line("- [TEST] Penerima: {$recipientName} ({$emailStatus}) | Jabatan: {$spv->jabatan} | Dept: {$spv->departemen}");
+            $this->warn("[MODE TEST] Email dan notifikasi web tidak dikirim ke penerima secara riil. Data simulasi:");
+            foreach ($recipients as $recipient) {
+                $recipientName = $recipient->fullname ?: ($recipient->username ?: 'Pengguna');
+                $emailStatus = $recipient->email ? $recipient->email : 'Tanpa Email';
+                $this->line("- [TEST] Penerima: {$recipientName} ({$emailStatus}) | Jabatan: {$recipient->jabatan} | Dept: {$recipient->departemen}");
             }
             return Command::SUCCESS;
         }
@@ -211,21 +218,21 @@ class CheckWaterQuotaAlertCommand extends Command
         $dashboardUrl = route('utility.dashboard_machine');
         $dbNotifCount = 0;
 
-        foreach ($supervisors as $supervisor) {
+        foreach ($recipients as $recipient) {
             foreach ($alertItems as $item) {
                 $statusLabel = $item['percentage'] >= 100 ? 'OVER KUOTA' : 'WASPADA (≥80%)';
                 $title = "⚠️ Kuota Air {$item['source']} [{$statusLabel}]";
                 $message = "Pemakaian {$item['source']} periode {$periodLabel} mencapai {$item['percentage']}% ({$item['actual']} m³ dari kuota {$item['monthly_quota']} m³).";
 
                 // Cek apakah notifikasi serupa sudah pernah dicatat dalam periode ini untuk user ini
-                $alreadyExistsInDb = NotificationsModel::where('user_id', $supervisor->id)
+                $alreadyExistsInDb = NotificationsModel::where('user_id', $recipient->id)
                     ->where('title', $title)
                     ->whereDate('created_at', '>=', $startDateStr)
                     ->exists();
 
                 if ($isForce || !$alreadyExistsInDb) {
                     NotificationsModel::create([
-                        'user_id'         => $supervisor->id,
+                        'user_id'         => $recipient->id,
                         'notifiable_type' => AirArea::class,
                         'notifiable_id'   => $item['area_id'],
                         'title'           => $title,
@@ -239,15 +246,15 @@ class CheckWaterQuotaAlertCommand extends Command
         }
         $this->info("✓ Berhasil menyimpan {$dbNotifCount} record ke tabel notifikasi web.");
 
-        // 5. Kirim email ke setiap supervisor yang memiliki email valid
+        // 5. Kirim email ke setiap user penerima yang memiliki email valid
         $sentCount = 0;
-        $supervisorsWithEmail = $supervisors->filter(fn($u) => !empty($u->email));
+        $recipientsWithEmail = $recipients->filter(fn($u) => !empty($u->email));
 
-        foreach ($supervisorsWithEmail as $supervisor) {
-            $recipientName = $supervisor->fullname ?: ($supervisor->username ?: 'Supervisor');
+        foreach ($recipientsWithEmail as $recipient) {
+            $recipientName = $recipient->fullname ?: ($recipient->username ?: 'Pengguna');
             try {
-                $this->line("Mengirim email ke: {$recipientName} <{$supervisor->email}>...");
-                Mail::to($supervisor->email)->send(new WaterQuotaAlertMail(
+                $this->line("Mengirim email ke: {$recipientName} <{$recipient->email}>...");
+                Mail::to($recipient->email)->send(new WaterQuotaAlertMail(
                     $alertItems,
                     $recipientName,
                     $periodLabelFull,
@@ -256,10 +263,10 @@ class CheckWaterQuotaAlertCommand extends Command
                     $daysInPeriod
                 ));
                 $sentCount++;
-                $this->info("✓ Sukses terkirim ke {$supervisor->email}");
+                $this->info("✓ Sukses terkirim ke {$recipient->email}");
             } catch (\Throwable $e) {
-                $this->error("✗ Gagal mengirim email ke {$supervisor->email}: " . $e->getMessage());
-                Log::error("WaterQuotaAlertMail error for {$supervisor->email}: " . $e->getMessage());
+                $this->error("✗ Gagal mengirim email ke {$recipient->email}: " . $e->getMessage());
+                Log::error("WaterQuotaAlertMail error for {$recipient->email}: " . $e->getMessage());
             }
         }
 

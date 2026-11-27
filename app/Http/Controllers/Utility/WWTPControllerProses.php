@@ -41,7 +41,7 @@ class WWTPControllerProses extends Controller
 
     public function index(Request $request)
     {
-        $query = WwtpRecord::with(['influent', 'effluent'])
+        $query = WwtpRecord::with(['influent', 'effluent', 'creator:id,username,fullname'])
             ->orderBy('tanggal', 'desc');
 
         if ($request->kategori) {
@@ -72,6 +72,11 @@ class WWTPControllerProses extends Controller
         $request->validate([
             'tanggal'  => 'required|date',
             'kategori' => 'required|in:influent,effluent',
+        ], [
+            'tanggal.required'  => 'Field Tanggal wajib diisi.',
+            'tanggal.date'      => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'kategori.required' => 'Field Kategori wajib dipilih.',
+            'kategori.in'       => 'Pilihan Kategori tidak valid.',
         ]);
 
         if ($request->kategori === 'influent') {
@@ -95,6 +100,13 @@ class WWTPControllerProses extends Controller
             'pit_proses_wwtp2' => 'nullable|numeric|min:0',
             'pit_outlet' => 'nullable|numeric|min:0',
             'pit_boiler' => 'nullable|numeric|min:0',
+        ], [
+            'pit_sparta.required'   => 'Field Pit Sparta wajib diisi.',
+            'pit_sparta.numeric'    => 'Field Pit Sparta harus berupa angka.',
+            'pit_garam.required'    => 'Field Pit Garam wajib diisi.',
+            'pit_garam.numeric'     => 'Field Pit Garam harus berupa angka.',
+            'pit_domestik.required' => 'Field Pit Domestik wajib diisi.',
+            'pit_domestik.numeric'  => 'Field Pit Domestik harus berupa angka.',
         ]);
 
         // Cek apakah minggu ini sudah ada data influent
@@ -114,8 +126,9 @@ class WWTPControllerProses extends Controller
 
         // Simpan header
         $record = WwtpRecord::create([
-            'tanggal'  => $request->tanggal,
-            'kategori' => 'influent',
+            'tanggal'    => $request->tanggal,
+            'kategori'   => 'influent',
+            'created_by' => Auth::id(),
         ]);
 
         // Simpan detail
@@ -145,12 +158,18 @@ class WWTPControllerProses extends Controller
         $request->validate([
             'full_proses' => 'required|numeric|min:0',
             'daf_pre'     => 'required|numeric|min:0',
+        ], [
+            'full_proses.required' => 'Field Full Proses wajib diisi.',
+            'full_proses.numeric'  => 'Field Full Proses harus berupa angka.',
+            'daf_pre.required'     => 'Field DAF Pre wajib diisi.',
+            'daf_pre.numeric'      => 'Field DAF Pre harus berupa angka.',
         ]);
 
         // Buat header
         $record = WwtpRecord::create([
-            'tanggal'  => $request->tanggal,
-            'kategori' => 'effluent',
+            'tanggal'    => $request->tanggal,
+            'kategori'   => 'effluent',
+            'created_by' => Auth::id(),
         ]);
 
         // Simpan detail
@@ -279,27 +298,42 @@ class WWTPControllerProses extends Controller
 
         if (!$approval) {
             $request->validate([
-                'foreman_id' => 'required|exists:users,id',
+                'foreman_id'    => 'required|exists:users,id',
                 'supervisor_id' => 'required|exists:users,id',
+            ], [
+                'foreman_id.required'    => 'Field Foreman wajib dipilih.',
+                'foreman_id.exists'      => 'Foreman yang dipilih tidak valid atau tidak ditemukan.',
+                'supervisor_id.required' => 'Field Supervisor wajib dipilih.',
+                'supervisor_id.exists'   => 'Supervisor yang dipilih tidak valid atau tidak ditemukan.',
             ]);
         }
 
         $request->validate([
-            'tanggal'  => 'required|date',
-            'shift'    => 'required|in:shift1,shift2,shift3',
-            'pit_sparta'   => 'required|numeric|min:0',
-            'pit_garam'    => 'required|numeric|min:0',
-            'pit_domestik' => 'required|numeric|min:0',
+            'tanggal'            => 'required|date',
+            'shift'              => 'required|in:shift1,shift2,shift3',
+            'pit_sparta'         => 'required|numeric|min:0',
+            'pit_garam'          => 'required|numeric|min:0',
+            'pit_domestik'       => 'required|numeric|min:0',
             'pit_produksi_step3' => 'nullable|numeric|min:0',
-            'pit_storage' => 'nullable|numeric|min:0',
-            'pit_proses_wwtp2' => 'nullable|numeric|min:0',
-            'pit_outlet' => 'nullable|numeric|min:0',
-            'pit_boiler' => 'nullable|numeric|min:0',
-            'debit1' => 'nullable|numeric|min:0',
-            'running_wwtp1' => 'nullable|string',
-            'debit2' => 'nullable|numeric|min:0',
-            'running_wwtp2' => 'nullable|string',
-
+            'pit_storage'        => 'nullable|numeric|min:0',
+            'pit_proses_wwtp2'   => 'nullable|numeric|min:0',
+            'pit_outlet'         => 'nullable|numeric|min:0',
+            'pit_boiler'         => 'nullable|numeric|min:0',
+            'debit1'             => 'nullable|numeric|min:0',
+            'running_wwtp1'      => 'nullable|string',
+            'debit2'             => 'nullable|numeric|min:0',
+            'running_wwtp2'      => 'nullable|string',
+        ], [
+            'tanggal.required'      => 'Field Tanggal wajib diisi.',
+            'tanggal.date'          => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'shift.required'        => 'Field Shift wajib dipilih.',
+            'shift.in'              => 'Pilihan Shift tidak valid.',
+            'pit_sparta.required'   => 'Field Pit Sparta wajib diisi.',
+            'pit_sparta.numeric'    => 'Field Pit Sparta harus berupa angka.',
+            'pit_garam.required'    => 'Field Pit Garam wajib diisi.',
+            'pit_garam.numeric'     => 'Field Pit Garam harus berupa angka.',
+            'pit_domestik.required' => 'Field Pit Domestik wajib diisi.',
+            'pit_domestik.numeric'  => 'Field Pit Domestik harus berupa angka.',
         ]);
 
         // Cek apakah shift pada tanggal tersebut sudah ada
@@ -414,6 +448,7 @@ class WWTPControllerProses extends Controller
             'running_wwtp1' => $request->running_wwtp1,
             'debit2' => $request->debit2,
             'running_wwtp2' => $request->running_wwtp2,
+            'created_by' => Auth::id(),
         ]);
 
         WwtpInfluentHarian::recalculateAwalFieldsFrom($harian->tanggal, $harian->id);
@@ -481,7 +516,7 @@ class WWTPControllerProses extends Controller
      */
     public function show($id)
     {
-        $data = WwtpRecord::with(['influent', 'effluent'])->findOrFail($id);
+        $data = WwtpRecord::with(['influent', 'effluent', 'creator:id,username,fullname'])->findOrFail($id);
         return response()->json($data);
     }
 
@@ -494,6 +529,9 @@ class WWTPControllerProses extends Controller
 
         $request->validate([
             'tanggal' => 'required|date',
+        ], [
+            'tanggal.required' => 'Field Tanggal wajib diisi.',
+            'tanggal.date'     => 'Field Tanggal harus berupa format tanggal yang valid.',
         ]);
 
         // Jika kategori influent → tetap jaga rule perminggu
@@ -503,6 +541,13 @@ class WWTPControllerProses extends Controller
                 'pit_sparta'   => 'required|numeric|min:0',
                 'pit_garam'    => 'required|numeric|min:0',
                 'pit_domestik' => 'required|numeric|min:0',
+            ], [
+                'pit_sparta.required'   => 'Field Pit Sparta wajib diisi.',
+                'pit_sparta.numeric'    => 'Field Pit Sparta harus berupa angka.',
+                'pit_garam.required'    => 'Field Pit Garam wajib diisi.',
+                'pit_garam.numeric'     => 'Field Pit Garam harus berupa angka.',
+                'pit_domestik.required' => 'Field Pit Domestik wajib diisi.',
+                'pit_domestik.numeric'  => 'Field Pit Domestik harus berupa angka.',
             ]);
 
             // Cek apakah tanggal barunya masuk minggu yang sudah ada data lain
@@ -540,6 +585,11 @@ class WWTPControllerProses extends Controller
             $request->validate([
                 'full_proses' => 'required|numeric|min:0',
                 'daf_pre'     => 'required|numeric|min:0',
+            ], [
+                'full_proses.required' => 'Field Full Proses wajib diisi.',
+                'full_proses.numeric'  => 'Field Full Proses harus berupa angka.',
+                'daf_pre.required'     => 'Field DAF Pre wajib diisi.',
+                'daf_pre.numeric'      => 'Field DAF Pre harus berupa angka.',
             ]);
 
             // Update header
@@ -583,7 +633,8 @@ class WWTPControllerProses extends Controller
         $page    = $request->input('page', 1);
         $bulan   = $request->input('bulan');
 
-        $query = WwtpInfluentHarian::orderBy('tanggal', 'desc')
+        $query = WwtpInfluentHarian::with('creator:id,username,fullname')
+            ->orderBy('tanggal', 'desc')
             ->orderBy('shift', 'asc');
 
         if ($bulan) {
@@ -611,7 +662,7 @@ class WWTPControllerProses extends Controller
      */
     public function showHarian($id)
     {
-        $data = WwtpInfluentHarian::findOrFail($id);
+        $data = WwtpInfluentHarian::with('creator:id,username,fullname')->findOrFail($id);
         $approval = WwtpDailyApproval::where('tanggal', $data->tanggal)->first();
         $data->approval_status = $approval ? $approval->status : null;
         return response()->json($data);
@@ -635,20 +686,31 @@ class WWTPControllerProses extends Controller
         }
 
         $request->validate([
-            'tanggal'  => 'required|date',
-            'shift'    => 'required|in:shift1,shift2,shift3',
-            'pit_sparta'   => 'required|numeric|min:0',
-            'pit_garam'    => 'required|numeric|min:0',
-            'pit_domestik' => 'required|numeric|min:0',
+            'tanggal'            => 'required|date',
+            'shift'              => 'required|in:shift1,shift2,shift3',
+            'pit_sparta'         => 'required|numeric|min:0',
+            'pit_garam'          => 'required|numeric|min:0',
+            'pit_domestik'       => 'required|numeric|min:0',
             'pit_produksi_step3' => 'nullable|numeric|min:0',
-            'pit_storage' => 'nullable|numeric|min:0',
-            'pit_proses_wwtp2' => 'nullable|numeric|min:0',
-            'pit_outlet' => 'nullable|numeric|min:0',
-            'pit_boiler' => 'nullable|numeric|min:0',
-            'debit1' => 'nullable|numeric|min:0',
-            'running_wwtp1' => 'nullable|string',
-            'debit2' => 'nullable|numeric|min:0',
-            'running_wwtp2' => 'nullable|string',
+            'pit_storage'        => 'nullable|numeric|min:0',
+            'pit_proses_wwtp2'   => 'nullable|numeric|min:0',
+            'pit_outlet'         => 'nullable|numeric|min:0',
+            'pit_boiler'         => 'nullable|numeric|min:0',
+            'debit1'             => 'nullable|numeric|min:0',
+            'running_wwtp1'      => 'nullable|string',
+            'debit2'             => 'nullable|numeric|min:0',
+            'running_wwtp2'      => 'nullable|string',
+        ], [
+            'tanggal.required'      => 'Field Tanggal wajib diisi.',
+            'tanggal.date'          => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'shift.required'        => 'Field Shift wajib dipilih.',
+            'shift.in'              => 'Pilihan Shift tidak valid.',
+            'pit_sparta.required'   => 'Field Pit Sparta wajib diisi.',
+            'pit_sparta.numeric'    => 'Field Pit Sparta harus berupa angka.',
+            'pit_garam.required'    => 'Field Pit Garam wajib diisi.',
+            'pit_garam.numeric'     => 'Field Pit Garam harus berupa angka.',
+            'pit_domestik.required' => 'Field Pit Domestik wajib diisi.',
+            'pit_domestik.numeric'  => 'Field Pit Domestik harus berupa angka.',
         ]);
 
         $approval = \App\Models\Utility\WwtpDailyApproval::where('tanggal', $request->tanggal)->first();
@@ -1005,7 +1067,7 @@ class WWTPControllerProses extends Controller
      */
     public function getRecentRecords($limit = 10)
     {
-        $data = WwtpRecord::with(['influent', 'effluent'])
+        $data = WwtpRecord::with(['influent', 'effluent', 'creator:id,username,fullname'])
             ->orderBy('tanggal', 'desc')
             ->limit($limit)
             ->get();

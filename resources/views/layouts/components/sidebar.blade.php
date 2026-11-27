@@ -57,7 +57,7 @@
                     @include('layouts.components.sidebar-utility.utility_project')
                     @include('layouts.components.sidebar-epr.menu-epr')
                     @include('layouts.components.sidebar-utility.wwtp')
-                    @include('layouts.components.sidebar-boiler.menu-boiler')
+                    {{-- @include('layouts.components.sidebar-boiler.menu-boiler') --}}
                     @include('layouts.components.sidebar-kalibrasi.menu-kalibrasi')
                     @include('layouts.components.sidebar-scoring.menu-scoring-input')
                     @include('layouts.components.sidebar-maintenance.menu-maintenance')
@@ -83,6 +83,16 @@
                             </a>
                         </li>
                     @endif
+
+                    <!-- /////////////////////Role & Permission (Khusus Admin)/////////////// -->
+                    @can('role', 'admin')
+                        <li class="nav-item">
+                            <a href="{{ route('access-control.index') }}"
+                                class="nav-link menu-link {{ request()->routeIs('access-control.*') ? 'active' : '' }}">
+                                <i class="mdi mdi-shield-key-outline"></i> <span data-key="t-roles">Role & Permission</span>
+                            </a>
+                        </li>
+                    @endcan
                 @else
                     <li class="menu-title"><span data-key="t-menu">Menu</span></li>
                     @include('layouts.components.sidebar-dept.dept_lain')

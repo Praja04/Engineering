@@ -14,6 +14,7 @@ use App\Http\Controllers\Kalibrasi\KalibrasiJangkaSorongController;
 use App\Http\Controllers\Kalibrasi\KalibrasiThermohygrometerController;
 use App\Http\Controllers\Kalibrasi\Master\KalibrasiMasterTimbanganController;
 use App\Http\Controllers\Kalibrasi\Master\KalibrasiMasterJangkaSorongController;
+use App\Http\Controllers\Kalibrasi\Master\KalibrasiMasterKetidakpastianPressureController;
 
 // All Access
 Route::middleware(['auth', 'access:Engineering Kalibrasi'])->group(function () {
@@ -114,8 +115,19 @@ Route::middleware(['auth', 'access'])->group(function () {
             // Pengukuran
             Route::get('/jangka-sorong/index', [KalibrasiMasterJangkaSorongController::class, 'viewJangkaSorong'])->name('master.kalibrasi.jangka_sorong');
             Route::get('/timbangan/index', [KalibrasiMasterTimbanganController::class, 'viewTimbangan'])->name('master.kalibrasi.timbangan');
+            Route::get('/ketidakpastian-pressure/index', [KalibrasiMasterKetidakpastianPressureController::class, 'viewKetidakpastian'])->name('master.kalibrasi.ketidakpastian_pressure');
+            Route::get('/ketidakpastian-pressure/by-alat/{alat}', [KalibrasiMasterKetidakpastianPressureController::class, 'getByAlat'])->name('master.kalibrasi.ketidakpastian_pressure.by-alat');
+            Route::get('/ketidakpastian-pressure/download-template', [KalibrasiMasterKetidakpastianPressureController::class, 'downloadTemplate'])->name('master.kalibrasi.ketidakpastian_pressure.download_template');
+            Route::post('/ketidakpastian-pressure/import', [KalibrasiMasterKetidakpastianPressureController::class, 'importExcel'])->name('master.kalibrasi.ketidakpastian_pressure.import');
             Route::resource('/jangka-sorong', KalibrasiMasterJangkaSorongController::class);
             Route::resource('/timbangan', KalibrasiMasterTimbanganController::class);
+            Route::resource('/ketidakpastian-pressure', KalibrasiMasterKetidakpastianPressureController::class)->names([
+                'index'   => 'master.kalibrasi.ketidakpastian_pressure.index',
+                'store'   => 'master.kalibrasi.ketidakpastian_pressure.store',
+                'show'    => 'master.kalibrasi.ketidakpastian_pressure.show',
+                'update'  => 'master.kalibrasi.ketidakpastian_pressure.update',
+                'destroy' => 'master.kalibrasi.ketidakpastian_pressure.destroy',
+            ]);
         });
     });
 });

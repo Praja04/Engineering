@@ -35,7 +35,7 @@ class WWTPControllerSludge extends Controller
         $bulan   = $request->input('bulan');
         $search  = $request->input('search');
 
-        $query = WwtpSludge::orderBy('tanggal', 'desc')->orderBy('shift', 'asc');
+        $query = WwtpSludge::with('creator:id,username,fullname')->orderBy('tanggal', 'desc')->orderBy('shift', 'asc');
 
         if ($shift) {
             $query->where('shift', $shift);
@@ -100,8 +100,13 @@ class WWTPControllerSludge extends Controller
 
         if (!$approval) {
             $request->validate([
-                'foreman_id' => 'required|exists:users,id',
+                'foreman_id'    => 'required|exists:users,id',
                 'supervisor_id' => 'required|exists:users,id',
+            ], [
+                'foreman_id.required'    => 'Field Foreman wajib dipilih.',
+                'foreman_id.exists'      => 'Foreman yang dipilih tidak valid atau tidak ditemukan.',
+                'supervisor_id.required' => 'Field Supervisor wajib dipilih.',
+                'supervisor_id.exists'   => 'Supervisor yang dipilih tidak valid atau tidak ditemukan.',
             ]);
         }
 
@@ -112,6 +117,17 @@ class WWTPControllerSludge extends Controller
             'hasil_lumpur'       => 'required|numeric|min:0',
             'running_hour_scp'   => 'required|numeric|min:0',
             'sludge_content'     => 'nullable|numeric|min:0',
+        ], [
+            'tanggal.required'          => 'Field Tanggal wajib diisi.',
+            'tanggal.date'              => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'shift.required'            => 'Field Shift wajib dipilih.',
+            'shift.in'                  => 'Pilihan Shift tidak valid.',
+            'drain_lumpur.required'     => 'Field Drain Lumpur wajib diisi.',
+            'drain_lumpur.numeric'      => 'Field Drain Lumpur harus berupa angka.',
+            'hasil_lumpur.required'     => 'Field Hasil Lumpur wajib diisi.',
+            'hasil_lumpur.numeric'      => 'Field Hasil Lumpur harus berupa angka.',
+            'running_hour_scp.required' => 'Field Running Hour SCP wajib diisi.',
+            'running_hour_scp.numeric'  => 'Field Running Hour SCP harus berupa angka.',
         ]);
 
         $existing = WwtpSludge::where('tanggal', $request->tanggal)
@@ -139,6 +155,7 @@ class WWTPControllerSludge extends Controller
             'hasil_lumpur'     => $request->hasil_lumpur,
             'running_hour_scp' => $request->running_hour_scp,
             'sludge_content'   => $request->sludge_content,
+            'created_by'       => Auth::id(),
         ]);
 
         // Create or update daily approval
@@ -198,7 +215,7 @@ class WWTPControllerSludge extends Controller
 
     public function show($id)
     {
-        $data = WwtpSludge::findOrFail($id);
+        $data = WwtpSludge::with('creator:id,username,fullname')->findOrFail($id);
         $approval = WwtpDailyApproval::where('tanggal', $data->tanggal)->first();
         $data->approval_status = $approval ? $approval->status : null;
         return response()->json($data);
@@ -218,6 +235,10 @@ class WWTPControllerSludge extends Controller
             'hasil_lumpur'     => 'nullable|numeric|min:0',
             'running_hour_scp' => 'nullable|numeric|min:0',
             'sludge_content'   => 'nullable|numeric|min:0',
+        ], [
+            'tanggal.required' => 'Field Tanggal wajib diisi.',
+            'tanggal.date'     => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'shift.required'   => 'Field Shift wajib dipilih.',
         ]);
 
         $err = $this->checkDailyApprovalPermission($request->tanggal, 'mengubah');
@@ -498,7 +519,7 @@ class WWTPControllerSludge extends Controller
         $bulan   = $request->input('bulan');
         $search  = $request->input('search');
 
-        $query = WwtpPengangkutanSludge::orderBy('week_start', 'desc');
+        $query = WwtpPengangkutanSludge::with('creator:id,username,fullname')->orderBy('week_start', 'desc');
 
         if ($bulan) {
             $query->whereRaw("DATE_FORMAT(week_start, '%Y-%m') = ?", [$bulan]);
@@ -524,6 +545,11 @@ class WWTPControllerSludge extends Controller
         $request->validate([
             'tanggal'             => 'required|date',
             'jumlah_pengangkutan' => 'required|numeric|min:0',
+        ], [
+            'tanggal.required'             => 'Field Tanggal wajib diisi.',
+            'tanggal.date'                 => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'jumlah_pengangkutan.required' => 'Field Jumlah Pengangkutan wajib diisi.',
+            'jumlah_pengangkutan.numeric'  => 'Field Jumlah Pengangkutan harus berupa angka.',
         ]);
 
         $tanggal   = Carbon::parse($request->tanggal);
@@ -542,12 +568,13 @@ class WWTPControllerSludge extends Controller
             'week_start'          => $startWeek,
             'week_end'            => $endWeek,
             'jumlah_pengangkutan' => $request->jumlah_pengangkutan,
+            'created_by'          => Auth::id(),
         ]);
 
         return response()->json([
             'status'  => 'success',
             'message' => 'Data berhasil disimpan.',
-            'data'    => $data,
+            'data'    => $data->load('creator:id,username,fullname'),
         ]);
     }
 
@@ -556,7 +583,7 @@ class WWTPControllerSludge extends Controller
      */
     public function show_pengangkutan($id)
     {
-        $data = WwtpPengangkutanSludge::findOrFail($id);
+        $data = WwtpPengangkutanSludge::with('creator:id,username,fullname')->findOrFail($id);
         return response()->json(['status' => 'success', 'data' => $data]);
     }
 
@@ -570,6 +597,11 @@ class WWTPControllerSludge extends Controller
         $request->validate([
             'tanggal'             => 'required|date',
             'jumlah_pengangkutan' => 'required|numeric|min:0',
+        ], [
+            'tanggal.required'             => 'Field Tanggal wajib diisi.',
+            'tanggal.date'                 => 'Field Tanggal harus berupa format tanggal yang valid.',
+            'jumlah_pengangkutan.required' => 'Field Jumlah Pengangkutan wajib diisi.',
+            'jumlah_pengangkutan.numeric'  => 'Field Jumlah Pengangkutan harus berupa angka.',
         ]);
 
         $tanggal   = Carbon::parse($request->tanggal);

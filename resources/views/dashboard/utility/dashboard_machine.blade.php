@@ -533,6 +533,81 @@
                 color: #334155 !important;
             }
 
+            /* Light mode styling for chart header badges and date/update badge */
+            body.wco-light-mode .chart-header-badge,
+            body.wco-light-mode .wco-card-header .badge,
+            body.wco-light-mode .wco-header .badge,
+            body.wco-light-mode .badge.bg-dark {
+                background-color: #f1f5f9 !important;
+                border-color: #cbd5e1 !important;
+                color: #475569 !important;
+            }
+
+            body.wco-light-mode .chart-header-badge.text-cyan,
+            body.wco-light-mode .wco-card-header .badge.text-cyan,
+            body.wco-light-mode .badge.bg-dark.text-cyan {
+                background-color: #ecfeff !important;
+                border-color: #a5f3fc !important;
+                color: #0891b2 !important;
+            }
+
+            body.wco-light-mode .chart-header-badge.text-primary,
+            body.wco-light-mode .wco-card-header .badge.text-primary,
+            body.wco-light-mode .badge.bg-dark.text-primary,
+            body.wco-light-mode .chart-header-badge.text-info,
+            body.wco-light-mode .wco-card-header .badge.text-info,
+            body.wco-light-mode .badge.bg-dark.text-info {
+                background-color: #eff6ff !important;
+                border-color: #bfdbfe !important;
+                color: #1d4ed8 !important;
+            }
+
+            body.wco-light-mode .chart-header-badge.text-success,
+            body.wco-light-mode .wco-card-header .badge.text-success,
+            body.wco-light-mode .badge.bg-dark.text-success {
+                background-color: #ecfdf5 !important;
+                border-color: #a7f3d0 !important;
+                color: #047857 !important;
+            }
+
+            body.wco-light-mode .chart-header-badge.text-warning,
+            body.wco-light-mode .wco-card-header .badge.text-warning,
+            body.wco-light-mode .badge.bg-dark.text-warning {
+                background-color: #fffbeb !important;
+                border-color: #fde68a !important;
+                color: #b45309 !important;
+            }
+
+            body.wco-light-mode .chart-header-badge.text-danger,
+            body.wco-light-mode .wco-card-header .badge.text-danger,
+            body.wco-light-mode .badge.bg-dark.text-danger {
+                background-color: #fef2f2 !important;
+                border-color: #fecaca !important;
+                color: #b91c1c !important;
+            }
+
+            body.wco-light-mode .chart-header-badge.text-pink,
+            body.wco-light-mode .wco-card-header .badge.text-pink,
+            body.wco-light-mode .badge.bg-dark.text-pink {
+                background-color: #fdf2f8 !important;
+                border-color: #fbcfe8 !important;
+                color: #be185d !important;
+            }
+
+            body.wco-light-mode .chart-header-badge.text-muted,
+            body.wco-light-mode .wco-header .badge.text-muted,
+            body.wco-light-mode .badge.bg-dark.text-muted {
+                background-color: #f8fafc !important;
+                border-color: #e2e8f0 !important;
+                color: #64748b !important;
+            }
+
+            body.wco-light-mode .pill-badge {
+                background: #f1f5f9 !important;
+                border-color: #cbd5e1 !important;
+                color: #334155 !important;
+            }
+
             .text-cyan {
                 color: #06b6d4 !important;
             }
@@ -633,6 +708,13 @@
                                 <i class="mdi mdi-refresh" id="refreshIcon"></i>
                             </button>
 
+                            <!-- Export PPTX Button with Screenshot -->
+                            <button id="btnExportPptxScreen" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
+                                title="Export PowerPoint (.pptx) dengan Screenshot Grafik Otomatis" type="button">
+                                <i class="mdi mdi-file-powerpoint-box text-warning"></i>
+                                <span class="d-none d-sm-inline">Export PPTX</span>
+                            </button>
+
                             <!-- Theme Toggle Button -->
                             <button id="btnThemeToggle" class="btn-theme-toggle" type="button"
                                 title="Ganti Mode Tampilan (Dark / Light)">
@@ -656,7 +738,7 @@
                             </a>
 
                             <!-- Last Updated Badge -->
-                            <div class="badge bg-dark border border-secondary px-2 py-1 text-muted"
+                            <div class="badge chart-header-badge bg-dark border border-secondary px-2 py-1 text-muted"
                                 style="font-size: 9px;">
                                 <i class="mdi mdi-clock-outline me-1 text-cyan"></i>
                                 <span id="lastUpdateBadge">-</span>
@@ -855,7 +937,7 @@
                                     <i class="mdi mdi-gas-cylinder text-cyan"></i>
                                     <span>COMPRESSOR RUNNING HOURS</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-cyan"
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-cyan"
                                     id="compPeriodBadge">Hourly Readings</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
@@ -930,7 +1012,7 @@
                                     <i class="mdi mdi-fan text-primary"></i>
                                     <span>AHU AMPERE & SUHU TEMP OUT</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-primary"
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-primary"
                                     id="ahuPeriodBadge">AHU 1 - 4</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
@@ -1012,7 +1094,7 @@
                                     <i class="mdi mdi-coolant-temperature text-success"></i>
                                     <span>COOLING TOWER (SUHU & PRESS)</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-success"
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-success"
                                     id="ctPeriodBadge">Tiap Jam & Avg</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
@@ -1067,7 +1149,7 @@
                                     <i class="mdi mdi-transmission-tower text-warning"></i>
                                     <span>MDP POWER & KELISTRIKAN</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-warning"
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-warning"
                                     id="mdpStatusBadge">Status: Normal</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
@@ -1134,7 +1216,7 @@
                                     <i class="mdi mdi-thermometer-lines text-danger"></i>
                                     <span>MDP SUHU MESIN DAN SUHU RUANG</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-danger"
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-danger"
                                     id="mdpThermalBadge">Suhu & Trafo</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
@@ -1189,7 +1271,7 @@
                                     <i class="mdi mdi-generator-mobile text-pink"></i>
                                     <span>GENSET WARMING UP</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-pink"
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-pink"
                                     id="gensetHeaderYearBadge">Tahun 2026</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
@@ -1235,7 +1317,7 @@
                                     <i class="mdi mdi-water-pump text-cyan"></i>
                                     <span>AIR MENTAH (AKTUAL VS KUOTA)</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-cyan"
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-cyan"
                                     id="airRawPeriodBadge">Sumur 1,2,4,5 & PDAM</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
@@ -1295,7 +1377,7 @@
                                     <i class="mdi mdi-water text-primary"></i>
                                     <span>AIR PROSES & SUPPORT</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-primary"
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-primary"
                                     id="airProsesPeriodBadge">Pemakaian Area</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
@@ -1356,7 +1438,7 @@
                                     <i class="mdi mdi-coolant-temperature text-cyan"></i>
                                     <span>KUALITAS AIR COOLING TOWER</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-cyan">Cooling Tower</span>
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-cyan">Cooling Tower</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
                                 <div class="row g-1 mb-2">
@@ -1405,7 +1487,7 @@
                                     <i class="mdi mdi-water-plus text-cyan"></i>
                                     <span>KUALITAS AIR REVERSE OSMOSIS</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-cyan">RO System</span>
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-cyan">RO System</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
                                 <div class="row g-1 mb-2">
@@ -1454,7 +1536,7 @@
                                     <i class="mdi mdi-water-sync text-success"></i>
                                     <span>KUALITAS AIR WATER SOFTENER</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-success">Softener</span>
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-success">Softener</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
                                 <div class="row g-1 mb-2">
@@ -1503,7 +1585,7 @@
                                     <i class="mdi mdi-fire-circle text-warning"></i>
                                     <span>KUALITAS AIR BOILER</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-warning">Boiler System</span>
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-warning">Boiler System</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
                                 <div class="row g-1 mb-2">
@@ -1552,7 +1634,7 @@
                                     <i class="mdi mdi-water text-cyan"></i>
                                     <span>KUALITAS AIR FRESH WATER</span>
                                 </div>
-                                <span class="badge bg-dark border border-secondary text-cyan">Fresh Water</span>
+                                <span class="badge chart-header-badge bg-dark border border-secondary text-cyan">Fresh Water</span>
                             </div>
                             <div class="wco-card-body p-2 d-flex flex-column">
                                 <div class="row g-1 mb-2">
@@ -1607,7 +1689,7 @@
                                         title="Filter Tahun Cost SMKP">
                                         <option value="2026" selected>2026</option>
                                     </select>
-                                    <span class="badge bg-dark border border-secondary text-warning"
+                                    <span class="badge chart-header-badge bg-dark border border-secondary text-warning"
                                         id="costSmkpBadge">1 Tahun</span>
                                 </div>
                             </div>
@@ -2021,10 +2103,10 @@
 
                     const trafoTemp = mdp.temperatur_transformator;
                     if (trafoTemp > 75) {
-                        $('#mdpStatusBadge').text('Warning: Suhu Trafo Tinggi').attr('class', 'badge bg-danger');
+                        $('#mdpStatusBadge').text('Warning: Suhu Trafo Tinggi').attr('class', 'badge chart-header-badge bg-danger text-white');
                     } else {
                         $('#mdpStatusBadge').text('Status: Normal').attr('class',
-                            'badge bg-dark border border-secondary text-warning');
+                            'badge chart-header-badge bg-dark border border-secondary text-warning');
                     }
                     $('#valMdpTrafoCond').text(mdp.suhu_ruang_trafo > 45 ? 'Panas' : 'Normal');
                     $('#valMdpGensetCond').text(mdp.suhu_ruang_genset > 45 ? 'Panas' : 'Normal');
@@ -3820,6 +3902,91 @@
                     updateCostSmkpUI(data.cost_smkp);
                     renderCostSmkpChart(data.cost_smkp);
                 }
+
+                // ─── Export PPTX dengan Screenshot Chart Langsung dari Browser ───
+                $('#btnExportPptxScreen').on('click', async function() {
+                    const $btn = $(this);
+                    const originalHtml = $btn.html();
+                    $btn.prop('disabled', true).html('<i class="mdi mdi-loading mdi-spin text-warning"></i> <span>Capture Chart...</span>');
+
+                    try {
+                        const images = {};
+
+                        // Capture chart compressor
+                        if (charts.comp && typeof charts.comp.dataURI === 'function') {
+                            try {
+                                const res = await charts.comp.dataURI();
+                                if (res && res.imgURI) images['chart.compressor'] = res.imgURI;
+                            } catch (e) { console.warn('Capture compressor failed:', e); }
+                        }
+
+                        // Capture chart ahu
+                        if (charts.ahu && typeof charts.ahu.dataURI === 'function') {
+                            try {
+                                const res = await charts.ahu.dataURI();
+                                if (res && res.imgURI) images['chart.ahu'] = res.imgURI;
+                            } catch (e) { console.warn('Capture ahu failed:', e); }
+                        }
+
+                        // Capture chart cooling tower
+                        if (charts.ct && typeof charts.ct.dataURI === 'function') {
+                            try {
+                                const res = await charts.ct.dataURI();
+                                if (res && res.imgURI) images['chart.cooling_tower'] = res.imgURI;
+                            } catch (e) { console.warn('Capture cooling tower failed:', e); }
+                        }
+
+                        // Capture chart power house (MDP)
+                        if (charts.mdp && typeof charts.mdp.dataURI === 'function') {
+                            try {
+                                const res = await charts.mdp.dataURI();
+                                if (res && res.imgURI) images['chart.powerhouse'] = res.imgURI;
+                            } catch (e) { console.warn('Capture powerhouse failed:', e); }
+                        }
+
+                        // Filter parameters
+                        const mode = $('#filterMode').val();
+                        const selectedDate = $('#selectedDate').val();
+                        const startDate = mode === 'custom' ? $('#customStartDate').val() : (mode === 'today' ? selectedDate : $('#selectedDate').val());
+                        const endDate = mode === 'custom' ? $('#customEndDate').val() : selectedDate;
+                        const gensetYear = $('#gensetYearSelect').val() || new Date().getFullYear();
+
+                        $btn.html('<i class="mdi mdi-loading mdi-spin text-warning"></i> <span>Menyiapkan File...</span>');
+
+                        const csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
+                        const exportUrl = `{{ route('utility.dashboard_machine_export_pptx') }}?mode=${mode}&tanggal=${selectedDate}&start_date=${startDate}&end_date=${endDate}&genset_year=${gensetYear}`;
+
+                        const response = await fetch(exportUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+                            },
+                            body: JSON.stringify({ images: images })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Gagal mengekspor file PPTX (HTTP ' + response.status + ')');
+                        }
+
+                        const blob = await response.blob();
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = `Weekly_Operasional_Utility_${startDate}_${endDate}.pptx`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(blobUrl);
+
+                    } catch (err) {
+                        console.error('Error export PPTX:', err);
+                        alert('Gagal mengekspor PPTX: ' + (err.message || 'Terjadi kesalahan sistem.'));
+                    } finally {
+                        $btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
 
                 // Initial trigger
                 loadDashboardData();

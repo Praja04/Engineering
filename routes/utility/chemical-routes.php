@@ -3,9 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Utility\ChemicalController;
 
-
-
-Route::prefix('utility')->middleware('auth')->group(function () {
+Route::prefix('utility')->middleware(['auth', 'permission:utility_menu'])->group(function () {
 
     // CRUD air
     Route::get('/trend-pemakaian-chemical', [ChemicalController::class, 'getTrendPemakaianChemical']);

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Services\EjoRoleMapperService;
+use App\Traits\HasRolesAndPermissions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRolesAndPermissions;
 
     protected $guarded = ['id'];
 
@@ -74,11 +75,20 @@ class User extends Authenticatable
 
     public function getImageUrlAttribute()
     {
+        if ($this->image) {
+            if (file_exists(public_path('uploads/users/' . $this->image))) {
+                return asset('uploads/users/' . $this->image);
+            }
+            if (Storage::disk('public')->exists($this->image)) {
+                return url(Storage::url($this->image));
+            }
+            if (file_exists(public_path($this->image))) {
+                return asset($this->image);
+            }
+        }
         if ($this->avatar) {
             return $this->avatar;
         }
-        return $this->image && url(Storage::disk('public')->exists($this->image))
-            ? url(Storage::url($this->image))
-            : asset('material/assets/images/users/user-dummy-img.jpg');
+        return asset('material/assets/images/users/user-dummy-img.jpg');
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Kalibrasi\KalibrasiModel;
 use App\Models\Kalibrasi\KalibrasiSertifikatModel;
 use App\Models\Kalibrasi\Pressure\KalibrasiPressureDetailModel;
 use App\Models\Kalibrasi\Pressure\KalibrasiPressureModel;
+use App\Models\Kalibrasi\Master\MasterKetidakpastianPressureModel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -83,6 +84,9 @@ class KalibrasiPressureController extends Controller
                 'status' => 'draft'
             ]);
 
+            $alat = AlatKalibrasiModel::find($request->alat_id);
+            $kodeAlat = $alat ? $alat->kode_alat : null;
+
             foreach ($request->pressure as $index => $p) {
 
                 $titik = $p['titik_kalibrasi'];
@@ -109,13 +113,31 @@ class KalibrasiPressureController extends Controller
                 $tekananStandarTurun = $avgStandarTurun;
                 $koreksiAlatTurun = $avgStandarTurun - $avgAlatTurun;
 
-                $ketidakpastianNaik = $staticU['naik'][$index] ?? 0.059872897;
-                $ketidakpastianTurun = $staticU['turun'][$index] ?? 0.059872897;
+                // Cek apakah ada master ketidakpastian khusus untuk alat dan titik ini
+                $masterU = MasterKetidakpastianPressureModel::where(function ($q) use ($request, $kodeAlat) {
+                        if (!empty($request->alat_id)) {
+                            $q->where('alat_id', $request->alat_id);
+                        }
+                        if ($kodeAlat) {
+                            $q->orWhere('kode_alat', $kodeAlat);
+                        }
+                    })
+                    ->where('titik_kalibrasi', $titik)
+                    ->first();
 
-                $uNaik = $ketidakpastianNaik;
-                $uTurun = $ketidakpastianTurun;
-
-                $uGabungan = sqrt(pow($uNaik, 2) + pow($uTurun, 2));
+                if ($masterU && $masterU->nilai_ketidakpastian !== null) {
+                    $uGabungan = (float) $masterU->nilai_ketidakpastian;
+                    $uNaik = $masterU->u_naik !== null ? (float) $masterU->u_naik : ($uGabungan / sqrt(2));
+                    $uTurun = $masterU->u_turun !== null ? (float) $masterU->u_turun : ($uGabungan / sqrt(2));
+                    $ketidakpastianNaik = $uNaik;
+                    $ketidakpastianTurun = $uTurun;
+                } else {
+                    $ketidakpastianNaik = $staticU['naik'][$index] ?? 0.059872897;
+                    $ketidakpastianTurun = $staticU['turun'][$index] ?? 0.059872897;
+                    $uNaik = $ketidakpastianNaik;
+                    $uTurun = $ketidakpastianTurun;
+                    $uGabungan = sqrt(pow($uNaik, 2) + pow($uTurun, 2));
+                }
 
                 $pressure = KalibrasiPressureModel::create([
                     'kalibrasi_id' => $kalibrasi->id,
