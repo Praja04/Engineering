@@ -385,7 +385,105 @@ class DashboardController extends Controller
             'energy_per_pack' => $dbMachineKpis->count() > 0 ? round($dbMachineKpis->avg('energy_per_pack'), 2) : 0.28,
         ];
 
+        
+        // ---------------------------------------------------------
+        // Daily Downtime Trend for Mechanical & Electrical
+        // ---------------------------------------------------------
+        $dailyDates = [];
+        $dailyLabels = [];
+        $dailyFullDates = [];
+        $dailyMechPct = [];
+        $dailyElecPct = [];
+        $dailyMechMins = [];
+        $dailyElecMins = [];
+        $dailyMechCount = [];
+        $dailyElecCount = [];
+
+        $dayNamesIndo = [
+            'Sunday' => 'Minggu',
+            'Monday' => 'Senin',
+            'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday' => 'Kamis',
+            'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu',
+        ];
+
+        $currDate = \Carbon\Carbon::parse($startDate)->startOfDay();
+        $endDateCarbon = \Carbon\Carbon::parse($endDate)->startOfDay();
+
+        while ($currDate->lte($endDateCarbon)) {
+            $dStr = $currDate->format('Y-m-d');
+            $dailyDates[] = $dStr;
+
+            $dayEnglish = $currDate->format('l');
+            $dayIndo = $dayNamesIndo[$dayEnglish] ?? $dayEnglish;
+
+            if ($daysInPeriod <= 7) {
+                // Sesuai contoh template Excel: "Senin", "Selasa", "Rabu", dst.
+                $dailyLabels[] = $dayIndo;
+                $dailyFullDates[] = $dayIndo . ', ' . $currDate->format('d/m/Y');
+            } elseif ($daysInPeriod <= 31) {
+                $dailyLabels[] = $currDate->format('d M') . ' (' . substr($dayIndo, 0, 3) . ')';
+                $dailyFullDates[] = $dayIndo . ', ' . $currDate->format('d/m/Y');
+            } else {
+                $dailyLabels[] = $currDate->format('d/m/Y');
+                $dailyFullDates[] = $dayIndo . ', ' . $currDate->format('d/m/Y');
+            }
+
+            // Reports for this day
+            $dayReports = $cmReports->filter(fn($r) => $r->tanggal === $dStr);
+            $dayMechReports = $dayReports->filter(fn($r) => strtolower($r->electrical_mechanical) === 'mechanical');
+            $dayElecReports = $dayReports->filter(fn($r) => strtolower($r->electrical_mechanical) === 'electrical');
+
+            $mMenit = $dayMechReports->sum('total_menit');
+            $eMenit = $dayElecReports->sum('total_menit');
+            $mCount = $dayMechReports->count();
+            $eCount = $dayElecReports->count();
+
+            // Daily loading time for this day from loadingTimes
+            $dayLtRecs = $loadingTimes->filter(fn($lt) => $lt->tanggal === $dStr);
+            $dayLt = $dayLtRecs->sum(function($lt) {
+                $sum = ($lt->loading_time_a ?? 0) + ($lt->loading_time_b ?? 0) + ($lt->loading_time_c ?? 0);
+                return $sum > 0 ? $sum : ($lt->loading_time_all ?? 0);
+            });
+
+            if ($dayLt <= 0) {
+                $dayLt = count($activeMachines) * 24 * 60;
+            }
+
+            $mPct = $dayLt > 0 ? round(($mMenit / $dayLt) * 100, 2) : 0.0;
+            $ePct = $dayLt > 0 ? round(($eMenit / $dayLt) * 100, 2) : 0.0;
+
+            $dailyMechPct[] = $mPct;
+            $dailyElecPct[] = $ePct;
+            $dailyMechMins[] = $mMenit;
+            $dailyElecMins[] = $eMenit;
+            $dailyMechCount[] = $mCount;
+            $dailyElecCount[] = $eCount;
+
+            $currDate->addDay();
+        }
+
+        $avgDailyMechPct = count($dailyMechPct) > 0 ? round(array_sum($dailyMechPct) / count($dailyMechPct), 2) : 0.0;
+        $avgDailyElecPct = count($dailyElecPct) > 0 ? round(array_sum($dailyElecPct) / count($dailyElecPct), 2) : 0.0;
+        $maxDailyMechPct = count($dailyMechPct) > 0 ? max($dailyMechPct) : 0.0;
+        $maxDailyElecPct = count($dailyElecPct) > 0 ? max($dailyElecPct) : 0.0;
+
         return view('epr.dashboard-cm', compact(
+            'dailyDates',
+            'dailyLabels',
+            'dailyFullDates',
+            'dailyMechPct',
+            'dailyElecPct',
+            'dailyMechMins',
+            'dailyElecMins',
+            'dailyMechCount',
+            'dailyElecCount',
+            'avgDailyMechPct',
+            'avgDailyElecPct',
+            'maxDailyMechPct',
+            'maxDailyElecPct',
             'filterType',
             'month',
             'week',
