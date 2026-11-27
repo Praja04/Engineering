@@ -885,6 +885,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const dailyMechCount = @json($dailyMechCount);
     const dailyElecCount = @json($dailyElecCount);
 
+    // Hitung headroom sumbu Y agar data label di atas titik puncak tidak terpotong
+    const maxMechVal = dailyMechPct.length > 0 ? Math.max(...dailyMechPct) : 0;
+    const yAxisMaxMech = maxMechVal > 0 ? Number((maxMechVal * 1.35).toFixed(2)) : 1.0;
+
+    const maxElecVal = dailyElecPct.length > 0 ? Math.max(...dailyElecPct) : 0;
+    const yAxisMaxElec = maxElecVal > 0 ? Number((maxElecVal * 1.35).toFixed(2)) : 1.0;
+
     // 1. Grafik DT Harian: MECHANICAL
     const elDailyMech = document.querySelector("#chartDailyMechanical");
     if (elDailyMech && dailyLabels.length > 0) {
@@ -895,7 +902,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }],
             chart: {
                 type: 'line',
-                height: 290,
+                height: 300,
                 toolbar: { show: false },
                 zoom: { enabled: false }
             },
@@ -905,31 +912,25 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             colors: ['#7c3aed'],
             markers: {
-                size: 6,
+                size: 7,
                 colors: ['#7c3aed'],
                 strokeColors: '#ffffff',
-                strokeWidth: 2,
-                hover: { size: 8 }
+                strokeWidth: 2.5,
+                hover: { size: 9 }
             },
             dataLabels: {
                 enabled: true,
                 formatter: function (val) {
-                    return val > 0 ? (val.toFixed(2) + '%').replace('.', ',') : '';
+                    return val > 0 ? (Number(val).toFixed(2) + '%').replace('.', ',') : '';
                 },
-                offsetY: -8,
+                offsetY: -10,
                 style: {
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    colors: ['#6b21a8']
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    colors: ['#581c87']
                 },
                 background: {
-                    enabled: true,
-                    foreColor: '#6b21a8',
-                    padding: 3,
-                    borderRadius: 4,
-                    borderWidth: 1,
-                    borderColor: '#e9d5ff',
-                    opacity: 0.95
+                    enabled: false
                 }
             },
             xaxis: {
@@ -937,7 +938,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 labels: {
                     style: { fontSize: '11px', fontWeight: 600, colors: '#475569' },
                     rotate: dailyLabels.length > 10 ? -45 : 0,
-                    trim: true
+                    trim: false,
+                    hideOverlappingLabels: false
                 },
                 axisBorder: { show: true, color: '#cbd5e1' },
                 axisTicks: { show: true }
@@ -952,11 +954,18 @@ document.addEventListener("DOMContentLoaded", function () {
                         return val.toFixed(1) + '%';
                     }
                 },
-                min: 0
+                min: 0,
+                max: yAxisMaxMech
             },
             grid: {
                 borderColor: '#f1f5f9',
-                strokeDashArray: 3
+                strokeDashArray: 3,
+                padding: {
+                    top: 15,
+                    right: 25,
+                    left: 15,
+                    bottom: 5
+                }
             },
             tooltip: {
                 shared: true,
@@ -998,7 +1007,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }],
             chart: {
                 type: 'line',
-                height: 290,
+                height: 300,
                 toolbar: { show: false },
                 zoom: { enabled: false }
             },
@@ -1008,31 +1017,25 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             colors: ['#2563eb'],
             markers: {
-                size: 6,
+                size: 7,
                 colors: ['#2563eb'],
                 strokeColors: '#ffffff',
-                strokeWidth: 2,
-                hover: { size: 8 }
+                strokeWidth: 2.5,
+                hover: { size: 9 }
             },
             dataLabels: {
                 enabled: true,
                 formatter: function (val) {
-                    return val > 0 ? (val.toFixed(2) + '%').replace('.', ',') : '';
+                    return val > 0 ? (Number(val).toFixed(2) + '%').replace('.', ',') : '';
                 },
-                offsetY: -8,
+                offsetY: -10,
                 style: {
-                    fontSize: '11px',
-                    fontWeight: 700,
+                    fontSize: '12px',
+                    fontWeight: 800,
                     colors: ['#1e40af']
                 },
                 background: {
-                    enabled: true,
-                    foreColor: '#1e40af',
-                    padding: 3,
-                    borderRadius: 4,
-                    borderWidth: 1,
-                    borderColor: '#bfdbfe',
-                    opacity: 0.95
+                    enabled: false
                 }
             },
             xaxis: {
@@ -1040,7 +1043,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 labels: {
                     style: { fontSize: '11px', fontWeight: 600, colors: '#475569' },
                     rotate: dailyLabels.length > 10 ? -45 : 0,
-                    trim: true
+                    trim: false,
+                    hideOverlappingLabels: false
                 },
                 axisBorder: { show: true, color: '#cbd5e1' },
                 axisTicks: { show: true }
@@ -1055,11 +1059,18 @@ document.addEventListener("DOMContentLoaded", function () {
                         return val.toFixed(1) + '%';
                     }
                 },
-                min: 0
+                min: 0,
+                max: yAxisMaxElec
             },
             grid: {
                 borderColor: '#f1f5f9',
-                strokeDashArray: 3
+                strokeDashArray: 3,
+                padding: {
+                    top: 15,
+                    right: 25,
+                    left: 15,
+                    bottom: 5
+                }
             },
             tooltip: {
                 shared: true,
@@ -1090,7 +1101,6 @@ document.addEventListener("DOMContentLoaded", function () {
         };
         new ApexCharts(elDailyElec, optionsDailyElec).render();
     }
-
 });
 </script>
 @endsection
