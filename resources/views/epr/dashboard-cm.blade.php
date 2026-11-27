@@ -476,6 +476,82 @@
             </div>
         </div>
 
+        
+        {{-- Row 4 (BARU): Grafik Downtime Harian — Mechanical & Electrical (Divided into 2 Charts) --}}
+        <div class="row g-3 mb-4">
+            {{-- Grafik 1: Downtime Harian Mechanical --}}
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; border-top: 3px solid #7c3aed !important;">
+                    <div class="card-module-header" style="background: #581c87;">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge rounded-circle p-1 d-flex align-items-center justify-content-center text-white" style="width: 22px; height: 22px; background: rgba(255,255,255,0.2);">
+                                <i class="ri-settings-4-line fs-13"></i>
+                            </span>
+                            <span>GRAFIK DOWNTIME HARIAN — MECHANICAL (%)</span>
+                        </div>
+                        <span class="badge bg-white text-purple fs-10" style="color: #7c3aed;">
+                            Avg: {{ number_format($avgDailyMechPct, 2) }}%
+                        </span>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 px-1 gap-2">
+                            <span class="text-muted fs-11">
+                                Persentase (%) Downtime Mechanical per hari terhadap Loading Time (Sesuai Filter)
+                            </span>
+                            <span class="badge fs-11 font-monospace" style="background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff;">
+                                Total: {{ number_format($mechDuration) }} Menit ({{ $mechCount }} Kejadian)
+                            </span>
+                        </div>
+                        <div id="chartDailyMechanical" style="min-height: 290px;"></div>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fs-11 text-muted mt-2 pt-2 border-top gap-2">
+                            <span style="background-color: #fef08a; padding: 2px 8px; border-radius: 4px; color: #854d0e; font-weight: 600;">
+                                <i class="ri-line-chart-line me-1"></i> Rata-rata DT Mechanical: {{ number_format($avgDailyMechPct, 2) }}%
+                            </span>
+                            <span>
+                                Puncak Tertinggi: <strong class="text-danger font-monospace">{{ number_format($maxDailyMechPct, 2) }}%</strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Grafik 2: Downtime Harian Electrical --}}
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; border-top: 3px solid #2563eb !important;">
+                    <div class="card-module-header header-blue">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge rounded-circle p-1 d-flex align-items-center justify-content-center text-white" style="width: 22px; height: 22px; background: rgba(255,255,255,0.2);">
+                                <i class="ri-flashlight-line fs-13"></i>
+                            </span>
+                            <span>GRAFIK DOWNTIME HARIAN — ELECTRICAL (%)</span>
+                        </div>
+                        <span class="badge bg-white text-primary fs-10">
+                            Avg: {{ number_format($avgDailyElecPct, 2) }}%
+                        </span>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 px-1 gap-2">
+                            <span class="text-muted fs-11">
+                                Persentase (%) Downtime Electrical per hari terhadap Loading Time (Sesuai Filter)
+                            </span>
+                            <span class="badge bg-soft-primary text-primary fs-11 font-monospace" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                                Total: {{ number_format($elecDuration) }} Menit ({{ $elecCount }} Kejadian)
+                            </span>
+                        </div>
+                        <div id="chartDailyElectrical" style="min-height: 290px;"></div>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center fs-11 text-muted mt-2 pt-2 border-top gap-2">
+                            <span style="background-color: #dbeafe; padding: 2px 8px; border-radius: 4px; color: #1e40af; font-weight: 600;">
+                                <i class="ri-line-chart-line me-1"></i> Rata-rata DT Electrical: {{ number_format($avgDailyElecPct, 2) }}%
+                            </span>
+                            <span>
+                                Puncak Tertinggi: <strong class="text-danger font-monospace">{{ number_format($maxDailyElecPct, 2) }}%</strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Row 4: TOP 5 Electrical & TOP 5 Mechanical Breakdown --}}
         <div class="row g-3 mb-4">
             {{-- Top 5 Electrical --}}
@@ -796,7 +872,235 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
         }
     }
+
+    // -------------------------------------------------------------
+    // Data Harian (Mechanical & Electrical) dari Controller
+    // -------------------------------------------------------------
+    const dailyLabels = @json($dailyLabels);
+    const dailyFullDates = @json($dailyFullDates);
+    const dailyMechPct = @json($dailyMechPct);
+    const dailyElecPct = @json($dailyElecPct);
+    const dailyMechMins = @json($dailyMechMins);
+    const dailyElecMins = @json($dailyElecMins);
+    const dailyMechCount = @json($dailyMechCount);
+    const dailyElecCount = @json($dailyElecCount);
+
+    // Hitung headroom sumbu Y agar data label di atas titik puncak tidak terpotong
+    const maxMechVal = dailyMechPct.length > 0 ? Math.max(...dailyMechPct) : 0;
+    const yAxisMaxMech = maxMechVal > 0 ? Number((maxMechVal * 1.35).toFixed(2)) : 1.0;
+
+    const maxElecVal = dailyElecPct.length > 0 ? Math.max(...dailyElecPct) : 0;
+    const yAxisMaxElec = maxElecVal > 0 ? Number((maxElecVal * 1.35).toFixed(2)) : 1.0;
+
+    // 1. Grafik DT Harian: MECHANICAL
+    const elDailyMech = document.querySelector("#chartDailyMechanical");
+    if (elDailyMech && dailyLabels.length > 0) {
+        const optionsDailyMech = {
+            series: [{
+                name: '% DT Mechanical',
+                data: dailyMechPct
+            }],
+            chart: {
+                type: 'line',
+                height: 300,
+                toolbar: { show: false },
+                zoom: { enabled: false }
+            },
+            stroke: {
+                curve: 'straight',
+                width: 3
+            },
+            colors: ['#7c3aed'],
+            markers: {
+                size: 7,
+                colors: ['#7c3aed'],
+                strokeColors: '#ffffff',
+                strokeWidth: 2.5,
+                hover: { size: 9 }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    return val > 0 ? (Number(val).toFixed(2) + '%').replace('.', ',') : '';
+                },
+                offsetY: -10,
+                style: {
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    colors: ['#581c87']
+                },
+                background: {
+                    enabled: false
+                }
+            },
+            xaxis: {
+                categories: dailyLabels,
+                labels: {
+                    style: { fontSize: '11px', fontWeight: 600, colors: '#475569' },
+                    rotate: dailyLabels.length > 10 ? -45 : 0,
+                    trim: false,
+                    hideOverlappingLabels: false
+                },
+                axisBorder: { show: true, color: '#cbd5e1' },
+                axisTicks: { show: true }
+            },
+            yaxis: {
+                title: {
+                    text: '% Downtime Mechanical',
+                    style: { fontSize: '11px', fontWeight: 600, color: '#64748b' }
+                },
+                labels: {
+                    formatter: function (val) {
+                        return val.toFixed(1) + '%';
+                    }
+                },
+                min: 0,
+                max: yAxisMaxMech
+            },
+            grid: {
+                borderColor: '#f1f5f9',
+                strokeDashArray: 3,
+                padding: {
+                    top: 15,
+                    right: 25,
+                    left: 15,
+                    bottom: 5
+                }
+            },
+            tooltip: {
+                shared: true,
+                custom: function({series, seriesIndex, dataPointIndex, w}) {
+                    const pct = series[seriesIndex][dataPointIndex];
+                    const mins = dailyMechMins[dataPointIndex] || 0;
+                    const count = dailyMechCount[dataPointIndex] || 0;
+                    const fullDate = dailyFullDates[dataPointIndex] || dailyLabels[dataPointIndex] || '';
+                    return `
+                        <div class="p-2 shadow-sm border rounded bg-white" style="font-size: 12px; min-width: 170px;">
+                            <div class="fw-bold text-dark border-bottom pb-1 mb-1">${fullDate}</div>
+                            <div class="d-flex justify-content-between gap-3" style="color: #7c3aed;">
+                                <span>Persentase DT:</span>
+                                <strong>${Number(pct).toFixed(2)}%</strong>
+                            </div>
+                            <div class="d-flex justify-content-between gap-3 text-muted">
+                                <span>Durasi DT:</span>
+                                <strong class="text-dark">${mins} menit</strong>
+                            </div>
+                            <div class="d-flex justify-content-between gap-3 text-muted">
+                                <span>Jumlah Kejadian:</span>
+                                <strong class="text-dark">${count} kali</strong>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        };
+        new ApexCharts(elDailyMech, optionsDailyMech).render();
+    }
+
+    // 2. Grafik DT Harian: ELECTRICAL
+    const elDailyElec = document.querySelector("#chartDailyElectrical");
+    if (elDailyElec && dailyLabels.length > 0) {
+        const optionsDailyElec = {
+            series: [{
+                name: '% DT Electrical',
+                data: dailyElecPct
+            }],
+            chart: {
+                type: 'line',
+                height: 300,
+                toolbar: { show: false },
+                zoom: { enabled: false }
+            },
+            stroke: {
+                curve: 'straight',
+                width: 3
+            },
+            colors: ['#2563eb'],
+            markers: {
+                size: 7,
+                colors: ['#2563eb'],
+                strokeColors: '#ffffff',
+                strokeWidth: 2.5,
+                hover: { size: 9 }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    return val > 0 ? (Number(val).toFixed(2) + '%').replace('.', ',') : '';
+                },
+                offsetY: -10,
+                style: {
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    colors: ['#1e40af']
+                },
+                background: {
+                    enabled: false
+                }
+            },
+            xaxis: {
+                categories: dailyLabels,
+                labels: {
+                    style: { fontSize: '11px', fontWeight: 600, colors: '#475569' },
+                    rotate: dailyLabels.length > 10 ? -45 : 0,
+                    trim: false,
+                    hideOverlappingLabels: false
+                },
+                axisBorder: { show: true, color: '#cbd5e1' },
+                axisTicks: { show: true }
+            },
+            yaxis: {
+                title: {
+                    text: '% Downtime Electrical',
+                    style: { fontSize: '11px', fontWeight: 600, color: '#64748b' }
+                },
+                labels: {
+                    formatter: function (val) {
+                        return val.toFixed(1) + '%';
+                    }
+                },
+                min: 0,
+                max: yAxisMaxElec
+            },
+            grid: {
+                borderColor: '#f1f5f9',
+                strokeDashArray: 3,
+                padding: {
+                    top: 15,
+                    right: 25,
+                    left: 15,
+                    bottom: 5
+                }
+            },
+            tooltip: {
+                shared: true,
+                custom: function({series, seriesIndex, dataPointIndex, w}) {
+                    const pct = series[seriesIndex][dataPointIndex];
+                    const mins = dailyElecMins[dataPointIndex] || 0;
+                    const count = dailyElecCount[dataPointIndex] || 0;
+                    const fullDate = dailyFullDates[dataPointIndex] || dailyLabels[dataPointIndex] || '';
+                    return `
+                        <div class="p-2 shadow-sm border rounded bg-white" style="font-size: 12px; min-width: 170px;">
+                            <div class="fw-bold text-dark border-bottom pb-1 mb-1">${fullDate}</div>
+                            <div class="d-flex justify-content-between gap-3 text-primary">
+                                <span>Persentase DT:</span>
+                                <strong>${Number(pct).toFixed(2)}%</strong>
+                            </div>
+                            <div class="d-flex justify-content-between gap-3 text-muted">
+                                <span>Durasi DT:</span>
+                                <strong class="text-dark">${mins} menit</strong>
+                            </div>
+                            <div class="d-flex justify-content-between gap-3 text-muted">
+                                <span>Jumlah Kejadian:</span>
+                                <strong class="text-dark">${count} kali</strong>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        };
+        new ApexCharts(elDailyElec, optionsDailyElec).render();
+    }
 });
-</script>
 </script>
 @endsection
