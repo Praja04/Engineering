@@ -1125,15 +1125,14 @@
                                         </div>
                                     </div>
                                     <div class="form-group-c" id="groupBackupNotes" style="display:none">
-                                        <label class="form-label-c">Pilih Mesin Backup / Cadangan <span
+                                        <label class="form-label-c">Pilih Mesin Backup / Cadangan (Bisa > 1 Unit) <span
                                                 class="req">*</span></label>
-                                        <select class="form-control-c" id="backup_mesin_id" style="width: 100%;">
-                                            <option value="">— Cari Kode / Nama Mesin —</option>
+                                        <select class="form-control-c" id="backup_mesin_ids" multiple="multiple" style="width: 100%;">
                                         </select>
                                         <input type="hidden" id="backup_notes">
                                         <div style="font-size: 11px; color: #059669; margin-top: 5px;">
-                                            <i class="mdi mdi-sync"></i> <strong>Sinkronisasi 2 Arah:</strong> Mesin yang
-                                            dipilih otomatis terhubung saling backup.
+                                            <i class="mdi mdi-sync"></i> <strong>Multi-Backup 2 Arah:</strong> Semua mesin yang
+                                            dipilih otomatis saling terhubung sebagai unit cadangan.
                                         </div>
                                     </div>
                                 </div>
@@ -1369,8 +1368,23 @@
                 let html = '';
 
                 paged.forEach((item, i) => {
+                    let backupDetailHtml = '';
+                    if (item.backup_mesin_list && item.backup_mesin_list.length > 0) {
+                        backupDetailHtml = `
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                ${item.backup_mesin_list.map(b => `<span class="badge bg-dark border border-secondary text-info font-monospace" style="font-size:10.5px;" title="${b.nama_mesin}">${b.kode_mesin || b.nama_mesin}</span>`).join('')}
+                            </div>
+                        `;
+                    } else if (item.backup_notes) {
+                        backupDetailHtml = `<div class="text-muted small mt-1 font-monospace" style="font-size:11px;">${item.backup_notes}</div>`;
+                    }
+
+                    const backupCountText = item.backup_mesin_list && item.backup_mesin_list.length > 1
+                        ? `Ada Backup (${item.backup_mesin_list.length})`
+                        : 'Ada Backup';
+
                     const hasBackupBadge = item.has_backup ?
-                        `<span class="badge bg-success"><i class="mdi mdi-shield-check me-1"></i>Ada Backup</span>${item.backup_notes ? `<div class="text-muted small mt-1 font-monospace" style="font-size:11px;">${item.backup_notes}</div>` : ''}` :
+                        `<span class="badge bg-success"><i class="mdi mdi-shield-check me-1"></i>${backupCountText}</span>${backupDetailHtml}` :
                         `<span class="badge bg-secondary">Tanpa Backup</span>`;
 
                     html += `
@@ -1438,10 +1452,14 @@
             });
             $('#filterJenis, #filterAktif, #filterBackup').on('change', applyFilter);
 
-            /* ── Backup Select2 Searchable Dropdown ─────────────────────────────── */
-            function initBackupSelect2(currentId = null, selectedBackupId = null) {
-                const $sel = $('#backup_mesin_id');
-                $sel.empty().append('<option value="">— Cari Kode / Nama Mesin —</option>');
+            /* ── Backup Select2 Searchable Dropdown (Multi-Select) ──────────────── */
+            function initBackupSelect2(currentId = null, selectedBackupIds = []) {
+                const $sel = $('#backup_mesin_ids');
+                $sel.empty();
+
+                const selIds = (Array.isArray(selectedBackupIds) ? selectedBackupIds : [selectedBackupIds])
+                    .filter(x => x !== null && x !== undefined && x !== '')
+                    .map(x => String(x));
 
                 // Urutkan mesin berdasarkan nama
                 const sorted = [...allData].sort((a, b) => (a.nama_mesin || '').localeCompare(b.nama_mesin || ''));
@@ -1451,21 +1469,20 @@
                     const code = m.kode_mesin ? `[${m.kode_mesin}] ` : '';
                     const loc = m.lokasi ? ` (${m.lokasi})` : '';
                     const label = `${code}${m.nama_mesin}${loc}`;
-                    const isSelected = selectedBackupId && String(m.id) === String(selectedBackupId);
+                    const isSelected = selIds.includes(String(m.id));
                     $sel.append(new Option(label, m.id, false, isSelected));
                 });
 
-                if (selectedBackupId) {
-                    $sel.val(selectedBackupId);
-                }
+                $sel.val(selIds);
 
                 if (!$sel.hasClass('select2-hidden-accessible')) {
                     $sel.select2({
                         theme: 'bootstrap-5',
                         dropdownParent: $('#modalMesin'),
-                        placeholder: '— Cari Kode / Nama Mesin —',
+                        placeholder: '— Cari & Pilih Satu atau Lebih Mesin Backup —',
                         allowClear: true,
-                        width: '100%'
+                        width: '100%',
+                        closeOnSelect: false
                     });
                 } else {
                     $sel.trigger('change.select2');
@@ -1477,11 +1494,11 @@
                 if ($(this).val() === '1') {
                     $('#groupBackupNotes').slideDown(150, function() {
                         const curId = $('#mesinId').val();
-                        initBackupSelect2(curId, $('#backup_mesin_id').val());
+                        initBackupSelect2(curId, $('#backup_mesin_ids').val() || []);
                     });
                 } else {
                     $('#groupBackupNotes').slideUp(150);
-                    $('#backup_mesin_id').val('').trigger('change.select2');
+                    $('#backup_mesin_ids').val([]).trigger('change.select2');
                     $('#backup_notes').val('');
                 }
             });
@@ -1503,8 +1520,8 @@
                 $('#groupAktif').hide();
                 $('#aktif').prop('checked', true);
                 $('#has_backup').val('0');
-                initBackupSelect2(null, null);
-                $('#backup_mesin_id').val('').trigger('change.select2');
+                initBackupSelect2(null, []);
+                $('#backup_mesin_ids').val([]).trigger('change.select2');
                 $('#backup_notes').val('');
                 $('#groupBackupNotes').hide();
                 $('input[name="frekuensi[]"]').prop('checked', false);
@@ -1523,12 +1540,15 @@
                 $('#dept').val(d.dept ?? '');
                 $('#kode_mesin').val(d.kode_mesin ?? '');
                 $('#has_backup').val(d.has_backup ? '1' : '0');
-                initBackupSelect2(d.id, d.backup_mesin_id || null);
+
+                const bIds = (d.backup_mesin_ids && d.backup_mesin_ids.length)
+                    ? d.backup_mesin_ids
+                    : (d.backup_mesin_id ? [d.backup_mesin_id] : []);
+
+                initBackupSelect2(d.id, bIds);
                 if (d.has_backup) {
                     $('#groupBackupNotes').show();
-                    if (d.backup_mesin_id) {
-                        $('#backup_mesin_id').val(d.backup_mesin_id).trigger('change.select2');
-                    }
+                    $('#backup_mesin_ids').val(bIds.map(String)).trigger('change.select2');
                 } else {
                     $('#groupBackupNotes').hide();
                 }
@@ -1562,9 +1582,10 @@
                 const url = isUpdate ? R.update(id) : R.store;
 
                 const hasBackupVal = $('#has_backup').val();
-                const backupMesinIdVal = (hasBackupVal === '1') ? ($('#backup_mesin_id').val() || null) : null;
-                const backupText = (hasBackupVal === '1' && backupMesinIdVal) ? $(
-                    '#backup_mesin_id option:selected').text().trim() : null;
+                let backupMesinIdsVal = [];
+                if (hasBackupVal === '1') {
+                    backupMesinIdsVal = $('#backup_mesin_ids').val() || [];
+                }
 
                 const payload = {
                     _token: R.csrf,
@@ -1575,8 +1596,9 @@
                     dept: $('#dept').val() || null,
                     kode_mesin: $('#kode_mesin').val() || null,
                     has_backup: hasBackupVal,
-                    backup_mesin_id: backupMesinIdVal,
-                    backup_notes: backupText,
+                    backup_mesin_ids: backupMesinIdsVal,
+                    backup_mesin_id: backupMesinIdsVal.length ? backupMesinIdsVal[0] : null,
+                    backup_notes: $('#backup_notes').val() || null,
                     'frekuensi[]': $('input[name="frekuensi[]"]:checked').map(function() {
                         return this.value;
                     }).get(),

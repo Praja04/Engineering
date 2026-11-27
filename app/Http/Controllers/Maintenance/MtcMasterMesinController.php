@@ -26,7 +26,16 @@ class MtcMasterMesinController extends Controller
     {
         DB::transaction(function () use ($request) {
             $hasBackup = $request->boolean('has_backup', false);
-            $backupMesinId = $hasBackup && !empty($request->backup_mesin_id) ? (int)$request->backup_mesin_id : null;
+            $backupMesinIds = [];
+            if ($hasBackup) {
+                if ($request->has('backup_mesin_ids')) {
+                    $backupMesinIds = array_values(array_filter(array_map('intval', (array) $request->input('backup_mesin_ids', []))));
+                } elseif (!empty($request->backup_mesin_id)) {
+                    $backupMesinIds = [(int) $request->backup_mesin_id];
+                }
+            }
+
+            $primaryBackupId = count($backupMesinIds) > 0 ? $backupMesinIds[0] : null;
 
             $mesin = MtcMasterMesinModel::create([
                 'jenis_mtc'       => $request->jenis_mtc,
@@ -34,15 +43,15 @@ class MtcMasterMesinController extends Controller
                 'lokasi'          => $request->lokasi,
                 'dept'            => $request->dept ?? null,
                 'kode_mesin'      => $request->kode_mesin ?? null,
-                'has_backup'      => $hasBackup,
-                'backup_mesin_id' => $backupMesinId,
+                'has_backup'      => $hasBackup && count($backupMesinIds) > 0,
+                'backup_mesin_id' => $primaryBackupId,
                 'backup_notes'    => null,
                 'aktif'           => 1,
                 'created_by'      => Auth::id(),
             ]);
 
-            // Sinkronisasi 2 arah untuk mesin backup
-            $this->syncTwoWayBackup($mesin, $hasBackup, $backupMesinId, $request->backup_notes);
+            // Sinkronisasi multi-backup (Many-to-Many 2 arah)
+            $this->syncMutualMultiBackup($mesin, $hasBackup, $backupMesinIds, $request->backup_notes);
 
             // frekuensi dikirim sebagai array: [{ interval: 1, satuan: 'bulan' }, ...]
             $this->syncFrekuensi($mesin->id, $request->frekuensi ?? []);
@@ -53,28 +62,41 @@ class MtcMasterMesinController extends Controller
 
     public function getData()
     {
-        $data = MtcMasterMesinModel::with('frekuensi')
+        $data = MtcMasterMesinModel::with(['frekuensi', 'backupMesinList:id,kode_mesin,nama_mesin,lokasi'])
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(fn($item) => [
-                'id'              => $item->id,
-                'jenis_mtc'       => $item->jenis_mtc,
-                'nama_mesin'      => $item->nama_mesin,
-                'lokasi'          => $item->lokasi,
-                'dept'            => $item->dept,
-                'kode_mesin'      => $item->kode_mesin,
-                'has_backup'      => (bool) $item->has_backup,
-                'backup_mesin_id' => $item->backup_mesin_id,
-                'backup_notes'    => $item->backup_notes,
-                'aktif'           => $item->aktif,
-                'created_at'      => $item->created_at,
-                // [{ interval: 2, satuan: 'bulan', label: '2 Bulan' }, ...]
-                'frekuensi_list'  => $item->frekuensi->map(fn($f) => [
-                    'interval' => $f->interval,
-                    'satuan'   => $f->satuan,
-                    'label'    => $f->label,
-                ])->toArray(),
-            ]);
+            ->map(function ($item) {
+                $backupList = $item->backupMesinList->map(fn($b) => [
+                    'id'         => $b->id,
+                    'kode_mesin' => $b->kode_mesin,
+                    'nama_mesin' => $b->nama_mesin,
+                    'lokasi'     => $b->lokasi,
+                ])->values()->toArray();
+
+                $backupIds = array_column($backupList, 'id');
+
+                return [
+                    'id'                => $item->id,
+                    'jenis_mtc'         => $item->jenis_mtc,
+                    'nama_mesin'        => $item->nama_mesin,
+                    'lokasi'            => $item->lokasi,
+                    'dept'              => $item->dept,
+                    'kode_mesin'        => $item->kode_mesin,
+                    'has_backup'        => (bool) $item->has_backup,
+                    'backup_mesin_id'   => $item->backup_mesin_id,
+                    'backup_mesin_ids'  => $backupIds,
+                    'backup_mesin_list' => $backupList,
+                    'backup_notes'      => $item->backup_notes,
+                    'aktif'             => $item->aktif,
+                    'created_at'        => $item->created_at,
+                    // [{ interval: 2, satuan: 'bulan', label: '2 Bulan' }, ...]
+                    'frekuensi_list'    => $item->frekuensi->map(fn($f) => [
+                        'interval' => $f->interval,
+                        'satuan'   => $f->satuan,
+                        'label'    => $f->label,
+                    ])->toArray(),
+                ];
+            });
 
         return response()->json(['status' => true, 'data' => $data]);
     }
@@ -84,7 +106,16 @@ class MtcMasterMesinController extends Controller
         DB::transaction(function () use ($request, $id) {
             $mesin = MtcMasterMesinModel::findOrFail($id);
             $hasBackup = $request->boolean('has_backup', false);
-            $backupMesinId = $hasBackup && !empty($request->backup_mesin_id) ? (int)$request->backup_mesin_id : null;
+            $backupMesinIds = [];
+            if ($hasBackup) {
+                if ($request->has('backup_mesin_ids')) {
+                    $backupMesinIds = array_values(array_filter(array_map('intval', (array) $request->input('backup_mesin_ids', []))));
+                } elseif (!empty($request->backup_mesin_id)) {
+                    $backupMesinIds = [(int) $request->backup_mesin_id];
+                }
+            }
+
+            $primaryBackupId = count($backupMesinIds) > 0 ? $backupMesinIds[0] : null;
 
             $mesin->update([
                 'jenis_mtc'       => $request->jenis_mtc,
@@ -92,14 +123,14 @@ class MtcMasterMesinController extends Controller
                 'lokasi'          => $request->lokasi,
                 'dept'            => $request->dept ?? null,
                 'kode_mesin'      => $request->kode_mesin ?? null,
-                'has_backup'      => $hasBackup,
-                'backup_mesin_id' => $backupMesinId,
+                'has_backup'      => $hasBackup && count($backupMesinIds) > 0,
+                'backup_mesin_id' => $primaryBackupId,
                 'aktif'           => $request->aktif,
                 'updated_by'      => Auth::id(),
             ]);
 
-            // Sinkronisasi 2 arah untuk mesin backup
-            $this->syncTwoWayBackup($mesin, $hasBackup, $backupMesinId, $request->backup_notes);
+            // Sinkronisasi multi-backup (Many-to-Many 2 arah)
+            $this->syncMutualMultiBackup($mesin, $hasBackup, $backupMesinIds, $request->backup_notes);
 
             $this->syncFrekuensi($mesin->id, $request->frekuensi ?? []);
         });
@@ -111,12 +142,35 @@ class MtcMasterMesinController extends Controller
     {
         DB::transaction(function () use ($id) {
             $mesin = MtcMasterMesinModel::findOrFail($id);
-            // Clear partner machine's backup link (2 arah)
-            MtcMasterMesinModel::where('backup_mesin_id', $mesin->id)->update([
-                'has_backup'      => false,
-                'backup_mesin_id' => null,
-                'backup_notes'    => null,
-            ]);
+
+            // Ambil daftar partner yang menjadikan mesin ini sebagai backup
+            $partnerIds = DB::table('mtc_mesin_backup')
+                ->where('backup_mesin_id', $mesin->id)
+                ->pluck('mesin_id')
+                ->toArray();
+
+            // Hapus dari pivot
+            DB::table('mtc_mesin_backup')
+                ->where('mesin_id', $mesin->id)
+                ->orWhere('backup_mesin_id', $mesin->id)
+                ->delete();
+
+            // Refresh partner machines
+            foreach ($partnerIds as $pId) {
+                $remBackups = DB::table('mtc_mesin_backup')
+                    ->where('mesin_id', $pId)
+                    ->pluck('backup_mesin_id')
+                    ->toArray();
+                $pMesin = MtcMasterMesinModel::find($pId);
+                if ($pMesin) {
+                    $pMesin->update([
+                        'has_backup'      => count($remBackups) > 0,
+                        'backup_mesin_id' => count($remBackups) > 0 ? $remBackups[0] : null,
+                        'backup_notes'    => $this->buildBackupNotes($remBackups),
+                    ]);
+                }
+            }
+
             $mesin->delete();
         });
 
@@ -421,65 +475,94 @@ class MtcMasterMesinController extends Controller
     }
 
     /**
-     * Sinkronisasi relasi 2 arah antara Mesin Utama dan Mesin Backup
+     * Helper membuat string ringkasan kode & nama mesin backup
      */
-    private function syncTwoWayBackup(MtcMasterMesinModel $mesin, bool $hasBackup, ?int $backupMesinId, ?string $manualNotes = null)
+    private function buildBackupNotes(array $backupIds): ?string
     {
-        if ($hasBackup && $backupMesinId) {
-            $backupMesin = MtcMasterMesinModel::find($backupMesinId);
-            if ($backupMesin && $backupMesin->id !== $mesin->id) {
-                // Catatan nama unit backup untuk mesin ini
-                $notesForThis = $backupMesin->kode_mesin
-                    ? "[{$backupMesin->kode_mesin}] {$backupMesin->nama_mesin}"
-                    : $backupMesin->nama_mesin;
+        if (empty($backupIds)) {
+            return null;
+        }
 
-                $mesin->update([
-                    'has_backup'      => true,
-                    'backup_mesin_id' => $backupMesin->id,
-                    'backup_notes'    => $notesForThis,
-                ]);
+        $mesins = MtcMasterMesinModel::whereIn('id', $backupIds)->get();
+        if ($mesins->isEmpty()) {
+            return null;
+        }
 
-                // Lepaskan relasi mesin lain yang sebelumnya mem-backup mesin ini jika ada perubahan
-                MtcMasterMesinModel::where('backup_mesin_id', $mesin->id)
-                    ->where('id', '!=', $backupMesin->id)
-                    ->update([
-                        'has_backup'      => false,
-                        'backup_mesin_id' => null,
-                        'backup_notes'    => null,
-                    ]);
+        $notes = [];
+        foreach ($mesins as $m) {
+            $notes[] = $m->kode_mesin ? "[{$m->kode_mesin}] {$m->nama_mesin}" : $m->nama_mesin;
+        }
 
-                // Sinkronisasi otomatis 2 arah ke mesin pasangannya
-                $notesForPartner = $mesin->kode_mesin
-                    ? "[{$mesin->kode_mesin}] {$mesin->nama_mesin}"
-                    : $mesin->nama_mesin;
+        return implode(', ', $notes);
+    }
 
-                $backupMesin->update([
-                    'has_backup'      => true,
-                    'backup_mesin_id' => $mesin->id,
-                    'backup_notes'    => $notesForPartner,
+    /**
+     * Sinkronisasi relasi Many-to-Many 2 arah untuk multi-backup mesin
+     */
+    private function syncMutualMultiBackup(MtcMasterMesinModel $mesin, bool $hasBackup, array $backupMesinIds, ?string $manualNotes = null)
+    {
+        // Filter out self ID
+        $cleanBackupIds = $hasBackup
+            ? array_values(array_unique(array_filter(array_map('intval', $backupMesinIds), fn($id) => $id > 0 && $id !== $mesin->id)))
+            : [];
+
+        // Ambil daftar backup lama yang terhubung ke mesin ini
+        $oldBackupIds = DB::table('mtc_mesin_backup')
+            ->where('mesin_id', $mesin->id)
+            ->pluck('backup_mesin_id')
+            ->toArray();
+
+        // 1. Sync relasi pivot untuk mesin ini
+        $mesin->backupMesinList()->sync($cleanBackupIds);
+
+        // 2. Mesin yang dilepas (ada di old tapi tidak ada di new) -> copot link 2 arah
+        $removedIds = array_diff($oldBackupIds, $cleanBackupIds);
+        foreach ($removedIds as $remId) {
+            DB::table('mtc_mesin_backup')
+                ->where('mesin_id', $remId)
+                ->where('backup_mesin_id', $mesin->id)
+                ->delete();
+
+            // Refresh status partner
+            $remRemaining = DB::table('mtc_mesin_backup')->where('mesin_id', $remId)->pluck('backup_mesin_id')->toArray();
+            $partnerMesin = MtcMasterMesinModel::find($remId);
+            if ($partnerMesin) {
+                $partnerMesin->update([
+                    'has_backup'      => count($remRemaining) > 0,
+                    'backup_mesin_id' => count($remRemaining) > 0 ? $remRemaining[0] : null,
+                    'backup_notes'    => $this->buildBackupNotes($remRemaining),
                 ]);
             }
-        } elseif ($hasBackup && !empty($manualNotes)) {
-            // Jika ada backup manual tanpa ID pasangan spesifik
-            $mesin->update([
-                'has_backup'      => true,
-                'backup_mesin_id' => null,
-                'backup_notes'    => $manualNotes,
-            ]);
-        } else {
-            // Hapus relasi backup pada mesin ini
-            $mesin->update([
-                'has_backup'      => false,
-                'backup_mesin_id' => null,
-                'backup_notes'    => null,
-            ]);
-
-            // Hapus juga relasi 2 arah pada mesin yang berpasangan dengannya
-            MtcMasterMesinModel::where('backup_mesin_id', $mesin->id)->update([
-                'has_backup'      => false,
-                'backup_mesin_id' => null,
-                'backup_notes'    => null,
-            ]);
         }
+
+        // 3. Mesin baru yang ditambahkan -> tambahkan link balik 2 arah
+        foreach ($cleanBackupIds as $addId) {
+            DB::table('mtc_mesin_backup')->updateOrInsert(
+                ['mesin_id' => $addId, 'backup_mesin_id' => $mesin->id],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+
+            // Refresh status partner
+            $addRemaining = DB::table('mtc_mesin_backup')->where('mesin_id', $addId)->pluck('backup_mesin_id')->toArray();
+            $partnerMesin = MtcMasterMesinModel::find($addId);
+            if ($partnerMesin) {
+                $partnerMesin->update([
+                    'has_backup'      => true,
+                    'backup_mesin_id' => $mesin->id,
+                    'backup_notes'    => $this->buildBackupNotes($addRemaining),
+                ]);
+            }
+        }
+
+        // 4. Update status mesin ini
+        $notesForThis = count($cleanBackupIds) > 0
+            ? $this->buildBackupNotes($cleanBackupIds)
+            : ($hasBackup && !empty($manualNotes) ? $manualNotes : null);
+
+        $mesin->update([
+            'has_backup'      => count($cleanBackupIds) > 0 || ($hasBackup && !empty($manualNotes)),
+            'backup_mesin_id' => count($cleanBackupIds) > 0 ? $cleanBackupIds[0] : null,
+            'backup_notes'    => $notesForThis,
+        ]);
     }
 }

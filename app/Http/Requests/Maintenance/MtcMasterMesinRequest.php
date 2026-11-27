@@ -27,9 +27,11 @@ class MtcMasterMesinRequest extends FormRequest
             'lokasi'          => ['nullable', 'string'],
             'dept'            => ['nullable', 'string'],
             'kode_mesin'      => ['nullable', 'string'],
-            'has_backup'      => ['nullable'],
-            'backup_mesin_id' => ['nullable'],
-            'backup_notes'    => ['nullable', 'string', 'max:255'],
+            'has_backup'       => ['nullable'],
+            'backup_mesin_id'  => ['nullable'],
+            'backup_mesin_ids' => ['nullable', 'array'],
+            'backup_mesin_ids.*' => ['nullable', 'integer'],
+            'backup_notes'     => ['nullable', 'string', 'max:500'],
         ];
     }
 }

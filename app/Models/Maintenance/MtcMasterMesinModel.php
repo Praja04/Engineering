@@ -31,6 +31,11 @@ class MtcMasterMesinModel extends Model
         'has_backup' => 'boolean',
     ];
 
+    public function backupMesinList()
+    {
+        return $this->belongsToMany(self::class, 'mtc_mesin_backup', 'mesin_id', 'backup_mesin_id');
+    }
+
     public function backupMesin()
     {
         return $this->belongsTo(self::class, 'backup_mesin_id');
