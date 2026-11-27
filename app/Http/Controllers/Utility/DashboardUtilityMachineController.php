@@ -953,6 +953,8 @@ class DashboardUtilityMachineController extends Controller
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
         $daysCount = $start->diffInDays($end) + 1;
+        $safetyDays = min(2, $daysCount);
+        $baseDays = max(0, $daysCount - $safetyDays);
 
         // 1. Air Proses & Support Query (excluding raw sources)
         $prosesData = PemakaianAirModel::query()
@@ -985,22 +987,32 @@ class DashboardUtilityMachineController extends Controller
         $rawData = [];
         $totalRawAktual = 0;
         $totalRawQuota = 0;
+        $totalBaseQuota = 0;
+        $totalSafetyQuota = 0;
 
         foreach ($rawSources as $source) {
             $actual = isset($rawRecords[$source]) ? round((float)$rawRecords[$source]->total_pemakaian, 2) : 0.0;
             $dailyQuota = isset($quotas[$source]) && $quotas[$source] !== null ? (float)$quotas[$source] : ($defaultQuotas[$source] ?? 0.0);
             $expectedQuota = round($dailyQuota * $daysCount, 2);
+            $baseQuota = round($dailyQuota * $baseDays, 2);
+            $safetyQuota = round($dailyQuota * $safetyDays, 2);
             $variance = round($actual - $expectedQuota, 2);
             $pct = $expectedQuota > 0 ? round(($actual / $expectedQuota) * 100, 1) : 0.0;
 
             $totalRawAktual += $actual;
             $totalRawQuota += $expectedQuota;
+            $totalBaseQuota += $baseQuota;
+            $totalSafetyQuota += $safetyQuota;
 
             $rawData[] = [
                 'jenis_pemakaian' => $source,
                 'total_pemakaian' => $actual,
                 'daily_quota'     => $dailyQuota,
                 'expected_quota'  => $expectedQuota,
+                'base_quota'      => $baseQuota,
+                'safety_quota'    => $safetyQuota,
+                'base_days'       => $baseDays,
+                'safety_days'     => $safetyDays,
                 'variance'        => $variance,
                 'percentage'      => $pct,
                 'status'          => $actual > $expectedQuota ? 'exceeded' : 'normal',
@@ -1022,9 +1034,13 @@ class DashboardUtilityMachineController extends Controller
                 'items' => $rawData,
                 'total_aktual' => round($totalRawAktual, 2),
                 'total_quota'  => round($totalRawQuota, 2),
+                'total_base_quota' => round($totalBaseQuota, 2),
+                'total_safety_quota' => round($totalSafetyQuota, 2),
                 'total_variance' => $totalVariance,
                 'total_percentage' => $totalPercentage,
                 'days_count'   => $daysCount,
+                'base_days'    => $baseDays,
+                'safety_days'  => $safetyDays,
                 'status'       => $totalRawAktual > $totalRawQuota ? 'exceeded' : 'normal',
             ]
         ];

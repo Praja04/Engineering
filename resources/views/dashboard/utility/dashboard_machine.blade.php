@@ -1364,6 +1364,23 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="d-flex align-items-center justify-content-between px-1 mb-1" style="font-size: 8.5px;">
+                                    <span class="text-muted" style="font-size: 8px;">Perbandingan per Sumber</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="d-flex align-items-center gap-1">
+                                            <span style="width: 8px; height: 8px; background-color: #06b6d4; border-radius: 2px; display: inline-block;"></span>
+                                            <span class="text-muted" style="font-size: 8px;">Aktual</span>
+                                        </span>
+                                        <span class="d-flex align-items-center gap-1">
+                                            <span style="width: 8px; height: 8px; background-color: #64748b; border-radius: 2px; display: inline-block;"></span>
+                                            <span class="text-muted" id="legendAirRawBase" style="font-size: 8px;">Kuota</span>
+                                        </span>
+                                        <span class="d-flex align-items-center gap-1">
+                                            <span style="width: 8px; height: 8px; background-color: #f59e0b; border-radius: 2px; display: inline-block;"></span>
+                                            <span class="text-warning fw-semibold" id="legendAirRawSafety" style="font-size: 8px;">Safety (2H)</span>
+                                        </span>
+                                    </div>
+                                </div>
                                 <div id="chartAirRaw" style="min-height: 200px;"></div>
                             </div>
                         </div>
@@ -2298,8 +2315,12 @@
                     // Raw Water Card
                     $('#valAirRawTotal').text(`${aktualFormatted} m³`);
                     $('#valAirRawQuota').text(`${quotaFormatted} m³`);
+                    const daysCount = Number(raw.days_count || 1);
+                    const safetyDays = Number(raw.safety_days !== undefined ? raw.safety_days : Math.min(2, daysCount));
+                    const baseDays = Number(raw.base_days !== undefined ? raw.base_days : Math.max(0, daysCount - safetyDays));
                     $('#valAirRawDaysMeta').text(
-                        `${raw.days_count || 1} Hari (${(totalQuota / (raw.days_count || 1)).toFixed(0)} m³/hari)`);
+                        `${daysCount} Hari (${baseDays}H + ${safetyDays}H Safety)`
+                    ).attr('title', `Target Harian: ${(totalQuota / daysCount).toFixed(0)} m³/hari (Termasuk Buffer Safety ${safetyDays} Hari)`);
 
                     const varFormatted = (raw.total_variance > 0 ? '+' : '') + Number(raw.total_variance || 0)
                         .toLocaleString('id-ID', {
@@ -3515,22 +3536,43 @@
                     if (!rawData) return;
                     const chartTheme = getChartTheme();
                     const items = rawData.items || [];
+                    const daysCount = Number(rawData.days_count || 1);
+                    const safetyDays = Number(rawData.safety_days !== undefined ? rawData.safety_days : Math.min(2, daysCount));
+                    const baseDays = Number(rawData.base_days !== undefined ? rawData.base_days : Math.max(0, daysCount - safetyDays));
+
+                    // Update legend indicators if element exists
+                    if ($('#legendAirRawBase').length) {
+                        $('#legendAirRawBase').text(`Kuota (${baseDays}H)`);
+                    }
+                    if ($('#legendAirRawSafety').length) {
+                        $('#legendAirRawSafety').text(`Safety (${safetyDays}H)`);
+                    }
+
                     const categories = items.length > 0 ? items.map(d => d.jenis_pemakaian) : ['Tidak Ada Data'];
                     const actualData = items.length > 0 ? items.map(d => Number(d.total_pemakaian)) : [0];
-                    const quotaData = items.length > 0 ? items.map(d => Number(d.expected_quota)) : [0];
+                    const baseQuotaData = items.length > 0 ? items.map(d => Number(d.base_quota !== undefined ? d.base_quota : (d.daily_quota * baseDays).toFixed(2))) : [0];
+                    const safetyQuotaData = items.length > 0 ? items.map(d => Number(d.safety_quota !== undefined ? d.safety_quota : (d.daily_quota * safetyDays).toFixed(2))) : [0];
 
                     const options = {
                         series: [{
                                 name: 'Aktual (m³)',
+                                group: 'aktual',
                                 data: actualData
                             },
                             {
-                                name: 'Target Kuota (m³)',
-                                data: quotaData
+                                name: `Kuota Reguler (${baseDays}H)`,
+                                group: 'kuota',
+                                data: baseQuotaData
+                            },
+                            {
+                                name: `Safety Kuota (${safetyDays}H)`,
+                                group: 'kuota',
+                                data: safetyQuotaData
                             }
                         ],
                         chart: {
                             type: 'bar',
+                            stacked: true,
                             height: 200,
                             toolbar: {
                                 show: false
@@ -3538,26 +3580,28 @@
                             background: 'transparent'
                         },
                         theme: chartTheme,
-                        colors: ['#06b6d4', isThemeLight() ? '#94a3b8' : '#475569'],
+                        colors: ['#06b6d4', isThemeLight() ? '#94a3b8' : '#475569', '#f59e0b'],
                         plotOptions: {
                             bar: {
                                 borderRadius: 4,
                                 columnWidth: '55%',
                                 dataLabels: {
-                                    position: 'top'
+                                    total: {
+                                        enabled: true,
+                                        formatter: val => (val > 0 ? Number(val).toLocaleString('id-ID') : '0'),
+                                        offsetY: -16,
+                                        style: {
+                                            fontSize: '8px',
+                                            fontFamily: 'JetBrains Mono, monospace',
+                                            fontWeight: 600,
+                                            color: isThemeLight() ? '#334155' : '#cbd5e1'
+                                        }
+                                    }
                                 }
                             }
                         },
                         dataLabels: {
-                            enabled: true,
-                            formatter: val => (val > 0 ? Number(val).toLocaleString('id-ID') : '0'),
-                            offsetY: -16,
-                            style: {
-                                fontSize: '8px',
-                                fontFamily: 'JetBrains Mono, monospace',
-                                fontWeight: 600,
-                                colors: isThemeLight() ? ['#0891b2', '#475569'] : ['#22d3ee', '#cbd5e1']
-                            }
+                            enabled: false
                         },
                         xaxis: {
                             categories: categories,
@@ -3597,21 +3641,26 @@
                         },
                         tooltip: {
                             theme: chartTheme.mode,
+                            shared: true,
+                            intersect: false,
                             y: {
                                 formatter: function(val, {
                                     seriesIndex,
                                     dataPointIndex
                                 }) {
                                     const item = items[dataPointIndex];
-                                    if (!item) return val + ' m³';
+                                    if (!item) return (val ? Number(val).toLocaleString('id-ID') : 0) + ' m³';
                                     if (seriesIndex === 0) {
                                         const statusBadge = item.status === 'exceeded' ?
                                             `<span style="color: #ef4444; font-weight: 600;">⚠️ Over +${Math.abs(item.variance).toFixed(1)} m³</span>` :
                                             `<span style="color: #10b981; font-weight: 600;">✓ Normal</span>`;
-                                        return `${Number(val).toLocaleString('id-ID')} m³ (${item.percentage}% dari kuota)<br/>${statusBadge}`;
-                                    } else {
-                                        return `${Number(val).toLocaleString('id-ID')} m³ (Target ${item.daily_quota} m³/hari)`;
+                                        return `${Number(val).toLocaleString('id-ID')} m³ (${item.percentage}% dari target kuota)<br/>${statusBadge}`;
+                                    } else if (seriesIndex === 1) {
+                                        return `${Number(val).toLocaleString('id-ID')} m³ (${baseDays} Hari @ ${item.daily_quota} m³/hari)`;
+                                    } else if (seriesIndex === 2) {
+                                        return `${Number(val).toLocaleString('id-ID')} m³ (${safetyDays} Hari Safety @ ${item.daily_quota} m³/hari)<br/><span style="color: #94a3b8; font-size: 10px;">Total Kuota: ${Number(item.expected_quota).toLocaleString('id-ID')} m³</span>`;
                                     }
+                                    return Number(val).toLocaleString('id-ID') + ' m³';
                                 }
                             }
                         }
