@@ -200,7 +200,7 @@ class MtcDashboardController extends Controller
                         'budget' => $costData['budget_formatted'],
                         'budget_utilization' => $costData['budget_utilization'],
                         'status' => $costData['budget_utilization'] <= 100 ? 'optimal' : 'danger',
-                        'subtext' => 'Total Maintenance Cost',
+                        'subtext' => 'Total Maintenance Cost (Dept. ENG)',
                     ],
                 ],
                 'charts' => [
@@ -327,7 +327,7 @@ class MtcDashboardController extends Controller
                     'budget' => $costData['budget_formatted'],
                     'budget_utilization' => $costData['budget_utilization'],
                     'status' => $costData['budget_utilization'] <= 100 ? 'optimal' : 'danger',
-                    'subtext' => 'Total Maintenance Cost',
+                    'subtext' => 'Total Maintenance Cost (Dept. ENG)',
                 ],
             ],
             'charts' => [
@@ -1293,7 +1293,19 @@ class MtcDashboardController extends Controller
         $chartEnd = count($weeksList) > 0 ? end($weeksList)['end']->format('Y-m-d') : $endDate->format('Y-m-d');
 
         // Fetch replacement materials in chart range joined with main and master material
-        $replacementItems = MtcPenggantianMaterialModel::with(['main', 'masterMaterial'])
+        $replacementItems = MtcPenggantianMaterialModel::with([
+            'main.motorPump.mesin',
+            'main.utility.mesin',
+            'main.electrical.mesin',
+            'main.refrigerasi.mesin',
+            'main.electricEngine.mesin',
+            'main.dieselEngine.mesin',
+            'main.electricP2h.mesin',
+            'main.dieselP2h.mesin',
+            'main.gensetP2h.mesin',
+            'main.battery',
+            'masterMaterial'
+        ])
             ->whereHas('main', function ($q) use ($chartStart, $chartEnd) {
                 $q->whereBetween('tanggal', [$chartStart, $chartEnd]);
             })
@@ -1331,6 +1343,16 @@ class MtcDashboardController extends Controller
             $weekTotal = 0.0;
 
             foreach ($wItems as $item) {
+                if (!$item->main) continue;
+
+                $mInfo = $this->resolveMachineInfo($item->main);
+
+                // Filter hanya mesin dari departemen ENG / Engineering
+                $deptToCheck = $mInfo['dept'] ?? ($item->main->departemen ?? null);
+                if (!$this->isEngineeringDept($deptToCheck)) {
+                    continue;
+                }
+
                 $cost = floatval($item->total_harga);
                 if ($cost <= 0) {
                     $unitPrice = floatval($item->harga_satuan);
@@ -1428,6 +1450,7 @@ class MtcDashboardController extends Controller
         $location    = $main->lokasi ?? $main->area ?? '-';
         $hasBackup   = false;
         $backupNotes = null;
+        $dept        = null;
 
         if ($rel && $main->$rel && $main->$rel->mesin) {
             $mObj        = $main->$rel->mesin;
@@ -1437,6 +1460,7 @@ class MtcDashboardController extends Controller
             $location    = $mObj->lokasi ?? $mObj->dept ?? $location;
             $hasBackup   = (bool) ($mObj->has_backup ?? false);
             $backupNotes = $mObj->backup_notes ?? null;
+            $dept        = $mObj->dept ?? null;
         } elseif (in_array($main->jenis_mtc, ['Electric Engine', 'Diesel Engine'])) {
             $machineKey  = "main_" . $main->id;
             $machineName = $main->area ? "Unit: {$main->area}" : ($main->jenis_mtc . ' #' . $main->id);
@@ -1456,22 +1480,38 @@ class MtcDashboardController extends Controller
             $machineCode = '-';
         }
 
-        // Fallback matching by name or code if hasBackup is still false
-        if (!$hasBackup && !empty($main->area)) {
-            static $masterMesinBackupMap = null;
-            if ($masterMesinBackupMap === null) {
-                $masterMesinBackupMap = [];
-                $allM = DB::table('mtc_master_mesin')->select('nama_mesin', 'kode_mesin', 'has_backup', 'backup_notes')->get();
-                foreach ($allM as $mm) {
-                    if ($mm->nama_mesin) $masterMesinBackupMap[trim(strtolower($mm->nama_mesin))] = ['has_backup' => (bool)$mm->has_backup, 'notes' => $mm->backup_notes];
-                    if ($mm->kode_mesin) $masterMesinBackupMap[trim(strtolower($mm->kode_mesin))] = ['has_backup' => (bool)$mm->has_backup, 'notes' => $mm->backup_notes];
+        // Fallback matching by name or code if dept or hasBackup is not yet resolved
+        static $masterMesinMap = null;
+        if ($masterMesinMap === null) {
+            $masterMesinMap = [];
+            $allM = DB::table('mtc_master_mesin')->select('id', 'nama_mesin', 'kode_mesin', 'has_backup', 'backup_notes', 'dept')->get();
+            foreach ($allM as $mm) {
+                $itemData = [
+                    'id'         => $mm->id,
+                    'has_backup' => (bool)$mm->has_backup,
+                    'notes'      => $mm->backup_notes,
+                    'dept'       => $mm->dept,
+                ];
+                if ($mm->nama_mesin) $masterMesinMap[trim(strtolower($mm->nama_mesin))] = $itemData;
+                if ($mm->kode_mesin) $masterMesinMap[trim(strtolower($mm->kode_mesin))] = $itemData;
+            }
+        }
+
+        if (!empty($main->area)) {
+            $target = trim(strtolower($main->area));
+            if (isset($masterMesinMap[$target])) {
+                if (!$hasBackup) {
+                    $hasBackup   = $masterMesinMap[$target]['has_backup'];
+                    $backupNotes = $masterMesinMap[$target]['notes'];
+                }
+                if (empty($dept)) {
+                    $dept = $masterMesinMap[$target]['dept'];
                 }
             }
-            $target = trim(strtolower($main->area));
-            if (isset($masterMesinBackupMap[$target])) {
-                $hasBackup = $masterMesinBackupMap[$target]['has_backup'];
-                $backupNotes = $masterMesinBackupMap[$target]['notes'];
-            }
+        }
+
+        if (empty($dept) && !empty($main->departemen)) {
+            $dept = $main->departemen;
         }
 
         return [
@@ -1481,7 +1521,20 @@ class MtcDashboardController extends Controller
             'area'         => $location ?: '-',
             'has_backup'   => $hasBackup,
             'backup_notes' => $backupNotes,
+            'dept'         => $dept,
         ];
+    }
+
+    /**
+     * Cek apakah departemen mesin adalah ENG / Engineering
+     */
+    private function isEngineeringDept(?string $dept): bool
+    {
+        if (empty($dept)) {
+            return false;
+        }
+        $d = strtoupper(trim($dept));
+        return in_array($d, ['ENG', 'ENGINEERING']);
     }
 
     /**
@@ -1670,6 +1723,13 @@ class MtcDashboardController extends Controller
         foreach ($costRecords as $rec) {
             if (!$rec->main) continue;
             $mInfo = $this->resolveMachineInfo($rec->main);
+
+            // Filter hanya mesin dari departemen ENG / Engineering
+            $deptToCheck = $mInfo['dept'] ?? ($rec->main->departemen ?? null);
+            if (!$this->isEngineeringDept($deptToCheck)) {
+                continue;
+            }
+
             $mKey = $mInfo['key'];
 
             $cost = floatval($rec->total_harga);

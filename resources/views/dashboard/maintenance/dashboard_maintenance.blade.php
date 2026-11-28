@@ -1684,7 +1684,7 @@
                                         Detail Maintenance Cost
                                     </h4>
                                     <div class="mtc-card-subtitle">
-                                        Akumulasi Biaya per Kategori (MHE, Pompa, Utility, AC)
+                                        Akumulasi Biaya per Kategori Dept. Engineering (MHE, Pompa, Utility, AC)
                                     </div>
                                 </div>
                                 <span
@@ -1777,7 +1777,7 @@
                                         <i class="mdi mdi-cash-fast text-info"></i>
                                         Top Cost Tertinggi
                                     </h4>
-                                    <div class="mtc-card-subtitle">Pengeluaran terbesar (Budget Impact)</div>
+                                    <div class="mtc-card-subtitle">Pengeluaran terbesar unit Engineering (Budget Impact)</div>
                                 </div>
                                 <span class="badge bg-dark border border-secondary border-opacity-25 font-mono"
                                     style="font-size: 10px;">
